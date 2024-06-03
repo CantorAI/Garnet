@@ -26,7 +26,7 @@ auto generate_data(long long num_samples) {
     return std::make_pair(x, y);
 }
 
-int main() {
+int main2() {
     torch::Device device(torch::kCPU); // Default to CPU
     if (torch::cuda::is_available()) {
         device = torch::Device(torch::kCUDA); // Use GPU if available
