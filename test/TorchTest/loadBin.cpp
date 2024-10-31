@@ -67,7 +67,7 @@ std::unordered_map<std::string, torch::Tensor> load_weights_from_binary(
     return model_weights;
 }
 
-int main() {
+int main3() {
     try {
         auto weights = load_weights_from_binary("D:\\ToGithub\\CantorAI\\Garnet\\model_weights.bin");
         for (const auto& pair : weights) {

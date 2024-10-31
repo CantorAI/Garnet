@@ -6,7 +6,7 @@ import os
 import zlib
 
 # Define paths
-pth_folder = "C:/ToGithub/llama3/Meta-Llama-3-8B"
+pth_folder = "C:/ToGithub/llama3/Meta-Llama-3-70B"
 pth_file = os.path.join(pth_folder, "consolidated.00.pth")
 
 def save_weights_to_binary(model_path, output_file, compress=False):
@@ -18,6 +18,8 @@ def save_weights_to_binary(model_path, output_file, compress=False):
         "compression_enabled": compress
     }
 
+    tensor_info = []  # List to hold information about each tensor
+
     with open(output_file, 'wb') as f:
         # Write metadata with compression flag
         metadata_json = json.dumps(metadata)
@@ -26,6 +28,14 @@ def save_weights_to_binary(model_path, output_file, compress=False):
 
         for key, tensor in state_dict.items():
             tensor = tensor.cpu().contiguous()
+            tensor_details = {
+                "key": key,
+                "data_type": str(tensor.dtype),
+                "shape": list(tensor.shape),
+                "number_of_elements": tensor.numel(),
+                "element_size_bytes": tensor.element_size(),
+                "total_size_bytes": tensor.numel() * tensor.element_size()
+            }
 
             # Print tensor info for verification
             print(f"Key: {key}")
@@ -34,6 +44,9 @@ def save_weights_to_binary(model_path, output_file, compress=False):
             print(f"  Number of Elements: {tensor.numel()}")
             print(f"  Element Size (bytes): {tensor.element_size()}")
             print(f"  Total Size (bytes): {tensor.numel() * tensor.element_size()}")
+
+            # Add tensor details to the list
+            tensor_info.append(tensor_details)
 
             # Write the tensor key and dtype
             key_encoded = key.encode('utf-8')
@@ -55,6 +68,7 @@ def save_weights_to_binary(model_path, output_file, compress=False):
             if compress:
                 compressed_data = zlib.compress(buffer)
                 data_to_write = compressed_data
+                tensor_details["compressed_size_bytes"] = len(compressed_data)
                 print(f"Compressed from {num_bytes} to {len(compressed_data)} bytes.")
             else:
                 data_to_write = buffer
@@ -62,7 +76,14 @@ def save_weights_to_binary(model_path, output_file, compress=False):
             # Write the actual tensor data
             f.write(data_to_write)
 
-if __name__ == "__main__":
-    save_weights_to_binary(pth_file, 'model_weights.bin')
-    print("Done writing binary and JSON info.")
+    # Set output path for the JSON file
+    json_output_file = os.path.splitext(output_file)[0] + '_details.json'
 
+    # Write tensor info to a JSON file
+    with open(json_output_file, 'w') as f_json:
+        json.dump(tensor_info, f_json, indent=4)
+
+if __name__ == "__main__":
+    binary_output_file = os.path.join(pth_folder, 'model_weights.bin')
+    save_weights_to_binary(pth_file, binary_output_file)
+    print("Done writing binary and JSON info.")

@@ -51,7 +51,7 @@ endif()
 
 find_package(Torch REQUIRED)
 
-add_executable(${PROJECT_NAME} dcgan.cpp loadBin.cpp)
+add_executable(${PROJECT_NAME} dcgan.cpp loadBin.cpp "matrixTest.cpp")
 target_link_libraries(${PROJECT_NAME} "${TORCH_LIBRARIES}")
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 
