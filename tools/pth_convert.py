@@ -6,7 +6,7 @@ import os
 import zlib
 
 # Define paths
-pth_folder = "C:/ToGithub/llama3/Meta-Llama-3-70B"
+pth_folder = "D:/llama3/Meta-Llama-3-8B"
 pth_file = os.path.join(pth_folder, "consolidated.00.pth")
 
 def save_weights_to_binary(model_path, output_file, compress=False):
