@@ -65,8 +65,8 @@ namespace Garnet
             file.read(buffer.data(), num_bytes);
 
             // Create and populate X::Tensor
-
-            tensor->Create(X::Value());
+            X::Value dummy;
+            tensor->Create(dummy);
 
             // Copy data into tensor
             memcpy(tensor->GetData(), buffer.data(), num_bytes);
