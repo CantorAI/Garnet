@@ -44,7 +44,10 @@ namespace Garnet
             else if (dtype == "torch.bfloat16") {
                 tensor_data_type = X::TensorDataType::BFLOAT16;
             }
-
+            else if (dtype.find("torch.float8_") != std::string::npos)
+            {
+                tensor_data_type = X::TensorDataType::FLOAT8;
+            }
             // Read shape
             uint64_t num_dims;
             file.read(reinterpret_cast<char*>(&num_dims), sizeof(uint64_t));
