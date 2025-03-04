@@ -1,0 +1,62 @@
+﻿flowchart TD
+    Input("Input Tokens") --> Embed("Embedding Layer\n102,400 × 2048")
+    Embed --> Layer0("Layer 0: Dense MLP")
+    Layer0 --> Layer1("Layer 1: MoE")
+    Layer1 --> Layer2("Layer 2: MoE")
+    Layer2 --> Layer3("Layer 3: MoE")
+    Layer3 --> LayerDots1("...")
+    LayerDots1 --> Layer13("Layer 13: MoE")
+    Layer13 --> Layer14("Layer 14: MoE")
+    Layer14 --> LayerDots2("...")
+    LayerDots2 --> Layer26("Layer 26: MoE")
+    Layer26 --> Layer27("Layer 27: MoE")
+    Layer27 --> Norm("Final RMSNorm\n2048")
+    Norm --> Head("Output Projection\n2048 × 102,400")
+    Head --> Output("Output Logits")
+    
+    subgraph DenseLayer["Dense Layer (Layer 0)"]
+        DL1("Input: B×S×2048") --> DL2("RMSNorm: 2048")
+        DL2 --> DL3("Multi-Head Attention\n16 heads × 128 dim")
+        DL3 --> DL4("Residual Connection")
+        DL4 --> DL5("RMSNorm: 2048")
+        DL5 --> DL6("Dense MLP\nUp: 2048×10,944\nDown: 10,944×2048")
+        DL6 --> DL7("Residual Connection")
+        DL7 --> DL8("Output: B×S×2048")
+    end
+    
+    subgraph MoELayer["MoE Layer (Layers 1-27)"]
+        ML1("Input: B×S×2048") --> ML2("RMSNorm: 2048")
+        ML2 --> ML3("Multi-Head Attention\n16 heads × 128 dim")
+        ML3 --> ML4("Residual Connection")
+        ML4 --> ML5("RMSNorm: 2048")
+        ML5 --> ML6("Routing Gate: 2048×64")
+        ML6 --> ML7("Top-6 Expert Selection")
+        ML5 --> ML8("64 Experts: 2048×1408→1408×2048")
+        ML5 --> ML9("2 Shared: 2048×1408→1408×2048")
+        ML7 & ML8 & ML9 --> ML10("Weighted Sum")
+        ML10 --> ML11("Residual Connection")
+        ML11 --> ML12("Output: B×S×2048")
+    end
+    
+    subgraph Attention["Multi-Head Attention"]
+        A1("Input: B×S×2048") --> A2("QKV Projection: 3×2048×2048")
+        A2 --> A3("Split: 16 heads of dim 128")
+        A3 --> A4("Apply RoPE")
+        A4 --> A5("Attention Matrix: B×16×S×S")
+        A5 --> A6("Softmax")
+        A6 --> A7("Value Aggregation")
+        A7 --> A8("Output Projection: 2048×2048")
+    end
+    
+    subgraph Expert["Expert Network"]
+        E1("Input: B×S×2048") --> E2("Gate Proj: 2048×1408")
+        E1 --> E3("Up Proj: 2048×1408")
+        E2 --> E4("SiLU Activation")
+        E4 & E3 --> E5("Multiply")
+        E5 --> E6("Down Proj: 1408×2048")
+        E6 --> E7("Output: B×S×2048")
+    end
+
+    %% Legend
+    L1["B = Batch Size\nS = Sequence Length"]
+    style L1 fill:#f5f5f5,stroke:#ccc,stroke-width:1px,font-size:12px

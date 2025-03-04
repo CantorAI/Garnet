@@ -1,30 +1,92 @@
-﻿ # CMakeList.txt : CMake project for Garnet, include source and define
-# project specific logic here.
-#
-cmake_minimum_required(VERSION 3.8)
-project ("garnet")
+﻿cmake_minimum_required(VERSION 3.18)
+project("garnet" LANGUAGES CXX CUDA)
 
+# Ensure that CUDA code uses the shared (dynamic) runtime.
+set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
+
+# For MSVC, make sure all code uses the dynamic runtime
+if(MSVC)
+    # This affects all targets
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+
+    # Force all C/C++ code to use dynamic runtime
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
+endif()
+
+# Append our cmake modules path.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-message("CMAKE_MODULE_PATH=" ${CMAKE_MODULE_PATH} )
+message("CMAKE_MODULE_PATH=" ${CMAKE_MODULE_PATH})
+
+# Find and include the xlang package.
 find_package(xlang REQUIRED)
-set(xlang_sdk_folder  "${XLANG_INCLUDE_DIR}")
+set(xlang_sdk_folder "${XLANG_INCLUDE_DIR}")
 include_directories(${xlang_sdk_folder})
 
+# Include project directories.
 include_directories("src/entry")
 include_directories("src/include")
 include_directories("src/model")
+include_directories("src/tensor")
 
+# Use absolute paths for source files.
 FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
-FILE(GLOB Entry_SRC "src/entry/*.cpp")
+FILE(GLOB Entry_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/entry/*.cpp")
+FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
+FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
 
+# Create the shared library target.
 add_library(${PROJECT_NAME} 
-	SHARED
-	${XLANG_API_SRC}
-	${Entry_SRC}
+    SHARED
+    ${XLANG_API_SRC}
+    ${Entry_SRC}
+    ${Tensor_SRC}
+    ${Cuda_SRC}
 )
-if (WIN32)
-    target_link_libraries(${PROJECT_NAME})
+
+# On Windows, link against cudart (the CUDA runtime) explicitly.
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} cudart)
+    
+    # Add debug-specific libraries for Windows Debug build
+    if(MSVC)
+        # Debug build
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /D_DEBUG")
+        
+        # Use the debug runtime for debug builds
+        target_link_libraries(${PROJECT_NAME} $<$<CONFIG:Debug>:msvcrtd>)
+        target_link_libraries(${PROJECT_NAME} $<$<CONFIG:Release>:msvcrt>)
+    endif()
 else()
-    target_link_libraries(${PROJECT_NAME} pthread dl)
+    target_link_libraries(${PROJECT_NAME} pthread dl m)
 endif()
 
+# Enable separable CUDA compilation and specify architectures.
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_ARCHITECTURES "70;75;80"
+)
+
+# For MSVC, ensure consistent runtime settings for all source files
+if(MSVC)
+    # Apply to all source files directly
+    foreach(src_file ${XLANG_API_SRC} ${Entry_SRC} ${Tensor_SRC})
+        if(CMAKE_BUILD_TYPE MATCHES Debug)
+            set_source_files_properties(${src_file} PROPERTIES COMPILE_FLAGS "/MDd")
+        else()
+            set_source_files_properties(${src_file} PROPERTIES COMPILE_FLAGS "/MD")
+        endif()
+    endforeach()
+    
+    # Set target properties for MSVC runtime
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>"
+    )
+    
+    # For debug builds, also link with the debug version of the C runtime
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        target_link_libraries(${PROJECT_NAME} debug msvcrtd)
+    endif()
+endif()

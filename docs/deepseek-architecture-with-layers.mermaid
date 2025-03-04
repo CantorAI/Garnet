@@ -1,0 +1,61 @@
+flowchart TD
+    Input[Input Tokens] --> Embed[Embedding Layer\n102,400 vocab size]
+    Embed --> Layer0[Layer 0\nDense MLP]
+    
+    %% Create a visual representation of the 28 layers
+    Layer0 --> Layer1[Layer 1\nMoE]
+    Layer1 --> Layer2[Layer 2\nMoE]
+    Layer2 --> Layer3[Layer 3\nMoE]
+    Layer3 --> LayerDots1[...]
+    LayerDots1 --> Layer13[Layer 13\nMoE]
+    Layer13 --> Layer14[Layer 14\nMoE]
+    Layer14 --> LayerDots2[...]
+    LayerDots2 --> Layer26[Layer 26\nMoE]
+    Layer26 --> Layer27[Layer 27\nMoE]
+    
+    Layer27 --> Norm[Final RMSNorm]
+    Norm --> Head[Output Projection]
+    Head --> Output[Output Logits]
+    
+    subgraph "Dense Layer (Layer 0)"
+        DenseIn[Input\n2048 dim] --> DenseAttNorm[RMSNorm]
+        DenseAttNorm --> DenseAtt[Multi-Head Attention\n16 heads]
+        DenseAtt --> DenseAttRes[+Residual]
+        DenseAttRes --> DenseFFNNorm[RMSNorm]
+        DenseFFNNorm --> DenseMLP[Dense MLP\n10,944 inter_dim]
+        DenseMLP --> DenseFFNRes[+Residual]
+        DenseFFNRes --> DenseOut[Output]
+    end
+    
+    subgraph "MoE Layer (Layers 1-27)"
+        MoEIn[Input\n2048 dim] --> MoEAttNorm[RMSNorm]
+        MoEAttNorm --> MoEAtt[Multi-Head Attention\n16 heads]
+        MoEAtt --> MoEAttRes[+Residual]
+        MoEAttRes --> MoEFFNNorm[RMSNorm]
+        MoEFFNNorm --> MoEGate[Routing Gate\nSoftmax Scoring]
+        MoEGate --> MoEExpertSelect[Select Top-6 Experts]
+        MoEFFNNorm --> MoEExperts[64 Routed Experts\n1,408 dim each]
+        MoEFFNNorm --> MoEShared[2 Shared Experts]
+        MoEExperts & MoEShared & MoEExpertSelect --> MoEWeightedSum[Weighted Sum]
+        MoEWeightedSum --> MoEFFNRes[+Residual]
+        MoEFFNRes --> MoEOut[Output]
+    end
+    
+    subgraph "Multi-Head Attention"
+        AttIn[Input] --> AttSplit[Split into 16 heads]
+        AttSplit --> AttQKV[Q, K, V Projections]
+        AttQKV --> AttRoPE[Apply RoPE]
+        AttRoPE --> AttScores[Compute Attention Scores]
+        AttScores --> AttSoftmax[Softmax]
+        AttSoftmax --> AttOut[Attention Output]
+        AttOut --> AttProj[Output Projection]
+    end
+    
+    subgraph "Expert Network"
+        ExpertIn[Input] --> W1[Gate Projection]
+        ExpertIn --> W3[Up Projection]
+        W1 --> SiLU[SiLU Activation]
+        SiLU & W3 --> Mul[Multiply]
+        Mul --> W2[Down Projection]
+        W2 --> ExpertOut[Output]
+    end

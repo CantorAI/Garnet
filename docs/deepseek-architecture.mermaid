@@ -1,0 +1,58 @@
+flowchart TD
+    subgraph Transformer
+        Input[Input Tokens] --> Embed[Embedding Layer]
+        Embed --> Blocks[Transformer Blocks]
+        Blocks --> Norm[Final RMSNorm]
+        Norm --> Head[Output Projection]
+        Head --> Output[Output Logits]
+    end
+    
+    subgraph "Transformer Block"
+        BlockIn[Input] --> AttentionNorm[Attention Norm]
+        AttentionNorm --> Attention[Multi-Head Attention]
+        Attention --> AttentionResidual[+Residual]
+        AttentionResidual --> FFNNorm[Feed-Forward Norm]
+        FFNNorm --> FFN{Layer Type?}
+        FFN -->|Layer < n_dense_layers| DenseMLP[Dense MLP]
+        FFN -->|Layer >= n_dense_layers| MoELayer[Mixture of Experts]
+        DenseMLP --> FFNResidual[+Residual]
+        MoELayer --> FFNResidual
+        FFNResidual --> BlockOut[Output]
+    end
+    
+    subgraph "Multi-Head Attention (MLA)"
+        MLAIn[Input] --> WQ[Query Projection]
+        MLAIn --> WKV[Key-Value Projection]
+        WQ --> QSplit[Split Q]
+        QSplit --> QNoPE[Q without PE]
+        QSplit --> QPE[Q with RoPE]
+        WKV --> KVSplit[Split KV]
+        KVSplit --> KPE[K with RoPE]
+        KVSplit --> KVA[KV Low-Rank]
+        KVA --> KVNorm[KV Norm]
+        KVNorm --> KVB[KV Projection]
+        KVB --> KNoPE[K without PE]
+        KVB --> V[Value]
+        QNoPE & QPE & KNoPE & KPE --> Attn[Attention Scores]
+        Attn & V --> AttnOut[Attention Output]
+        AttnOut --> WO[Output Projection]
+        WO --> MLAOut[Output]
+    end
+    
+    subgraph "Mixture of Experts (MoE)"
+        MoEIn[Input] --> Gate[Routing Gate]
+        Gate --> ExpertSelection[Select Top-k Experts]
+        MoEIn --> Experts[64 Routed Experts]
+        MoEIn --> SharedExperts[2 Shared Experts]
+        Experts & SharedExperts & ExpertSelection --> WeightedSum[Weighted Sum]
+        WeightedSum --> MoEOut[Output]
+    end
+    
+    subgraph "Expert Network"
+        ExpertIn[Input] --> W1[W1 Projection]
+        ExpertIn --> W3[W3 Projection]
+        W1 --> SiLU[SiLU Activation]
+        SiLU & W3 --> Mul[Multiply]
+        Mul --> W2[W2 Projection]
+        W2 --> ExpertOut[Output]
+    end

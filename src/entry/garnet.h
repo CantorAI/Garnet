@@ -2,6 +2,7 @@
 #include "singleton.h"
 #include "xpackage.h"
 #include "xlang.h"
+#include "garnet_tensor.h"
 
 namespace Garnet
 {
@@ -12,6 +13,7 @@ namespace Garnet
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
 			APISET().AddFunc<1>("loadModel", &GarnetAPI::LoadModel);
+			APISET().AddClass<0, GarnetTensor>("tensor");
 		END_PACKAGE
 
 		void SetModule(X::Value curModule)
