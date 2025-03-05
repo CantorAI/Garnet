@@ -1,7 +1,353 @@
 #include "garnet_tensor.h"
+#include <cuda_runtime.h>
+#include "tensor_helper.h"
+#include <cuda_fp16.h>    // For __half and __float2half
+#include <cuda_bf16.h>    // For __nv_bfloat16
+#include <cuda_fp8.h>     // For __nv_fp8_e4m3 and __nv_fp8_e5m2
+
+// Forward declarations for the CUDA functions from ptxGemm_kernel.cu
+extern "C" {
+    void runGemmFP16(const __half* d_A, const __half* d_B, float* d_C, int M, int N, int K);
+    void runGemmBF16(const __nv_bfloat16* d_A, const __nv_bfloat16* d_B, float* d_C, int M, int N, int K);
+    void runGemmFP8E4M3(const __nv_fp8_e4m3* d_A, const __nv_fp8_e4m3* d_B, float* d_C, int M, int N, int K);
+    void runGemmFP8E5M2(const __nv_fp8_e5m2* d_A, const __nv_fp8_e5m2* d_B, float* d_C, int M, int N, int K);
+    void runGemmFP32(const float* d_A, const float* d_B, float* d_C, int M, int N, int K);
+}
 
 namespace Garnet
 {
+    void GarnetTensor::Multiply(X::ARGS& params, X::KWARGS& kwParams,
+        X::Value input1, X::Value input2, X::Value& retVal)
+    {
+        bool isTensor1 = input1.IsTensor();
+        bool isTensor2 = input2.IsTensor();
+
+        if (isTensor1 && isTensor2)
+        {
+            // Tensor-tensor multiplication
+            X::Tensor tensor1(input1);
+            X::Tensor tensor2(input2);
+
+            // Get the data types
+            auto tensor1_type = tensor1->GetDataType();
+            auto tensor2_type = tensor2->GetDataType();
+
+            // Validate dimensions for matrix multiplication
+            int dimCount1 = tensor1->GetDimCount();
+            int dimCount2 = tensor2->GetDimCount();
+
+            if (dimCount1 > 2 || dimCount2 > 2)
+            {
+                retVal = X::Value();
+                return;
+            }
+
+            int m = tensor1->GetDimSize(0);
+            int n = (dimCount1 > 1) ? tensor1->GetDimSize(1) : 1;
+            int k = (dimCount2 > 1) ? tensor2->GetDimSize(1) : 1;
+
+            // Check if dimensions match for matrix multiplication
+            if (dimCount2 == 1)
+            {
+                // Vector case: n must match
+                if (n != tensor2->GetDimSize(0))
+                {
+                    retVal = X::Value();
+                    return;
+                }
+            }
+            else if (n != tensor2->GetDimSize(0))
+            {
+                // Matrix case: inner dimensions must match
+                retVal = X::Value();
+                return;
+            }
+
+            // Check if dimensions are multiples of 16 for GEMM kernels
+            if (m % 16 != 0 || n % 16 != 0 || k % 16 != 0)
+            {
+                retVal = X::Value();
+                //return;
+            }
+
+            // Set the result dimensions
+            int resultD = 1;
+            if (tensor2->GetDimCount() > 1)
+            {
+                resultD = 2;
+            }
+            X::Port::vector<int> resultDims(resultD);
+            resultDims.push_back(m);
+            if (tensor2->GetDimCount() > 1)
+            {
+                resultDims.push_back(k);
+            }
+
+            // Ensure GPU memory is allocated for both tensors
+            TensorOpStatus status = TensorHelper::EnsureGPUMemory(tensor1);
+            if (status != TensorOpStatus::Success)
+            {
+                retVal = X::Value();
+                return;
+            }
+
+            status = TensorHelper::EnsureGPUMemory(tensor2);
+            if (status != TensorOpStatus::Success)
+            {
+                retVal = X::Value();
+                return;
+            }
+
+            // Check device compatibility
+            std::string device1 = TensorHelper::GetDeviceName(tensor1);
+            std::string device2 = TensorHelper::GetDeviceName(tensor2);
+
+            if (!device1.empty() && !device2.empty() && device1 != device2)
+            {
+                retVal = X::Value();
+                return;
+            }
+
+            // Create result tensor
+            std::string deviceName = !device1.empty() ? device1 : (!device2.empty() ? device2 : "cuda");
+
+            // Create new descriptor for result tensor
+            X::XPackageValue<TensorDescriptor> resultDescValue;
+            TensorDescriptor& resultDesc = *resultDescValue;
+            resultDesc.mDeviceName = deviceName;
+
+            // Create the result tensor
+            X::Tensor resultTensor;
+            resultTensor->SetDataType(tensor1_type);
+            resultTensor->SetShape(resultDims);
+            X::Value initData;
+            resultTensor->Create(initData);
+            status = TensorHelper::EnsureGPUMemory(resultTensor);
+            if (status != TensorOpStatus::Success)
+            {
+                retVal = X::Value();
+                return;
+            }
+
+            void* gpuResultData = TensorHelper::GetGPUMemory(resultTensor);
+
+
+            // Get GPU memory pointers
+            void* gpuData1 = TensorHelper::GetGPUMemory(tensor1);
+            void* gpuData2 = TensorHelper::GetGPUMemory(tensor2);
+
+            // Perform matrix multiplication based on data type
+            if (tensor1_type == X::TensorDataType::FLOAT32 
+                && tensor2_type == X::TensorDataType::FLOAT32)
+            {
+                runGemmFP32(
+                    reinterpret_cast<float*>(gpuData1),
+                    reinterpret_cast<float*>(gpuData2),
+                    reinterpret_cast<float*>(gpuResultData), m, n, k);
+            }
+            else if (tensor1_type == X::TensorDataType::FLOAT16 
+                && tensor2_type == X::TensorDataType::FLOAT16)
+            {
+                runGemmFP16(
+                    reinterpret_cast<__half*>(gpuData1),
+                    reinterpret_cast<__half*>(gpuData2),
+                    reinterpret_cast<float*>(gpuResultData), m, n, k);
+            }
+            else if (tensor1_type == X::TensorDataType::BFLOAT16 && tensor2_type == X::TensorDataType::BFLOAT16)
+            {
+                runGemmBF16(
+                    reinterpret_cast<__nv_bfloat16*>(gpuData1),
+                    reinterpret_cast<__nv_bfloat16*>(gpuData2),
+                    reinterpret_cast<float*>(gpuResultData), m, n, k);
+            }
+            else if (tensor1_type == X::TensorDataType::FLOAT8 
+                && tensor2_type == X::TensorDataType::FLOAT8)
+            {
+                runGemmFP8E4M3(
+                    reinterpret_cast<__nv_fp8_e4m3*>(gpuData1),
+                    reinterpret_cast<__nv_fp8_e4m3*>(gpuData2),
+                    reinterpret_cast<float*>(gpuResultData), m, n, k);
+            }
+            else
+            {
+                // Unsupported data type combination
+                cudaFree(gpuResultData);
+                retVal = X::Value();
+                return;
+            }
+
+            // Copy result from GPU to CPU
+            status = TensorHelper::CopyResultFromGPU(resultTensor);
+            if (status != TensorOpStatus::Success)
+            {
+                cudaFree(gpuResultData);
+                retVal = X::Value();
+                return;
+            }
+
+            retVal = X::Value(resultTensor);
+        }
+        else if (isTensor1)
+        {
+            // Tensor-scalar multiplication
+            X::Tensor tensor(input1);
+            auto tensorType = tensor->GetDataType();
+            float scalar = (float)input2.ToDouble();
+
+            // We only support 1D or 2D tensors
+            int dimCount = tensor->GetDimCount();
+            if (dimCount > 2)
+            {
+                retVal = X::Value();
+                return;
+            }
+
+            // Copy dimensions for result tensor
+            X::Port::vector<int> dims;
+            for (int i = 0; i < dimCount; i++)
+            {
+                dims.push_back(tensor->GetDimSize(i));
+            }
+
+            // Calculate total elements
+            long long totalElements = 1;
+            for (int i = 0; i < dimCount; i++)
+            {
+                totalElements *= tensor->GetDimSize(i);
+            }
+
+            // Ensure GPU memory is allocated
+            TensorOpStatus status = TensorHelper::EnsureGPUMemory(tensor);
+            if (status != TensorOpStatus::Success)
+            {
+                retVal = X::Value();
+                return;
+            }
+
+            // Create result tensor
+            std::string deviceName = TensorHelper::GetDeviceName(tensor);
+            if (deviceName.empty()) {
+                deviceName = "cuda";
+            }
+
+            // Create new descriptor for result tensor
+            X::XPackageValue<TensorDescriptor> resultDescValue;
+            TensorDescriptor& resultDesc = *resultDescValue;
+            resultDesc.mDeviceName = deviceName;
+
+            // Create the result tensor
+            X::Value resultTensorDesc = X::Value(resultDescValue);
+            X::Tensor resultTensor(resultTensorDesc);
+            resultTensor->SetDataType(tensorType);
+            resultTensor->SetShape(dims);
+
+            // Allocate GPU memory for result
+            long long resultSize = totalElements * TensorHelper::GetItemSizeForType(tensorType);
+            void* gpuResultData = nullptr;
+            cudaError_t err = cudaMalloc(&gpuResultData, resultSize);
+            if (err != cudaSuccess)
+            {
+                retVal = X::Value();
+                return;
+            }
+            resultDesc.gpuMemory = gpuResultData;
+            resultTensor->SetDesc(X::Value(resultDescValue));
+
+            // Get GPU memory pointers
+            void* gpuData = TensorHelper::GetGPUMemory(tensor);
+
+            // Perform scalar multiplication based on data type
+            if (tensorType == X::TensorDataType::FLOAT32)
+            {
+                // Define kernel dimensions
+                dim3 blockSize(256);
+                dim3 gridSize((totalElements + blockSize.x - 1) / blockSize.x);
+
+                // Launch your custom CUDA kernel for scalar multiplication
+                // scalarMultiplyKernelFP32<<<gridSize, blockSize>>>(
+                //     reinterpret_cast<float*>(gpuData),
+                //     reinterpret_cast<float*>(gpuResultData),
+                //     scalar, totalElements);
+
+                cudaDeviceSynchronize();
+            }
+            else if (tensorType == X::TensorDataType::FLOAT16)
+            {
+                // Define kernel dimensions
+                dim3 blockSize(256);
+                dim3 gridSize((totalElements + blockSize.x - 1) / blockSize.x);
+
+                // Launch your custom CUDA kernel for scalar multiplication
+                // scalarMultiplyKernelFP16<<<gridSize, blockSize>>>(
+                //     reinterpret_cast<__half*>(gpuData),
+                //     reinterpret_cast<__half*>(gpuResultData),
+                //     scalar, totalElements);
+
+                cudaDeviceSynchronize();
+            }
+            else if (tensorType == X::TensorDataType::BFLOAT16)
+            {
+                // Define kernel dimensions
+                dim3 blockSize(256);
+                dim3 gridSize((totalElements + blockSize.x - 1) / blockSize.x);
+
+                // Launch your custom CUDA kernel for scalar multiplication
+                // scalarMultiplyKernelBF16<<<gridSize, blockSize>>>(
+                //     reinterpret_cast<__nv_bfloat16*>(gpuData),
+                //     reinterpret_cast<__nv_bfloat16*>(gpuResultData),
+                //     scalar, totalElements);
+
+                cudaDeviceSynchronize();
+            }
+            else if (tensorType == X::TensorDataType::FLOAT8)
+            {
+                // Define kernel dimensions
+                dim3 blockSize(256);
+                dim3 gridSize((totalElements + blockSize.x - 1) / blockSize.x);
+
+                // Launch your custom CUDA kernel for scalar multiplication
+                // scalarMultiplyKernelFP8<<<gridSize, blockSize>>>(
+                //     reinterpret_cast<__nv_fp8_e4m3*>(gpuData),
+                //     reinterpret_cast<__nv_fp8_e4m3*>(gpuResultData),
+                //     scalar, totalElements);
+
+                cudaDeviceSynchronize();
+            }
+            else
+            {
+                // Unsupported data type
+                cudaFree(gpuResultData);
+                retVal = X::Value();
+                return;
+            }
+
+            // Copy result from GPU to CPU
+            status = TensorHelper::CopyResultFromGPU(resultTensor);
+            if (status != TensorOpStatus::Success)
+            {
+                cudaFree(gpuResultData);
+                retVal = X::Value();
+                return;
+            }
+
+            retVal = X::Value(resultTensor);
+        }
+        else if (isTensor2)
+        {
+            // Scalar-tensor multiplication is commutative
+            X::Value result;
+            Multiply(params, kwParams, input2, input1, result);
+            retVal = result;
+        }
+        else
+        {
+            // Scalar-scalar multiplication
+            float val1 = (float)input1;
+            float val2 = (float)input2;
+            retVal = X::Value(val1 * val2);
+        }
+    }
+
 	void GarnetTensor::Add(X::ARGS& params, X::KWARGS& kwParams, 
 		X::Value input1, X::Value input2, X::Value& retVal)
 	{
@@ -10,29 +356,16 @@ namespace Garnet
 		X::Value input1, X::Value input2, X::Value& retVal)
 	{
 	}
-	void GarnetTensor::Multiply(X::ARGS& params, X::KWARGS& kwParams, 
+	void GarnetTensor::Matmul(X::ARGS& params, X::KWARGS& kwParams, 
 		X::Value input1, X::Value input2, X::Value& retVal)
 	{
 		bool isTensor1 = input1.IsTensor();
 		bool isTensor2 = input2.IsTensor();
-		if (isTensor1 && isTensor2)
+		if (!isTensor1 || !isTensor2)
 		{
-			// Multiply two tensors.
-			X::Tensor tensor1(input1);
-			X::Tensor tensor2(input2);
+			retVal = X::Value();
 		}
-		else if (isTensor1)
-		{
-			// Multiply tensor and scalar.
-		}
-		else if (isTensor2)
-		{
-			// Multiply scalar and tensor.
-		}
-		else
-		{
-			// Multiply two scalars.
-		}
+
 	}
 	void GarnetTensor::Permute(X::ARGS& params, X::KWARGS& kwParams, 
 		X::Value input, X::Value& retVal)

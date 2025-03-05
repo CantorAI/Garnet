@@ -1,7 +1,12 @@
 ﻿cmake_minimum_required(VERSION 3.18)
 project("garnet" LANGUAGES CXX CUDA)
 
+# Find CUDA package
+find_package(CUDA REQUIRED)
+
 # Ensure that CUDA code uses the shared (dynamic) runtime.
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
 
 # For MSVC, make sure all code uses the dynamic runtime
@@ -25,17 +30,20 @@ find_package(xlang REQUIRED)
 set(xlang_sdk_folder "${XLANG_INCLUDE_DIR}")
 include_directories(${xlang_sdk_folder})
 
+include_directories(${CUDA_INCLUDE_DIRS})
 # Include project directories.
 include_directories("src/entry")
 include_directories("src/include")
 include_directories("src/model")
 include_directories("src/tensor")
+include_directories("src/test")
 
 # Use absolute paths for source files.
 FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
 FILE(GLOB Entry_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/entry/*.cpp")
 FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
 FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
+FILE(GLOB Test_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/test/*.cpp")
 
 # Create the shared library target.
 add_library(${PROJECT_NAME} 
@@ -44,6 +52,7 @@ add_library(${PROJECT_NAME}
     ${Entry_SRC}
     ${Tensor_SRC}
     ${Cuda_SRC}
+    ${Test_SRC}
 )
 
 # On Windows, link against cudart (the CUDA runtime) explicitly.
@@ -66,7 +75,7 @@ endif()
 # Enable separable CUDA compilation and specify architectures.
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
-    CUDA_ARCHITECTURES "70;75;80"
+    CUDA_ARCHITECTURES "80;89"
 )
 
 # For MSVC, ensure consistent runtime settings for all source files

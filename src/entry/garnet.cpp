@@ -82,4 +82,10 @@ namespace Garnet
         return model;
     }
 
+    void GarnetAPI::RunTest()
+    {
+        extern int ptxGemm_test();
+		ptxGemm_test();
+    }
+
 }
