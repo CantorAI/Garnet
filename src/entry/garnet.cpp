@@ -3,16 +3,17 @@
 #include "xlang.h"
 #include <fstream> 
 #include <numeric> 
+#include <filesystem>
+#include <regex>
 
 namespace Garnet
 {
-    X::Value GarnetAPI::LoadModel(std::string modelPath)
+    bool GarnetAPI::LoadModelFromFile(std::string modelPath, X::Dict& model)
     {
-        X::Dict model;
         std::ifstream file(modelPath, std::ios::binary);
 
         if (!file.is_open()) {
-            throw std::runtime_error("Cannot open model file: " + modelPath);
+            return false;
         }
 
         // Read metadata
@@ -79,6 +80,62 @@ namespace Garnet
         }
 
         file.close();
+        return true;
+    }
+
+    X::Value GarnetAPI::LoadModel(std::string modelPath)
+    {
+        X::Dict model;
+        namespace fs = std::filesystem;
+
+        // Check if the path contains a wildcard ('*' or '?')
+        if (modelPath.find('*') != std::string::npos || modelPath.find('?') != std::string::npos)
+        {
+            // Split the path into directory and pattern parts.
+            fs::path pathPattern(modelPath);
+            fs::path directory = pathPattern.parent_path();
+            if (directory.empty()) {
+                directory = fs::current_path();
+            }
+            std::string pattern = pathPattern.filename().string();
+
+            // Convert wildcard pattern to a regular expression.
+            // For example, "*.bin" becomes ".*\.bin"
+            std::string regexPattern;
+            for (char c : pattern)
+            {
+                if (c == '*')
+                    regexPattern += ".*";
+                else if (c == '?')
+                    regexPattern += ".";
+                // Escape regex special characters, except for alphanumerics
+                else if (std::isalnum(c) || c == '_' || c == '-')
+                    regexPattern += c;
+                else
+                    regexPattern += "\\" + std::string(1, c);
+            }
+            std::regex fileRegex(regexPattern, std::regex::icase);
+
+            // Iterate over files in the target directory.
+            for (const auto& entry : fs::directory_iterator(directory))
+            {
+                if (entry.is_regular_file())
+                {
+                    std::string filename = entry.path().filename().string();
+                    if (std::regex_match(filename, fileRegex))
+                    {
+                        // Append the model data from each matching file.
+                        LoadModelFromFile(entry.path().string(), model);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // No wildcard found; assume modelPath is a single file.
+            LoadModelFromFile(modelPath, model);
+        }
+
         return model;
     }
 

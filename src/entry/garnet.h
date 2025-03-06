@@ -10,6 +10,7 @@ namespace Garnet
 		public Singleton<GarnetAPI>
 	{
 		X::Value m_curModule;
+		bool LoadModelFromFile(std::string modelPath, X::Dict& model);
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
 			APISET().AddFunc<1>("loadModel", &GarnetAPI::LoadModel);
