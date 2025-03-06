@@ -134,12 +134,10 @@ namespace Garnet
             if (tensor1_type == X::TensorDataType::FLOAT32 
                 && tensor2_type == X::TensorDataType::FLOAT32)
             {
-#if __TODO__
                 runGemmFP32(
                     reinterpret_cast<float*>(gpuData1),
                     reinterpret_cast<float*>(gpuData2),
                     reinterpret_cast<float*>(gpuResultData), m, k, n);
-#endif
             }
             else if (tensor1_type == X::TensorDataType::FLOAT16 
                 && tensor2_type == X::TensorDataType::FLOAT16)

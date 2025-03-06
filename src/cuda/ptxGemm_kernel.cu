@@ -19,7 +19,8 @@ __global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C,
 
     // For FP8 types, WMMA fragments are not available.
     if constexpr (std::is_same_v<DataType, __nv_fp8_e4m3> ||
-        std::is_same_v<DataType, __nv_fp8_e5m2>) {
+        std::is_same_v<DataType, __nv_fp8_e5m2> ||
+        std::is_same_v<DataType, float>) {
         // Fallback: each thread computes one element of the 16x16 tile.
         for (int i = threadIdx.x; i < 256; i += blockDim.x) {
             int r = i / 16;
@@ -117,6 +118,11 @@ void launchWmmaGemmKernel(const DataType* A, const DataType* B, float* C,
 // Extern "C" interface for launching the kernels.
 extern "C" {
 
+    void runGemmFP32(const float* A, const float* B, float* C,
+        int M, int N, int K)
+    {
+		launchWmmaGemmKernel(A, B, C, M, N, K);
+    }
     void runGemmFP16(const __half* A, const __half* B, float* C,
         int M, int N, int K) {
         launchWmmaGemmKernel(A, B, C, M, N, K);
