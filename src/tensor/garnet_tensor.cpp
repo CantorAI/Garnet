@@ -63,13 +63,6 @@ namespace Garnet
                 return;
             }
 
-            // Check if dimensions are multiples of 16 for GEMM kernels
-            if (m % 16 != 0 || n % 16 != 0 || k % 16 != 0)
-            {
-                retVal = X::Value();
-                //return;
-            }
-
             // Set the result dimensions
             int resultD = 1;
             if (tensor2->GetDimCount() > 1)
@@ -116,12 +109,13 @@ namespace Garnet
             TensorDescriptor& resultDesc = *resultDescValue;
             resultDesc.mDeviceName = deviceName;
 
-            // Create the result tensor
-            X::Tensor resultTensor;
-            resultTensor->SetDataType(tensor1_type);
-            resultTensor->SetShape(resultDims);
+            // don't create new tensor, that will not deliver to  the result tensor
+            X::XTensor* pRetTensor = dynamic_cast<X::XTensor*>(retVal.GetObj());
+            pRetTensor->SetDataType(tensor1_type);
+            pRetTensor->SetShape(resultDims);
             X::Value initData;
-            resultTensor->Create(initData);
+            pRetTensor->Create(initData);
+			X::Tensor resultTensor(pRetTensor);
             status = TensorHelper::EnsureGPUMemory(resultTensor);
             if (status != TensorOpStatus::Success)
             {
@@ -140,10 +134,12 @@ namespace Garnet
             if (tensor1_type == X::TensorDataType::FLOAT32 
                 && tensor2_type == X::TensorDataType::FLOAT32)
             {
+#if __TODO__
                 runGemmFP32(
                     reinterpret_cast<float*>(gpuData1),
                     reinterpret_cast<float*>(gpuData2),
-                    reinterpret_cast<float*>(gpuResultData), m, n, k);
+                    reinterpret_cast<float*>(gpuResultData), m, k, n);
+#endif
             }
             else if (tensor1_type == X::TensorDataType::FLOAT16 
                 && tensor2_type == X::TensorDataType::FLOAT16)
@@ -151,14 +147,14 @@ namespace Garnet
                 runGemmFP16(
                     reinterpret_cast<__half*>(gpuData1),
                     reinterpret_cast<__half*>(gpuData2),
-                    reinterpret_cast<float*>(gpuResultData), m, n, k);
+                    reinterpret_cast<float*>(gpuResultData), m, k, n);
             }
             else if (tensor1_type == X::TensorDataType::BFLOAT16 && tensor2_type == X::TensorDataType::BFLOAT16)
             {
                 runGemmBF16(
                     reinterpret_cast<__nv_bfloat16*>(gpuData1),
                     reinterpret_cast<__nv_bfloat16*>(gpuData2),
-                    reinterpret_cast<float*>(gpuResultData), m, n, k);
+                    reinterpret_cast<float*>(gpuResultData), m, k, n);
             }
             else if (tensor1_type == X::TensorDataType::FLOAT8 
                 && tensor2_type == X::TensorDataType::FLOAT8)
@@ -166,7 +162,7 @@ namespace Garnet
                 runGemmFP8E4M3(
                     reinterpret_cast<__nv_fp8_e4m3*>(gpuData1),
                     reinterpret_cast<__nv_fp8_e4m3*>(gpuData2),
-                    reinterpret_cast<float*>(gpuResultData), m, n, k);
+                    reinterpret_cast<float*>(gpuResultData), m, k, n);
             }
             else
             {

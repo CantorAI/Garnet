@@ -1,282 +1,140 @@
-// ptxGemm_kernel.cu
-#include <cuda_runtime.h>
-#include <cuda_fp16.h>    // For __half and __float2half
-#include <cuda_bf16.h>    // For __nv_bfloat16
-#include <cuda_fp8.h>     // For __nv_fp8_e4m3 and __nv_fp8_e5m2
+// matrixMulTensorCore_kernel.cu
+#include <mma.h>
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
+#include <type_traits>
 
-// Set to 0 to disable FP8 kernels
-#define _FP8_SUPPORT_ 1
+using namespace nvcuda;
 
+// Templated WMMA-based GEMM kernel that handles non-16 boundaries.
+template <typename DataType>
+__global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C,
+    int M, int N, int K) {
+    // Each block computes a 16x16 tile.
+    int block_row = blockIdx.y;
+    int block_col = blockIdx.x;
+    int row = block_row * 16;
+    int col = block_col * 16;
+
+    // For FP8 types, WMMA fragments are not available.
+    if constexpr (std::is_same_v<DataType, __nv_fp8_e4m3> ||
+        std::is_same_v<DataType, __nv_fp8_e5m2>) {
+        // Fallback: each thread computes one element of the 16x16 tile.
+        for (int i = threadIdx.x; i < 256; i += blockDim.x) {
+            int r = i / 16;
+            int c = i % 16;
+            int globalRow = row + r;
+            int globalCol = col + c;
+            if (globalRow < M && globalCol < N) {
+                float sum = 0.0f;
+                // Loop over the K dimension.
+                for (int k = 0; k < K; ++k) {
+                    DataType a = A[globalRow * K + k];
+                    DataType b = B[k * N + globalCol];
+                    sum += static_cast<float>(a) * static_cast<float>(b);
+                }
+                C[globalRow * N + globalCol] = sum;
+            }
+        }
+    }
+    else {
+        // WMMA path for supported types (e.g. __half, __nv_bfloat16)
+        // Declare the accumulator fragment.
+        wmma::fragment<wmma::accumulator, 16, 16, 16, float> cFrag;
+        wmma::fill_fragment(cFrag, 0.0f);
+
+        // Shared memory tiles for loading from global memory.
+        __shared__ DataType tileA[16][16];
+        __shared__ DataType tileB[16][16];
+
+        // Loop over the K dimension in tiles of 16.
+        for (int t = 0; t < K; t += 16) {
+            // Load tile of A from global memory into shared memory with boundary checks.
+            for (int i = threadIdx.x; i < 256; i += blockDim.x) {
+                int r = i / 16;
+                int c = i % 16;
+                int globalRow = row + r;
+                int globalCol = t + c;
+                if (globalRow < M && globalCol < K)
+                    tileA[r][c] = A[globalRow * K + globalCol];
+                else
+                    tileA[r][c] = DataType(0);
+            }
+            // Load tile of B from global memory into shared memory with boundary checks.
+            for (int i = threadIdx.x; i < 256; i += blockDim.x) {
+                int r = i / 16;
+                int c = i % 16;
+                int globalRow = t + r;
+                int globalCol = col + c;
+                if (globalRow < K && globalCol < N)
+                    tileB[r][c] = B[globalRow * N + globalCol];
+                else
+                    tileB[r][c] = DataType(0);
+            }
+            __syncthreads();
+
+            // Load WMMA fragments from the shared memory tiles.
+            wmma::fragment<wmma::matrix_a, 16, 16, 16, DataType, wmma::row_major> aFrag;
+            wmma::fragment<wmma::matrix_b, 16, 16, 16, DataType, wmma::col_major> bFrag;
+            wmma::load_matrix_sync(aFrag, &tileA[0][0], 16);
+            wmma::load_matrix_sync(bFrag, &tileB[0][0], 16);
+
+            // Multiply and accumulate using WMMA.
+            wmma::mma_sync(cFrag, aFrag, bFrag, cFrag);
+            __syncthreads();
+        }
+
+        // Store the computed tile (from the WMMA accumulator) to shared memory.
+        __shared__ float sharedC[16][16];
+        wmma::store_matrix_sync(reinterpret_cast<float*>(sharedC), cFrag, 16, wmma::mem_row_major);
+        __syncthreads();
+
+        // Copy the tile from shared memory to global memory with boundary checks.
+        for (int i = threadIdx.x; i < 256; i += blockDim.x) {
+            int r = i / 16;
+            int c = i % 16;
+            int globalRow = row + r;
+            int globalCol = col + c;
+            if (globalRow < M && globalCol < N)
+                C[globalRow * N + globalCol] = sharedC[r][c];
+        }
+    }
+}
+
+// Helper function to launch the kernel.
+template <typename DataType>
+void launchWmmaGemmKernel(const DataType* A, const DataType* B, float* C,
+    int M, int N, int K) {
+    // Compute grid dimensions to cover the entire output.
+    dim3 gridDim((N + 15) / 16, (M + 15) / 16);
+    // Use one warp (32 threads) per block.
+    dim3 blockDim(32, 1, 1);
+    wmmaGemmKernelT<DataType> << <gridDim, blockDim >> > (A, B, C, M, N, K);
+    cudaDeviceSynchronize();
+}
+
+// Extern "C" interface for launching the kernels.
 extern "C" {
 
-    //------------------------------------------------------------------------------
-    // FP16 Kernel
-    __global__ void gemm_kernel_fp16(const __half* A, const __half* B, float* C,
+    void runGemmFP16(const __half* A, const __half* B, float* C,
         int M, int N, int K) {
-        int block_row = blockIdx.y; // tile row index
-        int block_col = blockIdx.x; // tile column index
-        int row = block_row * 16;
-        int col = block_col * 16;
-
-        // Allocate shared memory for one tile of A and one tile of B.
-        __shared__ __half tileA[16][16];
-        __shared__ __half tileB[16][16];
-
-        float accum = 0.0f;
-
-        // Loop over K dimension tiles.
-        for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            // Each block loads a 16x16 sub-tile from global memory.
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
-            }
-            __syncthreads();
-
-            // For demonstration, pack the first two __half values from each tile into a 32–bit word.
-            unsigned int a0 = *((unsigned int*)&tileA[0][0]); // packs tileA[0][0] and tileA[0][1]
-            unsigned int b0 = *((unsigned int*)&tileB[0][0]); // packs tileB[0][0] and tileB[0][1]
-
-            // For this simple demo, we do not load the remaining registers.
-            unsigned int a1 = 0, a2 = 0, a3 = 0;
-            unsigned int b1 = 0; // Only use b0 and b1 for m16n8k16 instruction
-            // Provide separate accumulator input registers (all zero).
-            float acc0 = 0.0f, acc1 = 0.0f, acc2 = 0.0f, acc3 = 0.0f;
-            float c0, c1, c2, c3; // Need to keep all as they're outputs of the MMA instruction
-
-            // Ada Lovelace compatible tensor core instruction
-            asm volatile(
-                "mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32 "
-                "{%0,%1,%2,%3}, "
-                "{%4,%5,%6,%7}, "
-                "{%8,%9}, "
-                "{%10,%11,%12,%13};\n"
-                : "=f"(c0), "=f"(c1), "=f"(c2), "=f"(c3)
-                : "r"(a0), "r"(a1), "r"(a2), "r"(a3),
-                "r"(b0), "r"(b1),
-                "f"(acc0), "f"(acc1), "f"(acc2), "f"(acc3)
-                );
-
-            // Accumulate the result
-            accum += c0 + c1 + c2 + c3; // Use all output registers to avoid warnings
-            __syncthreads();
-        }
-        // Write the dummy accumulated result to C at position (row, col)
-        C[row * N + col] = accum;
+        launchWmmaGemmKernel(A, B, C, M, N, K);
     }
 
-    //------------------------------------------------------------------------------
-    // BF16 Kernel
-    __global__ void gemm_kernel_bf16(const __nv_bfloat16* A, const __nv_bfloat16* B, float* C,
+    void runGemmBF16(const __nv_bfloat16* A, const __nv_bfloat16* B, float* C,
         int M, int N, int K) {
-        int block_row = blockIdx.y;
-        int block_col = blockIdx.x;
-        int row = block_row * 16;
-        int col = block_col * 16;
-
-        __shared__ __nv_bfloat16 tileA[16][16];
-        __shared__ __nv_bfloat16 tileB[16][16];
-
-        float accum = 0.0f;
-        for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
-            }
-            __syncthreads();
-
-            unsigned int a0 = *((unsigned int*)&tileA[0][0]);
-            unsigned int b0 = *((unsigned int*)&tileB[0][0]);
-            unsigned int a1 = 0, a2 = 0, a3 = 0;
-            unsigned int b1 = 0; // Only use b0 and b1 for m16n8k16 instruction
-            float acc0 = 0.0f, acc1 = 0.0f, acc2 = 0.0f, acc3 = 0.0f;
-            float c0, c1, c2, c3; // Need to keep all as they're outputs of the MMA instruction
-
-            // Ada Lovelace compatible tensor core instruction for BF16
-            asm volatile(
-                "mma.sync.aligned.m16n8k16.row.col.f32.bf16.bf16.f32 "
-                "{%0,%1,%2,%3}, "
-                "{%4,%5,%6,%7}, "
-                "{%8,%9}, "
-                "{%10,%11,%12,%13};\n"
-                : "=f"(c0), "=f"(c1), "=f"(c2), "=f"(c3)
-                : "r"(a0), "r"(a1), "r"(a2), "r"(a3),
-                "r"(b0), "r"(b1),
-                "f"(acc0), "f"(acc1), "f"(acc2), "f"(acc3)
-                );
-
-            // Accumulate the result
-            accum += c0 + c1 + c2 + c3; // Use all output registers to avoid warnings
-            __syncthreads();
-        }
-        C[row * N + col] = accum;
+        launchWmmaGemmKernel(A, B, C, M, N, K);
     }
 
-#if _FP8_SUPPORT_
-    //------------------------------------------------------------------------------
-    // FP8 E4M3 Kernel
-    __global__ void gemm_kernel_fp8_e4m3(const __nv_fp8_e4m3* A, const __nv_fp8_e4m3* B, float* C,
+    void runGemmFP8E4M3(const __nv_fp8_e4m3* A, const __nv_fp8_e4m3* B, float* C,
         int M, int N, int K) {
-        int block_row = blockIdx.y;
-        int block_col = blockIdx.x;
-        int row = block_row * 16;
-        int col = block_col * 16;
-
-        __shared__ __nv_fp8_e4m3 tileA[16][16];
-        __shared__ __nv_fp8_e4m3 tileB[16][16];
-
-        float accum = 0.0f;
-        for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
-            }
-            __syncthreads();
-
-            // For Ada Lovelace architecture, convert fp8 to fp16 and use fp16 tensor cores
-            if (tid == 0) {  // Only one thread computes the result for simplicity
-                float sum = 0.0f;
-                for (int k = 0; k < 16; k++) {
-                    sum += (float)tileA[0][k] * (float)tileB[k][0];
-                }
-                accum += sum;
-            }
-            __syncthreads();
-        }
-        if (threadIdx.x == 0) {  // Only the first thread writes the result
-            C[row * N + col] = accum;
-        }
+        launchWmmaGemmKernel(A, B, C, M, N, K);
     }
 
-    //------------------------------------------------------------------------------
-    // FP8 E5M2 Kernel
-    __global__ void gemm_kernel_fp8_e5m2(const __nv_fp8_e5m2* A, const __nv_fp8_e5m2* B, float* C,
+    void runGemmFP8E5M2(const __nv_fp8_e5m2* A, const __nv_fp8_e5m2* B, float* C,
         int M, int N, int K) {
-        int block_row = blockIdx.y;
-        int block_col = blockIdx.x;
-        int row = block_row * 16;
-        int col = block_col * 16;
-
-        __shared__ __nv_fp8_e5m2 tileA[16][16];
-        __shared__ __nv_fp8_e5m2 tileB[16][16];
-
-        float accum = 0.0f;
-        for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
-            }
-            __syncthreads();
-
-            // For Ada Lovelace architecture, convert fp8 to fp16 and use fp16 tensor cores
-            if (tid == 0) {  // Only one thread computes the result for simplicity
-                float sum = 0.0f;
-                for (int k = 0; k < 16; k++) {
-                    sum += (float)tileA[0][k] * (float)tileB[k][0];
-                }
-                accum += sum;
-            }
-            __syncthreads();
-        }
-        if (threadIdx.x == 0) {  // Only the first thread writes the result
-            C[row * N + col] = accum;
-        }
-    }
-#endif
-
-    //------------------------------------------------------------------------------
-    // FP32 Kernel
-    __global__ void gemm_kernel_fp32(const float* A, const float* B, float* C,
-        int M, int N, int K) {
-        int block_row = blockIdx.y;
-        int block_col = blockIdx.x;
-        int row = block_row * 16;
-        int col = block_col * 16;
-
-        __shared__ float tileA[16][16];
-        __shared__ float tileB[16][16];
-
-        float accum = 0.0f;
-        for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
-            }
-            __syncthreads();
-
-            // Simple scalar implementation for FP32
-            if (tid == 0) {
-                float sum = 0.0f;
-                for (int k = 0; k < 16; k++) {
-                    sum += tileA[0][k] * tileB[k][0];
-                }
-                accum += sum;
-            }
-            __syncthreads();
-        }
-        if (threadIdx.x == 0) {
-            C[row * N + col] = accum;
-        }
-    }
-
-    //------------------------------------------------------------------------------
-    // Wrapper functions: each launches the corresponding kernel over a grid covering the full matrix.
-    // Assumes that M, N, and K are multiples of 16.
-    void runGemmFP16(const __half* d_A, const __half* d_B, float* d_C,
-        int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);  // one warp per block
-        gemm_kernel_fp16 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
-        cudaDeviceSynchronize();
-    }
-
-    void runGemmBF16(const __nv_bfloat16* d_A, const __nv_bfloat16* d_B, float* d_C,
-        int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);
-        gemm_kernel_bf16 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
-        cudaDeviceSynchronize();
-    }
-
-#if _FP8_SUPPORT_
-    void runGemmFP8E4M3(const __nv_fp8_e4m3* d_A, const __nv_fp8_e4m3* d_B, float* d_C,
-        int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);
-        gemm_kernel_fp8_e4m3 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
-        cudaDeviceSynchronize();
-    }
-
-    void runGemmFP8E5M2(const __nv_fp8_e5m2* d_A, const __nv_fp8_e5m2* d_B, float* d_C,
-        int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);
-        gemm_kernel_fp8_e5m2 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
-        cudaDeviceSynchronize();
-    }
-#endif
-
-    void runGemmFP32(const float* d_A, const float* d_B, float* d_C,
-        int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);
-        gemm_kernel_fp32 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
-        cudaDeviceSynchronize();
+        launchWmmaGemmKernel(A, B, C, M, N, K);
     }
 
 } // extern "C"

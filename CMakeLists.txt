@@ -42,7 +42,7 @@ include_directories("src/test")
 FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
 FILE(GLOB Entry_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/entry/*.cpp")
 FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
-FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
+FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/ptxGemm_kernel.cu")
 FILE(GLOB Test_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/test/*.cpp")
 
 # Create the shared library target.
