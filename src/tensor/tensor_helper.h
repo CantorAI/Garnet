@@ -152,7 +152,10 @@ namespace Garnet
                 return sizeof(__half);
             case X::TensorDataType::BFLOAT16:
                 return sizeof(__nv_bfloat16);
-            case X::TensorDataType::FLOAT8:
+            case X::TensorDataType::FLOAT8_E4M3FN:
+            case X::TensorDataType::FLOAT8_E4M3FNUZ:
+            case X::TensorDataType::FLOAT8_E5M2:
+            case X::TensorDataType::FLOAT8_E5M2FNUZ:
                 return sizeof(__nv_fp8_e4m3);
             default:
                 return 0;

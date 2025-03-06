@@ -45,9 +45,21 @@ namespace Garnet
             else if (dtype == "torch.bfloat16") {
                 tensor_data_type = X::TensorDataType::BFLOAT16;
             }
-            else if (dtype.find("torch.float8_") != std::string::npos)
+            else if (dtype.find("torch.float8_e4m3fn") != std::string::npos)
             {
-                tensor_data_type = X::TensorDataType::FLOAT8;
+                tensor_data_type = X::TensorDataType::FLOAT8_E4M3FN;
+            }
+            else if (dtype.find("torch.float8_e4m3fnuz") != std::string::npos)
+            {
+                tensor_data_type = X::TensorDataType::FLOAT8_E4M3FNUZ;
+            }
+            else if (dtype.find("torch.float8_e5m2") != std::string::npos)
+            {
+                tensor_data_type = X::TensorDataType::FLOAT8_E5M2;
+            }
+            else if (dtype.find("torch.float8_e5m2fnuz") != std::string::npos)
+            {
+                tensor_data_type = X::TensorDataType::FLOAT8_E5M2FNUZ;
             }
             // Read shape
             uint64_t num_dims;

@@ -154,14 +154,22 @@ namespace Garnet
                     reinterpret_cast<__nv_bfloat16*>(gpuData2),
                     reinterpret_cast<float*>(gpuResultData), m, k, n);
             }
-            else if (tensor1_type == X::TensorDataType::FLOAT8 
-                && tensor2_type == X::TensorDataType::FLOAT8)
+            else if (tensor1_type == X::TensorDataType::FLOAT8_E4M3FN
+                && tensor2_type == X::TensorDataType::FLOAT8_E4M3FN)
             {
                 runGemmFP8E4M3(
                     reinterpret_cast<__nv_fp8_e4m3*>(gpuData1),
                     reinterpret_cast<__nv_fp8_e4m3*>(gpuData2),
                     reinterpret_cast<float*>(gpuResultData), m, k, n);
-            }
+			}
+			else if (tensor1_type == X::TensorDataType::FLOAT8_E5M2
+				&& tensor2_type == X::TensorDataType::FLOAT8_E5M2)
+			{
+				runGemmFP8E5M2(
+					reinterpret_cast<__nv_fp8_e5m2*>(gpuData1),
+					reinterpret_cast<__nv_fp8_e5m2*>(gpuData2),
+					reinterpret_cast<float*>(gpuResultData), m, k, n);
+			}
             else
             {
                 // Unsupported data type combination
