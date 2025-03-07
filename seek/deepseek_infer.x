@@ -19,7 +19,7 @@ from xlang_os import fs
 #         else:
 #             this.bias = None
 
-#     def forward(self, x):
+#     def forward(x):
 #         this.input = x  # 保存输入用于反向传播
 #         output = np.dot(x, this.weight.T)
 #         if this.bias is not None:
@@ -43,7 +43,7 @@ from xlang_os import fs
 #     _supports_sdpa = True
 #     _supports_cache_class = True
 
-#     def _init_weights(self, module):
+#     def _init_weights(module):
 #         std = this.config.initializer_range
 #         if isinstance(module, nn.Linear):
 #             module.weight.data.normal_(mean=0.0, std=std)
@@ -72,14 +72,13 @@ from xlang_os import fs
 #         # Initialize weights and apply final processing
 #         this.post_init()
 
-#     def get_input_embeddings(self):
+#     def get_input_embeddings():
 #         return this.embed_tokens
 
-#     def set_input_embeddings(self, value):
+#     def set_input_embeddings(value):
 #         this.embed_tokens = value
 
 #     def forward(
-#         self,
 #         input_ids: tensor = None,
 #         attention_mask: tensor = None,
 #         position_ids: tensor = None,
@@ -221,28 +220,25 @@ from xlang_os import fs
 #         # Initialize weights and apply final processing
 #         this.post_init()
 
-#     def get_input_embeddings(self):
+#     def get_input_embeddings():
 #         return this.model.embed_tokens
 
-#     def set_input_embeddings(self, value):
+#     def set_input_embeddings(value):
 #         this.model.embed_tokens = value
 
-#     def get_output_embeddings(self):
+#     def get_output_embeddings():
 #         return this.lm_head
 
-#     def set_output_embeddings(self, new_embeddings):
+#     def set_output_embeddings(new_embeddings):
 #         this.lm_head = new_embeddings
 
-#     def set_decoder(self, decoder):
+#     def set_decoder(decoder):
 #         this.model = decoder
 
-#     def get_decoder(self):
+#     def get_decoder():
 #         return this.model
 
-#     @add_start_docstrings_to_model_forward(Deepseek_INPUTS_DOCSTRING)
-#     @replace_return_docstrings(output_type=CausalLMOutputWithPast, config_class=_CONFIG_FOR_DOC)
 #     def forward(
-#         self,
 #         input_ids: torch.LongTensor = None,
 #         attention_mask: Optional[torch.Tensor] = None,
 #         position_ids: Optional[torch.LongTensor] = None,
@@ -333,7 +329,7 @@ from xlang_os import fs
 #         )
 
 #     def prepare_inputs_for_generation(
-#         self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs
+#         input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs
 #     ):
 #         if past_key_values is not None:
 #             if isinstance(past_key_values, Cache):
@@ -390,7 +386,6 @@ from xlang_os import fs
 #         )
 #         return model_inputs
 
-#     @staticmethod
 #     def _reorder_cache(past_key_values, beam_idx):
 #         reordered_past = ()
 #         for layer_past in past_key_values:
@@ -402,6 +397,50 @@ from xlang_os import fs
 
 #
 
+
+def scaled_dot_product_attention(query_states, key_states, value_states, attn_mask=None, dropout_p=0.0, is_causal=False):
+    """
+    Scaled Dot-Product Attention 的 numpy 实现
+    :param query_states: 查询矩阵，形状为 (batch_size, seq_len_q, d_k)
+    :param key_states: 键矩阵，形状为 (batch_size, seq_len_k, d_k)
+    :param value_states: 值矩阵，形状为 (batch_size, seq_len_k, d_v)
+    :param attn_mask: 注意力掩码，形状为 (batch_size, seq_len_q, seq_len_k)
+    :param dropout_p: Dropout 概率（未实现）
+    :param is_causal: 是否使用因果掩码
+    :return: 注意力输出，形状为 (batch_size, seq_len_q, d_v)
+    """
+    # 获取键向量的维度
+    d_k = key_states.shape[-1]
+
+    # 计算注意力分数
+    attn_scores = np.matmul(query_states, key_states.transpose(0, 2, 1)) / np.sqrt(d_k)
+
+    # 应用因果掩码（如果需要）
+    if is_causal:
+        seq_len_q, seq_len_k = query_states.shape[1], key_states.shape[1]
+        causal_mask = np.triu(np.ones((seq_len_q, seq_len_k)), k=1) * -1e9  # 上三角掩码
+        attn_scores = attn_scores + causal_mask[None, :, :]  # 广播到 batch 维度
+
+    # 应用注意力掩码（如果提供）
+    if attn_mask is not None:
+        attn_scores = attn_scores + attn_mask
+
+    # 计算注意力权重
+    attn_weights = np.exp(attn_scores - np.max(attn_scores, axis=-1, keepdims=True))  # 数值稳定性
+    attn_weights = attn_weights / np.sum(attn_weights, axis=-1, keepdims=True)
+
+    # 加权求和
+    output = np.matmul(attn_weights, value_states)
+
+    return output
+
+def apply_rotary_pos_emb(q, k, cos, sin, position_ids, unsqueeze_dim=1):
+    cos = cos[position_ids].unsqueeze(unsqueeze_dim)
+    sin = sin[position_ids].unsqueeze(unsqueeze_dim)
+    q_embed = (q * cos) + (rotate_half(q) * sin)
+    k_embed = (k * cos) + (rotate_half(k) * sin)
+    return q_embed, k_embed
+
 # text = "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors. The output is"
 # inputs = tokenizer(text, return_tensors="pt")
 # inputs_data = inputs.copy().data
@@ -410,7 +449,8 @@ from xlang_os import fs
 # with open('inputs_data.json', 'w') as f:
 #     json.dump(inputs_data, f, indent=4)
 
-def load_inputs(filename):
+### 1. loading input tokens
+def load_json(filename):
     fileObj = fs.File(filename,"r")
     content = fileObj.read(fileObj.size)
     fileObj.close()
@@ -422,8 +462,92 @@ inputs_filename='./data/inputs_data.json'
 inputs = load_inputs(inputs_filename)
 print("inputs:",inputs)
 
+
+### 2. loading model weights
+
 m001 = garnet.loadModel("C:/df/moe-16b/model-00001-of-00007.bin")
 
+def ones(n):
+    for i in range(n):
+	    f_all+=test_fn.taskrun(pool,100+i*10,100)
 
+### 3. forward
+config = load_json('C:/df/moe-16b/config.json')
+num_hidden_layers = config['num_hidden_layers']
+vocab_size = config['vocab_size']
+hidden_size = config['hidden_size']
+attention_dropout = config['attention_dropout']
+num_heads = config['num_attention_heads']
+head_dim = hidden_size // self.num_heads
+num_key_value_heads = config['num_key_value_heads']
+num_key_value_groups = self.num_heads // self.num_key_value_heads
+max_position_embeddings = config['max_position_embeddings']
+rope_theta = config['rope_theta']
+
+
+input_ids = tensor(inputs)
+position_ids =tensor([[ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17,
+    18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+    36, 37, 38, 39]])
+attention_mask = tensor([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+
+model_embed_tokens_weight = m001['model.embed_tokens.weight']
+#embed_tokens = nn.Embedding(vocab_size, hidden_size, 0)
+inputs_embeds = model_embed_tokens_weight[input_ids]
+
+hidden_states = inputs_embeds
+for layer_idx in range(num_hidden_layers):
+    input_layernorm =  m001[f'model.layers.{layer_idx}.input_layernorm.weight']
+    residual = hidden_states
+    hidden_states = input_layernorm(hidden_states)
+    # Self Attention
+    #self_attn =  m001[f'model.layers.{i}.input_layernorm.weight']
+    bsz, q_len, _ = hidden_states.size()
+    q_proj = m001[f'model.layers.{layer_idx}.self_attn.q_proj.weight']
+    k_proj = m001[f'model.layers.{layer_idx}.self_attn.k_proj.weight']
+    v_proj = m001[f'model.layers.{layer_idx}.self_attn.v_proj.weight']
+    o_proj = m001[f'model.layers.{layer_idx}.self_attn.o_proj.weight']
+    hidden_states = self_attn(hidden_states)
+    query_states = query_states.view(bsz, q_len, num_heads, head_dim).transpose(1, 2)
+    key_states = key_states.view(bsz, q_len, num_key_value_heads, head_dim).transpose(1, 2)
+    value_states = value_states.view(bsz, q_len, num_key_value_heads, head_dim).transpose(1, 2)
+
+    kv_seq_len = key_states.shape[-2]
+    if past_key_value is not None:
+        kv_seq_len += past_key_value.get_usable_length(kv_seq_len, layer_idx)
+    
+    cos, sin = rotary_emb(value_states, seq_len=kv_seq_len)
+
+    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+
+    key_states = repeat_kv(key_states, num_key_value_groups)
+    value_states = repeat_kv(value_states, num_key_value_groups)
+
+    attn_output = scaled_dot_product_attention(
+        query_states,
+        key_states,
+        value_states,
+        attn_mask=attention_mask,
+        dropout_p=0.0,
+        is_causal= attention_mask is None and q_len > 1
+    )
+
+    attn_output = attn_output.transpose(1, 2).contiguous()
+    attn_output = attn_output.reshape(bsz, q_len, hidden_size)
+
+    attn_output = o_proj(attn_output)
+    hidden_states = attn_output
+
+
+
+    hidden_states = residual + hidden_states
+    # Fully Connected
+    residual = hidden_states
+    hidden_states = post_attention_layernorm(hidden_states)
+    hidden_states = mlp(hidden_states)
+    hidden_states = residual + hidden_states
+
+outputs = this_norm(hidden_states)
 print('hello1', m001)
 print('hello2')
