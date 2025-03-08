@@ -98,12 +98,11 @@ namespace Garnet
 
     X::Value GarnetAPI::LoadModel(std::string modelPath)
     {
-        X::Dict model;
+        X::Dict dictModel;
         namespace fs = std::filesystem;
 
-        // Static variables to store tokenizer paths
-        static std::string tokenizerJsonPath;
-        static std::string tokenizerConfigJsonPath;
+        std::string tokenizerJsonPath;
+        std::string tokenizerConfigJsonPath;
 
         // Check if the path contains a wildcard ('*' or '?')
         if (modelPath.find('*') != std::string::npos || modelPath.find('?') != std::string::npos)
@@ -142,7 +141,7 @@ namespace Garnet
                     if (std::regex_match(filename, fileRegex))
                     {
                         // Append the model data from each matching file.
-                        LoadModelFromFile(entry.path().string(), model);
+                        LoadModelFromFile(entry.path().string(), dictModel);
                     }
                 }
             }
@@ -170,7 +169,7 @@ namespace Garnet
                     if (extension == ".bin")
                     {
                         // Load .bin file
-                        LoadModelFromFile(entryPath.string(), model);
+                        LoadModelFromFile(entryPath.string(), dictModel);
                     }
                     else if (filename == "tokenizer.json")
                     {
@@ -187,11 +186,14 @@ namespace Garnet
             else
             {
                 // Single file
-                LoadModelFromFile(modelPath, model);
+                LoadModelFromFile(modelPath, dictModel);
             }
         }
 
-        return model;
+        X::XPackageValue<Model> varModel;
+        Model& model = *varModel;
+		model.SetInfo(modelPath, tokenizerJsonPath, tokenizerConfigJsonPath, dictModel);
+        return varModel;
     }
 
     void GarnetAPI::RunTest(X::XRuntime* rt, X::XObj* pContext,
