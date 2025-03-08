@@ -1,4 +1,5 @@
 from garnet import garnet
+garnet.runTest()
 T = garnet.tensor()
 # modelPath = "D:/CantorAIProjects/DeepSeek-V3/DeepSeek-V3-Base/model_weights_from_safetensor.bin"
 modelPath = "D:/CantorAIProjects/DeepSeek-V3/deepseek-moe-16b-base/*.bin"

@@ -32,16 +32,20 @@ include_directories(${xlang_sdk_folder})
 
 include_directories(${CUDA_INCLUDE_DIRS})
 # Include project directories.
+include_directories("src/common")
 include_directories("src/entry")
 include_directories("src/include")
 include_directories("src/model")
 include_directories("src/tensor")
 include_directories("src/test")
+include_directories("src/log")
 
 # Use absolute paths for source files.
 FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
+FILE(GLOB Common_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp")
 FILE(GLOB Entry_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/entry/*.cpp")
 FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
+FILE(GLOB Log_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/log/*.cpp")
 FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/ptxGemm_kernel.cu")
 FILE(GLOB Test_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/test/*.cpp")
 
@@ -53,6 +57,8 @@ add_library(${PROJECT_NAME}
     ${Tensor_SRC}
     ${Cuda_SRC}
     ${Test_SRC}
+    ${Common_SRC}
+    ${Log_SRC}
 )
 
 # On Windows, link against cudart (the CUDA runtime) explicitly.

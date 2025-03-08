@@ -10,6 +10,6 @@ namespace Garnet
 		X::Value mModel;//a dictionary to store {key:tersor}
 	public:
 		BEGIN_PACKAGE(Model)
-		END_PACKAGE
-	}
+			END_PACKAGE
+	};
 }
