@@ -96,6 +96,7 @@ namespace Garnet
         return true;
     }
 
+
     X::Value GarnetAPI::LoadModel(std::string modelPath)
     {
         X::Dict dictModel;
@@ -103,7 +104,7 @@ namespace Garnet
 
         std::string tokenizerJsonPath;
         std::string tokenizerConfigJsonPath;
-
+        std::string strModelPath;
         // Check if the path contains a wildcard ('*' or '?')
         if (modelPath.find('*') != std::string::npos || modelPath.find('?') != std::string::npos)
         {
@@ -113,6 +114,7 @@ namespace Garnet
             if (directory.empty()) {
                 directory = fs::current_path();
             }
+			strModelPath = directory.string();
             std::string pattern = pathPattern.filename().string();
 
             // Convert wildcard pattern to a regular expression.
@@ -153,6 +155,7 @@ namespace Garnet
 
             if (fs::is_directory(path))
             {
+				strModelPath = path.string();
                 // Reset tokenizer paths
                 tokenizerJsonPath = "";
                 tokenizerConfigJsonPath = "";
@@ -186,13 +189,16 @@ namespace Garnet
             else
             {
                 // Single file
+                fs::path fsPath(modelPath);
+                fs::path directory = fsPath.parent_path();
+                strModelPath = directory.string();
                 LoadModelFromFile(modelPath, dictModel);
             }
         }
 
         X::XPackageValue<Model> varModel;
         Model& model = *varModel;
-		model.SetInfo(modelPath, tokenizerJsonPath, tokenizerConfigJsonPath, dictModel);
+		model.SetInfo(strModelPath, tokenizerJsonPath, tokenizerConfigJsonPath, dictModel);
         return varModel;
     }
 

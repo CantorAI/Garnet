@@ -11,9 +11,12 @@ namespace Garnet
 		std::string mModelPath;
 		std::string mTokenizerJsonPath;
 		std::string mTokenizerConfigJsonPath;
+
+		X::Value mTokenizer;
 	public:
 		BEGIN_PACKAGE(Model)
 			APISET().SetAccessor(&Model::Access);
+			APISET().AddVarFunc("tokenizer", &Model::Tokenizer);
 		END_PACKAGE
 
 		inline void SetInfo(
@@ -28,5 +31,7 @@ namespace Garnet
 			mTokenizerConfigJsonPath = tokenizerConfigJsonPath;
 		}
 		X::Value Access(X::Port::vector<X::Value>& IdxAry);
+		void Tokenizer(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 	};
 }
