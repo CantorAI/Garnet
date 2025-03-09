@@ -1,4 +1,3 @@
-from transformers import AutoModel
 import torch
 from tqdm import tqdm
 import os
@@ -32,4 +31,4 @@ def convert(src_path):
 
 if __name__ == "__main__":
     #check(r'G:\deepseek\org', 'model-00163-of-000163.safetensors')
-    convert('C:/df/moe-16b')
+    convert("D:\\CantorAIProjects\\DeepSeek-V3\\deepseek-moe-16b-base")

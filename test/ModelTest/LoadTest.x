@@ -8,8 +8,9 @@ def softmax(m):
 model_embed_tokens_weight = m001["model.embed_tokens.weight"]
 model_layers_0_input_layernorm_weight = m001["model.layers.0.input_layernorm.weight"]
 Y = model_embed_tokens_weight*model_layers_0_input_layernorm_weight
+z = Y+10
 
-y_graph = T.graph(Y)
+y_graph = T.graph(Z)
 
 y_graph.run()
 
