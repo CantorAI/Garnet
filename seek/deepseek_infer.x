@@ -3,6 +3,8 @@ import CpuTensor as T
 import json
 from xlang_os import fs
 
+import numpy as np
+
 # class Linear:
 #     def Linear(in_features, out_features, bias=True):
 #         this.in_features = in_features
@@ -397,40 +399,30 @@ from xlang_os import fs
 
 #
 
-
 def scaled_dot_product_attention(query_states, key_states, value_states, attn_mask=None, dropout_p=0.0, is_causal=False):
-    """
-    Scaled Dot-Product Attention 的 numpy 实现
-    :param query_states: 查询矩阵，形状为 (batch_size, seq_len_q, d_k)
-    :param key_states: 键矩阵，形状为 (batch_size, seq_len_k, d_k)
-    :param value_states: 值矩阵，形状为 (batch_size, seq_len_k, d_v)
-    :param attn_mask: 注意力掩码，形状为 (batch_size, seq_len_q, seq_len_k)
-    :param dropout_p: Dropout 概率（未实现）
-    :param is_causal: 是否使用因果掩码
-    :return: 注意力输出，形状为 (batch_size, seq_len_q, d_v)
-    """
     # 获取键向量的维度
     d_k = key_states.shape[-1]
 
-    # 计算注意力分数
+    # # 计算注意力分数
     attn_scores = np.matmul(query_states, key_states.transpose(0, 2, 1)) / np.sqrt(d_k)
 
-    # 应用因果掩码（如果需要）
-    if is_causal:
-        seq_len_q, seq_len_k = query_states.shape[1], key_states.shape[1]
-        causal_mask = np.triu(np.ones((seq_len_q, seq_len_k)), k=1) * -1e9  # 上三角掩码
-        attn_scores = attn_scores + causal_mask[None, :, :]  # 广播到 batch 维度
+    # # 应用因果掩码（如果需要）
+    # if is_causal:
+    #     seq_len_q, seq_len_k = query_states.shape[1], key_states.shape[1]
+    #     causal_mask = np.triu(np.ones((seq_len_q, seq_len_k)), k=1) * -1e9  # 上三角掩码
+    #     attn_scores = attn_scores + causal_mask[None, :, :]  # 广播到 batch 维度
 
-    # 应用注意力掩码（如果提供）
-    if attn_mask is not None:
-        attn_scores = attn_scores + attn_mask
+    # # 应用注意力掩码（如果提供）
+    # if attn_mask is not None:
+    #     attn_scores = attn_scores + attn_mask
 
-    # 计算注意力权重
+    # # 计算注意力权重
     attn_weights = np.exp(attn_scores - np.max(attn_scores, axis=-1, keepdims=True))  # 数值稳定性
     attn_weights = attn_weights / np.sum(attn_weights, axis=-1, keepdims=True)
 
-    # 加权求和
+    # # 加权求和
     output = np.matmul(attn_weights, value_states)
+    output = None
 
     return output
 
@@ -440,6 +432,96 @@ def apply_rotary_pos_emb(q, k, cos, sin, position_ids, unsqueeze_dim=1):
     q_embed = (q * cos) + (rotate_half(q) * sin)
     k_embed = (k * cos) + (rotate_half(k) * sin)
     return q_embed, k_embed
+
+
+def repeat_kv(hidden_states, n_rep):
+    batch, num_key_value_heads, slen, head_dim = hidden_states.shape
+    hidden_states = np.expand_dims(hidden_states, axis=2)  # 添加第3维 (None)
+    hidden_states = np.broadcast_to(hidden_states, (batch, num_key_value_heads, n_rep, slen, head_dim))
+    return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
+
+
+# class DeepseekRMSNorm():
+#     def DeepseekRMSNorm(hidden_size, eps=1e-6):
+#         self.weight = nn.Parameter(torch.ones(hidden_size))
+#         self.variance_epsilon = eps
+#     def forward(self, hidden_states):
+#         input_dtype = hidden_states.dtype
+#         hidden_states = hidden_states.to(torch.float32)
+#         variance = hidden_states.pow(2).mean(-1, keepdim=True)
+#         hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
+#         return self.weight * hidden_states.to(input_dtype)
+def deepseekRMSNorm(norm_weight, hidden_states):
+    variance_epsilon = 0.000001#1e-6
+    input_dtype = np.float16  # 假设原始数据类型是 float16
+    hidden_states_f32 = hidden_states.astype(np.float32)
+    variance = np.mean(hidden_states_f32 ** 2, axis=-1, keepdims=True)
+    hidden_states_norm = hidden_states_f32 * (1 / np.sqrt(variance + variance_epsilon))
+    hidden_states_final = norm_weight * hidden_states_norm.astype(input_dtype)
+    return hidden_states_final
+
+class DeepseekMLP:
+    gate_proj
+    up_proj
+    down_proj
+    act_fn
+    def DeepseekMLP(cfg, weight_file,layer_idx):
+        this.gate_proj = weight_file[f'model.layers.{layer_idx}.mlp.gate_proj.weight']
+        this.up_proj = weight_file[f'model.layers.{layer_idx}.mlp.up_proj.weight']
+        this.down_proj = weight_file[f'model.layers.{layer_idx}.mlp.down_proj.weight']
+        this.act_fn = ACT2FN[config.hidden_act]
+    def deepseekMLP():
+        down_proj = this.down_proj(this.act_fn(this.gate_proj(x)) * this.up_proj(x))
+        return down_proj
+
+
+class DeepseekMoE:
+    num_experts_per_tok
+    experts
+    gate
+    shared_experts
+    def DeepseekMoE(cfg,weight_file, layer_idx):
+        this.num_experts_per_tok = config.num_experts_per_tok
+        moe_intermediate_size = config['moe_intermediate_size']
+        n_shared_experts = config['n_shared_experts']
+        this.experts = nn.ModuleList([DeepseekMLP(cfg, intermediate_size = moe_intermediate_size, layer_idx) for i in range(config.n_routed_experts)])
+        this.gate = MoEGate(cfg)
+        intermediate_size = moe_intermediate_size * n_shared_experts
+        this.shared_experts = DeepseekMLP(cfg=cfg, intermediate_size = intermediate_size,layer_idx)
+
+    def moe_infer_numpy(x, flat_expert_indices, flat_expert_weights):
+        expert_cache = np.zeros_like(x)
+        
+        idxs = flat_expert_indices.argsort()
+        expert_token_counts = np.bincount(flat_expert_indices, minlength=self.num_experts)
+        tokens_per_expert = expert_token_counts.cumsum()
+        token_idxs = idxs // this.num_experts_per_tok
+        for i in range(this.num_experts):
+            start_idx = 0 if i == 0 else tokens_per_expert[i-1]
+            end_idx = tokens_per_expert[i]
+            if start_idx >= end_idx:
+                continue  # 当前专家无 token 需要处理
+            exp_token_idx = token_idxs[start_idx:end_idx]
+            expert_tokens = x[exp_token_idx]
+            expert_out = this.experts[i](expert_tokens)
+            expert_out *= flat_expert_weights[idxs[start_idx:end_idx], None]  # 保持维度
+            np.add.at(expert_cache, exp_token_idx, expert_out)
+        return expert_cache
+
+    def deepseekMoE(hidden_states):
+        
+        # forward
+        identity = hidden_states
+        orig_shape = hidden_states.shape
+        topk_idx, topk_weight, aux_loss = self.gate(hidden_states)
+        hidden_states = hidden_states.reshape(-1, hidden_states.shape[-1])
+        flat_topk_idx = topk_idx.view(-1)
+        y = self.moe_infer(hidden_states, flat_topk_idx, topk_weight.view(-1, 1)).view(*orig_shape)
+        y = y + self.shared_experts(identity)
+        return y
+
+
+
 
 # text = "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors. The output is"
 # inputs = tokenizer(text, return_tensors="pt")
@@ -459,17 +541,12 @@ def load_json(filename):
     return inputs
 
 inputs_filename='./data/inputs_data.json'
-inputs = load_inputs(inputs_filename)
+inputs = load_json(inputs_filename)
 print("inputs:",inputs)
 
 
 ### 2. loading model weights
-
 m001 = garnet.loadModel("C:/df/moe-16b/model-00001-of-00007.bin")
-
-def ones(n):
-    for i in range(n):
-	    f_all+=test_fn.taskrun(pool,100+i*10,100)
 
 ### 3. forward
 config = load_json('C:/df/moe-16b/config.json')
@@ -483,9 +560,11 @@ num_key_value_heads = config['num_key_value_heads']
 num_key_value_groups = self.num_heads // self.num_key_value_heads
 max_position_embeddings = config['max_position_embeddings']
 rope_theta = config['rope_theta']
+first_k_dense_replace=config['first_k_dense_replace']
+moe_layer_freq = config['moe_layer_freq']
 
 
-input_ids = tensor(inputs)
+input_ids = tensor(inputs['input_ids'])
 position_ids =tensor([[ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17,
     18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
     36, 37, 38, 39]])
@@ -500,7 +579,9 @@ hidden_states = inputs_embeds
 for layer_idx in range(num_hidden_layers):
     input_layernorm =  m001[f'model.layers.{layer_idx}.input_layernorm.weight']
     residual = hidden_states
-    hidden_states = input_layernorm(hidden_states)
+    ###########hidden_states = input_layernorm(hidden_states)
+    input_layernorm_weight = m001[f'model.layers.{layer_idx}.input_layernorm.weight']
+    hidden_states = deepseekRMSNorm(input_layernorm_weight, hidden_states)
     # Self Attention
     #self_attn =  m001[f'model.layers.{i}.input_layernorm.weight']
     bsz, q_len, _ = hidden_states.size()
@@ -508,17 +589,23 @@ for layer_idx in range(num_hidden_layers):
     k_proj = m001[f'model.layers.{layer_idx}.self_attn.k_proj.weight']
     v_proj = m001[f'model.layers.{layer_idx}.self_attn.v_proj.weight']
     o_proj = m001[f'model.layers.{layer_idx}.self_attn.o_proj.weight']
-    hidden_states = self_attn(hidden_states)
-    query_states = query_states.view(bsz, q_len, num_heads, head_dim).transpose(1, 2)
-    key_states = key_states.view(bsz, q_len, num_key_value_heads, head_dim).transpose(1, 2)
-    value_states = value_states.view(bsz, q_len, num_key_value_heads, head_dim).transpose(1, 2)
+    query_states = q_proj(hidden_states)
+    key_states = k_proj(hidden_states)
+    value_states = v_proj(hidden_states)
+
+    # query_states = query_states.view(bsz, q_len, num_heads, head_dim).transpose(1, 2)
+    # key_states = key_states.view(bsz, q_len, num_key_value_heads, head_dim).transpose(1, 2)
+    # value_states = value_states.view(bsz, q_len, num_key_value_heads, head_dim).transpose(1, 2)
+    query_states = query_states.reshape(bsz, q_len, num_heads, head_dim).swapaxes(1, 2)
+    key_states = key_states.reshape(bsz, q_len, num_key_value_heads, head_dim).swapaxes(1, 2)
+    value_states = value_states.reshape(bsz, q_len, num_key_value_heads, head_dim).swapaxes(1, 2)
 
     kv_seq_len = key_states.shape[-2]
     if past_key_value is not None:
         kv_seq_len += past_key_value.get_usable_length(kv_seq_len, layer_idx)
     
-    cos, sin = rotary_emb(value_states, seq_len=kv_seq_len)
-
+    # cos, sin = rotary_emb(value_states, seq_len=kv_seq_len)
+    cos, sin = 0, 0
     query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
 
     key_states = repeat_kv(key_states, num_key_value_groups)
@@ -533,21 +620,41 @@ for layer_idx in range(num_hidden_layers):
         is_causal= attention_mask is None and q_len > 1
     )
 
-    attn_output = attn_output.transpose(1, 2).contiguous()
+    # attn_output = attn_output.transpose(1, 2).contiguous()
+    # attn_output = attn_output.reshape(bsz, q_len, hidden_size)
+    attn_output = attn_output.swapaxes(1, 2)  # 交换维度 1 和 2
+    attn_output = np.ascontiguousarray(attn_output)  # 确保内存连续性（可选）
     attn_output = attn_output.reshape(bsz, q_len, hidden_size)
 
     attn_output = o_proj(attn_output)
     hidden_states = attn_output
 
-
-
     hidden_states = residual + hidden_states
     # Fully Connected
     residual = hidden_states
-    hidden_states = post_attention_layernorm(hidden_states)
-    hidden_states = mlp(hidden_states)
+    #hidden_states = post_attention_layernorm(hidden_states)
+    post_attention_layernorm_weight = m001[f'model.layers.{layer_idx}.post_attention_layernorm.weight']
+    hidden_states = deepseekRMSNorm(post_attention_layernorm_weight, hidden_states)
+    #hidden_states = mlp(hidden_states)
+    # self.mlp = DeepseekMoE(config) if (config.n_routed_experts is not None and  \
+    #                                 layer_idx >= config.first_k_dense_replace and layer_idx % config.moe_layer_freq == 0) \
+    #                             else DeepseekMLP(config)
+    if (n_routed_experts is not None and  layer_idx >= first_k_dense_replace and layer_idx % moe_layer_freq == 0):
+        deepseekMoE = DeepseekMoE(config, m001, layer_idx)
+        hidden_states = deepseekMoE(hidden_states)
+    else:
+        deepseekMoE = DeepseekMLP(config, m001, layer_idx)
+        gate_proj = m001[f'model.layers.{layer_idx}.mlp.gate_proj.weight']
+        up_proj = m001[f'model.layers.{layer_idx}.mlp.up_proj.weight']
+        down_proj = m001[f'model.layers.{layer_idx}.mlp.down_proj.weight']
+        act_fn = ACT2FN[config.hidden_act]
+        hidden_states = deepseekMLP(hidden_states)
     hidden_states = residual + hidden_states
 
-outputs = this_norm(hidden_states)
+#outputs = this_norm(hidden_states)
+
+y_graph = T.graph(outputs)
+y_graph.run()
+
 print('hello1', m001)
 print('hello2')
