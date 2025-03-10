@@ -23,8 +23,10 @@ namespace Garnet
         X::PyObject pyObjAttentionMask(py_attention_mask);
 		X::Value attention_mask = pyObjAttentionMask->ToXlang();
         X::Tensor tensorIds;
+		tensorIds->SetDataType(X::TensorDataType::INT);
         tensorIds->Create(input_ids);
         X::Tensor tensorAttentionMask;
+        tensorAttentionMask->SetDataType(X::TensorDataType::INT);
         tensorAttentionMask->Create(attention_mask);
         X::Dict dictInputs;
         dictInputs->Set("input_ids", tensorIds);

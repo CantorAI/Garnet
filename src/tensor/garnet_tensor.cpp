@@ -14,6 +14,14 @@ extern "C" {
     void runGemmFP32(const float* d_A, const float* d_B, float* d_C, int M, int N, int K);
 }
 
+extern "C" {
+    void runGatherKernelFloat(const float* input, const int* indices, float* output, int M, int N, int numIndices);
+    void runGatherKernelFP16(const __half* input, const int* indices, __half* output, int M, int N, int numIndices);
+    void runGatherKernelBF16(const __nv_bfloat16* input, const int* indices, __nv_bfloat16* output, int M, int N, int numIndices);
+    void runGatherKernelFP8E4M3(const __nv_fp8_e4m3* input, const int* indices, __nv_fp8_e4m3* output, int M, int N, int numIndices);
+    void runGatherKernelFP8E5M2(const __nv_fp8_e5m2* input, const int* indices, __nv_fp8_e5m2* output, int M, int N, int numIndices);
+}
+
 namespace Garnet
 {
     void GarnetTensor::Multiply(X::ARGS& params, X::KWARGS& kwParams,
@@ -373,4 +381,155 @@ namespace Garnet
 		X::Value input, X::Value& retVal)
 	{
 	}
+    void GarnetTensor::Gather(X::ARGS& params, X::KWARGS& kwParams,
+        X::Value input1, X::Value input2, X::Value& retVal)
+    {
+        // Ensure both inputs are tensors.
+        bool isTensor1 = input1.IsTensor();
+        bool isTensor2 = input2.IsTensor();
+        if (!isTensor1 || !isTensor2)
+        {
+            retVal = X::Value();
+            return;
+        }
+
+        // input1 is the embedding matrix and must be 2D.
+        X::Tensor tensor = input1;
+        if (tensor->GetDimCount() != 2)
+        {
+            retVal = X::Value();
+            return;
+        }
+
+        // input2 is the indices tensor and we require it be 1D.
+        X::Tensor indicesTensor = input2;
+        if (indicesTensor->GetDimCount() != 1)
+        {
+            retVal = X::Value();
+            return;
+        }
+
+        // Let N be the number of rows (vocabulary size) and M be the embedding dimension.
+        int N = tensor->GetDimSize(0);
+        int M = tensor->GetDimSize(1);
+        int numIndices = indicesTensor->GetDimSize(0);
+
+        // The result of gathering will be a matrix of shape (numIndices, M)
+        X::Port::vector<int> resultDims(2);
+        resultDims.push_back(numIndices);
+        resultDims.push_back(M);
+
+        // Ensure GPU memory is allocated for both tensors.
+        TensorOpStatus status = TensorHelper::EnsureGPUMemory(tensor);
+        if (status != TensorOpStatus::Success)
+        {
+            retVal = X::Value();
+            return;
+        }
+        status = TensorHelper::EnsureGPUMemory(indicesTensor);
+        if (status != TensorOpStatus::Success)
+        {
+            retVal = X::Value();
+            return;
+        }
+
+        // Check that both tensors are on the same device.
+        std::string device1 = TensorHelper::GetDeviceName(tensor);
+        std::string device2 = TensorHelper::GetDeviceName(indicesTensor);
+        if (!device1.empty() && !device2.empty() && device1 != device2)
+        {
+            retVal = X::Value();
+            return;
+        }
+        std::string deviceName = !device1.empty() ? device1 : (!device2.empty() ? device2 : "cuda");
+
+        // Create the result tensor.
+        X::XPackageValue<TensorDescriptor> resultDescValue;
+        TensorDescriptor& resultDesc = *resultDescValue;
+        resultDesc.mDeviceName = deviceName;
+
+        // Use the provided result tensor (do not create a new one).
+        X::XTensor* pRetTensor = dynamic_cast<X::XTensor*>(retVal.GetObj());
+        if (pRetTensor == nullptr)
+        {
+            retVal = X::Value();
+            return;
+        }
+        pRetTensor->SetDataType(tensor->GetDataType());
+        pRetTensor->SetShape(resultDims);
+        X::Value initData;
+        pRetTensor->Create(initData);
+        X::Tensor resultTensor(pRetTensor);
+        status = TensorHelper::EnsureGPUMemory(resultTensor);
+        if (status != TensorOpStatus::Success)
+        {
+            retVal = X::Value();
+            return;
+        }
+
+        void* gpuResultData = TensorHelper::GetGPUMemory(resultTensor);
+        void* gpuData = TensorHelper::GetGPUMemory(tensor);
+        void* gpuIndices = TensorHelper::GetGPUMemory(indicesTensor);
+
+        // Dispatch to the appropriate gather kernel based on the tensor's data type.
+        X::TensorDataType tensorType = tensor->GetDataType();
+        if (tensorType == X::TensorDataType::FLOAT32)
+        {
+            runGatherKernelFloat(
+                reinterpret_cast<float*>(gpuData),
+                reinterpret_cast<int*>(gpuIndices),
+                reinterpret_cast<float*>(gpuResultData),
+                M, N, numIndices);
+        }
+        else if (tensorType == X::TensorDataType::FLOAT16)
+        {
+            runGatherKernelFP16(
+                reinterpret_cast<__half*>(gpuData),
+                reinterpret_cast<int*>(gpuIndices),
+                reinterpret_cast<__half*>(gpuResultData),
+                M, N, numIndices);
+        }
+        else if (tensorType == X::TensorDataType::BFLOAT16)
+        {
+            runGatherKernelBF16(
+                reinterpret_cast<__nv_bfloat16*>(gpuData),
+                reinterpret_cast<int*>(gpuIndices),
+                reinterpret_cast<__nv_bfloat16*>(gpuResultData),
+                M, N, numIndices);
+        }
+        else if (tensorType == X::TensorDataType::FLOAT8_E4M3FN)
+        {
+            runGatherKernelFP8E4M3(
+                reinterpret_cast<__nv_fp8_e4m3*>(gpuData),
+                reinterpret_cast<int*>(gpuIndices),
+                reinterpret_cast<__nv_fp8_e4m3*>(gpuResultData),
+                M, N, numIndices);
+        }
+        else if (tensorType == X::TensorDataType::FLOAT8_E5M2)
+        {
+            runGatherKernelFP8E5M2(
+                reinterpret_cast<__nv_fp8_e5m2*>(gpuData),
+                reinterpret_cast<int*>(gpuIndices),
+                reinterpret_cast<__nv_fp8_e5m2*>(gpuResultData),
+                M, N, numIndices);
+        }
+        else
+        {
+            // Unsupported type.
+            cudaFree(gpuResultData);
+            retVal = X::Value();
+            return;
+        }
+
+        // Copy the result from GPU to CPU.
+        status = TensorHelper::CopyResultFromGPU(resultTensor);
+        if (status != TensorOpStatus::Success)
+        {
+            cudaFree(gpuResultData);
+            retVal = X::Value();
+            return;
+        }
+
+        retVal = X::Value(resultTensor);
+    }
 }

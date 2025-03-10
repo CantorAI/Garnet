@@ -17,6 +17,8 @@ namespace Garnet
 		BEGIN_PACKAGE(Model)
 			APISET().SetAccessor(&Model::Access);
 			APISET().AddVarFunc("tokenizer", &Model::Tokenizer);
+			APISET().AddProp0("weights", &Model::mModel);
+			APISET().AddPropWithType<std::string>("modelPath", &Model::mModelPath);
 		END_PACKAGE
 
 		inline void SetInfo(
