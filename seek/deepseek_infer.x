@@ -404,8 +404,11 @@ def scaled_dot_product_attention(query_states, key_states, value_states, attn_ma
     d_k = key_states.shape[-1]
 
     # # 计算注意力分数
-    attn_scores = np.matmul(query_states, key_states.transpose(0, 2, 1)) / np.sqrt(d_k)
-
+    #attn_scores = np.matmul(query_states, key_states.transpose(0, 2, 1)) / np.sqrt(d_k)
+    attn_scores = query_states* T.matmul() * key_states.transpose(0, 2, 1)
+    sqrt1= d_k * T.sqrt()
+    attn_scores1 = attn_scores / sqrt1
+    
     # # 应用因果掩码（如果需要）
     # if is_causal:
     #     seq_len_q, seq_len_k = query_states.shape[1], key_states.shape[1]
@@ -417,13 +420,14 @@ def scaled_dot_product_attention(query_states, key_states, value_states, attn_ma
     #     attn_scores = attn_scores + attn_mask
 
     # # 计算注意力权重
-    attn_weights = np.exp(attn_scores - np.max(attn_scores, axis=-1, keepdims=True))  # 数值稳定性
-    attn_weights = attn_weights / np.sum(attn_weights, axis=-1, keepdims=True)
+    #attn_weights = np.exp(attn_scores - np.max(attn_scores, axis=-1, keepdims=True))  # 数值稳定性
+    #attn_weights = attn_weights / np.sum(attn_weights, axis=-1, keepdims=True)
+    attn_weights = attn_scores1 * T.attn_weight()
 
     # # 加权求和
-    output = np.matmul(attn_weights, value_states)
-    output = None
-
+    #output = np.matmul(attn_weights, value_states)
+    output = attn_weights * value_states
+    
     return output
 
 def apply_rotary_pos_emb(q, k, cos, sin, position_ids, unsqueeze_dim=1):
@@ -532,21 +536,16 @@ class DeepseekMoE:
 #     json.dump(inputs_data, f, indent=4)
 
 ### 1. loading input tokens
-def load_json(filename):
-    fileObj = fs.File(filename,"r")
-    content = fileObj.read(fileObj.size)
-    fileObj.close()
-    #print(content)
-    inputs = json.loads(content,normalize=True)
-    return inputs
-
-inputs_filename='./data/inputs_data.json'
-inputs = load_json(inputs_filename)
-print("inputs:",inputs)
-
-
-### 2. loading model weights
-m001 = garnet.loadModel("C:/df/moe-16b/model-00001-of-00007.bin")
+from garnet import garnet
+T = garnet.tensor()
+#garnet.cantor = cantor
+modelPath = "C:/df/moe-16b/*.bin"
+model = garnet.loadModel(modelPath)
+text = "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors. The output is"
+inputs = model.tokenizer(text, return_tensors = "pt")
+input_ids = inputs.input_ids
+attention_mask = inputs.attention_mask
+#print(inputs)
 
 ### 3. forward
 config = load_json('C:/df/moe-16b/config.json')
@@ -571,85 +570,114 @@ position_ids =tensor([[ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 1
 attention_mask = tensor([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
 
-model_embed_tokens_weight = m001['model.embed_tokens.weight']
+model_embed_tokens_weight = model['model.embed_tokens.weight']
 #embed_tokens = nn.Embedding(vocab_size, hidden_size, 0)
-inputs_embeds = model_embed_tokens_weight[input_ids]
+inputs_embeds = model_embed_tokens_weight*T.gather()*input_ids  # torch.Size([1, 40, 2048])<-Embedding(102400, 2048) *  torch.Size([1, 40])
 
 hidden_states = inputs_embeds
 for layer_idx in range(num_hidden_layers):
-    input_layernorm =  m001[f'model.layers.{layer_idx}.input_layernorm.weight']
+    input_layernorm =  model[f'model.layers.{layer_idx}.input_layernorm.weight']
     residual = hidden_states
     ###########hidden_states = input_layernorm(hidden_states)
-    input_layernorm_weight = m001[f'model.layers.{layer_idx}.input_layernorm.weight']
-    hidden_states = deepseekRMSNorm(input_layernorm_weight, hidden_states)
+    input_layernorm_weight = model[f'model.layers.{layer_idx}.input_layernorm.weight']
+    input_dtype = hidden_states* T.type()  
+    hidden_states_norm = hidden_states* T.norm()  # 假设原始数据类型是 float16
+    # T.norm() should normalize states as follows:
+    #   variance_epsilon = 0.000001#1e-6
+    #   hidden_states_f32 = hidden_states* T.astype(np.float32)
+    #   variance = np.mean(hidden_states_f32 ** 2, axis=-1, keepdims=True)
+    #   hidden_states_norm = hidden_states_f32 * (1 / np.sqrt(variance + variance_epsilon))
+    hidden_states2 = input_layernorm_weight * hidden_states_norm* T.astype(input_dtype)  #  torch.Size([1, 40, 2048])<-torch.Size([2048]) *  torch.Size([1, 40, 2048])
+
     # Self Attention
     #self_attn =  m001[f'model.layers.{i}.input_layernorm.weight']
-    bsz, q_len, _ = hidden_states.size()
-    q_proj = m001[f'model.layers.{layer_idx}.self_attn.q_proj.weight']
-    k_proj = m001[f'model.layers.{layer_idx}.self_attn.k_proj.weight']
-    v_proj = m001[f'model.layers.{layer_idx}.self_attn.v_proj.weight']
-    o_proj = m001[f'model.layers.{layer_idx}.self_attn.o_proj.weight']
-    query_states = q_proj(hidden_states)
-    key_states = k_proj(hidden_states)
-    value_states = v_proj(hidden_states)
+    bsz, q_len, _ = hidden_states2 *T.size()
+    q_proj = model[f'model.layers.{layer_idx}.self_attn.q_proj.weight']
+    k_proj = model[f'model.layers.{layer_idx}.self_attn.k_proj.weight']
+    v_proj = model[f'model.layers.{layer_idx}.self_attn.v_proj.weight']
+    o_proj = model[f'model.layers.{layer_idx}.self_attn.o_proj.weight']
+    query_states = q_proj* T.linear()* hidden_states2   # torch.Size([1, 40, 2048]) <- torch.Size([1, 40, 2048])
+    key_states = k_proj* T.linear()* hidden_states2  # torch.Size([1, 40, 2048]) <- torch.Size([1, 40, 2048])
+    value_states = v_proj* T.linear() *hidden_states2  # torch.Size([1, 40, 2048]) <- torch.Size([1, 40, 2048])
 
     # query_states = query_states.view(bsz, q_len, num_heads, head_dim).transpose(1, 2)
     # key_states = key_states.view(bsz, q_len, num_key_value_heads, head_dim).transpose(1, 2)
     # value_states = value_states.view(bsz, q_len, num_key_value_heads, head_dim).transpose(1, 2)
-    query_states = query_states.reshape(bsz, q_len, num_heads, head_dim).swapaxes(1, 2)
-    key_states = key_states.reshape(bsz, q_len, num_key_value_heads, head_dim).swapaxes(1, 2)
-    value_states = value_states.reshape(bsz, q_len, num_key_value_heads, head_dim).swapaxes(1, 2)
+    query_states = query_states* T.reshape(bsz, q_len, num_heads, head_dim) * T.permute(1, 2)   # torch.Size([1, 16, 40, 128]) <- torch.Size([1, 40, 2048])
+    key_states = key_states* T.reshape(bsz, q_len, num_key_value_heads, head_dim)* T.permute(1, 2)  # torch.Size([1, 16, 40, 128]) <- torch.Size([1, 40, 2048])
+    value_states = value_states* T.reshape(bsz, q_len, num_key_value_heads, head_dim)* T.permute(1, 2)  # torch.Size([1, 16, 40, 128]) <- torch.Size([1, 40, 2048])
 
-    kv_seq_len = key_states.shape[-2]
+    kv_seq_len = key_states.shape[-2] 
     if past_key_value is not None:
-        kv_seq_len += past_key_value.get_usable_length(kv_seq_len, layer_idx)
+        kv_seq_len += past_key_value.get_usable_length(kv_seq_len, layer_idx) # 40 +=<
     
     # cos, sin = rotary_emb(value_states, seq_len=kv_seq_len)
     cos, sin = 0, 0
-    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids) # torch.Size([1, 16, 40, 128])，torch.Size([1, 16, 40, 128]) <-
 
-    key_states = repeat_kv(key_states, num_key_value_groups)
-    value_states = repeat_kv(value_states, num_key_value_groups)
+    key_states = key_states* T.repeat_kv(num_key_value_groups)  # torch.Size([1, 16, 40, 128]) <-
+    value_states = value_states* T.repeat_kv( num_key_value_groups) # torch.Size([1, 16, 40, 128]) <-
 
-    attn_output = scaled_dot_product_attention(
+    attn_output = scaled_dot_product_attention(         # torch.Size([1, 16, 40, 128]) <-
         query_states,
         key_states,
         value_states,
         attn_mask=attention_mask,
         dropout_p=0.0,
         is_causal= attention_mask is None and q_len > 1
-    )
+    )  
 
     # attn_output = attn_output.transpose(1, 2).contiguous()
-    # attn_output = attn_output.reshape(bsz, q_len, hidden_size)
-    attn_output = attn_output.swapaxes(1, 2)  # 交换维度 1 和 2
-    attn_output = np.ascontiguousarray(attn_output)  # 确保内存连续性（可选）
-    attn_output = attn_output.reshape(bsz, q_len, hidden_size)
+    attn_output1 = attn_output* T.permute(1, 2)  #                               <- torch.Size([1, 16, 40, 128])
+    attn_output2 = attn_output1* T.contiguous()  # torch.Size([1, 40, 16, 128]) <-
+    attn_output3 = attn_output2* T.reshape(bsz, q_len, hidden_size) # torch.Size([1, 40, 2048]) <- torch.Size([1, 40, 16, 128])
+    attn_output4 = o_proj* T.linear() *attn_output3  # torch.Size([1, 40, 2048]) <- Linear(in_features=2048, out_features=2048, bias=False) * torch.Size([1, 40, 2048])
+    hidden_states3 = residual + attn_output4  #  torch.Size([1, 40, 2048])  <- torch.Size([1, 40, 2048]) + torch.Size([1, 40, 2048]) 
 
-    attn_output = o_proj(attn_output)
-    hidden_states = attn_output
-
-    hidden_states = residual + hidden_states
     # Fully Connected
-    residual = hidden_states
+    residual = hidden_states3
     #hidden_states = post_attention_layernorm(hidden_states)
-    post_attention_layernorm_weight = m001[f'model.layers.{layer_idx}.post_attention_layernorm.weight']
-    hidden_states = deepseekRMSNorm(post_attention_layernorm_weight, hidden_states)
+    post_attention_layernorm_weight = model[f'model.layers.{layer_idx}.post_attention_layernorm.weight']
+    #hidden_states = deepseekRMSNorm(post_attention_layernorm_weight, hidden_states)
+    input_dtype = hidden_states3* T.type()
+    hidden_states_norm = hidden_states3* T.norm()
+    hidden_states4 = post_attention_layernorm_weight * hidden_states_norm* T.astype(input_dtype) # torch.Size([1, 40, 2048]) <-torch.Size([2048]) * 
     #hidden_states = mlp(hidden_states)
     # self.mlp = DeepseekMoE(config) if (config.n_routed_experts is not None and  \
     #                                 layer_idx >= config.first_k_dense_replace and layer_idx % config.moe_layer_freq == 0) \
     #                             else DeepseekMLP(config)
     if (n_routed_experts is not None and  layer_idx >= first_k_dense_replace and layer_idx % moe_layer_freq == 0):
-        deepseekMoE = DeepseekMoE(config, m001, layer_idx)
-        hidden_states = deepseekMoE(hidden_states)
-    else:
-        deepseekMoE = DeepseekMLP(config, m001, layer_idx)
-        gate_proj = m001[f'model.layers.{layer_idx}.mlp.gate_proj.weight']
-        up_proj = m001[f'model.layers.{layer_idx}.mlp.up_proj.weight']
-        down_proj = m001[f'model.layers.{layer_idx}.mlp.down_proj.weight']
+        #deepseekMoE = DeepseekMoE(config, m001, layer_idx)(x)
+        identity = hidden_states4
+        orig_shape = hidden_states4* T.shape()
+        topk_idx, topk_weight, aux_loss = self.gate(hidden_states4)
+
+        hidden_states4a = hidden_states4* T.reshape(-1, hidden_states4.shape[-1])
+        flat_topk_idx = topk_idx*T.view(-1)
+        y = self.moe_infer(hidden_states4b, flat_topk_idx, topk_weight.view(-1, 1)).view(*orig_shape)
+
+        hidden_states5 = y + self.shared_experts(identity)
+    else:  # if layer_index ==0   
+        #deepseekMoE = DeepseekMLP(config, m001, layer_idx)  ## layer_index ==0   
+        gate_proj = model[f'model.layers.{layer_idx}.mlp.gate_proj.weight']  # torch.Size([10944, 2048]) <-
+        up_proj = model[f'model.layers.{layer_idx}.mlp.up_proj.weight']  #  torch.Size([10944, 2048]) <-
+        down_proj = model[f'model.layers.{layer_idx}.mlp.down_proj.weight'] # torch.Size([2048, 10944])
         act_fn = ACT2FN[config.hidden_act]
-        hidden_states = deepseekMLP(hidden_states)
-    hidden_states = residual + hidden_states
+        #hidden_states = deepseekMLP(hidden_states)
+        #hidden_states = down_proj(this.act_fn(this.gate_proj(x)) * this.up_proj(x))
+        gate_x = gate_proj * T.linear() * hidden_states4      #                          <-  torch.Size([10944, 2048]) **torch.Size([1, 40, 2048])
+        up_x = up_proj * T.linear() * hidden_states4
+        act_fn_x =  gate_x * T. SiLu() 
+        act_fn_x2 = act_fn_x * up_proj
+        hidden_states5 = down_proj * T.linear() * act_fn_x2   # torch.Size([1, 40, 2048]) <- 
+
+    hidden_states6 = residual + hidden_states5  # torch.Size([1, 40, 2048]) <- 
+    if use_cache:
+        hidden_states7 = hidden_states6 + present_key_value
+
+    y_graph = T.graph(hidden_states7)
+    y_graph.run()
+    hidden_states = hidden_states7  #  for next layer
 
 #outputs = this_norm(hidden_states)
 
