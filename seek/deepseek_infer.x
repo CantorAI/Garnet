@@ -455,28 +455,28 @@ def repeat_kv(hidden_states, n_rep):
 #         variance = hidden_states.pow(2).mean(-1, keepdim=True)
 #         hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
 #         return self.weight * hidden_states.to(input_dtype)
-def deepseekRMSNorm(norm_weight, hidden_states):
-    variance_epsilon = 0.000001#1e-6
-    input_dtype = np.float16  # 假设原始数据类型是 float16
-    hidden_states_f32 = hidden_states.astype(np.float32)
-    variance = np.mean(hidden_states_f32 ** 2, axis=-1, keepdims=True)
-    hidden_states_norm = hidden_states_f32 * (1 / np.sqrt(variance + variance_epsilon))
-    hidden_states_final = norm_weight * hidden_states_norm.astype(input_dtype)
-    return hidden_states_final
+# def deepseekRMSNorm(norm_weight, hidden_states):
+#     variance_epsilon = 0.000001#1e-6
+#     input_dtype = np.float16  # 假设原始数据类型是 float16
+#     hidden_states_f32 = hidden_states.astype(np.float32)
+#     variance = np.mean(hidden_states_f32 ** 2, axis=-1, keepdims=True)
+#     hidden_states_norm = hidden_states_f32 * (1 / np.sqrt(variance + variance_epsilon))
+#     hidden_states_final = norm_weight * hidden_states_norm.astype(input_dtype)
+#     return hidden_states_final
 
-class DeepseekMLP:
-    gate_proj
-    up_proj
-    down_proj
-    act_fn
-    def DeepseekMLP(cfg, weight_file,layer_idx):
-        this.gate_proj = weight_file[f'model.layers.{layer_idx}.mlp.gate_proj.weight']
-        this.up_proj = weight_file[f'model.layers.{layer_idx}.mlp.up_proj.weight']
-        this.down_proj = weight_file[f'model.layers.{layer_idx}.mlp.down_proj.weight']
-        this.act_fn = ACT2FN[config.hidden_act]
-    def deepseekMLP():
-        down_proj = this.down_proj(this.act_fn(this.gate_proj(x)) * this.up_proj(x))
-        return down_proj
+# class DeepseekMLP:
+#     gate_proj
+#     up_proj
+#     down_proj
+#     act_fn
+#     def DeepseekMLP(cfg, weight_file,layer_idx):
+#         this.gate_proj = weight_file[f'model.layers.{layer_idx}.mlp.gate_proj.weight']
+#         this.up_proj = weight_file[f'model.layers.{layer_idx}.mlp.up_proj.weight']
+#         this.down_proj = weight_file[f'model.layers.{layer_idx}.mlp.down_proj.weight']
+#         this.act_fn = ACT2FN[config.hidden_act]
+#     def deepseekMLP():
+#         down_proj = this.down_proj(this.act_fn(this.gate_proj(x)) * this.up_proj(x))
+#         return down_proj
 
 
 class DeepseekMoE:
@@ -608,12 +608,13 @@ for layer_idx in range(num_hidden_layers):
     value_states = value_states* T.reshape(bsz, q_len, num_key_value_heads, head_dim)* T.permute(1, 2)  # torch.Size([1, 16, 40, 128]) <- torch.Size([1, 40, 2048])
 
     kv_seq_len = key_states.shape[-2] 
-    if past_key_value is not None:
-        kv_seq_len += past_key_value.get_usable_length(kv_seq_len, layer_idx) # 40 +=<
+    if past_key_value is not None:  # if ??
+        kv_seq_len += past_key_value.get_usable_length(kv_seq_len, layer_idx) # 40 +=<  
     
     # cos, sin = rotary_emb(value_states, seq_len=kv_seq_len)
     cos, sin = 0, 0
-    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids) # torch.Size([1, 16, 40, 128])，torch.Size([1, 16, 40, 128]) <-
+    #query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids) 
+    query_states, key_states = query_states * T.apply_rotary_pos_emb(cos, sin, position_ids) * key_states * position_ids # torch.Size([1, 16, 40, 128])，torch.Size([1, 16, 40, 128]) <-
 
     key_states = key_states* T.repeat_kv(num_key_value_groups)  # torch.Size([1, 16, 40, 128]) <-
     value_states = value_states* T.repeat_kv( num_key_value_groups) # torch.Size([1, 16, 40, 128]) <-
