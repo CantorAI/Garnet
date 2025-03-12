@@ -532,4 +532,9 @@ namespace Garnet
 
         retVal = X::Value(resultTensor);
     }
+    void GarnetTensor::Convert(X::ARGS& params, X::KWARGS& kwParams,
+        X::Value input, X::Value& retVal)
+    {
+
+    }
 }

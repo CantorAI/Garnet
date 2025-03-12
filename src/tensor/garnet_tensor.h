@@ -26,6 +26,7 @@ namespace Garnet
 			APISET().AddTensorBinaryOp("matmul", &GarnetTensor::Matmul);
 			APISET().AddTensorUnaryOp("permute", &GarnetTensor::Permute);
 			APISET().AddTensorBinaryOp("gather", &GarnetTensor::Gather);
+			APISET().AddTensorUnaryOp("convert", &GarnetTensor::Convert);
 		END_PACKAGE
 
 		void Add(X::ARGS& params, X::KWARGS& kwParams,
@@ -40,5 +41,7 @@ namespace Garnet
 				X::Value input, X::Value& retVal);
 		void Gather(X::ARGS& params, X::KWARGS& kwParams,
 			X::Value input1, X::Value input2, X::Value& retVal);
+		void Convert(X::ARGS& params, X::KWARGS& kwParams,
+			X::Value input, X::Value& retVal);
 	};
 }
