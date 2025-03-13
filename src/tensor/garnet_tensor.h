@@ -27,6 +27,16 @@ namespace Garnet
 			APISET().AddTensorUnaryOp("permute", &GarnetTensor::Permute);
 			APISET().AddTensorBinaryOp("gather", &GarnetTensor::Gather);
 			APISET().AddTensorUnaryOp("convert", &GarnetTensor::Convert);
+
+			APISET().AddTensorUnaryOp("zeros", &GarnetTensor::InitZeros);
+			APISET().AddTensorUnaryOp("ones", &GarnetTensor::InitOnes);
+			APISET().AddTensorUnaryOp("full", &GarnetTensor::InitFull);
+			APISET().AddTensorUnaryOp("rand", &GarnetTensor::InitRand);
+			APISET().AddTensorUnaryOp("randn", &GarnetTensor::InitRandn);
+			APISET().AddTensorUnaryOp("uniform", &GarnetTensor::InitUniform);
+			APISET().AddTensorUnaryOp("normal", &GarnetTensor::InitNormal);
+			APISET().AddTensorUnaryOp("trunc_normal", &GarnetTensor::InitTruncNormal);
+
 		END_PACKAGE
 
 		void Add(X::ARGS& params, X::KWARGS& kwParams,
@@ -43,5 +53,14 @@ namespace Garnet
 			X::Value input1, X::Value input2, X::Value& retVal);
 		void Convert(X::ARGS& params, X::KWARGS& kwParams,
 			X::Value input, X::Value& retVal);
+
+		void InitZeros(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
+		void InitOnes(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
+		void InitFull(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
+		void InitRand(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
+		void InitRandn(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
+		void InitUniform(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
+		void InitNormal(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
+		void InitTruncNormal(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
 	};
 }

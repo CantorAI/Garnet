@@ -48,7 +48,7 @@ FILE(GLOB Model_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/model/*.cpp")
 FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
 FILE(GLOB Log_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/log/*.cpp")
 FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/ptxGemm_kernel.cu"
-    src/cuda/gather_kernel.cu)
+    src/cuda/gather_kernel.cu src/cuda/init_ops_kernel.cu)
 FILE(GLOB Test_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/test/*.cpp")
 
 # Create the shared library target.
