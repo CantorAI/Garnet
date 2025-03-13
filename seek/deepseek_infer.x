@@ -576,7 +576,7 @@ inputs_embeds = model_embed_tokens_weight*T.gather()*input_ids  # torch.Size([1,
 
 hidden_states = inputs_embeds
 for layer_idx in range(num_hidden_layers):
-    input_layernorm =  model[f'model.layers.{layer_idx}.input_layernorm.weight']
+    input_layernorm =  model['model.layers.${layer_idx}.input_layernorm.weight']
     residual = hidden_states
     ###########hidden_states = input_layernorm(hidden_states)
     input_layernorm_weight = model[f'model.layers.{layer_idx}.input_layernorm.weight']
@@ -592,10 +592,10 @@ for layer_idx in range(num_hidden_layers):
     # Self Attention
     #self_attn =  m001[f'model.layers.{i}.input_layernorm.weight']
     bsz, q_len, _ = hidden_states2 *T.size()
-    q_proj = model[f'model.layers.{layer_idx}.self_attn.q_proj.weight']
-    k_proj = model[f'model.layers.{layer_idx}.self_attn.k_proj.weight']
-    v_proj = model[f'model.layers.{layer_idx}.self_attn.v_proj.weight']
-    o_proj = model[f'model.layers.{layer_idx}.self_attn.o_proj.weight']
+    q_proj = model['model.layers.${layer_idx}.self_attn.q_proj.weight']
+    k_proj = model['model.layers.${layer_idx}.self_attn.k_proj.weight']
+    v_proj = model['model.layers.${layer_idx}.self_attn.v_proj.weight']
+    o_proj = model['model.layers.${layer_idx}.self_attn.o_proj.weight']
     query_states = q_proj* T.linear()* hidden_states2   # torch.Size([1, 40, 2048]) <- torch.Size([1, 40, 2048])
     key_states = k_proj* T.linear()* hidden_states2  # torch.Size([1, 40, 2048]) <- torch.Size([1, 40, 2048])
     value_states = v_proj* T.linear() *hidden_states2  # torch.Size([1, 40, 2048]) <- torch.Size([1, 40, 2048])
@@ -636,9 +636,9 @@ for layer_idx in range(num_hidden_layers):
     hidden_states3 = residual + attn_output4  #  torch.Size([1, 40, 2048])  <- torch.Size([1, 40, 2048]) + torch.Size([1, 40, 2048]) 
 
     # Fully Connected
-    residual = hidden_states3
+    residual2 = hidden_states3  # second  residual
     #hidden_states = post_attention_layernorm(hidden_states)
-    post_attention_layernorm_weight = model[f'model.layers.{layer_idx}.post_attention_layernorm.weight']
+    post_attention_layernorm_weight = model['model.layers.${layer_idx}.post_attention_layernorm.weight']
     #hidden_states = deepseekRMSNorm(post_attention_layernorm_weight, hidden_states)
     input_dtype = hidden_states3* T.type()
     hidden_states_norm = hidden_states3* T.norm()
@@ -660,9 +660,9 @@ for layer_idx in range(num_hidden_layers):
         hidden_states5 = y + self.shared_experts(identity)
     else:  # if layer_index ==0   
         #deepseekMoE = DeepseekMLP(config, m001, layer_idx)  ## layer_index ==0   
-        gate_proj = model[f'model.layers.{layer_idx}.mlp.gate_proj.weight']  # torch.Size([10944, 2048]) <-
-        up_proj = model[f'model.layers.{layer_idx}.mlp.up_proj.weight']  #  torch.Size([10944, 2048]) <-
-        down_proj = model[f'model.layers.{layer_idx}.mlp.down_proj.weight'] # torch.Size([2048, 10944])
+        gate_proj = model['model.layers.${layer_idx}.mlp.gate_proj.weight']  # torch.Size([10944, 2048]) <-
+        up_proj = model['model.layers.${layer_idx}.mlp.up_proj.weight']  #  torch.Size([10944, 2048]) <-
+        down_proj = model['model.layers.${layer_idx}.mlp.down_proj.weight'] # torch.Size([2048, 10944])
         act_fn = ACT2FN[config.hidden_act]
         #hidden_states = deepseekMLP(hidden_states)
         #hidden_states = down_proj(this.act_fn(this.gate_proj(x)) * this.up_proj(x))
@@ -672,7 +672,7 @@ for layer_idx in range(num_hidden_layers):
         act_fn_x2 = act_fn_x * up_proj
         hidden_states5 = down_proj * T.linear() * act_fn_x2   # torch.Size([1, 40, 2048]) <- 
 
-    hidden_states6 = residual + hidden_states5  # torch.Size([1, 40, 2048]) <- 
+    hidden_states6 = residual2 + hidden_states5  # torch.Size([1, 40, 2048]) <- 
     if use_cache:
         hidden_states7 = hidden_states6 + present_key_value
 
