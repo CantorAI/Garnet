@@ -1,9 +1,13 @@
 #include "garnet_tensor.h"
+
+#if __USE_DIRECT_RUN
+
 #include <cuda_runtime.h>
 #include "tensor_helper.h"
 #include <cuda_fp16.h>    // For __half and __float2half
 #include <cuda_bf16.h>    // For __nv_bfloat16
 #include <cuda_fp8.h>     // For __nv_fp8_e4m3 and __nv_fp8_e5m2
+
 
 // Forward declarations for the CUDA functions from ptxGemm_kernel.cu
 extern "C" {
@@ -358,7 +362,9 @@ namespace Garnet
         }
     }
 
-	void GarnetTensor::Add(X::ARGS& params, X::KWARGS& kwParams, 
+
+
+    void GarnetTensor::Add(X::ARGS& params, X::KWARGS& kwParams,
 		X::Value input1, X::Value input2, X::Value& retVal)
 	{
 	}
@@ -538,3 +544,5 @@ namespace Garnet
 
     }
 }
+
+#endif

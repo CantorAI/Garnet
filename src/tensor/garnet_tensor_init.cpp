@@ -50,17 +50,15 @@ extern "C" {
 
 namespace Garnet {
 
-    void GarnetTensor::InitZeros(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal)
+    X::Value GarnetTensor::InitZeros(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output)
     {
         if (!input.IsTensor()) {
-            retVal = X::Value();
-            return;
+            return X::Value();
         }
         X::Tensor tensor(input);
         int numel = tensor->GetCount();
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retVal = X::Value();
-            return;
+            return X::Value();
         }
         void* gpuData = TensorHelper::GetGPUMemory(tensor);
         X::TensorDataType dtype = tensor->GetDataType();
@@ -76,24 +74,25 @@ namespace Garnet {
             runInitZerosBF16(reinterpret_cast<__nv_bfloat16*>(gpuData), numel);
             break;
         default:
-            retVal = X::Value();
-            return;
+            output = X::Value();
+            return X::Value();
         }
         TensorHelper::CopyResultFromGPU(tensor);
-        retVal = X::Value(tensor);
+        output =  X::Value(tensor);
+		return output;
     }
 
-    void GarnetTensor::InitOnes(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal)
+    X::Value GarnetTensor::InitOnes(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output)
     {
         if (!input.IsTensor()) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return X::Value();
         }
         X::Tensor tensor(input);
         int numel = tensor->GetCount();
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return X::Value();
         }
         void* gpuData = TensorHelper::GetGPUMemory(tensor);
         X::TensorDataType dtype = tensor->GetDataType();
@@ -109,27 +108,28 @@ namespace Garnet {
             runInitOnesBF16(reinterpret_cast<__nv_bfloat16*>(gpuData), numel);
             break;
         default:
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return X::Value();
         }
         TensorHelper::CopyResultFromGPU(tensor);
-        retVal = X::Value(tensor);
+        output =  X::Value(tensor);
+        return output;
     }
 
-    void GarnetTensor::InitFull(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal)
+    X::Value GarnetTensor::InitFull(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output)
     {
         // Expect extra parameter "value"
         if (!input.IsTensor() || !kwParams.Has("value")) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         X::Tensor tensor(input);
         int numel = tensor->GetCount();
         auto* pItem = kwParams.find("value");
         float val = (float)pItem->val.ToDouble();
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         void* gpuData = TensorHelper::GetGPUMemory(tensor);
         X::TensorDataType dtype = tensor->GetDataType();
@@ -145,25 +145,26 @@ namespace Garnet {
             runInitFullBF16(reinterpret_cast<__nv_bfloat16*>(gpuData), numel, __float2bfloat16(val));
             break;
         default:
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return X::Value();
         }
         TensorHelper::CopyResultFromGPU(tensor);
-        retVal = X::Value(tensor);
+        output =  X::Value(tensor);
+        return output;
     }
 
-    void GarnetTensor::InitRand(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal)
+    X::Value GarnetTensor::InitRand(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output)
     {
         if (!input.IsTensor()) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         X::Tensor tensor(input);
         int numel = tensor->GetCount();
         unsigned int seed = kwParams.Has("seed") ? (unsigned int)kwParams.find("seed")->val.ToDouble() : 1234;
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         void* gpuData = TensorHelper::GetGPUMemory(tensor);
         X::TensorDataType dtype = tensor->GetDataType();
@@ -179,25 +180,26 @@ namespace Garnet {
             runInitRandBF16(reinterpret_cast<__nv_bfloat16*>(gpuData), numel, seed);
             break;
         default:
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         TensorHelper::CopyResultFromGPU(tensor);
-        retVal = X::Value(tensor);
+        output =  X::Value(tensor);
+        return output;
     }
 
-    void GarnetTensor::InitRandn(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal)
+    X::Value GarnetTensor::InitRandn(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output)
     {
         if (!input.IsTensor()) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         X::Tensor tensor(input);
         int numel = tensor->GetCount();
         unsigned int seed = kwParams.Has("seed") ? (unsigned int)kwParams.find("seed")->val.ToDouble() : 1234;
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         void* gpuData = TensorHelper::GetGPUMemory(tensor);
         X::TensorDataType dtype = tensor->GetDataType();
@@ -213,19 +215,19 @@ namespace Garnet {
             runInitRandnBF16(reinterpret_cast<__nv_bfloat16*>(gpuData), numel, seed);
             break;
         default:
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         TensorHelper::CopyResultFromGPU(tensor);
-        retVal = X::Value(tensor);
+        output =  X::Value(tensor);
     }
 
-    void GarnetTensor::InitUniform(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal)
+    X::Value GarnetTensor::InitUniform(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output)
     {
         // Expect extra parameters "low" and "high"
         if (!input.IsTensor() || !kwParams.Has("low") || !kwParams.Has("high")) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         X::Tensor tensor(input);
         int numel = tensor->GetCount();
@@ -233,8 +235,8 @@ namespace Garnet {
         float fHigh = (float)kwParams.find("high")->val.ToDouble();
         unsigned int seed = kwParams.Has("seed") ? (unsigned int)kwParams.find("seed")->val.ToDouble() : 1234;
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         void* gpuData = TensorHelper::GetGPUMemory(tensor);
         X::TensorDataType dtype = tensor->GetDataType();
@@ -250,19 +252,20 @@ namespace Garnet {
             runInitUniformBF16(reinterpret_cast<__nv_bfloat16*>(gpuData), numel, __float2bfloat16(fLow), __float2bfloat16(fHigh), seed);
             break;
         default:
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         TensorHelper::CopyResultFromGPU(tensor);
-        retVal = X::Value(tensor);
+        output =  X::Value(tensor);
+        return output;
     }
 
-    void GarnetTensor::InitNormal(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal)
+    X::Value GarnetTensor::InitNormal(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output)
     {
         // Expect extra parameters "mean" and "std"
         if (!input.IsTensor() || !kwParams.Has("mean") || !kwParams.Has("std")) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         X::Tensor tensor(input);
         int numel = tensor->GetCount();
@@ -270,8 +273,8 @@ namespace Garnet {
         float fStd = (float)kwParams.find("std")->val.ToDouble();
         unsigned int seed = kwParams.Has("seed") ? (unsigned int)kwParams.find("seed")->val.ToDouble() : 1234;
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         void* gpuData = TensorHelper::GetGPUMemory(tensor);
         X::TensorDataType dtype = tensor->GetDataType();
@@ -287,21 +290,22 @@ namespace Garnet {
             runInitNormalBF16(reinterpret_cast<__nv_bfloat16*>(gpuData), numel, fMean, fStd, seed);
             break;
         default:
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         TensorHelper::CopyResultFromGPU(tensor);
-        retVal = X::Value(tensor);
+        output =  X::Value(tensor);
+        return output;
     }
 
-    void GarnetTensor::InitTruncNormal(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal)
+    X::Value GarnetTensor::InitTruncNormal(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output)
     {
         // Expect extra parameters "mean", "std", "a", and "b"
         if (!input.IsTensor() || !kwParams.Has("mean") || !kwParams.Has("std") ||
             !kwParams.Has("a") || !kwParams.Has("b"))
         {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         X::Tensor tensor(input);
         int numel = tensor->GetCount();
@@ -311,8 +315,8 @@ namespace Garnet {
         float fB = (float)kwParams.find("b")->val.ToDouble();
         unsigned int seed = kwParams.Has("seed") ? (unsigned int)kwParams.find("seed")->val.ToDouble() : 1234;
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         void* gpuData = TensorHelper::GetGPUMemory(tensor);
         X::TensorDataType dtype = tensor->GetDataType();
@@ -328,11 +332,12 @@ namespace Garnet {
             runInitTruncNormalBF16(reinterpret_cast<__nv_bfloat16*>(gpuData), numel, fMean, fStd, fA, fB, seed);
             break;
         default:
-            retVal = X::Value();
-            return;
+            output =  X::Value();
+            return output;
         }
         TensorHelper::CopyResultFromGPU(tensor);
-        retVal = X::Value(tensor);
+        output =  X::Value(tensor);
+        return output;
     }
 
 } // namespace Garnet
