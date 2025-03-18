@@ -1,7 +1,9 @@
 #pragma once
 #include "xpackage.h"
 #include "xlang.h"
-
+#include <set>
+#include <string>
+#include <sstream>
 
 namespace Garnet
 {
@@ -16,10 +18,122 @@ namespace Garnet
 			APISET().AddPropWithType<std::string>("DeviceName", &TensorDescriptor::mDeviceName);
 		END_PACKAGE
 	};
+	class GarnetTensor;
+	class Fusionist
+	{
+		GarnetTensor* m_tensor = nullptr;
+		X::Value mFunc;
+
+		BEGIN_PACKAGE(Fusionist)
+			APISET().SetCallHandler(&Fusionist::Call);
+		END_PACKAGE
+
+	public:
+		Fusionist() {}
+		Fusionist(X::Value& func) :
+			mFunc(func)
+		{
+		}
+		inline void SetParent(GarnetTensor* t) { m_tensor = t; }
+		bool Call(X::XRuntime* rt, X::ARGS& params, X::KWARGS& kwParams, X::Value& outputue);
+		inline void SetFunc(X::Value& func)
+		{
+			mFunc = func;
+		}
+	};
+	// Helper functions for CUDA code generation
+	class CudaCodeGen {
+		friend class GarnetTensor;
+
+		std::set<std::string> declaredVariables;
+		// Function to reset the declared variables set
+		void ResetDeclaredVariables() {
+			declaredVariables.clear();
+		}
+
+		std::string GetTensorName(X::Tensor& tensor)
+		{
+			std::string strName = tensor->GetName().ToString();
+			if (strName.empty())
+			{
+				strName = "tensor_" + std::to_string(tensor->GetID());
+			}
+			return strName;
+		}
+		// Convert tensor data type to CUDA type string
+		std::string GetTypeString(X::TensorDataType type) {
+			switch (type) {
+			case X::TensorDataType::FLOAT32:
+				return "float";
+			case X::TensorDataType::FLOAT16:
+				return "__half";
+			case X::TensorDataType::BFLOAT16:
+				return "__nv_bfloat16";
+			case X::TensorDataType::FLOAT8_E4M3FN:
+				return "__nv_fp8_e4m3";
+			case X::TensorDataType::FLOAT8_E5M2:
+				return "__nv_fp8_e5m2";
+			default:
+				return "float"; // Default to float
+			}
+		}
+
+		// Generate pointer variable declaration and assignment
+			// Updated to avoid duplicate declarations
+		std::string GenerateVariableDeclaration(const std::string& varName,
+			X::TensorDataType type,
+			void* memoryPtr) {
+			// Check if variable is already declared
+			if (declaredVariables.find(varName) != declaredVariables.end()) {
+				return ""; // Variable already declared, return empty string
+			}
+
+			// Add variable to declared set
+			declaredVariables.insert(varName);
+
+			// Generate declaration as before
+			std::string typeStr = GetTypeString(type);
+			std::stringstream ss;
+			ss << std::hex << reinterpret_cast<uintptr_t>(memoryPtr);
+			std::string addrStr = "0x" + ss.str();
+			return typeStr + "* " + varName + " = (" + typeStr + "*)" + addrStr + ";\n";
+		}
+
+		// Generate operation comment header
+		std::string GenerateCommentHeader(const std::string& opName,
+			X::Tensor& tensor1,
+			X::Tensor& tensor2) {
+			std::string comment = "// " + opName + " operation for tensor " +
+				GetTensorName(tensor1);
+			if (tensor2) {
+				comment += " and tensor " + GetTensorName(tensor2);
+			}
+			comment += "\n";
+			return comment;
+		}
+
+		std::string GenerateCommentHeader(const std::string& opName, X::Tensor& tensor) {
+			std::string comment = "// " + opName + " operation for tensor " +
+				GetTensorName(tensor);
+			comment += "\n";
+			return comment;
+		}
+	};
+
 	class GarnetTensor
 	{
+		CudaCodeGen mCodeGen;
 	public:
 		BEGIN_PACKAGE(GarnetTensor)
+			APISET().AddClass<0, Fusionist>("fusionist");
+			APISET().AddVarFuncEx("fusion", &GarnetTensor::Fusion);
+			//APISET().AddVarFuncEx("compile", &GarnetTensor::Fusion);
+
+			APISET().AddTensorStructuralOps("header", &GarnetTensor::Header);
+			APISET().AddTensorStructuralOps("trailer", &GarnetTensor::Trailer);
+			APISET().AddTensorStructuralOps("branchBegin", &GarnetTensor::BranchBegin);
+			APISET().AddTensorStructuralOps("branchEnd", &GarnetTensor::BranchEnd);
+
 			APISET().AddTensorBinaryOp("add", &GarnetTensor::Add);
 			APISET().AddTensorBinaryOp("minus", &GarnetTensor::Minus);
 			APISET().AddTensorBinaryOp("mul", &GarnetTensor::Multiply);
@@ -37,30 +151,38 @@ namespace Garnet
 			APISET().AddTensorUnaryOp("normal", &GarnetTensor::InitNormal);
 			APISET().AddTensorUnaryOp("trunc_normal", &GarnetTensor::InitTruncNormal);
 
-		END_PACKAGE
+			END_PACKAGE
 
-		void Add(X::ARGS& params, X::KWARGS& kwParams,
-				X::Value input1, X::Value input2, X::Value& retVal);
-		void Minus(X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& retVal);
-		void Multiply(X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& retVal);
-		void Matmul(X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& retVal);
-		void Permute(X::ARGS& params, X::KWARGS& kwParams,
-				X::Value input, X::Value& retVal);
-		void Gather(X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& retVal);
-		void Convert(X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input, X::Value& retVal);
+		void Fusion(X::XRuntime* rt, X::XObj* pThis, X::XObj* pContext,
+					X::ARGS& params, X::KWARGS& kwParams, X::Value& trailer, X::Value& outputue);
 
-		void InitZeros(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
-		void InitOnes(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
-		void InitFull(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
-		void InitRand(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
-		void InitRandn(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
-		void InitUniform(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
-		void InitNormal(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
-		void InitTruncNormal(X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& retVal);
+		X::Value Header(X::Value& graph,X::ARGS& params);
+		X::Value Trailer(X::Value& graph, X::ARGS& params);
+		X::Value BranchBegin(X::Value& graph, X::ARGS& params);
+		X::Value BranchEnd(X::Value& graph, X::ARGS& params);
+
+		X::Value Add(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+				X::Value input1, X::Value input2, X::Value& output);
+		X::Value Minus(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+			X::Value input1, X::Value input2, X::Value& output);
+		X::Value Multiply(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+			X::Value input1, X::Value input2, X::Value& output);
+		X::Value Matmul(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+			X::Value input1, X::Value input2, X::Value& output);
+		X::Value Permute(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+				X::Value input, X::Value& output);
+		X::Value Gather(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+			X::Value input1, X::Value input2, X::Value& output);
+		X::Value Convert(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+			X::Value input, X::Value& output);
+
+		X::Value InitZeros(X::Value& graph,X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
+		X::Value InitOnes(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
+		X::Value InitFull(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
+		X::Value InitRand(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
+		X::Value InitRandn(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
+		X::Value InitUniform(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
+		X::Value InitNormal(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
+		X::Value InitTruncNormal(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
 	};
 }
