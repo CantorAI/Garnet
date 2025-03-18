@@ -672,21 +672,46 @@ for layer_idx in range(num_hidden_layers):
             start_idx = 0 if i == 0 else tokens_per_expert[i-1]
             if start_idx == end_idx:
                 continue
-            expert = self.experts[i]
-            exp_token_idx = token_idxs[start_idx:end_idx]
-            expert_tokens = x[exp_token_idx]
-            expert_out = expert(expert_tokens)
-            expert_out.mul_(flat_expert_weights[idxs[start_idx:end_idx]])
-            expert_cache.scatter_reduce_(0, exp_token_idx.view(-1, 1).repeat(1, x.shape[-1]), expert_out, reduce='sum')
-        y = expert_cache
+            exp_token_idx = token_idxs[start_idx:end_idx] # torch.Size([1])<-
+            expert_tokens = x[exp_token_idx] # torch.Size([1, 2048]) <-
+            #expert = self.experts[i]
+            #expert_out = expert(expert_tokens)
+            gate_proj = model['model.layers.${layer_idx}.mlp.experts.${i}.gate_proj.weight']  # torch.Size([10944, 2048]) <-
+            up_proj = model['model.layers.${layer_idx}.mlp.experts.${i}.up_proj.weight']  #  torch.Size([10944, 2048]) <-
+            down_proj = model['model.layers.${layer_idx}.mlp.experts.${i}.down_proj.weight'] # torch.Size([2048, 10944])
+            
+            #act_fn = ACT2FN[config.hidden_act]
+            #hidden_states = deepseekMLP(hidden_states)
+            #hidden_states = down_proj(this.act_fn(this.gate_proj(x)) * this.up_proj(x))
+            gate_x = gate_proj * T.linear() * hidden_states4b      #                          <-  torch.Size([10944, 2048]) **torch.Size([1, 40, 2048])
+            up_x = up_proj * T.linear() * hidden_states4b #
+            act_fn_x =  gate_x * T. SiLu() #
+            act_fn_x2 = act_fn_x * up_proj #
+            hidden_states4c = down_proj * T.linear() * act_fn_x2   # torch.Size([1, 40, 2048]) <- 
+            expert_out= hidden_states4c* T.mul_()* flat_expert_weights[idxs[start_idx:end_idx]] #  torch.Size([1, 2048]) <- 
+            #expert_cache2=expert_cache* T.scatter_reduce_(0, exp_token_idx.view(-1, 1).repeat(1, x.shape[-1]), expert_out, reduce='sum')
+            expert_cache2=expert_cache* T.scatter_reduce_(0, exp_token_idx.view(-1, 1).repeat(1, x.shape[-1]), expert_out, reduce='sum') #torch.Size([40, 2048]) <-
+        y = expert_cache2
 
-        hidden_states5 = y + self.shared_experts(identity)
+        #hidden_states5 = y + self.shared_experts(identity)
+        gate_proj2 = model['model.layers.${layer_idx}.mlp.shared_experts.gate_proj.weight']  # torch.Size([10944, 2048]) <-
+        up_proj2 = model['model.layers.${layer_idx}.mlp.shared_experts.up_proj.weight']  #  torch.Size([10944, 2048]) <-
+        down_proj2 = model['model.layers.${layer_idx}.mlp.shared_experts.down_proj.weight'] # torch.Size([2048, 10944])
+        #act_fn = ACT2FN[config.hidden_act]
+        #hidden_states = deepseekMLP(hidden_states)
+        #hidden_states = down_proj(this.act_fn(this.gate_proj(x)) * this.up_proj(x))
+        gate_x = gate_proj2 * T.linear() * identity      #                          <-  torch.Size([10944, 2048]) **torch.Size([1, 40, 2048])
+        up_x = up_proj2 * T.linear() * identity
+        act_fn_x1a =  gate_x2 * T. SiLu() 
+        act_fn_x2a = act_fn_x1a * up_proj
+        shared_states = down_proj * T.linear() * act_fn_x2a   # torch.Size([1, 40, 2048]) <- 
+        hidden_states5 = y + shared_states # torch.Size([1, 40, 2048]) <- 
     else:  # if layer_index ==0   
         #deepseekMoE = DeepseekMLP(config, m001, layer_idx)  ## layer_index ==0   
         gate_proj = model['model.layers.${layer_idx}.mlp.gate_proj.weight']  # torch.Size([10944, 2048]) <-
         up_proj = model['model.layers.${layer_idx}.mlp.up_proj.weight']  #  torch.Size([10944, 2048]) <-
         down_proj = model['model.layers.${layer_idx}.mlp.down_proj.weight'] # torch.Size([2048, 10944])
-        act_fn = ACT2FN[config.hidden_act]
+        #act_fn = ACT2FN[config.hidden_act]
         #hidden_states = deepseekMLP(hidden_states)
         #hidden_states = down_proj(this.act_fn(this.gate_proj(x)) * this.up_proj(x))
         gate_x = gate_proj * T.linear() * hidden_states4      #                          <-  torch.Size([10944, 2048]) **torch.Size([1, 40, 2048])
