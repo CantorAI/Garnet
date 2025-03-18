@@ -561,6 +561,7 @@ max_position_embeddings = config['max_position_embeddings']
 rope_theta = config['rope_theta']
 first_k_dense_replace=config['first_k_dense_replace']
 moe_layer_freq = config['moe_layer_freq']
+norm_topk_prob = config['norm_topk_prob']
 
 
 input_ids = tensor(inputs['input_ids'])
@@ -651,11 +652,33 @@ for layer_idx in range(num_hidden_layers):
         #deepseekMoE = DeepseekMoE(config, m001, layer_idx)(x)
         identity = hidden_states4
         orig_shape = hidden_states4* T.shape()
-        topk_idx, topk_weight, aux_loss = self.gate(hidden_states4)
-
-        hidden_states4a = hidden_states4* T.reshape(-1, hidden_states4.shape[-1])
-        flat_topk_idx = topk_idx*T.view(-1)
-        y = self.moe_infer(hidden_states4b, flat_topk_idx, topk_weight.view(-1, 1)).view(*orig_shape)
+        #topk_idx, topk_weight, aux_loss = self.gate(hidden_states4) # <-torch.Size([1, 40, 2048])
+        bsz, seq_len, h = hidden_states4* T.shape()
+        hidden_states4a = hidden_states4* T.view(-1, h)  # torch.Size([40, 2048]) <- torch.Size([1, 40, 2048])
+        gating_dim = hidden_size
+        l_weight =  T.parameter(n_routed_experts, gating_dim) # torch.Size([64, 2048]) <-        nn.Parameter(torch.empty((self.n_routed_experts, self.gating_dim)))
+        logits = hidden_states4a* T.linear(l_weight) # torch.Size([40, 64]) <- torch.Size([40, 2048])
+        scores = logits* T.softmax(dim=-1) # torch.Size([40, 64]) 
+        top_k = num_experts_per_tok # 6
+        topk_weight, topk_idx = scores* T.topk(k=top_k, dim=-1, sorted=False) # # torch.Size([40, 6]), torch.Size([40, 6]) <-torch.Size([40, 64]) 
+        hidden_states4b = hidden_states4a* T.reshape(-1, hidden_states4a.shape[-1]) # torch.Size([40, 2048])
+        flat_topk_idx = topk_idx*T.view(-1) # torch.Size([240])<-torch.Size([40, 6])
+        #y = self.moe_infer(hidden_states4b, flat_topk_idx, topk_weight.view(-1, 1)).view(*orig_shape)
+        expert_cache = hidden_states4b* T.zeros_like() # torch.Size([240])<-
+        idxs = flat_topk_idx* T.argsort()  # torch.Size([240]) <-
+        tokens_per_expert = flat_topk_idx* T.bincount().cpu().numpy().cumsum(0)   # (64,)<-
+        token_idxs = idxs // num_experts_per_tok   # torch.Size([240]) <- torch.Size([240]) // 6
+        for i, end_idx in enumerate(tokens_per_expert):
+            start_idx = 0 if i == 0 else tokens_per_expert[i-1]
+            if start_idx == end_idx:
+                continue
+            expert = self.experts[i]
+            exp_token_idx = token_idxs[start_idx:end_idx]
+            expert_tokens = x[exp_token_idx]
+            expert_out = expert(expert_tokens)
+            expert_out.mul_(flat_expert_weights[idxs[start_idx:end_idx]])
+            expert_cache.scatter_reduce_(0, exp_token_idx.view(-1, 1).repeat(1, x.shape[-1]), expert_out, reduce='sum')
+        y = expert_cache
 
         hidden_states5 = y + self.shared_experts(identity)
     else:  # if layer_index ==0   
