@@ -123,6 +123,7 @@ namespace Garnet
 	class GarnetTensor
 	{
 		CudaCodeGen mCodeGen;
+		std::string ProcessCondition(X::Value& astNode);
 	public:
 		BEGIN_PACKAGE(GarnetTensor)
 			APISET().AddClass<0, Fusionist>("fusionist");

@@ -20,12 +20,15 @@ def calc_test(x,y,z):
     # t1 is 4×3 and t2 is 3×4, so multiplication is valid
     Z = t1 * t2
     if x > 9:
-        x =x+1
+        if x >10:
+            x =x+1
+            Z = Z-1
         Z = Z+x
     elif x >20:
         Z = Z+y
     else:
         Z = Z-z
+    Z = Z+1
     # Create and run the computation graph
     y_graph = T.graph(Z)
     print("Graph:",y_graph)
