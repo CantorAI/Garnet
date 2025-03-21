@@ -690,7 +690,9 @@ for layer_idx in range(num_hidden_layers):
             hidden_states4c = down_proj * T.linear() * act_fn_x2   # torch.Size([1, 40, 2048]) <- 
             expert_out= hidden_states4c* T.mul_()* flat_expert_weights[idxs[start_idx:end_idx]] #  torch.Size([1, 2048]) <- 
             #expert_cache2=expert_cache* T.scatter_reduce_(0, exp_token_idx.view(-1, 1).repeat(1, x.shape[-1]), expert_out, reduce='sum')
-            expert_cache2=expert_cache* T.scatter_reduce_(0, exp_token_idx.view(-1, 1).repeat(1, x.shape[-1]), expert_out, reduce='sum') #torch.Size([40, 2048]) <-
+            exp_token_idx1=exp_token_idx*T.view(-1, 1)
+            exp_token_idx2=exp_token_idx1*T.repeat(1, x.shape[-1])
+            expert_cache2=expert_cache* T.scatter_reduce_(0, reduce='sum')*exp_token_idx2 * expert_out #torch.Size([40, 2048]) <-
         y = expert_cache2
 
         #hidden_states5 = y + self.shared_experts(identity)
