@@ -19,11 +19,17 @@ def calc_test(x,y,z):
     # Perform matrix multiplication
     # t1 is 4×3 and t2 is 3×4, so multiplication is valid
     Z = t1 * t2
-    if x > 9:
+    if x > 9 and x <100:
         if x >10:
             x =x+1
             Z = Z-1
-        Z = Z+x
+        if z >100:
+            Z = Z+x
+        elif z >90:
+            Z = Z+100
+        else:
+            x = x+100
+            Z = Z-x
     elif x >20:
         Z = Z+y
     else:

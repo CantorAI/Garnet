@@ -60,72 +60,76 @@ namespace Garnet
 	// Implementation of BranchBegin function
     X::Value GarnetTensor::BranchBegin(X::Value& graph, X::ARGS& params)
     {
-        std::string code;
+        std::string code = "    // Begin branch\n";
 
         // Extract parameters
-        X::Value condExpr = params[0];        // Condition expression (AST node)
+        X::Value condExpr = params[0];
         std::string branchType = params[1].ToString();
         int flowId = params[2].ToInt();
-        int branchId = params[3].ToInt();     // 0=if, 1=elif1, -1=else
+        int branchId = params[3].ToInt();
 
         // Process branch type based on branchId
         if (branchId == 0) {
-            // If branch
             code += "    if (" + ProcessCondition(condExpr) + ") {\n";
         }
         else if (branchId > 0) {
-            // Else if branch
             code += "    else if (" + ProcessCondition(condExpr) + ") {\n";
         }
         else if (branchId == -1) {
-            // Else branch (no condition needed)
             code += "    else {\n";
         }
 
         return X::Value(code);
     }
 
-    // Helper function to process condition AST nodes
     std::string GarnetTensor::ProcessCondition(X::Value& astNode)
     {
         std::string nodeType = astNode["type"]().ToString();
 
         if (nodeType == "BinaryOp") {
-            // Handle binary operations (like x > 9)
             X::Value children = astNode["children"]();
             std::string opType = astNode["OperatorType"]().ToString();
 
-            // Process left and right operands
-            X::Value leftNode = children[0];
-            X::Value rightNode = children[1];
+            // Translate XLang operators to CUDA syntax
+            if (opType == "and") opType = "&&";
+            else if (opType == "or") opType = "||";
 
-            return ProcessCondition(leftNode) + " " + opType + " " + ProcessCondition(rightNode);
+            std::string leftExpr = ProcessCondition(children[0]);
+            std::string rightExpr = ProcessCondition(children[1]);
+
+            // Only add parentheses when needed for logical operators
+            if (opType == "&&" || opType == "||") {
+                // Check if left/right are binary ops that need parentheses
+                if (children[0]["type"]().ToString() == "BinaryOp") {
+                    leftExpr = "(" + leftExpr + ")";
+                }
+                if (children[1]["type"]().ToString() == "BinaryOp") {
+                    rightExpr = "(" + rightExpr + ")";
+                }
+                return leftExpr + " " + opType + " " + rightExpr;
+            }
+            else {
+                return leftExpr + " " + opType + " " + rightExpr;
+            }
         }
         else if (nodeType == "UnaryOp") {
-            // Handle unary operations (like !x)
             X::Value children = astNode["children"]();
             std::string opType = astNode["OperatorType"]().ToString();
+
+            if (opType == "not") opType = "!";
 
             return opType + ProcessCondition(children[0]);
         }
         else if (nodeType == "Var") {
-            // Handle variable references
             return astNode["name"]().ToString();
         }
         else if (nodeType == "Str") {
-            // Handle string literals - add quotes
             return "\"" + astNode["name"]().ToString() + "\"";
         }
-        else if (nodeType == "Number") {
-            // Handle integer literals
-            return astNode["name"]().ToString();
-        }
-        else if (nodeType == "Double") {
-            // Handle floating point literals
+        else if (nodeType == "Number" || nodeType == "Double") {
             return astNode["name"]().ToString();
         }
         else {
-            // Fallback for other node types
             return astNode.ToString();
         }
     }
