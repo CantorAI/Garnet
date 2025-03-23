@@ -356,33 +356,33 @@ namespace Garnet {
             code += mCodeGen.GenerateVariableDeclaration(multiVar, multiTensor->GetDataType(), gpuMulti);
             code += mCodeGen.GenerateVariableDeclaration(resultVar, multiTensor->GetDataType(), gpuResult);
 
-            // Instead of assigning to a temporary variable, we directly use singleVar.
             auto singleType = singleTensor->GetDataType();
             auto multiType = multiTensor->GetDataType();
+            // Note: The correct order is: multi-element tensor variable first, then single element tensor variable.
             if (singleType != multiType) {
                 code += "// Converting single element tensor to match multi tensor type\n";
                 if (multiType == X::TensorDataType::DOUBLE) {
-                    code += "runSingleElementTensorAddFP64((double)" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP64(" + multiVar + ", (double)" + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::FLOAT32) {
-                    code += "runSingleElementTensorAddFP32(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP32(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::FLOAT16) {
-                    code += "runSingleElementTensorAddFP16(__float2half(" + singleVar + "), " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP16(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::BFLOAT16) {
-                    code += "runSingleElementTensorAddBF16(__float2bfloat16(" + singleVar + "), " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddBF16(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::FLOAT8_E4M3FN) {
-                    code += "runSingleElementTensorAddFP8E4M3(__float2fp8_e4m3(" + singleVar + "), " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP8E4M3(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::FLOAT8_E5M2) {
-                    code += "runSingleElementTensorAddFP8E5M2(__float2fp8_e5m2(" + singleVar + "), " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP8E5M2(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else {
@@ -391,27 +391,27 @@ namespace Garnet {
             }
             else {
                 if (singleType == X::TensorDataType::DOUBLE) {
-                    code += "runSingleElementTensorAddFP64(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP64(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::FLOAT32) {
-                    code += "runSingleElementTensorAddFP32(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP32(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::FLOAT16) {
-                    code += "runSingleElementTensorAddFP16(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP16(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::BFLOAT16) {
-                    code += "runSingleElementTensorAddBF16(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddBF16(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::FLOAT8_E4M3FN) {
-                    code += "runSingleElementTensorAddFP8E4M3(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP8E4M3(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::FLOAT8_E5M2) {
-                    code += "runSingleElementTensorAddFP8E5M2(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorAddFP8E5M2(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else {
@@ -419,7 +419,7 @@ namespace Garnet {
                 }
             }
             return code;
-            };
+        };
 
         // Lambda for multi-element tensor-tensor addition.
         auto addTensors = [&](X::Tensor t1, X::Tensor t2, X::Tensor resultTensor, long long totalElements) -> std::string {
@@ -497,11 +497,12 @@ namespace Garnet {
             std::string resultVar = mCodeGen.GetTensorName(resultTensor);
             code += mCodeGen.GenerateVariableDeclaration(inputVar, tensor->GetDataType(), gpuData);
             code += mCodeGen.GenerateVariableDeclaration(resultVar, tensor->GetDataType(), gpuResultData);
-            // Pass scalar value directly.
-            code += "runScalarAddFP32(" + inputVar + ", " + resultVar + ", " +
-                std::to_string(scalar) + ", " + std::to_string(tensor->GetCount()) + ");\n";
+            // The correct order: first parameter is the tensor, second is the scalar, third is the result.
+            code += "runScalarAddFP32(" + inputVar + ", " + std::to_string(scalar) + ", " + resultVar +
+                ", " + std::to_string(tensor->GetCount()) + ");\n";
             return code;
-            };
+        };
+
 
         // Main decision logic based on whether the inputs are tensors or scalars.
         if (isTensor1 && isTensor2)
@@ -633,30 +634,31 @@ namespace Garnet {
 
             auto singleType = singleTensor->GetDataType();
             auto multiType = multiTensor->GetDataType();
+            // Correct parameter order: first argument is the multi-element tensor, then the single-element tensor.
             if (singleType != multiType) {
                 code += "// Converting single element tensor to match multi tensor type\n";
                 if (multiType == X::TensorDataType::DOUBLE) {
-                    code += "runSingleElementTensorMinusFP64((double)" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP64(" + multiVar + ", (double)" + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::FLOAT32) {
-                    code += "runSingleElementTensorMinusFP32(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP32(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::FLOAT16) {
-                    code += "runSingleElementTensorMinusFP16(__float2half(" + singleVar + "), " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP16(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::BFLOAT16) {
-                    code += "runSingleElementTensorMinusBF16(__float2bfloat16(" + singleVar + "), " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusBF16(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::FLOAT8_E4M3FN) {
-                    code += "runSingleElementTensorMinusFP8E4M3(__float2fp8_e4m3(" + singleVar + "), " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP8E4M3(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (multiType == X::TensorDataType::FLOAT8_E5M2) {
-                    code += "runSingleElementTensorMinusFP8E5M2(__float2fp8_e5m2(" + singleVar + "), " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP8E5M2(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else {
@@ -665,27 +667,27 @@ namespace Garnet {
             }
             else {
                 if (singleType == X::TensorDataType::DOUBLE) {
-                    code += "runSingleElementTensorMinusFP64(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP64(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::FLOAT32) {
-                    code += "runSingleElementTensorMinusFP32(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP32(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::FLOAT16) {
-                    code += "runSingleElementTensorMinusFP16(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP16(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::BFLOAT16) {
-                    code += "runSingleElementTensorMinusBF16(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusBF16(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::FLOAT8_E4M3FN) {
-                    code += "runSingleElementTensorMinusFP8E4M3(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP8E4M3(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else if (singleType == X::TensorDataType::FLOAT8_E5M2) {
-                    code += "runSingleElementTensorMinusFP8E5M2(" + singleVar + ", " + multiVar + ", " + resultVar +
+                    code += "runSingleElementTensorMinusFP8E5M2(" + multiVar + ", " + singleVar + ", " + resultVar +
                         ", " + std::to_string(multiTensor->GetCount()) + ");\n";
                 }
                 else {
@@ -771,9 +773,9 @@ namespace Garnet {
             std::string resultVar = mCodeGen.GetTensorName(resultTensor);
             code += mCodeGen.GenerateVariableDeclaration(inputVar, tensor->GetDataType(), gpuData);
             code += mCodeGen.GenerateVariableDeclaration(resultVar, tensor->GetDataType(), gpuResultData);
-            // Pass the scalar value directly.
-            code += "runScalarMinusFP32(" + inputVar + ", " + resultVar + ", " +
-                std::to_string(scalar) + ", " + std::to_string(tensor->GetCount()) + ");\n";
+            // Correct order: first the tensor, then the scalar, then the result.
+            code += "runScalarMinusFP32(" + inputVar + ", " + std::to_string(scalar) + ", " + resultVar +
+                ", " + std::to_string(tensor->GetCount()) + ");\n";
             return code;
             };
 
@@ -853,7 +855,6 @@ namespace Garnet {
             return X::Value(cudaCodeString);
         }
     }
-
 
     // Implementation of Matmul function
     X::Value GarnetTensor::Matmul(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
