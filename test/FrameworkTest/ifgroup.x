@@ -36,9 +36,9 @@ def calc_test(x,y,z):
         Z = Z-z
     Z = Z+1
     # Create and run the computation graph
-    y_graph = T.graph(Z)
-    print("Graph:",y_graph)
-    y_graph.run()
+    # y_graph = T.graph(Z)
+    # print("Graph:",y_graph)
+    # y_graph.run()
     return Z
 
 result = calc_test(10.0,20.0,30.0)

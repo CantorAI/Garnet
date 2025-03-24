@@ -1,10 +1,19 @@
 #include "garnet_tensor.h"
+#include "md5.h"
+#include "garnet.h"
 
 namespace Garnet
 {
 	bool Fusionist::Call(X::XRuntime* rt, X::ARGS& params, 
 		X::KWARGS& kwParams, X::Value& retValue)
 	{
+        if (!mNeedGenAndCompile)
+        {
+            //TODO: call
+            return true;
+        }
+        //Need to gen code and compile
+
 		X::Func func(mFunc);
 		X::Value valParamNames = func->GetParameterNameList();
 		X::List nameList(valParamNames);
@@ -36,11 +45,48 @@ namespace Garnet
 				it.val = tensor;
 			}
 		}
-
-		retValue = mFunc.ObjCall(params, kwParams);
+        X::Value t = mFunc.ObjCall(params, kwParams);
+        X::ARGS params_t;
+        if (t.IsList())
+        {
+            X::List list(t);
+            params_t.resize(list->Size());
+            for (auto& it : *list)
+            {
+                params_t.push_back(it);
+            }
+        }
+        else if (t.IsDict())
+        {
+            X::Dict dict(t);
+            params_t.resize(dict->Size());
+            for (auto& it : *dict)
+            {
+                params_t.push_back(it.second());
+            }
+        }
+        else
+        {
+            params_t.resize(1);
+            params_t.push_back(t);
+        }
+        X::KWARGS kwParams_t;
+        auto* pTensorGraph = X::g_pXHost->CreateTensorGraph();
+        pTensorGraph->Create(mVarTensor.GetObj(), params_t, kwParams_t);
+		mTensorGraph = X::Value(pTensorGraph);
+		X::KWARGS kwArgs;
+        kwArgs.Add("Func", mFunc);
+		pTensorGraph->Run(params,kwArgs);
+        X::Value varCode = pTensorGraph->GetCodeGenerated();
+        std::string code = varCode.ToString();
 		return true;
 	}
-	void GarnetTensor::Fusion(X::XRuntime* rt, X::XObj* pThis,
+    GarnetTensor::GarnetTensor()
+    {
+        std::string baseFolder = GarnetAPI::I().GetBaseFolder();
+		mCompiler.Init(baseFolder);
+    }
+    void GarnetTensor::Fusion(X::XRuntime* rt, X::XObj* pThis,
 		X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, 
 		X::Value& trailer, X::Value& retValue)
 	{
@@ -50,9 +96,21 @@ namespace Garnet
 			X::Func func(trailer);
 			func->ChangeStatmentsIntoTranslateMode(true, false);
 		}
+
+        X::Func func(trailer);
+		X::Value varFuncName = func->GetName();
+		std::string funcName = varFuncName.ToString();
+        X::Value funcCode = func->GetCode(true);
+		std::string code = funcCode.ToString();
+        MD5 md5 = MD5(code);
+        std::string codeHash = md5.hexdigest();
+		bool bHasSameAndNoChange = mCompiler.check_module_hash(funcName, codeHash);
 		X::XPackageValue<Fusionist> varFusion;
 		Fusionist& f = *varFusion;
-		f.SetParent(this);
+        //if not existed or changed
+        f.SetNeedGenAndCompile(!bHasSameAndNoChange);
+        X::Value varGarnetTensor(pContext);
+		f.SetParent(varGarnetTensor);
 		f.SetFunc(trailer);
 		retValue = varFusion;
 	}

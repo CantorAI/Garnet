@@ -11,18 +11,118 @@
 namespace Garnet {
 
     // Generate CUDA file header code
-    X::Value GarnetTensor::Header(X::Value& graph, X::ARGS& params) {
+    X::Value GarnetTensor::Header(X::Value& graph, X::ARGS& params)
+    {
+        // Ensure that at least one parameter (the XLang function) is provided.
+        if (params.size() < 1) {
+            return X::Value("// Error: Insufficient parameters: expected at least one parameter (the XLang function)\n");
+        }
+
+        // The first parameter is a XLang function.
+        X::Func func(params[0]);
+        std::string cudaFunctionName = func->GetName().ToString();
+
+        // Retrieve the parameter name list from the function.
+        X::Value valParamNames = func->GetParameterNameList();
+        X::List nameList(valParamNames);
+
+        // Check if the provided params include values for all function parameters.
+        if (params.size() < (nameList->Size() + 1)) {
+            return X::Value("// Error: Insufficient parameters provided to Header function: expected " +
+                std::to_string(nameList->Size() + 1) + " but got " + std::to_string(params.size()) + "\n");
+        }
+
+        // Build the parameter declaration list.
+        std::string paramListStr;
+        // Loop over each parameter name.
+        // Note: for each parameter name at index i in nameList,
+        // the corresponding calling argument is at params[i+1].
+        for (int i = 0; i < (int)nameList->Size(); i++) {
+            X::Value nameVal;
+            nameList->GetIndexValue(i, nameVal);
+            std::string paramName = nameVal.ToString();
+            // Get the calling parameter (could be a tensor or a scalar).
+            X::Value argValue = params[i + 1];
+            std::string typeStr;
+
+            if (argValue.IsTensor()) {
+                // For tensors, cast to X::Tensor.
+                X::Tensor tensor(argValue);
+                // Check if the tensor is a single element.
+                if (tensor->GetCount() == 1) {
+                    // Single-element tensor treated as a scalar.
+                    auto dt = tensor->GetDataType();
+                    if (dt == X::TensorDataType::DOUBLE) {
+                        typeStr = "double";
+                    }
+                    else if (dt == X::TensorDataType::FLOAT32) {
+                        typeStr = "float";
+                    }
+                    else if (dt == X::TensorDataType::FLOAT16) {
+                        typeStr = "__half";
+                    }
+                    else if (dt == X::TensorDataType::BFLOAT16) {
+                        typeStr = "bfloat16";
+                    }
+                    else if (dt == X::TensorDataType::FLOAT8_E4M3FN) {
+                        typeStr = "fp8_e4m3";  // Adjust as needed for your type name.
+                    }
+                    else if (dt == X::TensorDataType::FLOAT8_E5M2) {
+                        typeStr = "fp8_e5m2";
+                    }
+                    else {
+                        typeStr = "float"; // Fallback type.
+                    }
+                }
+                else {
+                    // Multi-element tensor: declare as a pointer.
+                    auto dt = tensor->GetDataType();
+                    if (dt == X::TensorDataType::DOUBLE) {
+                        typeStr = "double*";
+                    }
+                    else if (dt == X::TensorDataType::FLOAT32) {
+                        typeStr = "float*";
+                    }
+                    else if (dt == X::TensorDataType::FLOAT16) {
+                        typeStr = "__half*";
+                    }
+                    else if (dt == X::TensorDataType::BFLOAT16) {
+                        typeStr = "bfloat16*";
+                    }
+                    else if (dt == X::TensorDataType::FLOAT8_E4M3FN) {
+                        typeStr = "fp8_e4m3*";
+                    }
+                    else if (dt == X::TensorDataType::FLOAT8_E5M2) {
+                        typeStr = "fp8_e5m2*";
+                    }
+                    else {
+                        typeStr = "float*"; // Fallback.
+                    }
+                }
+            }
+            else {
+                // Non-tensor values are treated as scalar (default to float).
+                typeStr = "float";
+            }
+
+            // Append the parameter declaration.
+            paramListStr += typeStr + " " + paramName;
+            if (i < (int)nameList->Size() - 1) {
+                paramListStr += ", ";
+            }
+        }
+
+        // Generate the header code with necessary includes.
         std::string headerCode =
             "#include <cuda_runtime.h>\n"
             "#include <cuda_fp16.h>\n"
             "#include <cuda_bf16.h>\n"
             "#include <cuda_fp8.h>\n\n"
-
             "// Include CUDA function declarations\n"
-            "#include \"cuda_templates/cuda_function_declarations.h\"\n\n"
+            "#include \"cuda_templates/cuda_function_declarations.h\"\n\n";
 
-            "// Main function for executing the CUDA operations\n"
-            "extern \"C\" void executeGarnetTensorOperations() {\n";
+        // Use the obtained function name and parameter list to generate the function header.
+        headerCode += "extern \"C\" void " + cudaFunctionName + "(" + paramListStr + ") {\n";
 
         return X::Value(headerCode);
     }

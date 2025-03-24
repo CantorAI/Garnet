@@ -34,6 +34,7 @@ include_directories(${CUDA_INCLUDE_DIRS})
 # Include project directories.
 include_directories("src/common")
 include_directories("src/entry")
+include_directories("src/compiler")
 include_directories("src/include")
 include_directories("src/model")
 include_directories("src/tensor")
@@ -66,8 +67,9 @@ add_library(${PROJECT_NAME}
 
 # On Windows, link against cudart (the CUDA runtime) explicitly.
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} cudart)
-    
+    target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY} 
+            ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
+    ) 
     # Add debug-specific libraries for Windows Debug build
     if(MSVC)
         # Debug build
@@ -78,7 +80,7 @@ if(WIN32)
         target_link_libraries(${PROJECT_NAME} $<$<CONFIG:Release>:msvcrt>)
     endif()
 else()
-    target_link_libraries(${PROJECT_NAME} pthread dl m)
+    target_link_libraries(${PROJECT_NAME} pthread dl m ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY})
 endif()
 
 # Enable separable CUDA compilation and specify architectures.

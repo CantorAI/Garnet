@@ -74,7 +74,6 @@ namespace Garnet {
         std::string get_ptx_path(const std::string& module_name) const {
             return (std::filesystem::path(jit_dir_) / (module_name + ".ptx")).string();
         }
-
         // Get the hash file path for a given module name
         std::string get_hash_path(const std::string& module_name) const {
             return (std::filesystem::path(jit_dir_) / (module_name + ".md5")).string();
@@ -341,16 +340,18 @@ namespace Garnet {
 
     public:
         // Constructor with base directory
-        CudaJitCompiler(const std::string& base_dir)
-            : base_dir_(base_dir) {
-
+        CudaJitCompiler() {}
+        void Init(const std::string& base_dir)
+        {
+            base_dir_ = base_dir;
             // Ensure base directory exists
             if (!std::filesystem::exists(base_dir_)) {
                 throw std::runtime_error("Base directory does not exist: " + base_dir_);
             }
 
             // Setup paths
-            jit_dir_ = std::filesystem::path(base_dir_) / "_jit_";
+            std::filesystem::path jit_path = std::filesystem::path(base_dir_) / "_jit_";
+            jit_dir_ = jit_path.string();
 
             // Initialize CUDA
             ensure_cuda_initialized();
@@ -358,7 +359,6 @@ namespace Garnet {
             // Ensure JIT directory exists
             ensure_jit_directory();
         }
-
         // Destructor
         ~CudaJitCompiler() {
             std::lock_guard<std::mutex> lock(cache_mutex_);
@@ -430,7 +430,20 @@ namespace Garnet {
                 std::cout << "Added header file: " << name << std::endl;
             }
         }
+        // Check if a module exists and has a matching hash - thread-safe
+        bool check_module_hash(const std::string& module_name, const std::string& md5_hash) {
+            // Lock for thread safety
+            std::lock_guard<std::mutex> lock(cache_mutex_);
 
+            // First, check if the module files exist
+            if (!ptx_file_exists(module_name) || !hash_file_exists(module_name)) {
+                return false;
+            }
+            // Read the stored hash and compare
+            std::string stored_hash = read_hash_from_file(module_name);
+            // Return true if hashes match
+            return (stored_hash == md5_hash);
+        }
         // Compile CUDA code or load from cached PTX - thread-safe
         bool compile_or_load(const std::string& cuda_code,
             const std::string& module_name,
@@ -563,10 +576,6 @@ namespace Garnet {
             return "";
         }
 
-        // Get the path to the PTX file for a specific module
-        std::string get_ptx_path(const std::string& module_name) const {
-            return (std::filesystem::path(jit_dir_) / (module_name + ".ptx")).string();
-        }
 
         // Get a kernel function from a specific module
         CUfunction get_kernel(const std::string& module_name, const std::string& kernel_name) const {

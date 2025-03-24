@@ -14,6 +14,7 @@ namespace Garnet
 		X::Value m_cantor;
 		X::Value m_log;
 		X::Value m_curModule;
+		std::string m_baseFolder;//like cantor's folder
 		bool LoadModelFromFile(std::string modelPath, X::Dict& model);
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
@@ -29,6 +30,14 @@ namespace Garnet
 			APISET().AddClass<0, GarnetTensor>("tensor");
 		END_PACKAGE
 
+		void SetBaseFolder(std::string folder)
+		{
+			m_baseFolder = folder;
+		}
+		std::string GetBaseFolder()
+		{
+			return m_baseFolder;
+		}
 		void SetModule(X::Value curModule)
 		{
 			m_curModule = curModule;

@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <sstream>
+#include "cuda_jit_compiler.h"
 
 namespace Garnet
 {
@@ -21,9 +22,10 @@ namespace Garnet
 	class GarnetTensor;
 	class Fusionist
 	{
-		GarnetTensor* m_tensor = nullptr;
-		X::Value mFunc;
-
+		X::Value mVarTensor;//bind to a tensor
+		X::Value mFunc;//the Func with this Fusion dectoration
+		X::Value mTensorGraph;
+		bool mNeedGenAndCompile = false;
 		BEGIN_PACKAGE(Fusionist)
 			APISET().SetCallHandler(&Fusionist::Call);
 		END_PACKAGE
@@ -34,7 +36,11 @@ namespace Garnet
 			mFunc(func)
 		{
 		}
-		inline void SetParent(GarnetTensor* t) { m_tensor = t; }
+		inline void SetNeedGenAndCompile(bool b)
+		{
+			mNeedGenAndCompile = b;
+		}
+		inline void SetParent(X::Value& t) { mVarTensor = t; }
 		bool Call(X::XRuntime* rt, X::ARGS& params, X::KWARGS& kwParams, X::Value& outputue);
 		inline void SetFunc(X::Value& func)
 		{
@@ -123,6 +129,7 @@ namespace Garnet
 	class GarnetTensor
 	{
 		CudaCodeGen mCodeGen;
+		CudaJitCompiler mCompiler;
 		std::string ProcessCondition(X::Value& astNode);
 	public:
 		BEGIN_PACKAGE(GarnetTensor)
@@ -153,7 +160,10 @@ namespace Garnet
 			APISET().AddTensorUnaryOp("trunc_normal", &GarnetTensor::InitTruncNormal);
 
 			END_PACKAGE
+	public:
+		GarnetTensor();
 
+		// Fusion function
 		void Fusion(X::XRuntime* rt, X::XObj* pThis, X::XObj* pContext,
 					X::ARGS& params, X::KWARGS& kwParams, X::Value& trailer, X::Value& outputue);
 

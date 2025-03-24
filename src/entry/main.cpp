@@ -64,6 +64,7 @@ extern "C"  X_EXPORT void Load(void* pHost, X::Value curModule)
 	GetCurLibInfo((void*)Load, strFullPath, strFolderPath, strLibName);
 	X::g_pXHost = (X::XHost*)pHost;
 	Garnet::GarnetAPI::I().SetModule(curModule);
+	Garnet::GarnetAPI::I().SetBaseFolder(strFolderPath);
 	X::RegisterPackage<Garnet::GarnetAPI>(strFullPath.c_str(), "garnet", &Garnet::GarnetAPI::I());
 }
 extern "C"  X_EXPORT void Unload()
