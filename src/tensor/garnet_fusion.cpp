@@ -81,6 +81,13 @@ namespace Garnet
         std::string code = varCode.ToString();
 		X::XPackageValue<GarnetTensor> varTensor(mVarTensor);
         GarnetTensor& gt = *varTensor;
+        gt.GetCompiler().add_option("-D__CUDA_ARCH__=860");
+        gt.GetCompiler().add_option("-D__CUDACC_RTC__");
+
+        //gt.GetCompiler().add_option("-arch=sm_89");
+        //gt.GetCompiler().add_option("--gpu-architecture=compute_80");
+        gt.GetCompiler().add_option("--gpu-architecture=compute_89");
+
 		bool bOK = gt.GetCompiler().compile_or_load(code, mFuncName,mFuncCodeHash);
 		return true;
 	}

@@ -117,9 +117,10 @@ namespace Garnet {
             "#include <cuda_runtime.h>\n"
             "#include <cuda_fp16.h>\n"
             "#include <cuda_bf16.h>\n"
-            "#include <cuda_fp8.h>\n\n"
-            "// Include CUDA function declarations\n"
-            "#include \"cuda_templates/cuda_function_declarations.h\"\n\n";
+            "#include <cuda_fp8.h>\n"
+            "#include \"cuda_lib.h\"\n\n"
+            "#include \"cuda_lib.cu\"\n\n";
+
 
         // Use the obtained function name and parameter list to generate the function header.
         headerCode += "extern \"C\" void " + cudaFunctionName + "(" + paramListStr + ") {\n";
@@ -131,7 +132,9 @@ namespace Garnet {
     X::Value GarnetTensor::Trailer(X::Value& graph, X::ARGS& params) {
         std::string trailerCode =
             "// End of operations\n"
-            "cudaDeviceSynchronize();\n"
+            "//#ifndef __NVRTC__\n"
+            "//cudaDeviceSynchronize();\n"
+            "//#endif\n"
             "}\n";
 
         return X::Value(trailerCode);
@@ -145,99 +148,202 @@ namespace Garnet {
         bool isTensor1 = input1.IsTensor();
         bool isTensor2 = input2.IsTensor();
 
-        // Lambda for creating tensor-tensor multiplication code
-        auto generateMatrixMulCode = [&](X::Tensor& t1, X::Tensor& t2, X::Tensor& result,
+        // Lambda: Prepare a result tensor based on a source tensor¡¯s shape and data type.
+        auto prepareResultTensor = [&](X::Tensor srcTensor, X::Tensor resultTensor) -> bool {
+            int dimCount = srcTensor->GetDimCount();
+            X::Port::vector<int> dims(dimCount);
+            for (int i = 0; i < dimCount; i++) {
+                dims.push_back(srcTensor->GetDimSize(i));
+            }
+            resultTensor->SetDataType(srcTensor->GetDataType());
+            resultTensor->SetShape(dims);
+            X::TensorGraph tensorGraph(graph);
+            X::Value initData;
+            resultTensor->Create(initData);
+            return (TensorHelper::EnsureGPUMemory(resultTensor) == TensorOpStatus::Success);
+            };
+
+        // Lambda: Perform matrix multiplication (GEMM) using the original kernel names.
+        // For input matrices A (m x n) and B (n x k), result is C (m x k).
+        // Note: We call runGemmXXX(A, B, C, m, k, n) as in the original code.
+        auto matrixMultiply = [&](X::Tensor A, X::Tensor B, X::Tensor resultTensor,
             int m, int n, int k) -> std::string {
+                // Ensure GPU memory for A, B, and result tensor.
+                if (TensorHelper::EnsureGPUMemory(A) != TensorOpStatus::Success)
+                    return "// Error: Failed to allocate GPU memory for tensor A\n";
+                if (TensorHelper::EnsureGPUMemory(B) != TensorOpStatus::Success)
+                    return "// Error: Failed to allocate GPU memory for tensor B\n";
+                if (!prepareResultTensor(A, resultTensor))
+                    return "// Error: Failed to allocate GPU memory for result tensor\n";
 
-                std::string code = mCodeGen.GenerateCommentHeader("Matrix multiplication", t1, t2);
-                auto t1_type = t1->GetDataType();
-                auto t2_type = t2->GetDataType();
+                std::string code = mCodeGen.GenerateCommentHeader("Matrix multiplication", A, B);
+                void* gpuA = TensorHelper::GetGPUMemory(A);
+                void* gpuB = TensorHelper::GetGPUMemory(B);
+                void* gpuC = TensorHelper::GetGPUMemory(resultTensor);
+                std::string varA = mCodeGen.GetTensorName(A);
+                std::string varB = mCodeGen.GetTensorName(B);
+                std::string varC = mCodeGen.GetTensorName(resultTensor);
+                code += mCodeGen.GenerateVariableDeclaration(varA, A->GetDataType(), gpuA);
+                code += mCodeGen.GenerateVariableDeclaration(varB, B->GetDataType(), gpuB);
+                code += mCodeGen.GenerateVariableDeclaration(varC, A->GetDataType(), gpuC);
 
-                // Get memory pointers
-                void* gpu1 = TensorHelper::GetGPUMemory(t1);
-                void* gpu2 = TensorHelper::GetGPUMemory(t2);
-                void* gpuResult = TensorHelper::GetGPUMemory(result);
-
-                // Create variable names
-                std::string var1 = mCodeGen.GetTensorName(t1);
-                std::string var2 = mCodeGen.GetTensorName(t2);
-                std::string resultVar = mCodeGen.GetTensorName(result);
-
-                // Add variable declarations
-                code += mCodeGen.GenerateVariableDeclaration(var1, t1_type, gpu1);
-                code += mCodeGen.GenerateVariableDeclaration(var2, t2_type, gpu2);
-                code += mCodeGen.GenerateVariableDeclaration(resultVar, t1_type, gpuResult);
-
-                // Generate kernel calls based on data types
-                if (t1_type == X::TensorDataType::DOUBLE && t2_type == X::TensorDataType::DOUBLE) {
-                    code += "runGemmFP64(" + var1 + ", " + var2 + ", " + resultVar +
-                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " +
-                        std::to_string(n) + ");\n";
+                // Dispatch the proper kernel based on the tensor data type.
+                if (A->GetDataType() == X::TensorDataType::FLOAT32) {
+                    code += "runGemmFP32(" + varA + ", " + varB + ", " + varC +
+                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " + std::to_string(n) + ");\n";
                 }
-                else if (t1_type == X::TensorDataType::FLOAT32 && t2_type == X::TensorDataType::FLOAT32) {
-                    code += "runGemmFP32(" + var1 + ", " + var2 + ", " + resultVar +
-                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " +
-                        std::to_string(n) + ");\n";
+                else if (A->GetDataType() == X::TensorDataType::FLOAT16) {
+                    code += "runGemmFP16(" + varA + ", " + varB + ", " + varC +
+                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " + std::to_string(n) + ");\n";
                 }
-                else if (t1_type == X::TensorDataType::FLOAT16 && t2_type == X::TensorDataType::FLOAT16) {
-                    code += "runGemmFP16(" + var1 + ", " + var2 + ", " + resultVar +
-                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " +
-                        std::to_string(n) + ");\n";
+                else if (A->GetDataType() == X::TensorDataType::BFLOAT16) {
+                    code += "runGemmBF16(" + varA + ", " + varB + ", " + varC +
+                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " + std::to_string(n) + ");\n";
                 }
-                else if (t1_type == X::TensorDataType::BFLOAT16 && t2_type == X::TensorDataType::BFLOAT16) {
-                    code += "runGemmBF16(" + var1 + ", " + var2 + ", " + resultVar +
-                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " +
-                        std::to_string(n) + ");\n";
+                else if (A->GetDataType() == X::TensorDataType::FLOAT8_E4M3FN) {
+                    code += "runGemmFP8E4M3(" + varA + ", " + varB + ", " + varC +
+                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " + std::to_string(n) + ");\n";
                 }
-                else if (t1_type == X::TensorDataType::FLOAT8_E4M3FN && t2_type == X::TensorDataType::FLOAT8_E4M3FN) {
-                    code += "runGemmFP8E4M3(" + var1 + ", " + var2 + ", " + resultVar +
-                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " +
-                        std::to_string(n) + ");\n";
-                }
-                else if (t1_type == X::TensorDataType::FLOAT8_E5M2 && t2_type == X::TensorDataType::FLOAT8_E5M2) {
-                    code += "runGemmFP8E5M2(" + var1 + ", " + var2 + ", " + resultVar +
-                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " +
-                        std::to_string(n) + ");\n";
+                else if (A->GetDataType() == X::TensorDataType::FLOAT8_E5M2) {
+                    code += "runGemmFP8E5M2(" + varA + ", " + varB + ", " + varC +
+                        ", " + std::to_string(m) + ", " + std::to_string(k) + ", " + std::to_string(n) + ");\n";
                 }
                 else {
-                    code += "// Error: Unsupported data type combination\n";
+                    code += "// Error: Unsupported data type combination for matrix multiplication\n";
                 }
-
                 return code;
             };
 
+        // Lambda: Handle the case where one tensor is a single element and the other is multi-element.
+        auto multiplySingleElementTensor = [&](X::Tensor singleTensor, X::Tensor multiTensor, X::Tensor resultTensor) -> std::string {
+            if (TensorHelper::EnsureGPUMemory(multiTensor) != TensorOpStatus::Success)
+                return "// Error: Failed to allocate GPU memory for multi-element tensor\n";
+            if (!prepareResultTensor(multiTensor, resultTensor))
+                return "// Error: Failed to allocate GPU memory for result tensor\n";
+
+            std::string code = mCodeGen.GenerateCommentHeader("Single element tensor as scalar multiplication", singleTensor, multiTensor);
+            std::string singleVar = mCodeGen.GetTensorName(singleTensor);
+            std::string multiVar = mCodeGen.GetTensorName(multiTensor);
+            std::string resultVar = mCodeGen.GetTensorName(resultTensor);
+            void* gpuMulti = TensorHelper::GetGPUMemory(multiTensor);
+            void* gpuResult = TensorHelper::GetGPUMemory(resultTensor);
+            code += mCodeGen.GenerateVariableDeclaration(multiVar, multiTensor->GetDataType(), gpuMulti);
+            code += mCodeGen.GenerateVariableDeclaration(resultVar, multiTensor->GetDataType(), gpuResult);
+            // If needed, add a comment about type conversion if the single element¡¯s type differs.
+            if (singleTensor->GetDataType() != multiTensor->GetDataType()) {
+                code += "// Converting single element tensor to match multi tensor type\n";
+            }
+            // Using a naming convention similar to Add and Minus.
+            if (multiTensor->GetDataType() == X::TensorDataType::FLOAT32) {
+                code += "runSingleElementTensorMultiplyFP32(" + multiVar + ", " + singleVar + ", " + resultVar +
+                    ", " + std::to_string(multiTensor->GetCount()) + ");\n";
+            }
+            else if (multiTensor->GetDataType() == X::TensorDataType::FLOAT16) {
+                code += "runSingleElementTensorMultiplyFP16(" + multiVar + ", " + singleVar + ", " + resultVar +
+                    ", " + std::to_string(multiTensor->GetCount()) + ");\n";
+            }
+            else if (multiTensor->GetDataType() == X::TensorDataType::BFLOAT16) {
+                code += "runSingleElementTensorMultiplyBF16(" + multiVar + ", " + singleVar + ", " + resultVar +
+                    ", " + std::to_string(multiTensor->GetCount()) + ");\n";
+            }
+            else if (multiTensor->GetDataType() == X::TensorDataType::FLOAT8_E4M3FN) {
+                code += "runSingleElementTensorMultiplyFP8E4M3(" + multiVar + ", " + singleVar + ", " + resultVar +
+                    ", " + std::to_string(multiTensor->GetCount()) + ");\n";
+            }
+            else if (multiTensor->GetDataType() == X::TensorDataType::FLOAT8_E5M2) {
+                code += "runSingleElementTensorMultiplyFP8E5M2(" + multiVar + ", " + singleVar + ", " + resultVar +
+                    ", " + std::to_string(multiTensor->GetCount()) + ");\n";
+            }
+            else {
+                code += "// Error: Unsupported data type for single element tensor multiplication\n";
+            }
+            return code;
+            };
+
+        // Lambda: Tensor-scalar multiplication.
+        auto multiplyTensorScalar = [&](X::Tensor tensor, float scalar, X::Tensor resultTensor) -> std::string {
+            if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success)
+                return "// Error: Failed to allocate GPU memory for tensor\n";
+            if (!prepareResultTensor(tensor, resultTensor))
+                return "// Error: Failed to allocate GPU memory for result tensor\n";
+
+            std::string code = mCodeGen.GenerateCommentHeader("Scalar multiplication with tensor", tensor);
+            void* gpuData = TensorHelper::GetGPUMemory(tensor);
+            void* gpuResultData = TensorHelper::GetGPUMemory(resultTensor);
+            std::string inputVar = mCodeGen.GetTensorName(tensor);
+            std::string resultVar = mCodeGen.GetTensorName(resultTensor);
+            code += mCodeGen.GenerateVariableDeclaration(inputVar, tensor->GetDataType(), gpuData);
+            code += mCodeGen.GenerateVariableDeclaration(resultVar, tensor->GetDataType(), gpuResultData);
+            code += "float scalar_value = " + std::to_string(scalar) + ";\n";
+            if (tensor->GetDataType() == X::TensorDataType::FLOAT32) {
+                code += "runScalarMultiplyFP32(" + inputVar + ", " + resultVar + ", scalar_value, " +
+                    std::to_string(tensor->GetCount()) + ");\n";
+            }
+            else if (tensor->GetDataType() == X::TensorDataType::FLOAT16) {
+                code += "runScalarMultiplyFP16(" + inputVar + ", " + resultVar + ", scalar_value, " +
+                    std::to_string(tensor->GetCount()) + ");\n";
+            }
+            else if (tensor->GetDataType() == X::TensorDataType::BFLOAT16) {
+                code += "runScalarMultiplyBF16(" + inputVar + ", " + resultVar + ", scalar_value, " +
+                    std::to_string(tensor->GetCount()) + ");\n";
+            }
+            else if (tensor->GetDataType() == X::TensorDataType::FLOAT8_E4M3FN) {
+                code += "runScalarMultiplyFP8E4M3(" + inputVar + ", " + resultVar + ", scalar_value, " +
+                    std::to_string(tensor->GetCount()) + ");\n";
+            }
+            else if (tensor->GetDataType() == X::TensorDataType::FLOAT8_E5M2) {
+                code += "runScalarMultiplyFP8E5M2(" + inputVar + ", " + resultVar + ", scalar_value, " +
+                    std::to_string(tensor->GetCount()) + ");\n";
+            }
+            else {
+                code += "// Error: Unsupported data type for scalar multiplication\n";
+            }
+            return code;
+            };
+
+        // Lambda: Scalar-scalar multiplication.
+        auto multiplyScalars = [&](float a, float b) -> std::string {
+            std::string code = "// Scalar-scalar multiplication\n";
+            code += std::to_string(a) + " * " + std::to_string(b) + ";\n";
+            return code;
+            };
+
+        // Process cases.
         if (isTensor1 && isTensor2)
         {
-            // Tensor-tensor multiplication
             X::Tensor tensor1(input1);
             X::Tensor tensor2(input2);
-            auto tensor1_type = tensor1->GetDataType();
-            auto tensor2_type = tensor2->GetDataType();
 
-            // Optimized path for single element tensors
+            // Case 1: Both tensors are single elements ¨C perform direct scalar multiplication.
             if (tensor1->GetCount() == 1 && tensor2->GetCount() == 1) {
-                // Direct expression for single element operations
+                std::string resultVar = mCodeGen.GetTensorName(X::Tensor(output));
                 cudaCodeString = "// Direct single element multiplication\n";
-                cudaCodeString += "*static_cast<float*>(" + mCodeGen.GetTensorName(tensor1) +
-                    ") * *static_cast<float*>(" + mCodeGen.GetTensorName(tensor2) + ");\n";
+                cudaCodeString += resultVar + " = " +
+                    mCodeGen.GetTensorName(tensor1) + " * " +
+                    mCodeGen.GetTensorName(tensor2) + ";\n";
                 return X::Value(cudaCodeString);
             }
-
-            // Normal tensor-tensor processing
-            int dimCount1 = tensor1->GetDimCount();
-            int dimCount2 = tensor2->GetDimCount();
-
-            // Validate dimensions
-            if (dimCount1 > 2 || dimCount2 > 2) {
-                return X::Value("// Error: Tensor dimensions > 2 not supported\n");
+            // Case 2: One tensor is a single element and the other is multi-element.
+            if (tensor1->GetCount() == 1 && tensor2->GetCount() > 1) {
+                X::Tensor resultTensor(output);
+                cudaCodeString = multiplySingleElementTensor(tensor1, tensor2, resultTensor);
+                return X::Value(cudaCodeString);
             }
-
+            if (tensor2->GetCount() == 1 && tensor1->GetCount() > 1) {
+                X::Tensor resultTensor(output);
+                cudaCodeString = multiplySingleElementTensor(tensor2, tensor1, resultTensor);
+                return X::Value(cudaCodeString);
+            }
+            // Case 3: Both tensors are multi-element.
+            if (tensor1->GetDimCount() > 2 || tensor2->GetDimCount() > 2) {
+                return X::Value("// Error: Tensor dimensions > 2 not supported for matrix multiplication\n");
+            }
+            // For matrix multiplication, we assume tensor1 is A (m x n) and tensor2 is B (n x k).
             int m = tensor1->GetDimSize(0);
-            int n = (dimCount1 > 1) ? tensor1->GetDimSize(1) : 1;
-            int k = (dimCount2 > 1) ? tensor2->GetDimSize(1) : 1;
-
-            // Check dimension compatibility
-            if (dimCount2 == 1) {
+            int n = (tensor1->GetDimCount() > 1) ? tensor1->GetDimSize(1) : 1;
+            int k = (tensor2->GetDimCount() > 1) ? tensor2->GetDimSize(1) : 1;
+            // Check inner dimensions.
+            if (tensor2->GetDimCount() == 1) {
                 if (n != tensor2->GetDimSize(0)) {
                     return X::Value("// Error: Dimension mismatch for vector multiplication\n");
                 }
@@ -245,166 +351,58 @@ namespace Garnet {
             else if (n != tensor2->GetDimSize(0)) {
                 return X::Value("// Error: Inner dimensions must match for matrix multiplication\n");
             }
-
-            // Ensure GPU memory is allocated for input tensors
-            TensorOpStatus status = TensorHelper::EnsureGPUMemory(tensor1);
-            if (status != TensorOpStatus::Success) {
-                return X::Value("// Error: Failed to allocate GPU memory for tensor1\n");
-            }
-
-            status = TensorHelper::EnsureGPUMemory(tensor2);
-            if (status != TensorOpStatus::Success) {
-                return X::Value("// Error: Failed to allocate GPU memory for tensor2\n");
-            }
-
-            // Create result tensor with proper dimensions
-            int dimNum = 1;
-            if (tensor2->GetDimCount() > 1) {
-                dimNum = 2;
-            }
-            X::Port::vector<int> resultDims(dimNum);
+            // Create result tensor: shape = {m, k} if tensor2 is 2D, else {m} for vector multiplication.
+            X::Port::vector<int> resultDims(tensor2->GetDimCount() > 1?2:1);
             resultDims.push_back(m);
             if (tensor2->GetDimCount() > 1) {
                 resultDims.push_back(k);
             }
-
-            // Set up the return tensor and register it with the tensor graph
             X::Tensor resultTensor(output);
-            X::TensorGraph tensorGraph(graph);
-            resultTensor->SetDataType(tensor1_type);
+            resultTensor->SetDataType(tensor1->GetDataType());
             resultTensor->SetShape(resultDims);
-            X::Value initData;
-            resultTensor->Create(initData);
-            tensorGraph->PutTensorIntoCache(resultTensor);
-
-            status = TensorHelper::EnsureGPUMemory(resultTensor);
-            if (status != TensorOpStatus::Success) {
-                return X::Value("// Error: Failed to allocate GPU memory for result tensor\n");
+            {
+                X::TensorGraph tensorGraph(graph);
+                X::Value initData;
+                resultTensor->Create(initData);
+                tensorGraph->PutTensorIntoCache(resultTensor);
             }
-
-            // Generate CUDA code using the lambda
-            cudaCodeString = generateMatrixMulCode(tensor1, tensor2, resultTensor, m, n, k);
+            // Call the matrix multiplication lambda.
+            cudaCodeString = matrixMultiply(tensor1, tensor2, resultTensor, m, n, k);
             return X::Value(cudaCodeString);
         }
-        else if (isTensor1)
+        else if (isTensor1 && !isTensor2)
         {
-            // Tensor-scalar multiplication
+            // Tensor-scalar multiplication.
             X::Tensor tensor(input1);
-            auto tensorType = tensor->GetDataType();
-            float scalar = (float)input2.ToDouble();
-
-            // Optimized path for single element tensor
+            // If the tensor is a single element, do direct multiplication.
             if (tensor->GetCount() == 1) {
+                std::string resultVar = mCodeGen.GetTensorName(X::Tensor(output));
                 cudaCodeString = "// Direct single element scalar multiplication\n";
-                cudaCodeString += "*static_cast<float*>(" + mCodeGen.GetTensorName(tensor) +
-                    ") * " + std::to_string(scalar) + ";\n";
+                cudaCodeString += resultVar + " = " +
+                    mCodeGen.GetTensorName(tensor) + " * " + std::to_string((float)input2.ToDouble()) + ";\n";
                 return X::Value(cudaCodeString);
             }
-
-            // Standard tensor-scalar logic
-            int dimCount = tensor->GetDimCount();
-            if (dimCount > 2) {
-                return X::Value("// Error: Tensor dimensions > 2 not supported for scalar multiplication\n");
-            }
-
-            // Calculate total elements
-            long long totalElements = tensor->GetCount();
-
-            // Ensure GPU memory is allocated
-            TensorOpStatus status = TensorHelper::EnsureGPUMemory(tensor);
-            if (status != TensorOpStatus::Success) {
-                return X::Value("// Error: Failed to allocate GPU memory for tensor\n");
-            }
-
-            // Create result tensor with same shape as input
-            X::Port::vector<int> resultDims(dimCount);
-            for (int i = 0; i < dimCount; i++) {
-                resultDims.push_back(tensor->GetDimSize(i));
-            }
-
-            // Set up the return tensor
-            X::Tensor resultTensor(output);
-            X::TensorGraph tensorGraph(graph);
-            resultTensor->SetDataType(tensorType);
-            resultTensor->SetShape(resultDims);
-            X::Value initData;
-            resultTensor->Create(initData);
-            tensorGraph->PutTensorIntoCache(resultTensor);
-
-            status = TensorHelper::EnsureGPUMemory(resultTensor);
-            if (status != TensorOpStatus::Success) {
-                return X::Value("// Error: Failed to allocate GPU memory for result tensor\n");
-            }
-
-            // Get GPU memory pointers
-            void* gpuData = TensorHelper::GetGPUMemory(tensor);
-            void* gpuResultData = TensorHelper::GetGPUMemory(resultTensor);
-
-            // Create variable names
-            std::string inputVar = mCodeGen.GetTensorName(tensor);
-            std::string resultVar = mCodeGen.GetTensorName(resultTensor);
-
-            // Generate CUDA code for scalar multiplication
-            cudaCodeString = mCodeGen.GenerateCommentHeader("Scalar multiplication", tensor);
-            cudaCodeString += mCodeGen.GenerateVariableDeclaration(inputVar, tensorType, gpuData);
-            cudaCodeString += mCodeGen.GenerateVariableDeclaration(resultVar, tensorType, gpuResultData);
-
-            // Add scalar declaration
-            cudaCodeString += "float scalar_value = " + std::to_string(scalar) + ";\n";
-
-            // Call the appropriate scalar multiplication function based on data type
-            if (tensorType == X::TensorDataType::DOUBLE) {
-                cudaCodeString += "runScalarMultiplyFP64(" +
-                    inputVar + ", " + resultVar + ", scalar_value, " +
-                    std::to_string(totalElements) + ");\n";
-            }
-            else if (tensorType == X::TensorDataType::FLOAT32) {
-                cudaCodeString += "runScalarMultiplyFP32(" +
-                    inputVar + ", " + resultVar + ", scalar_value, " +
-                    std::to_string(totalElements) + ");\n";
-            }
-            else if (tensorType == X::TensorDataType::FLOAT16) {
-                cudaCodeString += "runScalarMultiplyFP16(" +
-                    inputVar + ", " + resultVar + ", scalar_value, " +
-                    std::to_string(totalElements) + ");\n";
-            }
-            else if (tensorType == X::TensorDataType::BFLOAT16) {
-                cudaCodeString += "runScalarMultiplyBF16(" +
-                    inputVar + ", " + resultVar + ", scalar_value, " +
-                    std::to_string(totalElements) + ");\n";
-            }
-            else if (tensorType == X::TensorDataType::FLOAT8_E4M3FN) {
-                cudaCodeString += "runScalarMultiplyFP8E4M3(" +
-                    inputVar + ", " + resultVar + ", scalar_value, " +
-                    std::to_string(totalElements) + ");\n";
-            }
-            else if (tensorType == X::TensorDataType::FLOAT8_E5M2) {
-                cudaCodeString += "runScalarMultiplyFP8E5M2(" +
-                    inputVar + ", " + resultVar + ", scalar_value, " +
-                    std::to_string(totalElements) + ");\n";
-            }
             else {
-                cudaCodeString += "// Error: Unsupported data type for scalar multiplication\n";
-                return X::Value("// Error: Unsupported data type for scalar multiplication\n");
+                X::Tensor resultTensor(output);
+                cudaCodeString = multiplyTensorScalar(tensor, (float)input2.ToDouble(), resultTensor);
+                return X::Value(cudaCodeString);
             }
-
-            return X::Value(cudaCodeString);
         }
-        else if (isTensor2)
+        else if (!isTensor1 && isTensor2)
         {
-            // Scalar-tensor multiplication (commutative)
+            // For commutative scalar-tensor multiplication, swap the inputs.
             return Multiply(graph, params, kwParams, input2, input1, output);
         }
         else
         {
-            // Scalar-scalar multiplication
+            // Both inputs are scalars.
             float val1 = (float)input1.ToDouble();
             float val2 = (float)input2.ToDouble();
-            cudaCodeString = "// Scalar-scalar multiplication\n";
-            cudaCodeString += std::to_string(val1) + " * " + std::to_string(val2) + ";\n";
+            cudaCodeString = multiplyScalars(val1, val2);
             return X::Value(cudaCodeString);
         }
     }
+
 
     // Implementation of Add function
     X::Value GarnetTensor::Add(X::Value& graph, X::ARGS& params,

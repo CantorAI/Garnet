@@ -1,61 +1,139 @@
-// cuda_templates/cuda_function_declarations.h
-#ifndef CUDA_FUNCTION_DECLARATIONS_H
-#define CUDA_FUNCTION_DECLARATIONS_H
+#ifndef _GARNET_CUDA_H_
+#define _GARNET_CUDA_H_
 
-// This file contains all CUDA function declarations used by GarnetTensor
-// Edit this file to add or modify CUDA function declarations
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h> // Assumes definitions for fp8_e4m3 and fp8_e5m2 types
 
+using bfloat16 = __nv_bfloat16;
+
+struct fp8_e4m3 {
+    unsigned char data;
+    // Optionally add conversion routines if needed.
+};
+
+struct fp8_e5m2 {
+    unsigned char data;
+    // Optionally add conversion routines if needed.
+};
+
+
+#ifdef __cplusplus
 extern "C" {
-    // Matrix multiplication operations
-    void runGemmFP32(const float* d_A, const float* d_B, float* d_C, int M, int N, int K);
-    void runGemmFP16(const __half* d_A, const __half* d_B, float* d_C, int M, int N, int K);
-    void runGemmBF16(const __nv_bfloat16* d_A, const __nv_bfloat16* d_B, float* d_C, int M, int N, int K);
-    void runGemmFP8E4M3(const __nv_fp8_e4m3* d_A, const __nv_fp8_e4m3* d_B, float* d_C, int M, int N, int K);
-    void runGemmFP8E5M2(const __nv_fp8_e5m2* d_A, const __nv_fp8_e5m2* d_B, float* d_C, int M, int N, int K);
+#endif
 
-    // Gather operations
-    void runGatherKernelFloat(const float* input, const int* indices, float* output, int M, int N, int numIndices);
-    void runGatherKernelFP16(const __half* input, const int* indices, __half* output, int M, int N, int numIndices);
-    void runGatherKernelBF16(const __nv_bfloat16* input, const int* indices, __nv_bfloat16* output, int M, int N, int numIndices);
-    void runGatherKernelFP8E4M3(const __nv_fp8_e4m3* input, const int* indices, __nv_fp8_e4m3* output, int M, int N, int numIndices);
-    void runGatherKernelFP8E5M2(const __nv_fp8_e5m2* input, const int* indices, __nv_fp8_e5m2* output, int M, int N, int numIndices);
+    // ------------------------
+    // Multiply Kernels
+    // ------------------------
+    void runGemmFP32(float* A, float* B, float* C, int m, int k, int n);
+    void runGemmFP16(__half* A, __half* B, __half* C, int m, int k, int n);
+    void runGemmBF16(bfloat16* A, bfloat16* B, bfloat16* C, int m, int k, int n);
+    void runGemmFP8E4M3(fp8_e4m3* A, fp8_e4m3* B, fp8_e4m3* C, int m, int k, int n);
+    void runGemmFP8E5M2(fp8_e5m2* A, fp8_e5m2* B, fp8_e5m2* C, int m, int k, int n);
 
-    // Scalar operations
-    void runScalarMultiplyFP32(const float* input, float* output, float scalar, long long length);
-    void runScalarMultiplyFP16(const __half* input, __half* output, float scalar, long long length);
-    void runScalarMultiplyBF16(const __nv_bfloat16* input, __nv_bfloat16* output, float scalar, long long length);
-    void runScalarMultiplyFP8E4M3(const __nv_fp8_e4m3* input, __nv_fp8_e4m3* output, float scalar, long long length);
-    void runScalarMultiplyFP8E5M2(const __nv_fp8_e5m2* input, __nv_fp8_e5m2* output, float scalar, long long length);
+    void runSingleElementTensorMultiplyFP32(float* multi, float* single, float* result, int count);
+    void runSingleElementTensorMultiplyFP16(__half* multi, __half* single, __half* result, int count);
+    void runSingleElementTensorMultiplyBF16(bfloat16* multi, bfloat16* single, bfloat16* result, int count);
+    void runSingleElementTensorMultiplyFP8E4M3(fp8_e4m3* multi, fp8_e4m3* single, fp8_e4m3* result, int count);
+    void runSingleElementTensorMultiplyFP8E5M2(fp8_e5m2* multi, fp8_e5m2* single, fp8_e5m2* result, int count);
 
-    // Element-wise operations
-    void runElementwiseAddFP32(const float* input1, const float* input2, float* output, long long length);
-    void runElementwiseAddFP16(const __half* input1, const __half* input2, __half* output, long long length);
-    void runElementwiseAddBF16(const __nv_bfloat16* input1, const __nv_bfloat16* input2, __nv_bfloat16* output, long long length);
-    void runElementwiseAddFP8E4M3(const __nv_fp8_e4m3* input1, const __nv_fp8_e4m3* input2, __nv_fp8_e4m3* output, long long length);
-    void runElementwiseAddFP8E5M2(const __nv_fp8_e5m2* input1, const __nv_fp8_e5m2* input2, __nv_fp8_e5m2* output, long long length);
+    void runScalarMultiplyFP32(float* input, float* result, float scalar, int count);
+    void runScalarMultiplyFP16(__half* input, __half* result, float scalar, int count);
+    void runScalarMultiplyBF16(bfloat16* input, bfloat16* result, float scalar, int count);
+    void runScalarMultiplyFP8E4M3(fp8_e4m3* input, fp8_e4m3* result, float scalar, int count);
+    void runScalarMultiplyFP8E5M2(fp8_e5m2* input, fp8_e5m2* result, float scalar, int count);
 
-    void runElementwiseSubtractFP32(const float* input1, const float* input2, float* output, long long length);
-    void runElementwiseSubtractFP16(const __half* input1, const __half* input2, __half* output, long long length);
-    void runElementwiseSubtractBF16(const __nv_bfloat16* input1, const __nv_bfloat16* input2, __nv_bfloat16* output, long long length);
-    void runElementwiseSubtractFP8E4M3(const __nv_fp8_e4m3* input1, const __nv_fp8_e4m3* input2, __nv_fp8_e4m3* output, long long length);
-    void runElementwiseSubtractFP8E5M2(const __nv_fp8_e5m2* input1, const __nv_fp8_e5m2* input2, __nv_fp8_e5m2* output, long long length);
+    // ------------------------
+    // Add Kernels
+    // ------------------------
+    void runAddFP64(double* A, double* B, double* C, int count);
+    void runAddFP32(float* A, float* B, float* C, int count);
+    void runAddFP16(__half* A, __half* B, __half* C, int count);
+    void runAddBF16(bfloat16* A, bfloat16* B, bfloat16* C, int count);
+    void runAddFP8E4M3(fp8_e4m3* A, fp8_e4m3* B, fp8_e4m3* C, int count);
+    void runAddFP8E5M2(fp8_e5m2* A, fp8_e5m2* B, fp8_e5m2* C, int count);
 
-    // Permute operations
-    void runPermuteFP32(const float* input, float* output, const int* dims, const int* perm, int rank);
-    void runPermuteFP16(const __half* input, __half* output, const int* dims, const int* perm, int rank);
-    void runPermuteBF16(const __nv_bfloat16* input, __nv_bfloat16* output, const int* dims, const int* perm, int rank);
-    void runPermuteFP8E4M3(const __nv_fp8_e4m3* input, __nv_fp8_e4m3* output, const int* dims, const int* perm, int rank);
-    void runPermuteFP8E5M2(const __nv_fp8_e5m2* input, __nv_fp8_e5m2* output, const int* dims, const int* perm, int rank);
+    void runSingleElementTensorAddFP64(double* tensor, double single, double* result, int count);
+    void runSingleElementTensorAddFP32(float* tensor, float single, float* result, int count);
+    void runSingleElementTensorAddFP16(__half* tensor, __half single, __half* result, int count);
+    void runSingleElementTensorAddBF16(bfloat16* tensor, bfloat16 single, bfloat16* result, int count);
+    void runSingleElementTensorAddFP8E4M3(fp8_e4m3* tensor, fp8_e4m3 single, fp8_e4m3* result, int count);
+    void runSingleElementTensorAddFP8E5M2(fp8_e5m2* tensor, fp8_e5m2 single, fp8_e5m2* result, int count);
 
-    // Type conversion operations
-    void runConvertFP32ToFP16(const float* input, __half* output, long long length);
-    void runConvertFP32ToBF16(const float* input, __nv_bfloat16* output, long long length);
-    void runConvertFP32ToFP8E4M3(const float* input, __nv_fp8_e4m3* output, long long length);
-    void runConvertFP32ToFP8E5M2(const float* input, __nv_fp8_e5m2* output, long long length);
-    void runConvertFP16ToFP32(const __half* input, float* output, long long length);
-    void runConvertBF16ToFP32(const __nv_bfloat16* input, float* output, long long length);
-    void runConvertFP8E4M3ToFP32(const __nv_fp8_e4m3* input, float* output, long long length);
-    void runConvertFP8E5M2ToFP32(const __nv_fp8_e5m2* input, float* output, long long length);
+    void runScalarAddFP32(float* input, float scalar, float* result, int count);
+
+    // ------------------------
+    // Minus Kernels
+    // ------------------------
+    void runMinusFP64(double* A, double* B, double* C, int count);
+    void runMinusFP32(float* A, float* B, float* C, int count);
+    void runMinusFP16(__half* A, __half* B, __half* C, int count);
+    void runMinusBF16(bfloat16* A, bfloat16* B, bfloat16* C, int count);
+    void runMinusFP8E4M3(fp8_e4m3* A, fp8_e4m3* B, fp8_e4m3* C, int count);
+    void runMinusFP8E5M2(fp8_e5m2* A, fp8_e5m2* B, fp8_e5m2* C, int count);
+
+    void runSingleElementTensorMinusFP64(double* tensor, double single, double* result, int count);
+    void runSingleElementTensorMinusFP32(float* tensor, float single, float* result, int count);
+    void runSingleElementTensorMinusFP16(__half* tensor, __half single, __half* result, int count);
+    void runSingleElementTensorMinusBF16(bfloat16* tensor, bfloat16 single, bfloat16* result, int count);
+    void runSingleElementTensorMinusFP8E4M3(fp8_e4m3* tensor, fp8_e4m3 single, fp8_e4m3* result, int count);
+    void runSingleElementTensorMinusFP8E5M2(fp8_e5m2* tensor, fp8_e5m2 single, fp8_e5m2* result, int count);
+
+    void runScalarMinusFP32(float* input, float scalar, float* result, int count);
+
+    // ------------------------
+    // Matmul Kernels
+    // ------------------------
+    void runMatmulFP32(float* A, float* B, float* C, int m, int n, int k);
+    void runMatmulFP16(__half* A, __half* B, __half* C, int m, int n, int k);
+    void runMatmulBF16(bfloat16* A, bfloat16* B, bfloat16* C, int m, int n, int k);
+    void runMatmulFP8E4M3(fp8_e4m3* A, fp8_e4m3* B, fp8_e4m3* C, int m, int n, int k);
+    void runMatmulFP8E5M2(fp8_e5m2* A, fp8_e5m2* B, fp8_e5m2* C, int m, int n, int k);
+
+    // ------------------------
+    // Permute Kernels
+    // ------------------------
+    void runPermuteFP32(float* input, float* output, int* permOrder, int* dimSizes, int dimCount);
+    void runPermuteFP16(__half* input, __half* output, int* permOrder, int* dimSizes, int dimCount);
+    void runPermuteBF16(bfloat16* input, bfloat16* output, int* permOrder, int* dimSizes, int dimCount);
+    void runPermuteFP8E4M3(fp8_e4m3* input, fp8_e4m3* output, int* permOrder, int* dimSizes, int dimCount);
+    void runPermuteFP8E5M2(fp8_e5m2* input, fp8_e5m2* output, int* permOrder, int* dimSizes, int dimCount);
+
+    // ------------------------
+    // Gather Kernels
+    // ------------------------
+    void runGatherFP32(float* data, float* indices, float* output,
+        int* dataDims, int dataDimCount,
+        int* indicesDims, int indicesDimCount, int dim);
+    void runGatherFP16(__half* data, __half* indices, __half* output,
+        int* dataDims, int dataDimCount,
+        int* indicesDims, int indicesDimCount, int dim);
+    void runGatherBF16(bfloat16* data, bfloat16* indices, bfloat16* output,
+        int* dataDims, int dataDimCount,
+        int* indicesDims, int indicesDimCount, int dim);
+    void runGatherFP8E4M3(fp8_e4m3* data, fp8_e4m3* indices, fp8_e4m3* output,
+        int* dataDims, int dataDimCount,
+        int* indicesDims, int indicesDimCount, int dim);
+    void runGatherFP8E5M2(fp8_e5m2* data, fp8_e5m2* indices, fp8_e5m2* output,
+        int* dataDims, int dataDimCount,
+        int* indicesDims, int indicesDimCount, int dim);
+
+    // ------------------------
+    // Convert Kernels
+    // ------------------------
+    void runConvertFP32ToFP16(float* src, __half* dest, int totalElements);
+    void runConvertFP32ToBF16(float* src, bfloat16* dest, int totalElements);
+    void runConvertFP32ToFP8E4M3(float* src, fp8_e4m3* dest, int totalElements);
+    void runConvertFP32ToFP8E5M2(float* src, fp8_e5m2* dest, int totalElements);
+
+    void runConvertFP16ToFP32(__half* src, float* dest, int totalElements);
+    void runConvertBF16ToFP32(bfloat16* src, float* dest, int totalElements);
+    void runConvertFP8E4M3ToFP32(fp8_e4m3* src, float* dest, int totalElements);
+    void runConvertFP8E5M2ToFP32(fp8_e5m2* src, float* dest, int totalElements);
+
+#ifdef __cplusplus
 }
+#endif
 
-#endif // CUDA_FUNCTION_DECLARATIONS_H
+#endif // _GARNET_CUDA_H_

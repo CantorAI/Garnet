@@ -303,7 +303,7 @@ namespace Garnet {
                     option_ptrs.push_back(opt.c_str());
                 }
 
-                // Compile the CUDA code to PTX
+                // Print NVRTC options if verbose
                 if (verbose_) {
                     std::cout << "NVRTC options for module '" << module_name << "':" << std::endl;
                     for (const auto& opt : options) {
@@ -311,6 +311,7 @@ namespace Garnet {
                     }
                 }
 
+                // Compile the CUDA code to PTX
                 nvrtcResult compile_result = nvrtcCompileProgram(
                     prog, option_ptrs.size(), option_ptrs.data()
                 );
@@ -321,6 +322,22 @@ namespace Garnet {
 
                 std::string log(log_size, '\0');
                 check_nvrtc_error(nvrtcGetProgramLog(prog, &log[0]), "nvrtcGetProgramLog");
+
+                // Write the compile log to file in the jit directory (.log)
+                {
+                    std::string log_path = (std::filesystem::path(jit_dir_) / (module_name + ".log")).string();
+                    std::ofstream log_file(log_path, std::ios::binary);
+                    if (log_file.is_open()) {
+                        log_file << log;
+                        log_file.close();
+                        if (verbose_) {
+                            std::cout << "Saved NVRTC compile log to file: " << log_path << std::endl;
+                        }
+                    }
+                    else {
+                        std::cerr << "Failed to write NVRTC compile log to file: " << log_path << std::endl;
+                    }
+                }
 
                 if (compile_result != NVRTC_SUCCESS) {
                     std::cerr << "NVRTC Compilation failed for module '" << module_name << "':\n" << log << std::endl;
@@ -496,6 +513,22 @@ namespace Garnet {
             const std::string& md5_hash) {
             ensure_cuda_initialized();
 
+            // Always write out the CUDA source code to a file (.cu) in the JIT directory
+            {
+                std::string cu_path = (std::filesystem::path(jit_dir_) / (module_name + ".cu")).string();
+                std::ofstream cu_file(cu_path, std::ios::binary);
+                if (cu_file.is_open()) {
+                    cu_file << cuda_code;
+                    cu_file.close();
+                    if (verbose_) {
+                        std::cout << "Saved CUDA source to file: " << cu_path << std::endl;
+                    }
+                }
+                else {
+                    std::cerr << "Failed to write CUDA source to file: " << cu_path << std::endl;
+                }
+            }
+
             // Lock for thread safety
             std::lock_guard<std::mutex> lock(cache_mutex_);
 
@@ -621,7 +654,6 @@ namespace Garnet {
             }
             return "";
         }
-
 
         // Get a kernel function from a specific module
         CUfunction get_kernel(const std::string& module_name, const std::string& kernel_name) const {
