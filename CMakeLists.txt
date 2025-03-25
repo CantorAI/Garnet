@@ -65,9 +65,11 @@ add_library(${PROJECT_NAME}
     ${Log_SRC}
 )
 
+
 # On Windows, link against cudart (the CUDA runtime) explicitly.
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY} 
+    target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
+            nvrtc.lib
             ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
     ) 
     # Add debug-specific libraries for Windows Debug build
@@ -110,3 +112,8 @@ if(MSVC)
         target_link_libraries(${PROJECT_NAME} debug msvcrtd)
     endif()
 endif()
+
+# copy the src/cuda folder to Lib/Garnet/cuda.
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Lib/Garnet/cuda")
+file(COPY "${PROJECT_SOURCE_DIR}/src/cuda" DESTINATION "${CMAKE_BINARY_DIR}/bin/Lib/Garnet/")
+

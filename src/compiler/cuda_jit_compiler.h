@@ -39,6 +39,44 @@ namespace Garnet {
         bool initialized_ = false;
         bool verbose_ = false;
 
+        std::string get_cuda_include_dir() {
+#if defined(WIN32) || defined(_WIN32)
+            // On Windows, use the CUDA_PATH environment variable.
+            const char* cudaPath = std::getenv("CUDA_PATH");
+            if (cudaPath) {
+                std::filesystem::path includePath = std::filesystem::path(cudaPath) / "include";
+                if (std::filesystem::exists(includePath)) {
+                    return includePath.string();
+                }
+                else {
+                    std::cerr << "CUDA include directory not found at: " << includePath.string() << std::endl;
+                }
+            }
+            else {
+                std::cerr << "CUDA_PATH environment variable not set on Windows." << std::endl;
+            }
+            // Fallback for Windows (update the path as needed)
+            return "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v11.2\\include";
+#else
+            // On non-Windows systems (Linux/macOS), use the CUDA_HOME environment variable.
+            const char* cudaPath = std::getenv("CUDA_HOME");
+            if (cudaPath) {
+                std::filesystem::path includePath = std::filesystem::path(cudaPath) / "include";
+                if (std::filesystem::exists(includePath)) {
+                    return includePath.string();
+                }
+                else {
+                    std::cerr << "CUDA include directory not found at: " << includePath.string() << std::endl;
+                }
+            }
+            else {
+                std::cerr << "CUDA_HOME environment variable not set on non-Windows system." << std::endl;
+            }
+            // Fallback for non-Windows (update the path as needed)
+            return "/usr/local/cuda/include";
+#endif
+        }
+
         // Check CUDA driver API errors
         void check_cuda_error(CUresult result, const char* call) const {
             if (result != CUDA_SUCCESS) {
@@ -352,6 +390,14 @@ namespace Garnet {
             // Setup paths
             std::filesystem::path jit_path = std::filesystem::path(base_dir_) / "_jit_";
             jit_dir_ = jit_path.string();
+
+            // Automatically add the CUDA include directory
+            std::string cudaInclude = get_cuda_include_dir();
+            add_include_directory(cudaInclude);
+
+            std::filesystem::path cuda_lib_path = std::filesystem::path(base_dir_) / "Lib/Garnet/cuda";
+            std::string lib_include = cuda_lib_path.string();
+            add_include_directory(lib_include);
 
             // Initialize CUDA
             ensure_cuda_initialized();

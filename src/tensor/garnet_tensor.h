@@ -24,6 +24,8 @@ namespace Garnet
 	{
 		X::Value mVarTensor;//bind to a tensor
 		X::Value mFunc;//the Func with this Fusion dectoration
+		std::string mFuncName;
+		std::string mFuncCodeHash;
 		X::Value mTensorGraph;
 		bool mNeedGenAndCompile = false;
 		BEGIN_PACKAGE(Fusionist)
@@ -42,9 +44,11 @@ namespace Garnet
 		}
 		inline void SetParent(X::Value& t) { mVarTensor = t; }
 		bool Call(X::XRuntime* rt, X::ARGS& params, X::KWARGS& kwParams, X::Value& outputue);
-		inline void SetFunc(X::Value& func)
+		inline void SetFunc(X::Value& func,std::string& funcName,std::string& funcCodeHash)
 		{
 			mFunc = func;
+			mFuncName = funcName;
+			mFuncCodeHash = funcCodeHash;
 		}
 	};
 	// Helper functions for CUDA code generation
@@ -162,7 +166,7 @@ namespace Garnet
 			END_PACKAGE
 	public:
 		GarnetTensor();
-
+		CudaJitCompiler& GetCompiler() { return mCompiler; }
 		// Fusion function
 		void Fusion(X::XRuntime* rt, X::XObj* pThis, X::XObj* pContext,
 					X::ARGS& params, X::KWARGS& kwParams, X::Value& trailer, X::Value& outputue);

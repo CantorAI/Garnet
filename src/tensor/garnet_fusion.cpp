@@ -79,6 +79,9 @@ namespace Garnet
 		pTensorGraph->Run(params,kwArgs);
         X::Value varCode = pTensorGraph->GetCodeGenerated();
         std::string code = varCode.ToString();
+		X::XPackageValue<GarnetTensor> varTensor(mVarTensor);
+        GarnetTensor& gt = *varTensor;
+		bool bOK = gt.GetCompiler().compile_or_load(code, mFuncName,mFuncCodeHash);
 		return true;
 	}
     GarnetTensor::GarnetTensor()
@@ -111,7 +114,7 @@ namespace Garnet
         f.SetNeedGenAndCompile(!bHasSameAndNoChange);
         X::Value varGarnetTensor(pContext);
 		f.SetParent(varGarnetTensor);
-		f.SetFunc(trailer);
+		f.SetFunc(trailer, funcName, codeHash);
 		retValue = varFusion;
 	}
 
