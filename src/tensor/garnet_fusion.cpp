@@ -4,6 +4,68 @@
 
 namespace Garnet
 {
+ 
+#include <vector>
+
+    // Helper function that builds a runtime kernel arguments array from X::ARGS.
+    // Returns a vector of void* pointers that can be passed to a CUDA kernel launcher.
+#if 0
+    std::vector<void*> BuildKernelArgsArray(X::ARGS& params)
+    {
+        std::vector<void*> kernelArgs;
+
+        // Ensure that we have at least the XLang function.
+        if (params.size() < 1) {
+            return kernelArgs;
+        }
+
+        // Extract the function and its parameter name list.
+        X::Func func(params[0]);
+        X::Value paramNamesVal = func->GetParameterNameList();
+        X::List nameList(paramNamesVal);
+
+        // Iterate over each parameter in the function signature.
+        for (int i = 0; i < (int)nameList->Size(); i++) {
+            // The corresponding runtime argument is at params[i+1]
+            X::Value argValue = params[i + 1];
+
+            if (argValue.IsTensor()) {
+                X::Tensor tensor(argValue);
+                if (tensor->GetCount() == 1) {
+                    // Single-element tensor: treat it as a scalar.
+                    // Assume tensor->Data() returns a pointer to the scalar value.
+                    void* ptr = tensor->Data();
+                    kernelArgs.push_back(ptr);
+                }
+                else {
+                    // Multi-element tensor: first add the pointer to its data.
+                    void* dataPtr = tensor->Data();
+                    kernelArgs.push_back(dataPtr);
+
+                    // Then, for each dimension in the tensor's shape list, allocate an int.
+                    X::Value shapesVal = tensor->Shapes();
+                    X::List shapeList(shapesVal);
+                    for (int j = 0; j < (int)shapeList->Size(); j++) {
+                        int dim = shapeList->GetIndexValue(j).ToInt();
+                        // Allocate memory for this dimension.
+                        int* dimPtr = new int(dim);
+                        kernelArgs.push_back(static_cast<void*>(dimPtr));
+                        // Caller must free these allocated ints after the kernel launch.
+                    }
+                }
+            }
+            else {
+                // Non-tensor: assume it's a scalar (float).
+                float scalarVal = argValue.ToFloat();
+                float* scalarPtr = new float(scalarVal);
+                kernelArgs.push_back(static_cast<void*>(scalarPtr));
+                // Caller must free this allocated float after the kernel launch.
+            }
+        }
+        return kernelArgs;
+    }
+#endif
+
 	bool Fusionist::Call(X::XRuntime* rt, X::ARGS& params, 
 		X::KWARGS& kwParams, X::Value& retValue)
 	{
@@ -81,14 +143,25 @@ namespace Garnet
         std::string code = varCode.ToString();
 		X::XPackageValue<GarnetTensor> varTensor(mVarTensor);
         GarnetTensor& gt = *varTensor;
-        gt.GetCompiler().add_option("-D__CUDA_ARCH__=860");
-        gt.GetCompiler().add_option("-D__CUDACC_RTC__");
+        auto& compiler = gt.GetCompiler();
+        compiler.add_option("-D__CUDA_ARCH__=860");
+        compiler.add_option("-D__CUDACC_RTC__");
 
-        //gt.GetCompiler().add_option("-arch=sm_89");
-        //gt.GetCompiler().add_option("--gpu-architecture=compute_80");
-        gt.GetCompiler().add_option("--gpu-architecture=compute_89");
+        //compiler.add_option("-arch=sm_89");
+        //compiler.add_option("--gpu-architecture=compute_80");
+        compiler.add_option("--gpu-architecture=compute_89");
 
-		bool bOK = gt.GetCompiler().compile_or_load(code, mFuncName,mFuncCodeHash);
+		bool bOK = compiler.compile_or_load(code, mFuncName,mFuncCodeHash);
+        if (!bOK)
+        {
+            return false;
+        }
+        CUfunction kernel = compiler.get_kernel(mFuncName, mFuncName);
+        // Define grid and block dimensions:
+        dim3 block_dim(1);
+        dim3 grid_dim(1);
+        //void* kernelArgs[] = {  };
+        //compiler.launch_kernel(kernel, grid_dim, block_dim, kernelArgs, 0, nullptr);
 		return true;
 	}
     GarnetTensor::GarnetTensor()
