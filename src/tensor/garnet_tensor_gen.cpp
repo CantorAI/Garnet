@@ -130,7 +130,7 @@ namespace Garnet {
             "#include \"cuda_lib.cu\"\n\n";
 
         // Generate the kernel function header.
-        headerCode += "extern \"C\" void " + cudaFunctionName + "(" + paramListStr + ") {\n";
+        headerCode += "extern \"C\" __global__ void " + cudaFunctionName + "(" + paramListStr + ") {\n";
 
         return X::Value(headerCode);
     }

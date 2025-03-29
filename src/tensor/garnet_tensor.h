@@ -28,6 +28,9 @@ namespace Garnet
 		std::string mFuncCodeHash;
 		X::Value mTensorGraph;
 		bool mNeedGenAndCompile = false;
+		CUfunction m_kernel;
+		bool mHasKernel = false;
+
 		BEGIN_PACKAGE(Fusionist)
 			APISET().SetCallHandler(&Fusionist::Call);
 		END_PACKAGE

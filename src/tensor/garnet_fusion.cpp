@@ -5,165 +5,207 @@
 namespace Garnet
 {
  
-#include <vector>
-
-    // Helper function that builds a runtime kernel arguments array from X::ARGS.
-    // Returns a vector of void* pointers that can be passed to a CUDA kernel launcher.
-#if 0
-    std::vector<void*> BuildKernelArgsArray(X::ARGS& params)
+    bool Fusionist::Call(X::XRuntime* rt, X::ARGS& params,
+        X::KWARGS& kwParams, X::Value& retValue)
     {
-        std::vector<void*> kernelArgs;
+        X::Func func(mFunc);
+        X::Value valParamNames = func->GetParameterNameList();
+        X::List nameList(valParamNames);
 
-        // Ensure that we have at least the XLang function.
-        if (params.size() < 1) {
-            return kernelArgs;
-        }
-
-        // Extract the function and its parameter name list.
-        X::Func func(params[0]);
-        X::Value paramNamesVal = func->GetParameterNameList();
-        X::List nameList(paramNamesVal);
-
-        // Iterate over each parameter in the function signature.
-        for (int i = 0; i < (int)nameList->Size(); i++) {
-            // The corresponding runtime argument is at params[i+1]
-            X::Value argValue = params[i + 1];
-
-            if (argValue.IsTensor()) {
-                X::Tensor tensor(argValue);
-                if (tensor->GetCount() == 1) {
-                    // Single-element tensor: treat it as a scalar.
-                    // Assume tensor->Data() returns a pointer to the scalar value.
-                    void* ptr = tensor->Data();
-                    kernelArgs.push_back(ptr);
-                }
-                else {
-                    // Multi-element tensor: first add the pointer to its data.
-                    void* dataPtr = tensor->Data();
-                    kernelArgs.push_back(dataPtr);
-
-                    // Then, for each dimension in the tensor's shape list, allocate an int.
-                    X::Value shapesVal = tensor->Shapes();
-                    X::List shapeList(shapesVal);
-                    for (int j = 0; j < (int)shapeList->Size(); j++) {
-                        int dim = shapeList->GetIndexValue(j).ToInt();
-                        // Allocate memory for this dimension.
-                        int* dimPtr = new int(dim);
-                        kernelArgs.push_back(static_cast<void*>(dimPtr));
-                        // Caller must free these allocated ints after the kernel launch.
-                    }
-                }
-            }
-            else {
-                // Non-tensor: assume it's a scalar (float).
-                float scalarVal = argValue.ToFloat();
-                float* scalarPtr = new float(scalarVal);
-                kernelArgs.push_back(static_cast<void*>(scalarPtr));
-                // Caller must free this allocated float after the kernel launch.
-            }
-        }
-        return kernelArgs;
-    }
-#endif
-
-	bool Fusionist::Call(X::XRuntime* rt, X::ARGS& params, 
-		X::KWARGS& kwParams, X::Value& retValue)
-	{
-        if (!mNeedGenAndCompile)
-        {
-            //TODO: call
-            return true;
-        }
-        //Need to gen code and compile
-
-		X::Func func(mFunc);
-		X::Value valParamNames = func->GetParameterNameList();
-		X::List nameList(valParamNames);
-		//all parameters change to tensor
-		for (int i=0;i<(int)params.size();i++)
-		{
-			auto& v = params[i];
-			if (!v.IsTensor())
-			{
-				X::Tensor tensor;
-				tensor->Create(v);
-				if (i < nameList.size())
-				{
-					auto& name = nameList[i];
-					if (name.IsString())
-					{
-						tensor->SetName(name);
-					}
-				}
-				v = tensor;
-			}
-		}
-		for (auto& it : kwParams)
-		{
-			if (!it.val.IsTensor())
-			{
-				X::Tensor tensor;
-				tensor->Create(it.val);
-				it.val = tensor;
-			}
-		}
-        X::Value t = mFunc.ObjCall(params, kwParams);
-        X::ARGS params_t;
-        if (t.IsList())
-        {
-            X::List list(t);
-            params_t.resize(list->Size());
-            for (auto& it : *list)
-            {
-                params_t.push_back(it);
-            }
-        }
-        else if (t.IsDict())
-        {
-            X::Dict dict(t);
-            params_t.resize(dict->Size());
-            for (auto& it : *dict)
-            {
-                params_t.push_back(it.second());
-            }
-        }
-        else
-        {
-            params_t.resize(1);
-            params_t.push_back(t);
-        }
-        X::KWARGS kwParams_t;
-        auto* pTensorGraph = X::g_pXHost->CreateTensorGraph();
-        pTensorGraph->Create(mVarTensor.GetObj(), params_t, kwParams_t);
-		mTensorGraph = X::Value(pTensorGraph);
-		X::KWARGS kwArgs;
-        kwArgs.Add("Func", mFunc);
-		pTensorGraph->Run(params,kwArgs);
-        X::Value varCode = pTensorGraph->GetCodeGenerated();
-        std::string code = varCode.ToString();
-		X::XPackageValue<GarnetTensor> varTensor(mVarTensor);
+        X::XPackageValue<GarnetTensor> varTensor(mVarTensor);
         GarnetTensor& gt = *varTensor;
         auto& compiler = gt.GetCompiler();
-        compiler.add_option("-D__CUDA_ARCH__=860");
-        compiler.add_option("-D__CUDACC_RTC__");
 
-        //compiler.add_option("-arch=sm_89");
-        //compiler.add_option("--gpu-architecture=compute_80");
-        compiler.add_option("--gpu-architecture=compute_89");
-
-		bool bOK = compiler.compile_or_load(code, mFuncName,mFuncCodeHash);
-        if (!bOK)
+        auto gen_compile_proc = [&]() 
         {
-            return false;
+            // Convert positional parameters.
+            for (int i = 0; i < (int)params.size(); i++)
+            {
+                auto& v = params[i];
+                if (!v.IsTensor())
+                {
+                    X::Tensor tensor;
+                    tensor->Create(v);
+                    if (i < nameList.size())
+                    {
+                        auto& name = nameList[i];
+                        if (name.IsString())
+                        {
+                            tensor->SetName(name);
+                        }
+                    }
+                    v = tensor;
+                }
+            }
+            // Convert keyword parameters.
+            for (auto& it : kwParams)
+            {
+                if (!it.val.IsTensor())
+                {
+                    X::Tensor tensor;
+                    tensor->Create(it.val);
+                    it.val = tensor;
+                }
+            }
+
+            // Call the original function.
+            X::Value t = mFunc.ObjCall(params, kwParams);
+            X::ARGS params_t;
+            if (t.IsList())
+            {
+                X::List list(t);
+                params_t.resize(list->Size());
+                for (auto& it : *list)
+                {
+                    params_t.push_back(it);
+                }
+            }
+            else if (t.IsDict())
+            {
+                X::Dict dict(t);
+                params_t.resize(dict->Size());
+                for (auto& it : *dict)
+                {
+                    params_t.push_back(it.second());
+                }
+            }
+            else
+            {
+                params_t.resize(1);
+                params_t.push_back(t);
+            }
+
+            // Create and run the tensor graph.
+            X::KWARGS kwParams_t;
+            auto* pTensorGraph = X::g_pXHost->CreateTensorGraph();
+            pTensorGraph->Create(mVarTensor.GetObj(), params_t, kwParams_t);
+            mTensorGraph = X::Value(pTensorGraph);
+            X::KWARGS kwArgs;
+            kwArgs.Add("Func", mFunc);
+            pTensorGraph->Run(params, kwArgs);
+
+            // Retrieve the generated code.
+            X::Value varCode = pTensorGraph->GetCodeGenerated();
+            std::string code = varCode.ToString();
+
+            compiler.add_option("-D__CUDA_ARCH__=860");
+            compiler.add_option("-D__CUDACC_RTC__");
+            compiler.add_option("--gpu-architecture=compute_89");
+
+            bool bOK = compiler.compile_or_load(code, mFuncName, mFuncCodeHash);
+            return bOK;
+        };//end gen_compile_proc
+
+        if (mNeedGenAndCompile)
+        {
+            bool bOK = gen_compile_proc();
+            if (!bOK)
+            {
+				return false; // Indicate failure
+            }
+            mNeedGenAndCompile = false;
         }
-        CUfunction kernel = compiler.get_kernel(mFuncName, mFuncName);
-        // Define grid and block dimensions:
+        if (!mHasKernel)
+        {
+            m_kernel = compiler.get_kernel(mFuncName, mFuncName);
+            mHasKernel = true;
+        }
+
+        // --- Build kernel arguments using inline lambdas ---
+        // Define a union to hold any scalar value.
+        union ScalarValue {
+            int   i;
+            float f;
+            double d;
+        };
+
+        // Single storage vector for all scalar values (both arguments and dimensions).
+        std::vector<ScalarValue> scalarStorage;
+        // The kernel argument list will hold either tensor data pointers or addresses in scalarStorage.
+        std::vector<void*> kernelArgs;
+
+        // Lambda to store a scalar value into scalarStorage and push its address into kernelArgs.
+        auto pushScalarValue = [&](auto value)
+            {
+                using T = decltype(value);
+                ScalarValue scalar;
+                if constexpr (std::is_same_v<T, int>) {
+                    scalar.i = value;
+                    scalarStorage.push_back(scalar);
+                    kernelArgs.push_back(reinterpret_cast<void*>(&scalarStorage.back().i));
+                }
+                else if constexpr (std::is_same_v<T, float>) {
+                    scalar.f = value;
+                    scalarStorage.push_back(scalar);
+                    kernelArgs.push_back(reinterpret_cast<void*>(&scalarStorage.back().f));
+                }
+                else if constexpr (std::is_same_v<T, double>) {
+                    scalar.d = value;
+                    scalarStorage.push_back(scalar);
+                    kernelArgs.push_back(reinterpret_cast<void*>(&scalarStorage.back().d));
+                }
+            };
+
+        // Helper lambda for processing a non-tensor scalar.
+        auto processScalarNonTensor = [&](X::Value& v)
+            {
+                if (v.IsLong())
+                    pushScalarValue((int)v);
+                else if (v.IsDouble())
+                    pushScalarValue(v.ToDouble());
+            };
+
+        // Lambda to build the complete kernel arguments list.
+        auto buildKernelArgs = [&]()
+            {
+                for (size_t i = 0; i < nameList->Size(); i++)
+                {
+                    X::Value argValue = params[i];
+                    if (argValue.IsTensor())
+                    {
+                        X::Tensor tensor(argValue);
+                        if (tensor->GetCount() == 1)
+                        {
+                            X::Value firstVal;
+							tensor->GetIndexValue(0, firstVal);
+                            processScalarNonTensor(firstVal);
+                        }
+                        else
+                        {
+                            // For multi-element tensors, first push the data pointer.
+                            void* dataPtr = tensor->GetData();
+                            kernelArgs.push_back(dataPtr);
+                            // Then push each shape dimension.
+                            X::Value shapesVal = tensor->Shapes();
+                            X::List shapeList(shapesVal);
+                            for (int j = 0; j < (int)shapeList->Size(); j++)
+                            {
+                                int dim = (int)shapeList[j];
+                                pushScalarValue(dim);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Process non-tensor as a scalar.
+                        processScalarNonTensor(argValue);
+                    }
+                }
+            };
+
+        // Build the kernel argument list.
+        buildKernelArgs();
+
+        // --- Launch the kernel ---
         dim3 block_dim(1);
         dim3 grid_dim(1);
-        //void* kernelArgs[] = {  };
-        //compiler.launch_kernel(kernel, grid_dim, block_dim, kernelArgs, 0, nullptr);
-		return true;
-	}
+        compiler.launch_kernel(m_kernel, grid_dim, block_dim, kernelArgs.data(), 0, nullptr);
+
+        return true;
+    }
+
+
+
     GarnetTensor::GarnetTensor()
     {
         std::string baseFolder = GarnetAPI::I().GetBaseFolder();

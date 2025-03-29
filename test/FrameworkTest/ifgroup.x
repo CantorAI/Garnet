@@ -42,4 +42,5 @@ def calc_test(x,y,z):
     return Z
 
 result = calc_test(10.0,20.0,30.0)
+result2 = calc_test(1110.0,120.0,130.0)
 print("Done")

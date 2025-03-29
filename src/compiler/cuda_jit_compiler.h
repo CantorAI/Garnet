@@ -656,22 +656,39 @@ namespace Garnet {
         }
 
         // Get a kernel function from a specific module
-        CUfunction get_kernel(const std::string& module_name, const std::string& kernel_name) const {
-            std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(cache_mutex_));
+        CUfunction get_kernel(const std::string& module_name, const std::string& kernel_name) {
+            // Lock for thread safety
+            std::lock_guard<std::mutex> lock(cache_mutex_);
 
+            // Try to find the module in the cache
             auto it = module_cache_.find(module_name);
             if (it == module_cache_.end() || !it->second.module) {
-                throw std::runtime_error("No compiled CUDA module '" + module_name + "' loaded");
+                // Module not in memory or not loaded, try loading from the PTX file.
+                if (ptx_file_exists(module_name)) {
+                    ModuleCache new_cache;
+                    if (load_ptx_from_file(module_name, new_cache)) {
+                        // Cache the loaded module and update the iterator.
+                        module_cache_[module_name] = std::move(new_cache);
+                        it = module_cache_.find(module_name);
+                    }
+                    else {
+                        throw std::runtime_error("Failed to load PTX for module '" + module_name + "'");
+                    }
+                }
+                else {
+                    throw std::runtime_error("No compiled CUDA module '" + module_name + "' loaded, and no PTX file found.");
+                }
             }
 
+            // Retrieve the kernel from the loaded module.
             CUfunction kernel;
             check_cuda_error(
                 cuModuleGetFunction(&kernel, it->second.module, kernel_name.c_str()),
                 "cuModuleGetFunction"
             );
-
             return kernel;
         }
+
 
         // Launch a kernel with the specified grid and block dimensions
         void launch_kernel(CUfunction kernel,
