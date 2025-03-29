@@ -27,6 +27,7 @@ namespace Garnet
 		std::string mFuncName;
 		std::string mFuncCodeHash;
 		X::Value mTensorGraph;
+		X::Value mReturnValue;//the xlang return value, then if kernl run ok, it will be set to this value
 		bool mNeedGenAndCompile = false;
 		CUfunction m_kernel;
 		bool mHasKernel = false;
