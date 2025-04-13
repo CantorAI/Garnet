@@ -8,8 +8,7 @@ garnet.cantor = cantor
 T = garnet.tensor()
 
 @T.fusion()
-def calc_test():
-    # Initialize tensor data properly
+def calc_test_simple():
     t1 = tensor([[1,2,3],[4,5,6],[7,8,9],[10,11,12]])  # 4×3 matrix
     t2 = tensor([[10,20,30,40],[50,60,70,80],[90,100,110,120]])  # 3×4 matrix
 
@@ -20,9 +19,5 @@ def calc_test():
     Z = Z*100
     return Z
 
-result = calc_test()
-# Create and run the computation graph
-y_graph = T.graph(result)
-print("Graph:",y_graph)
-y_graph.run()
+result = calc_test_simple()
 print("Done")

@@ -47,7 +47,12 @@ namespace Garnet {
                 if (tensor->GetCount() == 1) {
                     auto dt = tensor->GetDataType();
                     if (dt == X::TensorDataType::DOUBLE) {
-                        decl = "double " + paramName;
+                        if (mTreatDoubleAsFloat) {
+                            decl = "float " + paramName;
+                        }
+                        else {
+                            decl = "double " + paramName;
+                        }
                     }
                     else if (dt == X::TensorDataType::FLOAT32) {
                         decl = "float " + paramName;

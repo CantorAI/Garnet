@@ -136,6 +136,7 @@ namespace Garnet
 
 	class GarnetTensor
 	{
+		bool mTreatDoubleAsFloat = true;
 		CudaCodeGen mCodeGen;
 		CudaJitCompiler mCompiler;
 		std::string ProcessCondition(X::Value& astNode);

@@ -37,7 +37,7 @@ namespace Garnet {
         std::unordered_map<std::string, ModuleCache> module_cache_;
         std::mutex cache_mutex_;
         bool initialized_ = false;
-        bool verbose_ = false;
+        bool verbose_ = true;
 
         std::string get_cuda_include_dir() {
 #if defined(WIN32) || defined(_WIN32)
