@@ -1280,11 +1280,11 @@ namespace Garnet {
                 dim = it->val.ToInt();
             }
 
-            // Ensure indices tensor has integer-compatible data type
-            if (indicesType != X::TensorDataType::FLOAT32)
-            {
-                return X::Value("// Error: Indices tensor must have FLOAT32 data type\n");
-            }
+            //// Ensure indices tensor has integer-compatible data type
+            //if (indicesType != X::TensorDataType::FLOAT32)
+            //{
+            //    return X::Value("// Error: Indices tensor must have FLOAT32 data type\n");
+            //}
 
             // Validate dimensions
             int dataDimCount = dataTensor->GetDimCount();
@@ -1314,6 +1314,7 @@ namespace Garnet {
             {
                 if (i == dim)
                 {
+                    resultDims.resize(resultDims.size() + indicesDimCount);
                     // This dimension comes from indices tensor shape
                     for (int j = 0; j < indicesDimCount; j++)
                     {
@@ -1322,6 +1323,7 @@ namespace Garnet {
                 }
                 else
                 {
+                    resultDims.resize(resultDims.size() + 1);
                     resultDims.push_back(dataTensor->GetDimSize(i));
                 }
             }
