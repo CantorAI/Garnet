@@ -472,16 +472,22 @@ first_k_dense_replace=config['first_k_dense_replace']
 moe_layer_freq = config['moe_layer_freq']
 norm_topk_prob = config['norm_topk_prob']
 
-input_ids = tensor(inputs['input_ids'])
+input_ids = inputs['input_ids']
 position_ids =tensor([[ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17,
     18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
     36, 37, 38, 39]])
 attention_mask = tensor([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
 
+# gather()
+@T.fusion()
+def ga(w,x):
+    s_embed = w*T.gather()*x
+    return s_embed
 model_embed_tokens_weight = model['model.embed_tokens.weight']
 #embed_tokens = nn.Embedding(vocab_size, hidden_size, 0)
-inputs_embeds = model_embed_tokens_weight*T.gather()*input_ids  # torch.Size([1, 40, 2048])<-Embedding(102400, 2048) *  torch.Size([1, 40])
+inputs_embeds = ga(model_embed_tokens_weight, input_ids) #model_embed_tokens_weight*T.gather()*input_ids  # torch.Size([1, 40, 2048])<-Embedding(102400, 2048) *  torch.Size([1, 40])
+print("s_embed:",inputs_embeds)
 
 hidden_states = inputs_embeds
 for layer_idx in range(num_hidden_layers):
@@ -489,13 +495,13 @@ for layer_idx in range(num_hidden_layers):
     residual = hidden_states
     ###########hidden_states = input_layernorm(hidden_states)
     input_layernorm_weight = model[f'model.layers.{layer_idx}.input_layernorm.weight']
-    input_dtype = hidden_states* T.type()  
     hidden_states_norm = hidden_states* T.norm()  # 假设原始数据类型是 float16
     # T.norm() should normalize states as follows:
     #   variance_epsilon = 0.000001#1e-6
     #   hidden_states_f32 = hidden_states* T.astype(np.float32)
     #   variance = np.mean(hidden_states_f32 ** 2, axis=-1, keepdims=True)
     #   hidden_states_norm = hidden_states_f32 * (1 / np.sqrt(variance + variance_epsilon))
+    input_dtype = hidden_states* T.type()  
     hidden_states2 = input_layernorm_weight * hidden_states_norm* T.astype(input_dtype)  #  torch.Size([1, 40, 2048])<-torch.Size([2048]) *  torch.Size([1, 40, 2048])
 
     # Self Attention
