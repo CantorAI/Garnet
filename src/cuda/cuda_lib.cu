@@ -637,7 +637,7 @@ void runGatherFP16(__half* data, __half* indices, __half* output,
     cudaDeviceSynchronize();
 }
 
-void runGatherBF16(__nv_bfloat16* data, __nv_bfloat16* indices, __nv_bfloat16* output,
+void runGatherBF16(__nv_bfloat16* data, int* indices, __nv_bfloat16* output,
     int* dataDims, int dataDimCount,
     int* indicesDims, int indicesDimCount, int dim) {
     int totalIndices = 1;
@@ -655,7 +655,7 @@ void runGatherBF16(__nv_bfloat16* data, __nv_bfloat16* indices, __nv_bfloat16* o
         (elementsPerIndex + block.y - 1) / block.y);
 
     gather_kernel<__nv_bfloat16> << <grid, block >> > (
-        data, (int*)indices, output,
+        data, indices, output,
         dataDims, dataDimCount,
         indicesDims, indicesDimCount, dim);
 
