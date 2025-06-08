@@ -7,7 +7,7 @@
 #include <limits.h>
 #include <math.h>
 #include <type_traits>
-
+#include "cuda_lib.h"
 //--------------------------------------------------------
 // Basic initialization kernels (zeros, ones, full)
 //--------------------------------------------------------

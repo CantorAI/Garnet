@@ -7,17 +7,8 @@
 #include <cuda_fp8.h> // Assumes definitions for fp8_e4m3 and fp8_e5m2 types
 
 using bfloat16 = __nv_bfloat16;
-
-struct fp8_e4m3 {
-    unsigned char data;
-    // Optionally add conversion routines if needed.
-};
-
-struct fp8_e5m2 {
-    unsigned char data;
-    // Optionally add conversion routines if needed.
-};
-
+typedef __nv_fp8_e4m3 fp8_e4m3;
+typedef __nv_fp8_e5m2 fp8_e5m2;
 
 #ifdef __cplusplus
 extern "C" {
@@ -131,6 +122,15 @@ extern "C" {
     void runConvertBF16ToFP32(bfloat16* src, float* dest, int totalElements);
     void runConvertFP8E4M3ToFP32(fp8_e4m3* src, float* dest, int totalElements);
     void runConvertFP8E5M2ToFP32(fp8_e5m2* src, float* dest, int totalElements);
+
+    // ------------------------
+    // Memory Management
+    // ------------------------
+    void runZeroInitializeFP32(float* data, int count, cudaStream_t stream = 0);
+    void runZeroInitializeFP16(__half* data, int count, cudaStream_t stream = 0);
+    void runZeroInitializeBF16(bfloat16* data, int count, cudaStream_t stream = 0);
+
+    //void cleanup();
 
 #ifdef __cplusplus
 }

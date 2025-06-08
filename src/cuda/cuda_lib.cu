@@ -1,9 +1,10 @@
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
-#include <cuda_fp8.h>
+//#include <cuda_fp8.h>
 #include <cooperative_groups.h>
 #include <stdio.h>
+#include "cuda_lib.h"
 
 namespace cg = cooperative_groups;
 
@@ -24,7 +25,7 @@ __device__ int computeLinearIndex(int* dims, int dimCount, int* indices) {
     }
     return index;
 }
-
+/*
 // ==============================================
 // 矩阵乘法(GEMM)实现
 // ==============================================
@@ -47,7 +48,7 @@ __global__ void gemm_kernel(const T* A, const T* B, T* C, int M, int N, int K) {
     __shared__ T As[TILE_SIZE][TILE_SIZE];
     __shared__ T Bs[TILE_SIZE][TILE_SIZE];
 
-    T cVal = 0;
+    T cVal = (T)0;
 
     // 循环遍历平铺
     for (int t = 0; t < (K + TILE_SIZE - 1) / TILE_SIZE; ++t) {
@@ -61,21 +62,21 @@ __global__ void gemm_kernel(const T* A, const T* B, T* C, int M, int N, int K) {
             As[ty][tx] = A[aRow * K + aCol];
         }
         else {
-            As[ty][tx] = 0;
+            As[ty][tx] = (T)0;
         }
 
         if (bRow < K && bCol < N) {
             Bs[ty][tx] = B[bRow * N + bCol];
         }
         else {
-            Bs[ty][tx] = 0;
+            Bs[ty][tx] = (T)0;
         }
 
         __syncthreads();
 
         // 计算部分结果
         for (int k = 0; k < TILE_SIZE; ++k) {
-            cVal += As[ty][k] * Bs[k][tx];
+            cVal =  T(float(cVal) + float(As[ty][k]) * float(Bs[k][tx]));
         }
 
         __syncthreads();
@@ -127,6 +128,7 @@ void runGemmFP8E5M2(__nv_fp8_e5m2* A, __nv_fp8_e5m2* B, __nv_fp8_e5m2* C, int m,
     gemm_kernel<__nv_fp8_e5m2> << <grid, block >> > (A, B, C, m, n, k);
     cudaDeviceSynchronize();
 }
+*/
 
 // ==============================================
 // 逐元素乘法实现
@@ -136,7 +138,7 @@ template <typename T>
 __global__ void elementwise_multiply_kernel(const T* A, const T* B, T* C, int count) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
-        C[idx] = A[idx] * B[idx];
+        C[idx] = T(float( A[idx]) * float( B[0]));
     }
 }
 
@@ -178,7 +180,7 @@ template <typename T>
 __global__ void scalar_multiply_kernel(const T* input, T* result, float scalar, int count) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
-        result[idx] = input[idx] * static_cast<T>(scalar);
+        result[idx] =T( float( input[idx]) * float(static_cast<T>(scalar)));
     }
 }
 
@@ -220,7 +222,7 @@ template <typename T>
 __global__ void add_kernel(const T* A, const T* B, T* C, int count) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
-        C[idx] = A[idx] + B[idx];
+        C[idx] =T(float( A[idx]) +float( B[idx]));
     }
 }
 
@@ -268,7 +270,7 @@ template <typename T>
 __global__ void single_element_add_kernel(const T* tensor, T single, T* result, int count) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
-        result[idx] = tensor[idx] + single;
+        result[idx] = T(float(tensor[idx]) + float(single));
     }
 }
 
@@ -326,7 +328,7 @@ template <typename T>
 __global__ void minus_kernel(const T* A, const T* B, T* C, int count) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
-        C[idx] = A[idx] - B[idx];
+        C[idx] =T(float( A[idx]) - float(B[idx]));
     }
 }
 
@@ -374,7 +376,7 @@ template <typename T>
 __global__ void single_element_minus_kernel(const T* tensor, T single, T* result, int count) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
-        result[idx] = tensor[idx] - single;
+        result[idx] = T(float(tensor[idx]) - float(single));
     }
 }
 
@@ -431,7 +433,7 @@ void runScalarMinusFP32(float* input, float scalar, float* result, int count) {
     scalar_minus_kernel<float> << <gridSize, BLOCK_SIZE >> > (input, scalar, result, count);
     cudaDeviceSynchronize();
 }
-
+/*
 // ==============================================
 // 矩阵乘法(Matmul)实现
 // ==============================================
@@ -455,7 +457,7 @@ void runMatmulFP8E4M3(__nv_fp8_e4m3* A, __nv_fp8_e4m3* B, __nv_fp8_e4m3* C, int 
 void runMatmulFP8E5M2(__nv_fp8_e5m2* A, __nv_fp8_e5m2* B, __nv_fp8_e5m2* C, int m, int n, int k) {
     runGemmFP8E5M2(A, B, C, m, k, n);
 }
-
+*/
 // ==============================================
 // 转置(Permute)实现
 // ==============================================
@@ -745,7 +747,8 @@ void runConvertFP32ToBF16(float* src, __nv_bfloat16* dest, int totalElements) {
 __global__ void convert_fp32_to_fp8e4m3_kernel(float* src, __nv_fp8_e4m3* dest, int totalElements) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < totalElements) {
-        dest[idx] = __float2nv_fp8_e4m3(src[idx]);
+        //dest[idx] = __float2nv_fp8_e4m3(src[idx]);
+        dest[idx] = (__nv_fp8_e4m3)__nv_cvt_float_to_fp8(src[idx], __NV_SATFINITE, __NV_E4M3);
     }
 }
 
@@ -758,7 +761,8 @@ void runConvertFP32ToFP8E4M3(float* src, __nv_fp8_e4m3* dest, int totalElements)
 __global__ void convert_fp32_to_fp8e5m2_kernel(float* src, __nv_fp8_e5m2* dest, int totalElements) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < totalElements) {
-        dest[idx] = __float2nv_fp8_e5m2(src[idx]);
+        //dest[idx] = __float2nv_fp8_e5m2(src[idx]);
+        dest[idx] = (__nv_fp8_e5m2)__nv_cvt_float_to_fp8(src[idx], __NV_SATFINITE, __NV_E5M2);
     }
 }
 
@@ -797,7 +801,12 @@ void runConvertBF16ToFP32(__nv_bfloat16* src, float* dest, int totalElements) {
 __global__ void convert_fp8e4m3_to_fp32_kernel(__nv_fp8_e4m3* src, float* dest, int totalElements) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < totalElements) {
-        dest[idx] = __nv_fp8e4m32float(src[idx]);
+        //dest[idx] = __nv_fp8e4m32float(src[idx]);
+#if defined(__CUDA_FP8_TYPES_EXIST__)
+        dest[idx] = float(__nv_fp8_e4m3(src[idx]));  // 显式构造后转换
+#else
+        return 0.0f;
+#endif
     }
 }
 
@@ -810,7 +819,12 @@ void runConvertFP8E4M3ToFP32(__nv_fp8_e4m3* src, float* dest, int totalElements)
 __global__ void convert_fp8e5m2_to_fp32_kernel(__nv_fp8_e5m2* src, float* dest, int totalElements) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < totalElements) {
-        dest[idx] = __nv_fp8e5m22float(src[idx]);
+       // dest[idx] = __nv_fp8e5m22float(src[idx]);        
+#if defined(__CUDA_FP8_TYPES_EXIST__)
+        dest[idx] = float(__nv_fp8_e5m2(src[idx]));  // 显式构造后转换
+#else
+        return 0.0f;
+#endif
     }
 }
 
@@ -819,3 +833,35 @@ void runConvertFP8E5M2ToFP32(__nv_fp8_e5m2* src, float* dest, int totalElements)
     convert_fp8e5m2_to_fp32_kernel << <gridSize, BLOCK_SIZE >> > (src, dest, totalElements);
     cudaDeviceSynchronize();
 }
+
+// ------------------------
+// Memory Management
+// ------------------------
+void runZeroInitializeFP32(float* data, int count, cudaStream_t stream) {
+    cudaError_t err = cudaMemsetAsync(data, 0, count * sizeof(float), stream);
+    assert(err == cudaSuccess);
+}
+
+void runZeroInitializeFP16(__half* data, int count, cudaStream_t stream) {
+    cudaError_t err = cudaMemsetAsync(data, 0, count * sizeof(__half), stream);
+    assert(err == cudaSuccess);
+}
+
+void runZeroInitializeBF16(bfloat16* data, int count, cudaStream_t stream) {
+    cudaError_t err = cudaMemsetAsync(data, 0, count * sizeof(bfloat16), stream);
+    assert(err == cudaSuccess);
+}
+
+//#ifdef _WIN32
+//static class Cleanup {
+//public:
+//    ~Cleanup() {
+//        CublasHandle::destroy();
+//    }
+//} 
+//#else
+//__attribute__((destructor))
+//static void cleanup() {
+//    CublasHandle::destroy();
+//}
+//#endif

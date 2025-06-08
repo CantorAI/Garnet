@@ -1,6 +1,6 @@
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
-
+#include "cuda_lib.h"
 // Templated kernel for element-wise type conversion.
 template <typename InType, typename OutType>
 __global__ void astypeKernel(const InType* __restrict__ input,

@@ -4,6 +4,7 @@
 #include <cuda_bf16.h>    // For __nv_bfloat16
 #include <cuda_fp8.h>     // For __nv_fp8_e4m3 and __nv_fp8_e5m2
 #include <stdio.h>
+#include "cuda_lib.h"
 
 // Templated 2D gather kernel.
 // Input matrix is in row-major order with shape (N, M):

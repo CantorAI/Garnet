@@ -103,18 +103,18 @@ extern "C" void runWmmaGemmKernel_bf16(const __nv_bfloat16* d_A, const __nv_bflo
 
 // FP8 version: E4M3.
 extern "C" void runWmmaGemmKernel_fp8_e4m3(const __nv_fp8_e4m3* d_A, const __nv_fp8_e4m3* d_B, float* d_C, int M, int N, int K) {
-    dim3 gridDim(N / WMMA_N, M / WMMA_M);
+   /* dim3 gridDim(N / WMMA_N, M / WMMA_M);
     dim3 blockDim(32, 1, 1);
     wmmaGemmKernelT<__nv_fp8_e4m3> << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
-    cudaDeviceSynchronize();
+    cudaDeviceSynchronize();*/
 }
 
 // FP8 version: E5M2.
 extern "C" void runWmmaGemmKernel_fp8_e5m2(const __nv_fp8_e5m2* d_A, const __nv_fp8_e5m2* d_B, float* d_C, int M, int N, int K) {
-    dim3 gridDim(N / WMMA_N, M / WMMA_M);
+    /*dim3 gridDim(N / WMMA_N, M / WMMA_M);
     dim3 blockDim(32, 1, 1);
     wmmaGemmKernelT<__nv_fp8_e5m2> << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
-    cudaDeviceSynchronize();
+    cudaDeviceSynchronize();*/
 }
 
 // Float (32-bit) version using conventional tiled kernel.

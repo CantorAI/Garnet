@@ -40,6 +40,7 @@ include_directories("src/model")
 include_directories("src/tensor")
 include_directories("src/test")
 include_directories("src/log")
+include_directories("src/cuda")
 
 # Use absolute paths for source files.
 FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
@@ -48,9 +49,8 @@ FILE(GLOB Entry_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/entry/*.cpp")
 FILE(GLOB Model_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/model/*.cpp")
 FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
 FILE(GLOB Log_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/log/*.cpp")
-FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/ptxGemm_kernel.cu"
-    src/cuda/gather_kernel.cu src/cuda/init_ops_kernel.cu)
-FILE(GLOB Test_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/test/*.cpp")
+FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
+FILE(GLOB Test_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/test/cudalib_test.cpp")
 
 # Create the shared library target.
 add_library(${PROJECT_NAME} 

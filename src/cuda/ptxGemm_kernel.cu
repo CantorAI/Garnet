@@ -4,7 +4,7 @@
 #include <cuda_bf16.h>
 #include <cuda_fp8.h>
 #include <type_traits>
-
+#include "cuda_lib.h"
 using namespace nvcuda;
 
 // Templated WMMA-based GEMM kernel that handles non-16 boundaries.
@@ -118,7 +118,7 @@ void launchWmmaGemmKernel(const DataType* A, const DataType* B, float* C,
 // Extern "C" interface for launching the kernels.
 extern "C" {
 
-    void runGemmFP32(const float* A, const float* B, float* C,
+    /*void runGemmFP32(const float* A, const float* B, float* C,
         int M, int N, int K)
     {
 		launchWmmaGemmKernel(A, B, C, M, N, K);
@@ -141,6 +141,6 @@ extern "C" {
     void runGemmFP8E5M2(const __nv_fp8_e5m2* A, const __nv_fp8_e5m2* B, float* C,
         int M, int N, int K) {
         launchWmmaGemmKernel(A, B, C, M, N, K);
-    }
+    }*/
 
 } // extern "C"
