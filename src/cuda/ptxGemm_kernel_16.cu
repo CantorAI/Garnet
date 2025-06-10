@@ -11,111 +11,116 @@ extern "C" {
 
     //------------------------------------------------------------------------------
     // FP16 Kernel
-    __global__ void gemm_kernel_fp16(const __half* A, const __half* B, float* C,
-        int M, int N, int K) {
-        int block_row = blockIdx.y; // tile row index
-        int block_col = blockIdx.x; // tile column index
-        int row = block_row * 16;
-        int col = block_col * 16;
+     //------------------------------------------------------------------------------
+    // 修正后的FP16内核
+    __global__ void gemm_kernel_fp16(const __half* A, const __half* B, __half* C,
+        int M, int K, int N) {
+        // 二维线程块: 每个线程块处理一个16x16输出块
+        int row_in_block = threadIdx.y; // 线程在块内的行ID (0-15)
+        int col_in_block = threadIdx.x; // 线程在块内的列ID (0-15)
 
-        // Allocate shared memory for one tile of A and one tile of B.
+        int block_row = blockIdx.y;     // 输出块的行索引
+        int block_col = blockIdx.x;     // 输出块的列索引
+
+        // 计算输出矩阵C中的全局坐标
+        int row = block_row * 16 + row_in_block;
+        int col = block_col * 16 + col_in_block;
+
+        // 共享内存声明 (每个块16x16)
         __shared__ __half tileA[16][16];
         __shared__ __half tileB[16][16];
 
         float accum = 0.0f;
 
-        // Loop over K dimension tiles.
+        // 沿K维度分块处理
         for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            // Each block loads a 16x16 sub-tile from global memory.
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
+            // 协作加载A的tile (行优先)
+            int load_row = row_in_block;
+            int load_col = t + col_in_block;
+            if (row < M && load_col < K) {
+                tileA[row_in_block][col_in_block] = A[row * K + load_col];
+            }
+            else {
+                tileA[row_in_block][col_in_block] = __float2half(0.0f);
+            }
+
+            // 协作加载B的tile (列优先)
+            load_row = t + row_in_block;
+            load_col = col;
+            if (load_row < K && col < N) {
+                tileB[row_in_block][col_in_block] = B[load_row * N + col];
+            }
+            else {
+                tileB[row_in_block][col_in_block] = __float2half(0.0f);
             }
             __syncthreads();
 
-            // For demonstration, pack the first two __half values from each tile into a 32朾it word.
-            unsigned int a0 = *((unsigned int*)&tileA[0][0]); // packs tileA[0][0] and tileA[0][1]
-            unsigned int b0 = *((unsigned int*)&tileB[0][0]); // packs tileB[0][0] and tileB[0][1]
-
-            // For this simple demo, we do not load the remaining registers.
-            unsigned int a1 = 0, a2 = 0, a3 = 0;
-            unsigned int b1 = 0; // Only use b0 and b1 for m16n8k16 instruction
-            // Provide separate accumulator input registers (all zero).
-            float acc0 = 0.0f, acc1 = 0.0f, acc2 = 0.0f, acc3 = 0.0f;
-            float c0, c1, c2, c3; // Need to keep all as they're outputs of the MMA instruction
-
-            // Ada Lovelace compatible tensor core instruction
-            asm volatile(
-                "mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32 "
-                "{%0,%1,%2,%3}, "
-                "{%4,%5,%6,%7}, "
-                "{%8,%9}, "
-                "{%10,%11,%12,%13};\n"
-                : "=f"(c0), "=f"(c1), "=f"(c2), "=f"(c3)
-                : "r"(a0), "r"(a1), "r"(a2), "r"(a3),
-                "r"(b0), "r"(b1),
-                "f"(acc0), "f"(acc1), "f"(acc2), "f"(acc3)
-                );
-
-            // Accumulate the result
-            accum += c0 + c1 + c2 + c3; // Use all output registers to avoid warnings
+            // 计算当前tile对accum的贡献
+            for (int k = 0; k < 16; k++) {
+                accum += __half2float(tileA[row_in_block][k]) *
+                    __half2float(tileB[k][col_in_block]);
+            }
             __syncthreads();
         }
-        // Write the dummy accumulated result to C at position (row, col)
-        C[row * N + col] = accum;
+
+        // 将结果写入全局内存
+        if (row < M && col < N) {
+            C[row * N + col] = __float2half(accum);
+        }
     }
 
     //------------------------------------------------------------------------------
-    // BF16 Kernel
-    __global__ void gemm_kernel_bf16(const __nv_bfloat16* A, const __nv_bfloat16* B, float* C,
-        int M, int N, int K) {
+    // 修正后的BF16内核
+    __global__ void gemm_kernel_bf16(const __nv_bfloat16* A, const __nv_bfloat16* B, __nv_bfloat16* C,
+        int M, int K, int N) {
+        // 二维线程块: 每个线程块处理一个16x16输出块
+        int row_in_block = threadIdx.y;
+        int col_in_block = threadIdx.x;
+
         int block_row = blockIdx.y;
         int block_col = blockIdx.x;
-        int row = block_row * 16;
-        int col = block_col * 16;
+
+        int row = block_row * 16 + row_in_block;
+        int col = block_col * 16 + col_in_block;
 
         __shared__ __nv_bfloat16 tileA[16][16];
         __shared__ __nv_bfloat16 tileB[16][16];
 
         float accum = 0.0f;
         for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
+            // 协作加载A的tile
+            int load_row = row_in_block;
+            int load_col = t + col_in_block;
+            if (row < M && load_col < K) {
+                tileA[row_in_block][col_in_block] = A[row * K + load_col];
+            }
+            else {
+                tileA[row_in_block][col_in_block] = __float2bfloat16(0.0f);
+            }
+
+            // 协作加载B的tile
+            load_row = t + row_in_block;
+            load_col = col;
+            if (load_row < K && col < N) {
+                tileB[row_in_block][col_in_block] = B[load_row * N + col];
+            }
+            else {
+                tileB[row_in_block][col_in_block] = __float2bfloat16(0.0f);
             }
             __syncthreads();
 
-            unsigned int a0 = *((unsigned int*)&tileA[0][0]);
-            unsigned int b0 = *((unsigned int*)&tileB[0][0]);
-            unsigned int a1 = 0, a2 = 0, a3 = 0;
-            unsigned int b1 = 0; // Only use b0 and b1 for m16n8k16 instruction
-            float acc0 = 0.0f, acc1 = 0.0f, acc2 = 0.0f, acc3 = 0.0f;
-            float c0, c1, c2, c3; // Need to keep all as they're outputs of the MMA instruction
-
-            // Ada Lovelace compatible tensor core instruction for BF16
-            asm volatile(
-                "mma.sync.aligned.m16n8k16.row.col.f32.bf16.bf16.f32 "
-                "{%0,%1,%2,%3}, "
-                "{%4,%5,%6,%7}, "
-                "{%8,%9}, "
-                "{%10,%11,%12,%13};\n"
-                : "=f"(c0), "=f"(c1), "=f"(c2), "=f"(c3)
-                : "r"(a0), "r"(a1), "r"(a2), "r"(a3),
-                "r"(b0), "r"(b1),
-                "f"(acc0), "f"(acc1), "f"(acc2), "f"(acc3)
-                );
-
-            // Accumulate the result
-            accum += c0 + c1 + c2 + c3; // Use all output registers to avoid warnings
+            // 计算累加值
+            for (int k = 0; k < 16; k++) {
+                accum += __bfloat162float(tileA[row_in_block][k]) *
+                    __bfloat162float(tileB[k][col_in_block]);
+            }
             __syncthreads();
         }
-        C[row * N + col] = accum;
+
+        // 写入结果
+        if (row < M && col < N) {
+            C[row * N + col] = __float2bfloat16(accum);
+        }
     }
 
 #if _FP8_SUPPORT_
@@ -196,40 +201,57 @@ extern "C" {
     }
 #endif
 
-    //------------------------------------------------------------------------------
-    // FP32 Kernel
     __global__ void gemm_kernel_fp32(const float* A, const float* B, float* C,
         int M, int N, int K) {
-        int block_row = blockIdx.y;
-        int block_col = blockIdx.x;
-        int row = block_row * 16;
-        int col = block_col * 16;
+        // 二维线程块: 每个线程块处理一个16x16输出块
+        int row_in_block = threadIdx.y; // 线程在块内的行ID (0-15)
+        int col_in_block = threadIdx.x; // 线程在块内的列ID (0-15)
 
+        int block_row = blockIdx.y;     // 输出块的行索引
+        int block_col = blockIdx.x;     // 输出块的列索引
+
+        // 计算输出矩阵C中的全局坐标
+        int row = block_row * 16 + row_in_block;
+        int col = block_col * 16 + col_in_block;
+
+        // 共享内存声明 (每个块16x16)
         __shared__ float tileA[16][16];
         __shared__ float tileB[16][16];
 
         float accum = 0.0f;
+
+        // 沿K维度分块处理
         for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
+            // 协作加载A的tile (行优先)
+            int load_row = row_in_block;
+            int load_col = t + col_in_block;
+            if (row < M && load_col < K) {
+                tileA[row_in_block][col_in_block] = A[row * K + load_col];
+            }
+            else {
+                tileA[row_in_block][col_in_block] = 0.0f;
+            }
+
+            // 协作加载B的tile (列优先)
+            load_row = t + row_in_block;
+            load_col = col;
+            if (load_row < K && col < N) {
+                tileB[row_in_block][col_in_block] = B[load_row * N + col];
+            }
+            else {
+                tileB[row_in_block][col_in_block] = 0.0f;
             }
             __syncthreads();
 
-            // Simple scalar implementation for FP32
-            if (tid == 0) {
-                float sum = 0.0f;
+            // 计算当前tile对accum的贡献
                 for (int k = 0; k < 16; k++) {
-                    sum += tileA[0][k] * tileB[k][0];
-                }
-                accum += sum;
+                accum += tileA[row_in_block][k] * tileB[k][col_in_block];
             }
             __syncthreads();
         }
-        if (threadIdx.x == 0) {
+
+        // 将结果写入全局内存
+        if (row < M && col < N) {
             C[row * N + col] = accum;
         }
     }
@@ -237,19 +259,27 @@ extern "C" {
     //------------------------------------------------------------------------------
     // Wrapper functions: each launches the corresponding kernel over a grid covering the full matrix.
     // Assumes that M, N, and K are multiples of 16.
-    void runGemmFP16(const __half* d_A, const __half* d_B, float* d_C,
-        int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);  // one warp per block
-        gemm_kernel_fp16 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
+    void runGemmFP16(__half* d_A, __half* d_B, __half* d_C,
+        int m, int k, int n) {
+        // 二维线程块: 16x16 = 256 threads/block
+        dim3 blockDim(16, 16);
+
+        // 网格布局: 每个块处理16x16输出
+        dim3 gridDim((n + 15) / 16, (m + 15) / 16);
+
+        gemm_kernel_fp16 << <gridDim, blockDim >> > (d_A, d_B, d_C, m, k, n);
         cudaDeviceSynchronize();
     }
 
-    void runGemmBF16(const __nv_bfloat16* d_A, const __nv_bfloat16* d_B, float* d_C,
-        int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);
-        gemm_kernel_bf16 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
+    void runGemmBF16(__nv_bfloat16* d_A, __nv_bfloat16* d_B, __nv_bfloat16* d_C,
+        int m, int k, int n) {
+        // 二维线程块: 16x16 = 256 threads/block
+        dim3 blockDim(16, 16);
+
+        // 网格布局: 每个块处理16x16输出
+        dim3 gridDim((n + 15) / 16, (m + 15) / 16);
+
+        gemm_kernel_bf16 << <gridDim, blockDim >> > (d_A, d_B, d_C, m, k, n);
         cudaDeviceSynchronize();
     }
 
@@ -271,10 +301,22 @@ extern "C" {
     }
 #endif
 
+    //void runGemmFP32(const float* d_A, const float* d_B, float* d_C,
+    //    int M, int N, int K) {
+    //    dim3 gridDim(N / 16, M / 16);
+    //    dim3 blockDim(32, 1, 1);
+    //    gemm_kernel_fp32 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
+    //    cudaDeviceSynchronize();
+    //}
+
     void runGemmFP32(const float* d_A, const float* d_B, float* d_C,
         int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);
+        // 二维线程块: 16x16 = 256 threads/block
+        dim3 blockDim(16, 16); // 修正线程块布局
+
+        // 网格布局: 每个块处理16x16输出
+        dim3 gridDim((N + 15) / 16, (M + 15) / 16); // 处理非16倍数尺寸
+
         gemm_kernel_fp32 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
         cudaDeviceSynchronize();
     }

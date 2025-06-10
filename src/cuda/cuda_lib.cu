@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
-//#include <cuda_fp8.h>
+#include <cuda_fp8.h>
 #include <cooperative_groups.h>
 #include <stdio.h>
 #include "cuda_lib.h"
@@ -25,122 +25,31 @@ __device__ int computeLinearIndex(int* dims, int dimCount, int* indices) {
     }
     return index;
 }
-/*
-// ==============================================
-// 矩阵乘法(GEMM)实现
-// ==============================================
-
-template <typename T, int TILE_SIZE = 32>
-__global__ void gemm_kernel(const T* A, const T* B, T* C, int M, int N, int K) {
-    // 线程块平铺
-    const int bx = blockIdx.x;
-    const int by = blockIdx.y;
-
-    // 线程平铺
-    const int tx = threadIdx.x;
-    const int ty = threadIdx.y;
-
-    // 每个线程块计算的C矩阵块
-    const int cRow = by * TILE_SIZE;
-    const int cCol = bx * TILE_SIZE;
-
-    // 共享内存声明
-    __shared__ T As[TILE_SIZE][TILE_SIZE];
-    __shared__ T Bs[TILE_SIZE][TILE_SIZE];
-
-    T cVal = (T)0;
-
-    // 循环遍历平铺
-    for (int t = 0; t < (K + TILE_SIZE - 1) / TILE_SIZE; ++t) {
-        // 加载A和B的平铺到共享内存
-        int aRow = cRow + ty;
-        int aCol = t * TILE_SIZE + tx;
-        int bRow = t * TILE_SIZE + ty;
-        int bCol = cCol + tx;
-
-        if (aRow < M && aCol < K) {
-            As[ty][tx] = A[aRow * K + aCol];
-        }
-        else {
-            As[ty][tx] = (T)0;
-        }
-
-        if (bRow < K && bCol < N) {
-            Bs[ty][tx] = B[bRow * N + bCol];
-        }
-        else {
-            Bs[ty][tx] = (T)0;
-        }
-
-        __syncthreads();
-
-        // 计算部分结果
-        for (int k = 0; k < TILE_SIZE; ++k) {
-            cVal =  T(float(cVal) + float(As[ty][k]) * float(Bs[k][tx]));
-        }
-
-        __syncthreads();
-    }
-
-    // 存储结果
-    int cIdx = (cRow + ty) * N + (cCol + tx);
-    if ((cRow + ty) < M && (cCol + tx) < N) {
-        C[cIdx] = cVal;
-    }
-}
-
-void runGemmFP32(float* A, float* B, float* C, int m, int k, int n) {
-    dim3 block(TILE_DIM, TILE_DIM);
-    dim3 grid((n + TILE_DIM - 1) / TILE_DIM,
-        (m + TILE_DIM - 1) / TILE_DIM);
-    gemm_kernel<float> << <grid, block >> > (A, B, C, m, n, k);
-    cudaDeviceSynchronize();
-}
-
-void runGemmFP16(__half* A, __half* B, __half* C, int m, int k, int n) {
-    dim3 block(TILE_DIM, TILE_DIM);
-    dim3 grid((n + TILE_DIM - 1) / TILE_DIM,
-        (m + TILE_DIM - 1) / TILE_DIM);
-    gemm_kernel<__half> << <grid, block >> > (A, B, C, m, n, k);
-    cudaDeviceSynchronize();
-}
-
-void runGemmBF16(__nv_bfloat16* A, __nv_bfloat16* B, __nv_bfloat16* C, int m, int k, int n) {
-    dim3 block(TILE_DIM, TILE_DIM);
-    dim3 grid((n + TILE_DIM - 1) / TILE_DIM,
-        (m + TILE_DIM - 1) / TILE_DIM);
-    gemm_kernel<__nv_bfloat16> << <grid, block >> > (A, B, C, m, n, k);
-    cudaDeviceSynchronize();
-}
-
-void runGemmFP8E4M3(__nv_fp8_e4m3* A, __nv_fp8_e4m3* B, __nv_fp8_e4m3* C, int m, int k, int n) {
-    dim3 block(TILE_DIM, TILE_DIM);
-    dim3 grid((n + TILE_DIM - 1) / TILE_DIM,
-        (m + TILE_DIM - 1) / TILE_DIM);
-    gemm_kernel<__nv_fp8_e4m3> << <grid, block >> > (A, B, C, m, n, k);
-    cudaDeviceSynchronize();
-}
-
-void runGemmFP8E5M2(__nv_fp8_e5m2* A, __nv_fp8_e5m2* B, __nv_fp8_e5m2* C, int m, int k, int n) {
-    dim3 block(TILE_DIM, TILE_DIM);
-    dim3 grid((n + TILE_DIM - 1) / TILE_DIM,
-        (m + TILE_DIM - 1) / TILE_DIM);
-    gemm_kernel<__nv_fp8_e5m2> << <grid, block >> > (A, B, C, m, n, k);
-    cudaDeviceSynchronize();
-}
-*/
 
 // ==============================================
 // 逐元素乘法实现
 // ==============================================
 
+
 template <typename T>
 __global__ void elementwise_multiply_kernel(const T* A, const T* B, T* C, int count) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
-        C[idx] = T(float( A[idx]) * float( B[0]));
+        // 对FP8类型使用专用转换函数
+        if constexpr (std::is_same_v<T, __nv_fp8_e4m3>) {
+            C[idx] = __nv_fp8_e4m3(float(A[idx]) * float(B[idx]));
+        }
+        else if constexpr (std::is_same_v<T, __nv_fp8_e5m2>) {
+            C[idx] = __nv_fp8_e5m2(float(A[idx]) * float(B[idx]));
+        }
+        else {
+            // 其他类型保持原转换方式
+            C[idx] = T(float(A[idx]) * float(B[idx]));
+    }
     }
 }
+
+
 
 void runSingleElementTensorMultiplyFP32(float* multi, float* single, float* result, int count) {
     int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -157,6 +66,18 @@ void runSingleElementTensorMultiplyFP16(__half* multi, __half* single, __half* r
 void runSingleElementTensorMultiplyBF16(__nv_bfloat16* multi, __nv_bfloat16* single, __nv_bfloat16* result, int count) {
     int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
     elementwise_multiply_kernel<__nv_bfloat16> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
+    cudaDeviceSynchronize();
+}
+
+void runElementwiseTensorMultiplyFP8E4M3(__nv_fp8_e4m3* multi, __nv_fp8_e4m3* single, __nv_fp8_e4m3* result, int count) {
+    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    elementwise_multiply_kernel<__nv_fp8_e4m3> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
+    cudaDeviceSynchronize();
+}
+
+void runElementwiseTensorMultiplyFP8E5M2(__nv_fp8_e5m2* multi, __nv_fp8_e5m2* single, __nv_fp8_e5m2* result, int count) {
+    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    elementwise_multiply_kernel<__nv_fp8_e5m2> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
     cudaDeviceSynchronize();
 }
 
