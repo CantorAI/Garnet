@@ -584,10 +584,12 @@ TestReport testSingleElementTensorMultiplyFP32() {
         std::vector<float> h_expected(count);
 
         // Generate test data
+        h_B.assign(count, float(0.0f));
+        float valB = float_dist(rng);
+        h_B[0] = valB;
         for (int i = 0; i < count; i++) {
             h_A[i] = float_dist(rng);
-            h_B[i] = float_dist(rng);
-            h_expected[i] = h_A[i] * h_B[i];
+            h_expected[i] = h_A[i] * valB;
         }
 
         // Allocate GPU memory
@@ -642,10 +644,12 @@ TestReport testSingleElementTensorMultiplyFP16() {  // 修改函数名以匹配实现
         std::uniform_real_distribution<float> float_dist(0.1f, 1.0f);  // 添加分布定义
 
         // Generate test data
+        h_B.assign(count, __half(0.0f));
+        float valB = float_dist(rng);
+        h_B[0] = __float2half(valB);
         for (int i = 0; i < count; i++) {
             h_A[i] = __float2half(float_dist(rng));
-            h_B[i] = __float2half(float_dist(rng));
-            h_expected[i] = __half2float(h_A[i]) * __half2float(h_B[i]);
+            h_expected[i] = __half2float(h_A[i]) * valB;
         }
 
         // Allocate GPU memory
@@ -794,56 +798,56 @@ TestReport testScalarMultiplyFP16() {
 // Element-wise Operations Tests
 // ------------------------
 
-TestReport testElementwiseMultiplyFP32() {
-    try {
-        const int count = 1024;
-        std::vector<float> h_A(count);
-        std::vector<float> h_B(count);
-        std::vector<float> h_C(count);
-        std::vector<float> h_expected(count);
-
-        // Generate test data
-        for (int i = 0; i < count; i++) {
-            h_A[i] = float_dist(rng);
-            h_B[i] = float_dist(rng);
-            h_expected[i] = h_A[i] * h_B[i];
-        }
-
-        // Allocate GPU memory
-        float *d_A, *d_B, *d_C;
-        cudaMalloc(&d_A, count * sizeof(float));
-        cudaMalloc(&d_B, count * sizeof(float));
-        cudaMalloc(&d_C, count * sizeof(float));
-
-        // Copy data to GPU
-        cudaMemcpy(d_A, h_A.data(), count * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_B, h_B.data(), count * sizeof(float), cudaMemcpyHostToDevice);
-
-        // Execute GPU computation
-        runSingleElementTensorMultiplyFP32(d_A, d_B, d_C, count);
-
-        // Copy result back to CPU
-        cudaMemcpy(h_C.data(), d_C, count * sizeof(float), cudaMemcpyDeviceToHost);
-
-        // Verify results
-        for (int i = 0; i < count; i++) {
-            if (!almostEqual(h_C[i], h_expected[i], static_cast<float>(EPSILON))) {
-                cudaFree(d_A);
-                cudaFree(d_B);
-                cudaFree(d_C);
-                return TestReport("runSingleElementTensorMultiplyFP32", FAIL, "Result mismatch");
-            }
-        }
-
-        cudaFree(d_A);
-        cudaFree(d_B);
-        cudaFree(d_C);
-        return TestReport("runSingleElementTensorMultiplyFP32", PASS);
-    }
-    catch (const std::exception& e) {
-        return TestReport("runSingleElementTensorMultiplyFP32", FAIL, e.what());
-    }
-}
+//TestReport testElementwiseMultiplyFP32() {
+//    try {
+//        const int count = 1024;
+//        std::vector<float> h_A(count);
+//        std::vector<float> h_B(count);
+//        std::vector<float> h_C(count);
+//        std::vector<float> h_expected(count);
+//
+//        // Generate test data
+//        for (int i = 0; i < count; i++) {
+//            h_A[i] = float_dist(rng);
+//            h_B[i] = float_dist(rng);
+//            h_expected[i] = h_A[i] * h_B[i];
+//        }
+//
+//        // Allocate GPU memory
+//        float *d_A, *d_B, *d_C;
+//        cudaMalloc(&d_A, count * sizeof(float));
+//        cudaMalloc(&d_B, count * sizeof(float));
+//        cudaMalloc(&d_C, count * sizeof(float));
+//
+//        // Copy data to GPU
+//        cudaMemcpy(d_A, h_A.data(), count * sizeof(float), cudaMemcpyHostToDevice);
+//        cudaMemcpy(d_B, h_B.data(), count * sizeof(float), cudaMemcpyHostToDevice);
+//
+//        // Execute GPU computation
+//        runSingleElementTensorMultiplyFP32(d_A, d_B, d_C, count);
+//
+//        // Copy result back to CPU
+//        cudaMemcpy(h_C.data(), d_C, count * sizeof(float), cudaMemcpyDeviceToHost);
+//
+//        // Verify results
+//        for (int i = 0; i < count; i++) {
+//            if (!almostEqual(h_C[i], h_expected[i], static_cast<float>(EPSILON))) {
+//                cudaFree(d_A);
+//                cudaFree(d_B);
+//                cudaFree(d_C);
+//                return TestReport("runSingleElementTensorMultiplyFP32", FAIL, "Result mismatch");
+//            }
+//        }
+//
+//        cudaFree(d_A);
+//        cudaFree(d_B);
+//        cudaFree(d_C);
+//        return TestReport("runSingleElementTensorMultiplyFP32", PASS);
+//    }
+//    catch (const std::exception& e) {
+//        return TestReport("runSingleElementTensorMultiplyFP32", FAIL, e.what());
+//    }
+//}
 
 // ------------------------
 // BF16 Element-wise Multiply Test
@@ -858,11 +862,12 @@ TestReport testSingleElementTensorMultiplyBF16() {
         std::vector<float> h_expected(count);
 
         // Generate test data
+        h_B.assign(count, bfloat16(0.0f));
+        float valB = float_dist(rng);
+        h_B[0] = __float2bfloat16(valB);
         for (int i = 0; i < count; i++) {
             float valA = float_dist(rng);
-            float valB = float_dist(rng);
             h_A[i] = __float2bfloat16(valA);
-            h_B[i] = __float2bfloat16(valB);
             h_expected[i] = valA * valB;
         }
 
@@ -947,13 +952,14 @@ TestReport testSingleElementTensorMultiplyFP8E4M3() {  // 更新测试函数名
             };
 
         // Generate test data
+        h_B.assign(count, __nv_fp8_e4m3(0.0f));
+        float valB = fp8_dist(rng);
+        h_B[0] = float_to_fp8_e4m3(valB);
         for (int i = 0; i < count; i++) {
             float valA = fp8_dist(rng);
-            float valB = fp8_dist(rng);
             h_A[i] = float_to_fp8_e4m3(valA);
-            h_B[i] = float_to_fp8_e4m3(valB);
             // 期望值计算考虑FP8精度损失
-            h_expected[i] = static_cast<float>(h_A[i]) * static_cast<float>(h_B[i]);
+            h_expected[i] = static_cast<float>(h_A[i]) * valB;
         }
 
         // Allocate GPU memory
@@ -996,7 +1002,7 @@ TestReport testSingleElementTensorMultiplyFP8E4M3() {  // 更新测试函数名
                     cudaFree(d_A);
                     cudaFree(d_B);
                     cudaFree(d_C);
-                return TestReport("runSingleElementTensorMultiplyFP8E5M2", FAIL,
+                return TestReport("testSingleElementTensorMultiplyFP8E4M3", FAIL,
                         "Result mismatch at index " + std::to_string(i) +
                         " Expected: " + std::to_string(expected) +
                     " Actual: " + std::to_string(actual)+
@@ -1005,8 +1011,6 @@ TestReport testSingleElementTensorMultiplyFP8E4M3() {  // 更新测试函数名
             }
 
         }
-
-
         cudaFree(d_A);
         cudaFree(d_B);
         cudaFree(d_C);
@@ -1044,11 +1048,12 @@ TestReport testSingleElementTensorMultiplyFP8E5M2() {
             };
 
         // Generate test data
+        h_B.assign(count, __nv_fp8_e5m2(0.0f));
+        float valB = fp8_dist(rng);
+        h_B[0] = float_to_fp8_e5m2(valB);
         for (int i = 0; i < count; i++) {
             float valA = fp8_dist(rng);
-            float valB = fp8_dist(rng);
             h_A[i] = float_to_fp8_e5m2(valA);
-            h_B[i] = float_to_fp8_e5m2(valB);
             h_expected[i] = valA * valB;
         }
 
