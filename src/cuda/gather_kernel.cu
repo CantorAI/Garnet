@@ -29,7 +29,7 @@ __global__ void gather_kernel_2d(const T* input, const int* indices, T* output, 
 // Extern "C" wrappers for various floating-point types.
 extern "C" {
 
-    void runGatherKernelFloat(const float* input, const int* indices, float* output, int M, int /*N*/, int numIndices) {
+    void runGatherKernelFP32(const float* input, const int* indices, float* output, int M, int /*N*/, int numIndices) {
         int threadsPerBlock = 256;
         // grid.x = numIndices (one block per gather index)
         // grid.y = ceil(M / threadsPerBlock) to cover all columns.

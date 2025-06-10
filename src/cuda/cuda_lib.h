@@ -71,6 +71,9 @@ extern "C" {
     void runSingleElementTensorMinusFP8E4M3(fp8_e4m3* tensor, fp8_e4m3 single, fp8_e4m3* result, int count);
     void runSingleElementTensorMinusFP8E5M2(fp8_e5m2* tensor, fp8_e5m2 single, fp8_e5m2* result, int count);
 
+    void runElementwiseTensorMultiplyFP8E4M3(fp8_e4m3* tensor, fp8_e4m3 single, fp8_e4m3* result, int count);
+    void runElementwiseTensorMultiplyFP8E5M2(fp8_e5m2* tensor, fp8_e5m2 single, fp8_e5m2* result, int count);
+
     void runScalarMinusFP32(float* input, float scalar, float* result, int count);
 
     // ------------------------

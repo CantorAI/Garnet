@@ -32,6 +32,55 @@ __device__ int computeLinearIndex(int* dims, int dimCount, int* indices) {
 
 
 template <typename T>
+__global__ void single_multiply_kernel(const T* A, const T* B, T* C, int count) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < count) {
+        // 对FP8类型使用专用转换函数
+        if constexpr (std::is_same_v<T, __nv_fp8_e4m3>) {
+            C[idx] = __nv_fp8_e4m3(float(A[idx]) * float(B[0]));
+        }
+        else if constexpr (std::is_same_v<T, __nv_fp8_e5m2>) {
+            C[idx] = __nv_fp8_e5m2(float(A[idx]) * float(B[0]));
+        }
+        else {
+            // 其他类型保持原转换方式
+            C[idx] = T(float(A[idx]) * float(B[0]));
+    }
+    }
+}
+
+
+void runSingleElementTensorMultiplyFP32(float* multi, float* single, float* result, int count) {
+    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    single_multiply_kernel<float> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
+    cudaDeviceSynchronize();
+}
+
+void runSingleElementTensorMultiplyFP16(__half* multi, __half* single, __half* result, int count) {
+    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    single_multiply_kernel<__half> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
+    cudaDeviceSynchronize();
+}
+
+void runSingleElementTensorMultiplyBF16(__nv_bfloat16* multi, __nv_bfloat16* single, __nv_bfloat16* result, int count) {
+    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    single_multiply_kernel<__nv_bfloat16> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
+    cudaDeviceSynchronize();
+}
+
+void runSingleElementTensorMultiplyFP8E4M3(__nv_fp8_e4m3* multi, __nv_fp8_e4m3* single, __nv_fp8_e4m3* result, int count) {
+    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    single_multiply_kernel<__nv_fp8_e4m3> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
+    cudaDeviceSynchronize();
+}
+
+void runSingleElementTensorMultiplyFP8E5M2(__nv_fp8_e5m2* multi, __nv_fp8_e5m2* single, __nv_fp8_e5m2* result, int count) {
+    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    single_multiply_kernel<__nv_fp8_e5m2> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
+    cudaDeviceSynchronize();
+}
+
+template <typename T>
 __global__ void elementwise_multiply_kernel(const T* A, const T* B, T* C, int count) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
@@ -45,29 +94,10 @@ __global__ void elementwise_multiply_kernel(const T* A, const T* B, T* C, int co
         else {
             // 其他类型保持原转换方式
             C[idx] = T(float(A[idx]) * float(B[idx]));
+        }
     }
-    }
 }
 
-
-
-void runSingleElementTensorMultiplyFP32(float* multi, float* single, float* result, int count) {
-    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    elementwise_multiply_kernel<float> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
-    cudaDeviceSynchronize();
-}
-
-void runSingleElementTensorMultiplyFP16(__half* multi, __half* single, __half* result, int count) {
-    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    elementwise_multiply_kernel<__half> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
-    cudaDeviceSynchronize();
-}
-
-void runSingleElementTensorMultiplyBF16(__nv_bfloat16* multi, __nv_bfloat16* single, __nv_bfloat16* result, int count) {
-    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    elementwise_multiply_kernel<__nv_bfloat16> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
-    cudaDeviceSynchronize();
-}
 
 void runElementwiseTensorMultiplyFP8E4M3(__nv_fp8_e4m3* multi, __nv_fp8_e4m3* single, __nv_fp8_e4m3* result, int count) {
     int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -76,18 +106,6 @@ void runElementwiseTensorMultiplyFP8E4M3(__nv_fp8_e4m3* multi, __nv_fp8_e4m3* si
 }
 
 void runElementwiseTensorMultiplyFP8E5M2(__nv_fp8_e5m2* multi, __nv_fp8_e5m2* single, __nv_fp8_e5m2* result, int count) {
-    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    elementwise_multiply_kernel<__nv_fp8_e5m2> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
-    cudaDeviceSynchronize();
-}
-
-void runSingleElementTensorMultiplyFP8E4M3(__nv_fp8_e4m3* multi, __nv_fp8_e4m3* single, __nv_fp8_e4m3* result, int count) {
-    int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    elementwise_multiply_kernel<__nv_fp8_e4m3> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
-    cudaDeviceSynchronize();
-}
-
-void runSingleElementTensorMultiplyFP8E5M2(__nv_fp8_e5m2* multi, __nv_fp8_e5m2* single, __nv_fp8_e5m2* result, int count) {
     int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
     elementwise_multiply_kernel<__nv_fp8_e5m2> << <gridSize, BLOCK_SIZE >> > (multi, single, result, count);
     cudaDeviceSynchronize();
@@ -235,9 +253,17 @@ void runSingleElementTensorAddFP8E5M2(__nv_fp8_e5m2* tensor, __nv_fp8_e5m2 singl
 // 标量加法实现
 // ==============================================
 
+template <typename T>
+__global__ void scalar_add_kernel(const T* input, T* result, float scalar, int count) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < count) {
+        result[idx] = T(float(input[idx]) + scalar);
+    }
+}
+
 void runScalarAddFP32(float* input, float scalar, float* result, int count) {
     int gridSize = (count + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    scalar_multiply_kernel<float> << <gridSize, BLOCK_SIZE >> > (input, result, scalar, count);
+    scalar_add_kernel<float> << <gridSize, BLOCK_SIZE >> > (input, result, scalar, count);
     cudaDeviceSynchronize();
 }
 
