@@ -123,84 +123,6 @@ extern "C" {
         }
     }
 
-#if _FP8_SUPPORT_
-    //------------------------------------------------------------------------------
-    // FP8 E4M3 Kernel
-    __global__ void gemm_kernel_fp8_e4m3(const __nv_fp8_e4m3* A, const __nv_fp8_e4m3* B, float* C,
-        int M, int N, int K) {
-        int block_row = blockIdx.y;
-        int block_col = blockIdx.x;
-        int row = block_row * 16;
-        int col = block_col * 16;
-
-        __shared__ __nv_fp8_e4m3 tileA[16][16];
-        __shared__ __nv_fp8_e4m3 tileB[16][16];
-
-        float accum = 0.0f;
-        for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
-            }
-            __syncthreads();
-
-            // For Ada Lovelace architecture, convert fp8 to fp16 and use fp16 tensor cores
-            if (tid == 0) {  // Only one thread computes the result for simplicity
-                float sum = 0.0f;
-                for (int k = 0; k < 16; k++) {
-                    sum += (float)tileA[0][k] * (float)tileB[k][0];
-                }
-                accum += sum;
-            }
-            __syncthreads();
-        }
-        if (threadIdx.x == 0) {  // Only the first thread writes the result
-            C[row * N + col] = accum;
-        }
-    }
-
-    //------------------------------------------------------------------------------
-    // FP8 E5M2 Kernel
-    __global__ void gemm_kernel_fp8_e5m2(const __nv_fp8_e5m2* A, const __nv_fp8_e5m2* B, float* C,
-        int M, int N, int K) {
-        int block_row = blockIdx.y;
-        int block_col = blockIdx.x;
-        int row = block_row * 16;
-        int col = block_col * 16;
-
-        __shared__ __nv_fp8_e5m2 tileA[16][16];
-        __shared__ __nv_fp8_e5m2 tileB[16][16];
-
-        float accum = 0.0f;
-        for (int t = 0; t < K; t += 16) {
-            int tid = threadIdx.x;
-            for (int i = tid; i < 256; i += 32) {
-                int r = i / 16;
-                int c = i % 16;
-                tileA[r][c] = A[(row + r) * K + (t + c)];
-                tileB[r][c] = B[(t + r) * N + (col + c)];
-            }
-            __syncthreads();
-
-            // For Ada Lovelace architecture, convert fp8 to fp16 and use fp16 tensor cores
-            if (tid == 0) {  // Only one thread computes the result for simplicity
-                float sum = 0.0f;
-                for (int k = 0; k < 16; k++) {
-                    sum += (float)tileA[0][k] * (float)tileB[k][0];
-                }
-                accum += sum;
-            }
-            __syncthreads();
-        }
-        if (threadIdx.x == 0) {  // Only the first thread writes the result
-            C[row * N + col] = accum;
-        }
-    }
-#endif
-
     __global__ void gemm_kernel_fp32(const float* A, const float* B, float* C,
         int M, int N, int K) {
         // 二维线程块: 每个线程块处理一个16x16输出块
@@ -284,19 +206,68 @@ extern "C" {
     }
 
 #if _FP8_SUPPORT_
-    void runGemmFP8E4M3(const __nv_fp8_e4m3* d_A, const __nv_fp8_e4m3* d_B, float* d_C,
+    // 修正后的FP8 E4M3内核
+    __global__ void gemm_kernel_fp8_e4m3(const __nv_fp8_e4m3* A, const __nv_fp8_e4m3* B, __nv_fp8_e4m3* C,
         int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);
-        gemm_kernel_fp8_e4m3 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (row >= M || col >= N) return;
+
+        float accum = 0.0f;
+        for (int k = 0; k < K; ++k) {
+            float a_val = static_cast<float>(A[row * K + k]);
+            float b_val = static_cast<float>(B[k * N + col]);
+            accum += a_val * b_val;
+        }
+
+        // 将结果转换为FP8存储
+        C[row * N + col] = __nv_fp8_e4m3(accum);
+    }
+
+    // 修正后的FP8 E5M2内核
+    __global__ void gemm_kernel_fp8_e5m2(const __nv_fp8_e5m2* A, const __nv_fp8_e5m2* B, __nv_fp8_e5m2* C,
+        int M, int N, int K) {
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (row >= M || col >= N) return;
+
+        float accum = 0.0f;
+        for (int k = 0; k < K; ++k) {
+            float a_val = static_cast<float>(A[row * K + k]);
+            float b_val = static_cast<float>(B[k * N + col]);
+            accum += a_val * b_val;
+        }
+
+        // 将结果转换为FP8存储
+        C[row * N + col] = __nv_fp8_e5m2(accum);
+    }
+#endif
+
+#if _FP8_SUPPORT_
+    // 修正后的运行函数
+    void runGemmFP8E4M3(const __nv_fp8_e4m3* d_A, const __nv_fp8_e4m3* d_B, __nv_fp8_e4m3* d_C,
+        int m, int n, int k) {  // 参数顺序统一为m,n,k
+
+        // 更合理的线程块配置
+        dim3 blockDim(16, 16);
+        dim3 gridDim((n + blockDim.x - 1) / blockDim.x,
+            (m + blockDim.y - 1) / blockDim.y);
+
+        gemm_kernel_fp8_e4m3 << <gridDim, blockDim >> > (d_A, d_B, d_C, m, n, k);
         cudaDeviceSynchronize();
     }
 
-    void runGemmFP8E5M2(const __nv_fp8_e5m2* d_A, const __nv_fp8_e5m2* d_B, float* d_C,
-        int M, int N, int K) {
-        dim3 gridDim(N / 16, M / 16);
-        dim3 blockDim(32, 1, 1);
-        gemm_kernel_fp8_e5m2 << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
+    void runGemmFP8E5M2(const __nv_fp8_e5m2* d_A, const __nv_fp8_e5m2* d_B, __nv_fp8_e5m2* d_C,
+        int m, int n, int k) {  // 参数顺序统一为m,n,k
+
+        // 更合理的线程块配置
+        dim3 blockDim(16, 16);
+        dim3 gridDim((n + blockDim.x - 1) / blockDim.x,
+            (m + blockDim.y - 1) / blockDim.y);
+
+        gemm_kernel_fp8_e5m2 << <gridDim, blockDim >> > (d_A, d_B, d_C, m, n, k);
         cudaDeviceSynchronize();
     }
 #endif

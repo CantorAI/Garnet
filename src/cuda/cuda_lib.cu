@@ -380,7 +380,7 @@ void runScalarMinusFP32(float* input, float scalar, float* result, int count) {
     scalar_minus_kernel<float> << <gridSize, BLOCK_SIZE >> > (input, scalar, result, count);
     cudaDeviceSynchronize();
 }
-/*
+
 // ==============================================
 // 矩阵乘法(Matmul)实现
 // ==============================================
@@ -404,7 +404,7 @@ void runMatmulFP8E4M3(__nv_fp8_e4m3* A, __nv_fp8_e4m3* B, __nv_fp8_e4m3* C, int 
 void runMatmulFP8E5M2(__nv_fp8_e5m2* A, __nv_fp8_e5m2* B, __nv_fp8_e5m2* C, int m, int n, int k) {
     runGemmFP8E5M2(A, B, C, m, k, n);
 }
-*/
+
 // ==============================================
 // 转置(Permute)实现
 // ==============================================

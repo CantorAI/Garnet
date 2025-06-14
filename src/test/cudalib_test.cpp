@@ -26,6 +26,7 @@
 std::mt19937 rng(std::random_device{}());
 std::uniform_real_distribution<float> float_dist(-10.0f, 10.0f);
 std::uniform_int_distribution<int> int_dist(0, 100);
+std::uniform_real_distribution<double> double_dist(-10.0, 10.0);
 
 // Test status
 enum TestStatus {
@@ -1167,6 +1168,115 @@ TestReport testAddFP32() {
     }
 }
 
+TestReport testAddFP64() {
+    try {
+        const int count = 1024;
+        std::vector<double> h_A(count);
+        std::vector<double> h_B(count);
+        std::vector<double> h_C(count);
+        std::vector<double> h_expected(count);
+
+        // Generate test data
+        for (int i = 0; i < count; i++) {
+            h_A[i] = double_dist(rng);  // 假设有double_dist分布
+            h_B[i] = double_dist(rng);
+            h_expected[i] = h_A[i] + h_B[i];
+        }
+
+        // Allocate GPU memory
+        double* d_A, * d_B, * d_C;
+        cudaMalloc(&d_A, count * sizeof(double));
+        cudaMalloc(&d_B, count * sizeof(double));
+        cudaMalloc(&d_C, count * sizeof(double));
+
+        // Copy data to GPU
+        cudaMemcpy(d_A, h_A.data(), count * sizeof(double), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, h_B.data(), count * sizeof(double), cudaMemcpyHostToDevice);
+
+        // Execute GPU computation
+        runAddFP64(d_A, d_B, d_C, count);  // 假设有runAddFP64内核
+
+        // Copy result back to CPU
+        cudaMemcpy(h_C.data(), d_C, count * sizeof(double), cudaMemcpyDeviceToHost);
+
+        // Verify results
+        for (int i = 0; i < count; i++) {
+            if (!almostEqual(h_C[i], h_expected[i], static_cast<double>(EPSILON))) {
+                cudaFree(d_A);
+                cudaFree(d_B);
+                cudaFree(d_C);
+                return TestReport("runAddFP64", FAIL, "Result mismatch");
+            }
+        }
+
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
+        return TestReport("runAddFP64", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runAddFP64", FAIL, e.what());
+    }
+}
+
+TestReport testAddFP16() {
+    try {
+        const int count = 1024;
+        std::vector<__half> h_A(count);
+        std::vector<__half> h_B(count);
+        std::vector<__half> h_C(count);
+        std::vector<float> h_expected(count);  // 使用float存储预期值以便比较
+
+        // 创建单精度分布生成器用于生成测试数据
+        std::uniform_real_distribution<float> float_dist(-1.0f, 1.0f);  // 使用较小范围避免溢出
+
+        // Generate test data
+        for (int i = 0; i < count; i++) {
+            float a = float_dist(rng);
+            float b = float_dist(rng);
+            h_A[i] = __float2half(a);
+            h_B[i] = __float2half(b);
+            h_expected[i] = a + b;  // 在float精度下计算预期结果
+        }
+
+        // Allocate GPU memory
+        __half* d_A, * d_B, * d_C;
+        cudaMalloc(&d_A, count * sizeof(__half));
+        cudaMalloc(&d_B, count * sizeof(__half));
+        cudaMalloc(&d_C, count * sizeof(__half));
+
+        // Copy data to GPU
+        cudaMemcpy(d_A, h_A.data(), count * sizeof(__half), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, h_B.data(), count * sizeof(__half), cudaMemcpyHostToDevice);
+
+        // Execute GPU computation
+        runAddFP16(d_A, d_B, d_C, count);  // 调用FP16内核
+
+        // Copy result back to CPU
+        cudaMemcpy(h_C.data(), d_C, count * sizeof(__half), cudaMemcpyDeviceToHost);
+
+        // Verify results - 转换为float进行比较
+        const float epsilon = 1e-3f;  // FP16需要更大的容差
+        for (int i = 0; i < count; i++) {
+            float result = __half2float(h_C[i]);
+            if (std::fabs(result - h_expected[i]) > epsilon) {
+                cudaFree(d_A);
+                cudaFree(d_B);
+                cudaFree(d_C);
+                return TestReport("runAddFP16", FAIL, "Result mismatch");
+            }
+        }
+
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
+        return TestReport("runAddFP16", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runAddFP16", FAIL, e.what());
+    }
+}
+
 TestReport testScalarAddFP32() {
     try {
         const int count = 1024;
@@ -1325,6 +1435,69 @@ TestReport testConvertFP32ToFP16() {
     }
 }
 
+TestReport testConvertFP32ToBP16() {
+    try {
+        const int count = 1024;
+        std::vector<float> h_src(count);
+        std::vector<bfloat16> h_dest(count);
+        std::vector<bfloat16> h_expected(count);
+
+        // 生成测试数据
+        std::uniform_real_distribution<float> float_dist(-100.0f, 100.0f);
+        for (int i = 0; i < count; i++) {
+            h_src[i] = float_dist(rng);
+            h_expected[i] = bfloat16(h_src[i]); // CPU端转换作为参考
+        }
+
+        // 分配GPU内存
+        float* d_src;
+        bfloat16* d_dest;
+        cudaMalloc(&d_src, count * sizeof(float));
+        cudaMalloc(&d_dest, count * sizeof(bfloat16));
+
+        // 复制数据到GPU
+        cudaMemcpy(d_src, h_src.data(), count * sizeof(float), cudaMemcpyHostToDevice);
+
+        // 执行GPU计算
+        runConvertFP32ToBF16(d_src, d_dest, count);
+
+        // 复制结果回CPU
+        cudaMemcpy(h_dest.data(), d_dest, count * sizeof(bfloat16), cudaMemcpyDeviceToHost);
+
+        // 验证结果
+        const float epsilon = 1e-3f; // BF16精度约为7位十进制
+        for (int i = 0; i < count; i++) {
+            float expected = float(h_expected[i]);
+            float actual = float(h_dest[i]);
+
+            // 特殊处理NaN和Inf
+            if (std::isnan(expected) && std::isnan(actual)) continue;
+            if (std::isinf(expected) && std::isinf(actual) &&
+                std::signbit(expected) == std::signbit(actual)) continue;
+
+            // 比较数值
+            float diff = std::fabs(expected - actual);
+            if (diff > epsilon) {
+                cudaFree(d_src);
+                cudaFree(d_dest);
+                return TestReport("runConvertFP32ToBF16", FAIL,
+                    "Result mismatch at index " + std::to_string(i) +
+                    " | Expected: " + std::to_string(expected) +
+                    " | Actual: " + std::to_string(actual) +
+                    " | Source: " + std::to_string(h_src[i]));
+            }
+        }
+
+        cudaFree(d_src);
+        cudaFree(d_dest);
+        return TestReport("runConvertFP32ToBF16", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runConvertFP32ToBF16", FAIL, e.what());
+    }
+}
+
+
 TestReport testConvertFP16ToFP32() {
     try {
         const int count = 1024;
@@ -1374,7 +1547,430 @@ TestReport testConvertFP16ToFP32() {
     }
 }
 
+TestReport testConvertBF16ToFP32() {
+    try {
+        const int count = 1024;
+        std::vector<bfloat16> h_src(count);
+        std::vector<float> h_dest(count);
+        std::vector<float> h_expected(count);
+
+        // 生成测试数据
+        std::uniform_real_distribution<float> float_dist(-100.0f, 100.0f);
+        for (int i = 0; i < count; i++) {
+            float src_val = float_dist(rng);
+            h_src[i] = bfloat16(src_val);
+            h_expected[i] = float(h_src[i]); // CPU端转换作为参考
+        }
+
+        // 添加特殊值测试
+        std::vector<float> specialValues = {
+            0.0f, -0.0f, 1.0f, -1.0f,
+            std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::quiet_NaN(),
+            std::numeric_limits<float>::denorm_min()
+        };
+        for (int i = 0; i < specialValues.size() && i < 8; i++) {
+            h_src[i] = bfloat16(specialValues[i]);
+            h_expected[i] = specialValues[i];
+        }
+
+        // 分配GPU内存
+        bfloat16* d_src;
+        float* d_dest;
+        cudaMalloc(&d_src, count * sizeof(bfloat16));
+        cudaMalloc(&d_dest, count * sizeof(float));
+
+        // 复制数据到GPU
+        cudaMemcpy(d_src, h_src.data(), count * sizeof(bfloat16), cudaMemcpyHostToDevice);
+
+        // 执行GPU计算
+        runConvertBF16ToFP32(d_src, d_dest, count);
+
+        // 复制结果回CPU
+        cudaMemcpy(h_dest.data(), d_dest, count * sizeof(float), cudaMemcpyDeviceToHost);
+
+        // 验证结果
+        const float epsilon = 1e-7f; // BF16->FP32转换应该是精确的
+        for (int i = 0; i < count; i++) {
+            float expected = h_expected[i];
+            float actual = h_dest[i];
+
+            // 特殊处理NaN
+            if (std::isnan(expected) && std::isnan(actual)) continue;
+
+            // 比较数值
+            float diff = std::fabs(expected - actual);
+            if (diff > epsilon) {
+                // 将原始BF16值转换回float以便调试
+                float src_float = float(h_src[i]);
+
+                cudaFree(d_src);
+                cudaFree(d_dest);
+                return TestReport("runConvertBF16ToFP32", FAIL,
+                    "Result mismatch at index " + std::to_string(i) +
+                    " | Expected: " + std::to_string(expected) +
+                    " | Actual: " + std::to_string(actual) +
+                    " | Source (BF16 as float): " + std::to_string(src_float));
+            }
+        }
+
+        cudaFree(d_src);
+        cudaFree(d_dest);
+        return TestReport("runConvertBF16ToFP32", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runConvertBF16ToFP32", FAIL, e.what());
+    }
+}
+
 // Similar tests for BF16 conversions can be added here
+// ------------------------
+// Matmul Test Functions
+// ------------------------
+
+// FP32矩阵乘法测试
+TestReport testMatmulFP32() {
+    try {
+        const int m = 128, n = 128, k = 128;
+        std::vector<float> h_A(m * k);
+        std::vector<float> h_B(k * n);
+        std::vector<float> h_C(m * n);
+        std::vector<float> h_expected(m * n);
+
+        // 生成测试数据
+        std::uniform_real_distribution<float> float_dist(-1.0f, 1.0f);
+        for (int i = 0; i < m * k; i++) h_A[i] = float_dist(rng);
+        for (int i = 0; i < k * n; i++) h_B[i] = float_dist(rng);
+
+        // CPU端计算预期结果
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                float sum = 0.0f;
+                for (int p = 0; p < k; p++) {
+                    sum += h_A[i * k + p] * h_B[p * n + j];
+                }
+                h_expected[i * n + j] = sum;
+            }
+        }
+
+        // 分配GPU内存
+        float* d_A, * d_B, * d_C;
+        cudaMalloc(&d_A, m * k * sizeof(float));
+        cudaMalloc(&d_B, k * n * sizeof(float));
+        cudaMalloc(&d_C, m * n * sizeof(float));
+
+        // 复制数据到GPU
+        cudaMemcpy(d_A, h_A.data(), m * k * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, h_B.data(), k * n * sizeof(float), cudaMemcpyHostToDevice);
+
+        // 执行GPU计算
+        runMatmulFP32(d_A, d_B, d_C, m, n, k);
+
+        // 复制结果回CPU
+        cudaMemcpy(h_C.data(), d_C, m * n * sizeof(float), cudaMemcpyDeviceToHost);
+
+        // 验证结果
+        const float epsilon = 1e-4f;
+        for (int i = 0; i < m * n; i++) {
+            if (std::fabs(h_C[i] - h_expected[i]) > epsilon) {
+                cudaFree(d_A);
+                cudaFree(d_B);
+                cudaFree(d_C);
+                return TestReport("runMatmulFP32", FAIL, "Result mismatch");
+            }
+        }
+
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
+        return TestReport("runMatmulFP32", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runMatmulFP32", FAIL, e.what());
+    }
+}
+
+// FP16矩阵乘法测试
+TestReport testMatmulFP16() {
+    try {
+        const int m = 128, n = 128, k = 128;
+        std::vector<__half> h_A(m * k);
+        std::vector<__half> h_B(k * n);
+        std::vector<__half> h_C(m * n);
+        std::vector<float> h_expected(m * n);
+
+        // 生成测试数据
+        std::uniform_real_distribution<float> float_dist(-1.0f, 1.0f);
+        for (int i = 0; i < m * k; i++)
+            h_A[i] = __float2half_rn(float_dist(rng));
+        for (int i = 0; i < k * n; i++)
+            h_B[i] = __float2half_rn(float_dist(rng));
+
+        // CPU端计算预期结果（使用float精度）
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                float sum = 0.0f;
+                for (int p = 0; p < k; p++) {
+                    float a = __half2float(h_A[i * k + p]);
+                    float b = __half2float(h_B[p * n + j]);
+                    sum += a * b;
+                }
+                h_expected[i * n + j] = sum;
+            }
+        }
+
+        // 分配GPU内存
+        __half* d_A, * d_B, * d_C;
+        cudaMalloc(&d_A, m * k * sizeof(__half));
+        cudaMalloc(&d_B, k * n * sizeof(__half));
+        cudaMalloc(&d_C, m * n * sizeof(__half));
+
+        // 复制数据到GPU
+        cudaMemcpy(d_A, h_A.data(), m * k * sizeof(__half), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, h_B.data(), k * n * sizeof(__half), cudaMemcpyHostToDevice);
+
+        // 执行GPU计算
+        runMatmulFP16(d_A, d_B, d_C, m, n, k);
+
+        // 复制结果回CPU
+        cudaMemcpy(h_C.data(), d_C, m * n * sizeof(__half), cudaMemcpyDeviceToHost);
+
+        // 验证结果（转换为float比较）
+        const float epsilon = 1e-2f;  // FP16需要更大的容差
+        for (int i = 0; i < m * n; i++) {
+            float result = __half2float(h_C[i]);
+            if (std::fabs(result - h_expected[i]) > epsilon) {
+                cudaFree(d_A);
+                cudaFree(d_B);
+                cudaFree(d_C);
+                return TestReport("runMatmulFP16", FAIL, 
+                    "Result mismatch at index " + std::to_string(i) +
+                    " Expected: " + std::to_string(h_expected[i]) +
+                    " Actual: " + std::to_string(result));
+            }
+        }
+
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
+        return TestReport("runMatmulFP16", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runMatmulFP16", FAIL, e.what());
+    }
+}
+
+// BF16矩阵乘法测试
+TestReport testMatmulBF16() {
+    try {
+        const int m = 128, n = 128, k = 128;
+        std::vector<bfloat16> h_A(m * k);
+        std::vector<bfloat16> h_B(k * n);
+        std::vector<bfloat16> h_C(m * n);
+        std::vector<float> h_expected(m * n);
+
+        // 生成测试数据
+        std::uniform_real_distribution<float> float_dist(-1.0f, 1.0f);
+        for (int i = 0; i < m * k; i++)
+            h_A[i] = bfloat16(float_dist(rng));
+        for (int i = 0; i < k * n; i++)
+            h_B[i] = bfloat16(float_dist(rng));
+
+        // CPU端计算预期结果（使用float精度）
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                float sum = 0.0f;
+                for (int p = 0; p < k; p++) {
+                    float a = float(h_A[i * k + p]);
+                    float b = float(h_B[p * n + j]);
+                    sum += a * b;
+                }
+                h_expected[i * n + j] = sum;
+            }
+        }
+
+        // 分配GPU内存
+        bfloat16* d_A, * d_B, * d_C;
+        cudaMalloc(&d_A, m * k * sizeof(bfloat16));
+        cudaMalloc(&d_B, k * n * sizeof(bfloat16));
+        cudaMalloc(&d_C, m * n * sizeof(bfloat16));
+
+        // 复制数据到GPU
+        cudaMemcpy(d_A, h_A.data(), m * k * sizeof(bfloat16), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, h_B.data(), k * n * sizeof(bfloat16), cudaMemcpyHostToDevice);
+
+        // 执行GPU计算
+        runMatmulBF16(d_A, d_B, d_C, m, n, k);
+
+        // 复制结果回CPU
+        cudaMemcpy(h_C.data(), d_C, m * n * sizeof(bfloat16), cudaMemcpyDeviceToHost);
+
+        // 验证结果（转换为float比较）
+        const float epsilon = 1e-2f;  // BF16精度类似FP16
+        for (int i = 0; i < m * n; i++) {
+            float result = float(h_C[i]);
+            if (std::fabs(result - h_expected[i]) > epsilon) {
+                cudaFree(d_A);
+                cudaFree(d_B);
+                cudaFree(d_C);
+                return TestReport("runMatmulBF16", FAIL, 
+                    "Result mismatch at index " + std::to_string(i) +
+                    " Expected: " + std::to_string(h_expected[i]) +
+                    " Actual: " + std::to_string(result));
+            }
+        }
+
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
+        return TestReport("runMatmulBF16", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runMatmulBF16", FAIL, e.what());
+    }
+}
+
+// FP8 E4M3矩阵乘法测试
+TestReport testMatmulFP8E4M3() {
+    try {
+        const int m = 64, n = 64, k = 64;  // 使用较小矩阵避免溢出
+        std::vector<fp8_e4m3> h_A(m * k);
+        std::vector<fp8_e4m3> h_B(k * n);
+        std::vector<fp8_e4m3> h_C(m * n);
+        std::vector<float> h_expected(m * n);
+
+        // 生成测试数据（使用较小范围）
+        std::uniform_real_distribution<float> float_dist(-0.5f, 0.5f);
+        for (int i = 0; i < m * k; i++)
+            h_A[i] = float_to_fp8_e4m3(float_dist(rng));
+        for (int i = 0; i < k * n; i++)
+            h_B[i] = float_to_fp8_e4m3(float_dist(rng));
+
+        // CPU端计算预期结果（使用float精度）
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                float sum = 0.0f;
+                for (int p = 0; p < k; p++) {
+                    float a = fp8_e4m3_to_float(h_A[i * k + p]);
+                    float b = fp8_e4m3_to_float(h_B[p * n + j]);
+                    sum += a * b;
+                }
+                h_expected[i * n + j] = sum;
+            }
+        }
+
+        // 分配GPU内存
+        fp8_e4m3* d_A, * d_B, * d_C;
+        cudaMalloc(&d_A, m * k * sizeof(fp8_e4m3));
+        cudaMalloc(&d_B, k * n * sizeof(fp8_e4m3));
+        cudaMalloc(&d_C, m * n * sizeof(fp8_e4m3));
+
+        // 复制数据到GPU
+        cudaMemcpy(d_A, h_A.data(), m * k * sizeof(fp8_e4m3), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, h_B.data(), k * n * sizeof(fp8_e4m3), cudaMemcpyHostToDevice);
+
+        // 执行GPU计算
+        runMatmulFP8E4M3(d_A, d_B, d_C, m, n, k);
+
+        // 复制结果回CPU
+        cudaMemcpy(h_C.data(), d_C, m * n * sizeof(fp8_e4m3), cudaMemcpyDeviceToHost);
+
+        // 验证结果（转换为float比较）
+        const float epsilon = 1e-1f;  // FP8需要更大的容差
+        for (int i = 0; i < m * n; i++) {
+            float result = fp8_e4m3_to_float(h_C[i]);
+            if (std::fabs(result - h_expected[i]) > epsilon) {
+                cudaFree(d_A);
+                cudaFree(d_B);
+                cudaFree(d_C);
+                return TestReport("runMatmulFP8E4M3", FAIL, 
+                    "Result mismatch at index " + std::to_string(i) +
+                    " Expected: " + std::to_string(h_expected[i]) +
+                    " Actual: " + std::to_string(result));
+            }
+        }
+
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
+        return TestReport("runMatmulFP8E4M3", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runMatmulFP8E4M3", FAIL, e.what());
+    }
+}
+
+// FP8 E5M2矩阵乘法测试
+TestReport testMatmulFP8E5M2() {
+    try {
+        const int m = 64, n = 64, k = 64;  // 使用较小矩阵避免溢出
+        std::vector<fp8_e5m2> h_A(m * k);
+        std::vector<fp8_e5m2> h_B(k * n);
+        std::vector<fp8_e5m2> h_C(m * n);
+        std::vector<float> h_expected(m * n);
+
+        // 生成测试数据（使用较小范围）
+        std::uniform_real_distribution<float> float_dist(-0.5f, 0.5f);
+        for (int i = 0; i < m * k; i++)
+            h_A[i] = float_to_fp8_e5m2(float_dist(rng));
+        for (int i = 0; i < k * n; i++)
+            h_B[i] = float_to_fp8_e5m2(float_dist(rng));
+
+        // CPU端计算预期结果（使用float精度）
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                float sum = 0.0f;
+                for (int p = 0; p < k; p++) {
+                    float a = fp8_e5m2_to_float(h_A[i * k + p]);
+                    float b = fp8_e5m2_to_float(h_B[p * n + j]);
+                    sum += a * b;
+                }
+                h_expected[i * n + j] = sum;
+            }
+        }
+
+        // 分配GPU内存
+        fp8_e5m2* d_A, * d_B, * d_C;
+        cudaMalloc(&d_A, m * k * sizeof(fp8_e5m2));
+        cudaMalloc(&d_B, k * n * sizeof(fp8_e5m2));
+        cudaMalloc(&d_C, m * n * sizeof(fp8_e5m2));
+
+        // 复制数据到GPU
+        cudaMemcpy(d_A, h_A.data(), m * k * sizeof(fp8_e5m2), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, h_B.data(), k * n * sizeof(fp8_e5m2), cudaMemcpyHostToDevice);
+
+        // 执行GPU计算
+        runMatmulFP8E5M2(d_A, d_B, d_C, m, n, k);
+
+        // 复制结果回CPU
+        cudaMemcpy(h_C.data(), d_C, m * n * sizeof(fp8_e5m2), cudaMemcpyDeviceToHost);
+
+        // 验证结果（转换为float比较）
+        const float epsilon = 1e-1f;  // FP8需要更大的容差
+        for (int i = 0; i < m * n; i++) {
+            float result = fp8_e5m2_to_float(h_C[i]);
+            if (std::fabs(result - h_expected[i]) > epsilon) {
+                cudaFree(d_A);
+                cudaFree(d_B);
+                cudaFree(d_C);
+                return TestReport("runMatmulFP8E5M2", FAIL, 
+                    "Result mismatch at index " + std::to_string(i) +
+                    " Expected: " + std::to_string(h_expected[i]) +
+                    " Actual: " + std::to_string(result));
+            }
+        }
+
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
+        return TestReport("runMatmulFP8E5M2", PASS);
+    }
+    catch (const std::exception& e) {
+        return TestReport("runMatmulFP8E5M2", FAIL, e.what());
+    }
+}
+
 
 // ------------------------
 // Main Test Function
@@ -1409,16 +2005,25 @@ int main() {
     printTestReport(testScalarMultiplyFP16());
 
     // Element-wise Operations Tests
-
+    printTestReport(testAddFP64());
     printTestReport(testAddFP32());
+    printTestReport(testAddFP16());
     printTestReport(testScalarAddFP32());
     printTestReport(testMinusFP32());
     // Add tests for FP16, BF16 versions here
 
     // Conversion Tests
     printTestReport(testConvertFP32ToFP16());
+    printTestReport(testConvertFP32ToBP16());
     printTestReport(testConvertFP16ToFP32());
+    printTestReport(testConvertBF16ToFP32());
     // Add tests for other conversions here
+    printTestReport(testMatmulFP32());
+    printTestReport(testMatmulFP16());
+    printTestReport(testMatmulBF16());
+    printTestReport(testMatmulFP8E4M3());
+    printTestReport(testMatmulFP8E5M2());
+
 
     std::cout << "=== GARNET CUDA TEST FINISH ===" << std::endl;
     return 0;
