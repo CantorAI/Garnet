@@ -29,7 +29,7 @@ weights = {"W": np.random.rand(128, 128).astype(np.float32)}
 print("Testing TRT Engine compilation and execution...")
 try:
     # If the C++ bindings are not implemented yet, this will throw an error and FAIL the test.
-    engine = garnet.build_model(
+    engine = garnet.load_model(
         xmodel_path, 
         weights=weights,
         cache_dir=os.path.join(script_dir, "cache")
