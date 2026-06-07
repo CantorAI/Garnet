@@ -14,11 +14,12 @@ except Exception as e:
 script_dir = os.path.dirname(os.path.abspath(__file__))
 xmodel_path = os.path.join(script_dir, "simple_matmul.x")
 
-# Create a simple .x file on the fly if it doesn't exist
-if not os.path.exists(xmodel_path):
-    with open(xmodel_path, "w") as f:
-        f.write('''
-import CpuTensor as T
+# Create a simple .x file on the fly
+with open(xmodel_path, "w") as f:
+    f.write('''
+from garnet import garnet
+T = garnet.tensor()
+
 def forward(a, b):
     return a * T.matmul() * b
 ''')
