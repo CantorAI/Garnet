@@ -4,8 +4,8 @@ setlocal
 :: Initialize VS Environment for x64
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-:: Move to Garnet root relative to this script
-cd /d "%~dp0..\..\ "
+:: Move to parent workspace folder (GarnetDev)
+cd /d "%~dp0..\..\..\"
 
 set BUILD_DIR=out\build\x64-Debug
 
@@ -18,7 +18,7 @@ cd "%BUILD_DIR%"
 set CMAKE_EXE="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
 if not exist %CMAKE_EXE% set CMAKE_EXE=cmake
 
-%CMAKE_EXE% -G "Ninja" -DCMAKE_BUILD_TYPE=Debug ..\..\..\
+%CMAKE_EXE% -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=bin -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=bin -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=bin ..\..\..\Garnet
 ninja
 
 endlocal
