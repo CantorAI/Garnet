@@ -4,7 +4,9 @@ project("garnet" LANGUAGES CXX CUDA)
 # Find CUDA package
 find_package(CUDA REQUIRED)
 
-# Ensure that CUDA code uses the shared (dynamic) runtime.
+# Ensure that CUDA and CXX code uses C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
