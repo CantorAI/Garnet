@@ -2,11 +2,13 @@ import os
 import sys
 import numpy as np
 
-# We expect Garnet to be importable
+import xlang
+
+# We expect Garnet to be importable via xlang
 try:
-    from garnet import garnet
-except ImportError as e:
-    print(f"Failed to import Garnet: {e}")
+    garnet = xlang.import_module("garnet")
+except Exception as e:
+    print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)
 
 script_dir = os.path.dirname(os.path.abspath(__file__))

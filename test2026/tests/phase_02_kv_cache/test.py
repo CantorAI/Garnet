@@ -1,9 +1,11 @@
 import sys
 
+import xlang
+
 try:
-    from garnet import garnet
-except ImportError as e:
-    print(f"Failed to import Garnet: {e}")
+    garnet = xlang.import_module("garnet")
+except Exception as e:
+    print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)
 
 print("Testing Garnet Paged KV Cache initialization and allocation...")

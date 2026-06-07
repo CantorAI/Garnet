@@ -2,10 +2,12 @@ import os
 import sys
 import numpy as np
 
+import xlang
+
 try:
-    from garnet import garnet
-except ImportError as e:
-    print(f"Failed to import Garnet: {e}")
+    garnet = xlang.import_module("garnet")
+except Exception as e:
+    print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)
 
 image_dir = os.environ.get("TEST_DATA_IMAGES_DIR", "")
