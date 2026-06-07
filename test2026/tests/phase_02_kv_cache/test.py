@@ -3,7 +3,7 @@ import sys
 import xlang
 
 try:
-    garnet = xlang.import_module("garnet")
+    garnet = xlang.importModule("garnet")
 except Exception as e:
     print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)
