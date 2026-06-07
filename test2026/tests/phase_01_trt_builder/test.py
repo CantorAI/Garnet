@@ -14,15 +14,7 @@ except Exception as e:
 script_dir = os.path.dirname(os.path.abspath(__file__))
 xmodel_path = os.path.join(script_dir, "simple_matmul.x")
 
-# Create a simple .x file on the fly
-with open(xmodel_path, "w") as f:
-    f.write('''
-from garnet import garnet
-T = garnet.tensor()
 
-def forward(a, b):
-    return a * T.matmul() * b
-''')
 
 # Mock weights
 weights = {"W": np.random.rand(128, 128).astype(np.float32)}
