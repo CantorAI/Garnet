@@ -1,0 +1,13 @@
+# Garnet Global Test Configuration (test2026)
+
+env_vars:
+  TEST_DATA_IMAGES_DIR: "D:/Data/Uploads_Shanghai/2026"
+  
+timeout: 30
+
+test_discovery:
+  include:
+    - "tests/phase_01_trt_builder"
+    - "tests/phase_02_kv_cache"
+    - "tests/phase_03_qwen_end_to_end"
+  exclude: []
