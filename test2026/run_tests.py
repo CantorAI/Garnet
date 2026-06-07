@@ -74,72 +74,77 @@ def main():
     print(f"\nDiscovered {len(test_dirs)} test directories.")
     
     for d in test_dirs:
-        test_name = os.path.basename(d)
-        print(f"Running: {test_name} ...", end=" ")
+        dir_name = os.path.basename(d)
         
-        # Find test.py or test.x
-        py_test = os.path.join(d, "test.py")
-        x_test = os.path.join(d, "test.x")
+        # Discover all test files in the directory
+        test_files = []
+        for ext in ["*.py", "*.x"]:
+            # Match both "test.py" and "test_something.py"
+            test_files.extend(glob.glob(os.path.join(d, f"test{ext}")))
+            test_files.extend(glob.glob(os.path.join(d, f"test_{ext}")))
         
-        cmd = None
-        if os.path.exists(py_test):
-            cmd = [sys.executable, py_test]
-        elif os.path.exists(x_test):
-            cmd = [xlang_exe, x_test]
-            
-        if not cmd:
-            print("SKIPPED (No test.py or test.x found)")
+        test_files = sorted(list(set(test_files)))
+        
+        if not test_files:
+            print(f"Directory {dir_name}: SKIPPED (No test files found)")
             continue
             
-        start_time = time.time()
-        try:
-            res = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=timeout, cwd=d)
-            exec_time = time.time() - start_time
+        for tf in test_files:
+            file_name = os.path.basename(tf)
+            test_name = f"{dir_name}/{file_name}"
+            print(f"Running: {test_name} ...", end=" ", flush=True)
             
-            output = res.stdout + "\n" + res.stderr
-            status = "PASS" if res.returncode == 0 else "FAIL"
+            cmd = [sys.executable, tf] if tf.endswith(".py") else [xlang_exe, tf]
             
-            if status == "PASS":
-                passed_count += 1
-                print("PASS")
-            else:
-                failed_count += 1
-                print(f"FAIL (Exit code {res.returncode})")
+            start_time = time.time()
+            try:
+                res = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=timeout, cwd=d)
+                exec_time = time.time() - start_time
                 
-            results.append({
-                "name": test_name,
-                "status": status,
-                "exit_code": res.returncode,
-                "execution_time_sec": round(exec_time, 2),
-                "output": output.strip()
-            })
-            
-        except subprocess.TimeoutExpired as e:
-            exec_time = time.time() - start_time
-            failed_count += 1
-            print("TIMEOUT")
-            output = ""
-            if e.stdout: output += e.stdout.decode('utf-8', errors='ignore') if isinstance(e.stdout, bytes) else e.stdout
-            if e.stderr: output += "\n" + (e.stderr.decode('utf-8', errors='ignore') if isinstance(e.stderr, bytes) else e.stderr)
-            
-            results.append({
-                "name": test_name,
-                "status": "TIMEOUT",
-                "exit_code": -1,
-                "execution_time_sec": round(exec_time, 2),
-                "output": output.strip()
-            })
-        except Exception as e:
-            exec_time = time.time() - start_time
-            failed_count += 1
-            print(f"ERROR ({str(e)})")
-            results.append({
-                "name": test_name,
-                "status": "ERROR",
-                "exit_code": -1,
-                "execution_time_sec": round(exec_time, 2),
-                "output": str(e)
-            })
+                output = res.stdout + "\n" + res.stderr
+                status = "PASS" if res.returncode == 0 else "FAIL"
+                
+                if status == "PASS":
+                    passed_count += 1
+                    print("PASS")
+                else:
+                    failed_count += 1
+                    print(f"FAIL (Exit code {res.returncode})")
+                    
+                results.append({
+                    "name": test_name,
+                    "status": status,
+                    "exit_code": res.returncode,
+                    "execution_time_sec": round(exec_time, 2),
+                    "output": output.strip()
+                })
+                
+            except subprocess.TimeoutExpired as e:
+                exec_time = time.time() - start_time
+                failed_count += 1
+                print("TIMEOUT")
+                output = ""
+                if e.stdout: output += e.stdout.decode('utf-8', errors='ignore') if isinstance(e.stdout, bytes) else e.stdout
+                if e.stderr: output += "\n" + (e.stderr.decode('utf-8', errors='ignore') if isinstance(e.stderr, bytes) else e.stderr)
+                
+                results.append({
+                    "name": test_name,
+                    "status": "TIMEOUT",
+                    "exit_code": -1,
+                    "execution_time_sec": round(exec_time, 2),
+                    "output": output.strip()
+                })
+            except Exception as e:
+                exec_time = time.time() - start_time
+                failed_count += 1
+                print(f"ERROR ({str(e)})")
+                results.append({
+                    "name": test_name,
+                    "status": "ERROR",
+                    "exit_code": -1,
+                    "execution_time_sec": round(exec_time, 2),
+                    "output": str(e)
+                })
             
     # Write JSON report
     report = {

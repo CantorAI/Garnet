@@ -6,7 +6,7 @@ import xlang
 
 # We expect Garnet to be importable via xlang
 try:
-    garnet = xlang.importModule("garnet")
+    garnet = xlang.importModule("garnet", fromPath="garnet")
 except Exception as e:
     print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)

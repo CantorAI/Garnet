@@ -1,30 +1,30 @@
 {
     "summary": {
         "total": 3,
-        "passed": 3,
-        "failed": 0
+        "passed": 1,
+        "failed": 2
     },
     "tests": [
         {
-            "name": "phase_01_trt_builder",
-            "status": "PASS",
-            "exit_code": 0,
-            "execution_time_sec": 0.05,
-            "output": "Simulating TRT Builder compilation test...\nData directory successfully located: D:/Data/Uploads_Shanghai/2026\nPhase 01: TRT Builder test passed!"
+            "name": "phase_01_trt_builder/test.py",
+            "status": "FAIL",
+            "exit_code": 1,
+            "execution_time_sec": 0.73,
+            "output": "Testing TRT Engine compilation and execution...\nTRT Builder failed: 'NoneType' object is not callable\n[xlang] Using engine path from record file:\n  D:\\CantorAI\\out\\build\\x64-debug\\bin"
         },
         {
-            "name": "phase_02_kv_cache",
-            "status": "PASS",
-            "exit_code": 0,
-            "execution_time_sec": 0.05,
-            "output": "Simulating KV Cache Page Allocation test...\nPhase 02: Paged KV Cache Manager test passed!"
+            "name": "phase_02_kv_cache/test.py",
+            "status": "FAIL",
+            "exit_code": 1,
+            "execution_time_sec": 0.11,
+            "output": "Testing Garnet Paged KV Cache initialization and allocation...\nKV Cache failed: 'NoneType' object is not callable\n[xlang] Using engine path from record file:\n  D:\\CantorAI\\out\\build\\x64-debug\\bin"
         },
         {
-            "name": "phase_03_qwen_end_to_end",
+            "name": "phase_03_qwen_end_to_end/test.py",
             "status": "PASS",
             "exit_code": 0,
-            "execution_time_sec": 0.05,
-            "output": "Simulating QWen-VL-8B End-to-End inference loop...\nPhase 03: QWen-VL End-to-End test passed!"
+            "execution_time_sec": 0.17,
+            "output": "Testing QWen-VL-8B End-to-End inference loop...\nMock weights not found. Skipping E2E graph execution until weights are downloaded.\n[xlang] Using engine path from record file:\n  D:\\CantorAI\\out\\build\\x64-debug\\bin"
         }
     ]
 }
