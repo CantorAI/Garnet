@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.18)
 project("garnet" LANGUAGES CXX CUDA)
 
 # Find CUDA package
@@ -12,7 +12,7 @@ set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
 # For MSVC, make sure all code uses the dynamic runtime
 if(MSVC)
     # This affects all targets
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
     # Force all C/C++ code to use dynamic runtime
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
@@ -104,7 +104,7 @@ if(MSVC)
     
     # Set target properties for MSVC runtime
     set_target_properties(${PROJECT_NAME} PROPERTIES
-        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>"
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
     )
     
     # For debug builds, also link with the debug version of the C runtime
