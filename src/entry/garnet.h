@@ -24,7 +24,7 @@ namespace Garnet
 					pThis->SetCantor(v);
 				},
 				[](auto* pThis) {return pThis->m_cantor; });
-			APISET().AddFunc<1>("loadModel", &GarnetAPI::LoadModel);
+			APISET().AddVarFunc("load_model", &GarnetAPI::LoadModelEx);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, Model>("model");
 			APISET().AddClass<0, GarnetTensor>("tensor");
@@ -55,6 +55,8 @@ namespace Garnet
 			return true;
 		}
 		X::Value LoadModel(std::string modelPath);
+		void LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunTest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 	};

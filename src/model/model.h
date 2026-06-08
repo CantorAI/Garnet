@@ -17,6 +17,7 @@ namespace Garnet
 		BEGIN_PACKAGE(Model)
 			APISET().SetAccessor(&Model::Access);
 			APISET().AddVarFunc("tokenizer", &Model::Tokenizer);
+            APISET().AddVarFunc("forward", &Model::Forward);
 			APISET().AddProp0("weights", &Model::mModel);
 			APISET().AddPropWithType<std::string>("modelPath", &Model::mModelPath);
 		END_PACKAGE
@@ -35,5 +36,8 @@ namespace Garnet
 		X::Value Access(X::Port::vector<X::Value>& IdxAry);
 		void Tokenizer(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+
+        void BuildTRTEngine(X::Value forwardFunc, X::Value inputShapes);
+        void Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 	};
 }

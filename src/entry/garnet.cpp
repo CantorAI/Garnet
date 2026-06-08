@@ -5,6 +5,7 @@
 #include <numeric> 
 #include <filesystem>
 #include <regex>
+#include <iostream>
 
 namespace Garnet
 {
@@ -200,6 +201,70 @@ namespace Garnet
         Model& model = *varModel;
 		model.SetInfo(strModelPath, tokenizerJsonPath, tokenizerConfigJsonPath, dictModel);
         return varModel;
+    }
+
+    void GarnetAPI::LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() == 0) return;
+        std::string modelPath = params[0].ToString();
+        
+        namespace fs = std::filesystem;
+        fs::path path(modelPath);
+        
+        X::Value modelVal;
+        
+        // Check if the path is a .x file
+        if (!fs::is_directory(path) && path.extension() == ".x") {
+            // Load an empty model object
+            X::XPackageValue<Model> varModel;
+            Model& model = *varModel;
+            X::Dict dictModel;
+            std::string dir = path.parent_path().string();
+            std::string emptyStr = "";
+            model.SetInfo(dir, emptyStr, emptyStr, dictModel);
+            modelVal = varModel;
+            
+            // Read the script file
+            std::cout << "[Garnet] Loading .x module from " << modelPath << std::endl;
+            std::ifstream file(modelPath);
+            std::string code((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            if (file.fail() && code.empty()) {
+                std::cout << "[Garnet] Failed to read file " << modelPath << std::endl;
+            }
+
+            X::Value moduleVal;
+            bool bOK = X::g_pXHost->LoadModule(modelPath.c_str(), code.c_str(), (int)code.size(), moduleVal);
+            std::cout << "[Garnet] LoadModule returned " << bOK << std::endl;
+            if (bOK && moduleVal.IsObject()) {
+                X::Value retVal;
+                X::g_pXHost->RunModule(moduleVal, retVal, true);
+
+                X::Value forwardFunc = moduleVal["forward"];
+                
+                X::Value inputShapes;
+                for (auto& it : kwParams) {
+                    std::cout << "[Garnet] kwParam key: " << std::string(it.key) << std::endl;
+                    if (std::string(it.key) == "input_shapes") {
+                        inputShapes = it.val;
+                    }
+                }
+                
+                if (forwardFunc.IsObject() && inputShapes.IsValid()) {
+                    std::cout << "[Garnet] Calling BuildTRTEngine..." << std::endl;
+                    model.BuildTRTEngine(forwardFunc, inputShapes);
+                } else {
+                    std::cout << "[Garnet] Missing forward func or input_shapes" << std::endl;
+                    std::cout << "  forwardFunc.IsObject(): " << forwardFunc.IsObject() << std::endl;
+                    std::cout << "  inputShapes.IsValid(): " << inputShapes.IsValid() << std::endl;
+                }
+            }
+        }
+        else {
+            modelVal = LoadModel(modelPath);
+        }
+        
+        retValue = modelVal;
     }
 
     void GarnetAPI::RunTest(X::XRuntime* rt, X::XObj* pContext,

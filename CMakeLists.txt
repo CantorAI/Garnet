@@ -44,6 +44,20 @@ include_directories("src/test")
 include_directories("src/log")
 include_directories("src/cuda")
 
+# Optionally include xlang and Garnet includes.
+include_directories(
+    ${XLANG_INCLUDE_DIR}
+    ${PROJECT_SOURCE_DIR}/src/include
+    ${PROJECT_SOURCE_DIR}/src/common
+    ${PROJECT_SOURCE_DIR}/src/compiler
+    ${PROJECT_SOURCE_DIR}/src/tensor
+    ${PROJECT_SOURCE_DIR}/src/test
+    ${PROJECT_SOURCE_DIR}/src/log
+    ${PROJECT_SOURCE_DIR}/src/model
+    ${PROJECT_SOURCE_DIR}/src/trt
+    "D:/CantorAI/ThirdPartySDK/TensorRT/include"
+)
+
 # Use absolute paths for source files.
 FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
 FILE(GLOB Common_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp")
@@ -53,6 +67,7 @@ FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
 FILE(GLOB Log_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/log/*.cpp")
 FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
 FILE(GLOB Test_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/test/cudalib_test.cpp")
+FILE(GLOB Trt_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/trt/*.cpp")
 
 # Create the shared library target.
 add_library(${PROJECT_NAME} 
@@ -65,13 +80,14 @@ add_library(${PROJECT_NAME}
     ${Common_SRC}
     ${Model_SRC}
     ${Log_SRC}
+    ${Trt_SRC}
 )
 
 
 # On Windows, link against cudart (the CUDA runtime) explicitly.
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
-            nvrtc.lib
+            nvrtc.lib "D:/CantorAI/ThirdPartySDK/TensorRT/lib/nvinfer_10.lib"
             ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
     ) 
     # Add debug-specific libraries for Windows Debug build

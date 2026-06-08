@@ -1,4 +1,6 @@
 #include "model.h"
+#include "../trt/trt_builder.h"
+#include <iostream>
 namespace Garnet
 {
     X::Value Model::Access(X::Port::vector<X::Value>& IdxAry)
@@ -32,5 +34,22 @@ namespace Garnet
         dictInputs->Set("input_ids", tensorIds);
         dictInputs->Set("attention_mask", tensorAttentionMask);
         retValue = dictInputs;
+    }
+
+    void Model::BuildTRTEngine(X::Value forwardFunc, X::Value inputShapes)
+    {
+        TRTBuilder builder;
+        // In Phase 1, we just invoke TRTBuilder
+        // mTRTEngine = builder.BuildEngine(forwardFunc, inputShapes, mModel);
+        // For now, we print a message.
+        std::cout << "[Model] Building TRT Engine with shapes..." << std::endl;
+        builder.BuildEngine(forwardFunc, inputShapes, mModel);
+    }
+
+    void Model::Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        // Placeholder for phase 1 TRTEngine execution
+        std::cout << "[Model] Executing TRT Engine forward pass..." << std::endl;
+        retValue = X::Value();
     }
 }

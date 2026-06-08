@@ -2,6 +2,7 @@
 #include "garnet_tensor.h"
 #include <cuda_runtime.h>
 #include "tensor_helper.h"
+#include "trt_builder.h"
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
 #include <cuda_fp8.h>
@@ -160,7 +161,7 @@ namespace Garnet {
         bool isTensor1 = input1.IsTensor();
         bool isTensor2 = input2.IsTensor();
 
-        // Lambda: Prepare a result tensor based on a source tensor¡¯s shape and data type.
+        // Lambda: Prepare a result tensor based on a source tensorâ€™s shape and data type.
         auto prepareResultTensor = [&](X::Tensor srcTensor, X::Tensor resultTensor) -> bool {
             int dimCount = srcTensor->GetDimCount();
             X::Port::vector<int> dims(dimCount);
@@ -241,7 +242,7 @@ namespace Garnet {
             void* gpuResult = TensorHelper::GetGPUMemory(resultTensor);
             code += mCodeGen.GenerateVariableDeclaration(multiVar, multiTensor->GetDataType(), gpuMulti);
             code += mCodeGen.GenerateVariableDeclaration(resultVar, multiTensor->GetDataType(), gpuResult);
-            // If needed, add a comment about type conversion if the single element¡¯s type differs.
+            // If needed, add a comment about type conversion if the single elementâ€™s type differs.
             if (singleTensor->GetDataType() != multiTensor->GetDataType()) {
                 code += "// Converting single element tensor to match multi tensor type\n";
             }
@@ -326,7 +327,7 @@ namespace Garnet {
             X::Tensor tensor1(input1);
             X::Tensor tensor2(input2);
 
-            // Case 1: Both tensors are single elements ¨C perform direct scalar multiplication.
+            // Case 1: Both tensors are single elements â€“ perform direct scalar multiplication.
             if (tensor1->GetCount() == 1 && tensor2->GetCount() == 1) {
                 std::string resultVar = mCodeGen.GetTensorName(X::Tensor(output));
                 cudaCodeString = "// Direct single element multiplication\n";
@@ -424,7 +425,7 @@ namespace Garnet {
         bool isTensor1 = input1.IsTensor();
         bool isTensor2 = input2.IsTensor();
 
-        // Lambda to prepare a result tensor given a source tensor¡¯s shape and data type.
+        // Lambda to prepare a result tensor given a source tensorâ€™s shape and data type.
         auto prepareResultTensor = [&](X::Tensor srcTensor, X::Tensor resultTensor) -> bool {
             int dimCount = srcTensor->GetDimCount();
             // Initialize vector with count 'dimCount'
@@ -624,7 +625,7 @@ namespace Garnet {
             bool isSingleElement1 = (tensor1->GetCount() == 1);
             bool isSingleElement2 = (tensor2->GetCount() == 1);
 
-            // Both tensors are single elements ¨C perform direct scalar addition.
+            // Both tensors are single elements â€“ perform direct scalar addition.
             if (isSingleElement1 && isSingleElement2) {
                 std::string resultVar = mCodeGen.GetTensorName(resultTensor);
                 cudaCodeString = "// Direct single element addition\n";
@@ -899,7 +900,7 @@ namespace Garnet {
             bool isSingleElement1 = (tensor1->GetCount() == 1);
             bool isSingleElement2 = (tensor2->GetCount() == 1);
 
-            // Both tensors are single elements ¨C perform direct scalar subtraction.
+            // Both tensors are single elements â€“ perform direct scalar subtraction.
             if (isSingleElement1 && isSingleElement2) {
                 std::string resultVar = mCodeGen.GetTensorName(resultTensor);
                 cudaCodeString = "// Direct single element subtraction\n";
@@ -1569,5 +1570,33 @@ namespace Garnet {
         {
             return X::Value("// Error: Convert operation requires a tensor input\n");
         }
+    }
+
+    X::Value GarnetTensor::BinaryOp(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+        X::Value input1, X::Value input2, X::Value& output)
+    {
+        ITRTContext* trt = Garnet::g_trtContext;
+        if (trt) {
+            std::string opName = "";
+            if (params.size() > 0) {
+                opName = params[0].ToString();
+            }
+            return trt->HandleBinaryOp(opName, graph, params, kwParams, input1, input2);
+        }
+        return X::Value("// Error: binary_op is only supported when TRT_Context is provided.\n");
+    }
+
+    X::Value GarnetTensor::UnaryOp(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+        X::Value input, X::Value& output)
+    {
+        ITRTContext* trt = Garnet::g_trtContext;
+        if (trt) {
+            std::string opName = "";
+            if (params.size() > 0) {
+                opName = params[0].ToString();
+            }
+            return trt->HandleUnaryOp(opName, graph, params, kwParams, input);
+        }
+        return X::Value("// Error: unary_op is only supported when TRT_Context is provided.\n");
     }
 }

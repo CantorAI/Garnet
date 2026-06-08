@@ -141,6 +141,7 @@ namespace Garnet
 		CudaJitCompiler mCompiler;
 		std::string ProcessCondition(X::Value& astNode);
 	public:
+		long long m_trtContext = 0;
 		BEGIN_PACKAGE(GarnetTensor)
 			APISET().AddClass<0, Fusionist>("fusionist");
 			APISET().AddVarFuncEx("fusion", &GarnetTensor::Fusion);
@@ -158,6 +159,9 @@ namespace Garnet
 			APISET().AddTensorUnaryOp("permute", &GarnetTensor::Permute);
 			APISET().AddTensorBinaryOp("gather", &GarnetTensor::Gather);
 			APISET().AddTensorUnaryOp("convert", &GarnetTensor::Convert);
+
+			APISET().AddTensorBinaryOp("binary_op", &GarnetTensor::BinaryOp);
+			APISET().AddTensorUnaryOp("unary_op", &GarnetTensor::UnaryOp);
 
 			APISET().AddTensorUnaryOp("zeros", &GarnetTensor::InitZeros);
 			APISET().AddTensorUnaryOp("ones", &GarnetTensor::InitOnes);
@@ -194,6 +198,11 @@ namespace Garnet
 		X::Value Gather(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
 			X::Value input1, X::Value input2, X::Value& output);
 		X::Value Convert(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+			X::Value input, X::Value& output);
+
+		X::Value BinaryOp(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
+			X::Value input1, X::Value input2, X::Value& output);
+		X::Value UnaryOp(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
 			X::Value input, X::Value& output);
 
 		X::Value InitZeros(X::Value& graph,X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
