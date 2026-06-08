@@ -14,6 +14,8 @@ namespace Garnet
 
 		X::Value mTokenizer;
 	public:
+		X::Value m_engine;
+		void SetEngine(X::Value engine) { m_engine = engine; }
 		BEGIN_PACKAGE(Model)
 			APISET().SetAccessor(&Model::Access);
 			APISET().AddVarFunc("tokenizer", &Model::Tokenizer);

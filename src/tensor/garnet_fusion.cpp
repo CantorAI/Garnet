@@ -208,8 +208,9 @@ namespace Garnet
 
     GarnetTensor::GarnetTensor()
     {
-        std::string baseFolder = GarnetAPI::I().GetBaseFolder();
-		mCompiler.Init(baseFolder);
+        // JIT Compiler initialization is deferred to lazy initialization
+        // when Fusion is actually requested, preventing unconditional CUDA/NVRTC crashes
+        // for users using the TensorRT backend.
     }
     void GarnetTensor::Fusion(X::XRuntime* rt, X::XObj* pThis,
 		X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, 

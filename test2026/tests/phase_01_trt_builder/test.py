@@ -4,17 +4,16 @@ import numpy as np
 
 import xlang
 
-# We expect Garnet to be importable via xlang
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Path to the freshly built garnet.dll
+garnet_dll_path = os.path.abspath(os.path.join(script_dir, "../../../../out/build/x64-Debug/bin/garnet.dll"))
 try:
-    garnet = xlang.importModule("garnet", fromPath="garnet")
+    garnet = xlang.importModule("garnet", fromPath=garnet_dll_path)
 except Exception as e:
     print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
 xmodel_path = os.path.join(script_dir, "simple_matmul.x")
-
-
 
 # Mock weights
 weights = {"W": np.random.rand(128, 128).astype(np.float32)}
@@ -40,6 +39,10 @@ try:
     
     # Ground truth validation
     expected = np.matmul(a_np, b_np)
+    
+    out_np = output.numpy()
+    np.testing.assert_allclose(out_np, expected, rtol=1e-3, atol=1e-3)
+    
     print("Phase 01: TRT Builder test passed! (dummy execution)")
     sys.exit(0)
 except Exception as e:

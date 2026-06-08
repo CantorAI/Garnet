@@ -237,26 +237,25 @@ namespace Garnet
             bool bOK = X::g_pXHost->LoadModule(modelPath.c_str(), code.c_str(), (int)code.size(), moduleVal);
             std::cout << "[Garnet] LoadModule returned " << bOK << std::endl;
             if (bOK && moduleVal.IsObject()) {
-                X::Value retVal;
-                X::g_pXHost->RunModule(moduleVal, retVal, true);
-
-                X::Value forwardFunc = moduleVal["forward"];
-                
-                X::Value inputShapes;
+                X::Value weightsDict;
                 for (auto& it : kwParams) {
-                    std::cout << "[Garnet] kwParam key: " << std::string(it.key) << std::endl;
-                    if (std::string(it.key) == "input_shapes") {
-                        inputShapes = it.val;
+                    if (std::string(it.key) == "weights") {
+                        weightsDict = it.val;
                     }
                 }
                 
-                if (forwardFunc.IsObject() && inputShapes.IsValid()) {
-                    std::cout << "[Garnet] Calling BuildTRTEngine..." << std::endl;
-                    model.BuildTRTEngine(forwardFunc, inputShapes);
+                // Store weights in GarnetAPI singleton before running script
+                GarnetAPI::I().SetCurrentWeights(weightsDict);
+
+                X::Value retVal;
+                X::g_pXHost->RunModule(moduleVal, retVal, true);
+
+                // Extract compiled engine that was set during script execution
+                X::Value compiledEngine = GarnetAPI::I().GetCompiledEngine();
+                if (compiledEngine.IsValid()) {
+                    model.SetEngine(compiledEngine);
                 } else {
-                    std::cout << "[Garnet] Missing forward func or input_shapes" << std::endl;
-                    std::cout << "  forwardFunc.IsObject(): " << forwardFunc.IsObject() << std::endl;
-                    std::cout << "  inputShapes.IsValid(): " << inputShapes.IsValid() << std::endl;
+                    std::cout << "[Garnet] Warning: Script finished but no engine was compiled!" << std::endl;
                 }
             }
         }

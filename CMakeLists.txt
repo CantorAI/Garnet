@@ -43,6 +43,9 @@ include_directories("src/tensor")
 include_directories("src/test")
 include_directories("src/log")
 include_directories("src/cuda")
+include_directories("${xlang_sdk_folder}/../Tensor")
+include_directories("${xlang_sdk_folder}/../Core")
+include_directories("src/trt")
 
 # Optionally include xlang and Garnet includes.
 include_directories(

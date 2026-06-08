@@ -145,6 +145,8 @@ namespace Garnet
 		BEGIN_PACKAGE(GarnetTensor)
 			APISET().AddClass<0, Fusionist>("fusionist");
 			APISET().AddVarFuncEx("fusion", &GarnetTensor::Fusion);
+			APISET().AddVarFunc("set_backend", &GarnetTensor::SetBackend);
+			APISET().AddVarFunc("set_weights", &GarnetTensor::SetWeights);
 			//APISET().AddVarFuncEx("compile", &GarnetTensor::Fusion);
 
 			APISET().AddTensorStructuralOps("header", &GarnetTensor::Header);
@@ -179,6 +181,11 @@ namespace Garnet
 		// Fusion function
 		void Fusion(X::XRuntime* rt, X::XObj* pThis, X::XObj* pContext,
 					X::ARGS& params, X::KWARGS& kwParams, X::Value& trailer, X::Value& outputue);
+
+		void SetBackend(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void SetWeights(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 
 		X::Value Header(X::Value& graph,X::ARGS& params);
 		X::Value Trailer(X::Value& graph, X::ARGS& params);

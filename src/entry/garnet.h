@@ -15,6 +15,8 @@ namespace Garnet
 		X::Value m_log;
 		X::Value m_curModule;
 		std::string m_baseFolder;//like cantor's folder
+		X::Value m_current_weights;
+		X::Value m_compiledEngine;
 		bool LoadModelFromFile(std::string modelPath, X::Dict& model);
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
@@ -42,6 +44,12 @@ namespace Garnet
 		{
 			m_curModule = curModule;
 		}
+
+		void SetCurrentWeights(X::Value weights) { m_current_weights = weights; }
+		X::Value GetCurrentWeights() { return m_current_weights; }
+
+		void SetCompiledEngine(X::Value engine) { m_compiledEngine = engine; }
+		X::Value GetCompiledEngine() { return m_compiledEngine; }
 		bool SetCantor(X::Value cantor)
 		{
 			if (m_cantor.IsValid())
