@@ -1,52 +1,60 @@
 import CpuTensor as T
 
-def CrossAttention(x, context, dim, num_heads):
-    head_dim = dim / num_heads
-    
-    q = x * T.matmul() * weights_q + bias_q
-    k = context * T.matmul() * weights_k + bias_k
-    v = context * T.matmul() * weights_v + bias_v
-    
-    q = q * T.reshape([query_seq_len, num_heads, head_dim]) * T.permute([1, 0, 2])
-    k = k * T.reshape([kv_seq_len, num_heads, head_dim]) * T.permute([1, 0, 2])
-    v = v * T.reshape([kv_seq_len, num_heads, head_dim]) * T.permute([1, 0, 2])
-    
-    scale = head_dim ** -0.5
-    attn = q * T.matmul() * (k * T.permute([0, 2, 1])) * scale
-    attn_probs = attn * T.softmax(axis=-1)
-    
-    out = attn_probs * T.matmul() * v
-    
-    out = out * T.permute([1, 0, 2]) * T.reshape([query_seq_len, dim])
-    out = out * T.matmul() * weights_proj + bias_proj
-    
-    return out
+# Qwen3-VL multimodal glue.
+#
+# Qwen3-VL does not use the old learned-query cross-attention adapter sketch.
+# The vision tower returns merged visual tokens and DeepStack features. The main
+# model replaces image/video placeholder embedding positions with merged visual
+# embeddings, builds 3D MRoPE position ids, and passes visual masks/features into
+# the text decoder.
 
-@fusion
-def VisionLanguageAdapter(vision_features, dim, num_heads):
-    # Initialize learned queries
-    query_tokens = query_embeddings 
-    
-    # Apply LayerNorm
-    q_norm = query_tokens * T.layer_norm(axis=-1)
-    v_norm = vision_features * T.layer_norm(axis=-1)
-    
-    # Incorporate 2D absolute positional embeddings into queries
-    q_norm = q_norm + query_pos_embeddings
-    
-    # Cross Attention pooling
-    attn_out = CrossAttention(q_norm, v_norm, dim, num_heads)
-    
-    # Residual
-    x = query_tokens + attn_out
-    
-    # MLP projection
-    norm_x = x * T.layer_norm(axis=-1)
-    h = norm_x * T.matmul() * mlp_weights_1 + mlp_bias_1
-    h = h * T.gelu()
-    out = h * T.matmul() * mlp_weights_2 + mlp_bias_2
-    
-    # Final residual
-    out = x + out
-    
-    return out
+
+def Qwen3VisionPositionIds(start_position, grid_thw, config, time_interval=1):
+    return grid_thw * T.unary_op(
+        "qwen3_vl_llm_vision_position_ids",
+        start_position=start_position,
+        temp_merge_size=1,
+        spatial_merge_size=config.vision_config.spatial_merge_size,
+        time_interval=time_interval
+    )
+
+
+def Qwen3GetRopeIndex(input_ids, mm_token_type_ids, image_grid_thw, video_grid_thw, attention_mask, config):
+    # Produces multimodal position_ids and mrope_position_deltas.
+    # position_ids shape follows HF: (3, batch, sequence), while the text model
+    # internally expands/handles the text position channel as well.
+    return input_ids * T.unary_op(
+        "qwen3_vl_get_rope_index",
+        mm_token_type_ids=mm_token_type_ids,
+        image_grid_thw=image_grid_thw,
+        video_grid_thw=video_grid_thw,
+        attention_mask=attention_mask,
+        spatial_merge_size=config.vision_config.spatial_merge_size
+    )
+
+
+def Qwen3MergeVisualEmbeddings(input_ids, text_embeddings, visual_embeds, image_token_id, video_token_id):
+    # Replace positions corresponding to image/video placeholder tokens with
+    # merged visual embeddings. Also returns a visual_pos_mask for DeepStack.
+    return text_embeddings * T.binary_op(
+        "qwen3_vl_merge_visual_embeddings",
+        input_ids=input_ids,
+        image_token_id=image_token_id,
+        video_token_id=video_token_id
+    ) * visual_embeds
+
+
+def Qwen3PrepareInputsEmbeds(input_ids, visual_outputs, weights, config):
+    text_embeddings = input_ids * T.binary_op("embedding") * weights["language_model.embed_tokens.weight"]
+    merged = Qwen3MergeVisualEmbeddings(
+        input_ids,
+        text_embeddings,
+        visual_outputs["pooler_output"],
+        image_token_id=config.image_token_id,
+        video_token_id=config.video_token_id
+    )
+    return {
+        "inputs_embeds": merged["inputs_embeds"],
+        "visual_pos_masks": merged["visual_pos_masks"],
+        "deepstack_visual_embeds": visual_outputs["deepstack_features"]
+    }

@@ -1,0 +1,171 @@
+{
+  "schema_version": "0.1",
+  "model": {
+    "name": "Qwen3-VL-2B-Instruct",
+    "family": "qwen3_vl",
+    "source": "qwen_vl/xmodel/qwen_vl_model.x",
+    "config": {
+      "text_layers": 28,
+      "text_hidden_size": 2048,
+      "attention_heads": 16,
+      "kv_heads": 8,
+      "head_dim": 128,
+      "vision_depth": 24,
+      "vision_hidden_size": 1024,
+      "vision_heads": 16,
+      "patch_size": 16,
+      "temporal_patch_size": 2,
+      "spatial_merge_size": 2,
+      "deepstack_visual_indexes": [5, 11, 17]
+    }
+  },
+  "nodes": [
+    {
+      "id": "model.qwen3_vl",
+      "kind": "model",
+      "label": "Qwen3VLModel",
+      "status": "planned",
+      "source": {
+        "file": "qwen_vl/xmodel/qwen_vl_model.x",
+        "function": "Qwen3VLModel",
+        "line": 19
+      }
+    },
+    {
+      "id": "vision.patch_embed",
+      "kind": "op",
+      "label": "Vision PatchEmbed Conv3d",
+      "op": "qwen3_vl_patch_embed_conv3d",
+      "backend": "trt",
+      "status": "planned",
+      "source": {
+        "file": "qwen_vl/xmodel/vision_encoder.x",
+        "function": "Qwen3VisionEncoder",
+        "line": 154
+      }
+    },
+    {
+      "id": "vision.blocks",
+      "kind": "block",
+      "label": "Vision Blocks x24",
+      "status": "planned",
+      "source": {
+        "file": "qwen_vl/xmodel/vision_encoder.x",
+        "function": "VisionBlock",
+        "line": 103
+      }
+    },
+    {
+      "id": "vision.attention",
+      "kind": "op",
+      "label": "Vision Varlen Attention",
+      "op": "vision_varlen_attention",
+      "backend": "cuda",
+      "status": "missing",
+      "source": {
+        "file": "qwen_vl/xmodel/vision_encoder.x",
+        "function": "VisionAttention",
+        "line": 87
+      }
+    },
+    {
+      "id": "vision.deepstack",
+      "kind": "block",
+      "label": "DeepStack Mergers",
+      "status": "planned",
+      "source": {
+        "file": "qwen_vl/xmodel/vision_encoder.x",
+        "function": "Qwen3VisionEncoder",
+        "line": 179
+      }
+    },
+    {
+      "id": "adapter.merge_visual",
+      "kind": "op",
+      "label": "Visual Placeholder Merge",
+      "op": "qwen3_vl_merge_visual_embeddings",
+      "backend": "cuda",
+      "status": "missing",
+      "source": {
+        "file": "qwen_vl/xmodel/vl_adapter.x",
+        "function": "Qwen3MergeVisualEmbeddings",
+        "line": 36
+      }
+    },
+    {
+      "id": "adapter.mrope_index",
+      "kind": "op",
+      "label": "MRoPE Position Builder",
+      "op": "qwen3_vl_get_rope_index",
+      "backend": "cuda",
+      "status": "missing",
+      "source": {
+        "file": "qwen_vl/xmodel/vl_adapter.x",
+        "function": "Qwen3GetRopeIndex",
+        "line": 22
+      }
+    },
+    {
+      "id": "text.layers",
+      "kind": "block",
+      "label": "Text Decoder Layers x28",
+      "status": "planned",
+      "source": {
+        "file": "qwen_vl/xmodel/qwen_llm.x",
+        "function": "Qwen3TextDecoderLayer",
+        "line": 86
+      }
+    },
+    {
+      "id": "text.paged_kv_update",
+      "kind": "op",
+      "label": "Paged KV Update",
+      "op": "paged_kv_update",
+      "backend": "cuda",
+      "status": "missing",
+      "source": {
+        "file": "qwen_vl/xmodel/qwen_llm.x",
+        "function": "Qwen3TextAttention",
+        "line": 57
+      }
+    },
+    {
+      "id": "text.paged_attention",
+      "kind": "op",
+      "label": "Paged Attention",
+      "op": "paged_attention",
+      "backend": "cuda",
+      "status": "missing",
+      "source": {
+        "file": "qwen_vl/xmodel/qwen_llm.x",
+        "function": "Qwen3TextAttention",
+        "line": 63
+      }
+    },
+    {
+      "id": "text.lm_head",
+      "kind": "op",
+      "label": "LM Head",
+      "op": "lm_head",
+      "backend": "trt",
+      "status": "planned",
+      "source": {
+        "file": "qwen_vl/xmodel/qwen_vl_model.x",
+        "function": "Qwen3VLModel",
+        "line": 71
+      }
+    }
+  ],
+  "edges": [
+    { "from": "model.qwen3_vl", "to": "vision.patch_embed" },
+    { "from": "vision.patch_embed", "to": "vision.blocks" },
+    { "from": "vision.blocks", "to": "vision.attention" },
+    { "from": "vision.blocks", "to": "vision.deepstack" },
+    { "from": "vision.deepstack", "to": "adapter.merge_visual" },
+    { "from": "adapter.merge_visual", "to": "adapter.mrope_index" },
+    { "from": "adapter.mrope_index", "to": "text.layers" },
+    { "from": "text.layers", "to": "text.paged_kv_update" },
+    { "from": "text.paged_kv_update", "to": "text.paged_attention" },
+    { "from": "text.paged_attention", "to": "text.lm_head" }
+  ]
+}

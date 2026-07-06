@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://garnet.local/workbench/trace.schema.json",
+  "title": "Garnet Workbench Trace Event",
+  "type": "object",
+  "required": ["ts_us", "event", "node_id"],
+  "properties": {
+    "ts_us": { "type": "integer" },
+    "duration_us": { "type": "integer" },
+    "event": {
+      "type": "string",
+      "enum": [
+        "request_start",
+        "preprocess",
+        "graph_build",
+        "backend_lower",
+        "kernel_launch",
+        "snapshot",
+        "kv_alloc",
+        "kv_update",
+        "scheduler_wait",
+        "error",
+        "request_end"
+      ]
+    },
+    "node_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "stream_id": { "type": "string" },
+    "backend": { "type": "string" },
+    "shape": { "type": "string" },
+    "dtype": { "type": "string" },
+    "message": { "type": "string" },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "device": { "type": "string" },
+        "sampled": { "type": "boolean" },
+        "stats": { "type": "object" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
+

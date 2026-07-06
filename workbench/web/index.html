@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Garnet Workbench</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-scroll">
+          <div class="brand">
+            <div class="brand-mark">G</div>
+            <div>
+              <h1>Garnet Workbench</h1>
+              <p id="model-name">Loading model...</p>
+            </div>
+          </div>
+
+          <section class="panel">
+            <div class="panel-title">View</div>
+            <nav class="route-list" aria-label="Workbench views">
+              <button class="route-button active" type="button" data-route="graph">Graph</button>
+              <button class="route-button" type="button" data-route="detail">Detail</button>
+              <button class="route-button" type="button" data-route="ops">Ops</button>
+              <button class="route-button" type="button" data-route="trace">Trace</button>
+            </nav>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">Graph</div>
+            <div class="metric-grid">
+              <div><span id="node-count">0</span><label>nodes</label></div>
+              <div><span id="edge-count">0</span><label>edges</label></div>
+              <div><span id="layer-count">0</span><label>layers</label></div>
+              <div><span id="matrix-count">0</span><label>matrices</label></div>
+              <div><span id="matrix-param-count">0</span><label>known params</label></div>
+            </div>
+            <label class="file-button graph-load">
+              <input id="graph-input" type="file" accept=".json">
+              Load Graph JSON
+            </label>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">Search</div>
+            <input id="search-input" class="input" type="search" placeholder="op, block, backend, file">
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">Status</div>
+            <div id="status-filters" class="filter-list"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">Trace</div>
+            <label class="file-button">
+              <input id="trace-input" type="file" accept=".jsonl,.json">
+              Load JSONL
+            </label>
+            <button id="clear-trace" class="ghost-button" type="button">Clear</button>
+          </section>
+        </div>
+        <div id="sidebar-hsplitter" class="sidebar-hsplitter" title="Resize selection panel"></div>
+        <section class="sidebar-inspector">
+          <div class="panel-title">Selection</div>
+          <div id="selection-explain" class="selection-explain"></div>
+        </section>
+      </aside>
+
+      <div id="app-splitter" class="app-splitter" title="Resize sidebar"></div>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Qwen3-VL MVP</div>
+            <h2>Model graph, backend status, and debug trace overlay</h2>
+          </div>
+          <div class="toolbar">
+            <button id="fit-graph" class="icon-button" type="button" title="Fit graph">Fit</button>
+            <button id="overview-graph" class="icon-button" type="button" title="Back to overview">Overview</button>
+            <button id="zoom-out" class="icon-button" type="button" title="Zoom out">-</button>
+            <span id="zoom-label" class="zoom-label">100%</span>
+            <button id="zoom-in" class="icon-button" type="button" title="Zoom in">+</button>
+            <button id="select-matrices" class="icon-button" type="button" title="Search matrix nodes">Matrices</button>
+            <button id="select-all" class="icon-button" type="button" title="Show all ops">All</button>
+          </div>
+        </header>
+
+        <section class="graph-section route-view" data-view="graph">
+          <div class="graph-breadcrumb">
+            <button id="graph-back" class="ghost-button compact" type="button">Back</button>
+            <button id="graph-root" class="ghost-button compact" type="button">Overview</button>
+            <nav id="graph-trail" class="graph-trail" aria-label="Graph drill path"></nav>
+            <span id="graph-context" class="graph-context"></span>
+          </div>
+          <div id="graph-canvas" class="graph-canvas" aria-label="Model graph"></div>
+        </section>
+
+        <section class="detail-route route-view" data-view="detail">
+          <div class="detail-workspace">
+            <div class="detail-header">
+              <div>
+                <div class="eyebrow">Selected Block</div>
+                <h3 id="drill-title">No block selected</h3>
+              </div>
+              <span id="drill-status" class="pill">-</span>
+            </div>
+
+            <div class="tabbar" role="tablist" aria-label="Detail tabs">
+              <button class="tab-button active" type="button" data-tab="layers">Layers</button>
+              <button class="tab-button" type="button" data-tab="ops">Ops</button>
+              <button class="tab-button" type="button" data-tab="expression">Expression</button>
+            </div>
+
+            <div id="drill-content" class="drill-content"></div>
+          </div>
+        </section>
+
+        <section class="lower-grid route-view" data-view="ops">
+          <div class="table-panel">
+            <div class="section-heading">
+              <h3>Op Support</h3>
+              <span id="table-count">0 rows</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Node</th>
+                    <th>Op</th>
+                    <th>Backend</th>
+                    <th>Status</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody id="node-table"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="detail-panel">
+            <div class="section-heading">
+              <h3>Node Detail</h3>
+              <span id="selected-id">none</span>
+            </div>
+            <div id="node-detail" class="node-detail"></div>
+          </aside>
+        </section>
+
+        <section class="trace-route route-view" data-view="trace">
+          <div class="table-panel">
+            <div class="section-heading">
+              <h3>Trace Events</h3>
+              <span id="trace-count">0 events</span>
+            </div>
+            <div id="trace-table" class="trace-table"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      window.MathJax = {
+        tex: { displayMath: [["\\[", "\\]"], ["$$", "$$"]] },
+        svg: { fontCache: "global" }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/elkjs@0.11.1/lib/elk.bundled.js"></script>
+    <script src="./default_graph.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
