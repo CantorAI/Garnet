@@ -1,7 +1,7 @@
 # Garnet Global Test Configuration (test2026)
 
 env_vars:
-  TEST_DATA_IMAGES_DIR: "D:/Data/Uploads_Shanghai/2026"
+  TEST_DATA_IMAGES_DIR: "D:/CantorAI2026/Garnet/data/Dataset.1980Love/imgs"
   
 timeout: 30
 
@@ -10,4 +10,5 @@ test_discovery:
     - "tests/phase_01_trt_builder"
     - "tests/phase_02_kv_cache"
     - "tests/phase_03_qwen_end_to_end"
+    - "tests/phase_04_qwen_vl_reference"
   exclude: []
