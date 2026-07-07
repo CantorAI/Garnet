@@ -79,6 +79,18 @@ namespace Garnet
         X::Value vProj = weights["language_model.layers.0.self_attn.v_proj.weight"];
         X::Value qNorm = weights["language_model.layers.0.self_attn.q_norm.weight"];
         X::Value kNorm = weights["language_model.layers.0.self_attn.k_norm.weight"];
+        if (mSubgraph == "text_rope_apply" && params.size() >= 3) {
+            retValue = builder.RunTextRoPEEngine(m_engine.ToString(), params[0], params[1], params[2]);
+            return;
+        }
+        if (mSubgraph == "text_attention_core") {
+            retValue = builder.RunTextAttentionEngine(m_engine.ToString(), params[0]);
+            return;
+        }
+        if (mSubgraph == "vision_attention_core") {
+            retValue = builder.RunVisionAttentionEngine(m_engine.ToString(), params[0]);
+            return;
+        }
         if ((mSubgraph == "text_qkv_head_norm" || mSubgraph.empty()) && qProj.IsValid() && kProj.IsValid() && vProj.IsValid() && qNorm.IsValid() && kNorm.IsValid()) {
             retValue = builder.RunTextQKVHeadNormEngine(m_engine.ToString(), params[0], qProj, kProj, vProj, qNorm, kNorm);
             return;
@@ -93,19 +105,45 @@ namespace Garnet
             retValue = builder.RunLinearTransposeEngine(m_engine.ToString(), params[0], oProj);
             return;
         }
+        X::Value embedTokens = weights["language_model.embed_tokens.weight"];
+        if ((mSubgraph == "text_lm_head" || mSubgraph.empty()) && embedTokens.IsValid()) {
+            retValue = builder.RunLinearTransposeEngine(m_engine.ToString(), params[0], embedTokens);
+            return;
+        }
 
         X::Value fc1 = weights["visual.blocks.0.mlp.linear_fc1.weight"];
         X::Value fc1Bias = weights["visual.blocks.0.mlp.linear_fc1.bias"];
         X::Value fc2 = weights["visual.blocks.0.mlp.linear_fc2.weight"];
         X::Value fc2Bias = weights["visual.blocks.0.mlp.linear_fc2.bias"];
+        X::Value patchWeight = weights["visual.patch_embed.proj.weight"];
+        X::Value patchBias = weights["visual.patch_embed.proj.bias"];
+        if ((mSubgraph == "vision_patch_embed" || mSubgraph.empty()) && patchWeight.IsValid() && patchBias.IsValid()) {
+            retValue = builder.RunLinearBiasTransposeEngine(m_engine.ToString(), params[0], patchWeight, patchBias);
+            return;
+        }
+        X::Value genericWeight = weights["W"];
+        X::Value genericBias = weights["B"];
+        if ((mSubgraph == "linear_bias" || mSubgraph.empty()) && genericWeight.IsValid() && genericBias.IsValid()) {
+            retValue = builder.RunLinearBiasTransposeEngine(m_engine.ToString(), params[0], genericWeight, genericBias);
+            return;
+        }
         if ((mSubgraph == "vision_mlp" || mSubgraph.empty()) && fc1.IsValid() && fc1Bias.IsValid() && fc2.IsValid() && fc2Bias.IsValid()) {
             retValue = builder.RunVisionMLPEngine(m_engine.ToString(), params[0], fc1, fc1Bias, fc2, fc2Bias);
             return;
         }
 
-        X::Value rmsWeight = weights["language_model.layers.0.input_layernorm.weight"];
+        X::Value rmsWeight = mRmsNormWeight.IsValid()
+            ? mRmsNormWeight
+            : weights["language_model.layers.0.input_layernorm.weight"];
         if ((mSubgraph == "rms_norm" || mSubgraph.empty()) && rmsWeight.IsValid()) {
             retValue = builder.RunRMSNormEngine(m_engine.ToString(), params[0], rmsWeight);
+            return;
+        }
+        X::Value postAttentionRmsWeight = mRmsNormWeight.IsValid()
+            ? mRmsNormWeight
+            : weights["language_model.layers.0.post_attention_layernorm.weight"];
+        if ((mSubgraph == "text_post_attention_rms_norm" || mSubgraph.empty()) && postAttentionRmsWeight.IsValid()) {
+            retValue = builder.RunRMSNormEngine(m_engine.ToString(), params[0], postAttentionRmsWeight);
             return;
         }
 

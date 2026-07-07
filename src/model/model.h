@@ -12,12 +12,14 @@ namespace Garnet
 		std::string mTokenizerJsonPath;
 		std::string mTokenizerConfigJsonPath;
 		std::string mSubgraph;
+		X::Value mRmsNormWeight;
 
 		X::Value mTokenizer;
 	public:
 		X::Value m_engine;
 		void SetEngine(X::Value engine) { m_engine = engine; }
 		void SetSubgraph(const std::string& subgraph) { mSubgraph = subgraph; }
+		void SetRMSNormWeight(X::Value weight) { mRmsNormWeight = weight; }
 		BEGIN_PACKAGE(Model)
 			APISET().SetAccessor(&Model::Access);
 			APISET().AddVarFunc("tokenizer", &Model::Tokenizer);

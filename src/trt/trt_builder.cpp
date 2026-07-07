@@ -1,9 +1,11 @@
 #include "trt_builder.h"
+#include "cuda_lib.h"
 #include "garnet_tensor.h"
 #include "garnet_tensor.h"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <cmath>
 
 #include <NvInfer.h>
 #include <NvInferPlugin.h>
@@ -487,6 +489,131 @@ namespace Garnet {
             down->GetDimSize(1) != intermediate) {
             std::cout << "[TRTBuilder] RunTextMLPEngine shape mismatch." << std::endl;
             return X::Value();
+        }
+
+        if (enginePath == "cuda_text_mlp") {
+            std::cout << "[TRTBuilder] Running CUDA TextMLP: tokens=" << tokens
+                << ", hidden=" << hidden << ", intermediate=" << intermediate << std::endl;
+            size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+            size_t projBytes = static_cast<size_t>(intermediate) * static_cast<size_t>(hidden) * sizeof(float);
+            size_t downBytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * sizeof(float);
+            size_t intermediateBytes = static_cast<size_t>(tokens) * static_cast<size_t>(intermediate) * sizeof(float);
+            size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+
+            void* dInput = nullptr;
+            void* dGateW = nullptr;
+            void* dUpW = nullptr;
+            void* dDownW = nullptr;
+            void* dGate = nullptr;
+            void* dUp = nullptr;
+            void* dHidden = nullptr;
+            void* dOutput = nullptr;
+            cudaStream_t stream = nullptr;
+            if (cudaStreamCreate(&stream) != cudaSuccess ||
+                cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+                cudaMalloc(&dGateW, projBytes) != cudaSuccess ||
+                cudaMalloc(&dUpW, projBytes) != cudaSuccess ||
+                cudaMalloc(&dDownW, downBytes) != cudaSuccess ||
+                cudaMalloc(&dGate, intermediateBytes) != cudaSuccess ||
+                cudaMalloc(&dUp, intermediateBytes) != cudaSuccess ||
+                cudaMalloc(&dHidden, intermediateBytes) != cudaSuccess ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA TextMLP allocation failed." << std::endl;
+                if (dInput) cudaFree(dInput);
+                if (dGateW) cudaFree(dGateW);
+                if (dUpW) cudaFree(dUpW);
+                if (dDownW) cudaFree(dDownW);
+                if (dGate) cudaFree(dGate);
+                if (dUp) cudaFree(dUp);
+                if (dHidden) cudaFree(dHidden);
+                if (dOutput) cudaFree(dOutput);
+                if (stream) cudaStreamDestroy(stream);
+                return X::Value();
+            }
+
+            cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+            cudaMemcpyAsync(dGateW, gate->GetData(), projBytes, cudaMemcpyHostToDevice, stream);
+            cudaMemcpyAsync(dUpW, up->GetData(), projBytes, cudaMemcpyHostToDevice, stream);
+            cudaMemcpyAsync(dDownW, down->GetData(), downBytes, cudaMemcpyHostToDevice, stream);
+
+            cudaError_t status = runLinearTransposeFP32(
+                static_cast<const float*>(dInput),
+                static_cast<const float*>(dGateW),
+                static_cast<float*>(dGate),
+                tokens,
+                hidden,
+                intermediate,
+                stream);
+            if (status == cudaSuccess) {
+                status = runLinearTransposeFP32(
+                    static_cast<const float*>(dInput),
+                    static_cast<const float*>(dUpW),
+                    static_cast<float*>(dUp),
+                    tokens,
+                    hidden,
+                    intermediate,
+                    stream);
+            }
+            if (status == cudaSuccess) {
+                status = runSiluMulFP32(
+                    static_cast<const float*>(dGate),
+                    static_cast<const float*>(dUp),
+                    static_cast<float*>(dHidden),
+                    tokens * intermediate,
+                    stream);
+            }
+            if (status == cudaSuccess) {
+                status = runLinearTransposeFP32(
+                    static_cast<const float*>(dHidden),
+                    static_cast<const float*>(dDownW),
+                    static_cast<float*>(dOutput),
+                    tokens,
+                    intermediate,
+                    hidden,
+                    stream);
+            }
+            if (status != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA TextMLP launch failed: "
+                    << cudaGetErrorString(status) << std::endl;
+                cudaFree(dInput); cudaFree(dGateW); cudaFree(dUpW); cudaFree(dDownW);
+                cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
+                cudaStreamDestroy(stream);
+                return X::Value();
+            }
+
+            std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
+            cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+            status = cudaStreamSynchronize(stream);
+            if (status != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA TextMLP sync failed: "
+                    << cudaGetErrorString(status) << std::endl;
+                cudaFree(dInput); cudaFree(dGateW); cudaFree(dUpW); cudaFree(dDownW);
+                cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
+                cudaStreamDestroy(stream);
+                return X::Value();
+            }
+
+            X::Tensor output;
+            output->SetDataType(X::TensorDataType::FLOAT32);
+            X::Port::vector<int> outputShape(2);
+            outputShape.push_back(tokens);
+            outputShape.push_back(hidden);
+            output->SetShape(outputShape);
+            X::Value initData;
+            if (!output->Create(initData) || output->GetData() == nullptr) {
+                cudaFree(dInput); cudaFree(dGateW); cudaFree(dUpW); cudaFree(dDownW);
+                cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
+                cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            memcpy(output->GetData(), hostOutput.data(), outputBytes);
+
+            cudaFree(dInput); cudaFree(dGateW); cudaFree(dUpW); cudaFree(dDownW);
+            cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            std::cout << "[TRTBuilder] CUDA TextMLP completed: [" << tokens
+                << ", " << hidden << "]" << std::endl;
+            return output;
         }
 
         std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
@@ -980,6 +1107,751 @@ namespace Garnet {
         return output;
     }
 
+    X::Value TRTBuilder::ExportTextRoPEEngine(const std::string& enginePath, const std::vector<int>& qkvShape, const std::vector<int>& cosShape, const std::vector<int>& sinShape, int qHeads, int kvHeads, int headDim) {
+        std::cout << "[TRTBuilder] ExportTextRoPEEngine -> " << enginePath << std::endl;
+        if (qkvShape.size() != 2 || cosShape.size() != 2 || sinShape.size() != 2 || qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || (headDim % 2) != 0) {
+            std::cout << "[TRTBuilder] TextRoPE invalid shapes." << std::endl;
+            return X::Value();
+        }
+        int tokens = qkvShape[0];
+        int qOut = qHeads * headDim;
+        int kOut = kvHeads * headDim;
+        int vOut = kOut;
+        int total = qOut + kOut + vOut;
+        if (qkvShape[1] != total || cosShape[0] != tokens || sinShape[0] != tokens || cosShape[1] != headDim || sinShape[1] != headDim) {
+            std::cout << "[TRTBuilder] TextRoPE shape mismatch." << std::endl;
+            return X::Value();
+        }
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 128ULL << 20);
+
+        Dims qkvDims{};
+        qkvDims.nbDims = 2;
+        qkvDims.d[0] = tokens;
+        qkvDims.d[1] = total;
+        Dims posDims{};
+        posDims.nbDims = 2;
+        posDims.d[0] = tokens;
+        posDims.d[1] = headDim;
+        ITensor* qkv = network->addInput("qkv", DataType::kFLOAT, qkvDims);
+        ITensor* cos = network->addInput("cos", DataType::kFLOAT, posDims);
+        ITensor* sin = network->addInput("sin", DataType::kFLOAT, posDims);
+        if (!qkv || !cos || !sin) return X::Value();
+
+        auto slice2d = [&](ITensor* src, int colStart, int width) -> ITensor* {
+            Dims start{};
+            start.nbDims = 2;
+            start.d[0] = 0;
+            start.d[1] = colStart;
+            Dims size{};
+            size.nbDims = 2;
+            size.d[0] = tokens;
+            size.d[1] = width;
+            Dims stride{};
+            stride.nbDims = 2;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            auto layer = network->addSlice(*src, start, size, stride);
+            if (!layer) return nullptr;
+            return layer->getOutput(0);
+        };
+        auto reshape3d = [&](ITensor* src, int heads) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 3;
+            shape.d[0] = tokens;
+            shape.d[1] = heads;
+            shape.d[2] = headDim;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto reshapePos = [&](ITensor* src) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 3;
+            shape.d[0] = tokens;
+            shape.d[1] = 1;
+            shape.d[2] = headDim;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto flatten2d = [&](ITensor* src, int width) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 2;
+            shape.d[0] = tokens;
+            shape.d[1] = width;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto rotateHalf = [&](ITensor* src, int heads) -> ITensor* {
+            Dims start1{};
+            start1.nbDims = 3;
+            start1.d[0] = 0;
+            start1.d[1] = 0;
+            start1.d[2] = 0;
+            Dims start2{};
+            start2.nbDims = 3;
+            start2.d[0] = 0;
+            start2.d[1] = 0;
+            start2.d[2] = headDim / 2;
+            Dims size{};
+            size.nbDims = 3;
+            size.d[0] = tokens;
+            size.d[1] = heads;
+            size.d[2] = headDim / 2;
+            Dims stride{};
+            stride.nbDims = 3;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            stride.d[2] = 1;
+            auto first = network->addSlice(*src, start1, size, stride);
+            auto second = network->addSlice(*src, start2, size, stride);
+            if (!first || !second || !first->getOutput(0) || !second->getOutput(0)) return nullptr;
+            auto negSecond = network->addUnary(*second->getOutput(0), UnaryOperation::kNEG);
+            if (!negSecond || !negSecond->getOutput(0)) return nullptr;
+            ITensor* parts[] = { negSecond->getOutput(0), first->getOutput(0) };
+            auto concat = network->addConcatenation(parts, 2);
+            if (!concat || !concat->getOutput(0)) return nullptr;
+            concat->setAxis(2);
+            return concat->getOutput(0);
+        };
+        auto applyRope = [&](ITensor* src, ITensor* cos3d, ITensor* sin3d, int heads) -> ITensor* {
+            auto xCos = network->addElementWise(*src, *cos3d, ElementWiseOperation::kPROD);
+            ITensor* rotated = rotateHalf(src, heads);
+            if (!xCos || !xCos->getOutput(0) || !rotated) return nullptr;
+            auto rotSin = network->addElementWise(*rotated, *sin3d, ElementWiseOperation::kPROD);
+            if (!rotSin || !rotSin->getOutput(0)) return nullptr;
+            auto out = network->addElementWise(*xCos->getOutput(0), *rotSin->getOutput(0), ElementWiseOperation::kSUM);
+            if (!out || !out->getOutput(0)) return nullptr;
+            return out->getOutput(0);
+        };
+
+        ITensor* qFlat = slice2d(qkv, 0, qOut);
+        ITensor* kFlat = slice2d(qkv, qOut, kOut);
+        ITensor* vFlat = slice2d(qkv, qOut + kOut, vOut);
+        ITensor* q3d = qFlat ? reshape3d(qFlat, qHeads) : nullptr;
+        ITensor* k3d = kFlat ? reshape3d(kFlat, kvHeads) : nullptr;
+        ITensor* cos3d = reshapePos(cos);
+        ITensor* sin3d = reshapePos(sin);
+        if (!q3d || !k3d || !vFlat || !cos3d || !sin3d) return X::Value();
+        ITensor* qRope = applyRope(q3d, cos3d, sin3d, qHeads);
+        ITensor* kRope = applyRope(k3d, cos3d, sin3d, kvHeads);
+        if (!qRope || !kRope) return X::Value();
+        ITensor* qOutFlat = flatten2d(qRope, qOut);
+        ITensor* kOutFlat = flatten2d(kRope, kOut);
+        if (!qOutFlat || !kOutFlat) return X::Value();
+        ITensor* concatInputs[] = { qOutFlat, kOutFlat, vFlat };
+        auto concat = network->addConcatenation(concatInputs, 3);
+        if (!concat || !concat->getOutput(0)) return X::Value();
+        concat->setAxis(1);
+        concat->getOutput(0)->setName("output");
+        network->markOutput(*concat->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized TextRoPE TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value(enginePath);
+    }
+
+    X::Value TRTBuilder::RunTextRoPEEngine(const std::string& enginePath, X::Value qkvValue, X::Value cosValue, X::Value sinValue) {
+        std::cout << "[TRTBuilder] RunTextRoPEEngine <- " << enginePath << std::endl;
+        if (!qkvValue.IsTensor() || !cosValue.IsTensor() || !sinValue.IsTensor()) return X::Value();
+        X::Tensor qkv(qkvValue);
+        X::Tensor cos(cosValue);
+        X::Tensor sin(sinValue);
+        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || cos->GetDataType() != X::TensorDataType::FLOAT32 || sin->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
+        if (qkv->GetDimCount() != 2 || cos->GetDimCount() != 2 || sin->GetDimCount() != 2) return X::Value();
+        int tokens = qkv->GetDimSize(0);
+        int total = qkv->GetDimSize(1);
+        int headDim = cos->GetDimSize(1);
+        if (cos->GetDimSize(0) != tokens || sin->GetDimSize(0) != tokens || sin->GetDimSize(1) != headDim) return X::Value();
+
+        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
+        if (!in.is_open()) return X::Value();
+        std::streamsize size = in.tellg();
+        in.seekg(0, std::ios::beg);
+        std::vector<char> engineBytes(static_cast<size_t>(size));
+        if (!in.read(engineBytes.data(), size)) return X::Value();
+        auto runtime = createInferRuntime(gLogger);
+        if (!runtime) return X::Value();
+        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
+        if (!engine) return X::Value();
+        auto context = engine->createExecutionContext();
+        if (!context) return X::Value();
+
+        size_t qkvBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
+        size_t posBytes = static_cast<size_t>(tokens) * static_cast<size_t>(headDim) * sizeof(float);
+        void* dQKV = nullptr;
+        void* dCos = nullptr;
+        void* dSin = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            cudaMalloc(&dQKV, qkvBytes) != cudaSuccess ||
+            cudaMalloc(&dCos, posBytes) != cudaSuccess ||
+            cudaMalloc(&dSin, posBytes) != cudaSuccess ||
+            cudaMalloc(&dOutput, qkvBytes) != cudaSuccess) {
+            if (dQKV) cudaFree(dQKV);
+            if (dCos) cudaFree(dCos);
+            if (dSin) cudaFree(dSin);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        cudaMemcpyAsync(dQKV, qkv->GetData(), qkvBytes, cudaMemcpyHostToDevice, stream);
+        cudaMemcpyAsync(dCos, cos->GetData(), posBytes, cudaMemcpyHostToDevice, stream);
+        cudaMemcpyAsync(dSin, sin->GetData(), posBytes, cudaMemcpyHostToDevice, stream);
+        bool bound = context->setTensorAddress("qkv", dQKV)
+            && context->setTensorAddress("cos", dCos)
+            && context->setTensorAddress("sin", dSin)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            cudaFree(dQKV); cudaFree(dCos); cudaFree(dSin); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(total));
+        cudaMemcpyAsync(hostOutput.data(), dOutput, qkvBytes, cudaMemcpyDeviceToHost, stream);
+        cudaStreamSynchronize(stream);
+
+        X::Tensor output;
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        X::Port::vector<int> outputShape(2);
+        outputShape.push_back(tokens);
+        outputShape.push_back(total);
+        output->SetShape(outputShape);
+        X::Value initData;
+        if (!output->Create(initData) || output->GetData() == nullptr) {
+            cudaFree(dQKV); cudaFree(dCos); cudaFree(dSin); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        memcpy(output->GetData(), hostOutput.data(), qkvBytes);
+        cudaFree(dQKV); cudaFree(dCos); cudaFree(dSin); cudaFree(dOutput); cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunTextRoPEEngine completed: [" << tokens << ", " << total << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportTextAttentionEngine(const std::string& enginePath, const std::vector<int>& qkvShape, int qHeads, int kvHeads, int headDim) {
+        std::cout << "[TRTBuilder] ExportTextAttentionEngine -> " << enginePath << std::endl;
+        if (qkvShape.size() != 2 || qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || qHeads % kvHeads != 0) return X::Value();
+        int tokens = qkvShape[0];
+        int qOut = qHeads * headDim;
+        int kOut = kvHeads * headDim;
+        int vOut = kOut;
+        int total = qOut + kOut + vOut;
+        int repeat = qHeads / kvHeads;
+        if (qkvShape[1] != total) return X::Value();
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 256ULL << 20);
+
+        Dims qkvDims{};
+        qkvDims.nbDims = 2;
+        qkvDims.d[0] = tokens;
+        qkvDims.d[1] = total;
+        ITensor* qkv = network->addInput("qkv", DataType::kFLOAT, qkvDims);
+        if (!qkv) return X::Value();
+
+        auto slice2d = [&](int colStart, int width) -> ITensor* {
+            Dims start{};
+            start.nbDims = 2;
+            start.d[0] = 0;
+            start.d[1] = colStart;
+            Dims size{};
+            size.nbDims = 2;
+            size.d[0] = tokens;
+            size.d[1] = width;
+            Dims stride{};
+            stride.nbDims = 2;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            auto layer = network->addSlice(*qkv, start, size, stride);
+            if (!layer) return nullptr;
+            return layer->getOutput(0);
+        };
+        auto reshapeTHD = [&](ITensor* src, int heads) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 3;
+            shape.d[0] = tokens;
+            shape.d[1] = heads;
+            shape.d[2] = headDim;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto transposeTHDToHTD = [&](ITensor* src) -> ITensor* {
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            Permutation perm{};
+            perm.order[0] = 1;
+            perm.order[1] = 0;
+            perm.order[2] = 2;
+            layer->setFirstTranspose(perm);
+            return layer->getOutput(0);
+        };
+        auto transposeHTDToTHD = [&](ITensor* src) -> ITensor* {
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            Permutation perm{};
+            perm.order[0] = 1;
+            perm.order[1] = 0;
+            perm.order[2] = 2;
+            layer->setFirstTranspose(perm);
+            return layer->getOutput(0);
+        };
+        auto flattenTHD = [&](ITensor* src) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 2;
+            shape.d[0] = tokens;
+            shape.d[1] = qOut;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto repeatKV = [&](ITensor* src) -> ITensor* {
+            std::vector<ITensor*> pieces;
+            pieces.reserve(qHeads);
+            for (int h = 0; h < kvHeads; ++h) {
+                Dims start{};
+                start.nbDims = 3;
+                start.d[0] = h;
+                start.d[1] = 0;
+                start.d[2] = 0;
+                Dims size{};
+                size.nbDims = 3;
+                size.d[0] = 1;
+                size.d[1] = tokens;
+                size.d[2] = headDim;
+                Dims stride{};
+                stride.nbDims = 3;
+                stride.d[0] = 1;
+                stride.d[1] = 1;
+                stride.d[2] = 1;
+                auto slice = network->addSlice(*src, start, size, stride);
+                if (!slice || !slice->getOutput(0)) return nullptr;
+                for (int r = 0; r < repeat; ++r) {
+                    pieces.push_back(slice->getOutput(0));
+                }
+            }
+            auto concat = network->addConcatenation(pieces.data(), static_cast<int32_t>(pieces.size()));
+            if (!concat || !concat->getOutput(0)) return nullptr;
+            concat->setAxis(0);
+            return concat->getOutput(0);
+        };
+
+        ITensor* qFlat = slice2d(0, qOut);
+        ITensor* kFlat = slice2d(qOut, kOut);
+        ITensor* vFlat = slice2d(qOut + kOut, vOut);
+        ITensor* qHTD = qFlat ? transposeTHDToHTD(reshapeTHD(qFlat, qHeads)) : nullptr;
+        ITensor* kHTD = kFlat ? transposeTHDToHTD(reshapeTHD(kFlat, kvHeads)) : nullptr;
+        ITensor* vHTD = vFlat ? transposeTHDToHTD(reshapeTHD(vFlat, kvHeads)) : nullptr;
+        if (!qHTD || !kHTD || !vHTD) return X::Value();
+        ITensor* kRepeated = repeatKV(kHTD);
+        ITensor* vRepeated = repeatKV(vHTD);
+        if (!kRepeated || !vRepeated) return X::Value();
+
+        auto scores = network->addMatrixMultiply(*qHTD, MatrixOperation::kNONE, *kRepeated, MatrixOperation::kTRANSPOSE);
+        if (!scores || !scores->getOutput(0)) return X::Value();
+        float scaleValue = 1.0f / std::sqrt(static_cast<float>(headDim));
+        Dims scalarDims{};
+        scalarDims.nbDims = 3;
+        scalarDims.d[0] = 1;
+        scalarDims.d[1] = 1;
+        scalarDims.d[2] = 1;
+        Weights scaleWeights{ DataType::kFLOAT, &scaleValue, 1 };
+        auto scaleConst = network->addConstant(scalarDims, scaleWeights);
+        if (!scaleConst || !scaleConst->getOutput(0)) return X::Value();
+        auto scaledScores = network->addElementWise(*scores->getOutput(0), *scaleConst->getOutput(0), ElementWiseOperation::kPROD);
+        if (!scaledScores || !scaledScores->getOutput(0)) return X::Value();
+
+        std::vector<float> mask(static_cast<size_t>(tokens) * static_cast<size_t>(tokens), 0.0f);
+        for (int i = 0; i < tokens; ++i) {
+            for (int j = i + 1; j < tokens; ++j) {
+                mask[static_cast<size_t>(i) * static_cast<size_t>(tokens) + static_cast<size_t>(j)] = -10000.0f;
+            }
+        }
+        Dims maskDims{};
+        maskDims.nbDims = 3;
+        maskDims.d[0] = 1;
+        maskDims.d[1] = tokens;
+        maskDims.d[2] = tokens;
+        Weights maskWeights{ DataType::kFLOAT, mask.data(), static_cast<int64_t>(mask.size()) };
+        auto maskConst = network->addConstant(maskDims, maskWeights);
+        if (!maskConst || !maskConst->getOutput(0)) return X::Value();
+        auto maskedScores = network->addElementWise(*scaledScores->getOutput(0), *maskConst->getOutput(0), ElementWiseOperation::kSUM);
+        if (!maskedScores || !maskedScores->getOutput(0)) return X::Value();
+
+        auto softmax = network->addSoftMax(*maskedScores->getOutput(0));
+        if (!softmax || !softmax->getOutput(0)) return X::Value();
+        softmax->setAxes(1U << 2);
+        auto context = network->addMatrixMultiply(*softmax->getOutput(0), MatrixOperation::kNONE, *vRepeated, MatrixOperation::kNONE);
+        if (!context || !context->getOutput(0)) return X::Value();
+        ITensor* thd = transposeHTDToTHD(context->getOutput(0));
+        ITensor* output = thd ? flattenTHD(thd) : nullptr;
+        if (!output) return X::Value();
+        output->setName("output");
+        network->markOutput(*output);
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized TextAttention TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value(enginePath);
+    }
+
+    X::Value TRTBuilder::RunTextAttentionEngine(const std::string& enginePath, X::Value qkvValue) {
+        std::cout << "[TRTBuilder] RunTextAttentionEngine <- " << enginePath << std::endl;
+        if (!qkvValue.IsTensor()) return X::Value();
+        X::Tensor qkv(qkvValue);
+        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2) return X::Value();
+        int tokens = qkv->GetDimSize(0);
+        int total = qkv->GetDimSize(1);
+
+        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
+        if (!in.is_open()) return X::Value();
+        std::streamsize size = in.tellg();
+        in.seekg(0, std::ios::beg);
+        std::vector<char> engineBytes(static_cast<size_t>(size));
+        if (!in.read(engineBytes.data(), size)) return X::Value();
+        auto runtime = createInferRuntime(gLogger);
+        if (!runtime) return X::Value();
+        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
+        if (!engine) return X::Value();
+        auto context = engine->createExecutionContext();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * 2048ULL * sizeof(float);
+        void* dInput = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            if (dInput) cudaFree(dInput);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        cudaMemcpyAsync(dInput, qkv->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+        bool bound = context->setTensorAddress("qkv", dInput)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        std::vector<float> hostOutput(static_cast<size_t>(tokens) * 2048ULL);
+        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+        cudaStreamSynchronize(stream);
+
+        X::Tensor output;
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        X::Port::vector<int> outputShape(2);
+        outputShape.push_back(tokens);
+        outputShape.push_back(2048);
+        output->SetShape(outputShape);
+        X::Value initData;
+        if (!output->Create(initData) || output->GetData() == nullptr) {
+            cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        memcpy(output->GetData(), hostOutput.data(), outputBytes);
+        cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunTextAttentionEngine completed: [" << tokens << ", 2048]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportVisionAttentionEngine(const std::string& enginePath, const std::vector<int>& qkvShape, int heads, int headDim) {
+        std::cout << "[TRTBuilder] ExportVisionAttentionEngine -> " << enginePath << std::endl;
+        if (qkvShape.size() != 2 || heads <= 0 || headDim <= 0) return X::Value();
+        int tokens = qkvShape[0];
+        int hidden = heads * headDim;
+        int total = hidden * 3;
+        if (qkvShape[1] != total) return X::Value();
+        if (tokens > 512) {
+            std::cout << "[TRTBuilder] VisionAttention tokens=" << tokens
+                << " uses CUDA exact attention path; skipping TensorRT score-matrix engine." << std::endl;
+            return X::Value("cuda_exact_vision_attention");
+        }
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 256ULL << 20);
+
+        Dims qkvDims{};
+        qkvDims.nbDims = 2;
+        qkvDims.d[0] = tokens;
+        qkvDims.d[1] = total;
+        ITensor* qkv = network->addInput("qkv", DataType::kFLOAT, qkvDims);
+        if (!qkv) return X::Value();
+
+        auto slice2d = [&](int colStart, int width) -> ITensor* {
+            Dims start{};
+            start.nbDims = 2;
+            start.d[0] = 0;
+            start.d[1] = colStart;
+            Dims size{};
+            size.nbDims = 2;
+            size.d[0] = tokens;
+            size.d[1] = width;
+            Dims stride{};
+            stride.nbDims = 2;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            auto layer = network->addSlice(*qkv, start, size, stride);
+            if (!layer) return nullptr;
+            return layer->getOutput(0);
+        };
+        auto reshapeTHD = [&](ITensor* src) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 3;
+            shape.d[0] = tokens;
+            shape.d[1] = heads;
+            shape.d[2] = headDim;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto transposeTHDToHTD = [&](ITensor* src) -> ITensor* {
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            Permutation perm{};
+            perm.order[0] = 1;
+            perm.order[1] = 0;
+            perm.order[2] = 2;
+            layer->setFirstTranspose(perm);
+            return layer->getOutput(0);
+        };
+        auto transposeHTDToTHD = [&](ITensor* src) -> ITensor* {
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            Permutation perm{};
+            perm.order[0] = 1;
+            perm.order[1] = 0;
+            perm.order[2] = 2;
+            layer->setFirstTranspose(perm);
+            return layer->getOutput(0);
+        };
+        auto flattenTHD = [&](ITensor* src) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 2;
+            shape.d[0] = tokens;
+            shape.d[1] = hidden;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+
+        ITensor* qFlat = slice2d(0, hidden);
+        ITensor* kFlat = slice2d(hidden, hidden);
+        ITensor* vFlat = slice2d(hidden * 2, hidden);
+        ITensor* qHTD = qFlat ? transposeTHDToHTD(reshapeTHD(qFlat)) : nullptr;
+        ITensor* kHTD = kFlat ? transposeTHDToHTD(reshapeTHD(kFlat)) : nullptr;
+        ITensor* vHTD = vFlat ? transposeTHDToHTD(reshapeTHD(vFlat)) : nullptr;
+        if (!qHTD || !kHTD || !vHTD) return X::Value();
+
+        auto scores = network->addMatrixMultiply(*qHTD, MatrixOperation::kNONE, *kHTD, MatrixOperation::kTRANSPOSE);
+        if (!scores || !scores->getOutput(0)) return X::Value();
+        float scaleValue = 1.0f / std::sqrt(static_cast<float>(headDim));
+        Dims scalarDims{};
+        scalarDims.nbDims = 3;
+        scalarDims.d[0] = 1;
+        scalarDims.d[1] = 1;
+        scalarDims.d[2] = 1;
+        Weights scaleWeights{ DataType::kFLOAT, &scaleValue, 1 };
+        auto scaleConst = network->addConstant(scalarDims, scaleWeights);
+        if (!scaleConst || !scaleConst->getOutput(0)) return X::Value();
+        auto scaledScores = network->addElementWise(*scores->getOutput(0), *scaleConst->getOutput(0), ElementWiseOperation::kPROD);
+        if (!scaledScores || !scaledScores->getOutput(0)) return X::Value();
+        auto softmax = network->addSoftMax(*scaledScores->getOutput(0));
+        if (!softmax || !softmax->getOutput(0)) return X::Value();
+        softmax->setAxes(1U << 2);
+        auto context = network->addMatrixMultiply(*softmax->getOutput(0), MatrixOperation::kNONE, *vHTD, MatrixOperation::kNONE);
+        if (!context || !context->getOutput(0)) return X::Value();
+        ITensor* thd = transposeHTDToTHD(context->getOutput(0));
+        ITensor* output = thd ? flattenTHD(thd) : nullptr;
+        if (!output) return X::Value();
+        output->setName("output");
+        network->markOutput(*output);
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized VisionAttention TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value(enginePath);
+    }
+
+    X::Value TRTBuilder::RunVisionAttentionEngine(const std::string& enginePath, X::Value qkvValue) {
+        std::cout << "[TRTBuilder] RunVisionAttentionEngine <- " << enginePath << std::endl;
+        if (!qkvValue.IsTensor()) return X::Value();
+        X::Tensor qkv(qkvValue);
+        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2 || qkv->GetDimSize(1) % 3 != 0) return X::Value();
+        int tokens = qkv->GetDimSize(0);
+        int total = qkv->GetDimSize(1);
+        int hidden = total / 3;
+        int heads = 16;
+        int headDim = hidden / heads;
+        if (hidden % heads != 0) {
+            std::cout << "[TRTBuilder] VisionAttention hidden size is not divisible by heads." << std::endl;
+            return X::Value();
+        }
+
+        if (enginePath == "cuda_exact_vision_attention" || tokens > 512) {
+            std::cout << "[TRTBuilder] Running CUDA exact vision attention: tokens=" << tokens
+                << ", heads=" << heads << ", headDim=" << headDim << std::endl;
+            size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
+            size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+            void* dInput = nullptr;
+            void* dOutput = nullptr;
+            cudaStream_t stream = nullptr;
+            if (cudaStreamCreate(&stream) != cudaSuccess ||
+                cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                if (dInput) cudaFree(dInput);
+                if (dOutput) cudaFree(dOutput);
+                if (stream) cudaStreamDestroy(stream);
+                std::cout << "[TRTBuilder] CUDA exact vision attention allocation failed." << std::endl;
+                return X::Value();
+            }
+            cudaMemcpyAsync(dInput, qkv->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+            cudaError_t launchErr = runVisionAttentionFP32(
+                static_cast<const float*>(dInput),
+                static_cast<float*>(dOutput),
+                tokens,
+                heads,
+                headDim,
+                stream);
+            if (launchErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA exact vision attention launch failed: "
+                    << cudaGetErrorString(launchErr) << std::endl;
+                cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
+            cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+            cudaError_t syncErr = cudaStreamSynchronize(stream);
+            if (syncErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA exact vision attention sync failed: "
+                    << cudaGetErrorString(syncErr) << std::endl;
+                cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+
+            X::Tensor output;
+            output->SetDataType(X::TensorDataType::FLOAT32);
+            X::Port::vector<int> outputShape(2);
+            outputShape.push_back(tokens);
+            outputShape.push_back(hidden);
+            output->SetShape(outputShape);
+            X::Value initData;
+            if (!output->Create(initData) || output->GetData() == nullptr) {
+                cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            memcpy(output->GetData(), hostOutput.data(), outputBytes);
+            cudaFree(dInput);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            std::cout << "[TRTBuilder] CUDA exact vision attention completed: [" << tokens
+                << ", " << hidden << "]" << std::endl;
+            return output;
+        }
+
+        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
+        if (!in.is_open()) return X::Value();
+        std::streamsize size = in.tellg();
+        in.seekg(0, std::ios::beg);
+        std::vector<char> engineBytes(static_cast<size_t>(size));
+        if (!in.read(engineBytes.data(), size)) return X::Value();
+        auto runtime = createInferRuntime(gLogger);
+        if (!runtime) return X::Value();
+        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
+        if (!engine) return X::Value();
+        auto context = engine->createExecutionContext();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        void* dInput = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            if (dInput) cudaFree(dInput);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        cudaMemcpyAsync(dInput, qkv->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+        bool bound = context->setTensorAddress("qkv", dInput)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
+        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+        cudaStreamSynchronize(stream);
+
+        X::Tensor output;
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        X::Port::vector<int> outputShape(2);
+        outputShape.push_back(tokens);
+        outputShape.push_back(hidden);
+        output->SetShape(outputShape);
+        X::Value initData;
+        if (!output->Create(initData) || output->GetData() == nullptr) {
+            cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        memcpy(output->GetData(), hostOutput.data(), outputBytes);
+        cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunVisionAttentionEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
+        return output;
+    }
+
     X::Value TRTBuilder::ExportLinearTransposeEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape) {
         std::cout << "[TRTBuilder] ExportLinearTransposeEngine -> " << enginePath << std::endl;
         if (inputShape.size() != 2 || weightShape.size() != 2 || inputShape[1] != weightShape[1]) {
@@ -1039,6 +1911,71 @@ namespace Garnet {
         int outFeatures = weight->GetDimSize(0);
         if (weight->GetDimSize(1) != inFeatures) return X::Value();
 
+        if (enginePath == "cuda_linear_transpose") {
+            std::cout << "[TRTBuilder] Running CUDA linear transpose: ["
+                << tokens << ", " << inFeatures << "] x [" << outFeatures << ", "
+                << inFeatures << "]" << std::endl;
+            size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
+            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
+            size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
+            void* dInput = nullptr;
+            void* dWeight = nullptr;
+            void* dOutput = nullptr;
+            cudaStream_t stream = nullptr;
+            if (cudaStreamCreate(&stream) != cudaSuccess ||
+                cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+                cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                if (dInput) cudaFree(dInput);
+                if (dWeight) cudaFree(dWeight);
+                if (dOutput) cudaFree(dOutput);
+                if (stream) cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+            cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
+            cudaError_t status = runLinearTransposeFP32(
+                static_cast<const float*>(dInput),
+                static_cast<const float*>(dWeight),
+                static_cast<float*>(dOutput),
+                tokens,
+                inFeatures,
+                outFeatures,
+                stream);
+            if (status != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear transpose launch failed: "
+                    << cudaGetErrorString(status) << std::endl;
+                cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures));
+            cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+            status = cudaStreamSynchronize(stream);
+            if (status != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear transpose sync failed: "
+                    << cudaGetErrorString(status) << std::endl;
+                cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+
+            X::Tensor output;
+            output->SetDataType(X::TensorDataType::FLOAT32);
+            X::Port::vector<int> outputShape(2);
+            outputShape.push_back(tokens);
+            outputShape.push_back(outFeatures);
+            output->SetShape(outputShape);
+            X::Value initData;
+            if (!output->Create(initData) || output->GetData() == nullptr) {
+                cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            memcpy(output->GetData(), hostOutput.data(), outputBytes);
+            cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+            std::cout << "[TRTBuilder] CUDA linear transpose completed: [" << tokens
+                << ", " << outFeatures << "]" << std::endl;
+            return output;
+        }
+
         std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
         if (!in.is_open()) return X::Value();
         std::streamsize size = in.tellg();
@@ -1096,6 +2033,221 @@ namespace Garnet {
         memcpy(output->GetData(), hostOutput.data(), outputBytes);
         cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunLinearTransposeEngine completed: [" << tokens << ", " << outFeatures << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportLinearBiasTransposeEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape, const std::vector<int>& biasShape) {
+        std::cout << "[TRTBuilder] ExportLinearBiasTransposeEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || weightShape.size() != 2 || biasShape.size() != 1 || inputShape[1] != weightShape[1] || biasShape[0] != weightShape[0]) {
+            std::cout << "[TRTBuilder] LinearBiasTranspose shape mismatch." << std::endl;
+            return X::Value();
+        }
+        int tokens = inputShape[0];
+        int inFeatures = inputShape[1];
+        int outFeatures = weightShape[0];
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 64ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = inFeatures;
+        Dims wDims{};
+        wDims.nbDims = 2;
+        wDims.d[0] = outFeatures;
+        wDims.d[1] = inFeatures;
+        Dims bDims{};
+        bDims.nbDims = 1;
+        bDims.d[0] = outFeatures;
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* w = network->addInput("W", DataType::kFLOAT, wDims);
+        ITensor* b = network->addInput("B", DataType::kFLOAT, bDims);
+        if (!x || !w || !b) return X::Value();
+        auto linear = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *w, MatrixOperation::kTRANSPOSE);
+        if (!linear || !linear->getOutput(0)) return X::Value();
+        auto biasShuffle = network->addShuffle(*b);
+        if (!biasShuffle || !biasShuffle->getOutput(0)) return X::Value();
+        Dims bias2d{};
+        bias2d.nbDims = 2;
+        bias2d.d[0] = 1;
+        bias2d.d[1] = outFeatures;
+        biasShuffle->setReshapeDimensions(bias2d);
+        auto out = network->addElementWise(*linear->getOutput(0), *biasShuffle->getOutput(0), ElementWiseOperation::kSUM);
+        if (!out || !out->getOutput(0)) return X::Value();
+        out->getOutput(0)->setName("output");
+        network->markOutput(*out->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized LinearBiasTranspose TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value(enginePath);
+    }
+
+    X::Value TRTBuilder::RunLinearBiasTransposeEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue, X::Value biasValue) {
+        std::cout << "[TRTBuilder] RunLinearBiasTransposeEngine <- " << enginePath << std::endl;
+        if (!inputValue.IsTensor() || !weightValue.IsTensor() || !biasValue.IsTensor()) return X::Value();
+        X::Tensor input(inputValue);
+        X::Tensor weight(weightValue);
+        X::Tensor bias(biasValue);
+        if (input->GetDataType() != X::TensorDataType::FLOAT32 || weight->GetDataType() != X::TensorDataType::FLOAT32 || bias->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
+        if (input->GetDimCount() != 2 || weight->GetDimCount() != 2 || bias->GetDimCount() != 1) return X::Value();
+        int tokens = input->GetDimSize(0);
+        int inFeatures = input->GetDimSize(1);
+        int outFeatures = weight->GetDimSize(0);
+        if (weight->GetDimSize(1) != inFeatures || bias->GetDimSize(0) != outFeatures) return X::Value();
+
+        if (enginePath == "cuda_linear_bias_transpose") {
+            std::cout << "[TRTBuilder] Running CUDA linear+bias transpose: ["
+                << tokens << ", " << inFeatures << "] x [" << outFeatures << ", "
+                << inFeatures << "]" << std::endl;
+            size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
+            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
+            size_t biasBytes = static_cast<size_t>(outFeatures) * sizeof(float);
+            size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
+            void* dInput = nullptr;
+            void* dWeight = nullptr;
+            void* dBias = nullptr;
+            void* dOutput = nullptr;
+            cudaStream_t stream = nullptr;
+            if (cudaStreamCreate(&stream) != cudaSuccess ||
+                cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+                cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
+                cudaMalloc(&dBias, biasBytes) != cudaSuccess ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                if (dInput) cudaFree(dInput);
+                if (dWeight) cudaFree(dWeight);
+                if (dBias) cudaFree(dBias);
+                if (dOutput) cudaFree(dOutput);
+                if (stream) cudaStreamDestroy(stream);
+                std::cout << "[TRTBuilder] CUDA linear+bias allocation failed." << std::endl;
+                return X::Value();
+            }
+            cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+            cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
+            cudaMemcpyAsync(dBias, bias->GetData(), biasBytes, cudaMemcpyHostToDevice, stream);
+            cudaError_t launchErr = runLinearBiasTransposeFP32(
+                static_cast<const float*>(dInput),
+                static_cast<const float*>(dWeight),
+                static_cast<const float*>(dBias),
+                static_cast<float*>(dOutput),
+                tokens,
+                inFeatures,
+                outFeatures,
+                stream);
+            if (launchErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear+bias launch failed: "
+                    << cudaGetErrorString(launchErr) << std::endl;
+                cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures));
+            cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+            cudaError_t syncErr = cudaStreamSynchronize(stream);
+            if (syncErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear+bias sync failed: "
+                    << cudaGetErrorString(syncErr) << std::endl;
+                cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+
+            X::Tensor output;
+            output->SetDataType(X::TensorDataType::FLOAT32);
+            X::Port::vector<int> outputShape(2);
+            outputShape.push_back(tokens);
+            outputShape.push_back(outFeatures);
+            output->SetShape(outputShape);
+            X::Value initData;
+            if (!output->Create(initData) || output->GetData() == nullptr) {
+                cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            memcpy(output->GetData(), hostOutput.data(), outputBytes);
+            cudaFree(dInput);
+            cudaFree(dWeight);
+            cudaFree(dBias);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            std::cout << "[TRTBuilder] CUDA linear+bias transpose completed: ["
+                << tokens << ", " << outFeatures << "]" << std::endl;
+            return output;
+        }
+
+        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
+        if (!in.is_open()) return X::Value();
+        std::streamsize size = in.tellg();
+        in.seekg(0, std::ios::beg);
+        std::vector<char> engineBytes(static_cast<size_t>(size));
+        if (!in.read(engineBytes.data(), size)) return X::Value();
+        auto runtime = createInferRuntime(gLogger);
+        if (!runtime) return X::Value();
+        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
+        if (!engine) return X::Value();
+        auto context = engine->createExecutionContext();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
+        size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
+        size_t biasBytes = static_cast<size_t>(outFeatures) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
+        void* dInput = nullptr;
+        void* dWeight = nullptr;
+        void* dBias = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+            cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
+            cudaMalloc(&dBias, biasBytes) != cudaSuccess ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            if (dInput) cudaFree(dInput);
+            if (dWeight) cudaFree(dWeight);
+            if (dBias) cudaFree(dBias);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+        cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
+        cudaMemcpyAsync(dBias, bias->GetData(), biasBytes, cudaMemcpyHostToDevice, stream);
+        bool bound = context->setTensorAddress("x", dInput)
+            && context->setTensorAddress("W", dWeight)
+            && context->setTensorAddress("B", dBias)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures));
+        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+        cudaStreamSynchronize(stream);
+
+        X::Tensor output;
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        X::Port::vector<int> outputShape(2);
+        outputShape.push_back(tokens);
+        outputShape.push_back(outFeatures);
+        output->SetShape(outputShape);
+        X::Value initData;
+        if (!output->Create(initData) || output->GetData() == nullptr) {
+            cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        memcpy(output->GetData(), hostOutput.data(), outputBytes);
+        cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunLinearBiasTransposeEngine completed: [" << tokens << ", " << outFeatures << "]" << std::endl;
         return output;
     }
 

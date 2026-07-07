@@ -133,6 +133,45 @@ extern "C" {
     void runZeroInitializeFP16(__half* data, int count, cudaStream_t stream = 0);
     void runZeroInitializeBF16(bfloat16* data, int count, cudaStream_t stream = 0);
 
+    // Exact QKV self-attention for Qwen3-VL vision attention.
+    // Input qkv is [tokens, 3 * heads * head_dim], output is [tokens, heads * head_dim].
+    // This path avoids materializing [heads, tokens, tokens] scores for original-resolution images.
+    cudaError_t runVisionAttentionFP32(
+        const float* qkv,
+        float* output,
+        int tokens,
+        int heads,
+        int headDim,
+        cudaStream_t stream = 0);
+
+    // Row-major linear layer: output[M, N] = input[M, K] * weight[N, K]^T + bias[N].
+    cudaError_t runLinearBiasTransposeFP32(
+        const float* input,
+        const float* weight,
+        const float* bias,
+        float* output,
+        int rows,
+        int inFeatures,
+        int outFeatures,
+        cudaStream_t stream = 0);
+
+    // Row-major linear layer: output[M, N] = input[M, K] * weight[N, K]^T.
+    cudaError_t runLinearTransposeFP32(
+        const float* input,
+        const float* weight,
+        float* output,
+        int rows,
+        int inFeatures,
+        int outFeatures,
+        cudaStream_t stream = 0);
+
+    cudaError_t runSiluMulFP32(
+        const float* gate,
+        const float* up,
+        float* output,
+        int count,
+        cudaStream_t stream = 0);
+
     //void cleanup();
 
 #ifdef __cplusplus

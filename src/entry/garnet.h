@@ -6,9 +6,36 @@
 #include "model.h"
 #include "log.h"
 #include <string>
+#include <deque>
+#include <unordered_map>
+#include <vector>
 
 namespace Garnet
 {
+	class KVCacheManager
+	{
+		int m_maxNumPages = 0;
+		int m_pageSize = 0;
+		int m_headDim = 0;
+		int m_numKVHeads = 0;
+		std::deque<int> m_freePages;
+		std::unordered_map<long long, std::vector<int>> m_sequencePages;
+	public:
+		BEGIN_PACKAGE(KVCacheManager)
+			APISET().AddVarFunc("allocate", &KVCacheManager::Allocate);
+			APISET().AddVarFunc("free", &KVCacheManager::Free);
+			APISET().AddVarFunc("stats", &KVCacheManager::Stats);
+		END_PACKAGE
+
+		void Configure(int maxNumPages, int pageSize, int headDim, int numKVHeads);
+		void Allocate(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void Free(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void Stats(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+	};
+
 	class GarnetAPI :
 		public Singleton<GarnetAPI>
 	{
@@ -28,7 +55,9 @@ namespace Garnet
 				},
 				[](auto* pThis) {return pThis->m_cantor; });
 			APISET().AddVarFunc("load_model", &GarnetAPI::LoadModelEx);
+			APISET().AddVarFunc("KVCacheManager", &GarnetAPI::CreateKVCacheManager);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
+			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
 			APISET().AddClass<0, Model>("model");
 			APISET().AddClass<0, GarnetTensor>("tensor");
 		END_PACKAGE
@@ -64,6 +93,8 @@ namespace Garnet
 			return true;
 		}
 		X::Value LoadModel(std::string modelPath);
+		void CreateKVCacheManager(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunTest(X::XRuntime* rt, X::XObj* pContext,

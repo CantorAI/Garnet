@@ -49,6 +49,86 @@ namespace Garnet
         }
     }
 
+    void KVCacheManager::Configure(int maxNumPages, int pageSize, int headDim, int numKVHeads)
+    {
+        m_maxNumPages = maxNumPages > 0 ? maxNumPages : 0;
+        m_pageSize = pageSize > 0 ? pageSize : 1;
+        m_headDim = headDim > 0 ? headDim : 1;
+        m_numKVHeads = numKVHeads > 0 ? numKVHeads : 1;
+        m_freePages.clear();
+        m_sequencePages.clear();
+        for (int page = 0; page < m_maxNumPages; ++page) {
+            m_freePages.push_back(page);
+        }
+    }
+
+    void KVCacheManager::Allocate(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        long long seqId = params.size() > 0 ? params[0].ToLongLong() : 0;
+        X::Value sequenceLengthValue = GetKwarg(kwParams, "sequence_length");
+        long long sequenceLength = sequenceLengthValue.IsValid()
+            ? sequenceLengthValue.ToLongLong()
+            : (params.size() > 1 ? params[1].ToLongLong() : 0);
+        if (sequenceLength < 0) sequenceLength = 0;
+        int pagesNeeded = static_cast<int>((sequenceLength + m_pageSize - 1) / m_pageSize);
+        if (pagesNeeded > static_cast<int>(m_freePages.size())) {
+            std::cout << "[KVCacheManager] Not enough free pages: need " << pagesNeeded
+                << ", have " << m_freePages.size() << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        auto existing = m_sequencePages.find(seqId);
+        if (existing != m_sequencePages.end()) {
+            for (int page : existing->second) {
+                m_freePages.push_front(page);
+            }
+            m_sequencePages.erase(existing);
+        }
+
+        std::vector<int> pages;
+        pages.reserve(static_cast<size_t>(pagesNeeded));
+        X::V<X::XList> retList;
+        for (int i = 0; i < pagesNeeded; ++i) {
+            int page = m_freePages.front();
+            m_freePages.pop_front();
+            pages.push_back(page);
+            X::Value pageValue(page);
+            retList->AddItem(pageValue);
+        }
+        m_sequencePages[seqId] = std::move(pages);
+        retValue = retList;
+    }
+
+    void KVCacheManager::Free(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        long long seqId = params.size() > 0 ? params[0].ToLongLong() : 0;
+        auto existing = m_sequencePages.find(seqId);
+        bool released = existing != m_sequencePages.end();
+        if (released) {
+            for (int page : existing->second) {
+                m_freePages.push_back(page);
+            }
+            m_sequencePages.erase(existing);
+        }
+        retValue = X::Value(released);
+    }
+
+    void KVCacheManager::Stats(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        X::Dict stats;
+        stats->Set("max_num_pages", X::Value(m_maxNumPages));
+        stats->Set("free_pages", X::Value(static_cast<int>(m_freePages.size())));
+        stats->Set("used_pages", X::Value(m_maxNumPages - static_cast<int>(m_freePages.size())));
+        stats->Set("page_size", X::Value(m_pageSize));
+        stats->Set("head_dim", X::Value(m_headDim));
+        stats->Set("num_kv_heads", X::Value(m_numKVHeads));
+        stats->Set("sequence_count", X::Value(static_cast<int>(m_sequencePages.size())));
+        retValue = stats;
+    }
+
     bool GarnetAPI::LoadModelFromFile(std::string modelPath, X::Dict& model)
     {
         std::ifstream file(modelPath, std::ios::binary);
@@ -243,6 +323,24 @@ namespace Garnet
         return varModel;
     }
 
+    void GarnetAPI::CreateKVCacheManager(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        auto getInt = [&](const char* name, size_t pos, int defaultValue) -> int {
+            X::Value value = GetKwarg(kwParams, name);
+            if (value.IsValid()) return static_cast<int>(value.ToLongLong());
+            if (params.size() > pos) return static_cast<int>(params[pos].ToLongLong());
+            return defaultValue;
+        };
+        int maxNumPages = getInt("max_num_pages", 0, 0);
+        int pageSize = getInt("page_size", 1, 16);
+        int headDim = getInt("head_dim", 2, 128);
+        int numKVHeads = getInt("num_kv_heads", 3, 1);
+        X::XPackageValue<KVCacheManager> manager;
+        (*manager).Configure(maxNumPages, pageSize, headDim, numKVHeads);
+        retValue = manager;
+    }
+
     void GarnetAPI::LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
@@ -318,11 +416,15 @@ namespace Garnet
                         std::vector<int> upShape = TensorShape(weights["language_model.layers.0.mlp.up_proj.weight"]);
                         std::vector<int> downShape = TensorShape(weights["language_model.layers.0.mlp.down_proj.weight"]);
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
-                        if (!std::filesystem::exists(enginePath)) {
+                        bool useCudaTextMlp = inputShape.size() == 2 && inputShape[0] > 64;
+                        if (useCudaTextMlp) {
+                            model.SetEngine(X::Value("cuda_text_mlp"));
+                        }
+                        else if (!std::filesystem::exists(enginePath)) {
                             TRTBuilder builder;
                             builder.ExportTextMLPEngine(enginePath.string(), inputShape, gateShape, upShape, downShape);
                         }
-                        if (std::filesystem::exists(enginePath)) {
+                        if (!useCudaTextMlp && std::filesystem::exists(enginePath)) {
                             model.SetEngine(X::Value(enginePath.string()));
                         }
                     }
@@ -365,6 +467,56 @@ namespace Garnet
                         }
                     }
                 }
+                else if (subgraph == "text_rope_apply" && inputShapes.IsList()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() >= 3) {
+                        std::vector<int> qkvShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> cosShape = ReadIntList(shapeList->Get(1));
+                        std::vector<int> sinShape = ReadIntList(shapeList->Get(2));
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportTextRoPEEngine(enginePath.string(), qkvShape, cosShape, sinShape, 16, 8, 128);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "text_attention_core" && inputShapes.IsList()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        std::vector<int> qkvShape = ReadIntList(shapeList->Get(0));
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportTextAttentionEngine(enginePath.string(), qkvShape, 16, 8, 128);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "vision_attention_core" && inputShapes.IsList()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        std::vector<int> qkvShape = ReadIntList(shapeList->Get(0));
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (qkvShape.size() == 2 && qkvShape[0] > 512) {
+                            model.SetEngine(X::Value("cuda_exact_vision_attention"));
+                        }
+                        else if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportVisionAttentionEngine(enginePath.string(), qkvShape, 16, 64);
+                        }
+                        if (qkvShape.size() == 2 && qkvShape[0] > 512) {
+                            model.SetEngine(X::Value("cuda_exact_vision_attention"));
+                        }
+                        else if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
                 else if (subgraph == "text_o_proj" && inputShapes.IsList() && weightsDict.IsObject()) {
                     X::List shapeList(inputShapes);
                     if (shapeList->Size() > 0) {
@@ -377,6 +529,70 @@ namespace Garnet
                             builder.ExportLinearTransposeEngine(enginePath.string(), inputShape, oShape);
                         }
                         if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "text_lm_head" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> embedShape = TensorShape(weights["language_model.embed_tokens.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        bool useCudaLinear = inputShape.size() == 2
+                            && embedShape.size() == 2
+                            && (embedShape[0] > 65536 || (static_cast<long long>(inputShape[0]) * static_cast<long long>(embedShape[0]) > 8LL * 1024LL * 1024LL));
+                        if (useCudaLinear) {
+                            model.SetEngine(X::Value("cuda_linear_transpose"));
+                        }
+                        else if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportLinearTransposeEngine(enginePath.string(), inputShape, embedShape);
+                        }
+                        if (!useCudaLinear && std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "vision_patch_embed" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> weightShape = TensorShape(weights["visual.patch_embed.proj.weight"]);
+                        std::vector<int> biasShape = TensorShape(weights["visual.patch_embed.proj.bias"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportLinearBiasTransposeEngine(enginePath.string(), inputShape, weightShape, biasShape);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "linear_bias" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> weightShape = TensorShape(weights["W"]);
+                        std::vector<int> biasShape = TensorShape(weights["B"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        bool useCudaLinear = inputShape.size() == 2 && weightShape.size() == 2
+                            && (inputShape[0] > 2048 || (static_cast<long long>(inputShape[0]) * static_cast<long long>(weightShape[0]) > 8LL * 1024LL * 1024LL));
+                        if (useCudaLinear) {
+                            model.SetEngine(X::Value("cuda_linear_bias_transpose"));
+                        }
+                        else if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportLinearBiasTransposeEngine(enginePath.string(), inputShape, weightShape, biasShape);
+                        }
+                        if (useCudaLinear) {
+                            model.SetEngine(X::Value("cuda_linear_bias_transpose"));
+                        }
+                        else if (std::filesystem::exists(enginePath)) {
                             model.SetEngine(X::Value(enginePath.string()));
                         }
                     }
@@ -402,8 +618,26 @@ namespace Garnet
                     X::List shapeList(inputShapes);
                     if (shapeList->Size() > 0) {
                         X::Dict weights(weightsDict);
+                        model.SetRMSNormWeight(weights["language_model.layers.0.input_layernorm.weight"]);
                         std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
                         std::vector<int> weightShape = TensorShape(weights["language_model.layers.0.input_layernorm.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportRMSNormEngine(enginePath.string(), inputShape, weightShape, 1.0e-6f);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "text_post_attention_rms_norm" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        model.SetRMSNormWeight(weights["language_model.layers.0.post_attention_layernorm.weight"]);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> weightShape = TensorShape(weights["language_model.layers.0.post_attention_layernorm.weight"]);
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
                             TRTBuilder builder;

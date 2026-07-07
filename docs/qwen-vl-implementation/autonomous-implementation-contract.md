@@ -429,6 +429,13 @@ test2026/tests/phase_05_subgraph_parity/layer_norm_trt.x
 test2026/tests/phase_05_subgraph_parity/text_qkv_proj_trt.x
 test2026/tests/phase_05_subgraph_parity/text_qkv_head_norm_trt.x
 test2026/tests/phase_05_subgraph_parity/text_o_proj_trt.x
+test2026/tests/phase_05_subgraph_parity/text_rope_apply_trt.x
+test2026/tests/phase_05_subgraph_parity/text_attention_core_trt.x
+test2026/tests/phase_05_subgraph_parity/text_post_rms_norm_trt.x
+test2026/tests/phase_05_subgraph_parity/text_lm_head_trt.x
+test2026/tests/phase_05_subgraph_parity/linear_bias_trt.x
+test2026/tests/phase_05_subgraph_parity/vision_patch_embed_trt.x
+test2026/tests/phase_05_subgraph_parity/vision_attention_core_trt.x
 test2026/tests/phase_05_subgraph_parity/text_mlp_trt.x
 test2026/tests/phase_05_subgraph_parity/vision_mlp_trt.x
 ```
@@ -476,6 +483,261 @@ Text output projection:
   max_error ~= 2.8e-5
   mean_error ~= 4.6e-6
 
+Text RoPE apply:
+  input [4,4096], cos/sin [4,128]
+  q_heads 16, kv_heads 8, head_dim 128
+  output [4,4096] as concat(q_rope, k_rope, v)
+  max_error ~= 9.5e-7
+  mean_error ~= 4.5e-9
+  v_max_error = 0
+
+Text attention core:
+  input [4,4096] as concat(q_rope, k_rope, v)
+  GQA repeat 8 kv heads -> 16 q heads
+  causal softmax prefill
+  output [4,2048]
+  max_error ~= 9.3e-5
+  mean_error ~= 2.1e-6
+
+Text decoder layer chain:
+  input [4,2048]
+  chain: input RMSNorm -> QKV/head norm -> RoPE -> attention -> output projection -> residual -> post RMSNorm -> MLP -> residual
+  output [4,2048]
+  max_error ~= 8.6e-4
+  mean_error ~= 1.4e-4
+  post_norm_path = garnet_trt
+
+Text decoder layer vs HF module:
+  reference: transformers.Qwen3VLTextDecoderLayer(layer_idx=0, eager)
+  HF rotary embeddings are passed into Garnet RoPE
+  output [4,2048]
+  max_error ~= 8.8e-4
+  mean_error ~= 1.1e-4
+
+Two text decoder layers vs HF modules:
+  reference: layer 0 -> layer 1, eager
+  output [4,2048]
+  max_error ~= 1.1e-2
+  mean_error ~= 4.0e-4
+
+Two-layer logits:
+  chain: two decoder layers -> final RMSNorm -> tied embedding LM head
+  logits [4,151936]
+  max_error ~= 1.3e-2
+  mean_error ~= 1.8e-3
+  last-token top-10 overlap = 10/10
+
+Processor-token logits:
+  input source: processor_frame_0_objects_json.npz input_ids
+  token window: first 8 ids from the real image prompt sequence
+  chain: tied token embedding lookup in Python -> two Garnet decoder layers -> final RMSNorm -> tied embedding LM head
+  logits [8,151936]
+  max_error ~= 1.1e-2
+  mean_error ~= 1.3e-3
+  last-token top-10 overlap = 10/10
+
+Visual-splice logits:
+  input source: processor_frame_0_objects_json.npz input_ids, mm_token_type_ids, pixel_values, image_grid_thw
+  token window: first 8 ids from the real image prompt sequence
+  visual positions: [4,5,6,7]
+  visual token source: first 16 processor patches -> patch embed -> interpolated pos_embed -> optional 24 vision blocks -> merger
+  chain: replace placeholder embeddings with Garnet-compatible visual tokens -> two Garnet decoder layers -> final RMSNorm -> tied embedding LM head
+  visual tokens [4,2048], logits [8,151936]
+  patch+pos+merger mode:
+    max_error ~= 7.4e-3
+    mean_error ~= 8.7e-4
+    last-token top-10 overlap = 10/10
+  all-vision-blocks mode:
+    vision_block_count = 24
+    visual_token_max_error ~= 3.4e-3
+    visual_token_mean_error ~= 3.6e-4
+    logits max_error ~= 2.4e-2
+    logits mean_error ~= 2.1e-3
+    last-token top-10 overlap = 10/10
+
+Full prompt-window logits:
+  input source: processor_frame_0_objects_json.npz input_ids, mm_token_type_ids, pixel_values, image_grid_thw
+  verified token windows: first 8 ids and first 12 ids from the real image prompt sequence
+  8-token window visual positions: [4,5,6,7]
+  12-token window visual positions: [4,5,6,7,8,9,10,11]
+  visual path: processor patches -> patch embed -> interpolated pos_embed -> 24 vision blocks -> merger
+  text path: all 28 text decoder layers -> final RMSNorm -> tied embedding LM head
+  8-token logits [8,151936]:
+    max_error ~= 5.3e-2
+    mean_error ~= 4.2e-3
+    last-token top-10 overlap = 10/10
+    expected_next_token_id = actual_next_token_id = 151645
+    expected_next_token_text = actual_next_token_text = <|im_end|>
+12-token logits [12,151936]:
+    visual_token_max_error ~= 4.5e-2
+    visual_token_mean_error ~= 4.5e-3
+    max_error ~= 9.9e-1
+    mean_error ~= 3.1e-2
+    last-token top-10 overlap = 10/10
+    expected_next_token_id = actual_next_token_id = 151645
+    expected_next_token_text = actual_next_token_text = <|im_end|>
+
+Cache rule found during widening:
+
+```text
+TensorRT cache directories must include shape-specific suffixes such as patch_32 and tokens_12.
+Do not reuse a static-shape engine cache across different token or patch counts.
+```
+
+Model forward façade:
+
+```text
+GarnetQwen3VLForwardFacade.forward(
+  input_ids,
+  pixel_values,
+  image_grid_thw,
+  mm_token_type_ids,
+  cos,
+  sin
+) -> logits
+```
+
+Verified behavior:
+
+```text
+input source: processor_frame_0_objects_json.npz
+token window: first 12 ids
+visual positions: [4,5,6,7,8,9,10,11]
+vision path: 32 processor patches -> patch embed -> interpolated pos_embed -> 24 vision blocks -> merger
+text path: all 28 text decoder layers -> final RMSNorm -> tied embedding LM head
+logits [12,151936]
+max_error ~= 3.8e-1
+mean_error ~= 1.3e-2
+last-token top-10 overlap = 10/10
+expected_next_token_id = actual_next_token_id = 151645
+expected_next_token_text = actual_next_token_text = <|im_end|>
+```
+
+Current limitation:
+
+```text
+The façade is a Python class that calls Garnet subgraph models internally.
+It still receives precomputed text RoPE cos/sin from the HF rotary helper.
+The next implementation step is to move this façade contract into a Garnet model-level entry and replace HF rotary preparation.
+```
+
+Native MRoPE position preparation:
+
+```text
+qwen3vl_mrope_position_ids_numpy(input_ids, mm_token_type_ids, image_grid_thw, video_grid_thw, attention_mask)
+```
+
+Verified against local `transformers.models.qwen3_vl.modeling_qwen3_vl.Qwen3VLModel.get_rope_index` using a shape-consistent synthetic image span:
+
+```text
+input_shape = [1,13]
+image_grid_thw = [[1,4,8]]
+visual_span_len = 8
+position_ids_shape = [3,1,13]
+mrope_position_deltas = [-4]
+max_position = 8
+```
+
+Native MRoPE cos/sin preparation:
+
+```text
+qwen3vl_text_mrope_cos_sin_numpy(position_ids, head_dim, rope_theta, mrope_section)
+```
+
+Verified against local `Qwen3VLTextRotaryEmbedding`:
+
+```text
+input_shape = [1,13]
+position_ids_shape = [3,1,13]
+cos_shape = [1,13,128]
+sin_shape = [1,13,128]
+max_error ~= 4.8e-7
+```
+
+Native-RoPE model-forward facade:
+
+```text
+GarnetQwen3VLForwardFacade.forward(
+  input_ids,
+  pixel_values,
+  image_grid_thw,
+  mm_token_type_ids
+) -> logits
+```
+
+Verified behavior:
+
+```text
+input source: processor_frame_0_objects_json.npz pixel_values, first 32 patches
+synthetic shape-consistent prompt length: 13 tokens
+image_grid_thw = [[1,4,8]]
+visual positions: [3,4,5,6,7,8,9,10]
+position_ids_shape = [3,1,13]
+cos_shape = [1,13,128]
+sin_shape = [1,13,128]
+vision path: 32 processor patches -> patch embed -> interpolated pos_embed -> 24 vision blocks -> merger
+text path: all 28 text decoder layers -> final RMSNorm -> tied embedding LM head
+logits [13,151936]
+max_error ~= 2.8e-2
+mean_error ~= 2.4e-3
+last-token top-10 overlap = 10/10
+expected_next_token_id = actual_next_token_id = 151644
+expected_next_token_text = actual_next_token_text = <|im_start|>
+```
+
+Important caveat:
+
+```text
+The saved real processor prefix tests use only the first 8 or 12 tokens of a much larger image span.
+Those truncated prefixes are useful for lightweight logits parity, but they are not valid standalone MRoPE sequences for the real image_grid_thw [[1,68,120]], because the full visual span is 2040 LLM visual tokens.
+Native MRoPE should be used either with a complete processor prompt or with synthetic/reduced grids whose visual-token count exactly matches the placeholder span.
+```
+
+Vision patch embed:
+  input source: processor_frame_0_objects_json.npz pixel_values
+  token window: first 16 flattened processor patches
+  weight: visual.patch_embed.proj.weight flattened from [1024,3,2,16,16] to [1024,1536]
+  output [16,1024]
+  max_error ~= 4.8e-7
+  mean_error ~= 1.5e-8
+
+Vision patch merger:
+  input source: first 16 processor patches -> patch embed
+  chain: merger LayerNorm -> reshape [16,1024] to [4,4096] -> linear_fc1 + GELU -> linear_fc2
+  output [4,2048]
+  max_error ~= 1.6e-3
+  mean_error ~= 3.3e-4
+
+Vision patch + positional embed + merger:
+  input source: processor_frame_0_objects_json.npz pixel_values + image_grid_thw [1,68,120]
+  token window: first 16 flattened processor patches
+  positional path: HF-compatible bilinear pos_embed interpolation and spatial-merge reorder
+  chain: patch embed -> add interpolated pos_embed -> merger LayerNorm -> reshape [16,1024] to [4,4096] -> linear_fc1 + GELU -> linear_fc2
+  output [4,2048]
+  max_error ~= 1.4e-3
+  mean_error ~= 3.1e-4
+
+Vision QKV projection:
+  input source: first 16 processor patches -> patch embed + interpolated pos_embed
+  chain: visual.blocks.0.attn.qkv linear+bias
+  output [16,3072]
+  max_error ~= 1.7e-3
+  mean_error ~= 1.3e-4
+
+Vision attention core:
+  input source: QKV from first 16 patch+pos tokens, with HF-compatible vision RoPE applied in the test harness
+  chain: non-causal 16-head attention, head_dim 64
+  output [16,1024]
+  max_error ~= 1.9e-6
+  mean_error ~= 3.5e-8
+
+Vision block 0:
+  input source: first 16 processor patches -> patch embed + interpolated pos_embed
+  chain: norm1 -> qkv -> vision RoPE -> non-causal attention -> proj -> residual -> norm2 -> MLP -> residual
+  output [16,1024]
+  max_error ~= 4.4e-4
+  mean_error ~= 3.5e-5
+
 Text MLP:
   input [3,2048]
   gate/up [6144,2048], down [2048,6144]
@@ -495,12 +757,12 @@ Current default regression:
 14 Passed, 0 Failed
 ```
 
-Next implementation target: complete the remaining text attention core:
+Next implementation target:
 
-1. apply Qwen3-VL text MRoPE to normalized Q/K
-2. implement causal/prefill attention with GQA KV repetition
-3. feed attention output through the verified output projection
-4. compare one full decoder layer against HF
+1. move `GarnetQwen3VLForwardFacade.forward()` from Python orchestration toward a Garnet model-level entry for `Qwen3VLModel`
+2. widen full prompt-window logits parity toward the complete processor prompt after model-level forward is stable
+3. add a decode loop that emits text from Garnet logits, then compare generated answer shape/parseability with the HF reference
+4. add KV cache-aware decode kernels after prefill parity is stable
 
 ## Stage 6: End-To-End Forward
 
@@ -514,6 +776,28 @@ Run one image/prompt through Garnet and produce logits.
 - top-k tokens are compared to HF reference
 - first unsupported op, if any, is reported by name/source location
 
+### Current Status
+
+Stage 6 has a tested forward-window path in the Phase 05 parity runner:
+
+```powershell
+$env:RUN_GARNET_REAL_QWEN_MLP_PARITY="1"
+$env:RUN_GARNET_REAL_QWEN_FULL_PROMPT_LOGITS_PARITY="1"
+$env:GARNET_QWEN_FULL_TEXT_USE_ALL_VISION_BLOCKS="1"
+$env:GARNET_QWEN_FULL_TEXT_TOKEN_WINDOW="8"
+.\.venv\Scripts\python.exe test2026\tests\phase_05_subgraph_parity\test_real_qwen_mlp_subgraphs.py
+```
+
+This now has a Python model-forward façade with one `.forward()` boundary, but it still uses Python orchestration internally to call Garnet subgraph models. It is not yet one native C++ `Qwen3VLModel.forward()` entry.
+
+Additional verified Stage 6 command for native MRoPE inside the facade:
+
+```powershell
+$env:RUN_GARNET_REAL_QWEN_MLP_PARITY="1"
+$env:RUN_GARNET_REAL_QWEN_MODEL_FORWARD_NATIVE_ROPE_FACADE_PARITY="1"
+.\.venv\Scripts\python.exe test2026\tests\phase_05_subgraph_parity\test_real_qwen_mlp_subgraphs.py
+```
+
 ## Stage 7: Decode And KV Cache
 
 ### Goal
@@ -526,6 +810,67 @@ Generate tokens with decode loop and KV cache.
 - KV cache allocation is explicit
 - per-token latency is reported
 - repeated system prompt cache path is testable
+
+### Current Status
+
+Stage 7 has a first non-KV decode smoke test through the Python model-forward facade:
+
+```powershell
+$env:RUN_GARNET_REAL_QWEN_MLP_PARITY="1"
+$env:RUN_GARNET_REAL_QWEN_MODEL_FORWARD_NATIVE_ROPE_DECODE="1"
+$env:GARNET_QWEN_NATIVE_ROPE_DECODE_TOKENS="2"
+.\.venv\Scripts\python.exe test2026\tests\phase_05_subgraph_parity\test_real_qwen_mlp_subgraphs.py
+```
+
+Verified behavior:
+
+```text
+prompt: reduced valid chat template with 8 image placeholders
+image source: processor_frame_0_objects_json.npz pixel_values, first 32 patches
+image_grid_thw = [[1,4,8]]
+visual_token_count = 8
+prompt_token_count = 27
+decode mode: greedy, no KV cache, full prefill rerun per token
+generated_token_ids = [73594, 2236]
+generated_text = ```json
+vision path: 24 vision blocks
+text path: 28 text decoder layers
+```
+
+Remaining Stage 7 work:
+
+Paged KV allocation status:
+
+```text
+Garnet exports KVCacheManager(max_num_pages, page_size, head_dim, num_kv_heads).
+allocate(seq_id, sequence_length) returns page IDs.
+free(seq_id) releases pages.
+stats() reports max/free/used pages and active sequence count.
+```
+
+Verified command:
+
+```powershell
+.\.venv\Scripts\python.exe test2026\tests\phase_02_kv_cache\test.py
+```
+
+Verified behavior:
+
+```text
+max_num_pages = 1024
+page_size = 16
+sequence_length = 40
+allocated_pages = 3
+used_pages after allocate = 3
+free_pages after free = 1024
+```
+
+Remaining Stage 7 work:
+
+1. move decode from full-prefix rerun to explicit prefill/decode split
+2. attach real K/V tensors to allocated pages and route text attention through them
+3. add per-token latency metrics
+4. run a longer structured JSON generation check after KV-backed decode exists
 
 ## Stage 8: Serving And Scheduler
 

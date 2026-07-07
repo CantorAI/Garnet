@@ -44,9 +44,17 @@ try:
     
     # 40 tokens / 16 page_size = 3 pages required
     assert len(blocks) == 3, f"Expected 3 pages to be allocated for 40 tokens, got {len(blocks)}"
+    stats = kv_manager.stats()
+    assert stats["used_pages"] == 3, f"Expected 3 used pages after allocation, got {stats['used_pages']}"
+    assert stats["free_pages"] == 1021, f"Expected 1021 free pages after allocation, got {stats['free_pages']}"
+    assert stats["sequence_count"] == 1, f"Expected 1 active sequence, got {stats['sequence_count']}"
     
     # Free the sequence blocks
     kv_manager.free(seq_id)
+    stats = kv_manager.stats()
+    assert stats["used_pages"] == 0, f"Expected 0 used pages after free, got {stats['used_pages']}"
+    assert stats["free_pages"] == 1024, f"Expected all pages free after free, got {stats['free_pages']}"
+    assert stats["sequence_count"] == 0, f"Expected 0 active sequences after free, got {stats['sequence_count']}"
     
     print("Phase 02: Paged KV Cache Manager test passed!")
     sys.exit(0)
