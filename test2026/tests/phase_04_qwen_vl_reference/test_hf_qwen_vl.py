@@ -83,6 +83,7 @@ try:
         "answer": answer,
         "device": device,
     }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(output, indent=2), encoding="utf-8")
 
     assert answer, "Qwen-VL reference generated an empty answer"

@@ -167,9 +167,9 @@ def run_case(case_name, xmodel_path, weight_dims):
 
     expected = a_np @ weights["W"]
     actual = tensor_to_numpy(out)
-    actual_prefix = actual.reshape(-1)[: expected.size].reshape(expected.shape)
-    np.testing.assert_allclose(actual_prefix, expected, rtol=1e-5, atol=1e-6)
-    print(f"trt_output={actual_prefix.tolist()}")
+    actual = actual.reshape(expected.shape)
+    np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
+    print(f"trt_output={actual.tolist()}")
     print(f"expected_output={expected.tolist()}")
     print(f"CASE_PASS={case_name}")
 

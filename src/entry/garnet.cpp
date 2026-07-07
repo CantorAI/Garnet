@@ -26,6 +26,19 @@ namespace Garnet
             return result;
         }
 
+        std::vector<int> TensorShape(X::Value value)
+        {
+            std::vector<int> result;
+            if (!value.IsTensor()) return result;
+            X::Tensor tensor(value);
+            int dimCount = tensor->GetDimCount();
+            result.reserve(static_cast<size_t>(dimCount));
+            for (int i = 0; i < dimCount; ++i) {
+                result.push_back(static_cast<int>(tensor->GetDimSize(i)));
+            }
+            return result;
+        }
+
         X::Value GetKwarg(X::KWARGS& kwParams, const char* name)
         {
             if (kwParams.Has(name)) {
@@ -267,6 +280,7 @@ namespace Garnet
                 X::Value weightsDict;
                 X::Value inputShapes;
                 X::Value weightShape;
+                std::string subgraph;
                 std::string cacheDir = (path.parent_path() / "cache").string();
                 for (auto& it : kwParams) {
                     if (std::string(it.key) == "weights") {
@@ -281,9 +295,13 @@ namespace Garnet
                     else if (std::string(it.key) == "cache_dir") {
                         cacheDir = it.val.ToString();
                     }
+                    else if (std::string(it.key) == "subgraph") {
+                        subgraph = it.val.ToString();
+                    }
                 }
 
                 model.SetInfo(dir, emptyStr, emptyStr, weightsDict);
+                model.SetSubgraph(subgraph);
                 
                 // Store weights in GarnetAPI singleton before running script
                 GarnetAPI::I().SetCurrentWeights(weightsDict);
@@ -291,7 +309,128 @@ namespace Garnet
                 X::Value retVal;
                 X::g_pXHost->RunModule(moduleVal, retVal, true);
 
-                if (inputShapes.IsList() && weightShape.IsList()) {
+                if (subgraph == "qwen3_text_mlp" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> gateShape = TensorShape(weights["language_model.layers.0.mlp.gate_proj.weight"]);
+                        std::vector<int> upShape = TensorShape(weights["language_model.layers.0.mlp.up_proj.weight"]);
+                        std::vector<int> downShape = TensorShape(weights["language_model.layers.0.mlp.down_proj.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportTextMLPEngine(enginePath.string(), inputShape, gateShape, upShape, downShape);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "text_qkv_proj" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> qShape = TensorShape(weights["language_model.layers.0.self_attn.q_proj.weight"]);
+                        std::vector<int> kShape = TensorShape(weights["language_model.layers.0.self_attn.k_proj.weight"]);
+                        std::vector<int> vShape = TensorShape(weights["language_model.layers.0.self_attn.v_proj.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportTextQKVEngine(enginePath.string(), inputShape, qShape, kShape, vShape);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "text_qkv_head_norm" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> qShape = TensorShape(weights["language_model.layers.0.self_attn.q_proj.weight"]);
+                        std::vector<int> kShape = TensorShape(weights["language_model.layers.0.self_attn.k_proj.weight"]);
+                        std::vector<int> vShape = TensorShape(weights["language_model.layers.0.self_attn.v_proj.weight"]);
+                        std::vector<int> qNormShape = TensorShape(weights["language_model.layers.0.self_attn.q_norm.weight"]);
+                        std::vector<int> kNormShape = TensorShape(weights["language_model.layers.0.self_attn.k_norm.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportTextQKVHeadNormEngine(enginePath.string(), inputShape, qShape, kShape, vShape, qNormShape, kNormShape, 1.0e-6f);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "text_o_proj" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> oShape = TensorShape(weights["language_model.layers.0.self_attn.o_proj.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportLinearTransposeEngine(enginePath.string(), inputShape, oShape);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "vision_mlp" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> fc1Shape = TensorShape(weights["visual.blocks.0.mlp.linear_fc1.weight"]);
+                        std::vector<int> fc2Shape = TensorShape(weights["visual.blocks.0.mlp.linear_fc2.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportVisionMLPEngine(enginePath.string(), inputShape, fc1Shape, fc2Shape);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "rms_norm" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> weightShape = TensorShape(weights["language_model.layers.0.input_layernorm.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportRMSNormEngine(enginePath.string(), inputShape, weightShape, 1.0e-6f);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (subgraph == "layer_norm" && inputShapes.IsList() && weightsDict.IsObject()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        X::Dict weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> weightShape = TensorShape(weights["visual.blocks.0.norm1.weight"]);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportLayerNormEngine(enginePath.string(), inputShape, weightShape, 1.0e-6f);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+                else if (inputShapes.IsList() && weightShape.IsList()) {
                     X::List shapeList(inputShapes);
                     if (shapeList->Size() > 0) {
                         std::vector<int> inputShape = ReadIntList(shapeList->Get(0));

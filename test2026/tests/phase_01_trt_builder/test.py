@@ -5,8 +5,19 @@ import numpy as np
 import xlang
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-# Path to the freshly built garnet.dll
-garnet_dll_path = os.path.abspath(os.path.join(script_dir, "../../../../out/build/x64-Debug/bin/garnet.dll"))
+repo_root = os.path.abspath(os.path.join(script_dir, "../../.."))
+garnet_dll_path = os.environ.get(
+    "GARNET_DLL_PATH",
+    os.path.join(repo_root, "out", "build", "x64-Debug", "bin", "garnet.dll"),
+)
+if hasattr(os, "add_dll_directory"):
+    for dll_dir in [
+        os.path.dirname(garnet_dll_path),
+        os.path.join(os.path.dirname(repo_root), "xlang", "out", "build", "x64-Debug", "bin"),
+    ]:
+        if os.path.isdir(dll_dir):
+            os.add_dll_directory(dll_dir)
+
 try:
     garnet = xlang.importModule("garnet", fromPath=garnet_dll_path)
 except Exception as e:
@@ -25,22 +36,28 @@ try:
         xmodel_path, 
         weights=weights,
         cache_dir=os.path.join(script_dir, "cache"),
-        input_shapes=[[1, 128], [128, 128]]
+        input_shapes=[[1, 128]],
+        weight_shape=[128, 128],
     )
     
     # Prepare inputs
     a_np = np.random.rand(1, 128).astype(np.float32)
-    b_np = weights["W"]
-    a = garnet.tensor(a_np)
-    b = garnet.tensor(b_np)
     
-    # Run engine
-    output = engine.forward(a, b)
+    # Run engine. Weights are owned by the loaded model, so forward only takes input.
+    output = engine.forward(a_np)
     
     # Ground truth validation
-    expected = np.matmul(a_np, b_np)
+    expected = np.matmul(a_np, weights["W"])
     
-    out_np = output.numpy()
+    to_numpy = getattr(output, "numpy", None)
+    to_list = getattr(output, "tolist", None)
+    if callable(to_numpy):
+        out_np = to_numpy()
+    elif callable(to_list):
+        out_np = np.array(to_list(), dtype=np.float32)
+    else:
+        raise AssertionError("TRT output has no numpy/tolist conversion")
+    out_np = out_np.reshape(expected.shape)
     np.testing.assert_allclose(out_np, expected, rtol=1e-3, atol=1e-3)
     
     print("Phase 01: TRT Builder test passed! (dummy execution)")

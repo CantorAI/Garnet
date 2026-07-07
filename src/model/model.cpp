@@ -65,14 +65,64 @@ namespace Garnet
             return;
         }
         X::Dict weights(mModel);
-        X::Value weight = weights["W"];
-        if (!weight.IsValid()) {
-            std::cout << "[Model] Missing loaded weight: W." << std::endl;
-            retValue = X::Value();
+        TRTBuilder builder;
+        X::Value gate = weights["language_model.layers.0.mlp.gate_proj.weight"];
+        X::Value up = weights["language_model.layers.0.mlp.up_proj.weight"];
+        X::Value down = weights["language_model.layers.0.mlp.down_proj.weight"];
+        if ((mSubgraph == "qwen3_text_mlp" || mSubgraph.empty()) && gate.IsValid() && up.IsValid() && down.IsValid()) {
+            retValue = builder.RunTextMLPEngine(m_engine.ToString(), params[0], gate, up, down);
             return;
         }
 
-        TRTBuilder builder;
-        retValue = builder.RunMatmulEngine(m_engine.ToString(), params[0], weight);
+        X::Value qProj = weights["language_model.layers.0.self_attn.q_proj.weight"];
+        X::Value kProj = weights["language_model.layers.0.self_attn.k_proj.weight"];
+        X::Value vProj = weights["language_model.layers.0.self_attn.v_proj.weight"];
+        X::Value qNorm = weights["language_model.layers.0.self_attn.q_norm.weight"];
+        X::Value kNorm = weights["language_model.layers.0.self_attn.k_norm.weight"];
+        if ((mSubgraph == "text_qkv_head_norm" || mSubgraph.empty()) && qProj.IsValid() && kProj.IsValid() && vProj.IsValid() && qNorm.IsValid() && kNorm.IsValid()) {
+            retValue = builder.RunTextQKVHeadNormEngine(m_engine.ToString(), params[0], qProj, kProj, vProj, qNorm, kNorm);
+            return;
+        }
+        if ((mSubgraph == "text_qkv_proj" || mSubgraph.empty()) && qProj.IsValid() && kProj.IsValid() && vProj.IsValid()) {
+            retValue = builder.RunTextQKVEngine(m_engine.ToString(), params[0], qProj, kProj, vProj);
+            return;
+        }
+
+        X::Value oProj = weights["language_model.layers.0.self_attn.o_proj.weight"];
+        if ((mSubgraph == "text_o_proj" || mSubgraph.empty()) && oProj.IsValid()) {
+            retValue = builder.RunLinearTransposeEngine(m_engine.ToString(), params[0], oProj);
+            return;
+        }
+
+        X::Value fc1 = weights["visual.blocks.0.mlp.linear_fc1.weight"];
+        X::Value fc1Bias = weights["visual.blocks.0.mlp.linear_fc1.bias"];
+        X::Value fc2 = weights["visual.blocks.0.mlp.linear_fc2.weight"];
+        X::Value fc2Bias = weights["visual.blocks.0.mlp.linear_fc2.bias"];
+        if ((mSubgraph == "vision_mlp" || mSubgraph.empty()) && fc1.IsValid() && fc1Bias.IsValid() && fc2.IsValid() && fc2Bias.IsValid()) {
+            retValue = builder.RunVisionMLPEngine(m_engine.ToString(), params[0], fc1, fc1Bias, fc2, fc2Bias);
+            return;
+        }
+
+        X::Value rmsWeight = weights["language_model.layers.0.input_layernorm.weight"];
+        if ((mSubgraph == "rms_norm" || mSubgraph.empty()) && rmsWeight.IsValid()) {
+            retValue = builder.RunRMSNormEngine(m_engine.ToString(), params[0], rmsWeight);
+            return;
+        }
+
+        X::Value lnWeight = weights["visual.blocks.0.norm1.weight"];
+        X::Value lnBias = weights["visual.blocks.0.norm1.bias"];
+        if ((mSubgraph == "layer_norm" || mSubgraph.empty()) && lnWeight.IsValid() && lnBias.IsValid()) {
+            retValue = builder.RunLayerNormEngine(m_engine.ToString(), params[0], lnWeight, lnBias);
+            return;
+        }
+
+        X::Value weight = weights["W"];
+        if ((mSubgraph == "matmul" || mSubgraph.empty()) && weight.IsValid()) {
+            retValue = builder.RunMatmulEngine(m_engine.ToString(), params[0], weight);
+            return;
+        }
+
+        std::cout << "[Model] Missing supported loaded weights for subgraph: " << mSubgraph << std::endl;
+        retValue = X::Value();
     }
 }

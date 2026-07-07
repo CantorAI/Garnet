@@ -171,6 +171,39 @@ $env:HF_QWEN_VL_MODEL_ID="Qwen/Qwen3-VL-2B-Instruct"
 - JSON prompts produce parseable JSON when possible
 - output path is printed
 
+### Current Status
+
+Real Qwen3-VL image + prompt inference has been run on local dataset images.
+
+Single-image output:
+
+```text
+test2026/artifacts/qwen_vl_reference/hf_qwen3_vl_frame0_answer.json
+```
+
+Dataset prompt runner:
+
+```text
+test2026/tests/phase_04_qwen_vl_reference/test_hf_qwen_vl_dataset.py
+```
+
+Verified command:
+
+```powershell
+$env:RUN_HF_QWEN_VL_DATASET="1"
+$env:HF_QWEN_VL_MODEL_ID="Qwen/Qwen3-VL-2B-Instruct"
+$env:HF_QWEN_VL_PROMPT="Describe the visible people, objects, and scene context in one concise paragraph."
+$env:HF_QWEN_VL_MAX_IMAGES="3"
+$env:HF_QWEN_VL_MAX_NEW_TOKENS="64"
+.\.venv\Scripts\python.exe test2026\tests\phase_04_qwen_vl_reference\test_hf_qwen_vl_dataset.py
+```
+
+Verified output:
+
+```text
+test2026/artifacts/qwen_vl_reference/hf_qwen3_vl_dataset_answers_3.json
+```
+
 ## Stage 2: Processor Contract
 
 ### Goal
@@ -329,6 +362,146 @@ Compare Garnet subgraph output against HF/PyTorch reference tensors.
 - numeric tolerance is documented
 - mismatch report includes max error, mean error, and first mismatching index
 
+### Current Status
+
+Implemented and passing with deterministic tiny `Qwen3TextMLP` and `VisionMLP` reference gates:
+
+```text
+test2026/tests/phase_05_subgraph_parity/test_text_mlp_reference.py
+```
+
+It writes:
+
+```text
+test2026/artifacts/qwen_vl_subgraphs/qwen3_text_mlp_tiny_reference.json
+test2026/artifacts/qwen_vl_subgraphs/qwen3_text_mlp_tiny_reference.npz
+```
+
+Formula:
+
+```text
+gate = x @ W_gate.T
+up = x @ W_up.T
+hidden = silu(gate) * up
+output = hidden @ W_down.T
+```
+
+The Garnet parity test executes this tiny MLP through Garnet/TensorRT when enabled:
+
+```text
+test2026/tests/phase_05_subgraph_parity/test_text_mlp_garnet.py
+```
+
+Enabled command:
+
+```powershell
+$env:RUN_GARNET_TEXT_MLP_PARITY="1"
+$env:GARNET_DLL_PATH="D:\CantorAI2026\Garnet\out\build\x64-Debug\bin\garnet.dll"
+.\.venv\Scripts\python.exe test2026\tests\phase_05_subgraph_parity\test_text_mlp_garnet.py
+```
+
+Tiny-subgraph verified error:
+
+```text
+Qwen3TextMLP:
+  max_error ~= 4.0e-6
+  mean_error ~= 1.2e-6
+
+VisionMLP:
+  max_error ~= 3.0e-8
+  mean_error ~= 5.3e-9
+```
+
+Additional VisionMLP files:
+
+```text
+test2026/tests/phase_05_subgraph_parity/test_vision_mlp_reference.py
+test2026/tests/phase_05_subgraph_parity/test_vision_mlp_garnet.py
+test2026/tests/phase_05_subgraph_parity/vision_mlp_trt.x
+```
+
+Implemented and passing with real `Qwen/Qwen3-VL-2B-Instruct` safetensors for layer-0 subgraphs:
+
+```text
+test2026/tests/phase_05_subgraph_parity/test_real_qwen_mlp_subgraphs.py
+test2026/tests/phase_05_subgraph_parity/rms_norm_trt.x
+test2026/tests/phase_05_subgraph_parity/layer_norm_trt.x
+test2026/tests/phase_05_subgraph_parity/text_qkv_proj_trt.x
+test2026/tests/phase_05_subgraph_parity/text_qkv_head_norm_trt.x
+test2026/tests/phase_05_subgraph_parity/text_o_proj_trt.x
+test2026/tests/phase_05_subgraph_parity/text_mlp_trt.x
+test2026/tests/phase_05_subgraph_parity/vision_mlp_trt.x
+```
+
+Verified command:
+
+```powershell
+$env:RUN_GARNET_REAL_QWEN_MLP_PARITY="1"
+.\.venv\Scripts\python.exe test2026\tests\phase_05_subgraph_parity\test_real_qwen_mlp_subgraphs.py
+```
+
+Real-weight verified errors:
+
+```text
+Text RMSNorm:
+  input [7,2048], weight [2048]
+  max_error ~= 1.2e-7
+  mean_error ~= 1.8e-9
+
+Vision LayerNorm:
+  input [9,1024], weight [1024]
+  max_error ~= 9.5e-7
+  mean_error ~= 1.8e-8
+
+Text QKV projection:
+  input [4,2048]
+  q [2048,2048], k [1024,2048], v [1024,2048]
+  output [4,4096]
+  max_error ~= 3.4e-5
+  mean_error ~= 4.6e-6
+
+Text QKV projection + per-head Q/K RMSNorm:
+  input [4,2048]
+  q_heads 16, kv_heads 8, head_dim 128
+  output [4,4096] as concat(q_norm, k_norm, v)
+  max_error ~= 6.6e-2
+  mean_error ~= 7.2e-4
+  q_max_error ~= 1.8e-2
+  k_max_error ~= 6.6e-2
+  v_max_error ~= 2.2e-5
+
+Text output projection:
+  input [4,2048], weight [2048,2048]
+  output [4,2048]
+  max_error ~= 2.8e-5
+  mean_error ~= 4.6e-6
+
+Text MLP:
+  input [3,2048]
+  gate/up [6144,2048], down [2048,6144]
+  max_error ~= 1.5e-6
+  mean_error ~= 3.2e-7
+
+Vision MLP:
+  input [5,1024]
+  fc1 [4096,1024], fc2 [1024,4096]
+  max_error ~= 1.8e-4
+  mean_error ~= 1.5e-5
+```
+
+Current default regression:
+
+```text
+14 Passed, 0 Failed
+```
+
+Next implementation target: complete the remaining text attention core:
+
+1. apply Qwen3-VL text MRoPE to normalized Q/K
+2. implement causal/prefill attention with GQA KV repetition
+3. feed attention output through the verified output projection
+4. compare one full decoder layer against HF
+
 ## Stage 6: End-To-End Forward
 
 ### Goal
@@ -467,30 +640,22 @@ The phase-00 test intentionally proves the public model path. Do not reintroduce
 
 Current `Model::Forward` executes one internal matmul engine for the preflight case. The repeat `.x` file has `range(5)` to prove xlang expression loading/control-flow shape, but full multi-op/multi-layer TensorRT graph execution is not implemented yet.
 
-Fresh `XTensor` output allocation from this varfunc path is also not stable yet. Phase 00 temporarily writes the TRT output into the input tensor carrier and the Python test compares the valid output prefix. Before Qwen-VL subgraphs use this path, implement a real output tensor factory/allocation path and remove the carrier workaround.
+Fresh `XTensor` output allocation from this varfunc path is now implemented for the phase-00 TRT matmul runner. The Python test validates the returned tensor shape directly instead of comparing an input-carrier prefix.
 
 ### Stage 0 Next Required Fixes
 
-1. Implement stable fresh output tensor allocation/return from C++ `TRTBuilder::RunMatmulEngine`.
-2. Replace the carrier workaround with a correctly shaped output tensor.
-3. Move from single matmul engine export to graph capture/lowering for multiple ops.
-4. Add a repeat execution parity test where `range(5)` actually executes five matmuls, not only expression-load plus one forward matmul.
+1. Move from single matmul engine export to graph capture/lowering for multiple ops.
+2. Add a repeat execution parity test where `range(5)` actually executes five matmuls, not only expression-load plus one forward matmul.
+3. Remove temporary verbose TRT preflight logging once graph lowering diagnostics exist.
 
 Do not start Qwen-VL model execution debugging until Stage 0 keeps passing after the fresh-output tensor fix.
 
 ## Current Next Task
 
-Finish the Stage 0 output tensor fix, then implement Stage 2:
+Implement the next Stage 5/6 bridge:
 
 ```text
-test_processor_contract.py
+text attention parity -> one decoder layer parity -> logits for one prompt/image
 ```
 
-with:
-
-- prompt suite
-- HF processor dump
-- JSON metadata
-- NPZ tensor file
-- reload validation
-- `.venv` test command
+The next code task is not processor setup anymore. Processor dumps, real HF image answers, real weight contract, and real-weight TRT subgraph parity are already in place.
