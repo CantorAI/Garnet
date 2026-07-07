@@ -5,6 +5,7 @@
 #include "garnet_tensor.h"
 #include "model.h"
 #include "log.h"
+#include <string>
 
 namespace Garnet
 {

@@ -4,6 +4,7 @@
 #include "xpackage.h"
 #include "trt_context.h"
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <NvInfer.h>
 
@@ -24,6 +25,8 @@ namespace Garnet {
         ~TRTBuilder();
 
         X::Value BuildEngine(X::Value forwardFunc, X::Value inputShapes, X::Value weightsDict);
+        X::Value ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape);
+        X::Value RunMatmulEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue);
 
         X::Value HandleBinaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input1, X::Value input2) override;
         X::Value HandleUnaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input) override;

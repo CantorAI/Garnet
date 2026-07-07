@@ -7,6 +7,7 @@ timeout: 30
 
 test_discovery:
   include:
+    - "tests/phase_00_trt_expression_preflight"
     - "tests/phase_01_trt_builder"
     - "tests/phase_02_kv_cache"
     - "tests/phase_03_qwen_end_to_end"

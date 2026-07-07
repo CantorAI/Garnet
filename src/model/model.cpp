@@ -48,8 +48,31 @@ namespace Garnet
 
     void Model::Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
-        // Placeholder for phase 1 TRTEngine execution
-        std::cout << "[Model] Executing TRT Engine forward pass..." << std::endl;
-        retValue = X::Value();
+        std::cout << "[Model] Executing forward pass..." << std::endl;
+        if (!m_engine.IsValid()) {
+            std::cout << "[Model] No compiled engine attached." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        if (params.size() < 1) {
+            std::cout << "[Model] Forward requires an input tensor." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        if (!mModel.IsObject() || mModel.GetObj()->GetType() != X::ObjType::Dict) {
+            std::cout << "[Model] Loaded weights are not a dictionary." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Dict weights(mModel);
+        X::Value weight = weights["W"];
+        if (!weight.IsValid()) {
+            std::cout << "[Model] Missing loaded weight: W." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        TRTBuilder builder;
+        retValue = builder.RunMatmulEngine(m_engine.ToString(), params[0], weight);
     }
 }

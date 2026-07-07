@@ -102,7 +102,8 @@ namespace Garnet {
                 check_cuda_error(cuDeviceGet(&device, 0), "cuDeviceGet");
 
                 CUcontext context;
-                check_cuda_error(cuCtxCreate(&context, 0, device), "cuCtxCreate");
+                check_cuda_error(cuDevicePrimaryCtxRetain(&context, device), "cuDevicePrimaryCtxRetain");
+                check_cuda_error(cuCtxSetCurrent(context), "cuCtxSetCurrent");
 
                 initialized_ = true;
             }

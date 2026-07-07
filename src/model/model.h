@@ -21,6 +21,7 @@ namespace Garnet
 			APISET().AddVarFunc("tokenizer", &Model::Tokenizer);
             APISET().AddVarFunc("forward", &Model::Forward);
 			APISET().AddProp0("weights", &Model::mModel);
+			APISET().AddProp0("engine", &Model::m_engine);
 			APISET().AddPropWithType<std::string>("modelPath", &Model::mModelPath);
 		END_PACKAGE
 

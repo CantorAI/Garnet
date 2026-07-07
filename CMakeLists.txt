@@ -69,7 +69,7 @@ FILE(GLOB Model_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/model/*.cpp")
 FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
 FILE(GLOB Log_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/log/*.cpp")
 FILE(GLOB Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
-FILE(GLOB Test_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/test/cudalib_test.cpp")
+list(FILTER Cuda_SRC EXCLUDE REGEX ".*/test\\.cu$")
 FILE(GLOB Trt_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/trt/*.cpp")
 
 # Create the shared library target.
@@ -79,12 +79,18 @@ add_library(${PROJECT_NAME}
     ${Entry_SRC}
     ${Tensor_SRC}
     ${Cuda_SRC}
-    ${Test_SRC}
     ${Common_SRC}
     ${Model_SRC}
     ${Log_SRC}
     ${Trt_SRC}
 )
+
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
+        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor>
+    )
+endif()
 
 
 # On Windows, link against cudart (the CUDA runtime) explicitly.
@@ -137,4 +143,3 @@ endif()
 # copy the src/cuda folder to Lib/Garnet/cuda.
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Lib/Garnet/cuda")
 file(COPY "${PROJECT_SOURCE_DIR}/src/cuda" DESTINATION "${CMAKE_BINARY_DIR}/bin/Lib/Garnet/")
-

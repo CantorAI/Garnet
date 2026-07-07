@@ -1,4 +1,5 @@
 #include "garnet.h"
+#include "../trt/trt_builder.h"
 #include "xpackage.h"
 #include "xlang.h"
 #include <fstream> 
@@ -6,9 +7,35 @@
 #include <filesystem>
 #include <regex>
 #include <iostream>
+#include <vector>
 
 namespace Garnet
 {
+    namespace
+    {
+        std::vector<int> ReadIntList(X::Value value)
+        {
+            std::vector<int> result;
+            if (!value.IsList()) return result;
+            X::List list(value);
+            long long size = list->Size();
+            result.reserve(static_cast<size_t>(size));
+            for (long long i = 0; i < size; ++i) {
+                result.push_back(static_cast<int>(list->Get(i).ToLongLong()));
+            }
+            return result;
+        }
+
+        X::Value GetKwarg(X::KWARGS& kwParams, const char* name)
+        {
+            if (kwParams.Has(name)) {
+                auto it = kwParams.find(name);
+                return it->val;
+            }
+            return X::Value();
+        }
+    }
+
     bool GarnetAPI::LoadModelFromFile(std::string modelPath, X::Dict& model)
     {
         std::ifstream file(modelPath, std::ios::binary);
@@ -238,11 +265,25 @@ namespace Garnet
             std::cout << "[Garnet] LoadModule returned " << bOK << std::endl;
             if (bOK && moduleVal.IsObject()) {
                 X::Value weightsDict;
+                X::Value inputShapes;
+                X::Value weightShape;
+                std::string cacheDir = (path.parent_path() / "cache").string();
                 for (auto& it : kwParams) {
                     if (std::string(it.key) == "weights") {
                         weightsDict = it.val;
                     }
+                    else if (std::string(it.key) == "input_shapes") {
+                        inputShapes = it.val;
+                    }
+                    else if (std::string(it.key) == "weight_shape") {
+                        weightShape = it.val;
+                    }
+                    else if (std::string(it.key) == "cache_dir") {
+                        cacheDir = it.val.ToString();
+                    }
                 }
+
+                model.SetInfo(dir, emptyStr, emptyStr, weightsDict);
                 
                 // Store weights in GarnetAPI singleton before running script
                 GarnetAPI::I().SetCurrentWeights(weightsDict);
@@ -250,11 +291,27 @@ namespace Garnet
                 X::Value retVal;
                 X::g_pXHost->RunModule(moduleVal, retVal, true);
 
+                if (inputShapes.IsList() && weightShape.IsList()) {
+                    X::List shapeList(inputShapes);
+                    if (shapeList->Size() > 0) {
+                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                        std::vector<int> wShape = ReadIntList(weightShape);
+                        std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
+                        if (!std::filesystem::exists(enginePath)) {
+                            TRTBuilder builder;
+                            builder.ExportMatmulEngine(enginePath.string(), inputShape, wShape);
+                        }
+                        if (std::filesystem::exists(enginePath)) {
+                            model.SetEngine(X::Value(enginePath.string()));
+                        }
+                    }
+                }
+
                 // Extract compiled engine that was set during script execution
                 X::Value compiledEngine = GarnetAPI::I().GetCompiledEngine();
-                if (compiledEngine.IsValid()) {
+                if (!model.m_engine.IsValid() && compiledEngine.IsValid()) {
                     model.SetEngine(compiledEngine);
-                } else {
+                } else if (!model.m_engine.IsValid()) {
                     std::cout << "[Garnet] Warning: Script finished but no engine was compiled!" << std::endl;
                 }
             }
