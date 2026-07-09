@@ -1648,23 +1648,109 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
                 max_pixels=processor_pixels,
             )
         image = Image.open(image_path).convert("RGB")
-        messages = [{
-            "role": "user",
-            "content": [
-                {"type": "image", "image": image},
-                {"type": "text", "text": user_prompt},
-            ],
-        }]
-        prompt_text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        inputs = processor(text=[prompt_text], images=[image], return_tensors="pt")
         def tensor_to_numpy(value):
             if isinstance(value, torch.Tensor):
                 return value.detach().cpu().numpy()
             return np.asarray(value)
-        input_ids = tensor_to_numpy(inputs["input_ids"])[0].astype(np.int64)
-        mm_types = tensor_to_numpy(inputs["mm_token_type_ids"])[0].astype(np.int64)
-        image_grid_thw = tensor_to_numpy(inputs["image_grid_thw"]).astype(np.int64)
-        pixel_values = tensor_to_numpy(inputs["pixel_values"]).astype(np.float32)
+        if env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_IMAGE_PREPROCESS"):
+            if processor_pixels is None:
+                processor_pixels = 65536
+            import ctypes
+            import math
+            factor = 32
+            resized_h = round(image.height / factor) * factor
+            resized_w = round(image.width / factor) * factor
+            if resized_h * resized_w > processor_pixels:
+                beta = math.sqrt((image.height * image.width) / processor_pixels)
+                resized_h = max(factor, math.floor(image.height / beta / factor) * factor)
+                resized_w = max(factor, math.floor(image.width / beta / factor) * factor)
+            elif resized_h * resized_w < processor_pixels:
+                beta = math.sqrt(processor_pixels / (image.height * image.width))
+                resized_h = math.ceil(image.height * beta / factor) * factor
+                resized_w = math.ceil(image.width * beta / factor) * factor
+            raw_rgb = np.ascontiguousarray(np.asarray(image, dtype=np.float32))
+            garnet_dll = Path(os.environ.get(
+                "GARNET_DLL_PATH",
+                REPO_ROOT / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll",
+            ))
+            if os.name == "nt" and hasattr(os, "add_dll_directory"):
+                for dll_dir in [
+                    garnet_dll.parent,
+                    REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Debug" / "bin",
+                    REPO_ROOT.parent / "out" / "build" / "x64-Debug" / "bin",
+                    REPO_ROOT.parent / "out" / "build" / "x64-debug" / "bin",
+                    Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
+                    Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin/x64"),
+                    REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
+                    REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "lib",
+                    Path("C:/Program Files/Microsoft Visual Studio/18/Community/VC/Redist/MSVC/14.51.36231/debug_nonredist/x64/Microsoft.VC145.DebugCRT"),
+                ]:
+                    if dll_dir.exists():
+                        os.add_dll_directory(str(dll_dir))
+            dll = ctypes.CDLL(str(garnet_dll))
+            dll.GarnetQwenVLResizePreprocessRGBF32.argtypes = [
+                ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_float,
+                ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_longlong),
+                ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                ctypes.c_char_p, ctypes.c_int,
+            ]
+            dll.GarnetQwenVLResizePreprocessRGBF32.restype = ctypes.c_int
+            patch_count = (resized_h // 16) * (resized_w // 16)
+            feature_dim = 3 * 2 * 16 * 16
+            pixel_values = np.empty((patch_count, feature_dim), dtype=np.float32)
+            image_grid_thw = np.zeros((1, 3), dtype=np.int64)
+            out_h = ctypes.c_int(0)
+            out_w = ctypes.c_int(0)
+            error = ctypes.create_string_buffer(512)
+            rc = dll.GarnetQwenVLResizePreprocessRGBF32(
+                raw_rgb.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                image.height,
+                image.width,
+                3,
+                0,
+                processor_pixels,
+                processor_pixels,
+                ctypes.c_float(255.0),
+                pixel_values.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                image_grid_thw.ctypes.data_as(ctypes.POINTER(ctypes.c_longlong)),
+                ctypes.byref(out_h),
+                ctypes.byref(out_w),
+                error,
+                len(error),
+            )
+            if rc != 0:
+                raise AssertionError(f"GarnetQwenVLResizePreprocessRGBF32 failed rc={rc}: {error.value.decode(errors='ignore')}")
+            expected_visual_count = int(np.prod(image_grid_thw[0]) // 4)
+            prompt_text = (
+                "<|im_start|>user\n"
+                "<|vision_start|>"
+                + "<|image_pad|>" * expected_visual_count
+                + "<|vision_end|>\n"
+                + user_prompt
+                + "\n"
+                "<|im_end|>\n"
+                "<|im_start|>assistant\n"
+            )
+            input_ids = np.asarray(tokenizer.encode(prompt_text, add_special_tokens=False), dtype=np.int64)
+            mm_types = np.zeros_like(input_ids, dtype=np.int64)
+            image_pad_id = tokenizer.encode("<|image_pad|>", add_special_tokens=False)[0]
+            mm_types[input_ids == image_pad_id] = 1
+            processor_npz = "garnet_cuda_image_preprocess"
+        else:
+            messages = [{
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": image},
+                    {"type": "text", "text": user_prompt},
+                ],
+            }]
+            prompt_text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            inputs = processor(text=[prompt_text], images=[image], return_tensors="pt")
+            input_ids = tensor_to_numpy(inputs["input_ids"])[0].astype(np.int64)
+            mm_types = tensor_to_numpy(inputs["mm_token_type_ids"])[0].astype(np.int64)
+            image_grid_thw = tensor_to_numpy(inputs["image_grid_thw"]).astype(np.int64)
+            pixel_values = tensor_to_numpy(inputs["pixel_values"]).astype(np.float32)
     else:
         arrays = np.load(processor_npz)
         image_grid_thw = np.asarray([[1, 4, 8]], dtype=np.int64)
@@ -2916,6 +3002,12 @@ if model_dir is None or not Path(model_dir).exists():
 
 garnet, garnet_dll = import_garnet()
 key_to_file = load_weight_map(model_dir)
+
+if env_flag("RUN_GARNET_REAL_QWEN_MODEL_FORWARD_NATIVE_ROPE_DECODE") and env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_ONLY"):
+    model_forward_native_rope_decode_result = run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file)
+    import json
+    print(json.dumps(model_forward_native_rope_decode_result, indent=2))
+    raise SystemExit(0)
 
 text_norm_result = run_rms_norm(garnet, key_to_file)
 vision_norm_result = run_layer_norm(garnet, key_to_file)

@@ -55,6 +55,8 @@ namespace Garnet
 				},
 				[](auto* pThis) {return pThis->m_cantor; });
 			APISET().AddVarFunc("load_model", &GarnetAPI::LoadModelEx);
+			APISET().AddVarFunc("qwen_vl_smart_resize", &GarnetAPI::QwenVLSmartResize);
+			APISET().AddVarFunc("qwen_vl_preprocess_image", &GarnetAPI::QwenVLPreprocessImage);
 			APISET().AddVarFunc("KVCacheManager", &GarnetAPI::CreateKVCacheManager);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
@@ -96,6 +98,10 @@ namespace Garnet
 		void CreateKVCacheManager(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void QwenVLSmartResize(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void QwenVLPreprocessImage(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunTest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

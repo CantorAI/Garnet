@@ -1,5 +1,6 @@
 #include "garnet.h"
 #include "../trt/trt_builder.h"
+#include "../image/qwen_vl/qwen_vl_image_preprocessor.h"
 #include "xpackage.h"
 #include "xlang.h"
 #include <fstream> 
@@ -46,6 +47,42 @@ namespace Garnet
                 return it->val;
             }
             return X::Value();
+        }
+
+        int GetIntArg(X::ARGS& params, X::KWARGS& kwParams, size_t index, const char* name, int defaultValue)
+        {
+            X::Value value = GetKwarg(kwParams, name);
+            if (value.IsValid()) {
+                return static_cast<int>(value.ToLongLong());
+            }
+            if (params.size() > index) {
+                return static_cast<int>(params[index].ToLongLong());
+            }
+            return defaultValue;
+        }
+
+        double GetDoubleArg(X::ARGS& params, X::KWARGS& kwParams, size_t index, const char* name, double defaultValue)
+        {
+            X::Value value = GetKwarg(kwParams, name);
+            if (value.IsValid()) {
+                return value.ToDouble();
+            }
+            if (params.size() > index) {
+                return params[index].ToDouble();
+            }
+            return defaultValue;
+        }
+
+        std::string GetStringArg(X::ARGS& params, X::KWARGS& kwParams, size_t index, const char* name, const std::string& defaultValue)
+        {
+            X::Value value = GetKwarg(kwParams, name);
+            if (value.IsValid()) {
+                return value.ToString();
+            }
+            if (params.size() > index) {
+                return params[index].ToString();
+            }
+            return defaultValue;
         }
     }
 
@@ -694,6 +731,83 @@ namespace Garnet
         }
         
         retValue = modelVal;
+    }
+
+    void GarnetAPI::QwenVLSmartResize(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        try {
+            int height = GetIntArg(params, kwParams, 0, "height", 0);
+            int width = GetIntArg(params, kwParams, 1, "width", 0);
+            int patchSize = GetIntArg(params, kwParams, 2, "patch_size", 16);
+            int mergeSize = GetIntArg(params, kwParams, 3, "merge_size", 2);
+            int minPixels = GetIntArg(params, kwParams, 4, "min_pixels", 65536);
+            int maxPixels = GetIntArg(params, kwParams, 5, "max_pixels", 65536);
+            auto resized = Image::QwenVL::SmartResize(
+                height,
+                width,
+                patchSize * mergeSize,
+                minPixels,
+                maxPixels);
+
+            X::Dict result;
+            int gridH = resized.height / patchSize;
+            int gridW = resized.width / patchSize;
+            result->Set("height", X::Value(resized.height));
+            result->Set("width", X::Value(resized.width));
+            result->Set("patch_size", X::Value(patchSize));
+            result->Set("merge_size", X::Value(mergeSize));
+            result->Set("grid_h", X::Value(gridH));
+            result->Set("grid_w", X::Value(gridW));
+            result->Set("visual_tokens", X::Value(gridH * gridW / (mergeSize * mergeSize)));
+            retValue = result;
+        }
+        catch (const std::exception& exc) {
+            std::cout << "[GarnetAPI] qwen_vl_smart_resize failed: " << exc.what() << std::endl;
+            retValue = X::Value();
+        }
+    }
+
+    void GarnetAPI::QwenVLPreprocessImage(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        try {
+            X::Value image = GetKwarg(kwParams, "image");
+            if (!image.IsValid() && params.size() > 0) {
+                image = params[0];
+            }
+            if (!image.IsValid()) {
+                retValue = X::Value();
+                return;
+            }
+
+            Image::QwenVL::QwenVLImagePreprocessConfig config;
+            int height = GetIntArg(params, kwParams, 1, "height", 0);
+            int width = GetIntArg(params, kwParams, 2, "width", 0);
+            config.patchSize = GetIntArg(params, kwParams, 3, "patch_size", 16);
+            config.temporalPatchSize = GetIntArg(params, kwParams, 4, "temporal_patch_size", 2);
+            config.mergeSize = GetIntArg(params, kwParams, 5, "merge_size", 2);
+            config.inputScale = static_cast<float>(GetDoubleArg(params, kwParams, 6, "input_scale", 255.0));
+            std::string inputFormat = GetStringArg(params, kwParams, 7, "format", "rgb");
+            config.pixelFormat = Image::PixelFormatFromString(inputFormat);
+
+            auto result = Image::QwenVL::PreprocessRawImageTensor(image, height, width, config);
+            X::Dict dict;
+            dict->Set("pixel_values", result.pixelValues);
+            dict->Set("image_grid_thw", result.imageGridTHW);
+            dict->Set("height", X::Value(result.resizedHeight));
+            dict->Set("width", X::Value(result.resizedWidth));
+            dict->Set("patch_size", X::Value(result.patchSize));
+            dict->Set("temporal_patch_size", X::Value(result.temporalPatchSize));
+            dict->Set("merge_size", X::Value(result.mergeSize));
+            dict->Set("input_format", X::Value(inputFormat));
+            dict->Set("backend", X::Value("cuda_raw_tensor"));
+            retValue = dict;
+        }
+        catch (const std::exception& exc) {
+            std::cout << "[GarnetAPI] qwen_vl_preprocess_image failed: " << exc.what() << std::endl;
+            retValue = X::Value();
+        }
     }
 
     void GarnetAPI::RunTest(X::XRuntime* rt, X::XObj* pContext,
