@@ -46,6 +46,8 @@ def main():
             "GARNET_QWEN_NATIVE_ROPE_DECODE_ONLY": "1",
             "GARNET_QWEN_NATIVE_ROPE_DECODE_PROCESSOR_IMAGE": "1",
             "GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_IMAGE_PREPROCESS": "1",
+            "GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_JPEG_PREPROCESS": "1",
+            "GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_TOKENIZER": "1",
             "GARNET_QWEN_NATIVE_ROPE_DECODE_PROCESSOR_PIXELS": max_pixels,
             "GARNET_QWEN_NATIVE_ROPE_DECODE_TOKENS": max_new_tokens,
             "GARNET_QWEN_NATIVE_ROPE_DECODE_PROMPT": prompt,
@@ -72,7 +74,7 @@ def main():
     result = extract_decode_json(combined_output)
     result.update(
         {
-            "input_mode": "upstream_raw_rgb_to_garnet_cuda_image_preprocess_then_garnet_model",
+            "input_mode": "jpeg_file_and_prompt_to_garnet_tokenizer_nvjpeg_cuda_image_preprocess_then_garnet_model",
             "phase": "phase_08_qwen_vl_native_prompt_image",
         }
     )

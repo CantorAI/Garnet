@@ -45,6 +45,8 @@ include_directories("src/log")
 include_directories("src/cuda")
 include_directories("src/image")
 include_directories("src/image/qwen_vl")
+include_directories("src/tokenizer")
+include_directories("third_party")
 include_directories("${xlang_sdk_folder}/../Tensor")
 include_directories("${xlang_sdk_folder}/../Core")
 include_directories("src/trt")
@@ -61,6 +63,8 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src/model
     ${PROJECT_SOURCE_DIR}/src/image
     ${PROJECT_SOURCE_DIR}/src/image/qwen_vl
+    ${PROJECT_SOURCE_DIR}/src/tokenizer
+    ${PROJECT_SOURCE_DIR}/third_party
     ${PROJECT_SOURCE_DIR}/src/trt
     "D:/CantorAI/ThirdPartySDK/TensorRT/include"
 )
@@ -73,6 +77,7 @@ FILE(GLOB Model_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/model/*.cpp")
 FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
 FILE(GLOB Log_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/log/*.cpp")
 FILE(GLOB_RECURSE Image_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/image/*.cpp")
+FILE(GLOB_RECURSE Tokenizer_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tokenizer/*.cpp")
 FILE(GLOB_RECURSE Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
 list(FILTER Cuda_SRC EXCLUDE REGEX ".*/test\\.cu$")
 FILE(GLOB Trt_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/trt/*.cpp")
@@ -88,6 +93,7 @@ add_library(${PROJECT_NAME}
     ${Model_SRC}
     ${Log_SRC}
     ${Image_SRC}
+    ${Tokenizer_SRC}
     ${Trt_SRC}
 )
 
@@ -103,7 +109,7 @@ endif()
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
             nvrtc.lib "D:/CantorAI/ThirdPartySDK/TensorRT/lib/nvinfer_10.lib"
-            nppc.lib nppig.lib
+            nppc.lib nppig.lib nvjpeg.lib
             ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
     ) 
     # Add debug-specific libraries for Windows Debug build

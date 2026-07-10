@@ -1,6 +1,7 @@
 #include "garnet.h"
 #include "../trt/trt_builder.h"
 #include "../image/qwen_vl/qwen_vl_image_preprocessor.h"
+#include "../tokenizer/qwen_tokenizer.h"
 #include "xpackage.h"
 #include "xlang.h"
 #include <fstream> 
@@ -9,6 +10,166 @@
 #include <regex>
 #include <iostream>
 #include <vector>
+#include <chrono>
+#include <cstring>
+#include <cstdio>
+#include <cuda_runtime.h>
+
+extern "C" int GarnetQwenVLPreprocessJpegFile(
+    const char* jpegPath,
+    int minPixels,
+    int maxPixels,
+    float* output,
+    long long* imageGridTHW,
+    int* sourceHeight,
+    int* sourceWidth,
+    int* resizedHeight,
+    int* resizedWidth,
+    char* errorMessage,
+    int errorMessageCapacity);
+
+#if defined(_WIN32)
+#define GARNET_ENTRY_EXPORT __declspec(dllexport)
+#else
+#define GARNET_ENTRY_EXPORT
+#endif
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLPrepareJpegPrompt(
+    const char* modelDir,
+    const char* jpegPath,
+    const char* prompt,
+    int minPixels,
+    int maxPixels,
+    long long* outputInputIds,
+    int inputIdCapacity,
+    int* outputInputIdCount,
+    long long* outputMmTokenTypes,
+    int mmTokenTypeCapacity,
+    float* outputPixelValues,
+    int pixelValueCapacity,
+    int* outputPixelValueCount,
+    long long* outputImageGridTHW,
+    int* sourceHeight,
+    int* sourceWidth,
+    int* resizedHeight,
+    int* resizedWidth,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    try {
+        if (modelDir == nullptr || jpegPath == nullptr || prompt == nullptr) {
+            setError("modelDir, jpegPath, and prompt are required");
+            return 1;
+        }
+        constexpr int patchSize = 16;
+        constexpr int temporalPatchSize = 2;
+        constexpr int mergeSize = 2;
+        int pixelBudget = minPixels > maxPixels ? minPixels : maxPixels;
+        if (pixelBudget <= 0) {
+            setError("pixel budget must be positive");
+            return 1;
+        }
+        int maxPatchCount = (pixelBudget + patchSize * patchSize - 1) / (patchSize * patchSize);
+        if (maxPatchCount < 1) {
+            maxPatchCount = 1;
+        }
+        int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
+        std::vector<float> pixelScratch(static_cast<size_t>(maxPatchCount) * static_cast<size_t>(featureDim));
+        long long grid[3] = {};
+        int srcH = 0;
+        int srcW = 0;
+        int outH = 0;
+        int outW = 0;
+        char imageError[512] = {};
+        int rc = GarnetQwenVLPreprocessJpegFile(
+            jpegPath,
+            minPixels,
+            maxPixels,
+            pixelScratch.data(),
+            grid,
+            &srcH,
+            &srcW,
+            &outH,
+            &outW,
+            imageError,
+            static_cast<int>(sizeof(imageError)));
+        if (rc != 0) {
+            setError(imageError);
+            return rc;
+        }
+
+        int patchCount = (outH / patchSize) * (outW / patchSize);
+        int pixelValueCount = patchCount * featureDim;
+        if (outputPixelValueCount != nullptr) {
+            *outputPixelValueCount = pixelValueCount;
+        }
+        if (outputImageGridTHW != nullptr) {
+            outputImageGridTHW[0] = grid[0];
+            outputImageGridTHW[1] = grid[1];
+            outputImageGridTHW[2] = grid[2];
+        }
+        if (sourceHeight != nullptr) *sourceHeight = srcH;
+        if (sourceWidth != nullptr) *sourceWidth = srcW;
+        if (resizedHeight != nullptr) *resizedHeight = outH;
+        if (resizedWidth != nullptr) *resizedWidth = outW;
+
+        Garnet::Tokenization::QwenTokenizer tokenizer;
+        std::string tokenizerError;
+        if (!tokenizer.LoadFromFolder(modelDir, &tokenizerError)) {
+            setError(tokenizerError);
+            return 1;
+        }
+        std::vector<int64_t> promptIds = Garnet::Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
+            tokenizer,
+            prompt,
+            grid,
+            mergeSize);
+        int64_t imagePadId = tokenizer.TokenId("<|image_pad|>");
+        if (outputInputIdCount != nullptr) {
+            *outputInputIdCount = static_cast<int>(promptIds.size());
+        }
+
+        bool capacityOk = true;
+        if (outputInputIds == nullptr || inputIdCapacity < static_cast<int>(promptIds.size())) {
+            capacityOk = false;
+        }
+        if (outputMmTokenTypes == nullptr || mmTokenTypeCapacity < static_cast<int>(promptIds.size())) {
+            capacityOk = false;
+        }
+        if (outputPixelValues == nullptr || pixelValueCapacity < pixelValueCount) {
+            capacityOk = false;
+        }
+        if (!capacityOk) {
+            setError("output buffer capacity is too small");
+            return 3;
+        }
+
+        int visualTokenCount = 0;
+        for (size_t i = 0; i < promptIds.size(); ++i) {
+            outputInputIds[i] = static_cast<long long>(promptIds[i]);
+            outputMmTokenTypes[i] = promptIds[i] == imagePadId ? 1LL : 0LL;
+            if (outputMmTokenTypes[i] == 1LL) {
+                ++visualTokenCount;
+            }
+        }
+        int expectedVisualTokenCount = static_cast<int>((grid[0] * grid[1] * grid[2]) / (mergeSize * mergeSize));
+        if (visualTokenCount != expectedVisualTokenCount) {
+            setError("visual placeholder count does not match image grid");
+            return 1;
+        }
+        std::memcpy(outputPixelValues, pixelScratch.data(), static_cast<size_t>(pixelValueCount) * sizeof(float));
+        return 0;
+    }
+    catch (const std::exception& exc) {
+        setError(exc.what());
+        return 1;
+    }
+}
 
 namespace Garnet
 {
@@ -84,16 +245,182 @@ namespace Garnet
             }
             return defaultValue;
         }
+
+        X::Value MakeInt64Tensor(const std::vector<long long>& values)
+        {
+            X::Tensor tensor;
+            X::Port::vector<int> shape;
+            shape.push_back(static_cast<int>(values.size()));
+            tensor->SetDataType(X::TensorDataType::INT64);
+            tensor->SetShape(shape);
+            X::Value init;
+            bool created = tensor->Create(init);
+            if (!created || tensor->GetData() == nullptr) {
+                std::cout << "[GarnetAPI] MakeInt64Tensor failed to allocate count=" << values.size() << std::endl;
+                return X::Value();
+            }
+            if (!values.empty()) {
+                std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
+            }
+            return X::Value(tensor);
+        }
+
+        X::Value MakeInt64List(const std::vector<long long>& values)
+        {
+            X::V<X::XList> list;
+            for (long long value : values) {
+                X::Value item(value);
+                list->AddItem(item);
+            }
+            return list;
+        }
+
+        X::Value MakeInt64Tensor2D(const std::vector<long long>& values, int rows, int cols)
+        {
+            X::Tensor tensor;
+            X::Port::vector<int> shape;
+            shape.push_back(rows);
+            shape.push_back(cols);
+            tensor->SetDataType(X::TensorDataType::INT64);
+            tensor->SetShape(shape);
+            X::Value init;
+            bool created = tensor->Create(init);
+            if (!created || tensor->GetData() == nullptr) {
+                std::cout << "[GarnetAPI] MakeInt64Tensor2D failed to allocate count=" << values.size() << std::endl;
+                return X::Value();
+            }
+            if (!values.empty()) {
+                std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
+            }
+            return X::Value(tensor);
+        }
+
+        X::Value MakeFloatTensor2D(const float* data, int rows, int cols)
+        {
+            X::Tensor tensor;
+            X::Port::vector<int> shape;
+            shape.push_back(rows);
+            shape.push_back(cols);
+            tensor->SetDataType(X::TensorDataType::FLOAT32);
+            tensor->SetShape(shape);
+            X::Value init;
+            bool created = tensor->Create(init);
+            if (!created || tensor->GetData() == nullptr) {
+                std::cout << "[GarnetAPI] MakeFloatTensor2D failed to allocate rows=" << rows << " cols=" << cols << std::endl;
+                return X::Value();
+            }
+            if (data != nullptr && rows > 0 && cols > 0) {
+                std::memcpy(tensor->GetData(), data, static_cast<size_t>(rows) * static_cast<size_t>(cols) * sizeof(float));
+            }
+            return X::Value(tensor);
+        }
+
+        double MsSince(std::chrono::steady_clock::time_point start)
+        {
+            auto elapsed = std::chrono::steady_clock::now() - start;
+            return std::chrono::duration<double, std::milli>(elapsed).count();
+        }
     }
 
-    void KVCacheManager::Configure(int maxNumPages, int pageSize, int headDim, int numKVHeads)
+    KVCacheManager::~KVCacheManager()
+    {
+        if (m_keyArena != nullptr) {
+            cudaFree(m_keyArena);
+            m_keyArena = nullptr;
+        }
+        if (m_valueArena != nullptr) {
+            cudaFree(m_valueArena);
+            m_valueArena = nullptr;
+        }
+    }
+
+    int KVCacheManager::PagesForTokens(long long tokenCount) const
+    {
+        if (tokenCount <= 0) {
+            return 0;
+        }
+        int pageSize = m_pageSize > 0 ? m_pageSize : 1;
+        return static_cast<int>((tokenCount + pageSize - 1) / pageSize);
+    }
+
+    X::Value KVCacheManager::MakePageList(const std::vector<int>& pages) const
+    {
+        X::V<X::XList> retList;
+        for (int page : pages) {
+            X::Value pageValue(page);
+            retList->AddItem(pageValue);
+        }
+        return retList;
+    }
+
+    bool KVCacheManager::EnsurePages(long long sequenceId, long long tokenCount)
+    {
+        int pagesNeeded = PagesForTokens(tokenCount);
+        auto& state = m_sequences[sequenceId];
+        int existing = static_cast<int>(state.pages.size());
+        if (pagesNeeded <= existing) {
+            state.logicalLength = tokenCount;
+            return true;
+        }
+        int extra = pagesNeeded - existing;
+        if (extra > static_cast<int>(m_freePages.size())) {
+            return false;
+        }
+        for (int i = 0; i < extra; ++i) {
+            int page = m_freePages.front();
+            m_freePages.pop_front();
+            state.pages.push_back(page);
+        }
+        state.logicalLength = tokenCount;
+        return true;
+    }
+
+    void KVCacheManager::Configure(int maxNumPages, int pageSize, int headDim, int numKVHeads,
+        int numLayers, int dtypeBytes, int deviceId)
     {
         m_maxNumPages = maxNumPages > 0 ? maxNumPages : 0;
         m_pageSize = pageSize > 0 ? pageSize : 1;
         m_headDim = headDim > 0 ? headDim : 1;
         m_numKVHeads = numKVHeads > 0 ? numKVHeads : 1;
+        m_numLayers = numLayers > 0 ? numLayers : 1;
+        m_dtypeBytes = dtypeBytes > 0 ? dtypeBytes : 2;
+        m_deviceId = deviceId >= 0 ? deviceId : 0;
+        m_bytesPerPagePerLayer = static_cast<size_t>(m_pageSize)
+            * static_cast<size_t>(m_numKVHeads)
+            * static_cast<size_t>(m_headDim)
+            * static_cast<size_t>(m_dtypeBytes);
+        m_totalBytes = static_cast<size_t>(m_maxNumPages)
+            * static_cast<size_t>(m_numLayers)
+            * m_bytesPerPagePerLayer;
+
+        if (m_keyArena != nullptr) {
+            cudaFree(m_keyArena);
+            m_keyArena = nullptr;
+        }
+        if (m_valueArena != nullptr) {
+            cudaFree(m_valueArena);
+            m_valueArena = nullptr;
+        }
+        if (m_totalBytes > 0) {
+            cudaSetDevice(m_deviceId);
+            cudaError_t keyErr = cudaMalloc(&m_keyArena, m_totalBytes);
+            cudaError_t valueErr = cudaMalloc(&m_valueArena, m_totalBytes);
+            if (keyErr != cudaSuccess || valueErr != cudaSuccess) {
+                std::cout << "[KVCacheManager] cudaMalloc failed: key="
+                    << cudaGetErrorString(keyErr) << ", value=" << cudaGetErrorString(valueErr) << std::endl;
+                if (m_keyArena != nullptr) {
+                    cudaFree(m_keyArena);
+                    m_keyArena = nullptr;
+                }
+                if (m_valueArena != nullptr) {
+                    cudaFree(m_valueArena);
+                    m_valueArena = nullptr;
+                }
+                m_totalBytes = 0;
+            }
+        }
         m_freePages.clear();
-        m_sequencePages.clear();
+        m_sequences.clear();
         for (int page = 0; page < m_maxNumPages; ++page) {
             m_freePages.push_back(page);
         }
@@ -108,46 +435,67 @@ namespace Garnet
             ? sequenceLengthValue.ToLongLong()
             : (params.size() > 1 ? params[1].ToLongLong() : 0);
         if (sequenceLength < 0) sequenceLength = 0;
-        int pagesNeeded = static_cast<int>((sequenceLength + m_pageSize - 1) / m_pageSize);
-        if (pagesNeeded > static_cast<int>(m_freePages.size())) {
+        int pagesNeeded = PagesForTokens(sequenceLength);
+        auto existing = m_sequences.find(seqId);
+        if (existing != m_sequences.end()) {
+            for (int page : existing->second.pages) {
+                m_freePages.push_front(page);
+            }
+            m_sequences.erase(existing);
+        }
+        if (!EnsurePages(seqId, sequenceLength)) {
             std::cout << "[KVCacheManager] Not enough free pages: need " << pagesNeeded
                 << ", have " << m_freePages.size() << std::endl;
             retValue = X::Value();
             return;
         }
-        auto existing = m_sequencePages.find(seqId);
-        if (existing != m_sequencePages.end()) {
-            for (int page : existing->second) {
-                m_freePages.push_front(page);
+        retValue = MakePageList(m_sequences[seqId].pages);
+    }
+
+    void KVCacheManager::Append(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        long long seqId = params.size() > 0 ? params[0].ToLongLong() : 0;
+        X::Value appendValue = GetKwarg(kwParams, "tokens");
+        long long appendTokens = appendValue.IsValid()
+            ? appendValue.ToLongLong()
+            : (params.size() > 1 ? params[1].ToLongLong() : 1);
+        if (appendTokens < 0) appendTokens = 0;
+        auto existing = m_sequences.find(seqId);
+        if (existing == m_sequences.end()) {
+            if (!EnsurePages(seqId, appendTokens)) {
+                retValue = X::Value();
+                return;
             }
-            m_sequencePages.erase(existing);
+        }
+        else {
+            long long newLength = existing->second.logicalLength + appendTokens;
+            if (!EnsurePages(seqId, newLength)) {
+                retValue = X::Value();
+                return;
+            }
         }
 
-        std::vector<int> pages;
-        pages.reserve(static_cast<size_t>(pagesNeeded));
-        X::V<X::XList> retList;
-        for (int i = 0; i < pagesNeeded; ++i) {
-            int page = m_freePages.front();
-            m_freePages.pop_front();
-            pages.push_back(page);
-            X::Value pageValue(page);
-            retList->AddItem(pageValue);
-        }
-        m_sequencePages[seqId] = std::move(pages);
-        retValue = retList;
+        const auto& state = m_sequences[seqId];
+        X::Dict dict;
+        dict->Set("sequence_id", X::Value(seqId));
+        dict->Set("logical_length", X::Value(state.logicalLength));
+        dict->Set("page_count", X::Value(static_cast<int>(state.pages.size())));
+        dict->Set("pages", MakePageList(state.pages));
+        retValue = dict;
     }
 
     void KVCacheManager::Free(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
         long long seqId = params.size() > 0 ? params[0].ToLongLong() : 0;
-        auto existing = m_sequencePages.find(seqId);
-        bool released = existing != m_sequencePages.end();
+        auto existing = m_sequences.find(seqId);
+        bool released = existing != m_sequences.end();
         if (released) {
-            for (int page : existing->second) {
+            for (int page : existing->second.pages) {
                 m_freePages.push_back(page);
             }
-            m_sequencePages.erase(existing);
+            m_sequences.erase(existing);
         }
         retValue = X::Value(released);
     }
@@ -162,7 +510,14 @@ namespace Garnet
         stats->Set("page_size", X::Value(m_pageSize));
         stats->Set("head_dim", X::Value(m_headDim));
         stats->Set("num_kv_heads", X::Value(m_numKVHeads));
-        stats->Set("sequence_count", X::Value(static_cast<int>(m_sequencePages.size())));
+        stats->Set("num_layers", X::Value(m_numLayers));
+        stats->Set("dtype_bytes", X::Value(m_dtypeBytes));
+        stats->Set("device_id", X::Value(m_deviceId));
+        stats->Set("bytes_per_page_per_layer", X::Value(static_cast<long long>(m_bytesPerPagePerLayer)));
+        stats->Set("total_key_bytes", X::Value(static_cast<long long>(m_totalBytes)));
+        stats->Set("total_value_bytes", X::Value(static_cast<long long>(m_totalBytes)));
+        stats->Set("gpu_allocated", X::Value(m_keyArena != nullptr && m_valueArena != nullptr));
+        stats->Set("sequence_count", X::Value(static_cast<int>(m_sequences.size())));
         retValue = stats;
     }
 
@@ -373,8 +728,11 @@ namespace Garnet
         int pageSize = getInt("page_size", 1, 16);
         int headDim = getInt("head_dim", 2, 128);
         int numKVHeads = getInt("num_kv_heads", 3, 1);
+        int numLayers = getInt("num_layers", 4, 1);
+        int dtypeBytes = getInt("dtype_bytes", 5, 2);
+        int deviceId = getInt("device_id", 6, 0);
         X::XPackageValue<KVCacheManager> manager;
-        (*manager).Configure(maxNumPages, pageSize, headDim, numKVHeads);
+        (*manager).Configure(maxNumPages, pageSize, headDim, numKVHeads, numLayers, dtypeBytes, deviceId);
         retValue = manager;
     }
 
@@ -768,6 +1126,137 @@ namespace Garnet
         }
     }
 
+    void GarnetAPI::QwenVLPrepareRequest(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        auto totalStart = std::chrono::steady_clock::now();
+        try {
+            std::string modelDir = GetStringArg(params, kwParams, 0, "model_dir", "");
+            std::string imagePath = GetStringArg(params, kwParams, 1, "image_path", "");
+            std::string prompt = GetStringArg(params, kwParams, 2, "prompt", "");
+            int minPixels = GetIntArg(params, kwParams, 3, "min_pixels", 65536);
+            int maxPixels = GetIntArg(params, kwParams, 4, "max_pixels", 65536);
+            if (modelDir.empty() || imagePath.empty() || prompt.empty()) {
+                std::cout << "[GarnetAPI] qwen_vl_prepare_request requires model_dir, image_path, and prompt." << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            constexpr int patchSize = 16;
+            constexpr int temporalPatchSize = 2;
+            constexpr int mergeSize = 2;
+            int pixelBudget = minPixels > maxPixels ? minPixels : maxPixels;
+            int maxPatchCount = (pixelBudget + patchSize * patchSize - 1) / (patchSize * patchSize);
+            if (maxPatchCount < 1) {
+                maxPatchCount = 1;
+            }
+            int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
+            std::vector<float> pixelScratch(static_cast<size_t>(maxPatchCount) * static_cast<size_t>(featureDim));
+            long long grid[3] = {};
+            int sourceHeight = 0;
+            int sourceWidth = 0;
+            int resizedHeight = 0;
+            int resizedWidth = 0;
+            char imageError[512] = {};
+
+            auto imageStart = std::chrono::steady_clock::now();
+            int rc = GarnetQwenVLPreprocessJpegFile(
+                imagePath.c_str(),
+                minPixels,
+                maxPixels,
+                pixelScratch.data(),
+                grid,
+                &sourceHeight,
+                &sourceWidth,
+                &resizedHeight,
+                &resizedWidth,
+                imageError,
+                static_cast<int>(sizeof(imageError)));
+            double imageMs = MsSince(imageStart);
+            if (rc != 0) {
+                std::cout << "[GarnetAPI] qwen_vl_prepare_request image preprocess failed: " << imageError << std::endl;
+                retValue = X::Value();
+                return;
+            }
+            int patchCount = (resizedHeight / patchSize) * (resizedWidth / patchSize);
+            if (patchCount <= 0 || patchCount > maxPatchCount) {
+                std::cout << "[GarnetAPI] qwen_vl_prepare_request invalid patch count: " << patchCount << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            auto tokenStart = std::chrono::steady_clock::now();
+            Tokenization::QwenTokenizer tokenizer;
+            std::string tokenError;
+            if (!tokenizer.LoadFromFolder(modelDir, &tokenError)) {
+                std::cout << "[GarnetAPI] qwen_vl_prepare_request tokenizer load failed: " << tokenError << std::endl;
+                retValue = X::Value();
+                return;
+            }
+            std::vector<int64_t> promptIds = Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
+                tokenizer,
+                prompt,
+                grid,
+                mergeSize);
+            int64_t imagePadId = tokenizer.TokenId("<|image_pad|>");
+            double tokenizeMs = MsSince(tokenStart);
+
+            std::vector<long long> inputIds;
+            std::vector<long long> mmTypes;
+            inputIds.reserve(promptIds.size());
+            mmTypes.reserve(promptIds.size());
+            int visualTokenCount = 0;
+            for (int64_t id : promptIds) {
+                inputIds.push_back(static_cast<long long>(id));
+                long long mmType = id == imagePadId ? 1LL : 0LL;
+                mmTypes.push_back(mmType);
+                if (mmType == 1) {
+                    ++visualTokenCount;
+                }
+            }
+
+            int expectedVisualTokenCount = static_cast<int>((grid[0] * grid[1] * grid[2]) / (mergeSize * mergeSize));
+            if (visualTokenCount != expectedVisualTokenCount) {
+                std::cout << "[GarnetAPI] qwen_vl_prepare_request visual token mismatch: prompt="
+                    << visualTokenCount << ", grid=" << expectedVisualTokenCount << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            std::vector<long long> gridVector = { grid[0], grid[1], grid[2] };
+            X::Dict dict;
+            dict->Set("input_ids", MakeInt64List(inputIds));
+            dict->Set("mm_token_type_ids", MakeInt64List(mmTypes));
+            dict->Set("pixel_values_shape", MakeInt64List({
+                static_cast<long long>(patchCount),
+                static_cast<long long>(featureDim),
+            }));
+            dict->Set("pixel_value_count", X::Value(patchCount * featureDim));
+            dict->Set("image_grid_thw", MakeInt64List(gridVector));
+
+            X::Dict timings;
+            timings->Set("image_preprocess_us", X::Value(static_cast<long long>(imageMs * 1000.0)));
+            timings->Set("tokenize_us", X::Value(static_cast<long long>(tokenizeMs * 1000.0)));
+            timings->Set("total_us", X::Value(static_cast<long long>(MsSince(totalStart) * 1000.0)));
+            dict->Set("prompt_token_count", X::Value(static_cast<int>(inputIds.size())));
+            dict->Set("visual_token_count", X::Value(visualTokenCount));
+            dict->Set("source_height", X::Value(sourceHeight));
+            dict->Set("source_width", X::Value(sourceWidth));
+            dict->Set("height", X::Value(resizedHeight));
+            dict->Set("width", X::Value(resizedWidth));
+            dict->Set("patch_size", X::Value(patchSize));
+            dict->Set("temporal_patch_size", X::Value(temporalPatchSize));
+            dict->Set("merge_size", X::Value(mergeSize));
+            dict->Set("backend", X::Value("qwen_vl_request_native_tokenizer_nvjpeg_cuda"));
+            dict->Set("timings", timings);
+            retValue = dict;
+        }
+        catch (const std::exception& exc) {
+            std::cout << "[GarnetAPI] qwen_vl_prepare_request failed: " << exc.what() << std::endl;
+            retValue = X::Value();
+        }
+    }
+
     void GarnetAPI::QwenVLPreprocessImage(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
@@ -806,6 +1295,105 @@ namespace Garnet
         }
         catch (const std::exception& exc) {
             std::cout << "[GarnetAPI] qwen_vl_preprocess_image failed: " << exc.what() << std::endl;
+            retValue = X::Value();
+        }
+    }
+
+    void GarnetAPI::QwenVLPreprocessJpegFile(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        try {
+            std::string path = GetStringArg(params, kwParams, 0, "path", "");
+            int minPixels = GetIntArg(params, kwParams, 1, "min_pixels", 65536);
+            int maxPixels = GetIntArg(params, kwParams, 2, "max_pixels", 65536);
+            if (path.empty() || minPixels <= 0 || maxPixels <= 0) {
+                retValue = X::Value();
+                return;
+            }
+
+            constexpr int patchSize = 16;
+            constexpr int temporalPatchSize = 2;
+            constexpr int mergeSize = 2;
+            int pixelBudget = minPixels > maxPixels ? minPixels : maxPixels;
+            int maxPatchCount = (pixelBudget + patchSize * patchSize - 1) / (patchSize * patchSize);
+            if (maxPatchCount < 1) {
+                maxPatchCount = 1;
+            }
+            int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
+            std::vector<float> scratch(static_cast<size_t>(maxPatchCount) * static_cast<size_t>(featureDim));
+            long long grid[3] = {};
+            int sourceHeight = 0;
+            int sourceWidth = 0;
+            int resizedHeight = 0;
+            int resizedWidth = 0;
+            char error[512] = {};
+
+            int rc = GarnetQwenVLPreprocessJpegFile(
+                path.c_str(),
+                minPixels,
+                maxPixels,
+                scratch.data(),
+                grid,
+                &sourceHeight,
+                &sourceWidth,
+                &resizedHeight,
+                &resizedWidth,
+                error,
+                static_cast<int>(sizeof(error)));
+            if (rc != 0) {
+                std::cout << "[GarnetAPI] qwen_vl_preprocess_jpeg_file failed: " << error << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            int patchCount = (resizedHeight / patchSize) * (resizedWidth / patchSize);
+            if (patchCount <= 0 || patchCount > maxPatchCount) {
+                std::cout << "[GarnetAPI] qwen_vl_preprocess_jpeg_file invalid patch count: " << patchCount << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            X::Tensor pixelValues;
+            X::Port::vector<int> pixelShape;
+            pixelShape.push_back(patchCount);
+            pixelShape.push_back(featureDim);
+            pixelValues->SetDataType(X::TensorDataType::FLOAT32);
+            pixelValues->SetShape(pixelShape);
+            X::Value pixelInit;
+            pixelValues->Create(pixelInit);
+            std::memcpy(
+                pixelValues->GetData(),
+                scratch.data(),
+                static_cast<size_t>(patchCount) * static_cast<size_t>(featureDim) * sizeof(float));
+
+            X::Tensor imageGrid;
+            X::Port::vector<int> gridShape;
+            gridShape.push_back(1);
+            gridShape.push_back(3);
+            imageGrid->SetDataType(X::TensorDataType::INT64);
+            imageGrid->SetShape(gridShape);
+            X::Value gridInit;
+            imageGrid->Create(gridInit);
+            auto* gridData = reinterpret_cast<long long*>(imageGrid->GetData());
+            gridData[0] = grid[0];
+            gridData[1] = grid[1];
+            gridData[2] = grid[2];
+
+            X::Dict dict;
+            dict->Set("pixel_values", X::Value(pixelValues));
+            dict->Set("image_grid_thw", X::Value(imageGrid));
+            dict->Set("source_height", X::Value(sourceHeight));
+            dict->Set("source_width", X::Value(sourceWidth));
+            dict->Set("height", X::Value(resizedHeight));
+            dict->Set("width", X::Value(resizedWidth));
+            dict->Set("patch_size", X::Value(patchSize));
+            dict->Set("temporal_patch_size", X::Value(temporalPatchSize));
+            dict->Set("merge_size", X::Value(mergeSize));
+            dict->Set("backend", X::Value("cuda_nvjpeg_jpeg_file"));
+            retValue = dict;
+        }
+        catch (const std::exception& exc) {
+            std::cout << "[GarnetAPI] qwen_vl_preprocess_jpeg_file failed: " << exc.what() << std::endl;
             retValue = X::Value();
         }
     }

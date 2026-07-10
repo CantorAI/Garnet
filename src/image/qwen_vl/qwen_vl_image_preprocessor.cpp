@@ -1,4 +1,5 @@
 #include "qwen_vl_image_preprocessor.h"
+#include "../cuda/jpeg_decode_nvjpeg.h"
 #include "../../tensor/garnet_tensor.h"
 #include <algorithm>
 #include <cmath>
@@ -37,6 +38,26 @@ extern "C" cudaError_t runQwenVLResizeNormalizePatchLayoutFP32(
     int dstWidth,
     int inputChannels,
     int channelOrder,
+    int patchSize,
+    int temporalPatchSize,
+    int mergeSize,
+    float inputScale,
+    float mean0,
+    float mean1,
+    float mean2,
+    float std0,
+    float std1,
+    float std2,
+    cudaStream_t stream);
+
+extern "C" cudaError_t runQwenVLResizeNormalizePatchLayoutRGB8(
+    const unsigned char* input,
+    float* output,
+    int srcHeight,
+    int srcWidth,
+    int srcPitchBytes,
+    int dstHeight,
+    int dstWidth,
     int patchSize,
     int temporalPatchSize,
     int mergeSize,
@@ -485,4 +506,210 @@ extern "C" GARNET_IMAGE_EXPORT int GarnetQwenVLResizePreprocessRGBF32(
     *resizedWidth = resize.width;
     setError("");
     return 0;
+}
+
+namespace
+{
+    int QwenVLPreprocessJpegBytesImpl(
+        const unsigned char* jpegData,
+        size_t jpegSize,
+        int minPixels,
+        int maxPixels,
+        float* output,
+        long long* imageGridTHW,
+        int* sourceHeight,
+        int* sourceWidth,
+        int* resizedHeight,
+        int* resizedWidth,
+        char* errorMessage,
+        int errorMessageCapacity)
+    {
+        auto setError = [&](const char* message) {
+            if (errorMessage && errorMessageCapacity > 0) {
+                std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message);
+            }
+        };
+
+        constexpr int patchSize = 16;
+        constexpr int temporalPatchSize = 2;
+        constexpr int mergeSize = 2;
+        if (!jpegData || jpegSize == 0 || !output || !imageGridTHW || !sourceHeight || !sourceWidth ||
+            !resizedHeight || !resizedWidth || minPixels <= 0 || maxPixels <= 0) {
+            setError("invalid Qwen-VL JPEG preprocess arguments");
+            return 1;
+        }
+
+        cudaStream_t stream = nullptr;
+        cudaError_t status = cudaStreamCreate(&stream);
+        if (status != cudaSuccess) {
+            setError("failed to create CUDA stream");
+            return 2;
+        }
+
+        Garnet::Image::Cuda::GpuImageRGB8 decoded;
+        std::string decodeError;
+        status = Garnet::Image::Cuda::DecodeJpegToDeviceRGB8(jpegData, jpegSize, stream, &decoded, &decodeError);
+        if (status != cudaSuccess) {
+            cudaStreamDestroy(stream);
+            setError(decodeError.empty() ? cudaGetErrorString(status) : decodeError.c_str());
+            return 3;
+        }
+
+        Garnet::Image::QwenVL::SmartResizeResult resize;
+        try {
+            resize = Garnet::Image::QwenVL::SmartResize(
+                decoded.height,
+                decoded.width,
+                patchSize * mergeSize,
+                minPixels,
+                maxPixels);
+        }
+        catch (const std::exception& exc) {
+            Garnet::Image::Cuda::FreeDecodedImage(&decoded);
+            cudaStreamDestroy(stream);
+            setError(exc.what());
+            return 4;
+        }
+
+        int gridH = resize.height / patchSize;
+        int gridW = resize.width / patchSize;
+        if (gridH % mergeSize != 0 || gridW % mergeSize != 0) {
+            Garnet::Image::Cuda::FreeDecodedImage(&decoded);
+            cudaStreamDestroy(stream);
+            setError("resized JPEG grid is not divisible by merge_size=2");
+            return 5;
+        }
+
+        int patchCount = gridH * gridW;
+        int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
+        size_t outputBytes = static_cast<size_t>(patchCount) * static_cast<size_t>(featureDim) * sizeof(float);
+        int decodedHeight = decoded.height;
+        int decodedWidth = decoded.width;
+        float* dOutput = nullptr;
+        status = cudaMalloc(&dOutput, outputBytes);
+        if (status != cudaSuccess) {
+            Garnet::Image::Cuda::FreeDecodedImage(&decoded);
+            cudaStreamDestroy(stream);
+            setError("failed to allocate CUDA output buffer");
+            return 6;
+        }
+
+        status = runQwenVLResizeNormalizePatchLayoutRGB8(
+            decoded.data,
+            dOutput,
+            decoded.height,
+            decoded.width,
+            decoded.pitchBytes,
+            resize.height,
+            resize.width,
+            patchSize,
+            temporalPatchSize,
+            mergeSize,
+            255.0f,
+            0.5f,
+            0.5f,
+            0.5f,
+            0.5f,
+            0.5f,
+            0.5f,
+            stream);
+
+        if (status == cudaSuccess) {
+            status = cudaMemcpyAsync(output, dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+        }
+        if (status == cudaSuccess) {
+            status = cudaStreamSynchronize(stream);
+        }
+
+        cudaFree(dOutput);
+        Garnet::Image::Cuda::FreeDecodedImage(&decoded);
+        cudaStreamDestroy(stream);
+        if (status != cudaSuccess) {
+            setError(cudaGetErrorString(status));
+            return 7;
+        }
+
+        imageGridTHW[0] = 1;
+        imageGridTHW[1] = gridH;
+        imageGridTHW[2] = gridW;
+        *sourceHeight = decodedHeight;
+        *sourceWidth = decodedWidth;
+        *resizedHeight = resize.height;
+        *resizedWidth = resize.width;
+        setError("");
+        return 0;
+    }
+}
+
+extern "C" GARNET_IMAGE_EXPORT int GarnetQwenVLPreprocessJpegBytes(
+    const unsigned char* jpegData,
+    size_t jpegSize,
+    int minPixels,
+    int maxPixels,
+    float* output,
+    long long* imageGridTHW,
+    int* sourceHeight,
+    int* sourceWidth,
+    int* resizedHeight,
+    int* resizedWidth,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    return QwenVLPreprocessJpegBytesImpl(
+        jpegData,
+        jpegSize,
+        minPixels,
+        maxPixels,
+        output,
+        imageGridTHW,
+        sourceHeight,
+        sourceWidth,
+        resizedHeight,
+        resizedWidth,
+        errorMessage,
+        errorMessageCapacity);
+}
+
+extern "C" GARNET_IMAGE_EXPORT int GarnetQwenVLPreprocessJpegFile(
+    const char* jpegPath,
+    int minPixels,
+    int maxPixels,
+    float* output,
+    long long* imageGridTHW,
+    int* sourceHeight,
+    int* sourceWidth,
+    int* resizedHeight,
+    int* resizedWidth,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const char* message) {
+        if (errorMessage && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message);
+        }
+    };
+
+    unsigned char* bytes = nullptr;
+    size_t byteCount = 0;
+    std::string readError;
+    if (!Garnet::Image::Cuda::ReadFileBytes(jpegPath, &bytes, &byteCount, &readError)) {
+        setError(readError.empty() ? "failed to read JPEG file" : readError.c_str());
+        return 1;
+    }
+
+    int rc = QwenVLPreprocessJpegBytesImpl(
+        bytes,
+        byteCount,
+        minPixels,
+        maxPixels,
+        output,
+        imageGridTHW,
+        sourceHeight,
+        sourceWidth,
+        resizedHeight,
+        resizedWidth,
+        errorMessage,
+        errorMessageCapacity);
+    delete[] bytes;
+    return rc;
 }

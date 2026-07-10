@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from pathlib import Path
 
 import numpy as np
@@ -1340,7 +1341,7 @@ class GarnetQwen3VLForwardFacade:
             self.cache_root / f"vision_patch_{patch_count}" / "merger",
         )
 
-    def forward(self, input_ids, pixel_values, image_grid_thw, mm_token_type_ids, cos_np=None, sin_np=None, last_token_logits_only=False):
+    def forward(self, input_ids, pixel_values, image_grid_thw, mm_token_type_ids, cos_np=None, sin_np=None, last_token_logits_only=False, visual_tokens_override=None):
         input_ids = np.asarray(input_ids, dtype=np.int64)
         mm_token_type_ids = np.asarray(mm_token_type_ids, dtype=np.int64)
         image_grid_thw = np.asarray(image_grid_thw, dtype=np.int64)
@@ -1365,7 +1366,15 @@ class GarnetQwen3VLForwardFacade:
         x = self.embed_tokens[input_ids].astype(np.float32)
         visual_positions = np.flatnonzero(mm_token_type_ids == 1)
         if visual_positions.size:
-            visual_tokens = self._visual_tokens(pixel_values, image_grid_thw, int(visual_positions.size))
+            if visual_tokens_override is not None:
+                visual_tokens = np.asarray(visual_tokens_override, dtype=np.float32)
+                if visual_tokens.shape[0] != visual_positions.size:
+                    raise AssertionError(
+                        f"visual token cache has {visual_tokens.shape[0]} tokens, "
+                        f"but prompt has {visual_positions.size} visual placeholders"
+                    )
+            else:
+                visual_tokens = self._visual_tokens(pixel_values, image_grid_thw, int(visual_positions.size))
             x[visual_positions] = visual_tokens
         else:
             visual_tokens = np.zeros((0, self.embed_tokens.shape[1]), dtype=np.float32)
@@ -1607,56 +1616,73 @@ def run_model_forward_facade_native_rope_against_hf_modules(garnet, model_dir, k
 
 
 def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
-    try:
-        from transformers import AutoTokenizer
-        tokenizer = AutoTokenizer.from_pretrained(str(model_dir), trust_remote_code=True)
-    except Exception as exc:
-        skip(f"AutoTokenizer is required for native-rope decode smoke test: {exc}")
+    use_garnet_tokenizer = env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_TOKENIZER")
+    tokenizer = None
+    if not use_garnet_tokenizer:
+        try:
+            from transformers import AutoTokenizer
+            tokenizer = AutoTokenizer.from_pretrained(str(model_dir), trust_remote_code=True)
+        except Exception as exc:
+            skip(f"AutoTokenizer is required for native-rope decode smoke test: {exc}")
 
     user_prompt = os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_PROMPT", "Detect visible objects. Return short JSON.")
     processor_npz = latest_processor_npz()
     image_path = None
     processor_pixels = None
+    native_decode = None
+    native_token_id = None
     if env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_PROCESSOR_IMAGE"):
+        use_garnet_image_preprocess = env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_IMAGE_PREPROCESS")
         try:
-            import torch
             from PIL import Image
-            from transformers import AutoProcessor
         except Exception as exc:
-            skip(f"whole-image processor decode requires PIL/torch/AutoProcessor: {exc}")
+            skip(f"whole-image decode requires PIL: {exc}")
+        if not use_garnet_image_preprocess:
+            try:
+                import torch
+                from transformers import AutoProcessor
+            except Exception as exc:
+                skip(f"HF processor decode requires torch/AutoProcessor: {exc}")
         image_path = Path(os.environ.get(
             "GARNET_QWEN_NATIVE_ROPE_DECODE_IMAGE",
             REPO_ROOT / "data" / "Dataset.1980Love" / "imgs" / "frame_0.jpg",
         ))
         processor_pixels_value = os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_PROCESSOR_PIXELS")
         if processor_pixels_value is None or processor_pixels_value.lower() in {"", "default", "original"}:
-            processor = AutoProcessor.from_pretrained(str(model_dir), trust_remote_code=True)
+            processor = None
+            if not use_garnet_image_preprocess:
+                processor = AutoProcessor.from_pretrained(str(model_dir), trust_remote_code=True)
             processor_pixels = None
         elif processor_pixels_value.lower().startswith("max:"):
             processor_pixels = int(processor_pixels_value.split(":", 1)[1])
-            processor = AutoProcessor.from_pretrained(
-                str(model_dir),
-                trust_remote_code=True,
-                max_pixels=processor_pixels,
-            )
+            processor = None
+            if not use_garnet_image_preprocess:
+                processor = AutoProcessor.from_pretrained(
+                    str(model_dir),
+                    trust_remote_code=True,
+                    max_pixels=processor_pixels,
+                )
         else:
             processor_pixels = int(processor_pixels_value)
-            processor = AutoProcessor.from_pretrained(
-                str(model_dir),
-                trust_remote_code=True,
-                min_pixels=processor_pixels,
-                max_pixels=processor_pixels,
-            )
+            processor = None
+            if not use_garnet_image_preprocess:
+                processor = AutoProcessor.from_pretrained(
+                    str(model_dir),
+                    trust_remote_code=True,
+                    min_pixels=processor_pixels,
+                    max_pixels=processor_pixels,
+                )
         image = Image.open(image_path).convert("RGB")
         def tensor_to_numpy(value):
             if isinstance(value, torch.Tensor):
                 return value.detach().cpu().numpy()
             return np.asarray(value)
-        if env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_IMAGE_PREPROCESS"):
+        if use_garnet_image_preprocess:
             if processor_pixels is None:
                 processor_pixels = 65536
             import ctypes
             import math
+            use_garnet_jpeg_preprocess = env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_JPEG_PREPROCESS")
             factor = 32
             resized_h = round(image.height / factor) * factor
             resized_w = round(image.width / factor) * factor
@@ -1668,7 +1694,6 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
                 beta = math.sqrt(processor_pixels / (image.height * image.width))
                 resized_h = math.ceil(image.height * beta / factor) * factor
                 resized_w = math.ceil(image.width * beta / factor) * factor
-            raw_rgb = np.ascontiguousarray(np.asarray(image, dtype=np.float32))
             garnet_dll = Path(os.environ.get(
                 "GARNET_DLL_PATH",
                 REPO_ROOT / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll",
@@ -1688,55 +1713,142 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
                     if dll_dir.exists():
                         os.add_dll_directory(str(dll_dir))
             dll = ctypes.CDLL(str(garnet_dll))
-            dll.GarnetQwenVLResizePreprocessRGBF32.argtypes = [
-                ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int, ctypes.c_int,
-                ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_float,
-                ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_longlong),
-                ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
-                ctypes.c_char_p, ctypes.c_int,
-            ]
-            dll.GarnetQwenVLResizePreprocessRGBF32.restype = ctypes.c_int
+            if use_garnet_tokenizer:
+                dll.GarnetQwenVLBuildSingleImagePromptIds.argtypes = [
+                    ctypes.c_char_p, ctypes.c_char_p, ctypes.POINTER(ctypes.c_longlong), ctypes.c_int,
+                    ctypes.POINTER(ctypes.c_longlong), ctypes.c_int, ctypes.POINTER(ctypes.c_int),
+                    ctypes.c_char_p, ctypes.c_int,
+                ]
+                dll.GarnetQwenVLBuildSingleImagePromptIds.restype = ctypes.c_int
+                dll.GarnetQwenTokenizerDecode.argtypes = [
+                    ctypes.c_char_p, ctypes.POINTER(ctypes.c_longlong), ctypes.c_int, ctypes.c_int,
+                    ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.c_char_p, ctypes.c_int,
+                ]
+                dll.GarnetQwenTokenizerDecode.restype = ctypes.c_int
+                dll.GarnetQwenTokenizerTokenId.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+                dll.GarnetQwenTokenizerTokenId.restype = ctypes.c_longlong
+
+                def _native_token_id(token):
+                    return int(dll.GarnetQwenTokenizerTokenId(str(model_dir).encode("utf-8"), token.encode("utf-8")))
+
+                def _native_decode(ids, skip_special=True):
+                    arr = (ctypes.c_longlong * len(ids))(*[int(x) for x in ids])
+                    byte_count = ctypes.c_int(0)
+                    decode_error = ctypes.create_string_buffer(512)
+                    rc_decode = dll.GarnetQwenTokenizerDecode(
+                        str(model_dir).encode("utf-8"), arr, len(ids), 1 if skip_special else 0,
+                        None, 0, ctypes.byref(byte_count), decode_error, len(decode_error)
+                    )
+                    if rc_decode not in (0, 3):
+                        raise AssertionError(f"GarnetQwenTokenizerDecode count failed rc={rc_decode}: {decode_error.value.decode(errors='ignore')}")
+                    text_buf = ctypes.create_string_buffer(byte_count.value + 1)
+                    rc_decode = dll.GarnetQwenTokenizerDecode(
+                        str(model_dir).encode("utf-8"), arr, len(ids), 1 if skip_special else 0,
+                        text_buf, len(text_buf), ctypes.byref(byte_count), decode_error, len(decode_error)
+                    )
+                    if rc_decode != 0:
+                        raise AssertionError(f"GarnetQwenTokenizerDecode failed rc={rc_decode}: {decode_error.value.decode(errors='ignore')}")
+                    return text_buf.value.decode("utf-8")
+
+                native_token_id = _native_token_id
+                native_decode = _native_decode
             patch_count = (resized_h // 16) * (resized_w // 16)
             feature_dim = 3 * 2 * 16 * 16
             pixel_values = np.empty((patch_count, feature_dim), dtype=np.float32)
             image_grid_thw = np.zeros((1, 3), dtype=np.int64)
+            source_h = ctypes.c_int(0)
+            source_w = ctypes.c_int(0)
             out_h = ctypes.c_int(0)
             out_w = ctypes.c_int(0)
             error = ctypes.create_string_buffer(512)
-            rc = dll.GarnetQwenVLResizePreprocessRGBF32(
-                raw_rgb.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                image.height,
-                image.width,
-                3,
-                0,
-                processor_pixels,
-                processor_pixels,
-                ctypes.c_float(255.0),
-                pixel_values.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                image_grid_thw.ctypes.data_as(ctypes.POINTER(ctypes.c_longlong)),
-                ctypes.byref(out_h),
-                ctypes.byref(out_w),
-                error,
-                len(error),
-            )
+            if use_garnet_jpeg_preprocess:
+                dll.GarnetQwenVLPreprocessJpegFile.argtypes = [
+                    ctypes.c_char_p, ctypes.c_int, ctypes.c_int,
+                    ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_longlong),
+                    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                    ctypes.c_char_p, ctypes.c_int,
+                ]
+                dll.GarnetQwenVLPreprocessJpegFile.restype = ctypes.c_int
+                rc = dll.GarnetQwenVLPreprocessJpegFile(
+                    str(image_path).encode("utf-8"),
+                    processor_pixels,
+                    processor_pixels,
+                    pixel_values.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                    image_grid_thw.ctypes.data_as(ctypes.POINTER(ctypes.c_longlong)),
+                    ctypes.byref(source_h),
+                    ctypes.byref(source_w),
+                    ctypes.byref(out_h),
+                    ctypes.byref(out_w),
+                    error,
+                    len(error),
+                )
+            else:
+                raw_rgb = np.ascontiguousarray(np.asarray(image, dtype=np.float32))
+                dll.GarnetQwenVLResizePreprocessRGBF32.argtypes = [
+                    ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                    ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_float,
+                    ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_longlong),
+                    ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+                    ctypes.c_char_p, ctypes.c_int,
+                ]
+                dll.GarnetQwenVLResizePreprocessRGBF32.restype = ctypes.c_int
+                rc = dll.GarnetQwenVLResizePreprocessRGBF32(
+                    raw_rgb.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                    image.height,
+                    image.width,
+                    3,
+                    0,
+                    processor_pixels,
+                    processor_pixels,
+                    ctypes.c_float(255.0),
+                    pixel_values.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                    image_grid_thw.ctypes.data_as(ctypes.POINTER(ctypes.c_longlong)),
+                    ctypes.byref(out_h),
+                    ctypes.byref(out_w),
+                    error,
+                    len(error),
+                )
             if rc != 0:
-                raise AssertionError(f"GarnetQwenVLResizePreprocessRGBF32 failed rc={rc}: {error.value.decode(errors='ignore')}")
+                api_name = "GarnetQwenVLPreprocessJpegFile" if use_garnet_jpeg_preprocess else "GarnetQwenVLResizePreprocessRGBF32"
+                raise AssertionError(f"{api_name} failed rc={rc}: {error.value.decode(errors='ignore')}")
             expected_visual_count = int(np.prod(image_grid_thw[0]) // 4)
-            prompt_text = (
-                "<|im_start|>user\n"
-                "<|vision_start|>"
-                + "<|image_pad|>" * expected_visual_count
-                + "<|vision_end|>\n"
-                + user_prompt
-                + "\n"
-                "<|im_end|>\n"
-                "<|im_start|>assistant\n"
-            )
-            input_ids = np.asarray(tokenizer.encode(prompt_text, add_special_tokens=False), dtype=np.int64)
+            if use_garnet_tokenizer:
+                prompt_count = ctypes.c_int(0)
+                prompt_error = ctypes.create_string_buffer(512)
+                grid_arr = (ctypes.c_longlong * 3)(*image_grid_thw[0].astype(np.int64).tolist())
+                rc_prompt = dll.GarnetQwenVLBuildSingleImagePromptIds(
+                    str(model_dir).encode("utf-8"), user_prompt.encode("utf-8"), grid_arr, 2,
+                    None, 0, ctypes.byref(prompt_count), prompt_error, len(prompt_error)
+                )
+                if rc_prompt not in (0, 3):
+                    raise AssertionError(f"GarnetQwenVLBuildSingleImagePromptIds count failed rc={rc_prompt}: {prompt_error.value.decode(errors='ignore')}")
+                prompt_ids = (ctypes.c_longlong * prompt_count.value)()
+                rc_prompt = dll.GarnetQwenVLBuildSingleImagePromptIds(
+                    str(model_dir).encode("utf-8"), user_prompt.encode("utf-8"), grid_arr, 2,
+                    prompt_ids, prompt_count.value, ctypes.byref(prompt_count), prompt_error, len(prompt_error)
+                )
+                if rc_prompt != 0:
+                    raise AssertionError(f"GarnetQwenVLBuildSingleImagePromptIds failed rc={rc_prompt}: {prompt_error.value.decode(errors='ignore')}")
+                input_ids = np.asarray([int(prompt_ids[i]) for i in range(prompt_count.value)], dtype=np.int64)
+                prompt_text = "garnet_native_qwen_vl_prompt"
+                image_pad_id = native_token_id("<|image_pad|>")
+            else:
+                prompt_text = (
+                    "<|im_start|>user\n"
+                    "<|vision_start|>"
+                    + "<|image_pad|>" * expected_visual_count
+                    + "<|vision_end|>\n"
+                    + user_prompt
+                    + "\n"
+                    "<|im_end|>\n"
+                    "<|im_start|>assistant\n"
+                )
+                input_ids = np.asarray(tokenizer.encode(prompt_text, add_special_tokens=False), dtype=np.int64)
+                image_pad_id = tokenizer.encode("<|image_pad|>", add_special_tokens=False)[0]
             mm_types = np.zeros_like(input_ids, dtype=np.int64)
-            image_pad_id = tokenizer.encode("<|image_pad|>", add_special_tokens=False)[0]
             mm_types[input_ids == image_pad_id] = 1
-            processor_npz = "garnet_cuda_image_preprocess"
+            processor_npz = "garnet_nvjpeg_cuda_image_preprocess" if use_garnet_jpeg_preprocess else "garnet_cuda_image_preprocess"
         else:
             messages = [{
                 "role": "user",
@@ -1786,9 +1898,23 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     step_summaries = []
     cur_ids = input_ids.copy()
     cur_mm_types = mm_types.copy()
-    eos_id = tokenizer.encode("<|im_end|>", add_special_tokens=False)[0]
+    eos_id = native_token_id("<|im_end|>") if use_garnet_tokenizer else tokenizer.encode("<|im_end|>", add_special_tokens=False)[0]
+    timing = {}
+    visual_positions = np.flatnonzero(mm_types == 1)
+    visual_token_start = time.perf_counter()
+    visual_tokens = facade._visual_tokens(pixel_values, image_grid_thw, int(visual_positions.size)) if visual_positions.size else None
+    timing["visual_tokens_once_ms"] = (time.perf_counter() - visual_token_start) * 1000.0
+    decode_start = time.perf_counter()
     for step in range(max_new_tokens):
-        out = facade.forward(cur_ids, pixel_values, image_grid_thw, cur_mm_types, last_token_logits_only=True)
+        step_start = time.perf_counter()
+        out = facade.forward(
+            cur_ids,
+            pixel_values,
+            image_grid_thw,
+            cur_mm_types,
+            last_token_logits_only=True,
+            visual_tokens_override=visual_tokens,
+        )
         logits = out["logits"]
         next_id = int(np.argmax(logits[-1]))
         top5 = np.argsort(logits[-1])[-5:][::-1]
@@ -1797,16 +1923,19 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
             "step": int(step),
             "input_tokens": int(cur_ids.shape[0]),
             "next_token_id": next_id,
-            "next_token_text": tokenizer.decode([next_id]),
+            "next_token_text": native_decode([next_id], False) if use_garnet_tokenizer else tokenizer.decode([next_id]),
             "top5_ids": [int(x) for x in top5.tolist()],
+            "step_ms": (time.perf_counter() - step_start) * 1000.0,
         })
         cur_ids = np.concatenate([cur_ids, np.asarray([next_id], dtype=np.int64)])
         cur_mm_types = np.concatenate([cur_mm_types, np.asarray([0], dtype=np.int64)])
         if next_id == eos_id:
             break
+    timing["decode_loop_ms"] = (time.perf_counter() - decode_start) * 1000.0
+    timing["total_after_frontend_ms"] = timing["visual_tokens_once_ms"] + timing["decode_loop_ms"]
 
-    generated_text = tokenizer.decode(generated, skip_special_tokens=True).strip()
-    raw_generated_text = tokenizer.decode(generated, skip_special_tokens=False)
+    generated_text = (native_decode(generated, True) if use_garnet_tokenizer else tokenizer.decode(generated, skip_special_tokens=True)).strip()
+    raw_generated_text = native_decode(generated, False) if use_garnet_tokenizer else tokenizer.decode(generated, skip_special_tokens=False)
     if not raw_generated_text.strip():
         raise AssertionError("native-rope decode produced empty raw text")
     return {
@@ -1824,6 +1953,9 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
         "raw_generated_text": raw_generated_text,
         "steps": step_summaries,
         "native_rope": True,
+        "native_tokenizer": bool(use_garnet_tokenizer),
+        "visual_tokens_cached_once": True,
+        "timing_ms": timing,
         "vision_block_count": int(facade.vision_block_count),
         "text_layer_count": int(facade.text_layer_count),
     }
