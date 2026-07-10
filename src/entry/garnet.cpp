@@ -2,6 +2,7 @@
 #include "../trt/trt_builder.h"
 #include "../image/qwen_vl/qwen_vl_image_preprocessor.h"
 #include "../tokenizer/qwen_tokenizer.h"
+#include "../cuda/cuda_lib.h"
 #include "xpackage.h"
 #include "xlang.h"
 #include <fstream> 
@@ -169,6 +170,238 @@ extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLPrepareJpegPrompt(
         setError(exc.what());
         return 1;
     }
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetRunTextKVCachedAttentionFP32(
+    const float* q,
+    const float* keyCache,
+    const float* valueCache,
+    float* output,
+    int sequenceLength,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const char* message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message ? message : "");
+        }
+    };
+    if (q == nullptr || keyCache == nullptr || valueCache == nullptr || output == nullptr ||
+        sequenceLength <= 0 || qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || (qHeads % kvHeads) != 0) {
+        setError("invalid cached attention arguments");
+        return 1;
+    }
+
+    size_t qBytes = static_cast<size_t>(qHeads) * static_cast<size_t>(headDim) * sizeof(float);
+    size_t kvBytes = static_cast<size_t>(sequenceLength) * static_cast<size_t>(kvHeads) * static_cast<size_t>(headDim) * sizeof(float);
+    size_t outBytes = qBytes;
+    float* dQ = nullptr;
+    float* dK = nullptr;
+    float* dV = nullptr;
+    float* dOut = nullptr;
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreate(&stream);
+    if (err == cudaSuccess) err = cudaMalloc(&dQ, qBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dK, kvBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dV, kvBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dOut, outBytes);
+    if (err != cudaSuccess) {
+        setError(cudaGetErrorString(err));
+        if (dQ) cudaFree(dQ);
+        if (dK) cudaFree(dK);
+        if (dV) cudaFree(dV);
+        if (dOut) cudaFree(dOut);
+        if (stream) cudaStreamDestroy(stream);
+        return 2;
+    }
+
+    err = cudaMemcpyAsync(dQ, q, qBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dK, keyCache, kvBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dV, valueCache, kvBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) {
+        err = runTextKVCachedAttentionFP32(
+            dQ, dK, dV, dOut, sequenceLength, qHeads, kvHeads, headDim, stream);
+    }
+    if (err == cudaSuccess) err = cudaMemcpyAsync(output, dOut, outBytes, cudaMemcpyDeviceToHost, stream);
+    if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+
+    cudaFree(dQ);
+    cudaFree(dK);
+    cudaFree(dV);
+    cudaFree(dOut);
+    cudaStreamDestroy(stream);
+    if (err != cudaSuccess) {
+        setError(cudaGetErrorString(err));
+        return 3;
+    }
+    setError("");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetRunTextPagedKVCachedAttentionFP32(
+    const float* q,
+    const float* keyPages,
+    const float* valuePages,
+    const int* pageTable,
+    float* output,
+    int sequenceLength,
+    int pageSize,
+    int physicalPageCount,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const char* message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message ? message : "");
+        }
+    };
+    if (q == nullptr || keyPages == nullptr || valuePages == nullptr || pageTable == nullptr || output == nullptr ||
+        sequenceLength <= 0 || pageSize <= 0 || physicalPageCount <= 0 ||
+        qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || (qHeads % kvHeads) != 0) {
+        setError("invalid paged cached attention arguments");
+        return 1;
+    }
+
+    int logicalPageCount = (sequenceLength + pageSize - 1) / pageSize;
+    size_t qBytes = static_cast<size_t>(qHeads) * static_cast<size_t>(headDim) * sizeof(float);
+    size_t pagesBytes = static_cast<size_t>(physicalPageCount) * static_cast<size_t>(pageSize)
+        * static_cast<size_t>(kvHeads) * static_cast<size_t>(headDim) * sizeof(float);
+    size_t tableBytes = static_cast<size_t>(logicalPageCount) * sizeof(int);
+    size_t outBytes = qBytes;
+    float* dQ = nullptr;
+    float* dK = nullptr;
+    float* dV = nullptr;
+    float* dOut = nullptr;
+    int* dPageTable = nullptr;
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreate(&stream);
+    if (err == cudaSuccess) err = cudaMalloc(&dQ, qBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dK, pagesBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dV, pagesBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dPageTable, tableBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dOut, outBytes);
+    if (err != cudaSuccess) {
+        setError(cudaGetErrorString(err));
+        if (dQ) cudaFree(dQ);
+        if (dK) cudaFree(dK);
+        if (dV) cudaFree(dV);
+        if (dPageTable) cudaFree(dPageTable);
+        if (dOut) cudaFree(dOut);
+        if (stream) cudaStreamDestroy(stream);
+        return 2;
+    }
+
+    err = cudaMemcpyAsync(dQ, q, qBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dK, keyPages, pagesBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dV, valuePages, pagesBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dPageTable, pageTable, tableBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) {
+        err = runTextPagedKVCachedAttentionFP32(
+            dQ, dK, dV, dPageTable, dOut, sequenceLength, pageSize, qHeads, kvHeads, headDim, stream);
+    }
+    if (err == cudaSuccess) err = cudaMemcpyAsync(output, dOut, outBytes, cudaMemcpyDeviceToHost, stream);
+    if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+
+    cudaFree(dQ);
+    cudaFree(dK);
+    cudaFree(dV);
+    cudaFree(dPageTable);
+    cudaFree(dOut);
+    cudaStreamDestroy(stream);
+    if (err != cudaSuccess) {
+        setError(cudaGetErrorString(err));
+        return 3;
+    }
+    setError("");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetRunTextPagedKVWriteFP32(
+    const float* qkv,
+    float* keyPages,
+    float* valuePages,
+    const int* pageTable,
+    int tokenCount,
+    int startPosition,
+    int pageSize,
+    int physicalPageCount,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const char* message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message ? message : "");
+        }
+    };
+    if (qkv == nullptr || keyPages == nullptr || valuePages == nullptr || pageTable == nullptr ||
+        tokenCount <= 0 || startPosition < 0 || pageSize <= 0 || physicalPageCount <= 0 ||
+        qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || (qHeads % kvHeads) != 0) {
+        setError("invalid paged KV write arguments");
+        return 1;
+    }
+
+    int qWidth = qHeads * headDim;
+    int kvWidth = kvHeads * headDim;
+    int qkvStride = qWidth + 2 * kvWidth;
+    int logicalPageCount = (startPosition + tokenCount + pageSize - 1) / pageSize;
+    size_t qkvBytes = static_cast<size_t>(tokenCount) * static_cast<size_t>(qkvStride) * sizeof(float);
+    size_t pagesBytes = static_cast<size_t>(physicalPageCount) * static_cast<size_t>(pageSize)
+        * static_cast<size_t>(kvHeads) * static_cast<size_t>(headDim) * sizeof(float);
+    size_t tableBytes = static_cast<size_t>(logicalPageCount) * sizeof(int);
+
+    float* dQKV = nullptr;
+    float* dK = nullptr;
+    float* dV = nullptr;
+    int* dPageTable = nullptr;
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreate(&stream);
+    if (err == cudaSuccess) err = cudaMalloc(&dQKV, qkvBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dK, pagesBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dV, pagesBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dPageTable, tableBytes);
+    if (err != cudaSuccess) {
+        setError(cudaGetErrorString(err));
+        if (dQKV) cudaFree(dQKV);
+        if (dK) cudaFree(dK);
+        if (dV) cudaFree(dV);
+        if (dPageTable) cudaFree(dPageTable);
+        if (stream) cudaStreamDestroy(stream);
+        return 2;
+    }
+
+    err = cudaMemcpyAsync(dQKV, qkv, qkvBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dK, keyPages, pagesBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dV, valuePages, pagesBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dPageTable, pageTable, tableBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) {
+        err = runTextPagedKVWriteFP32(
+            dQKV, dK, dV, dPageTable, tokenCount, startPosition, pageSize,
+            qHeads, kvHeads, headDim, stream);
+    }
+    if (err == cudaSuccess) err = cudaMemcpyAsync(keyPages, dK, pagesBytes, cudaMemcpyDeviceToHost, stream);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(valuePages, dV, pagesBytes, cudaMemcpyDeviceToHost, stream);
+    if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+
+    cudaFree(dQKV);
+    cudaFree(dK);
+    cudaFree(dV);
+    cudaFree(dPageTable);
+    cudaStreamDestroy(stream);
+    if (err != cudaSuccess) {
+        setError(cudaGetErrorString(err));
+        return 3;
+    }
+    setError("");
+    return 0;
 }
 
 namespace Garnet

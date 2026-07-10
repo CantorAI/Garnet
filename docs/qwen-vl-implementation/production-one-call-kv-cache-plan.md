@@ -210,11 +210,27 @@ Implemented now:
   - Tracks free/used pages.
   - Supports `allocate`, `append`, `free`, and `stats`.
   - Verified page growth and release in phase 13.
+- Phase 08 now consumes the one-call native request prepare path:
+  - `processor_npz` reports `garnet_one_call_prepare_jpeg_prompt`.
+  - The old separated tokenizer/JPEG path remains available as a fallback.
+- Phase 08 now owns a request KV lifecycle:
+  - Allocates pages for prefill sequence length.
+  - Appends one token per decode step.
+  - Frees pages on request finish.
+- Text decode cached-attention CUDA primitive:
+  - `runTextKVCachedAttentionFP32`: one-token grouped-query attention over contiguous K/V.
+  - `runTextPagedKVCachedAttentionFP32`: one-token grouped-query attention over paged K/V using a page table.
+  - `runTextPagedKVWriteFP32`: writes post-RoPE K/V slices from QKV into paged cache pages.
+  - C ABI test hooks validate both layouts against NumPy reference.
+  - Phase 15 validates QKV -> paged K/V write -> paged K/V read attention against last-token full causal attention.
+  - Current limitation: the primitive is not yet wired into full Qwen decoder layer execution, so phase 08 still uses the slow full-sequence decode path.
 
 New tests:
 
 - `test2026/tests/phase_13_kv_cache_manager/test.py`
 - `test2026/tests/phase_14_qwen_vl_prepare_request/test.py`
+- `test2026/tests/phase_15_text_kv_cached_attention/test.py`
+- `test2026/tests/phase_08_qwen_vl_native_prompt_image/test.py` with one-call request prep and KV lifecycle enabled.
 
 ### Stage A: One-Call Front Door
 

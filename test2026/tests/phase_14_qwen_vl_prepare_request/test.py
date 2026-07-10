@@ -3,7 +3,6 @@ import os
 import sys
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_IMAGE = REPO_ROOT / "data" / "Dataset.1980Love" / "imgs" / "frame_0.jpg"
 DEFAULT_PROMPT = b"Describe this picture in one short sentence."
@@ -157,6 +156,35 @@ def main():
     assert sum(1 for item in mm_types if item == 1) == 60
     assert [input_ids[i] for i in range(4)] == [151644, 872, 198, 151652]
     assert abs(float(pixel_values[0]) - (-1.0)) < 1e-6
+
+    try:
+        import xlang
+    except Exception as exc:
+        print(f"SKIP xlang API check: xlang is not available: {exc}")
+        print("Phase 14: one-call Qwen-VL JPEG+prompt request prepare passed.")
+        return
+
+    garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+    prepared = garnet.qwen_vl_prepare_request(
+        model_dir=str(model_dir),
+        image_path=str(DEFAULT_IMAGE),
+        prompt=DEFAULT_PROMPT.decode("utf-8"),
+        min_pixels=65536,
+        max_pixels=65536,
+    )
+    assert prepared["backend"] == "qwen_vl_request_native_tokenizer_nvjpeg_cuda"
+    assert prepared["prompt_token_count"] == 79
+    assert prepared["visual_token_count"] == 60
+    assert prepared["pixel_value_count"] == 240 * 1536
+    assert prepared["source_height"] == 1080
+    assert prepared["source_width"] == 1920
+    assert prepared["height"] == 192
+    assert prepared["width"] == 320
+    assert list(prepared["input_ids"])[:4] == [151644, 872, 198, 151652]
+    assert list(prepared["image_grid_thw"]) == [1, 12, 20]
+    assert sum(1 for item in prepared["mm_token_type_ids"] if item == 1) == 60
+    assert list(prepared["pixel_values_shape"]) == [240, 1536]
+
     print("Phase 14: one-call Qwen-VL JPEG+prompt request prepare passed.")
 
 

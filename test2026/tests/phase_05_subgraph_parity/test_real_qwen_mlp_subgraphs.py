@@ -321,6 +321,172 @@ def import_garnet():
         skip(f"failed to import Garnet from {garnet_dll}: {exc}")
 
 
+def add_garnet_dll_directories(garnet_dll):
+    if os.name != "nt" or not hasattr(os, "add_dll_directory"):
+        return
+    for dll_dir in [
+        garnet_dll.parent,
+        REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Debug" / "bin",
+        REPO_ROOT.parent / "out" / "build" / "x64-Debug" / "bin",
+        REPO_ROOT.parent / "out" / "build" / "x64-debug" / "bin",
+        Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
+        Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin/x64"),
+        REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
+        REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "lib",
+        Path("C:/Program Files/Microsoft Visual Studio/18/Community/VC/Redist/MSVC/14.51.36231/debug_nonredist/x64/Microsoft.VC145.DebugCRT"),
+    ]:
+        if dll_dir.exists():
+            os.add_dll_directory(str(dll_dir))
+
+
+def load_garnet_dll_ctypes():
+    import ctypes
+
+    garnet_dll = Path(os.environ.get(
+        "GARNET_DLL_PATH",
+        REPO_ROOT / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll",
+    ))
+    add_garnet_dll_directories(garnet_dll)
+    return ctypes.CDLL(str(garnet_dll))
+
+
+def configure_native_tokenizer_ctypes(dll, model_dir):
+    import ctypes
+
+    dll.GarnetQwenTokenizerDecode.argtypes = [
+        ctypes.c_char_p, ctypes.POINTER(ctypes.c_longlong), ctypes.c_int, ctypes.c_int,
+        ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.c_char_p, ctypes.c_int,
+    ]
+    dll.GarnetQwenTokenizerDecode.restype = ctypes.c_int
+    dll.GarnetQwenTokenizerTokenId.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+    dll.GarnetQwenTokenizerTokenId.restype = ctypes.c_longlong
+
+    def native_token_id(token):
+        return int(dll.GarnetQwenTokenizerTokenId(str(model_dir).encode("utf-8"), token.encode("utf-8")))
+
+    def native_decode(ids, skip_special=True):
+        arr = (ctypes.c_longlong * len(ids))(*[int(x) for x in ids])
+        byte_count = ctypes.c_int(0)
+        decode_error = ctypes.create_string_buffer(512)
+        rc_decode = dll.GarnetQwenTokenizerDecode(
+            str(model_dir).encode("utf-8"), arr, len(ids), 1 if skip_special else 0,
+            None, 0, ctypes.byref(byte_count), decode_error, len(decode_error)
+        )
+        if rc_decode not in (0, 3):
+            raise AssertionError(f"GarnetQwenTokenizerDecode count failed rc={rc_decode}: {decode_error.value.decode(errors='ignore')}")
+        text_buf = ctypes.create_string_buffer(byte_count.value + 1)
+        rc_decode = dll.GarnetQwenTokenizerDecode(
+            str(model_dir).encode("utf-8"), arr, len(ids), 1 if skip_special else 0,
+            text_buf, len(text_buf), ctypes.byref(byte_count), decode_error, len(decode_error)
+        )
+        if rc_decode != 0:
+            raise AssertionError(f"GarnetQwenTokenizerDecode failed rc={rc_decode}: {decode_error.value.decode(errors='ignore')}")
+        return text_buf.value.decode("utf-8")
+
+    return native_token_id, native_decode
+
+
+def prepare_qwen_vl_request_one_call(model_dir, image_path, user_prompt, processor_pixels):
+    import ctypes
+
+    dll = load_garnet_dll_ctypes()
+    fn = dll.GarnetQwenVLPrepareJpegPrompt
+    fn.argtypes = [
+        ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_int,
+        ctypes.POINTER(ctypes.c_longlong), ctypes.c_int, ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_longlong), ctypes.c_int,
+        ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_longlong),
+        ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int),
+        ctypes.c_char_p, ctypes.c_int,
+    ]
+    fn.restype = ctypes.c_int
+
+    input_count = ctypes.c_int(0)
+    pixel_count = ctypes.c_int(0)
+    grid = (ctypes.c_longlong * 3)()
+    source_h = ctypes.c_int(0)
+    source_w = ctypes.c_int(0)
+    resized_h = ctypes.c_int(0)
+    resized_w = ctypes.c_int(0)
+    error = ctypes.create_string_buffer(512)
+    rc = fn(
+        str(model_dir).encode("utf-8"),
+        str(image_path).encode("utf-8"),
+        user_prompt.encode("utf-8"),
+        int(processor_pixels),
+        int(processor_pixels),
+        None,
+        0,
+        ctypes.byref(input_count),
+        None,
+        0,
+        None,
+        0,
+        ctypes.byref(pixel_count),
+        grid,
+        ctypes.byref(source_h),
+        ctypes.byref(source_w),
+        ctypes.byref(resized_h),
+        ctypes.byref(resized_w),
+        error,
+        len(error),
+    )
+    if rc not in (0, 3):
+        raise AssertionError(f"GarnetQwenVLPrepareJpegPrompt count failed rc={rc}: {error.value.decode(errors='ignore')}")
+
+    input_ids_buf = (ctypes.c_longlong * input_count.value)()
+    mm_types_buf = (ctypes.c_longlong * input_count.value)()
+    pixel_values_buf = (ctypes.c_float * pixel_count.value)()
+    error2 = ctypes.create_string_buffer(512)
+    rc = fn(
+        str(model_dir).encode("utf-8"),
+        str(image_path).encode("utf-8"),
+        user_prompt.encode("utf-8"),
+        int(processor_pixels),
+        int(processor_pixels),
+        input_ids_buf,
+        input_count.value,
+        ctypes.byref(input_count),
+        mm_types_buf,
+        input_count.value,
+        pixel_values_buf,
+        pixel_count.value,
+        ctypes.byref(pixel_count),
+        grid,
+        ctypes.byref(source_h),
+        ctypes.byref(source_w),
+        ctypes.byref(resized_h),
+        ctypes.byref(resized_w),
+        error2,
+        len(error2),
+    )
+    if rc != 0:
+        raise AssertionError(f"GarnetQwenVLPrepareJpegPrompt failed rc={rc}: {error2.value.decode(errors='ignore')}")
+
+    grid_np = np.asarray([[int(grid[0]), int(grid[1]), int(grid[2])]], dtype=np.int64)
+    patch_count = int(grid_np[0, 1] * grid_np[0, 2])
+    feature_dim = 3 * 2 * 16 * 16
+    if pixel_count.value != patch_count * feature_dim:
+        raise AssertionError(f"pixel count {pixel_count.value} != expected {patch_count * feature_dim}")
+    pixel_values = np.ctypeslib.as_array(pixel_values_buf).copy().reshape(patch_count, feature_dim).astype(np.float32)
+    input_ids = np.ctypeslib.as_array(input_ids_buf).copy().astype(np.int64)
+    mm_types = np.ctypeslib.as_array(mm_types_buf).copy().astype(np.int64)
+    native_token_id, native_decode = configure_native_tokenizer_ctypes(dll, model_dir)
+    return {
+        "input_ids": input_ids,
+        "mm_types": mm_types,
+        "image_grid_thw": grid_np,
+        "pixel_values": pixel_values,
+        "native_token_id": native_token_id,
+        "native_decode": native_decode,
+        "processor_npz": "garnet_one_call_prepare_jpeg_prompt",
+        "source_size": [int(source_h.value), int(source_w.value)],
+        "resized_size": [int(resized_h.value), int(resized_w.value)],
+    }
+
+
 def run_rms_norm(garnet, key_to_file):
     key = "language_model.layers.0.input_layernorm.weight"
     weight = load_tensor(key_to_file, key)
@@ -1631,7 +1797,27 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     processor_pixels = None
     native_decode = None
     native_token_id = None
-    if env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_PROCESSOR_IMAGE"):
+    if env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_ONE_CALL_PREPARE"):
+        image_path = Path(os.environ.get(
+            "GARNET_QWEN_NATIVE_ROPE_DECODE_IMAGE",
+            REPO_ROOT / "data" / "Dataset.1980Love" / "imgs" / "frame_0.jpg",
+        ))
+        processor_pixels_value = os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_PROCESSOR_PIXELS")
+        if processor_pixels_value is None or processor_pixels_value.lower() in {"", "default", "original"}:
+            processor_pixels = 65536
+        elif processor_pixels_value.lower().startswith("max:"):
+            processor_pixels = int(processor_pixels_value.split(":", 1)[1])
+        else:
+            processor_pixels = int(processor_pixels_value)
+        prepared = prepare_qwen_vl_request_one_call(model_dir, image_path, user_prompt, processor_pixels)
+        input_ids = prepared["input_ids"]
+        mm_types = prepared["mm_types"]
+        image_grid_thw = prepared["image_grid_thw"]
+        pixel_values = prepared["pixel_values"]
+        native_token_id = prepared["native_token_id"]
+        native_decode = prepared["native_decode"]
+        processor_npz = prepared["processor_npz"]
+    elif env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_PROCESSOR_IMAGE"):
         use_garnet_image_preprocess = env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_IMAGE_PREPROCESS")
         try:
             from PIL import Image
@@ -1899,6 +2085,23 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     cur_ids = input_ids.copy()
     cur_mm_types = mm_types.copy()
     eos_id = native_token_id("<|im_end|>") if use_garnet_tokenizer else tokenizer.encode("<|im_end|>", add_special_tokens=False)[0]
+    kv_manager = None
+    kv_prefill_pages = []
+    kv_stats_before_free = None
+    kv_stats_after_free = None
+    kv_free_result = None
+    kv_sequence_id = int(os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_SEQUENCE_ID", "1"))
+    if env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_USE_KV_MANAGER"):
+        kv_manager = garnet.KVCacheManager(
+            max_num_pages=int(os.environ.get("GARNET_QWEN_KV_MAX_PAGES", "4096")),
+            page_size=int(os.environ.get("GARNET_QWEN_KV_PAGE_SIZE", "16")),
+            head_dim=int(os.environ.get("GARNET_QWEN_KV_HEAD_DIM", "128")),
+            num_kv_heads=int(os.environ.get("GARNET_QWEN_KV_HEADS", "2")),
+            num_layers=int(facade.text_layer_count),
+            dtype_bytes=int(os.environ.get("GARNET_QWEN_KV_DTYPE_BYTES", "2")),
+            device_id=int(os.environ.get("GARNET_QWEN_KV_DEVICE_ID", "0")),
+        )
+        kv_prefill_pages = [int(x) for x in kv_manager.allocate(kv_sequence_id, sequence_length=int(cur_ids.shape[0]))]
     timing = {}
     visual_positions = np.flatnonzero(mm_types == 1)
     visual_token_start = time.perf_counter()
@@ -1929,10 +2132,16 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
         })
         cur_ids = np.concatenate([cur_ids, np.asarray([next_id], dtype=np.int64)])
         cur_mm_types = np.concatenate([cur_mm_types, np.asarray([0], dtype=np.int64)])
+        if kv_manager is not None:
+            kv_manager.append(kv_sequence_id, tokens=1)
         if next_id == eos_id:
             break
     timing["decode_loop_ms"] = (time.perf_counter() - decode_start) * 1000.0
     timing["total_after_frontend_ms"] = timing["visual_tokens_once_ms"] + timing["decode_loop_ms"]
+    if kv_manager is not None:
+        kv_stats_before_free = kv_manager.stats()
+        kv_free_result = bool(kv_manager.free(kv_sequence_id))
+        kv_stats_after_free = kv_manager.stats()
 
     generated_text = (native_decode(generated, True) if use_garnet_tokenizer else tokenizer.decode(generated, skip_special_tokens=True)).strip()
     raw_generated_text = native_decode(generated, False) if use_garnet_tokenizer else tokenizer.decode(generated, skip_special_tokens=False)
@@ -1955,6 +2164,14 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
         "native_rope": True,
         "native_tokenizer": bool(use_garnet_tokenizer),
         "visual_tokens_cached_once": True,
+        "kv_cache_manager": {
+            "enabled": kv_manager is not None,
+            "sequence_id": kv_sequence_id if kv_manager is not None else None,
+            "prefill_pages": kv_prefill_pages,
+            "stats_before_free": kv_stats_before_free,
+            "free_result": kv_free_result,
+            "stats_after_free": kv_stats_after_free,
+        },
         "timing_ms": timing,
         "vision_block_count": int(facade.vision_block_count),
         "text_layer_count": int(facade.text_layer_count),

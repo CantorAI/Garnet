@@ -144,6 +144,51 @@ extern "C" {
         int headDim,
         cudaStream_t stream = 0);
 
+    // One-token grouped-query attention over an existing K/V cache.
+    // q is [qHeads, headDim], keyCache/valueCache are [sequenceLength, kvHeads, headDim],
+    // output is [qHeads, headDim]. qHeads must be divisible by kvHeads.
+    cudaError_t runTextKVCachedAttentionFP32(
+        const float* q,
+        const float* keyCache,
+        const float* valueCache,
+        float* output,
+        int sequenceLength,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
+    // One-token grouped-query attention over paged K/V cache.
+    // keyPages/valuePages are [numPhysicalPages, pageSize, kvHeads, headDim].
+    // pageTable maps logical page index -> physical page index for this sequence.
+    cudaError_t runTextPagedKVCachedAttentionFP32(
+        const float* q,
+        const float* keyPages,
+        const float* valuePages,
+        const int* pageTable,
+        float* output,
+        int sequenceLength,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
+    // Write K/V slices from qkv[tokens, qHeads*headDim + 2*kvHeads*headDim]
+    // into paged K/V cache pages at logical positions [startPosition, startPosition + tokenCount).
+    cudaError_t runTextPagedKVWriteFP32(
+        const float* qkv,
+        float* keyPages,
+        float* valuePages,
+        const int* pageTable,
+        int tokenCount,
+        int startPosition,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
     // Row-major linear layer: output[M, N] = input[M, K] * weight[N, K]^T + bias[N].
     cudaError_t runLinearBiasTransposeFP32(
         const float* input,
