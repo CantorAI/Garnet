@@ -150,6 +150,13 @@ namespace Garnet::Tokenization
         }
     }
 
+    std::shared_ptr<const QwenTokenizer> GetCachedQwenTokenizer(
+        const std::string& modelDir,
+        std::string* error)
+    {
+        return GetCachedTokenizer(modelDir.c_str(), error);
+    }
+
     void QwenTokenizer::InitByteLevelMaps()
     {
         m_byteToTokenChar.clear();

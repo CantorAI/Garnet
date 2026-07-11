@@ -4,6 +4,7 @@
 #include "xlang.h"
 #include "garnet_tensor.h"
 #include "model.h"
+#include "qwen_text_runner.h"
 #include "log.h"
 #include <string>
 #include <deque>
@@ -12,6 +13,66 @@
 
 namespace Garnet
 {
+	class QwenVLRequestContext
+	{
+	public:
+		X::Value inputIds;
+		X::Value mmTokenTypeIds;
+		X::Value pixelValues;
+		X::Value imageGridTHW;
+		X::Value kvCache;
+		long long kvHandle = 0;
+		int kvMaxTokens = 0;
+		int kvLogicalLength = 0;
+		int kvPageSize = 0;
+		int kvLogicalPages = 0;
+		int kvPhysicalPages = 0;
+		int kvQHeads = 0;
+		int kvHeads = 0;
+		int kvHeadDim = 0;
+		std::string modelDir;
+		std::string imagePath;
+		std::string prompt;
+		int sourceHeight = 0;
+		int sourceWidth = 0;
+		int resizedHeight = 0;
+		int resizedWidth = 0;
+		int promptTokenCount = 0;
+		int visualTokenCount = 0;
+		int pixelValueCount = 0;
+		int patchSize = 16;
+		int temporalPatchSize = 2;
+		int mergeSize = 2;
+		long long imagePreprocessUs = 0;
+		long long tokenizeUs = 0;
+		long long tensorUploadUs = 0;
+		long long totalUs = 0;
+
+		BEGIN_PACKAGE(QwenVLRequestContext)
+			APISET().AddProp0("input_ids", &QwenVLRequestContext::inputIds);
+			APISET().AddProp0("mm_token_type_ids", &QwenVLRequestContext::mmTokenTypeIds);
+			APISET().AddProp0("pixel_values", &QwenVLRequestContext::pixelValues);
+			APISET().AddProp0("image_grid_thw", &QwenVLRequestContext::imageGridTHW);
+			APISET().AddProp0("kv_cache", &QwenVLRequestContext::kvCache);
+			APISET().AddPropWithType<long long>("kv_handle", &QwenVLRequestContext::kvHandle);
+			APISET().AddPropWithType<int>("kv_max_tokens", &QwenVLRequestContext::kvMaxTokens);
+			APISET().AddPropWithType<int>("kv_logical_length", &QwenVLRequestContext::kvLogicalLength);
+			APISET().AddPropWithType<int>("kv_page_size", &QwenVLRequestContext::kvPageSize);
+			APISET().AddPropWithType<int>("kv_logical_pages", &QwenVLRequestContext::kvLogicalPages);
+			APISET().AddPropWithType<int>("kv_physical_pages", &QwenVLRequestContext::kvPhysicalPages);
+			APISET().AddPropWithType<int>("kv_q_heads", &QwenVLRequestContext::kvQHeads);
+			APISET().AddPropWithType<int>("kv_heads", &QwenVLRequestContext::kvHeads);
+			APISET().AddPropWithType<int>("kv_head_dim", &QwenVLRequestContext::kvHeadDim);
+			APISET().AddPropWithType<std::string>("model_dir", &QwenVLRequestContext::modelDir);
+			APISET().AddPropWithType<std::string>("image_path", &QwenVLRequestContext::imagePath);
+			APISET().AddPropWithType<std::string>("prompt", &QwenVLRequestContext::prompt);
+			APISET().AddVarFunc("stats", &QwenVLRequestContext::Stats);
+		END_PACKAGE
+
+		void Stats(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+	};
+
 	class KVCacheManager
 	{
 		struct SequenceState
@@ -77,12 +138,24 @@ namespace Garnet
 				[](auto* pThis) {return pThis->m_cantor; });
 			APISET().AddVarFunc("load_model", &GarnetAPI::LoadModelEx);
 			APISET().AddVarFunc("qwen_vl_smart_resize", &GarnetAPI::QwenVLSmartResize);
+			APISET().AddVarFunc("qwen_vl_create_request", &GarnetAPI::QwenVLCreateRequest);
 			APISET().AddVarFunc("qwen_vl_prepare_request", &GarnetAPI::QwenVLPrepareRequest);
 			APISET().AddVarFunc("qwen_vl_preprocess_image", &GarnetAPI::QwenVLPreprocessImage);
 			APISET().AddVarFunc("qwen_vl_preprocess_jpeg_file", &GarnetAPI::QwenVLPreprocessJpegFile);
 			APISET().AddVarFunc("KVCacheManager", &GarnetAPI::CreateKVCacheManager);
+			APISET().AddVarFunc("QwenTextRunner", &GarnetAPI::CreateQwenTextRunner);
+			APISET().AddVarFunc("device_paged_kv_write", &GarnetAPI::DevicePagedKVWriteTensor);
+			APISET().AddVarFunc("device_paged_kv_attention", &GarnetAPI::DevicePagedKVAttentionTensor);
+			APISET().AddVarFunc("tensor_add", &GarnetAPI::TensorAdd);
+			APISET().AddVarFunc("embedding", &GarnetAPI::Embedding);
+			APISET().AddVarFunc("replace_rows_by_mask", &GarnetAPI::ReplaceRowsByMask);
+			APISET().AddVarFunc("tensor_last_row", &GarnetAPI::TensorLastRow);
+			APISET().AddVarFunc("tensor_to_gpu", &GarnetAPI::TensorToGPU);
+			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
+			APISET().AddClass<0, QwenTextRunner>("QwenTextRunnerClass");
+			APISET().AddClass<0, QwenVLRequestContext>("QwenVLRequestContext");
 			APISET().AddClass<0, Model>("model");
 			APISET().AddClass<0, GarnetTensor>("tensor");
 		END_PACKAGE
@@ -120,15 +193,35 @@ namespace Garnet
 		X::Value LoadModel(std::string modelPath);
 		void CreateKVCacheManager(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void CreateQwenTextRunner(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void QwenVLSmartResize(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void QwenVLCreateRequest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void QwenVLPrepareRequest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void QwenVLPreprocessImage(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void QwenVLPreprocessJpegFile(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void DevicePagedKVWriteTensor(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void DevicePagedKVAttentionTensor(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void TensorAdd(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void Embedding(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ReplaceRowsByMask(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void TensorLastRow(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void TensorToGPU(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void TensorToCPU(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunTest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

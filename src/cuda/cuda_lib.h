@@ -217,6 +217,42 @@ extern "C" {
         int count,
         cudaStream_t stream = 0);
 
+    // Greedy sampler for row-major logits. Samples argmax from the last row.
+    cudaError_t runLogitsTop1FP32(
+        const float* logits,
+        long long* outputTokenId,
+        float* outputTokenValue,
+        int rows,
+        int vocabSize,
+        cudaStream_t stream = 0);
+
+    // Generic device tensor operations used to keep model orchestration on GPU.
+    cudaError_t runTensorAddFP32(
+        const float* lhs,
+        const float* rhs,
+        float* output,
+        int count,
+        cudaStream_t stream = 0);
+
+    cudaError_t runEmbeddingGatherInt64FP32(
+        const float* weights,
+        const long long* tokenIds,
+        float* output,
+        int tokenCount,
+        int vocabSize,
+        int hiddenSize,
+        cudaStream_t stream = 0);
+
+    cudaError_t runReplaceRowsByMaskInt64FP32(
+        float* output,
+        const long long* rowMask,
+        const float* replacementRows,
+        int rowCount,
+        int replacementCount,
+        int rowWidth,
+        long long maskValue,
+        cudaStream_t stream = 0);
+
     //void cleanup();
 
 #ifdef __cplusplus

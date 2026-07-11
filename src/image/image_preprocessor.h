@@ -8,6 +8,8 @@ namespace Garnet::Image
     {
         X::Value pixelValues;
         X::Value imageGridTHW;
+        int sourceHeight = 0;
+        int sourceWidth = 0;
         int resizedHeight = 0;
         int resizedWidth = 0;
         int patchSize = 0;

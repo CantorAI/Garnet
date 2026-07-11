@@ -2,10 +2,15 @@
 #include "cuda_lib.h"
 #include "garnet_tensor.h"
 #include "garnet_tensor.h"
+#include "tensor_helper.h"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <cmath>
+#include <cstdlib>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
 
 #include <NvInfer.h>
 #include <NvInferPlugin.h>
@@ -26,6 +31,194 @@ class Logger : public ILogger
 namespace Garnet {
 
     thread_local ITRTContext* g_trtContext = nullptr;
+
+    namespace {
+        struct CachedTRTExecution {
+            nvinfer1::IRuntime* runtime = nullptr;
+            nvinfer1::ICudaEngine* engine = nullptr;
+            nvinfer1::IExecutionContext* context = nullptr;
+        };
+
+        std::mutex g_trtExecutionCacheMutex;
+        std::unordered_map<std::string, CachedTRTExecution> g_trtExecutionCache;
+
+        nvinfer1::IExecutionContext* GetCachedTRTExecutionContext(const std::string& enginePath) {
+            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+            auto found = g_trtExecutionCache.find(enginePath);
+            if (found != g_trtExecutionCache.end()) {
+                return found->second.context;
+            }
+
+            std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
+            if (!in.is_open()) {
+                std::cout << "[TRTBuilder] Failed to open engine for read: " << enginePath << std::endl;
+                return nullptr;
+            }
+            std::streamsize size = in.tellg();
+            in.seekg(0, std::ios::beg);
+            std::vector<char> engineBytes(static_cast<size_t>(size));
+            if (!in.read(engineBytes.data(), size)) {
+                std::cout << "[TRTBuilder] Failed to read engine bytes: " << enginePath << std::endl;
+                return nullptr;
+            }
+
+            CachedTRTExecution cached;
+            cached.runtime = createInferRuntime(gLogger);
+            if (!cached.runtime) {
+                std::cout << "[TRTBuilder] createInferRuntime failed for cached engine: " << enginePath << std::endl;
+                return nullptr;
+            }
+            cached.engine = cached.runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
+            if (!cached.engine) {
+                std::cout << "[TRTBuilder] deserializeCudaEngine failed for cached engine: " << enginePath << std::endl;
+                return nullptr;
+            }
+            cached.context = cached.engine->createExecutionContext();
+            if (!cached.context) {
+                std::cout << "[TRTBuilder] createExecutionContext failed for cached engine: " << enginePath << std::endl;
+                return nullptr;
+            }
+
+            auto inserted = g_trtExecutionCache.emplace(enginePath, cached);
+            std::cout << "[TRTBuilder] Cached TensorRT execution context: " << enginePath << std::endl;
+            return inserted.first->second.context;
+        }
+
+        bool ShouldSyncTRTOutputToCPU() {
+            const char* value = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
+            if (!value) {
+                return true;
+            }
+            return !(value[0] == '0' && value[1] == '\0');
+        }
+
+        struct TensorDeviceBinding {
+            void* ptr = nullptr;
+            bool owned = false;
+        };
+
+        bool BindTensorInput(X::Tensor& tensor, size_t bytes, cudaStream_t stream, TensorDeviceBinding& binding) {
+            void* gpuPtr = TensorHelper::GetGPUMemory(tensor);
+            if (gpuPtr) {
+                binding.ptr = gpuPtr;
+                binding.owned = false;
+                return true;
+            }
+
+            // Tensor ownership is the device-memory contract. Promote a CPU
+            // tensor once and retain its CUDA allocation for the tensor's
+            // lifetime instead of uploading/freeing weights on every forward.
+            if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+                return false;
+            }
+            gpuPtr = TensorHelper::GetGPUMemory(tensor);
+            if (!gpuPtr || static_cast<size_t>(tensor->GetDataSize()) < bytes) {
+                return false;
+            }
+            binding.ptr = gpuPtr;
+            binding.owned = false;
+            return true;
+        }
+
+        void FreeOwnedBinding(TensorDeviceBinding& binding) {
+            if (binding.owned && binding.ptr) {
+                cudaFree(binding.ptr);
+            }
+            binding.ptr = nullptr;
+            binding.owned = false;
+        }
+
+        X::Value MakeGPUBackedTensor2D(
+            int rows,
+            int cols,
+            void* gpuOutput,
+            size_t outputBytes,
+            cudaStream_t stream) {
+            cudaError_t syncErr = cudaStreamSynchronize(stream);
+            if (syncErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] MakeGPUBackedTensor2D stream sync failed before tensor wrap: "
+                    << cudaGetErrorString(syncErr) << std::endl;
+                return X::Value();
+            }
+            cudaError_t lastErr = cudaGetLastError();
+            if (lastErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] MakeGPUBackedTensor2D CUDA error before tensor wrap: "
+                    << cudaGetErrorString(lastErr) << std::endl;
+                return X::Value();
+            }
+            X::Port::vector<int> outputShape(2);
+            outputShape.push_back(rows);
+            outputShape.push_back(cols);
+            X::Tensor output = X::g_pXHost->CreateTensor();
+            if (!output) {
+                std::cout << "[TRTBuilder] MakeGPUBackedTensor2D failed to create XTensor" << std::endl;
+                return X::Value();
+            }
+            output->SetDataType(X::TensorDataType::FLOAT32);
+            output->SetShape(outputShape);
+            if (ShouldSyncTRTOutputToCPU()) {
+                std::vector<char> host(outputBytes);
+                cudaError_t err = cudaMemcpy(host.data(), gpuOutput, outputBytes, cudaMemcpyDeviceToHost);
+                if (err != cudaSuccess) {
+                    std::cout << "[TRTBuilder] MakeGPUBackedTensor2D failed to sync CPU output" << std::endl;
+                    return X::Value();
+                }
+                output->DirectSetData(nullptr, 0);
+                output->SetDeviceType(X::TensorDeviceType::CPU);
+                output->SetDeviceContext(X::Value());
+                output->SetDeviceOps(X::Value());
+                output->SetData(host.data(), outputBytes);
+                cudaFree(gpuOutput);
+            }
+            else {
+                if (TensorHelper::AttachGPUMemory(output, gpuOutput) != TensorOpStatus::Success) {
+                    std::cout << "[TRTBuilder] MakeGPUBackedTensor2D failed to attach GPU memory" << std::endl;
+                    return X::Value();
+                }
+            }
+            return X::Value(output);
+        }
+
+        X::Value RebindExistingTensor2D(
+            X::Tensor& tensor,
+            int rows,
+            int cols,
+            void* gpuOutput,
+            size_t outputBytes,
+            cudaStream_t stream) {
+            cudaError_t syncErr = cudaStreamSynchronize(stream);
+            if (syncErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] RebindExistingTensor2D stream sync failed: "
+                    << cudaGetErrorString(syncErr) << std::endl;
+                return X::Value();
+            }
+
+            X::Port::vector<int> outputShape(2);
+            outputShape.push_back(rows);
+            outputShape.push_back(cols);
+            tensor->SetShape(outputShape);
+            tensor->SetDataType(X::TensorDataType::FLOAT32);
+            if (TensorHelper::AttachGPUMemory(tensor, gpuOutput) != TensorOpStatus::Success) {
+                std::cout << "[TRTBuilder] RebindExistingTensor2D failed to attach GPU memory" << std::endl;
+                return X::Value();
+            }
+            if (ShouldSyncTRTOutputToCPU()) {
+                std::vector<char> host(outputBytes);
+                cudaError_t err = cudaMemcpy(host.data(), gpuOutput, outputBytes, cudaMemcpyDeviceToHost);
+                if (err != cudaSuccess) {
+                    std::cout << "[TRTBuilder] RebindExistingTensor2D failed to sync CPU output" << std::endl;
+                    return X::Value();
+                }
+                tensor->DirectSetData(nullptr, 0);
+                tensor->SetDeviceType(X::TensorDeviceType::CPU);
+                tensor->SetDeviceContext(X::Value());
+                tensor->SetDeviceOps(X::Value());
+                tensor->SetData(host.data(), outputBytes);
+                cudaFree(gpuOutput);
+            }
+            return X::Value(tensor);
+        }
+    }
 
     TRTBuilder::TRTBuilder() {
     }
@@ -288,22 +481,22 @@ namespace Garnet {
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
 
+        TensorDeviceBinding inputBinding;
+        TensorDeviceBinding weightBinding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding) ||
+            !BindTensorInput(weight, weightBytes, stream, weightBinding) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             std::cout << "[TRTBuilder] CUDA allocation failed." << std::endl;
-            if (dInput) cudaFree(dInput);
-            if (dWeight) cudaFree(dWeight);
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
             if (dOutput) cudaFree(dOutput);
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::cout << "[TRTBuilder] CUDA buffers allocated." << std::endl;
-
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
-        std::cout << "[TRTBuilder] Inputs copied to device." << std::endl;
+        dInput = inputBinding.ptr;
+        dWeight = weightBinding.ptr;
+        std::cout << "[TRTBuilder] CUDA buffers bound." << std::endl;
 
         bool bound = context->setTensorAddress("a", dInput)
             && context->setTensorAddress("W", dWeight)
@@ -311,8 +504,8 @@ namespace Garnet {
         std::cout << "[TRTBuilder] setTensorAddress returned " << (bound ? "ok" : "false") << std::endl;
         if (!bound) {
             std::cout << "[TRTBuilder] setTensorAddress failed." << std::endl;
-            cudaFree(dInput);
-            cudaFree(dWeight);
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
             cudaFree(dOutput);
             cudaStreamDestroy(stream);
             return X::Value();
@@ -322,40 +515,24 @@ namespace Garnet {
         std::cout << "[TRTBuilder] enqueueV3 returned " << (ok ? "ok" : "false") << std::endl;
         if (!ok) {
             std::cout << "[TRTBuilder] enqueueV3 failed." << std::endl;
-            cudaFree(dInput);
-            cudaFree(dWeight);
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
             cudaFree(dOutput);
             cudaStreamDestroy(stream);
             return X::Value();
         }
 
-        std::vector<float> hostOutput(static_cast<size_t>(m) * static_cast<size_t>(n));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-        std::cout << "[TRTBuilder] Output copied to host." << std::endl;
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(m);
-        outputShape.push_back(n);
-        output->SetShape(outputShape);
-
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            std::cout << "[TRTBuilder] Failed to create output tensor storage." << std::endl;
-            cudaFree(dInput);
-            cudaFree(dWeight);
+        X::Value output = MakeGPUBackedTensor2D(m, n, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
             cudaFree(dOutput);
             cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
-        std::cout << "[TRTBuilder] Output tensor created." << std::endl;
 
-        cudaFree(dInput);
-        cudaFree(dWeight);
-        cudaFree(dOutput);
+        FreeOwnedBinding(inputBinding);
+        FreeOwnedBinding(weightBinding);
         cudaStreamDestroy(stream);
 
         std::cout << "[TRTBuilder] RunMatmulEngine completed: [" << m << ", " << n << "]" << std::endl;
@@ -509,20 +686,24 @@ namespace Garnet {
             void* dHidden = nullptr;
             void* dOutput = nullptr;
             cudaStream_t stream = nullptr;
+            TensorDeviceBinding inputBinding;
+            TensorDeviceBinding gateBinding;
+            TensorDeviceBinding upBinding;
+            TensorDeviceBinding downBinding;
             if (cudaStreamCreate(&stream) != cudaSuccess ||
-                cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-                cudaMalloc(&dGateW, projBytes) != cudaSuccess ||
-                cudaMalloc(&dUpW, projBytes) != cudaSuccess ||
-                cudaMalloc(&dDownW, downBytes) != cudaSuccess ||
+                !BindTensorInput(input, inputBytes, stream, inputBinding) ||
+                !BindTensorInput(gate, projBytes, stream, gateBinding) ||
+                !BindTensorInput(up, projBytes, stream, upBinding) ||
+                !BindTensorInput(down, downBytes, stream, downBinding) ||
                 cudaMalloc(&dGate, intermediateBytes) != cudaSuccess ||
                 cudaMalloc(&dUp, intermediateBytes) != cudaSuccess ||
                 cudaMalloc(&dHidden, intermediateBytes) != cudaSuccess ||
                 cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
                 std::cout << "[TRTBuilder] CUDA TextMLP allocation failed." << std::endl;
-                if (dInput) cudaFree(dInput);
-                if (dGateW) cudaFree(dGateW);
-                if (dUpW) cudaFree(dUpW);
-                if (dDownW) cudaFree(dDownW);
+                FreeOwnedBinding(inputBinding);
+                FreeOwnedBinding(gateBinding);
+                FreeOwnedBinding(upBinding);
+                FreeOwnedBinding(downBinding);
                 if (dGate) cudaFree(dGate);
                 if (dUp) cudaFree(dUp);
                 if (dHidden) cudaFree(dHidden);
@@ -531,10 +712,10 @@ namespace Garnet {
                 return X::Value();
             }
 
-            cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-            cudaMemcpyAsync(dGateW, gate->GetData(), projBytes, cudaMemcpyHostToDevice, stream);
-            cudaMemcpyAsync(dUpW, up->GetData(), projBytes, cudaMemcpyHostToDevice, stream);
-            cudaMemcpyAsync(dDownW, down->GetData(), downBytes, cudaMemcpyHostToDevice, stream);
+            dInput = inputBinding.ptr;
+            dGateW = gateBinding.ptr;
+            dUpW = upBinding.ptr;
+            dDownW = downBinding.ptr;
 
             cudaError_t status = runLinearTransposeFP32(
                 static_cast<const float*>(dInput),
@@ -575,65 +756,29 @@ namespace Garnet {
             if (status != cudaSuccess) {
                 std::cout << "[TRTBuilder] CUDA TextMLP launch failed: "
                     << cudaGetErrorString(status) << std::endl;
-                cudaFree(dInput); cudaFree(dGateW); cudaFree(dUpW); cudaFree(dDownW);
+                FreeOwnedBinding(inputBinding); FreeOwnedBinding(gateBinding); FreeOwnedBinding(upBinding); FreeOwnedBinding(downBinding);
                 cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
                 cudaStreamDestroy(stream);
                 return X::Value();
             }
 
-            std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
-            cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-            status = cudaStreamSynchronize(stream);
-            if (status != cudaSuccess) {
-                std::cout << "[TRTBuilder] CUDA TextMLP sync failed: "
-                    << cudaGetErrorString(status) << std::endl;
-                cudaFree(dInput); cudaFree(dGateW); cudaFree(dUpW); cudaFree(dDownW);
+            X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+            if (!output.IsValid()) {
+                FreeOwnedBinding(inputBinding); FreeOwnedBinding(gateBinding); FreeOwnedBinding(upBinding); FreeOwnedBinding(downBinding);
                 cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
                 cudaStreamDestroy(stream);
                 return X::Value();
             }
 
-            X::Tensor output;
-            output->SetDataType(X::TensorDataType::FLOAT32);
-            X::Port::vector<int> outputShape(2);
-            outputShape.push_back(tokens);
-            outputShape.push_back(hidden);
-            output->SetShape(outputShape);
-            X::Value initData;
-            if (!output->Create(initData) || output->GetData() == nullptr) {
-                cudaFree(dInput); cudaFree(dGateW); cudaFree(dUpW); cudaFree(dDownW);
-                cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
-                cudaStreamDestroy(stream);
-                return X::Value();
-            }
-            memcpy(output->GetData(), hostOutput.data(), outputBytes);
-
-            cudaFree(dInput); cudaFree(dGateW); cudaFree(dUpW); cudaFree(dDownW);
-            cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(gateBinding); FreeOwnedBinding(upBinding); FreeOwnedBinding(downBinding);
+            cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden);
             cudaStreamDestroy(stream);
             std::cout << "[TRTBuilder] CUDA TextMLP completed: [" << tokens
                 << ", " << hidden << "]" << std::endl;
             return output;
         }
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) {
-            std::cout << "[TRTBuilder] Failed to open TextMLP engine for read: " << enginePath << std::endl;
-            return X::Value();
-        }
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) {
-            std::cout << "[TRTBuilder] Failed to read TextMLP engine bytes." << std::endl;
-            return X::Value();
-        }
-
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -641,77 +786,61 @@ namespace Garnet {
         size_t downBytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * sizeof(float);
         size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
 
-        void* dInput = nullptr;
-        void* dGate = nullptr;
-        void* dUp = nullptr;
-        void* dDown = nullptr;
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dGate;
+        TensorDeviceBinding dUp;
+        TensorDeviceBinding dDown;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
-        if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dGate, projBytes) != cudaSuccess ||
-            cudaMalloc(&dUp, projBytes) != cudaSuccess ||
-            cudaMalloc(&dDown, downBytes) != cudaSuccess ||
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
+            return X::Value();
+        }
+        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
+            !BindTensorInput(gate, projBytes, stream, dGate) ||
+            !BindTensorInput(up, projBytes, stream, dUp) ||
+            !BindTensorInput(down, downBytes, stream, dDown) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             std::cout << "[TRTBuilder] TextMLP CUDA allocation failed." << std::endl;
-            if (dInput) cudaFree(dInput);
-            if (dGate) cudaFree(dGate);
-            if (dUp) cudaFree(dUp);
-            if (dDown) cudaFree(dDown);
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dGate);
+            FreeOwnedBinding(dUp);
+            FreeOwnedBinding(dDown);
             if (dOutput) cudaFree(dOutput);
-            if (stream) cudaStreamDestroy(stream);
+            cudaStreamDestroy(stream);
             return X::Value();
         }
 
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dGate, gate->GetData(), projBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dUp, up->GetData(), projBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dDown, down->GetData(), downBytes, cudaMemcpyHostToDevice, stream);
-
-        bool bound = context->setTensorAddress("x", dInput)
-            && context->setTensorAddress("W_gate", dGate)
-            && context->setTensorAddress("W_up", dUp)
-            && context->setTensorAddress("W_down", dDown)
+        bool bound = context->setTensorAddress("x", dInput.ptr)
+            && context->setTensorAddress("W_gate", dGate.ptr)
+            && context->setTensorAddress("W_up", dUp.ptr)
+            && context->setTensorAddress("W_down", dDown.ptr)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
             std::cout << "[TRTBuilder] TextMLP enqueue failed." << std::endl;
-            cudaFree(dInput);
-            cudaFree(dGate);
-            cudaFree(dUp);
-            cudaFree(dDown);
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dGate);
+            FreeOwnedBinding(dUp);
+            FreeOwnedBinding(dDown);
             cudaFree(dOutput);
             cudaStreamDestroy(stream);
             return X::Value();
         }
 
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(hidden);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
+        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
             std::cout << "[TRTBuilder] Failed to create TextMLP output tensor." << std::endl;
-            cudaFree(dInput);
-            cudaFree(dGate);
-            cudaFree(dUp);
-            cudaFree(dDown);
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dGate);
+            FreeOwnedBinding(dUp);
+            FreeOwnedBinding(dDown);
             cudaFree(dOutput);
             cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
-
-        cudaFree(dInput);
-        cudaFree(dGate);
-        cudaFree(dUp);
-        cudaFree(dDown);
-        cudaFree(dOutput);
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dGate);
+        FreeOwnedBinding(dUp);
+        FreeOwnedBinding(dDown);
         cudaStreamDestroy(stream);
 
         std::cout << "[TRTBuilder] RunTextMLPEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
@@ -799,17 +928,7 @@ namespace Garnet {
         int vOut = v->GetDimSize(0);
         if (q->GetDimSize(1) != hidden || k->GetDimSize(1) != hidden || v->GetDimSize(1) != hidden) return X::Value();
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -817,56 +936,56 @@ namespace Garnet {
         size_t kBytes = static_cast<size_t>(kOut) * static_cast<size_t>(hidden) * sizeof(float);
         size_t vBytes = static_cast<size_t>(vOut) * static_cast<size_t>(hidden) * sizeof(float);
         size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(qOut + kOut + vOut) * sizeof(float);
-        void* dInput = nullptr;
-        void* dQ = nullptr;
-        void* dK = nullptr;
-        void* dV = nullptr;
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dQ;
+        TensorDeviceBinding dK;
+        TensorDeviceBinding dV;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
-        if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dQ, qBytes) != cudaSuccess ||
-            cudaMalloc(&dK, kBytes) != cudaSuccess ||
-            cudaMalloc(&dV, vBytes) != cudaSuccess ||
-            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dQ) cudaFree(dQ);
-            if (dK) cudaFree(dK);
-            if (dV) cudaFree(dV);
-            if (dOutput) cudaFree(dOutput);
-            if (stream) cudaStreamDestroy(stream);
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dQ, q->GetData(), qBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dK, k->GetData(), kBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dV, v->GetData(), vBytes, cudaMemcpyHostToDevice, stream);
-        bool bound = context->setTensorAddress("x", dInput)
-            && context->setTensorAddress("W_q", dQ)
-            && context->setTensorAddress("W_k", dK)
-            && context->setTensorAddress("W_v", dV)
+        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
+            !BindTensorInput(q, qBytes, stream, dQ) ||
+            !BindTensorInput(k, kBytes, stream, dK) ||
+            !BindTensorInput(v, vBytes, stream, dV) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        bool bound = context->setTensorAddress("x", dInput.ptr)
+            && context->setTensorAddress("W_q", dQ.ptr)
+            && context->setTensorAddress("W_k", dK.ptr)
+            && context->setTensorAddress("W_v", dV.ptr)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dQ); cudaFree(dK); cudaFree(dV); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(qOut + kOut + vOut));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(qOut + kOut + vOut);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dQ); cudaFree(dK); cudaFree(dV); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, qOut + kOut + vOut, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
-        cudaFree(dInput); cudaFree(dQ); cudaFree(dK); cudaFree(dV); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dQ);
+        FreeOwnedBinding(dK);
+        FreeOwnedBinding(dV);
+        cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunTextQKVEngine completed: [" << tokens << ", " << (qOut + kOut + vOut) << "]" << std::endl;
         return output;
     }
@@ -1024,17 +1143,7 @@ namespace Garnet {
         if (headDim <= 0 || kNorm->GetDimSize(0) != headDim || q->GetDimSize(1) != hidden || k->GetDimSize(1) != hidden ||
             v->GetDimSize(1) != hidden || qOut % headDim != 0 || kOut % headDim != 0 || vOut != kOut) return X::Value();
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -1043,66 +1152,70 @@ namespace Garnet {
         size_t vBytes = static_cast<size_t>(vOut) * static_cast<size_t>(hidden) * sizeof(float);
         size_t normBytes = static_cast<size_t>(headDim) * sizeof(float);
         size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(qOut + kOut + vOut) * sizeof(float);
-        void* dInput = nullptr;
-        void* dQ = nullptr;
-        void* dK = nullptr;
-        void* dV = nullptr;
-        void* dQNorm = nullptr;
-        void* dKNorm = nullptr;
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dQ;
+        TensorDeviceBinding dK;
+        TensorDeviceBinding dV;
+        TensorDeviceBinding dQNorm;
+        TensorDeviceBinding dKNorm;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
-        if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dQ, qBytes) != cudaSuccess ||
-            cudaMalloc(&dK, kBytes) != cudaSuccess ||
-            cudaMalloc(&dV, vBytes) != cudaSuccess ||
-            cudaMalloc(&dQNorm, normBytes) != cudaSuccess ||
-            cudaMalloc(&dKNorm, normBytes) != cudaSuccess ||
-            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dQ) cudaFree(dQ);
-            if (dK) cudaFree(dK);
-            if (dV) cudaFree(dV);
-            if (dQNorm) cudaFree(dQNorm);
-            if (dKNorm) cudaFree(dKNorm);
-            if (dOutput) cudaFree(dOutput);
-            if (stream) cudaStreamDestroy(stream);
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dQ, q->GetData(), qBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dK, k->GetData(), kBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dV, v->GetData(), vBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dQNorm, qNorm->GetData(), normBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dKNorm, kNorm->GetData(), normBytes, cudaMemcpyHostToDevice, stream);
-        bool bound = context->setTensorAddress("x", dInput)
-            && context->setTensorAddress("W_q", dQ)
-            && context->setTensorAddress("W_k", dK)
-            && context->setTensorAddress("W_v", dV)
-            && context->setTensorAddress("q_norm", dQNorm)
-            && context->setTensorAddress("k_norm", dKNorm)
+        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
+            !BindTensorInput(q, qBytes, stream, dQ) ||
+            !BindTensorInput(k, kBytes, stream, dK) ||
+            !BindTensorInput(v, vBytes, stream, dV) ||
+            !BindTensorInput(qNorm, normBytes, stream, dQNorm) ||
+            !BindTensorInput(kNorm, normBytes, stream, dKNorm) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            FreeOwnedBinding(dQNorm);
+            FreeOwnedBinding(dKNorm);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        bool bound = context->setTensorAddress("x", dInput.ptr)
+            && context->setTensorAddress("W_q", dQ.ptr)
+            && context->setTensorAddress("W_k", dK.ptr)
+            && context->setTensorAddress("W_v", dV.ptr)
+            && context->setTensorAddress("q_norm", dQNorm.ptr)
+            && context->setTensorAddress("k_norm", dKNorm.ptr)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dQ); cudaFree(dK); cudaFree(dV); cudaFree(dQNorm); cudaFree(dKNorm); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            FreeOwnedBinding(dQNorm);
+            FreeOwnedBinding(dKNorm);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(qOut + kOut + vOut));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(qOut + kOut + vOut);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dQ); cudaFree(dK); cudaFree(dV); cudaFree(dQNorm); cudaFree(dKNorm); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, qOut + kOut + vOut, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            FreeOwnedBinding(dQNorm);
+            FreeOwnedBinding(dKNorm);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
-        cudaFree(dInput); cudaFree(dQ); cudaFree(dK); cudaFree(dV); cudaFree(dQNorm); cudaFree(dKNorm); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dQ);
+        FreeOwnedBinding(dK);
+        FreeOwnedBinding(dV);
+        FreeOwnedBinding(dQNorm);
+        FreeOwnedBinding(dKNorm);
+        cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunTextQKVHeadNormEngine completed: [" << tokens << ", " << (qOut + kOut + vOut) << "]" << std::endl;
         return output;
     }
@@ -1283,66 +1396,54 @@ namespace Garnet {
         int headDim = cos->GetDimSize(1);
         if (cos->GetDimSize(0) != tokens || sin->GetDimSize(0) != tokens || sin->GetDimSize(1) != headDim) return X::Value();
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t qkvBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
         size_t posBytes = static_cast<size_t>(tokens) * static_cast<size_t>(headDim) * sizeof(float);
-        void* dQKV = nullptr;
-        void* dCos = nullptr;
-        void* dSin = nullptr;
+        TensorDeviceBinding dQKV;
+        TensorDeviceBinding dCos;
+        TensorDeviceBinding dSin;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
-        if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dQKV, qkvBytes) != cudaSuccess ||
-            cudaMalloc(&dCos, posBytes) != cudaSuccess ||
-            cudaMalloc(&dSin, posBytes) != cudaSuccess ||
-            cudaMalloc(&dOutput, qkvBytes) != cudaSuccess) {
-            if (dQKV) cudaFree(dQKV);
-            if (dCos) cudaFree(dCos);
-            if (dSin) cudaFree(dSin);
-            if (dOutput) cudaFree(dOutput);
-            if (stream) cudaStreamDestroy(stream);
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        cudaMemcpyAsync(dQKV, qkv->GetData(), qkvBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dCos, cos->GetData(), posBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dSin, sin->GetData(), posBytes, cudaMemcpyHostToDevice, stream);
-        bool bound = context->setTensorAddress("qkv", dQKV)
-            && context->setTensorAddress("cos", dCos)
-            && context->setTensorAddress("sin", dSin)
+        if (!BindTensorInput(qkv, qkvBytes, stream, dQKV) ||
+            !BindTensorInput(cos, posBytes, stream, dCos) ||
+            !BindTensorInput(sin, posBytes, stream, dSin) ||
+            cudaMalloc(&dOutput, qkvBytes) != cudaSuccess) {
+            FreeOwnedBinding(dQKV);
+            FreeOwnedBinding(dCos);
+            FreeOwnedBinding(dSin);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        bool bound = context->setTensorAddress("qkv", dQKV.ptr)
+            && context->setTensorAddress("cos", dCos.ptr)
+            && context->setTensorAddress("sin", dSin.ptr)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dQKV); cudaFree(dCos); cudaFree(dSin); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(dQKV);
+            FreeOwnedBinding(dCos);
+            FreeOwnedBinding(dSin);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(total));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, qkvBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(total);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dQKV); cudaFree(dCos); cudaFree(dSin); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, total, dOutput, qkvBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dQKV);
+            FreeOwnedBinding(dCos);
+            FreeOwnedBinding(dSin);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), qkvBytes);
-        cudaFree(dQKV); cudaFree(dCos); cudaFree(dSin); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(dQKV);
+        FreeOwnedBinding(dCos);
+        FreeOwnedBinding(dSin);
+        cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunTextRoPEEngine completed: [" << tokens << ", " << total << "]" << std::endl;
         return output;
     }
@@ -1536,56 +1637,40 @@ namespace Garnet {
         int tokens = qkv->GetDimSize(0);
         int total = qkv->GetDimSize(1);
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
         size_t outputBytes = static_cast<size_t>(tokens) * 2048ULL * sizeof(float);
-        void* dInput = nullptr;
+        TensorDeviceBinding dInput;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
-        if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dOutput) cudaFree(dOutput);
-            if (stream) cudaStreamDestroy(stream);
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        cudaMemcpyAsync(dInput, qkv->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        bool bound = context->setTensorAddress("qkv", dInput)
+        if (!BindTensorInput(qkv, inputBytes, stream, dInput) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        bool bound = context->setTensorAddress("qkv", dInput.ptr)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(dInput);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * 2048ULL);
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(2048);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, 2048, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
-        cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(dInput);
+        cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunTextAttentionEngine completed: [" << tokens << ", 2048]" << std::endl;
         return output;
     }
@@ -1745,16 +1830,17 @@ namespace Garnet {
             void* dInput = nullptr;
             void* dOutput = nullptr;
             cudaStream_t stream = nullptr;
+            TensorDeviceBinding inputBinding;
             if (cudaStreamCreate(&stream) != cudaSuccess ||
-                cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+                !BindTensorInput(qkv, inputBytes, stream, inputBinding) ||
                 cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-                if (dInput) cudaFree(dInput);
+                FreeOwnedBinding(inputBinding);
                 if (dOutput) cudaFree(dOutput);
                 if (stream) cudaStreamDestroy(stream);
                 std::cout << "[TRTBuilder] CUDA exact vision attention allocation failed." << std::endl;
                 return X::Value();
             }
-            cudaMemcpyAsync(dInput, qkv->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+            dInput = inputBinding.ptr;
             cudaError_t launchErr = runVisionAttentionFP32(
                 static_cast<const float*>(dInput),
                 static_cast<float*>(dOutput),
@@ -1765,50 +1851,22 @@ namespace Garnet {
             if (launchErr != cudaSuccess) {
                 std::cout << "[TRTBuilder] CUDA exact vision attention launch failed: "
                     << cudaGetErrorString(launchErr) << std::endl;
-                cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+                FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
             }
-            std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
-            cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-            cudaError_t syncErr = cudaStreamSynchronize(stream);
-            if (syncErr != cudaSuccess) {
-                std::cout << "[TRTBuilder] CUDA exact vision attention sync failed: "
-                    << cudaGetErrorString(syncErr) << std::endl;
-                cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+            X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+            if (!output.IsValid()) {
+                FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
             }
-
-            X::Tensor output;
-            output->SetDataType(X::TensorDataType::FLOAT32);
-            X::Port::vector<int> outputShape(2);
-            outputShape.push_back(tokens);
-            outputShape.push_back(hidden);
-            output->SetShape(outputShape);
-            X::Value initData;
-            if (!output->Create(initData) || output->GetData() == nullptr) {
-                cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
-                return X::Value();
-            }
-            memcpy(output->GetData(), hostOutput.data(), outputBytes);
-            cudaFree(dInput);
-            cudaFree(dOutput);
+            FreeOwnedBinding(inputBinding);
             cudaStreamDestroy(stream);
             std::cout << "[TRTBuilder] CUDA exact vision attention completed: [" << tokens
                 << ", " << hidden << "]" << std::endl;
             return output;
         }
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
@@ -1816,38 +1874,28 @@ namespace Garnet {
         void* dInput = nullptr;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
+        TensorDeviceBinding inputBinding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
+            !BindTensorInput(qkv, inputBytes, stream, inputBinding) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
+            FreeOwnedBinding(inputBinding);
             if (dOutput) cudaFree(dOutput);
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
-        cudaMemcpyAsync(dInput, qkv->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+        dInput = inputBinding.ptr;
         bool bound = context->setTensorAddress("qkv", dInput)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(hidden);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
-        cudaFree(dInput); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(inputBinding); cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunVisionAttentionEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
         return output;
     }
@@ -1918,25 +1966,28 @@ namespace Garnet {
             size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
             size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
             size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
-            void* dInput = nullptr;
-            void* dWeight = nullptr;
+            TensorDeviceBinding dInput;
+            TensorDeviceBinding dWeight;
             void* dOutput = nullptr;
             cudaStream_t stream = nullptr;
-            if (cudaStreamCreate(&stream) != cudaSuccess ||
-                cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-                cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
-                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-                if (dInput) cudaFree(dInput);
-                if (dWeight) cudaFree(dWeight);
-                if (dOutput) cudaFree(dOutput);
-                if (stream) cudaStreamDestroy(stream);
+            if (cudaStreamCreate(&stream) != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear transpose stream create failed." << std::endl;
                 return X::Value();
             }
-            cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-            cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
+            if (!BindTensorInput(input, inputBytes, stream, dInput) ||
+                !BindTensorInput(weight, weightBytes, stream, dWeight) ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear transpose allocation/bind failed: "
+                    << cudaGetErrorString(cudaGetLastError()) << std::endl;
+                FreeOwnedBinding(dInput);
+                FreeOwnedBinding(dWeight);
+                if (dOutput) cudaFree(dOutput);
+                cudaStreamDestroy(stream);
+                return X::Value();
+            }
             cudaError_t status = runLinearTransposeFP32(
-                static_cast<const float*>(dInput),
-                static_cast<const float*>(dWeight),
+                static_cast<const float*>(dInput.ptr),
+                static_cast<const float*>(dWeight.ptr),
                 static_cast<float*>(dOutput),
                 tokens,
                 inFeatures,
@@ -1945,93 +1996,70 @@ namespace Garnet {
             if (status != cudaSuccess) {
                 std::cout << "[TRTBuilder] CUDA linear transpose launch failed: "
                     << cudaGetErrorString(status) << std::endl;
-                cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+                FreeOwnedBinding(dInput);
+                FreeOwnedBinding(dWeight);
+                cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
             }
-            std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures));
-            cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-            status = cudaStreamSynchronize(stream);
-            if (status != cudaSuccess) {
-                std::cout << "[TRTBuilder] CUDA linear transpose sync failed: "
-                    << cudaGetErrorString(status) << std::endl;
-                cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+            X::Value output = MakeGPUBackedTensor2D(tokens, outFeatures, dOutput, outputBytes, stream);
+            if (!output.IsValid()) {
+                std::cout << "[TRTBuilder] CUDA linear transpose output wrap failed." << std::endl;
+                FreeOwnedBinding(dInput);
+                FreeOwnedBinding(dWeight);
+                cudaFree(dOutput);
+                cudaStreamDestroy(stream);
                 return X::Value();
             }
-
-            X::Tensor output;
-            output->SetDataType(X::TensorDataType::FLOAT32);
-            X::Port::vector<int> outputShape(2);
-            outputShape.push_back(tokens);
-            outputShape.push_back(outFeatures);
-            output->SetShape(outputShape);
-            X::Value initData;
-            if (!output->Create(initData) || output->GetData() == nullptr) {
-                cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
-                return X::Value();
-            }
-            memcpy(output->GetData(), hostOutput.data(), outputBytes);
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaStreamDestroy(stream);
             std::cout << "[TRTBuilder] CUDA linear transpose completed: [" << tokens
                 << ", " << outFeatures << "]" << std::endl;
             return output;
         }
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
         size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
         size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
-        void* dInput = nullptr;
-        void* dWeight = nullptr;
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dWeight;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
-        if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
-            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dWeight) cudaFree(dWeight);
-            if (dOutput) cudaFree(dOutput);
-            if (stream) cudaStreamDestroy(stream);
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
-        bool bound = context->setTensorAddress("x", dInput)
-            && context->setTensorAddress("W", dWeight)
+        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
+            !BindTensorInput(weight, weightBytes, stream, dWeight) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        bool bound = context->setTensorAddress("x", dInput.ptr)
+            && context->setTensorAddress("W", dWeight.ptr)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(outFeatures);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, outFeatures, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
-        cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dWeight);
+        cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunLinearTransposeEngine completed: [" << tokens << ", " << outFeatures << "]" << std::endl;
         return output;
     }
@@ -2122,22 +2150,25 @@ namespace Garnet {
             void* dBias = nullptr;
             void* dOutput = nullptr;
             cudaStream_t stream = nullptr;
+            TensorDeviceBinding inputBinding;
+            TensorDeviceBinding weightBinding;
+            TensorDeviceBinding biasBinding;
             if (cudaStreamCreate(&stream) != cudaSuccess ||
-                cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-                cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
-                cudaMalloc(&dBias, biasBytes) != cudaSuccess ||
+                !BindTensorInput(input, inputBytes, stream, inputBinding) ||
+                !BindTensorInput(weight, weightBytes, stream, weightBinding) ||
+                !BindTensorInput(bias, biasBytes, stream, biasBinding) ||
                 cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-                if (dInput) cudaFree(dInput);
-                if (dWeight) cudaFree(dWeight);
-                if (dBias) cudaFree(dBias);
+                FreeOwnedBinding(inputBinding);
+                FreeOwnedBinding(weightBinding);
+                FreeOwnedBinding(biasBinding);
                 if (dOutput) cudaFree(dOutput);
                 if (stream) cudaStreamDestroy(stream);
                 std::cout << "[TRTBuilder] CUDA linear+bias allocation failed." << std::endl;
                 return X::Value();
             }
-            cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-            cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
-            cudaMemcpyAsync(dBias, bias->GetData(), biasBytes, cudaMemcpyHostToDevice, stream);
+            dInput = inputBinding.ptr;
+            dWeight = weightBinding.ptr;
+            dBias = biasBinding.ptr;
             cudaError_t launchErr = runLinearBiasTransposeFP32(
                 static_cast<const float*>(dInput),
                 static_cast<const float*>(dWeight),
@@ -2150,52 +2181,24 @@ namespace Garnet {
             if (launchErr != cudaSuccess) {
                 std::cout << "[TRTBuilder] CUDA linear+bias launch failed: "
                     << cudaGetErrorString(launchErr) << std::endl;
-                cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+                FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
             }
-            std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures));
-            cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-            cudaError_t syncErr = cudaStreamSynchronize(stream);
-            if (syncErr != cudaSuccess) {
-                std::cout << "[TRTBuilder] CUDA linear+bias sync failed: "
-                    << cudaGetErrorString(syncErr) << std::endl;
-                cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+            X::Value output = MakeGPUBackedTensor2D(tokens, outFeatures, dOutput, outputBytes, stream);
+            if (!output.IsValid()) {
+                FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
             }
-
-            X::Tensor output;
-            output->SetDataType(X::TensorDataType::FLOAT32);
-            X::Port::vector<int> outputShape(2);
-            outputShape.push_back(tokens);
-            outputShape.push_back(outFeatures);
-            output->SetShape(outputShape);
-            X::Value initData;
-            if (!output->Create(initData) || output->GetData() == nullptr) {
-                cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
-                return X::Value();
-            }
-            memcpy(output->GetData(), hostOutput.data(), outputBytes);
-            cudaFree(dInput);
-            cudaFree(dWeight);
-            cudaFree(dBias);
-            cudaFree(dOutput);
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            FreeOwnedBinding(biasBinding);
             cudaStreamDestroy(stream);
             std::cout << "[TRTBuilder] CUDA linear+bias transpose completed: ["
                 << tokens << ", " << outFeatures << "]" << std::endl;
             return output;
         }
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
@@ -2207,46 +2210,38 @@ namespace Garnet {
         void* dBias = nullptr;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
+        TensorDeviceBinding inputBinding;
+        TensorDeviceBinding weightBinding;
+        TensorDeviceBinding biasBinding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
-            cudaMalloc(&dBias, biasBytes) != cudaSuccess ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding) ||
+            !BindTensorInput(weight, weightBytes, stream, weightBinding) ||
+            !BindTensorInput(bias, biasBytes, stream, biasBinding) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dWeight) cudaFree(dWeight);
-            if (dBias) cudaFree(dBias);
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            FreeOwnedBinding(biasBinding);
             if (dOutput) cudaFree(dOutput);
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dBias, bias->GetData(), biasBytes, cudaMemcpyHostToDevice, stream);
+        dInput = inputBinding.ptr;
+        dWeight = weightBinding.ptr;
+        dBias = biasBinding.ptr;
         bool bound = context->setTensorAddress("x", dInput)
             && context->setTensorAddress("W", dWeight)
             && context->setTensorAddress("B", dBias)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(outFeatures);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, outFeatures, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
-        cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunLinearBiasTransposeEngine completed: [" << tokens << ", " << outFeatures << "]" << std::endl;
         return output;
     }
@@ -2363,17 +2358,7 @@ namespace Garnet {
             return X::Value();
         }
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -2390,28 +2375,33 @@ namespace Garnet {
         void* dB2 = nullptr;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
+        TensorDeviceBinding inputBinding;
+        TensorDeviceBinding w1Binding;
+        TensorDeviceBinding b1Binding;
+        TensorDeviceBinding w2Binding;
+        TensorDeviceBinding b2Binding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dW1, fc1Bytes) != cudaSuccess ||
-            cudaMalloc(&dB1, fc1BiasBytes) != cudaSuccess ||
-            cudaMalloc(&dW2, fc2Bytes) != cudaSuccess ||
-            cudaMalloc(&dB2, fc2BiasBytes) != cudaSuccess ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding) ||
+            !BindTensorInput(w1, fc1Bytes, stream, w1Binding) ||
+            !BindTensorInput(b1, fc1BiasBytes, stream, b1Binding) ||
+            !BindTensorInput(w2, fc2Bytes, stream, w2Binding) ||
+            !BindTensorInput(b2, fc2BiasBytes, stream, b2Binding) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dW1) cudaFree(dW1);
-            if (dB1) cudaFree(dB1);
-            if (dW2) cudaFree(dW2);
-            if (dB2) cudaFree(dB2);
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(w1Binding);
+            FreeOwnedBinding(b1Binding);
+            FreeOwnedBinding(w2Binding);
+            FreeOwnedBinding(b2Binding);
             if (dOutput) cudaFree(dOutput);
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
 
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dW1, w1->GetData(), fc1Bytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dB1, b1->GetData(), fc1BiasBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dW2, w2->GetData(), fc2Bytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dB2, b2->GetData(), fc2BiasBytes, cudaMemcpyHostToDevice, stream);
+        dInput = inputBinding.ptr;
+        dW1 = w1Binding.ptr;
+        dB1 = b1Binding.ptr;
+        dW2 = w2Binding.ptr;
+        dB2 = b2Binding.ptr;
 
         bool bound = context->setTensorAddress("x", dInput)
             && context->setTensorAddress("W_fc1", dW1)
@@ -2420,33 +2410,21 @@ namespace Garnet {
             && context->setTensorAddress("b_fc2", dB2)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dW1); cudaFree(dB1); cudaFree(dW2); cudaFree(dB2); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(w1Binding); FreeOwnedBinding(b1Binding); FreeOwnedBinding(w2Binding); FreeOwnedBinding(b2Binding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
 
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(hidden);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dW1); cudaFree(dB1); cudaFree(dW2); cudaFree(dB2); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(w1Binding); FreeOwnedBinding(b1Binding); FreeOwnedBinding(w2Binding); FreeOwnedBinding(b2Binding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), outputBytes);
 
-        cudaFree(dInput);
-        cudaFree(dW1);
-        cudaFree(dB1);
-        cudaFree(dW2);
-        cudaFree(dB2);
-        cudaFree(dOutput);
+        FreeOwnedBinding(inputBinding);
+        FreeOwnedBinding(w1Binding);
+        FreeOwnedBinding(b1Binding);
+        FreeOwnedBinding(w2Binding);
+        FreeOwnedBinding(b2Binding);
         cudaStreamDestroy(stream);
 
         std::cout << "[TRTBuilder] RunVisionMLPEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
@@ -2531,61 +2509,47 @@ namespace Garnet {
         int tokens = input->GetDimSize(0);
         int hidden = input->GetDimSize(1);
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
         size_t weightBytes = static_cast<size_t>(hidden) * sizeof(float);
-        void* dInput = nullptr;
-        void* dWeight = nullptr;
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dWeight;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
-        if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dWeight, weightBytes) != cudaSuccess ||
-            cudaMalloc(&dOutput, inputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dWeight) cudaFree(dWeight);
-            if (dOutput) cudaFree(dOutput);
-            if (stream) cudaStreamDestroy(stream);
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dWeight, weight->GetData(), weightBytes, cudaMemcpyHostToDevice, stream);
-        bool bound = context->setTensorAddress("x", dInput)
-            && context->setTensorAddress("weight", dWeight)
+        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
+            !BindTensorInput(weight, weightBytes, stream, dWeight) ||
+            cudaMalloc(&dOutput, inputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        bool bound = context->setTensorAddress("x", dInput.ptr)
+            && context->setTensorAddress("weight", dWeight.ptr)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, inputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(hidden);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, inputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), inputBytes);
-        cudaFree(dInput); cudaFree(dWeight); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dWeight);
+        cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunRMSNormEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
         return output;
     }
@@ -2675,17 +2639,7 @@ namespace Garnet {
         int tokens = input->GetDimSize(0);
         int hidden = input->GetDimSize(1);
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) return X::Value();
-        std::streamsize size = in.tellg();
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) return X::Value();
-        auto runtime = createInferRuntime(gLogger);
-        if (!runtime) return X::Value();
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        if (!engine) return X::Value();
-        auto context = engine->createExecutionContext();
+        auto context = GetCachedTRTExecutionContext(enginePath);
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -2695,46 +2649,38 @@ namespace Garnet {
         void* dBias = nullptr;
         void* dOutput = nullptr;
         cudaStream_t stream = nullptr;
+        TensorDeviceBinding inputBinding;
+        TensorDeviceBinding weightBinding;
+        TensorDeviceBinding biasBinding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dWeight, affineBytes) != cudaSuccess ||
-            cudaMalloc(&dBias, affineBytes) != cudaSuccess ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding) ||
+            !BindTensorInput(weight, affineBytes, stream, weightBinding) ||
+            !BindTensorInput(bias, affineBytes, stream, biasBinding) ||
             cudaMalloc(&dOutput, inputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dWeight) cudaFree(dWeight);
-            if (dBias) cudaFree(dBias);
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            FreeOwnedBinding(biasBinding);
             if (dOutput) cudaFree(dOutput);
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
-        cudaMemcpyAsync(dInput, input->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dWeight, weight->GetData(), affineBytes, cudaMemcpyHostToDevice, stream);
-        cudaMemcpyAsync(dBias, bias->GetData(), affineBytes, cudaMemcpyHostToDevice, stream);
+        dInput = inputBinding.ptr;
+        dWeight = weightBinding.ptr;
+        dBias = biasBinding.ptr;
         bool bound = context->setTensorAddress("x", dInput)
             && context->setTensorAddress("weight", dWeight)
             && context->setTensorAddress("bias", dBias)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        std::vector<float> hostOutput(static_cast<size_t>(tokens) * static_cast<size_t>(hidden));
-        cudaMemcpyAsync(hostOutput.data(), dOutput, inputBytes, cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
-
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(tokens);
-        outputShape.push_back(hidden);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr) {
-            cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, inputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        memcpy(output->GetData(), hostOutput.data(), inputBytes);
-        cudaFree(dInput); cudaFree(dWeight); cudaFree(dBias); cudaFree(dOutput); cudaStreamDestroy(stream);
+        FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaStreamDestroy(stream);
         std::cout << "[TRTBuilder] RunLayerNormEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
         return output;
     }

@@ -1113,7 +1113,7 @@ namespace Garnet {
             }
 
             // Extract permutation order from params
-            X::Port::vector<int> permOrder;
+            X::Port::vector<int> permOrder(static_cast<int>(params.size()));
             for (size_t i = 0; i < params.size(); i++)
             {
                 if (params[i].IsNumber())

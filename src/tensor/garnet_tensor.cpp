@@ -217,7 +217,7 @@ namespace Garnet
             }
 
             // Copy dimensions for result tensor
-            X::Port::vector<int> dims;
+            X::Port::vector<int> dims(dimCount);
             for (int i = 0; i < dimCount; i++)
             {
                 dims.push_back(tensor->GetDimSize(i));

@@ -3,6 +3,7 @@
 #include "../image_preprocessor.h"
 #include "../image_source.h"
 #include "xlang.h"
+#include <cstddef>
 #include <string>
 
 namespace Garnet::Image::QwenVL
@@ -24,6 +25,22 @@ namespace Garnet::Image::QwenVL
         int width = 0;
     };
 
+    struct DevicePreprocessResult
+    {
+        float* pixelValuesDevice = nullptr;
+        long long imageGridTHW[3] = { 1, 0, 0 };
+        int sourceHeight = 0;
+        int sourceWidth = 0;
+        int resizedHeight = 0;
+        int resizedWidth = 0;
+        int patchSize = 16;
+        int temporalPatchSize = 2;
+        int mergeSize = 2;
+        int patchCount = 0;
+        int featureDim = 0;
+        size_t outputBytes = 0;
+    };
+
     SmartResizeResult SmartResize(
         int height,
         int width,
@@ -36,4 +53,14 @@ namespace Garnet::Image::QwenVL
         int height,
         int width,
         const QwenVLImagePreprocessConfig& config);
+
+    PreprocessResult PreprocessJpegFileToTensor(
+        const std::string& jpegPath,
+        int minPixels,
+        int maxPixels);
+
+    DevicePreprocessResult PreprocessJpegFileToDeviceBuffer(
+        const std::string& jpegPath,
+        int minPixels,
+        int maxPixels);
 }

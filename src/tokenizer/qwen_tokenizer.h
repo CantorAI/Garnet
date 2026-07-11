@@ -3,6 +3,7 @@
 #include "tokenizer.h"
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -60,6 +61,10 @@ namespace Garnet::Tokenization
             const int64_t imageGridTHW[3],
             int mergeSize = 2);
     };
+
+    std::shared_ptr<const QwenTokenizer> GetCachedQwenTokenizer(
+        const std::string& modelDir,
+        std::string* error = nullptr);
 }
 
 extern "C" GARNET_TOKENIZER_EXPORT int GarnetQwenTokenizerEncode(

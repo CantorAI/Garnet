@@ -97,6 +97,33 @@ add_library(${PROJECT_NAME}
     ${Trt_SRC}
 )
 
+add_executable(garnet_qwen_vl_gpu_path_perf
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/qwen_vl_gpu_path_perf.cpp"
+)
+
+add_executable(garnet_qwen_vl_prepare_prompt_perf
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/qwen_vl_prepare_prompt_perf.cpp"
+)
+
+add_executable(garnet_device_kv_native_smoke
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/device_kv_native_smoke.cpp"
+)
+target_link_libraries(garnet_device_kv_native_smoke ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY})
+
+add_executable(garnet_qwen_tokenizer_native_smoke
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/qwen_tokenizer_native_smoke.cpp"
+)
+
+add_executable(garnet_debug_logits_sampler_native_smoke
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/logits_sampler_native_smoke.cpp"
+)
+target_link_libraries(garnet_debug_logits_sampler_native_smoke ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY})
+
+add_executable(garnet_qwen_vl_request_kv_native_smoke
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/qwen_vl_request_kv_native_smoke.cpp"
+)
+target_link_libraries(garnet_qwen_vl_request_kv_native_smoke ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY})
+
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>

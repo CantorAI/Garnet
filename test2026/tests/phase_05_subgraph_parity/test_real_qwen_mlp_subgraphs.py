@@ -9,6 +9,7 @@ import numpy as np
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
 ARTIFACT_DIR = REPO_ROOT / "test2026" / "artifacts" / "qwen_vl_subgraphs"
+GARNET_FOR_TENSOR_COPY = None
 
 
 def env_flag(name):
@@ -285,13 +286,38 @@ def run_native_mrope_cos_sin_against_hf(model_dir):
 
 
 def to_numpy(value):
+    if isinstance(value, np.ndarray):
+        return value
+    if type(value).__name__ == "XlangObject" and GARNET_FOR_TENSOR_COPY is not None:
+        cpu_value = GARNET_FOR_TENSOR_COPY.tensor_to_cpu(value)
+        if cpu_value is not None:
+            value = cpu_value
+            to_array_fn = getattr(value, "toarray", None)
+            if callable(to_array_fn):
+                return to_array_fn()
     to_numpy_fn = getattr(value, "numpy", None)
+    to_array_fn = getattr(value, "toarray", None)
     to_list_fn = getattr(value, "tolist", None)
     if callable(to_numpy_fn):
         return to_numpy_fn()
+    if callable(to_array_fn):
+        return to_array_fn()
     if callable(to_list_fn):
         return np.array(to_list_fn(), dtype=np.float32)
     raise AssertionError("Garnet output has no numpy/tolist conversion")
+
+
+def logits_to_numpy_or_cpu_copy(garnet, value, rows, vocab_size):
+    try:
+        return to_numpy(value).reshape(rows, vocab_size)
+    except AssertionError:
+        tensor_to_cpu = getattr(garnet, "tensor_to_cpu", None)
+        if not callable(tensor_to_cpu):
+            raise
+        cpu_value = tensor_to_cpu(value)
+        if cpu_value is None:
+            raise
+        return to_numpy(cpu_value).reshape(rows, vocab_size)
 
 
 def import_garnet():
@@ -316,7 +342,10 @@ def import_garnet():
                 os.add_dll_directory(str(dll_dir))
 
     try:
-        return xlang.importModule("garnet", fromPath=str(garnet_dll)), garnet_dll
+        global GARNET_FOR_TENSOR_COPY
+        garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+        GARNET_FOR_TENSOR_COPY = garnet
+        return garnet, garnet_dll
     except Exception as exc:
         skip(f"failed to import Garnet from {garnet_dll}: {exc}")
 
@@ -348,6 +377,77 @@ def load_garnet_dll_ctypes():
     ))
     add_garnet_dll_directories(garnet_dll)
     return ctypes.CDLL(str(garnet_dll))
+
+
+def configure_paged_kv_attention_ctypes(dll):
+    import ctypes
+
+    dll.GarnetRunTextPagedKVCachedAttentionFP32.argtypes = [
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+    ]
+    dll.GarnetRunTextPagedKVCachedAttentionFP32.restype = ctypes.c_int
+    dll.GarnetRunTextPagedKVWriteFP32.argtypes = [
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+    ]
+    dll.GarnetRunTextPagedKVWriteFP32.restype = ctypes.c_int
+    dll.GarnetCreateDevicePagedKVFP32.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_longlong),
+        ctypes.c_char_p,
+        ctypes.c_int,
+    ]
+    dll.GarnetCreateDevicePagedKVFP32.restype = ctypes.c_int
+    dll.GarnetDestroyDevicePagedKVFP32.argtypes = [ctypes.c_longlong, ctypes.c_char_p, ctypes.c_int]
+    dll.GarnetDestroyDevicePagedKVFP32.restype = ctypes.c_int
+    dll.GarnetDevicePagedKVWriteFP32.argtypes = [
+        ctypes.c_longlong,
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+    ]
+    dll.GarnetDevicePagedKVWriteFP32.restype = ctypes.c_int
+    dll.GarnetDevicePagedKVAttentionFP32.argtypes = [
+        ctypes.c_longlong,
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.POINTER(ctypes.c_float),
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+    ]
+    dll.GarnetDevicePagedKVAttentionFP32.restype = ctypes.c_int
+    return dll
 
 
 def configure_native_tokenizer_ctypes(dll, model_dir):
@@ -1258,6 +1358,904 @@ def run_garnet_text_decoder_layer(garnet, layer_weights, x, cos_np, sin_np, cach
     return ghidden + gmlp
 
 
+def run_garnet_text_decoder_layer_cached_last_token_parity(garnet, key_to_file):
+    import ctypes
+
+    tokens = int(os.environ.get("GARNET_CACHED_DECODER_LAYER_TOKENS", "17"))
+    page_size = int(os.environ.get("GARNET_CACHED_DECODER_LAYER_PAGE_SIZE", "8"))
+    q_heads = 16
+    kv_heads = 8
+    head_dim = 128
+    hidden_size = q_heads * head_dim
+    qkv_size = hidden_size + (2 * kv_heads * head_dim)
+    layer_weights = load_text_layer_weights_as_layer0_aliases(key_to_file, 0)
+    rng = np.random.default_rng(20260716)
+    x = rng.normal(0.0, 0.02, size=(tokens, hidden_size)).astype(np.float32)
+    cos_np, sin_np = make_text_mrope(tokens)
+    cache_dir = SCRIPT_DIR / "cache_cached_decoder_layer"
+
+    full = run_garnet_text_decoder_layer(garnet, layer_weights, x, cos_np, sin_np, cache_dir)
+
+    layer_prefix = "language_model.layers.0"
+    attn_prefix = layer_prefix + ".self_attn"
+    mlp_prefix = layer_prefix + ".mlp"
+
+    input_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "rms_norm_trt.x"),
+        weights={layer_prefix + ".input_layernorm.weight": layer_weights[layer_prefix + ".input_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[list(x.shape)],
+        subgraph="rms_norm",
+    )
+    gx_norm = to_numpy(input_norm_model.forward(x)).reshape(x.shape)
+
+    qkv_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_qkv_head_norm_trt.x"),
+        weights={
+            attn_prefix + ".q_proj.weight": layer_weights[attn_prefix + ".q_proj.weight"],
+            attn_prefix + ".k_proj.weight": layer_weights[attn_prefix + ".k_proj.weight"],
+            attn_prefix + ".v_proj.weight": layer_weights[attn_prefix + ".v_proj.weight"],
+            attn_prefix + ".q_norm.weight": layer_weights[attn_prefix + ".q_norm.weight"],
+            attn_prefix + ".k_norm.weight": layer_weights[attn_prefix + ".k_norm.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[list(x.shape)],
+        subgraph="text_qkv_head_norm",
+    )
+    gqkv = to_numpy(qkv_model.forward(gx_norm)).reshape(tokens, qkv_size)
+
+    rope_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_rope_apply_trt.x"),
+        weights={},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, qkv_size], [tokens, head_dim], [tokens, head_dim]],
+        subgraph="text_rope_apply",
+    )
+    grope = to_numpy(rope_model.forward(gqkv, cos_np, sin_np)).reshape(tokens, qkv_size).astype(np.float32, copy=False)
+
+    logical_pages = (tokens + page_size - 1) // page_size
+    physical_pages = logical_pages + 2
+    page_table = np.arange(logical_pages, dtype=np.int32)
+    if logical_pages > 1:
+        page_table = page_table[::-1].copy()
+    key_pages = np.zeros((physical_pages, page_size, kv_heads, head_dim), dtype=np.float32)
+    value_pages = np.zeros_like(key_pages)
+
+    dll = configure_paged_kv_attention_ctypes(load_garnet_dll_ctypes())
+    write_error = ctypes.create_string_buffer(512)
+    rc = dll.GarnetRunTextPagedKVWriteFP32(
+        grope.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        key_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        value_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        page_table.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        tokens,
+        0,
+        page_size,
+        physical_pages,
+        q_heads,
+        kv_heads,
+        head_dim,
+        write_error,
+        len(write_error),
+    )
+    if rc != 0:
+        raise AssertionError(f"GarnetRunTextPagedKVWriteFP32 failed rc={rc}: {write_error.value.decode(errors='ignore')}")
+
+    q_last = np.ascontiguousarray(grope[-1, :hidden_size].reshape(q_heads, head_dim))
+    gattn_last_heads = np.empty((q_heads, head_dim), dtype=np.float32)
+    attn_error = ctypes.create_string_buffer(512)
+    rc = dll.GarnetRunTextPagedKVCachedAttentionFP32(
+        q_last.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        key_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        value_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        page_table.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        gattn_last_heads.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        tokens,
+        page_size,
+        physical_pages,
+        q_heads,
+        kv_heads,
+        head_dim,
+        attn_error,
+        len(attn_error),
+    )
+    if rc != 0:
+        raise AssertionError(f"GarnetRunTextPagedKVCachedAttentionFP32 failed rc={rc}: {attn_error.value.decode(errors='ignore')}")
+    gattn_last = gattn_last_heads.reshape(1, hidden_size)
+
+    o_proj_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_o_proj_trt.x"),
+        weights={attn_prefix + ".o_proj.weight": layer_weights[attn_prefix + ".o_proj.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="text_o_proj",
+    )
+    go_last = to_numpy(o_proj_model.forward(gattn_last)).reshape(1, hidden_size)
+    ghidden_last = x[-1:] + go_last
+
+    post_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_post_rms_norm_trt.x"),
+        weights={layer_prefix + ".post_attention_layernorm.weight": layer_weights[layer_prefix + ".post_attention_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="text_post_attention_rms_norm",
+    )
+    gpost_last = to_numpy(post_norm_model.forward(ghidden_last)).reshape(1, hidden_size)
+
+    mlp_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_mlp_trt.x"),
+        weights={
+            mlp_prefix + ".gate_proj.weight": layer_weights[mlp_prefix + ".gate_proj.weight"],
+            mlp_prefix + ".up_proj.weight": layer_weights[mlp_prefix + ".up_proj.weight"],
+            mlp_prefix + ".down_proj.weight": layer_weights[mlp_prefix + ".down_proj.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="qwen3_text_mlp",
+    )
+    gmlp_last = to_numpy(mlp_model.forward(gpost_last)).reshape(1, hidden_size)
+    cached_last = ghidden_last + gmlp_last
+    expected_last = full[-1:]
+    max_error = float(np.max(np.abs(cached_last - expected_last)))
+    mean_error = float(np.mean(np.abs(cached_last - expected_last)))
+    np.testing.assert_allclose(cached_last, expected_last, rtol=2e-3, atol=2e-3)
+
+    return {
+        "tokens": tokens,
+        "page_size": page_size,
+        "logical_pages": int(logical_pages),
+        "physical_pages": int(physical_pages),
+        "page_table": [int(x) for x in page_table.tolist()],
+        "qkv_shape": list(grope.shape),
+        "key_pages_shape": list(key_pages.shape),
+        "value_pages_shape": list(value_pages.shape),
+        "last_token_output_shape": list(cached_last.shape),
+        "max_error": max_error,
+        "mean_error": mean_error,
+    }
+
+
+def run_garnet_text_decoder_layer_prefill_with_paged_kv(
+    garnet,
+    dll,
+    layer_weights,
+    x,
+    cos_np,
+    sin_np,
+    cache_dir,
+    page_size,
+    physical_pages,
+    page_table,
+):
+    import ctypes
+
+    layer_prefix = "language_model.layers.0"
+    attn_prefix = layer_prefix + ".self_attn"
+    mlp_prefix = layer_prefix + ".mlp"
+    tokens = int(x.shape[0])
+    q_heads = 16
+    kv_heads = 8
+    head_dim = 128
+    hidden_size = 2048
+    qkv_size = 4096
+
+    input_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "rms_norm_trt.x"),
+        weights={layer_prefix + ".input_layernorm.weight": layer_weights[layer_prefix + ".input_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[list(x.shape)],
+        subgraph="rms_norm",
+    )
+    gx_norm = to_numpy(input_norm_model.forward(x)).reshape(x.shape)
+
+    qkv_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_qkv_head_norm_trt.x"),
+        weights={
+            attn_prefix + ".q_proj.weight": layer_weights[attn_prefix + ".q_proj.weight"],
+            attn_prefix + ".k_proj.weight": layer_weights[attn_prefix + ".k_proj.weight"],
+            attn_prefix + ".v_proj.weight": layer_weights[attn_prefix + ".v_proj.weight"],
+            attn_prefix + ".q_norm.weight": layer_weights[attn_prefix + ".q_norm.weight"],
+            attn_prefix + ".k_norm.weight": layer_weights[attn_prefix + ".k_norm.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[list(x.shape)],
+        subgraph="text_qkv_head_norm",
+    )
+    gqkv = to_numpy(qkv_model.forward(gx_norm)).reshape(tokens, qkv_size)
+
+    rope_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_rope_apply_trt.x"),
+        weights={},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, qkv_size], [tokens, head_dim], [tokens, head_dim]],
+        subgraph="text_rope_apply",
+    )
+    grope = to_numpy(rope_model.forward(gqkv, cos_np, sin_np)).reshape(tokens, qkv_size).astype(np.float32, copy=False)
+
+    key_pages = np.zeros((physical_pages, page_size, kv_heads, head_dim), dtype=np.float32)
+    value_pages = np.zeros_like(key_pages)
+    write_error = ctypes.create_string_buffer(512)
+    rc = dll.GarnetRunTextPagedKVWriteFP32(
+        grope.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        key_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        value_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        page_table.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        tokens,
+        0,
+        page_size,
+        physical_pages,
+        q_heads,
+        kv_heads,
+        head_dim,
+        write_error,
+        len(write_error),
+    )
+    if rc != 0:
+        raise AssertionError(f"prefill GarnetRunTextPagedKVWriteFP32 failed rc={rc}: {write_error.value.decode(errors='ignore')}")
+
+    attention_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_attention_core_trt.x"),
+        weights={},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, qkv_size]],
+        subgraph="text_attention_core",
+    )
+    gattn = to_numpy(attention_model.forward(grope)).reshape(tokens, hidden_size)
+
+    o_proj_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_o_proj_trt.x"),
+        weights={attn_prefix + ".o_proj.weight": layer_weights[attn_prefix + ".o_proj.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, hidden_size]],
+        subgraph="text_o_proj",
+    )
+    go = to_numpy(o_proj_model.forward(gattn)).reshape(tokens, hidden_size)
+    ghidden = x + go
+
+    post_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_post_rms_norm_trt.x"),
+        weights={layer_prefix + ".post_attention_layernorm.weight": layer_weights[layer_prefix + ".post_attention_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, hidden_size]],
+        subgraph="text_post_attention_rms_norm",
+    )
+    gpost = to_numpy(post_norm_model.forward(ghidden)).reshape(tokens, hidden_size)
+
+    mlp_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_mlp_trt.x"),
+        weights={
+            mlp_prefix + ".gate_proj.weight": layer_weights[mlp_prefix + ".gate_proj.weight"],
+            mlp_prefix + ".up_proj.weight": layer_weights[mlp_prefix + ".up_proj.weight"],
+            mlp_prefix + ".down_proj.weight": layer_weights[mlp_prefix + ".down_proj.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, hidden_size]],
+        subgraph="qwen3_text_mlp",
+    )
+    gmlp = to_numpy(mlp_model.forward(gpost)).reshape(tokens, hidden_size)
+    return ghidden + gmlp, key_pages, value_pages
+
+
+def run_garnet_text_decoder_layer_decode_with_paged_kv(
+    garnet,
+    dll,
+    layer_weights,
+    x,
+    cos_np,
+    sin_np,
+    cache_dir,
+    key_pages,
+    value_pages,
+    page_size,
+    physical_pages,
+    page_table,
+    token_offset,
+):
+    import ctypes
+
+    layer_prefix = "language_model.layers.0"
+    attn_prefix = layer_prefix + ".self_attn"
+    mlp_prefix = layer_prefix + ".mlp"
+    q_heads = 16
+    kv_heads = 8
+    head_dim = 128
+    hidden_size = 2048
+    qkv_size = 4096
+    sequence_length = int(token_offset) + 1
+
+    input_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "rms_norm_trt.x"),
+        weights={layer_prefix + ".input_layernorm.weight": layer_weights[layer_prefix + ".input_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="rms_norm",
+    )
+    gx_norm = to_numpy(input_norm_model.forward(x)).reshape(1, hidden_size)
+
+    qkv_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_qkv_head_norm_trt.x"),
+        weights={
+            attn_prefix + ".q_proj.weight": layer_weights[attn_prefix + ".q_proj.weight"],
+            attn_prefix + ".k_proj.weight": layer_weights[attn_prefix + ".k_proj.weight"],
+            attn_prefix + ".v_proj.weight": layer_weights[attn_prefix + ".v_proj.weight"],
+            attn_prefix + ".q_norm.weight": layer_weights[attn_prefix + ".q_norm.weight"],
+            attn_prefix + ".k_norm.weight": layer_weights[attn_prefix + ".k_norm.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="text_qkv_head_norm",
+    )
+    gqkv = to_numpy(qkv_model.forward(gx_norm)).reshape(1, qkv_size)
+
+    rope_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_rope_apply_trt.x"),
+        weights={},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, qkv_size], [1, head_dim], [1, head_dim]],
+        subgraph="text_rope_apply",
+    )
+    grope = to_numpy(rope_model.forward(gqkv, cos_np, sin_np)).reshape(1, qkv_size).astype(np.float32, copy=False)
+
+    write_error = ctypes.create_string_buffer(512)
+    rc = dll.GarnetRunTextPagedKVWriteFP32(
+        grope.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        key_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        value_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        page_table.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        1,
+        int(token_offset),
+        page_size,
+        physical_pages,
+        q_heads,
+        kv_heads,
+        head_dim,
+        write_error,
+        len(write_error),
+    )
+    if rc != 0:
+        raise AssertionError(f"decode GarnetRunTextPagedKVWriteFP32 failed rc={rc}: {write_error.value.decode(errors='ignore')}")
+
+    q = np.ascontiguousarray(grope[0, :hidden_size].reshape(q_heads, head_dim))
+    attn_heads = np.empty((q_heads, head_dim), dtype=np.float32)
+    attn_error = ctypes.create_string_buffer(512)
+    rc = dll.GarnetRunTextPagedKVCachedAttentionFP32(
+        q.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        key_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        value_pages.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        page_table.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        attn_heads.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        sequence_length,
+        page_size,
+        physical_pages,
+        q_heads,
+        kv_heads,
+        head_dim,
+        attn_error,
+        len(attn_error),
+    )
+    if rc != 0:
+        raise AssertionError(f"GarnetRunTextPagedKVCachedAttentionFP32 failed rc={rc}: {attn_error.value.decode(errors='ignore')}")
+    gattn = attn_heads.reshape(1, hidden_size)
+
+    o_proj_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_o_proj_trt.x"),
+        weights={attn_prefix + ".o_proj.weight": layer_weights[attn_prefix + ".o_proj.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="text_o_proj",
+    )
+    go = to_numpy(o_proj_model.forward(gattn)).reshape(1, hidden_size)
+    ghidden = x + go
+
+    post_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_post_rms_norm_trt.x"),
+        weights={layer_prefix + ".post_attention_layernorm.weight": layer_weights[layer_prefix + ".post_attention_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="text_post_attention_rms_norm",
+    )
+    gpost = to_numpy(post_norm_model.forward(ghidden)).reshape(1, hidden_size)
+
+    mlp_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_mlp_trt.x"),
+        weights={
+            mlp_prefix + ".gate_proj.weight": layer_weights[mlp_prefix + ".gate_proj.weight"],
+            mlp_prefix + ".up_proj.weight": layer_weights[mlp_prefix + ".up_proj.weight"],
+            mlp_prefix + ".down_proj.weight": layer_weights[mlp_prefix + ".down_proj.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="qwen3_text_mlp",
+    )
+    gmlp = to_numpy(mlp_model.forward(gpost)).reshape(1, hidden_size)
+    return ghidden + gmlp
+
+
+def create_device_paged_kv_handle(dll, physical_pages, page_size, logical_pages, q_heads, kv_heads, head_dim, page_table):
+    import ctypes
+
+    handle = ctypes.c_longlong(0)
+    error = ctypes.create_string_buffer(512)
+    rc = dll.GarnetCreateDevicePagedKVFP32(
+        int(physical_pages),
+        int(page_size),
+        int(logical_pages),
+        int(q_heads),
+        int(kv_heads),
+        int(head_dim),
+        page_table.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        ctypes.byref(handle),
+        error,
+        len(error),
+    )
+    if rc != 0:
+        raise AssertionError(f"GarnetCreateDevicePagedKVFP32 failed rc={rc}: {error.value.decode(errors='ignore')}")
+    return int(handle.value)
+
+
+def destroy_device_paged_kv_handle(dll, handle):
+    import ctypes
+
+    error = ctypes.create_string_buffer(512)
+    rc = dll.GarnetDestroyDevicePagedKVFP32(int(handle), error, len(error))
+    if rc != 0:
+        raise AssertionError(f"GarnetDestroyDevicePagedKVFP32 failed rc={rc}: {error.value.decode(errors='ignore')}")
+
+
+def device_paged_kv_write(dll, handle, qkv, token_count, start_position):
+    import ctypes
+
+    error = ctypes.create_string_buffer(512)
+    qkv = np.ascontiguousarray(qkv.astype(np.float32, copy=False))
+    rc = dll.GarnetDevicePagedKVWriteFP32(
+        int(handle),
+        qkv.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        int(token_count),
+        int(start_position),
+        error,
+        len(error),
+    )
+    if rc != 0:
+        raise AssertionError(f"GarnetDevicePagedKVWriteFP32 failed rc={rc}: {error.value.decode(errors='ignore')}")
+
+
+def device_paged_kv_attention(dll, handle, q, sequence_length):
+    import ctypes
+
+    q = np.ascontiguousarray(q.astype(np.float32, copy=False))
+    output = np.empty_like(q)
+    error = ctypes.create_string_buffer(512)
+    rc = dll.GarnetDevicePagedKVAttentionFP32(
+        int(handle),
+        q.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        output.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        int(sequence_length),
+        error,
+        len(error),
+    )
+    if rc != 0:
+        raise AssertionError(f"GarnetDevicePagedKVAttentionFP32 failed rc={rc}: {error.value.decode(errors='ignore')}")
+    return output
+
+
+def run_garnet_text_decoder_layer_prefill_with_device_paged_kv(
+    garnet,
+    dll,
+    layer_weights,
+    x,
+    cos_np,
+    sin_np,
+    cache_dir,
+    device_kv_handle,
+):
+    layer_prefix = "language_model.layers.0"
+    attn_prefix = layer_prefix + ".self_attn"
+    mlp_prefix = layer_prefix + ".mlp"
+    tokens = int(x.shape[0])
+    head_dim = 128
+    hidden_size = 2048
+    qkv_size = 4096
+
+    input_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "rms_norm_trt.x"),
+        weights={layer_prefix + ".input_layernorm.weight": layer_weights[layer_prefix + ".input_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[list(x.shape)],
+        subgraph="rms_norm",
+    )
+    gx_norm = to_numpy(input_norm_model.forward(x)).reshape(x.shape)
+
+    qkv_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_qkv_head_norm_trt.x"),
+        weights={
+            attn_prefix + ".q_proj.weight": layer_weights[attn_prefix + ".q_proj.weight"],
+            attn_prefix + ".k_proj.weight": layer_weights[attn_prefix + ".k_proj.weight"],
+            attn_prefix + ".v_proj.weight": layer_weights[attn_prefix + ".v_proj.weight"],
+            attn_prefix + ".q_norm.weight": layer_weights[attn_prefix + ".q_norm.weight"],
+            attn_prefix + ".k_norm.weight": layer_weights[attn_prefix + ".k_norm.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[list(x.shape)],
+        subgraph="text_qkv_head_norm",
+    )
+    gqkv = to_numpy(qkv_model.forward(gx_norm)).reshape(tokens, qkv_size)
+
+    rope_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_rope_apply_trt.x"),
+        weights={},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, qkv_size], [tokens, head_dim], [tokens, head_dim]],
+        subgraph="text_rope_apply",
+    )
+    grope = to_numpy(rope_model.forward(gqkv, cos_np, sin_np)).reshape(tokens, qkv_size).astype(np.float32, copy=False)
+    device_paged_kv_write(dll, device_kv_handle, grope, tokens, 0)
+
+    attention_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_attention_core_trt.x"),
+        weights={},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, qkv_size]],
+        subgraph="text_attention_core",
+    )
+    gattn = to_numpy(attention_model.forward(grope)).reshape(tokens, hidden_size)
+
+    o_proj_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_o_proj_trt.x"),
+        weights={attn_prefix + ".o_proj.weight": layer_weights[attn_prefix + ".o_proj.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, hidden_size]],
+        subgraph="text_o_proj",
+    )
+    go = to_numpy(o_proj_model.forward(gattn)).reshape(tokens, hidden_size)
+    ghidden = x + go
+
+    post_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_post_rms_norm_trt.x"),
+        weights={layer_prefix + ".post_attention_layernorm.weight": layer_weights[layer_prefix + ".post_attention_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, hidden_size]],
+        subgraph="text_post_attention_rms_norm",
+    )
+    gpost = to_numpy(post_norm_model.forward(ghidden)).reshape(tokens, hidden_size)
+
+    mlp_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_mlp_trt.x"),
+        weights={
+            mlp_prefix + ".gate_proj.weight": layer_weights[mlp_prefix + ".gate_proj.weight"],
+            mlp_prefix + ".up_proj.weight": layer_weights[mlp_prefix + ".up_proj.weight"],
+            mlp_prefix + ".down_proj.weight": layer_weights[mlp_prefix + ".down_proj.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[[tokens, hidden_size]],
+        subgraph="qwen3_text_mlp",
+    )
+    gmlp = to_numpy(mlp_model.forward(gpost)).reshape(tokens, hidden_size)
+    return ghidden + gmlp
+
+
+def run_garnet_text_decoder_layer_decode_with_device_paged_kv(
+    garnet,
+    dll,
+    layer_weights,
+    x,
+    cos_np,
+    sin_np,
+    cache_dir,
+    device_kv_handle,
+    token_offset,
+):
+    layer_prefix = "language_model.layers.0"
+    attn_prefix = layer_prefix + ".self_attn"
+    mlp_prefix = layer_prefix + ".mlp"
+    q_heads = 16
+    head_dim = 128
+    hidden_size = 2048
+    qkv_size = 4096
+    sequence_length = int(token_offset) + 1
+
+    input_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "rms_norm_trt.x"),
+        weights={layer_prefix + ".input_layernorm.weight": layer_weights[layer_prefix + ".input_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="rms_norm",
+    )
+    gx_norm = to_numpy(input_norm_model.forward(x)).reshape(1, hidden_size)
+
+    qkv_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_qkv_head_norm_trt.x"),
+        weights={
+            attn_prefix + ".q_proj.weight": layer_weights[attn_prefix + ".q_proj.weight"],
+            attn_prefix + ".k_proj.weight": layer_weights[attn_prefix + ".k_proj.weight"],
+            attn_prefix + ".v_proj.weight": layer_weights[attn_prefix + ".v_proj.weight"],
+            attn_prefix + ".q_norm.weight": layer_weights[attn_prefix + ".q_norm.weight"],
+            attn_prefix + ".k_norm.weight": layer_weights[attn_prefix + ".k_norm.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="text_qkv_head_norm",
+    )
+    gqkv = to_numpy(qkv_model.forward(gx_norm)).reshape(1, qkv_size)
+
+    rope_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_rope_apply_trt.x"),
+        weights={},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, qkv_size], [1, head_dim], [1, head_dim]],
+        subgraph="text_rope_apply",
+    )
+    grope = to_numpy(rope_model.forward(gqkv, cos_np, sin_np)).reshape(1, qkv_size).astype(np.float32, copy=False)
+    device_paged_kv_write(dll, device_kv_handle, grope, 1, int(token_offset))
+
+    q = np.ascontiguousarray(grope[0, :hidden_size].reshape(q_heads, head_dim))
+    attn_heads = device_paged_kv_attention(dll, device_kv_handle, q, sequence_length)
+    gattn = attn_heads.reshape(1, hidden_size)
+
+    o_proj_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_o_proj_trt.x"),
+        weights={attn_prefix + ".o_proj.weight": layer_weights[attn_prefix + ".o_proj.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="text_o_proj",
+    )
+    go = to_numpy(o_proj_model.forward(gattn)).reshape(1, hidden_size)
+    ghidden = x + go
+
+    post_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_post_rms_norm_trt.x"),
+        weights={layer_prefix + ".post_attention_layernorm.weight": layer_weights[layer_prefix + ".post_attention_layernorm.weight"]},
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="text_post_attention_rms_norm",
+    )
+    gpost = to_numpy(post_norm_model.forward(ghidden)).reshape(1, hidden_size)
+
+    mlp_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_mlp_trt.x"),
+        weights={
+            mlp_prefix + ".gate_proj.weight": layer_weights[mlp_prefix + ".gate_proj.weight"],
+            mlp_prefix + ".up_proj.weight": layer_weights[mlp_prefix + ".up_proj.weight"],
+            mlp_prefix + ".down_proj.weight": layer_weights[mlp_prefix + ".down_proj.weight"],
+        },
+        cache_dir=str(cache_dir),
+        input_shapes=[[1, hidden_size]],
+        subgraph="qwen3_text_mlp",
+    )
+    gmlp = to_numpy(mlp_model.forward(gpost)).reshape(1, hidden_size)
+    return ghidden + gmlp
+
+
+def run_garnet_text_prefill_decode_cached_parity(garnet, key_to_file):
+    prompt_tokens = int(os.environ.get("GARNET_CACHED_DECODE_PROMPT_TOKENS", "11"))
+    page_size = int(os.environ.get("GARNET_CACHED_DECODE_PAGE_SIZE", "8"))
+    layer_count_env = os.environ.get("GARNET_CACHED_DECODE_LAYER_COUNT", "2").strip().lower()
+    available_layers = text_layer_count_from_weights(key_to_file)
+    layer_count = available_layers if layer_count_env in {"all", "full"} else int(layer_count_env)
+    layer_count = max(1, min(layer_count, available_layers))
+    total_tokens = prompt_tokens + 1
+    logical_pages = (total_tokens + page_size - 1) // page_size
+    physical_pages = logical_pages + 2
+    page_table = np.arange(logical_pages, dtype=np.int32)
+    if logical_pages > 1:
+        page_table = np.roll(page_table, 1).astype(np.int32)
+
+    embed_tokens = load_tensor(key_to_file, "language_model.embed_tokens.weight")
+    final_norm = load_tensor(key_to_file, "language_model.norm.weight")
+    prompt_ids = np.arange(1000, 1000 + prompt_tokens, dtype=np.int64)
+    next_id = np.asarray([1000 + prompt_tokens], dtype=np.int64)
+    input_ids_full = np.concatenate([prompt_ids, next_id])
+    cos_full, sin_full = make_text_mrope(total_tokens)
+    cos_prompt = cos_full[:prompt_tokens]
+    sin_prompt = sin_full[:prompt_tokens]
+    cos_decode = cos_full[prompt_tokens:prompt_tokens + 1]
+    sin_decode = sin_full[prompt_tokens:prompt_tokens + 1]
+    cache_dir = SCRIPT_DIR / "cache_cached_decode_layers" / f"layers_{layer_count}_tokens_{prompt_tokens}"
+    dll = configure_paged_kv_attention_ctypes(load_garnet_dll_ctypes())
+
+    full_hidden = embed_tokens[input_ids_full].astype(np.float32)
+    for layer_idx in range(layer_count):
+        layer_weights = load_text_layer_weights_as_layer0_aliases(key_to_file, layer_idx)
+        full_hidden = run_garnet_text_decoder_layer(garnet, layer_weights, full_hidden, cos_full, sin_full, cache_dir / "full" / f"layer_{layer_idx}")
+
+    prompt_hidden = embed_tokens[prompt_ids].astype(np.float32)
+    layer_caches = []
+    for layer_idx in range(layer_count):
+        layer_weights = load_text_layer_weights_as_layer0_aliases(key_to_file, layer_idx)
+        prompt_hidden, key_pages, value_pages = run_garnet_text_decoder_layer_prefill_with_paged_kv(
+            garnet,
+            dll,
+            layer_weights,
+            prompt_hidden,
+            cos_prompt,
+            sin_prompt,
+            cache_dir / "prefill" / f"layer_{layer_idx}",
+            page_size,
+            physical_pages,
+            page_table,
+        )
+        layer_caches.append((key_pages, value_pages))
+
+    decode_hidden = embed_tokens[next_id].astype(np.float32)
+    for layer_idx in range(layer_count):
+        layer_weights = load_text_layer_weights_as_layer0_aliases(key_to_file, layer_idx)
+        key_pages, value_pages = layer_caches[layer_idx]
+        decode_hidden = run_garnet_text_decoder_layer_decode_with_paged_kv(
+            garnet,
+            dll,
+            layer_weights,
+            decode_hidden,
+            cos_decode,
+            sin_decode,
+            cache_dir / "decode" / f"layer_{layer_idx}",
+            key_pages,
+            value_pages,
+            page_size,
+            physical_pages,
+            page_table,
+            prompt_tokens,
+        )
+
+    final_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "rms_norm_trt.x"),
+        weights={"language_model.layers.0.input_layernorm.weight": final_norm},
+        cache_dir=str(cache_dir / "norm"),
+        input_shapes=[[1, 2048]],
+        subgraph="rms_norm",
+    )
+    expected_norm = to_numpy(final_norm_model.forward(full_hidden[-1:])).reshape(1, 2048)
+    actual_norm = to_numpy(final_norm_model.forward(decode_hidden)).reshape(1, 2048)
+
+    lm_head_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_lm_head_trt.x"),
+        weights={"language_model.embed_tokens.weight": embed_tokens},
+        cache_dir=str(cache_dir / "lm_head"),
+        input_shapes=[[1, 2048]],
+        subgraph="text_lm_head",
+    )
+    expected_logits = to_numpy(lm_head_model.forward(expected_norm)).reshape(1, embed_tokens.shape[0])
+    actual_logits = to_numpy(lm_head_model.forward(actual_norm)).reshape(1, embed_tokens.shape[0])
+    hidden_max_error = float(np.max(np.abs(decode_hidden - full_hidden[-1:])))
+    hidden_mean_error = float(np.mean(np.abs(decode_hidden - full_hidden[-1:])))
+    logits_max_error = float(np.max(np.abs(actual_logits - expected_logits)))
+    logits_mean_error = float(np.mean(np.abs(actual_logits - expected_logits)))
+    expected_top1 = int(np.argmax(expected_logits[-1]))
+    actual_top1 = int(np.argmax(actual_logits[-1]))
+    np.testing.assert_allclose(decode_hidden, full_hidden[-1:], rtol=5e-3, atol=5e-3)
+
+    return {
+        "prompt_tokens": int(prompt_tokens),
+        "total_tokens_after_decode": int(total_tokens),
+        "layer_count": int(layer_count),
+        "available_layers": int(available_layers),
+        "page_size": int(page_size),
+        "logical_pages": int(logical_pages),
+        "physical_pages": int(physical_pages),
+        "page_table": [int(x) for x in page_table.tolist()],
+        "hidden_max_error": hidden_max_error,
+        "hidden_mean_error": hidden_mean_error,
+        "logits_max_error": logits_max_error,
+        "logits_mean_error": logits_mean_error,
+        "expected_top1": expected_top1,
+        "actual_top1": actual_top1,
+        "top1_match": expected_top1 == actual_top1,
+    }
+
+
+def run_garnet_text_prefill_decode_device_kv_parity(garnet, key_to_file):
+    prompt_tokens = int(os.environ.get("GARNET_DEVICE_CACHED_DECODE_PROMPT_TOKENS", "11"))
+    page_size = int(os.environ.get("GARNET_DEVICE_CACHED_DECODE_PAGE_SIZE", "8"))
+    layer_count_env = os.environ.get("GARNET_DEVICE_CACHED_DECODE_LAYER_COUNT", "2").strip().lower()
+    available_layers = text_layer_count_from_weights(key_to_file)
+    layer_count = available_layers if layer_count_env in {"all", "full"} else int(layer_count_env)
+    layer_count = max(1, min(layer_count, available_layers))
+    total_tokens = prompt_tokens + 1
+    logical_pages = (total_tokens + page_size - 1) // page_size
+    physical_pages = logical_pages + 2
+    page_table = np.arange(logical_pages, dtype=np.int32)
+    if logical_pages > 1:
+        page_table = np.roll(page_table, 1).astype(np.int32)
+
+    embed_tokens = load_tensor(key_to_file, "language_model.embed_tokens.weight")
+    final_norm = load_tensor(key_to_file, "language_model.norm.weight")
+    prompt_ids = np.arange(1000, 1000 + prompt_tokens, dtype=np.int64)
+    next_id = np.asarray([1000 + prompt_tokens], dtype=np.int64)
+    input_ids_full = np.concatenate([prompt_ids, next_id])
+    cos_full, sin_full = make_text_mrope(total_tokens)
+    cos_prompt = cos_full[:prompt_tokens]
+    sin_prompt = sin_full[:prompt_tokens]
+    cos_decode = cos_full[prompt_tokens:prompt_tokens + 1]
+    sin_decode = sin_full[prompt_tokens:prompt_tokens + 1]
+    cache_dir = SCRIPT_DIR / "cache_device_cached_decode_layers" / f"layers_{layer_count}_tokens_{prompt_tokens}"
+    dll = configure_paged_kv_attention_ctypes(load_garnet_dll_ctypes())
+
+    full_hidden = embed_tokens[input_ids_full].astype(np.float32)
+    for layer_idx in range(layer_count):
+        layer_weights = load_text_layer_weights_as_layer0_aliases(key_to_file, layer_idx)
+        full_hidden = run_garnet_text_decoder_layer(garnet, layer_weights, full_hidden, cos_full, sin_full, cache_dir / "full" / f"layer_{layer_idx}")
+
+    device_handles = []
+    prompt_hidden = embed_tokens[prompt_ids].astype(np.float32)
+    try:
+        for layer_idx in range(layer_count):
+            handle = create_device_paged_kv_handle(dll, physical_pages, page_size, logical_pages, 16, 8, 128, page_table)
+            device_handles.append(handle)
+            layer_weights = load_text_layer_weights_as_layer0_aliases(key_to_file, layer_idx)
+            prompt_hidden = run_garnet_text_decoder_layer_prefill_with_device_paged_kv(
+                garnet,
+                dll,
+                layer_weights,
+                prompt_hidden,
+                cos_prompt,
+                sin_prompt,
+                cache_dir / "prefill" / f"layer_{layer_idx}",
+                handle,
+            )
+
+        decode_hidden = embed_tokens[next_id].astype(np.float32)
+        for layer_idx in range(layer_count):
+            layer_weights = load_text_layer_weights_as_layer0_aliases(key_to_file, layer_idx)
+            decode_hidden = run_garnet_text_decoder_layer_decode_with_device_paged_kv(
+                garnet,
+                dll,
+                layer_weights,
+                decode_hidden,
+                cos_decode,
+                sin_decode,
+                cache_dir / "decode" / f"layer_{layer_idx}",
+                device_handles[layer_idx],
+                prompt_tokens,
+            )
+    finally:
+        for handle in device_handles:
+            destroy_device_paged_kv_handle(dll, handle)
+
+    final_norm_model = garnet.load_model(
+        str(SCRIPT_DIR / "rms_norm_trt.x"),
+        weights={"language_model.layers.0.input_layernorm.weight": final_norm},
+        cache_dir=str(cache_dir / "norm"),
+        input_shapes=[[1, 2048]],
+        subgraph="rms_norm",
+    )
+    expected_norm = to_numpy(final_norm_model.forward(full_hidden[-1:])).reshape(1, 2048)
+    actual_norm = to_numpy(final_norm_model.forward(decode_hidden)).reshape(1, 2048)
+
+    lm_head_model = garnet.load_model(
+        str(SCRIPT_DIR / "text_lm_head_trt.x"),
+        weights={"language_model.embed_tokens.weight": embed_tokens},
+        cache_dir=str(cache_dir / "lm_head"),
+        input_shapes=[[1, 2048]],
+        subgraph="text_lm_head",
+    )
+    expected_logits = to_numpy(lm_head_model.forward(expected_norm)).reshape(1, embed_tokens.shape[0])
+    actual_logits = to_numpy(lm_head_model.forward(actual_norm)).reshape(1, embed_tokens.shape[0])
+    hidden_max_error = float(np.max(np.abs(decode_hidden - full_hidden[-1:])))
+    hidden_mean_error = float(np.mean(np.abs(decode_hidden - full_hidden[-1:])))
+    logits_max_error = float(np.max(np.abs(actual_logits - expected_logits)))
+    logits_mean_error = float(np.mean(np.abs(actual_logits - expected_logits)))
+    expected_top1 = int(np.argmax(expected_logits[-1]))
+    actual_top1 = int(np.argmax(actual_logits[-1]))
+    np.testing.assert_allclose(decode_hidden, full_hidden[-1:], rtol=5e-3, atol=5e-3)
+
+    return {
+        "prompt_tokens": int(prompt_tokens),
+        "total_tokens_after_decode": int(total_tokens),
+        "layer_count": int(layer_count),
+        "available_layers": int(available_layers),
+        "page_size": int(page_size),
+        "logical_pages": int(logical_pages),
+        "physical_pages": int(physical_pages),
+        "page_table": [int(x) for x in page_table.tolist()],
+        "device_kv": True,
+        "hidden_max_error": hidden_max_error,
+        "hidden_mean_error": hidden_mean_error,
+        "logits_max_error": logits_max_error,
+        "logits_mean_error": logits_mean_error,
+        "expected_top1": expected_top1,
+        "actual_top1": actual_top1,
+        "top1_match": expected_top1 == actual_top1,
+    }
+
+
 def make_processor_window_embeddings(garnet, model_dir, key_to_file, token_count, use_all_vision):
     processor_npz = latest_processor_npz()
     arrays = np.load(processor_npz)
@@ -1568,7 +2566,8 @@ class GarnetQwen3VLForwardFacade:
             input_shapes=[list(lm_head_input.shape)],
             subgraph="text_lm_head",
         )
-        logits = to_numpy(lm_head_model.forward(lm_head_input)).reshape(lm_head_input.shape[0], self.embed_tokens.shape[0])
+        lm_head_output = lm_head_model.forward(lm_head_input)
+        logits = logits_to_numpy_or_cpu_copy(self.garnet, lm_head_output, lm_head_input.shape[0], self.embed_tokens.shape[0])
         return {
             "logits": logits,
             "hidden_states": hidden,
@@ -1577,6 +2576,413 @@ class GarnetQwen3VLForwardFacade:
             "text_layer_count": self.text_layer_count,
             "last_token_logits_only": bool(last_token_logits_only),
             "vision_block_count": self.vision_block_count if self.use_all_vision_blocks else 0,
+        }
+
+
+class GarnetQwen3VLCachedForwardFacade(GarnetQwen3VLForwardFacade):
+    def __init__(self, garnet, model_dir, key_to_file, cache_root, use_all_vision_blocks=True, max_new_tokens=1, page_size=16, text_layer_count=None):
+        super().__init__(garnet, model_dir, key_to_file, cache_root, use_all_vision_blocks=use_all_vision_blocks)
+        self.max_new_tokens = int(max_new_tokens)
+        self.page_size = int(page_size)
+        if text_layer_count is None:
+            self.cached_text_layer_count = self.text_layer_count
+        else:
+            self.cached_text_layer_count = max(1, min(int(text_layer_count), self.text_layer_count))
+        self.dll = configure_paged_kv_attention_ctypes(load_garnet_dll_ctypes())
+        self.layer_caches = []
+        self.device_kv_handles = []
+        self.page_table = None
+        self.physical_pages = 0
+        self.prefill_length = 0
+        self.logical_length = 0
+        self.image_grid_thw = None
+        self.mm_token_type_ids = None
+        self.gpu_tensor_chain = os.environ.get("GARNET_QWEN_GPU_TENSOR_CHAIN", "0").strip().lower() in {"1", "true", "yes", "on"}
+        self.gpu_layer_models = {}
+        self.gpu_output_models = {}
+        self.gpu_layer_weights = {}
+        self.gpu_embed_tokens = None
+        self.gpu_final_norm = None
+        self.cpp_text_runner_enabled = os.environ.get("GARNET_QWEN_CPP_TEXT_RUNNER", "1").strip().lower() in {"1", "true", "yes", "on"}
+        self.cpp_text_runners = {}
+        self.cpp_text_runner_bundles = {}
+
+    def close(self):
+        for handle in self.device_kv_handles:
+            destroy_device_paged_kv_handle(self.dll, handle)
+        self.device_kv_handles = []
+
+    def _gpu_models_for_layer(self, layer_idx, tokens):
+        key = (int(layer_idx), int(tokens))
+        cached = self.gpu_layer_models.get(key)
+        if cached is not None:
+            return cached
+
+        layer_weights = self.gpu_layer_weights.get(int(layer_idx))
+        if layer_weights is None:
+            cpu_layer_weights = load_text_layer_weights_as_layer0_aliases(self.key_to_file, layer_idx)
+            layer_weights = {
+                name: self.garnet.tensor_to_gpu(value)
+                for name, value in cpu_layer_weights.items()
+            }
+            self.gpu_layer_weights[int(layer_idx)] = layer_weights
+        layer_prefix = "language_model.layers.0"
+        attn_prefix = layer_prefix + ".self_attn"
+        mlp_prefix = layer_prefix + ".mlp"
+        cache_dir = self.cache_root / "gpu_tensor_chain" / f"tokens_{tokens}"
+        weight_payloads = {
+            "input_norm": {layer_prefix + ".input_layernorm.weight": layer_weights[layer_prefix + ".input_layernorm.weight"]},
+            "qkv": {
+                attn_prefix + ".q_proj.weight": layer_weights[attn_prefix + ".q_proj.weight"],
+                attn_prefix + ".k_proj.weight": layer_weights[attn_prefix + ".k_proj.weight"],
+                attn_prefix + ".v_proj.weight": layer_weights[attn_prefix + ".v_proj.weight"],
+                attn_prefix + ".q_norm.weight": layer_weights[attn_prefix + ".q_norm.weight"],
+                attn_prefix + ".k_norm.weight": layer_weights[attn_prefix + ".k_norm.weight"],
+            },
+            "o_proj": {attn_prefix + ".o_proj.weight": layer_weights[attn_prefix + ".o_proj.weight"]},
+            "post_norm": {layer_prefix + ".post_attention_layernorm.weight": layer_weights[layer_prefix + ".post_attention_layernorm.weight"]},
+            "mlp": {
+                mlp_prefix + ".gate_proj.weight": layer_weights[mlp_prefix + ".gate_proj.weight"],
+                mlp_prefix + ".up_proj.weight": layer_weights[mlp_prefix + ".up_proj.weight"],
+                mlp_prefix + ".down_proj.weight": layer_weights[mlp_prefix + ".down_proj.weight"],
+            },
+        }
+        models = {
+            "input_norm": self.garnet.load_model(
+                str(SCRIPT_DIR / "rms_norm_trt.x"),
+                weights=weight_payloads["input_norm"],
+                cache_dir=str(cache_dir / "input_norm"),
+                input_shapes=[[tokens, 2048]],
+                subgraph="rms_norm",
+            ),
+            "qkv": self.garnet.load_model(
+                str(SCRIPT_DIR / "text_qkv_head_norm_trt.x"),
+                weights=weight_payloads["qkv"],
+                cache_dir=str(cache_dir / "qkv"),
+                input_shapes=[[tokens, 2048]],
+                subgraph="text_qkv_head_norm",
+            ),
+            "rope": self.garnet.load_model(
+                str(SCRIPT_DIR / "text_rope_apply_trt.x"),
+                weights={},
+                cache_dir=str(cache_dir / "rope"),
+                input_shapes=[[tokens, 4096], [tokens, 128], [tokens, 128]],
+                subgraph="text_rope_apply",
+            ),
+            "attention": self.garnet.load_model(
+                str(SCRIPT_DIR / "text_attention_core_trt.x"),
+                weights={},
+                cache_dir=str(cache_dir / "attention"),
+                input_shapes=[[tokens, 4096]],
+                subgraph="text_attention_core",
+            ),
+            "o_proj": self.garnet.load_model(
+                str(SCRIPT_DIR / "text_o_proj_trt.x"),
+                weights=weight_payloads["o_proj"],
+                cache_dir=str(cache_dir / "o_proj"),
+                input_shapes=[[tokens, 2048]],
+                subgraph="text_o_proj",
+            ),
+            "post_norm": self.garnet.load_model(
+                str(SCRIPT_DIR / "text_post_rms_norm_trt.x"),
+                weights=weight_payloads["post_norm"],
+                cache_dir=str(cache_dir / "post_norm"),
+                input_shapes=[[tokens, 2048]],
+                subgraph="text_post_attention_rms_norm",
+            ),
+            "mlp": self.garnet.load_model(
+                str(SCRIPT_DIR / "text_mlp_trt.x"),
+                weights=weight_payloads["mlp"],
+                cache_dir=str(cache_dir / "mlp"),
+                input_shapes=[[tokens, 2048]],
+                subgraph="qwen3_text_mlp",
+            ),
+        }
+        if any(model is None for model in models.values()):
+            raise AssertionError(f"failed to load GPU tensor-chain models for text layer {layer_idx}")
+        models["_weight_payloads"] = weight_payloads
+        models["_layer_weights"] = layer_weights
+        self.gpu_layer_models[key] = models
+        return models
+
+    def _gpu_layer_forward(self, layer_idx, hidden, cos_np, sin_np, kv_handle, start_position, sequence_length, prefill):
+        tokens = int(cos_np.shape[0])
+        models = self._gpu_models_for_layer(layer_idx, tokens)
+        normed = models["input_norm"].forward(hidden)
+        qkv = models["qkv"].forward(normed)
+        rope_result = models["rope"].forward(qkv, cos_np, sin_np, int(kv_handle), tokens, int(start_position))
+        if rope_result is None or str(rope_result["status"]) != "ok":
+            raise AssertionError(f"GPU tensor-chain RoPE/KV write failed at layer {layer_idx}")
+        rope = rope_result["output_tensor"]
+        if prefill:
+            attention = models["attention"].forward(rope)
+        else:
+            attention_result = models["attention"].forward(rope, int(kv_handle), int(sequence_length), 2048)
+            if attention_result is None or str(attention_result["status"]) != "ok":
+                raise AssertionError(f"GPU tensor-chain KV attention failed at layer {layer_idx}")
+            attention = attention_result["output_tensor"]
+        projected = models["o_proj"].forward(attention)
+        residual = self.garnet.tensor_add(hidden, projected)
+        post_norm = models["post_norm"].forward(residual)
+        mlp = models["mlp"].forward(post_norm)
+        return self.garnet.tensor_add(residual, mlp)
+
+    def _cpp_text_runner(self, tokens):
+        tokens = int(tokens)
+        cached = self.cpp_text_runners.get(tokens)
+        if cached is not None:
+            return cached
+        bundle_keys = ["input_norm", "qkv", "rope", "attention", "o_proj", "post_norm", "mlp"]
+        bundles = []
+        for layer_idx in range(self.cached_text_layer_count):
+            models = self._gpu_models_for_layer(layer_idx, tokens)
+            bundles.append({name: models[name] for name in bundle_keys})
+        runner = self.garnet.QwenTextRunner(bundles)
+        if runner is None:
+            raise AssertionError("failed to create C++ QwenTextRunner")
+        stats = runner.stats()
+        if int(stats["layer_count"]) != self.cached_text_layer_count:
+            raise AssertionError("C++ QwenTextRunner layer count mismatch")
+        self.cpp_text_runner_bundles[tokens] = bundles
+        self.cpp_text_runners[tokens] = runner
+        return runner
+
+    def _gpu_sample_hidden(self, hidden, tokens):
+        hidden = self.garnet.tensor_last_row(hidden)
+        tokens = 1
+        if self.gpu_final_norm is None:
+            self.gpu_final_norm = self.garnet.tensor_to_gpu(self.final_norm)
+        if self.gpu_embed_tokens is None:
+            self.gpu_embed_tokens = self.garnet.tensor_to_gpu(self.embed_tokens)
+        cached = self.gpu_output_models.get(tokens)
+        if cached is None:
+            cache_dir = self.cache_root / "gpu_tensor_chain" / f"tokens_{tokens}"
+            output_weight_payloads = {
+                "norm": {"language_model.layers.0.input_layernorm.weight": self.gpu_final_norm},
+                "lm_head": {"language_model.embed_tokens.weight": self.gpu_embed_tokens},
+            }
+            cached = {
+                "norm": self.garnet.load_model(
+                    str(SCRIPT_DIR / "rms_norm_trt.x"),
+                    weights=output_weight_payloads["norm"],
+                    cache_dir=str(cache_dir / "final_norm"),
+                    input_shapes=[[tokens, 2048]],
+                    subgraph="rms_norm",
+                ),
+                "lm_head": self.garnet.load_model(
+                    str(SCRIPT_DIR / "text_lm_head_trt.x"),
+                    weights=output_weight_payloads["lm_head"],
+                    cache_dir=str(cache_dir / "lm_head"),
+                    input_shapes=[[tokens, 2048]],
+                    subgraph="text_lm_head",
+                ),
+                "_weight_payloads": output_weight_payloads,
+            }
+            self.gpu_output_models[tokens] = cached
+        normed = cached["norm"].forward(hidden)
+        logits = cached["lm_head"].forward(normed)
+        probe = cached["lm_head"].debug_probe("logits_top1", logits)
+        if probe is None or str(probe["status"]) != "ok":
+            raise AssertionError("GPU tensor-chain logits sampling failed")
+        return int(probe["token_id"])
+
+    def _cos_sin_for(self, input_ids, mm_token_type_ids, image_grid_thw):
+        if self.config is None:
+            raise AssertionError("native MRoPE cos/sin requires model config")
+        position_ids, _ = qwen3vl_mrope_position_ids_numpy(
+            input_ids[None, :],
+            mm_token_type_ids[None, :],
+            image_grid_thw=image_grid_thw,
+            attention_mask=np.ones((1, input_ids.shape[0]), dtype=np.int64),
+            spatial_merge_size=self.config.vision_config.spatial_merge_size,
+        )
+        cos, sin = qwen3vl_text_mrope_cos_sin_numpy(
+            position_ids,
+            head_dim=self.config.text_config.head_dim,
+            rope_theta=self.config.text_config.rope_parameters["rope_theta"],
+            mrope_section=self.config.text_config.rope_parameters.get("mrope_section", [24, 20, 20]),
+        )
+        return cos[0].astype(np.float32), sin[0].astype(np.float32)
+
+    def _logits_from_hidden(self, hidden, cache_dir):
+        final_norm_model = self.garnet.load_model(
+            str(SCRIPT_DIR / "rms_norm_trt.x"),
+            weights={"language_model.layers.0.input_layernorm.weight": self.final_norm},
+            cache_dir=str(cache_dir / "final_norm"),
+            input_shapes=[list(hidden.shape)],
+            subgraph="rms_norm",
+        )
+        normed = to_numpy(final_norm_model.forward(hidden)).reshape(hidden.shape)
+        lm_head_model = self.garnet.load_model(
+            str(SCRIPT_DIR / "text_lm_head_trt.x"),
+            weights={"language_model.embed_tokens.weight": self.embed_tokens},
+            cache_dir=str(cache_dir / "lm_head"),
+            input_shapes=[list(normed.shape)],
+            subgraph="text_lm_head",
+        )
+        lm_head_output = lm_head_model.forward(normed)
+        return logits_to_numpy_or_cpu_copy(self.garnet, lm_head_output, normed.shape[0], self.embed_tokens.shape[0])
+
+    def prefill(self, input_ids, pixel_values, image_grid_thw, mm_token_type_ids, visual_tokens_override=None):
+        input_ids = np.asarray(input_ids, dtype=np.int64)
+        mm_token_type_ids = np.asarray(mm_token_type_ids, dtype=np.int64)
+        image_grid_thw = np.asarray(image_grid_thw, dtype=np.int64)
+        self.prefill_length = int(input_ids.shape[0])
+        self.logical_length = self.prefill_length
+        self.image_grid_thw = image_grid_thw.copy()
+        self.mm_token_type_ids = mm_token_type_ids.copy()
+
+        total_capacity = self.prefill_length + self.max_new_tokens
+        logical_pages = (total_capacity + self.page_size - 1) // self.page_size
+        self.physical_pages = logical_pages + 2
+        self.page_table = np.arange(logical_pages, dtype=np.int32)
+
+        cos_np, sin_np = self._cos_sin_for(input_ids, mm_token_type_ids, image_grid_thw)
+        visual_positions = np.flatnonzero(mm_token_type_ids == 1)
+        if visual_positions.size:
+            if visual_tokens_override is not None:
+                visual_tokens = np.asarray(visual_tokens_override, dtype=np.float32)
+            else:
+                visual_tokens = self._visual_tokens(pixel_values, image_grid_thw, int(visual_positions.size))
+            if visual_tokens.shape[0] != visual_positions.size:
+                raise AssertionError(
+                    f"visual token cache has {visual_tokens.shape[0]} tokens, "
+                    f"but prompt has {visual_positions.size} visual placeholders"
+                )
+        else:
+            visual_tokens = np.zeros((0, self.embed_tokens.shape[1]), dtype=np.float32)
+
+        if self.gpu_tensor_chain:
+            if self.gpu_embed_tokens is None:
+                self.gpu_embed_tokens = self.garnet.tensor_to_gpu(self.embed_tokens)
+            hidden = self.garnet.embedding(self.gpu_embed_tokens, input_ids)
+            if visual_positions.size:
+                hidden = self.garnet.replace_rows_by_mask(hidden, mm_token_type_ids, visual_tokens, 1)
+        else:
+            hidden = self.embed_tokens[input_ids].astype(np.float32)
+            if visual_positions.size:
+                hidden[visual_positions] = visual_tokens
+
+        cache_dir = self.cache_root / f"cached_text_prefill_tokens_{self.prefill_length}_layers_{self.cached_text_layer_count}"
+        self.layer_caches = []
+        self.close()
+        for layer_idx in range(self.cached_text_layer_count):
+            handle = create_device_paged_kv_handle(
+                self.dll,
+                self.physical_pages,
+                self.page_size,
+                int(self.page_table.shape[0]),
+                16,
+                8,
+                128,
+                self.page_table,
+            )
+            self.device_kv_handles.append(handle)
+            self.layer_caches.append(handle)
+
+        if self.gpu_tensor_chain and self.cpp_text_runner_enabled:
+            hidden = self._cpp_text_runner(self.prefill_length).prefill(
+                hidden, cos_np, sin_np, self.layer_caches, 0, self.prefill_length
+            )
+            if hidden is None:
+                raise AssertionError("C++ QwenTextRunner prefill failed")
+        else:
+            for layer_idx, handle in enumerate(self.layer_caches):
+                if self.gpu_tensor_chain:
+                    hidden = self._gpu_layer_forward(
+                        layer_idx, hidden, cos_np, sin_np, handle, 0, self.prefill_length, True
+                    )
+                    continue
+                layer_weights = load_text_layer_weights_as_layer0_aliases(self.key_to_file, layer_idx)
+                hidden = run_garnet_text_decoder_layer_prefill_with_device_paged_kv(
+                    self.garnet,
+                    self.dll,
+                    layer_weights,
+                    hidden,
+                    cos_np,
+                    sin_np,
+                    cache_dir / f"layer_{layer_idx}",
+                    handle,
+                )
+
+        if self.gpu_tensor_chain:
+            next_token_id = self._gpu_sample_hidden(hidden, self.prefill_length)
+            logits = None
+        else:
+            next_token_id = None
+            logits = self._logits_from_hidden(hidden[-1:], cache_dir)
+        return {
+            "logits": logits,
+            "next_token_id": next_token_id,
+            "hidden_states": hidden,
+            "visual_positions": visual_positions,
+            "visual_tokens": visual_tokens,
+            "text_layer_count": self.cached_text_layer_count,
+            "full_text_layer_count": self.text_layer_count,
+            "vision_block_count": self.vision_block_count if self.use_all_vision_blocks else 0,
+            "kv_page_size": self.page_size,
+            "kv_logical_pages": int(self.page_table.shape[0]),
+            "kv_physical_pages": int(self.physical_pages),
+            "cached_decode": True,
+        }
+
+    def decode_one(self, token_id, prefix_input_ids, prefix_mm_token_type_ids):
+        if self.page_table is None or not self.layer_caches:
+            raise AssertionError("cached decode called before prefill")
+        token_id = int(token_id)
+        offset = int(self.logical_length)
+        full_ids = np.concatenate([np.asarray(prefix_input_ids, dtype=np.int64), np.asarray([token_id], dtype=np.int64)])
+        full_mm = np.concatenate([np.asarray(prefix_mm_token_type_ids, dtype=np.int64), np.asarray([0], dtype=np.int64)])
+        cos_full, sin_full = self._cos_sin_for(full_ids, full_mm, self.image_grid_thw)
+        cos_decode = cos_full[-1:]
+        sin_decode = sin_full[-1:]
+        if self.gpu_tensor_chain:
+            hidden = self.garnet.embedding(self.gpu_embed_tokens, np.asarray([token_id], dtype=np.int64))
+        else:
+            hidden = self.embed_tokens[np.asarray([token_id], dtype=np.int64)].astype(np.float32)
+        cache_dir = self.cache_root / f"cached_text_decode_one_layers_{self.cached_text_layer_count}"
+
+        if self.gpu_tensor_chain and self.cpp_text_runner_enabled:
+            hidden = self._cpp_text_runner(1).decode(
+                hidden, cos_decode, sin_decode, self.layer_caches, offset, offset + 1
+            )
+            if hidden is None:
+                raise AssertionError("C++ QwenTextRunner decode failed")
+        else:
+            for layer_idx, handle in enumerate(self.layer_caches):
+                if self.gpu_tensor_chain:
+                    hidden = self._gpu_layer_forward(
+                        layer_idx, hidden, cos_decode, sin_decode, handle, offset, offset + 1, False
+                    )
+                    continue
+                layer_weights = load_text_layer_weights_as_layer0_aliases(self.key_to_file, layer_idx)
+                hidden = run_garnet_text_decoder_layer_decode_with_device_paged_kv(
+                    self.garnet,
+                    self.dll,
+                    layer_weights,
+                    hidden,
+                    cos_decode,
+                    sin_decode,
+                    cache_dir / f"layer_{layer_idx}",
+                    handle,
+                    offset,
+                )
+
+        self.logical_length += 1
+        if self.gpu_tensor_chain:
+            next_token_id = self._gpu_sample_hidden(hidden, 1)
+            logits = None
+        else:
+            next_token_id = None
+            logits = self._logits_from_hidden(hidden, cache_dir)
+        return {
+            "logits": logits,
+            "next_token_id": next_token_id,
+            "hidden_states": hidden,
+            "text_layer_count": self.cached_text_layer_count,
+            "full_text_layer_count": self.text_layer_count,
+            "cached_decode": True,
+            "kv_logical_length": int(self.logical_length),
         }
 
 
@@ -2072,14 +3478,27 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     if visual_count != expected_visual_count:
         raise AssertionError(f"visual placeholder count {visual_count} != reduced-grid token count {expected_visual_count}")
 
-    facade = GarnetQwen3VLForwardFacade(
+    max_new_tokens = int(os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_TOKENS", "2"))
+    use_cached_text_decode = env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_USE_CACHED_TEXT")
+    cached_text_layer_count_value = os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_TEXT_LAYER_COUNT", "").strip().lower()
+    cached_text_layer_count = None if cached_text_layer_count_value in {"", "all", "full"} else int(cached_text_layer_count_value)
+    facade_cls = GarnetQwen3VLCachedForwardFacade if use_cached_text_decode else GarnetQwen3VLForwardFacade
+    facade_kwargs = {
+        "use_all_vision_blocks": True,
+    }
+    if use_cached_text_decode:
+        facade_kwargs.update({
+            "max_new_tokens": max_new_tokens,
+            "page_size": int(os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_TEXT_KV_PAGE_SIZE", "16")),
+            "text_layer_count": cached_text_layer_count,
+        })
+    facade = facade_cls(
         garnet,
         model_dir,
         key_to_file,
         SCRIPT_DIR / "cache_qwen3vl_model_forward_native_rope_decode",
-        use_all_vision_blocks=True,
+        **facade_kwargs,
     )
-    max_new_tokens = int(os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_TOKENS", "2"))
     generated = []
     step_summaries = []
     cur_ids = input_ids.copy()
@@ -2096,7 +3515,7 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
             max_num_pages=int(os.environ.get("GARNET_QWEN_KV_MAX_PAGES", "4096")),
             page_size=int(os.environ.get("GARNET_QWEN_KV_PAGE_SIZE", "16")),
             head_dim=int(os.environ.get("GARNET_QWEN_KV_HEAD_DIM", "128")),
-            num_kv_heads=int(os.environ.get("GARNET_QWEN_KV_HEADS", "2")),
+            num_kv_heads=int(os.environ.get("GARNET_QWEN_KV_HEADS", "8")),
             num_layers=int(facade.text_layer_count),
             dtype_bytes=int(os.environ.get("GARNET_QWEN_KV_DTYPE_BYTES", "2")),
             device_id=int(os.environ.get("GARNET_QWEN_KV_DEVICE_ID", "0")),
@@ -2108,35 +3527,82 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     visual_tokens = facade._visual_tokens(pixel_values, image_grid_thw, int(visual_positions.size)) if visual_positions.size else None
     timing["visual_tokens_once_ms"] = (time.perf_counter() - visual_token_start) * 1000.0
     decode_start = time.perf_counter()
-    for step in range(max_new_tokens):
-        step_start = time.perf_counter()
-        out = facade.forward(
-            cur_ids,
-            pixel_values,
-            image_grid_thw,
-            cur_mm_types,
-            last_token_logits_only=True,
-            visual_tokens_override=visual_tokens,
-        )
-        logits = out["logits"]
-        next_id = int(np.argmax(logits[-1]))
-        top5 = np.argsort(logits[-1])[-5:][::-1]
-        generated.append(next_id)
-        step_summaries.append({
-            "step": int(step),
-            "input_tokens": int(cur_ids.shape[0]),
-            "next_token_id": next_id,
-            "next_token_text": native_decode([next_id], False) if use_garnet_tokenizer else tokenizer.decode([next_id]),
-            "top5_ids": [int(x) for x in top5.tolist()],
-            "step_ms": (time.perf_counter() - step_start) * 1000.0,
-        })
-        cur_ids = np.concatenate([cur_ids, np.asarray([next_id], dtype=np.int64)])
-        cur_mm_types = np.concatenate([cur_mm_types, np.asarray([0], dtype=np.int64)])
-        if kv_manager is not None:
-            kv_manager.append(kv_sequence_id, tokens=1)
-        if next_id == eos_id:
-            break
+    if use_cached_text_decode:
+        try:
+            prefill_start = time.perf_counter()
+            prefill_out = facade.prefill(
+                cur_ids,
+                pixel_values,
+                image_grid_thw,
+                cur_mm_types,
+                visual_tokens_override=visual_tokens,
+            )
+            timing["text_prefill_ms"] = (time.perf_counter() - prefill_start) * 1000.0
+            logits = prefill_out["logits"]
+            sampled_token_id = prefill_out.get("next_token_id")
+            for step in range(max_new_tokens):
+                step_start = time.perf_counter()
+                if step > 0:
+                    decode_out = facade.decode_one(int(cur_ids[-1]), cur_ids[:-1], cur_mm_types[:-1])
+                    logits = decode_out["logits"]
+                    sampled_token_id = decode_out.get("next_token_id")
+                if sampled_token_id is not None:
+                    next_id = int(sampled_token_id)
+                    top5 = np.asarray([next_id], dtype=np.int64)
+                else:
+                    next_id = int(np.argmax(logits[-1]))
+                    top5 = np.argsort(logits[-1])[-5:][::-1]
+                generated.append(next_id)
+                step_summaries.append({
+                    "step": int(step),
+                    "input_tokens": int(cur_ids.shape[0]),
+                    "next_token_id": next_id,
+                    "next_token_text": native_decode([next_id], False) if use_garnet_tokenizer else tokenizer.decode([next_id]),
+                    "top5_ids": [int(x) for x in top5.tolist()],
+                    "step_ms": (time.perf_counter() - step_start) * 1000.0,
+                    "mode": "prefill_logits" if step == 0 else "cached_decode_one",
+                })
+                cur_ids = np.concatenate([cur_ids, np.asarray([next_id], dtype=np.int64)])
+                cur_mm_types = np.concatenate([cur_mm_types, np.asarray([0], dtype=np.int64)])
+                if kv_manager is not None:
+                    kv_manager.append(kv_sequence_id, tokens=1)
+                if next_id == eos_id:
+                    break
+        finally:
+            facade.close()
+    else:
+        for step in range(max_new_tokens):
+            step_start = time.perf_counter()
+            out = facade.forward(
+                cur_ids,
+                pixel_values,
+                image_grid_thw,
+                cur_mm_types,
+                last_token_logits_only=True,
+                visual_tokens_override=visual_tokens,
+            )
+            logits = out["logits"]
+            next_id = int(np.argmax(logits[-1]))
+            top5 = np.argsort(logits[-1])[-5:][::-1]
+            generated.append(next_id)
+            step_summaries.append({
+                "step": int(step),
+                "input_tokens": int(cur_ids.shape[0]),
+                "next_token_id": next_id,
+                "next_token_text": native_decode([next_id], False) if use_garnet_tokenizer else tokenizer.decode([next_id]),
+                "top5_ids": [int(x) for x in top5.tolist()],
+                "step_ms": (time.perf_counter() - step_start) * 1000.0,
+                "mode": "full_sequence_recompute",
+            })
+            cur_ids = np.concatenate([cur_ids, np.asarray([next_id], dtype=np.int64)])
+            cur_mm_types = np.concatenate([cur_mm_types, np.asarray([0], dtype=np.int64)])
+            if kv_manager is not None:
+                kv_manager.append(kv_sequence_id, tokens=1)
+            if next_id == eos_id:
+                break
     timing["decode_loop_ms"] = (time.perf_counter() - decode_start) * 1000.0
+    if use_cached_text_decode:
+        timing["decode_token_loop_ms"] = timing["decode_loop_ms"] - timing.get("text_prefill_ms", 0.0)
     timing["total_after_frontend_ms"] = timing["visual_tokens_once_ms"] + timing["decode_loop_ms"]
     if kv_manager is not None:
         kv_stats_before_free = kv_manager.stats()
@@ -2164,6 +3630,9 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
         "native_rope": True,
         "native_tokenizer": bool(use_garnet_tokenizer),
         "visual_tokens_cached_once": True,
+        "text_decode_mode": "cached_prefill_decode" if use_cached_text_decode else "full_sequence_recompute",
+        "gpu_tensor_chain": bool(use_cached_text_decode and getattr(facade, "gpu_tensor_chain", False)),
+        "cpp_text_runner": bool(use_cached_text_decode and getattr(facade, "cpp_text_runner_enabled", False)),
         "kv_cache_manager": {
             "enabled": kv_manager is not None,
             "sequence_id": kv_sequence_id if kv_manager is not None else None,
@@ -2174,7 +3643,8 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
         },
         "timing_ms": timing,
         "vision_block_count": int(facade.vision_block_count),
-        "text_layer_count": int(facade.text_layer_count),
+        "text_layer_count": int(facade.cached_text_layer_count if use_cached_text_decode else facade.text_layer_count),
+        "full_text_layer_count": int(facade.text_layer_count),
     }
 
 
@@ -3358,6 +4828,63 @@ if env_flag("RUN_GARNET_REAL_QWEN_MODEL_FORWARD_NATIVE_ROPE_DECODE") and env_fla
     print(json.dumps(model_forward_native_rope_decode_result, indent=2))
     raise SystemExit(0)
 
+if env_flag("RUN_GARNET_REAL_QWEN_CACHED_DECODER_LAYER_PARITY") and env_flag("GARNET_CACHED_DECODER_LAYER_ONLY"):
+    cached_decoder_layer_result = run_garnet_text_decoder_layer_cached_last_token_parity(garnet, key_to_file)
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    cached_summary_path = ARTIFACT_DIR / "real_qwen_cached_decoder_layer_parity.json"
+    cached_summary_path.write_text(
+        __import__("json").dumps(
+            {
+                "model_dir": str(model_dir),
+                "garnet": str(garnet_dll),
+                "cached_decoder_layer": cached_decoder_layer_result,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    print(__import__("json").dumps(cached_decoder_layer_result, indent=2))
+    print(f"wrote {cached_summary_path}")
+    raise SystemExit(0)
+
+if env_flag("RUN_GARNET_REAL_QWEN_CACHED_PREFILL_DECODE_PARITY") and env_flag("GARNET_CACHED_PREFILL_DECODE_ONLY"):
+    cached_prefill_decode_result = run_garnet_text_prefill_decode_cached_parity(garnet, key_to_file)
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    cached_summary_path = ARTIFACT_DIR / "real_qwen_cached_prefill_decode_parity.json"
+    cached_summary_path.write_text(
+        __import__("json").dumps(
+            {
+                "model_dir": str(model_dir),
+                "garnet": str(garnet_dll),
+                "cached_prefill_decode": cached_prefill_decode_result,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    print(__import__("json").dumps(cached_prefill_decode_result, indent=2))
+    print(f"wrote {cached_summary_path}")
+    raise SystemExit(0)
+
+if env_flag("RUN_GARNET_REAL_QWEN_DEVICE_KV_PREFILL_DECODE_PARITY") and env_flag("GARNET_DEVICE_KV_PREFILL_DECODE_ONLY"):
+    device_kv_prefill_decode_result = run_garnet_text_prefill_decode_device_kv_parity(garnet, key_to_file)
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    cached_summary_path = ARTIFACT_DIR / "real_qwen_device_kv_prefill_decode_parity.json"
+    cached_summary_path.write_text(
+        __import__("json").dumps(
+            {
+                "model_dir": str(model_dir),
+                "garnet": str(garnet_dll),
+                "device_kv_prefill_decode": device_kv_prefill_decode_result,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    print(__import__("json").dumps(device_kv_prefill_decode_result, indent=2))
+    print(f"wrote {cached_summary_path}")
+    raise SystemExit(0)
+
 text_norm_result = run_rms_norm(garnet, key_to_file)
 vision_norm_result = run_layer_norm(garnet, key_to_file)
 text_qkv_result = run_text_qkv_proj(garnet, key_to_file)
@@ -3366,6 +4893,15 @@ text_o_proj_result = run_text_o_proj(garnet, key_to_file)
 text_rope_result = run_text_rope_apply(garnet, key_to_file)
 text_attention_result = run_text_attention_core(garnet, key_to_file)
 text_decoder_layer_result = run_text_decoder_layer_chain(garnet, key_to_file)
+cached_decoder_layer_result = None
+if env_flag("RUN_GARNET_REAL_QWEN_CACHED_DECODER_LAYER_PARITY"):
+    cached_decoder_layer_result = run_garnet_text_decoder_layer_cached_last_token_parity(garnet, key_to_file)
+cached_prefill_decode_result = None
+if env_flag("RUN_GARNET_REAL_QWEN_CACHED_PREFILL_DECODE_PARITY"):
+    cached_prefill_decode_result = run_garnet_text_prefill_decode_cached_parity(garnet, key_to_file)
+device_kv_prefill_decode_result = None
+if env_flag("RUN_GARNET_REAL_QWEN_DEVICE_KV_PREFILL_DECODE_PARITY"):
+    device_kv_prefill_decode_result = run_garnet_text_prefill_decode_device_kv_parity(garnet, key_to_file)
 native_mrope_result = None
 if env_flag("RUN_GARNET_REAL_QWEN_NATIVE_MROPE_PARITY"):
     native_mrope_result = run_native_mrope_positions_against_hf(model_dir)
@@ -3444,6 +4980,9 @@ summary_path.write_text(
             "text_rope_apply": text_rope_result,
             "text_attention_core": text_attention_result,
             "text_decoder_layer_chain": text_decoder_layer_result,
+            "cached_decoder_layer": cached_decoder_layer_result,
+            "cached_prefill_decode": cached_prefill_decode_result,
+            "device_kv_prefill_decode": device_kv_prefill_decode_result,
             "native_mrope_positions": native_mrope_result,
             "native_mrope_cos_sin": native_mrope_cos_sin_result,
             "text_decoder_layer_hf_module": text_decoder_layer_hf_result,

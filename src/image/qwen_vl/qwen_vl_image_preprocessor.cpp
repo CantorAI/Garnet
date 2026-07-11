@@ -1,9 +1,11 @@
 #include "qwen_vl_image_preprocessor.h"
 #include "../cuda/jpeg_decode_nvjpeg.h"
 #include "../../tensor/garnet_tensor.h"
+#include "../../tensor/tensor_helper.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -88,7 +90,7 @@ namespace Garnet::Image::QwenVL
         X::Tensor MakeTensor(X::TensorDataType dtype, const std::vector<int>& shape)
         {
             X::Tensor tensor;
-            X::Port::vector<int> xshape;
+            X::Port::vector<int> xshape(static_cast<int>(shape.size()));
             for (int dim : shape) {
                 xshape.push_back(dim);
             }
@@ -112,6 +114,119 @@ namespace Garnet::Image::QwenVL
                 return 0;
             }
         }
+
+        DevicePreprocessResult PreprocessJpegFileToDeviceBufferImpl(
+            const std::string& jpegPath,
+            int minPixels,
+            int maxPixels)
+        {
+            constexpr int patchSize = 16;
+            constexpr int temporalPatchSize = 2;
+            constexpr int mergeSize = 2;
+            if (jpegPath.empty() || minPixels <= 0 || maxPixels <= 0) {
+                throw std::invalid_argument("invalid Qwen-VL JPEG preprocess arguments");
+            }
+
+            unsigned char* jpegBytes = nullptr;
+            size_t jpegSize = 0;
+            std::string readError;
+            if (!Cuda::ReadFileBytes(jpegPath.c_str(), &jpegBytes, &jpegSize, &readError)) {
+                throw std::runtime_error(readError.empty() ? "failed to read JPEG file" : readError);
+            }
+
+            cudaStream_t stream = nullptr;
+            cudaError_t status = cudaStreamCreate(&stream);
+            if (status != cudaSuccess) {
+                delete[] jpegBytes;
+                throw std::runtime_error("failed to create CUDA stream");
+            }
+
+            Cuda::GpuImageRGB8 decoded;
+            std::string decodeError;
+            status = Cuda::DecodeJpegToDeviceRGB8(jpegBytes, jpegSize, stream, &decoded, &decodeError);
+            delete[] jpegBytes;
+            if (status != cudaSuccess) {
+                cudaStreamDestroy(stream);
+                throw std::runtime_error(decodeError.empty() ? cudaGetErrorString(status) : decodeError);
+            }
+
+            DevicePreprocessResult result;
+            result.sourceHeight = decoded.height;
+            result.sourceWidth = decoded.width;
+
+            SmartResizeResult resize;
+            try {
+                resize = SmartResize(decoded.height, decoded.width, patchSize * mergeSize, minPixels, maxPixels);
+            }
+            catch (...) {
+                Cuda::FreeDecodedImage(&decoded);
+                cudaStreamDestroy(stream);
+                throw;
+            }
+
+            int gridH = resize.height / patchSize;
+            int gridW = resize.width / patchSize;
+            if (gridH <= 0 || gridW <= 0 || gridH % mergeSize != 0 || gridW % mergeSize != 0) {
+                Cuda::FreeDecodedImage(&decoded);
+                cudaStreamDestroy(stream);
+                throw std::runtime_error("resized JPEG grid is invalid for Qwen-VL merge size");
+            }
+
+            result.resizedHeight = resize.height;
+            result.resizedWidth = resize.width;
+            result.patchCount = gridH * gridW;
+            result.featureDim = 3 * temporalPatchSize * patchSize * patchSize;
+            result.outputBytes = static_cast<size_t>(result.patchCount) * static_cast<size_t>(result.featureDim) * sizeof(float);
+            result.imageGridTHW[0] = 1;
+            result.imageGridTHW[1] = gridH;
+            result.imageGridTHW[2] = gridW;
+
+            status = cudaMalloc(&result.pixelValuesDevice, result.outputBytes);
+            if (status != cudaSuccess) {
+                Cuda::FreeDecodedImage(&decoded);
+                cudaStreamDestroy(stream);
+                throw std::runtime_error("failed to allocate CUDA output buffer");
+            }
+
+            status = runQwenVLResizeNormalizePatchLayoutRGB8(
+                decoded.data,
+                result.pixelValuesDevice,
+                decoded.height,
+                decoded.width,
+                decoded.pitchBytes,
+                resize.height,
+                resize.width,
+                patchSize,
+                temporalPatchSize,
+                mergeSize,
+                255.0f,
+                0.5f,
+                0.5f,
+                0.5f,
+                0.5f,
+                0.5f,
+                0.5f,
+                stream);
+            if (status == cudaSuccess) {
+                status = cudaStreamSynchronize(stream);
+            }
+            Cuda::FreeDecodedImage(&decoded);
+            cudaStreamDestroy(stream);
+            if (status != cudaSuccess) {
+                cudaFree(result.pixelValuesDevice);
+                result.pixelValuesDevice = nullptr;
+                throw std::runtime_error(cudaGetErrorString(status));
+            }
+            return result;
+        }
+    }
+
+    DevicePreprocessResult PreprocessJpegFileToDeviceBuffer(
+        const std::string& jpegPath,
+        int minPixels,
+        int maxPixels)
+    {
+        return PreprocessJpegFileToDeviceBufferImpl(jpegPath, minPixels, maxPixels);
     }
 
     SmartResizeResult SmartResize(
@@ -194,7 +309,13 @@ namespace Garnet::Image::QwenVL
             throw std::runtime_error("failed to allocate CUDA image preprocessing buffers");
         }
 
-        cudaStatus = cudaMemcpyAsync(dInput, rawImage->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+        void* rawGpu = TensorHelper::GetGPUMemory(rawImage);
+        if (rawGpu) {
+            cudaStatus = cudaMemcpyAsync(dInput, rawGpu, inputBytes, cudaMemcpyDeviceToDevice, stream);
+        }
+        else {
+            cudaStatus = cudaMemcpyAsync(dInput, rawImage->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
+        }
 
         if (cudaStatus == cudaSuccess) {
             cudaStatus = runQwenVLNormalizePatchLayoutFP32(
@@ -218,14 +339,29 @@ namespace Garnet::Image::QwenVL
         }
 
         if (cudaStatus == cudaSuccess) {
-            cudaStatus = cudaMemcpyAsync(pixelValues->GetData(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-        }
-
-        if (cudaStatus == cudaSuccess) {
             cudaStatus = cudaStreamSynchronize(stream);
         }
+        if (!rawGpu && cudaStatus == cudaSuccess) {
+            TensorHelper::AttachGPUMemory(rawImage, dInput);
+            dInput = nullptr;
+        }
         cudaFree(dInput);
-        cudaFree(dOutput);
+        if (cudaStatus == cudaSuccess) {
+            cudaStatus = TensorHelper::AttachGPUMemory(pixelValues, dOutput) == TensorOpStatus::Success
+                ? cudaSuccess
+                : cudaErrorMemoryAllocation;
+        }
+        const char* syncEnv = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
+        bool syncCPU = !syncEnv || !(syncEnv[0] == '0' && syncEnv[1] == '\0');
+        if (cudaStatus == cudaSuccess && syncCPU) {
+            cudaStatus = cudaMemcpyAsync(pixelValues->GetData(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
+            if (cudaStatus == cudaSuccess) {
+                cudaStatus = cudaStreamSynchronize(stream);
+            }
+        }
+        if (cudaStatus != cudaSuccess) {
+            cudaFree(dOutput);
+        }
         cudaStreamDestroy(stream);
         if (cudaStatus != cudaSuccess) {
             throw std::runtime_error(std::string("Qwen-VL CUDA image preprocessing failed: ") + cudaGetErrorString(cudaStatus));
@@ -239,11 +375,63 @@ namespace Garnet::Image::QwenVL
         PreprocessResult result;
         result.pixelValues = X::Value(pixelValues);
         result.imageGridTHW = X::Value(imageGrid);
+        result.sourceHeight = height;
+        result.sourceWidth = width;
         result.resizedHeight = height;
         result.resizedWidth = width;
         result.patchSize = config.patchSize;
         result.temporalPatchSize = config.temporalPatchSize;
         result.mergeSize = config.mergeSize;
+        return result;
+    }
+
+    PreprocessResult PreprocessJpegFileToTensor(
+        const std::string& jpegPath,
+        int minPixels,
+        int maxPixels)
+    {
+        DevicePreprocessResult deviceResult = PreprocessJpegFileToDeviceBuffer(jpegPath, minPixels, maxPixels);
+
+        X::Tensor pixelValues = MakeTensor(X::TensorDataType::FLOAT32, { deviceResult.patchCount, deviceResult.featureDim });
+        if (TensorHelper::AttachGPUMemory(pixelValues, deviceResult.pixelValuesDevice) != TensorOpStatus::Success) {
+            cudaFree(deviceResult.pixelValuesDevice);
+            throw std::runtime_error("failed to attach GPU pixel buffer to X::Tensor");
+        }
+
+        const char* syncEnv = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
+        bool syncCPU = !syncEnv || !(syncEnv[0] == '0' && syncEnv[1] == '\0');
+        if (syncCPU) {
+            cudaStream_t stream = nullptr;
+            cudaError_t status = cudaStreamCreate(&stream);
+            if (status == cudaSuccess) {
+                status = cudaMemcpyAsync(pixelValues->GetData(), deviceResult.pixelValuesDevice, deviceResult.outputBytes, cudaMemcpyDeviceToHost, stream);
+            }
+            if (status == cudaSuccess) {
+                status = cudaStreamSynchronize(stream);
+            }
+            if (stream) cudaStreamDestroy(stream);
+            if (status != cudaSuccess) {
+                cudaFree(deviceResult.pixelValuesDevice);
+                throw std::runtime_error(cudaGetErrorString(status));
+            }
+        }
+
+        X::Tensor imageGrid = MakeTensor(X::TensorDataType::INT64, { 1, 3 });
+        auto* gridData = reinterpret_cast<long long*>(imageGrid->GetData());
+        gridData[0] = deviceResult.imageGridTHW[0];
+        gridData[1] = deviceResult.imageGridTHW[1];
+        gridData[2] = deviceResult.imageGridTHW[2];
+
+        PreprocessResult result;
+        result.pixelValues = X::Value(pixelValues);
+        result.imageGridTHW = X::Value(imageGrid);
+        result.sourceHeight = deviceResult.sourceHeight;
+        result.sourceWidth = deviceResult.sourceWidth;
+        result.resizedHeight = deviceResult.resizedHeight;
+        result.resizedWidth = deviceResult.resizedWidth;
+        result.patchSize = deviceResult.patchSize;
+        result.temporalPatchSize = deviceResult.temporalPatchSize;
+        result.mergeSize = deviceResult.mergeSize;
         return result;
     }
 }
@@ -712,4 +900,65 @@ extern "C" GARNET_IMAGE_EXPORT int GarnetQwenVLPreprocessJpegFile(
         errorMessageCapacity);
     delete[] bytes;
     return rc;
+}
+
+extern "C" GARNET_IMAGE_EXPORT int GarnetQwenVLPreprocessJpegFileDevice(
+    const char* jpegPath,
+    int minPixels,
+    int maxPixels,
+    void** pixelValuesDevice,
+    size_t* outputBytes,
+    long long* imageGridTHW,
+    int* sourceHeight,
+    int* sourceWidth,
+    int* resizedHeight,
+    int* resizedWidth,
+    int* patchCount,
+    int* featureDim,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const char* message) {
+        if (errorMessage && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message);
+        }
+    };
+
+    if (!jpegPath || !pixelValuesDevice || !outputBytes || !imageGridTHW ||
+        !sourceHeight || !sourceWidth || !resizedHeight || !resizedWidth ||
+        !patchCount || !featureDim) {
+        setError("invalid Qwen-VL device preprocess C ABI arguments");
+        return 1;
+    }
+
+    *pixelValuesDevice = nullptr;
+    *outputBytes = 0;
+    try {
+        auto result = Garnet::Image::QwenVL::PreprocessJpegFileToDeviceBuffer(jpegPath, minPixels, maxPixels);
+        *pixelValuesDevice = result.pixelValuesDevice;
+        *outputBytes = result.outputBytes;
+        imageGridTHW[0] = result.imageGridTHW[0];
+        imageGridTHW[1] = result.imageGridTHW[1];
+        imageGridTHW[2] = result.imageGridTHW[2];
+        *sourceHeight = result.sourceHeight;
+        *sourceWidth = result.sourceWidth;
+        *resizedHeight = result.resizedHeight;
+        *resizedWidth = result.resizedWidth;
+        *patchCount = result.patchCount;
+        *featureDim = result.featureDim;
+        setError("");
+        return 0;
+    }
+    catch (const std::exception& exc) {
+        setError(exc.what());
+        return 2;
+    }
+}
+
+extern "C" GARNET_IMAGE_EXPORT int GarnetFreeDeviceBuffer(void* deviceBuffer)
+{
+    if (!deviceBuffer) {
+        return 0;
+    }
+    return cudaFree(deviceBuffer) == cudaSuccess ? 0 : 1;
 }

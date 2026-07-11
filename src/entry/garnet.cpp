@@ -3,6 +3,7 @@
 #include "../image/qwen_vl/qwen_vl_image_preprocessor.h"
 #include "../tokenizer/qwen_tokenizer.h"
 #include "../cuda/cuda_lib.h"
+#include "../tensor/tensor_helper.h"
 #include "xpackage.h"
 #include "xlang.h"
 #include <fstream> 
@@ -14,7 +15,16 @@
 #include <chrono>
 #include <cstring>
 #include <cstdio>
+#include <cstdlib>
+#include <mutex>
+#include <unordered_map>
 #include <cuda_runtime.h>
+
+#if defined(_WIN32)
+#define GARNET_ENTRY_EXPORT __declspec(dllexport)
+#else
+#define GARNET_ENTRY_EXPORT
+#endif
 
 extern "C" int GarnetQwenVLPreprocessJpegFile(
     const char* jpegPath,
@@ -29,11 +39,49 @@ extern "C" int GarnetQwenVLPreprocessJpegFile(
     char* errorMessage,
     int errorMessageCapacity);
 
-#if defined(_WIN32)
-#define GARNET_ENTRY_EXPORT __declspec(dllexport)
-#else
-#define GARNET_ENTRY_EXPORT
-#endif
+extern "C" int GarnetFreeDeviceBuffer(void* deviceBuffer);
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetCreateDevicePagedKVFP32(
+    int physicalPageCount,
+    int pageSize,
+    int logicalPageCount,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    const int* pageTable,
+    long long* outputHandle,
+    char* errorMessage,
+    int errorMessageCapacity);
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDestroyDevicePagedKVFP32(
+    long long handle,
+    char* errorMessage,
+    int errorMessageCapacity);
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDevicePagedKVWriteDeviceFP32(
+    long long handle,
+    const float* deviceQKV,
+    int tokenCount,
+    int startPosition,
+    char* errorMessage,
+    int errorMessageCapacity);
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDevicePagedKVAttentionDeviceFP32(
+    long long handle,
+    const float* deviceQ,
+    float* deviceOutput,
+    int sequenceLength,
+    char* errorMessage,
+    int errorMessageCapacity);
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDebugSampleLogitsTop1FP32(
+    const float* deviceLogits,
+    int rows,
+    int vocabSize,
+    long long* deviceOutputTokenId,
+    float* deviceOutputTokenValue,
+    char* errorMessage,
+    int errorMessageCapacity);
 
 extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLPrepareJpegPrompt(
     const char* modelDir,
@@ -131,6 +179,14 @@ extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLPrepareJpegPrompt(
             grid,
             mergeSize);
         int64_t imagePadId = tokenizer.TokenId("<|image_pad|>");
+        if (imagePadId < 0 ||
+            tokenizer.TokenId("<|vision_start|>") < 0 ||
+            tokenizer.TokenId("<|vision_end|>") < 0 ||
+            tokenizer.TokenId("<|im_start|>") < 0 ||
+            tokenizer.TokenId("<|im_end|>") < 0) {
+            setError("model tokenizer is missing required Qwen-VL special tokens");
+            return 1;
+        }
         if (outputInputIdCount != nullptr) {
             *outputInputIdCount = static_cast<int>(promptIds.size());
         }
@@ -170,6 +226,791 @@ extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLPrepareJpegPrompt(
         setError(exc.what());
         return 1;
     }
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLPrepareJpegPromptDevice(
+    const char* modelDir,
+    const char* jpegPath,
+    const char* prompt,
+    int minPixels,
+    int maxPixels,
+    long long* outputInputIds,
+    int inputIdCapacity,
+    int* outputInputIdCount,
+    long long* outputMmTokenTypes,
+    int mmTokenTypeCapacity,
+    void** outputPixelValuesDevice,
+    size_t* outputPixelValueBytes,
+    int* outputPixelValueCount,
+    long long* outputImageGridTHW,
+    int* sourceHeight,
+    int* sourceWidth,
+    int* resizedHeight,
+    int* resizedWidth,
+    long long* imagePreprocessUs,
+    long long* tokenizeUs,
+    long long* totalUs,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto totalStart = std::chrono::steady_clock::now();
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+
+    auto setUs = [](long long* out, double ms) {
+        if (out) {
+            *out = static_cast<long long>(ms * 1000.0);
+        }
+    };
+    auto msSince = [](std::chrono::steady_clock::time_point start) {
+        auto end = std::chrono::steady_clock::now();
+        return std::chrono::duration<double, std::milli>(end - start).count();
+    };
+
+    try {
+        if (outputPixelValuesDevice) {
+            *outputPixelValuesDevice = nullptr;
+        }
+        if (outputPixelValueBytes) {
+            *outputPixelValueBytes = 0;
+        }
+        if (outputPixelValueCount) {
+            *outputPixelValueCount = 0;
+        }
+        if (modelDir == nullptr || jpegPath == nullptr || prompt == nullptr ||
+            outputInputIds == nullptr || outputMmTokenTypes == nullptr ||
+            outputPixelValuesDevice == nullptr || outputPixelValueBytes == nullptr ||
+            outputPixelValueCount == nullptr || outputImageGridTHW == nullptr) {
+            setError("invalid GarnetQwenVLPrepareJpegPromptDevice arguments");
+            return 1;
+        }
+
+        constexpr int mergeSize = 2;
+
+        auto imageStart = std::chrono::steady_clock::now();
+        auto image = Garnet::Image::QwenVL::PreprocessJpegFileToDeviceBuffer(jpegPath, minPixels, maxPixels);
+        double imageMs = msSince(imageStart);
+        setUs(imagePreprocessUs, imageMs);
+
+        outputImageGridTHW[0] = image.imageGridTHW[0];
+        outputImageGridTHW[1] = image.imageGridTHW[1];
+        outputImageGridTHW[2] = image.imageGridTHW[2];
+        if (sourceHeight) *sourceHeight = image.sourceHeight;
+        if (sourceWidth) *sourceWidth = image.sourceWidth;
+        if (resizedHeight) *resizedHeight = image.resizedHeight;
+        if (resizedWidth) *resizedWidth = image.resizedWidth;
+        *outputPixelValueBytes = image.outputBytes;
+        *outputPixelValueCount = image.patchCount * image.featureDim;
+
+        auto tokenStart = std::chrono::steady_clock::now();
+        std::string tokenError;
+        auto tokenizer = Garnet::Tokenization::GetCachedQwenTokenizer(modelDir, &tokenError);
+        if (!tokenizer) {
+            GarnetFreeDeviceBuffer(image.pixelValuesDevice);
+            setError(tokenError.empty() ? "failed to load tokenizer" : tokenError);
+            return 1;
+        }
+        std::vector<int64_t> promptIds = Garnet::Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
+            *tokenizer,
+            prompt,
+            image.imageGridTHW,
+            mergeSize);
+        int64_t imagePadId = tokenizer->TokenId("<|image_pad|>");
+        if (imagePadId < 0 ||
+            tokenizer->TokenId("<|vision_start|>") < 0 ||
+            tokenizer->TokenId("<|vision_end|>") < 0 ||
+            tokenizer->TokenId("<|im_start|>") < 0 ||
+            tokenizer->TokenId("<|im_end|>") < 0) {
+            GarnetFreeDeviceBuffer(image.pixelValuesDevice);
+            setError("model tokenizer is missing required Qwen-VL special tokens");
+            return 1;
+        }
+        double tokenMs = msSince(tokenStart);
+        setUs(tokenizeUs, tokenMs);
+
+        if (outputInputIdCount) {
+            *outputInputIdCount = static_cast<int>(promptIds.size());
+        }
+        if (inputIdCapacity < static_cast<int>(promptIds.size()) ||
+            mmTokenTypeCapacity < static_cast<int>(promptIds.size())) {
+            GarnetFreeDeviceBuffer(image.pixelValuesDevice);
+            setError("token output buffer capacity is too small");
+            return 3;
+        }
+
+        int visualTokenCount = 0;
+        for (size_t i = 0; i < promptIds.size(); ++i) {
+            outputInputIds[i] = static_cast<long long>(promptIds[i]);
+            long long mmType = promptIds[i] == imagePadId ? 1LL : 0LL;
+            outputMmTokenTypes[i] = mmType;
+            if (mmType == 1LL) {
+                ++visualTokenCount;
+            }
+        }
+        int expectedVisualTokenCount = static_cast<int>(
+            (image.imageGridTHW[0] * image.imageGridTHW[1] * image.imageGridTHW[2]) / (mergeSize * mergeSize));
+        if (visualTokenCount != expectedVisualTokenCount) {
+            GarnetFreeDeviceBuffer(image.pixelValuesDevice);
+            setError("visual placeholder count does not match image grid");
+            return 1;
+        }
+
+        *outputPixelValuesDevice = image.pixelValuesDevice;
+        setUs(totalUs, msSince(totalStart));
+        setError("");
+        return 0;
+    }
+    catch (const std::exception& exc) {
+        setError(exc.what());
+        return 1;
+    }
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLPrepareJpegPromptDeviceTensors(
+    const char* modelDir,
+    const char* jpegPath,
+    const char* prompt,
+    int minPixels,
+    int maxPixels,
+    void** outputInputIdsDevice,
+    size_t* outputInputIdsBytes,
+    int* outputInputIdCount,
+    void** outputMmTokenTypesDevice,
+    size_t* outputMmTokenTypesBytes,
+    void** outputPixelValuesDevice,
+    size_t* outputPixelValueBytes,
+    int* outputPixelValueCount,
+    long long* outputImageGridTHW,
+    int* sourceHeight,
+    int* sourceWidth,
+    int* resizedHeight,
+    int* resizedWidth,
+    long long* imagePreprocessUs,
+    long long* tokenizeUs,
+    long long* tensorUploadUs,
+    long long* totalUs,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto totalStart = std::chrono::steady_clock::now();
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    auto setUs = [](long long* out, double ms) {
+        if (out) {
+            *out = static_cast<long long>(ms * 1000.0);
+        }
+    };
+    auto msSince = [](std::chrono::steady_clock::time_point start) {
+        auto end = std::chrono::steady_clock::now();
+        return std::chrono::duration<double, std::milli>(end - start).count();
+    };
+    auto clearOutputs = [&]() {
+        if (outputInputIdsDevice) *outputInputIdsDevice = nullptr;
+        if (outputInputIdsBytes) *outputInputIdsBytes = 0;
+        if (outputInputIdCount) *outputInputIdCount = 0;
+        if (outputMmTokenTypesDevice) *outputMmTokenTypesDevice = nullptr;
+        if (outputMmTokenTypesBytes) *outputMmTokenTypesBytes = 0;
+        if (outputPixelValuesDevice) *outputPixelValuesDevice = nullptr;
+        if (outputPixelValueBytes) *outputPixelValueBytes = 0;
+        if (outputPixelValueCount) *outputPixelValueCount = 0;
+    };
+
+    clearOutputs();
+    try {
+        if (modelDir == nullptr || jpegPath == nullptr || prompt == nullptr ||
+            outputInputIdsDevice == nullptr || outputInputIdsBytes == nullptr ||
+            outputInputIdCount == nullptr || outputMmTokenTypesDevice == nullptr ||
+            outputMmTokenTypesBytes == nullptr || outputPixelValuesDevice == nullptr ||
+            outputPixelValueBytes == nullptr || outputPixelValueCount == nullptr ||
+            outputImageGridTHW == nullptr) {
+            setError("invalid GarnetQwenVLPrepareJpegPromptDeviceTensors arguments");
+            return 1;
+        }
+
+        constexpr int mergeSize = 2;
+        auto imageStart = std::chrono::steady_clock::now();
+        auto image = Garnet::Image::QwenVL::PreprocessJpegFileToDeviceBuffer(jpegPath, minPixels, maxPixels);
+        setUs(imagePreprocessUs, msSince(imageStart));
+
+        outputImageGridTHW[0] = image.imageGridTHW[0];
+        outputImageGridTHW[1] = image.imageGridTHW[1];
+        outputImageGridTHW[2] = image.imageGridTHW[2];
+        if (sourceHeight) *sourceHeight = image.sourceHeight;
+        if (sourceWidth) *sourceWidth = image.sourceWidth;
+        if (resizedHeight) *resizedHeight = image.resizedHeight;
+        if (resizedWidth) *resizedWidth = image.resizedWidth;
+
+        auto tokenStart = std::chrono::steady_clock::now();
+        std::string tokenError;
+        auto tokenizer = Garnet::Tokenization::GetCachedQwenTokenizer(modelDir, &tokenError);
+        if (!tokenizer) {
+            GarnetFreeDeviceBuffer(image.pixelValuesDevice);
+            setError(tokenError.empty() ? "failed to load tokenizer" : tokenError);
+            return 1;
+        }
+        std::vector<int64_t> promptIds = Garnet::Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
+            *tokenizer,
+            prompt,
+            image.imageGridTHW,
+            mergeSize);
+        int64_t imagePadId = tokenizer->TokenId("<|image_pad|>");
+        if (imagePadId < 0 ||
+            tokenizer->TokenId("<|vision_start|>") < 0 ||
+            tokenizer->TokenId("<|vision_end|>") < 0 ||
+            tokenizer->TokenId("<|im_start|>") < 0 ||
+            tokenizer->TokenId("<|im_end|>") < 0) {
+            GarnetFreeDeviceBuffer(image.pixelValuesDevice);
+            setError("model tokenizer is missing required Qwen-VL special tokens");
+            return 1;
+        }
+
+        std::vector<long long> inputIds;
+        std::vector<long long> mmTypes;
+        inputIds.reserve(promptIds.size());
+        mmTypes.reserve(promptIds.size());
+        int visualTokenCount = 0;
+        for (int64_t id : promptIds) {
+            inputIds.push_back(static_cast<long long>(id));
+            long long mmType = id == imagePadId ? 1LL : 0LL;
+            mmTypes.push_back(mmType);
+            if (mmType == 1LL) {
+                ++visualTokenCount;
+            }
+        }
+        int expectedVisualTokenCount = static_cast<int>(
+            (image.imageGridTHW[0] * image.imageGridTHW[1] * image.imageGridTHW[2]) / (mergeSize * mergeSize));
+        if (visualTokenCount != expectedVisualTokenCount) {
+            GarnetFreeDeviceBuffer(image.pixelValuesDevice);
+            setError("visual placeholder count does not match image grid");
+            return 1;
+        }
+        setUs(tokenizeUs, msSince(tokenStart));
+
+        auto uploadStart = std::chrono::steady_clock::now();
+        size_t idsBytes = inputIds.size() * sizeof(long long);
+        size_t mmBytes = mmTypes.size() * sizeof(long long);
+        void* dIds = nullptr;
+        void* dMm = nullptr;
+        cudaStream_t stream = nullptr;
+        cudaError_t err = cudaStreamCreate(&stream);
+        if (err == cudaSuccess) err = cudaMalloc(&dIds, idsBytes);
+        if (err == cudaSuccess) err = cudaMalloc(&dMm, mmBytes);
+        if (err == cudaSuccess) err = cudaMemcpyAsync(dIds, inputIds.data(), idsBytes, cudaMemcpyHostToDevice, stream);
+        if (err == cudaSuccess) err = cudaMemcpyAsync(dMm, mmTypes.data(), mmBytes, cudaMemcpyHostToDevice, stream);
+        if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+        if (stream) cudaStreamDestroy(stream);
+        if (err != cudaSuccess) {
+            if (dIds) cudaFree(dIds);
+            if (dMm) cudaFree(dMm);
+            GarnetFreeDeviceBuffer(image.pixelValuesDevice);
+            setError(cudaGetErrorString(err));
+            return 1;
+        }
+        setUs(tensorUploadUs, msSince(uploadStart));
+
+        *outputInputIdsDevice = dIds;
+        *outputInputIdsBytes = idsBytes;
+        *outputInputIdCount = static_cast<int>(inputIds.size());
+        *outputMmTokenTypesDevice = dMm;
+        *outputMmTokenTypesBytes = mmBytes;
+        *outputPixelValuesDevice = image.pixelValuesDevice;
+        *outputPixelValueBytes = image.outputBytes;
+        *outputPixelValueCount = image.patchCount * image.featureDim;
+        setUs(totalUs, msSince(totalStart));
+        setError("");
+        return 0;
+    }
+    catch (const std::exception& exc) {
+        setError(exc.what());
+        return 1;
+    }
+}
+
+namespace
+{
+    struct QwenVLDeviceRequest
+    {
+        void* inputIdsDevice = nullptr;
+        size_t inputIdsBytes = 0;
+        int inputIdCount = 0;
+        void* mmTokenTypesDevice = nullptr;
+        size_t mmTokenTypesBytes = 0;
+        void* pixelValuesDevice = nullptr;
+        size_t pixelValuesBytes = 0;
+        int pixelValueCount = 0;
+        long long imageGridTHW[3] = { 1, 0, 0 };
+        int sourceHeight = 0;
+        int sourceWidth = 0;
+        int resizedHeight = 0;
+        int resizedWidth = 0;
+        long long imagePreprocessUs = 0;
+        long long tokenizeUs = 0;
+        long long tensorUploadUs = 0;
+        long long totalUs = 0;
+        long long kvHandle = 0;
+        int kvMaxTokens = 0;
+        int kvLogicalLength = 0;
+        int kvPageSize = 0;
+        int kvLogicalPages = 0;
+        int kvPhysicalPages = 0;
+        int kvQHeads = 0;
+        int kvHeads = 0;
+        int kvHeadDim = 0;
+    };
+
+    std::mutex g_qwenVLDeviceRequestsMutex;
+    std::unordered_map<long long, QwenVLDeviceRequest> g_qwenVLDeviceRequests;
+    long long g_nextQwenVLDeviceRequestHandle = 1;
+
+    void FreeQwenVLDeviceRequestBuffers(QwenVLDeviceRequest& request)
+    {
+        if (request.inputIdsDevice) {
+            cudaFree(request.inputIdsDevice);
+            request.inputIdsDevice = nullptr;
+        }
+        if (request.mmTokenTypesDevice) {
+            cudaFree(request.mmTokenTypesDevice);
+            request.mmTokenTypesDevice = nullptr;
+        }
+        if (request.pixelValuesDevice) {
+            cudaFree(request.pixelValuesDevice);
+            request.pixelValuesDevice = nullptr;
+        }
+        if (request.kvHandle > 0) {
+            char error[1024] = {};
+            GarnetDestroyDevicePagedKVFP32(request.kvHandle, error, static_cast<int>(sizeof(error)));
+            request.kvHandle = 0;
+        }
+    }
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetCreateQwenVLDeviceRequest(
+    const char* modelDir,
+    const char* jpegPath,
+    const char* prompt,
+    int minPixels,
+    int maxPixels,
+    long long* outputHandle,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    if (!outputHandle) {
+        setError("outputHandle is required");
+        return 1;
+    }
+    *outputHandle = 0;
+
+    QwenVLDeviceRequest request;
+    int rc = GarnetQwenVLPrepareJpegPromptDeviceTensors(
+        modelDir,
+        jpegPath,
+        prompt,
+        minPixels,
+        maxPixels,
+        &request.inputIdsDevice,
+        &request.inputIdsBytes,
+        &request.inputIdCount,
+        &request.mmTokenTypesDevice,
+        &request.mmTokenTypesBytes,
+        &request.pixelValuesDevice,
+        &request.pixelValuesBytes,
+        &request.pixelValueCount,
+        request.imageGridTHW,
+        &request.sourceHeight,
+        &request.sourceWidth,
+        &request.resizedHeight,
+        &request.resizedWidth,
+        &request.imagePreprocessUs,
+        &request.tokenizeUs,
+        &request.tensorUploadUs,
+        &request.totalUs,
+        errorMessage,
+        errorMessageCapacity);
+    if (rc != 0) {
+        FreeQwenVLDeviceRequestBuffers(request);
+        return rc;
+    }
+
+    long long handle = 0;
+    {
+        std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+        handle = g_nextQwenVLDeviceRequestHandle++;
+        g_qwenVLDeviceRequests.emplace(handle, request);
+    }
+    *outputHandle = handle;
+    setError("");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDestroyQwenVLDeviceRequest(
+    long long handle,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    QwenVLDeviceRequest request;
+    {
+        std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+        auto found = g_qwenVLDeviceRequests.find(handle);
+        if (found == g_qwenVLDeviceRequests.end()) {
+            setError("invalid Qwen-VL device request handle");
+            return 1;
+        }
+        request = found->second;
+        g_qwenVLDeviceRequests.erase(found);
+    }
+    FreeQwenVLDeviceRequestBuffers(request);
+    setError("");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetGetQwenVLDeviceRequestInfo(
+    long long handle,
+    void** inputIdsDevice,
+    size_t* inputIdsBytes,
+    int* inputIdCount,
+    void** mmTokenTypesDevice,
+    size_t* mmTokenTypesBytes,
+    void** pixelValuesDevice,
+    size_t* pixelValuesBytes,
+    int* pixelValueCount,
+    long long* imageGridTHW,
+    int* sourceHeight,
+    int* sourceWidth,
+    int* resizedHeight,
+    int* resizedWidth,
+    long long* imagePreprocessUs,
+    long long* tokenizeUs,
+    long long* tensorUploadUs,
+    long long* totalUs,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    QwenVLDeviceRequest request;
+    {
+        std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+        auto found = g_qwenVLDeviceRequests.find(handle);
+        if (found == g_qwenVLDeviceRequests.end()) {
+            setError("invalid Qwen-VL device request handle");
+            return 1;
+        }
+        request = found->second;
+    }
+
+    if (inputIdsDevice) *inputIdsDevice = request.inputIdsDevice;
+    if (inputIdsBytes) *inputIdsBytes = request.inputIdsBytes;
+    if (inputIdCount) *inputIdCount = request.inputIdCount;
+    if (mmTokenTypesDevice) *mmTokenTypesDevice = request.mmTokenTypesDevice;
+    if (mmTokenTypesBytes) *mmTokenTypesBytes = request.mmTokenTypesBytes;
+    if (pixelValuesDevice) *pixelValuesDevice = request.pixelValuesDevice;
+    if (pixelValuesBytes) *pixelValuesBytes = request.pixelValuesBytes;
+    if (pixelValueCount) *pixelValueCount = request.pixelValueCount;
+    if (imageGridTHW) {
+        imageGridTHW[0] = request.imageGridTHW[0];
+        imageGridTHW[1] = request.imageGridTHW[1];
+        imageGridTHW[2] = request.imageGridTHW[2];
+    }
+    if (sourceHeight) *sourceHeight = request.sourceHeight;
+    if (sourceWidth) *sourceWidth = request.sourceWidth;
+    if (resizedHeight) *resizedHeight = request.resizedHeight;
+    if (resizedWidth) *resizedWidth = request.resizedWidth;
+    if (imagePreprocessUs) *imagePreprocessUs = request.imagePreprocessUs;
+    if (tokenizeUs) *tokenizeUs = request.tokenizeUs;
+    if (tensorUploadUs) *tensorUploadUs = request.tensorUploadUs;
+    if (totalUs) *totalUs = request.totalUs;
+    setError("");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetAllocateQwenVLDeviceRequestKV(
+    long long requestHandle,
+    int maxNewTokens,
+    int pageSize,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    int physicalPageCount,
+    long long* outputKVHandle,
+    int* outputMaxTokens,
+    int* outputLogicalPages,
+    int* outputPhysicalPages,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    if (outputKVHandle) *outputKVHandle = 0;
+    if (outputMaxTokens) *outputMaxTokens = 0;
+    if (outputLogicalPages) *outputLogicalPages = 0;
+    if (outputPhysicalPages) *outputPhysicalPages = 0;
+    if (pageSize <= 0 || qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || (qHeads % kvHeads) != 0) {
+        setError("invalid request KV geometry");
+        return 1;
+    }
+
+    std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+    auto found = g_qwenVLDeviceRequests.find(requestHandle);
+    if (found == g_qwenVLDeviceRequests.end()) {
+        setError("invalid Qwen-VL device request handle");
+        return 1;
+    }
+
+    QwenVLDeviceRequest& request = found->second;
+    int maxTokens = request.inputIdCount + (maxNewTokens > 0 ? maxNewTokens : 0);
+    if (maxTokens <= 0) {
+        setError("request has no tokens for KV allocation");
+        return 1;
+    }
+    int logicalPages = (maxTokens + pageSize - 1) / pageSize;
+    int physicalPages = physicalPageCount > 0 ? physicalPageCount : logicalPages;
+    if (physicalPages < logicalPages) {
+        setError("physicalPageCount must cover logical pages for request KV allocation");
+        return 1;
+    }
+
+    if (request.kvHandle > 0) {
+        char destroyError[1024] = {};
+        GarnetDestroyDevicePagedKVFP32(request.kvHandle, destroyError, static_cast<int>(sizeof(destroyError)));
+        request.kvHandle = 0;
+    }
+
+    std::vector<int> pageTable(static_cast<size_t>(logicalPages));
+    for (int i = 0; i < logicalPages; ++i) {
+        pageTable[static_cast<size_t>(i)] = i;
+    }
+
+    long long kvHandle = 0;
+    int rc = GarnetCreateDevicePagedKVFP32(
+        physicalPages,
+        pageSize,
+        logicalPages,
+        qHeads,
+        kvHeads,
+        headDim,
+        pageTable.data(),
+        &kvHandle,
+        errorMessage,
+        errorMessageCapacity);
+    if (rc != 0) {
+        return rc;
+    }
+
+    request.kvHandle = kvHandle;
+    request.kvMaxTokens = maxTokens;
+    request.kvLogicalLength = 0;
+    request.kvPageSize = pageSize;
+    request.kvLogicalPages = logicalPages;
+    request.kvPhysicalPages = physicalPages;
+    request.kvQHeads = qHeads;
+    request.kvHeads = kvHeads;
+    request.kvHeadDim = headDim;
+
+    if (outputKVHandle) *outputKVHandle = kvHandle;
+    if (outputMaxTokens) *outputMaxTokens = maxTokens;
+    if (outputLogicalPages) *outputLogicalPages = logicalPages;
+    if (outputPhysicalPages) *outputPhysicalPages = physicalPages;
+    setError("");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetGetQwenVLDeviceRequestKVInfo(
+    long long requestHandle,
+    long long* outputKVHandle,
+    int* outputMaxTokens,
+    int* outputPageSize,
+    int* outputLogicalPages,
+    int* outputPhysicalPages,
+    int* outputQHeads,
+    int* outputKVHeads,
+    int* outputHeadDim,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    QwenVLDeviceRequest request;
+    {
+        std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+        auto found = g_qwenVLDeviceRequests.find(requestHandle);
+        if (found == g_qwenVLDeviceRequests.end()) {
+            setError("invalid Qwen-VL device request handle");
+            return 1;
+        }
+        request = found->second;
+    }
+
+    if (outputKVHandle) *outputKVHandle = request.kvHandle;
+    if (outputMaxTokens) *outputMaxTokens = request.kvMaxTokens;
+    if (outputPageSize) *outputPageSize = request.kvPageSize;
+    if (outputLogicalPages) *outputLogicalPages = request.kvLogicalPages;
+    if (outputPhysicalPages) *outputPhysicalPages = request.kvPhysicalPages;
+    if (outputQHeads) *outputQHeads = request.kvQHeads;
+    if (outputKVHeads) *outputKVHeads = request.kvHeads;
+    if (outputHeadDim) *outputHeadDim = request.kvHeadDim;
+    setError("");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetGetQwenVLDeviceRequestKVState(
+    long long requestHandle,
+    long long* outputKVHandle,
+    int* outputMaxTokens,
+    int* outputLogicalLength,
+    int* outputPageSize,
+    int* outputLogicalPages,
+    int* outputPhysicalPages,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    QwenVLDeviceRequest request;
+    {
+        std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+        auto found = g_qwenVLDeviceRequests.find(requestHandle);
+        if (found == g_qwenVLDeviceRequests.end()) {
+            setError("invalid Qwen-VL device request handle");
+            return 1;
+        }
+        request = found->second;
+    }
+
+    if (outputKVHandle) *outputKVHandle = request.kvHandle;
+    if (outputMaxTokens) *outputMaxTokens = request.kvMaxTokens;
+    if (outputLogicalLength) *outputLogicalLength = request.kvLogicalLength;
+    if (outputPageSize) *outputPageSize = request.kvPageSize;
+    if (outputLogicalPages) *outputLogicalPages = request.kvLogicalPages;
+    if (outputPhysicalPages) *outputPhysicalPages = request.kvPhysicalPages;
+    setError("");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLDeviceRequestKVWriteDevice(
+    long long requestHandle,
+    const float* deviceQKV,
+    int tokenCount,
+    int startPosition,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    long long kvHandle = 0;
+    int capacity = 0;
+    {
+        std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+        auto found = g_qwenVLDeviceRequests.find(requestHandle);
+        if (found == g_qwenVLDeviceRequests.end()) {
+            setError("invalid Qwen-VL device request handle");
+            return 1;
+        }
+        kvHandle = found->second.kvHandle;
+        capacity = found->second.kvMaxTokens;
+    }
+    if (kvHandle <= 0) {
+        setError("request has no allocated device KV cache");
+        return 1;
+    }
+    if (deviceQKV == nullptr || tokenCount <= 0 || startPosition < 0 ||
+        startPosition + tokenCount > capacity) {
+        setError("invalid request KV write range");
+        return 1;
+    }
+    int rc = GarnetDevicePagedKVWriteDeviceFP32(
+        kvHandle,
+        deviceQKV,
+        tokenCount,
+        startPosition,
+        errorMessage,
+        errorMessageCapacity);
+    if (rc == 0) {
+        std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+        auto found = g_qwenVLDeviceRequests.find(requestHandle);
+        if (found != g_qwenVLDeviceRequests.end()) {
+            int endPosition = startPosition + tokenCount;
+            if (endPosition > found->second.kvLogicalLength) {
+                found->second.kvLogicalLength = endPosition;
+            }
+        }
+    }
+    return rc;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLDeviceRequestKVAttentionDevice(
+    long long requestHandle,
+    const float* deviceQ,
+    float* deviceOutput,
+    int sequenceLength,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    auto setError = [&](const std::string& message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message.c_str());
+        }
+    };
+    long long kvHandle = 0;
+    int capacity = 0;
+    int logicalLength = 0;
+    {
+        std::lock_guard<std::mutex> lock(g_qwenVLDeviceRequestsMutex);
+        auto found = g_qwenVLDeviceRequests.find(requestHandle);
+        if (found == g_qwenVLDeviceRequests.end()) {
+            setError("invalid Qwen-VL device request handle");
+            return 1;
+        }
+        kvHandle = found->second.kvHandle;
+        capacity = found->second.kvMaxTokens;
+        logicalLength = found->second.kvLogicalLength;
+    }
+    if (kvHandle <= 0) {
+        setError("request has no allocated device KV cache");
+        return 1;
+    }
+    if (deviceQ == nullptr || deviceOutput == nullptr ||
+        sequenceLength <= 0 || sequenceLength > capacity || sequenceLength > logicalLength) {
+        setError("invalid request KV attention range");
+        return 1;
+    }
+    return GarnetDevicePagedKVAttentionDeviceFP32(
+        kvHandle,
+        deviceQ,
+        deviceOutput,
+        sequenceLength,
+        errorMessage,
+        errorMessageCapacity);
 }
 
 extern "C" GARNET_ENTRY_EXPORT int GarnetRunTextKVCachedAttentionFP32(
@@ -404,6 +1245,329 @@ extern "C" GARNET_ENTRY_EXPORT int GarnetRunTextPagedKVWriteFP32(
     return 0;
 }
 
+namespace {
+    struct DevicePagedKVFP32 {
+        float* keyPages = nullptr;
+        float* valuePages = nullptr;
+        int* pageTable = nullptr;
+        int physicalPageCount = 0;
+        int logicalPageCount = 0;
+        int pageSize = 0;
+        int qHeads = 0;
+        int kvHeads = 0;
+        int headDim = 0;
+    };
+
+    std::mutex g_devicePagedKVCachesMutex;
+    std::unordered_map<long long, DevicePagedKVFP32> g_devicePagedKVCaches;
+    long long g_nextDevicePagedKVHandle = 1;
+
+    void SetCError(char* errorMessage, int errorMessageCapacity, const char* message) {
+        if (errorMessage != nullptr && errorMessageCapacity > 0) {
+            std::snprintf(errorMessage, static_cast<size_t>(errorMessageCapacity), "%s", message ? message : "");
+        }
+    }
+
+    bool GetDevicePagedKV(long long handle, DevicePagedKVFP32& out) {
+        std::lock_guard<std::mutex> lock(g_devicePagedKVCachesMutex);
+        auto found = g_devicePagedKVCaches.find(handle);
+        if (found == g_devicePagedKVCaches.end()) {
+            return false;
+        }
+        out = found->second;
+        return true;
+    }
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetCreateDevicePagedKVFP32(
+    int physicalPageCount,
+    int pageSize,
+    int logicalPageCount,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    const int* pageTable,
+    long long* outputHandle,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    if (physicalPageCount <= 0 || pageSize <= 0 || logicalPageCount <= 0 ||
+        qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || (qHeads % kvHeads) != 0 ||
+        pageTable == nullptr || outputHandle == nullptr) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV create arguments");
+        return 1;
+    }
+
+    DevicePagedKVFP32 cache;
+    cache.physicalPageCount = physicalPageCount;
+    cache.logicalPageCount = logicalPageCount;
+    cache.pageSize = pageSize;
+    cache.qHeads = qHeads;
+    cache.kvHeads = kvHeads;
+    cache.headDim = headDim;
+    size_t pagesBytes = static_cast<size_t>(physicalPageCount) * static_cast<size_t>(pageSize)
+        * static_cast<size_t>(kvHeads) * static_cast<size_t>(headDim) * sizeof(float);
+    size_t tableBytes = static_cast<size_t>(logicalPageCount) * sizeof(int);
+    cudaError_t err = cudaMalloc(&cache.keyPages, pagesBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&cache.valuePages, pagesBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&cache.pageTable, tableBytes);
+    if (err == cudaSuccess) err = cudaMemset(cache.keyPages, 0, pagesBytes);
+    if (err == cudaSuccess) err = cudaMemset(cache.valuePages, 0, pagesBytes);
+    if (err == cudaSuccess) err = cudaMemcpy(cache.pageTable, pageTable, tableBytes, cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        if (cache.keyPages) cudaFree(cache.keyPages);
+        if (cache.valuePages) cudaFree(cache.valuePages);
+        if (cache.pageTable) cudaFree(cache.pageTable);
+        SetCError(errorMessage, errorMessageCapacity, cudaGetErrorString(err));
+        return 2;
+    }
+
+    long long handle = 0;
+    {
+        std::lock_guard<std::mutex> lock(g_devicePagedKVCachesMutex);
+        handle = g_nextDevicePagedKVHandle++;
+        g_devicePagedKVCaches.emplace(handle, cache);
+    }
+    *outputHandle = handle;
+    SetCError(errorMessage, errorMessageCapacity, "");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDestroyDevicePagedKVFP32(
+    long long handle,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    DevicePagedKVFP32 cache;
+    {
+        std::lock_guard<std::mutex> lock(g_devicePagedKVCachesMutex);
+        auto found = g_devicePagedKVCaches.find(handle);
+        if (found == g_devicePagedKVCaches.end()) {
+            SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV handle");
+            return 1;
+        }
+        cache = found->second;
+        g_devicePagedKVCaches.erase(found);
+    }
+    if (cache.keyPages) cudaFree(cache.keyPages);
+    if (cache.valuePages) cudaFree(cache.valuePages);
+    if (cache.pageTable) cudaFree(cache.pageTable);
+    SetCError(errorMessage, errorMessageCapacity, "");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDevicePagedKVWriteFP32(
+    long long handle,
+    const float* qkv,
+    int tokenCount,
+    int startPosition,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    DevicePagedKVFP32 cache;
+    if (!GetDevicePagedKV(handle, cache)) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV handle");
+        return 1;
+    }
+    if (qkv == nullptr || tokenCount <= 0 || startPosition < 0 ||
+        startPosition + tokenCount > cache.logicalPageCount * cache.pageSize) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV write arguments");
+        return 2;
+    }
+    int qWidth = cache.qHeads * cache.headDim;
+    int kvWidth = cache.kvHeads * cache.headDim;
+    int qkvStride = qWidth + 2 * kvWidth;
+    size_t qkvBytes = static_cast<size_t>(tokenCount) * static_cast<size_t>(qkvStride) * sizeof(float);
+    float* dQKV = nullptr;
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreate(&stream);
+    if (err == cudaSuccess) err = cudaMalloc(&dQKV, qkvBytes);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dQKV, qkv, qkvBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) {
+        err = runTextPagedKVWriteFP32(
+            dQKV, cache.keyPages, cache.valuePages, cache.pageTable,
+            tokenCount, startPosition, cache.pageSize, cache.qHeads, cache.kvHeads, cache.headDim, stream);
+    }
+    if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+    if (dQKV) cudaFree(dQKV);
+    if (stream) cudaStreamDestroy(stream);
+    if (err != cudaSuccess) {
+        SetCError(errorMessage, errorMessageCapacity, cudaGetErrorString(err));
+        return 3;
+    }
+    SetCError(errorMessage, errorMessageCapacity, "");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDevicePagedKVWriteDeviceFP32(
+    long long handle,
+    const float* deviceQKV,
+    int tokenCount,
+    int startPosition,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    DevicePagedKVFP32 cache;
+    if (!GetDevicePagedKV(handle, cache)) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV handle");
+        return 1;
+    }
+    if (deviceQKV == nullptr || tokenCount <= 0 || startPosition < 0 ||
+        startPosition + tokenCount > cache.logicalPageCount * cache.pageSize) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV device-write arguments");
+        return 2;
+    }
+
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreate(&stream);
+    if (err == cudaSuccess) {
+        err = runTextPagedKVWriteFP32(
+            deviceQKV,
+            cache.keyPages,
+            cache.valuePages,
+            cache.pageTable,
+            tokenCount,
+            startPosition,
+            cache.pageSize,
+            cache.qHeads,
+            cache.kvHeads,
+            cache.headDim,
+            stream);
+    }
+    if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+    if (stream) cudaStreamDestroy(stream);
+    if (err != cudaSuccess) {
+        SetCError(errorMessage, errorMessageCapacity, cudaGetErrorString(err));
+        return 3;
+    }
+    SetCError(errorMessage, errorMessageCapacity, "");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDevicePagedKVAttentionFP32(
+    long long handle,
+    const float* q,
+    float* output,
+    int sequenceLength,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    DevicePagedKVFP32 cache;
+    if (!GetDevicePagedKV(handle, cache)) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV handle");
+        return 1;
+    }
+    if (q == nullptr || output == nullptr || sequenceLength <= 0 ||
+        sequenceLength > cache.logicalPageCount * cache.pageSize) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV attention arguments");
+        return 2;
+    }
+    size_t qBytes = static_cast<size_t>(cache.qHeads) * static_cast<size_t>(cache.headDim) * sizeof(float);
+    float* dQ = nullptr;
+    float* dOut = nullptr;
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreate(&stream);
+    if (err == cudaSuccess) err = cudaMalloc(&dQ, qBytes);
+    if (err == cudaSuccess) err = cudaMalloc(&dOut, qBytes);
+    if (err == cudaSuccess) err = cudaMemcpyAsync(dQ, q, qBytes, cudaMemcpyHostToDevice, stream);
+    if (err == cudaSuccess) {
+        err = runTextPagedKVCachedAttentionFP32(
+            dQ, cache.keyPages, cache.valuePages, cache.pageTable, dOut,
+            sequenceLength, cache.pageSize, cache.qHeads, cache.kvHeads, cache.headDim, stream);
+    }
+    if (err == cudaSuccess) err = cudaMemcpyAsync(output, dOut, qBytes, cudaMemcpyDeviceToHost, stream);
+    if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+    if (dQ) cudaFree(dQ);
+    if (dOut) cudaFree(dOut);
+    if (stream) cudaStreamDestroy(stream);
+    if (err != cudaSuccess) {
+        SetCError(errorMessage, errorMessageCapacity, cudaGetErrorString(err));
+        return 3;
+    }
+    SetCError(errorMessage, errorMessageCapacity, "");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDevicePagedKVAttentionDeviceFP32(
+    long long handle,
+    const float* deviceQ,
+    float* deviceOutput,
+    int sequenceLength,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    DevicePagedKVFP32 cache;
+    if (!GetDevicePagedKV(handle, cache)) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV handle");
+        return 1;
+    }
+    if (deviceQ == nullptr || deviceOutput == nullptr || sequenceLength <= 0 ||
+        sequenceLength > cache.logicalPageCount * cache.pageSize) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid device paged KV device-attention arguments");
+        return 2;
+    }
+
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreate(&stream);
+    if (err == cudaSuccess) {
+        err = runTextPagedKVCachedAttentionFP32(
+            deviceQ,
+            cache.keyPages,
+            cache.valuePages,
+            cache.pageTable,
+            deviceOutput,
+            sequenceLength,
+            cache.pageSize,
+            cache.qHeads,
+            cache.kvHeads,
+            cache.headDim,
+            stream);
+    }
+    if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+    if (stream) cudaStreamDestroy(stream);
+    if (err != cudaSuccess) {
+        SetCError(errorMessage, errorMessageCapacity, cudaGetErrorString(err));
+        return 3;
+    }
+    SetCError(errorMessage, errorMessageCapacity, "");
+    return 0;
+}
+
+extern "C" GARNET_ENTRY_EXPORT int GarnetDebugSampleLogitsTop1FP32(
+    const float* deviceLogits,
+    int rows,
+    int vocabSize,
+    long long* deviceOutputTokenId,
+    float* deviceOutputTokenValue,
+    char* errorMessage,
+    int errorMessageCapacity)
+{
+    if (deviceLogits == nullptr || deviceOutputTokenId == nullptr || rows <= 0 || vocabSize <= 0) {
+        SetCError(errorMessage, errorMessageCapacity, "invalid logits top-1 arguments");
+        return 1;
+    }
+
+    cudaStream_t stream = nullptr;
+    cudaError_t err = cudaStreamCreate(&stream);
+    if (err == cudaSuccess) {
+        err = runLogitsTop1FP32(
+            deviceLogits,
+            deviceOutputTokenId,
+            deviceOutputTokenValue,
+            rows,
+            vocabSize,
+            stream);
+    }
+    if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+    if (stream) cudaStreamDestroy(stream);
+    if (err != cudaSuccess) {
+        SetCError(errorMessage, errorMessageCapacity, cudaGetErrorString(err));
+        return 2;
+    }
+    SetCError(errorMessage, errorMessageCapacity, "");
+    return 0;
+}
+
 namespace Garnet
 {
     namespace
@@ -479,10 +1643,10 @@ namespace Garnet
             return defaultValue;
         }
 
-        X::Value MakeInt64Tensor(const std::vector<long long>& values)
+        X::Value MakeInt64Tensor(const std::vector<long long>& values, bool ensureGpu = false)
         {
             X::Tensor tensor;
-            X::Port::vector<int> shape;
+            X::Port::vector<int> shape(1);
             shape.push_back(static_cast<int>(values.size()));
             tensor->SetDataType(X::TensorDataType::INT64);
             tensor->SetShape(shape);
@@ -494,6 +1658,10 @@ namespace Garnet
             }
             if (!values.empty()) {
                 std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
+            }
+            if (ensureGpu && TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+                std::cout << "[GarnetAPI] MakeInt64Tensor failed to move tensor to GPU count=" << values.size() << std::endl;
+                return X::Value();
             }
             return X::Value(tensor);
         }
@@ -511,7 +1679,7 @@ namespace Garnet
         X::Value MakeInt64Tensor2D(const std::vector<long long>& values, int rows, int cols)
         {
             X::Tensor tensor;
-            X::Port::vector<int> shape;
+            X::Port::vector<int> shape(2);
             shape.push_back(rows);
             shape.push_back(cols);
             tensor->SetDataType(X::TensorDataType::INT64);
@@ -531,7 +1699,7 @@ namespace Garnet
         X::Value MakeFloatTensor2D(const float* data, int rows, int cols)
         {
             X::Tensor tensor;
-            X::Port::vector<int> shape;
+            X::Port::vector<int> shape(2);
             shape.push_back(rows);
             shape.push_back(cols);
             tensor->SetDataType(X::TensorDataType::FLOAT32);
@@ -553,6 +1721,48 @@ namespace Garnet
             auto elapsed = std::chrono::steady_clock::now() - start;
             return std::chrono::duration<double, std::milli>(elapsed).count();
         }
+    }
+
+    void QwenVLRequestContext::Stats(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        auto tensorGpu = [](X::Value value) {
+            if (!value.IsTensor()) {
+                return false;
+            }
+            X::Tensor tensor(value);
+            return TensorHelper::GetGPUMemory(tensor) != nullptr;
+        };
+
+        X::Dict stats;
+        stats->Set("source_height", X::Value(sourceHeight));
+        stats->Set("source_width", X::Value(sourceWidth));
+        stats->Set("height", X::Value(resizedHeight));
+        stats->Set("width", X::Value(resizedWidth));
+        stats->Set("prompt_token_count", X::Value(promptTokenCount));
+        stats->Set("visual_token_count", X::Value(visualTokenCount));
+        stats->Set("pixel_value_count", X::Value(pixelValueCount));
+        stats->Set("patch_size", X::Value(patchSize));
+        stats->Set("temporal_patch_size", X::Value(temporalPatchSize));
+        stats->Set("merge_size", X::Value(mergeSize));
+        stats->Set("input_ids_gpu", X::Value(tensorGpu(inputIds)));
+        stats->Set("mm_token_type_ids_gpu", X::Value(tensorGpu(mmTokenTypeIds)));
+        stats->Set("pixel_values_gpu", X::Value(tensorGpu(pixelValues)));
+        stats->Set("kv_allocated", X::Value(kvHandle > 0));
+        stats->Set("kv_handle", X::Value(kvHandle));
+        stats->Set("kv_max_tokens", X::Value(kvMaxTokens));
+        stats->Set("kv_logical_length", X::Value(kvLogicalLength));
+        stats->Set("kv_page_size", X::Value(kvPageSize));
+        stats->Set("kv_logical_pages", X::Value(kvLogicalPages));
+        stats->Set("kv_physical_pages", X::Value(kvPhysicalPages));
+        stats->Set("kv_q_heads", X::Value(kvQHeads));
+        stats->Set("kv_heads", X::Value(kvHeads));
+        stats->Set("kv_head_dim", X::Value(kvHeadDim));
+        stats->Set("image_preprocess_us", X::Value(imagePreprocessUs));
+        stats->Set("tokenize_us", X::Value(tokenizeUs));
+        stats->Set("tensor_upload_us", X::Value(tensorUploadUs));
+        stats->Set("total_us", X::Value(totalUs));
+        retValue = stats;
     }
 
     KVCacheManager::~KVCacheManager()
@@ -811,7 +2021,7 @@ namespace Garnet
             // Read shape
             uint64_t num_dims;
             file.read(reinterpret_cast<char*>(&num_dims), sizeof(uint64_t));
-            X::Port::vector<int> shape(num_dims);
+            X::Port::vector<int> shape(static_cast<int>(num_dims));
             for (uint64_t i = 0; i < num_dims;i++) {
                 int64_t d;
                 file.read((char*)&d, sizeof(int64_t));
@@ -821,8 +2031,8 @@ namespace Garnet
             tensor->SetShape(shape);
             tensor->SetDataType(tensor_data_type);
 
-            int64_t num_elements = std::accumulate(shape.begin(), shape.end(), 
-                1, std::multiplies<int64_t>());
+            int64_t num_elements = std::accumulate(shape.begin(), shape.end(),
+                int64_t{1}, std::multiplies<int64_t>());
             int64_t num_bytes = num_elements * tensor->GetItemSize();
             std::vector<char> buffer(num_bytes);
             file.read(buffer.data(), num_bytes);
@@ -833,6 +2043,10 @@ namespace Garnet
 
             // Copy data into tensor
             memcpy(tensor->GetData(), buffer.data(), num_bytes);
+            if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+                LOG << "LoadModelFromFile failed to move tensor to GPU: " << key << LINE_END;
+                return false;
+            }
 
             // Store in dictionary
             model->Set(key, tensor);
@@ -967,6 +2181,457 @@ namespace Garnet
         X::XPackageValue<KVCacheManager> manager;
         (*manager).Configure(maxNumPages, pageSize, headDim, numKVHeads, numLayers, dtypeBytes, deviceId);
         retValue = manager;
+    }
+
+    void GarnetAPI::CreateQwenTextRunner(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        X::XPackageValue<QwenTextRunner> runner;
+        if (params.size() > 0) {
+            if (!params[0].IsList()) {
+                std::cout << "[GarnetAPI] QwenTextRunner(layer_bundles) requires a list." << std::endl;
+                retValue = X::Value();
+                return;
+            }
+            runner->SetLayerBundles(params[0]);
+        }
+        retValue = X::Value(runner);
+    }
+
+    void GarnetAPI::DevicePagedKVWriteTensor(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 4 || !params[1].IsTensor()) {
+            std::cout << "[GarnetAPI] device_paged_kv_write(handle, qkv_tensor, token_count, start_position) expected." << std::endl;
+            retValue = X::Value(false);
+            return;
+        }
+        long long handle = params[0].ToLongLong();
+        X::Tensor qkv(params[1]);
+        int tokenCount = static_cast<int>(params[2].ToLongLong());
+        int startPosition = static_cast<int>(params[3].ToLongLong());
+        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2) {
+            std::cout << "[GarnetAPI] device_paged_kv_write requires a float32 2D qkv tensor." << std::endl;
+            retValue = X::Value(false);
+            return;
+        }
+        DevicePagedKVFP32 cache;
+        if (!GetDevicePagedKV(handle, cache)) {
+            std::cout << "[GarnetAPI] device_paged_kv_write invalid handle: " << handle << std::endl;
+            retValue = X::Value(false);
+            return;
+        }
+        int qWidth = cache.qHeads * cache.headDim;
+        int kvWidth = cache.kvHeads * cache.headDim;
+        int qkvStride = qWidth + 2 * kvWidth;
+        if (tokenCount <= 0 || tokenCount > qkv->GetDimSize(0) || qkv->GetDimSize(1) < qkvStride ||
+            startPosition < 0 || startPosition + tokenCount > cache.logicalPageCount * cache.pageSize) {
+            std::cout << "[GarnetAPI] device_paged_kv_write invalid shape or range." << std::endl;
+            retValue = X::Value(false);
+            return;
+        }
+        if (TensorHelper::EnsureGPUMemory(qkv) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] device_paged_kv_write failed to ensure qkv GPU memory." << std::endl;
+            retValue = X::Value(false);
+            return;
+        }
+        float* dQKV = static_cast<float*>(TensorHelper::GetGPUMemory(qkv));
+        if (!dQKV) {
+            std::cout << "[GarnetAPI] device_paged_kv_write qkv tensor has no GPU memory." << std::endl;
+            retValue = X::Value(false);
+            return;
+        }
+        cudaStream_t stream = nullptr;
+        cudaError_t err = cudaStreamCreate(&stream);
+        if (err == cudaSuccess) {
+            err = runTextPagedKVWriteFP32(
+                dQKV, cache.keyPages, cache.valuePages, cache.pageTable,
+                tokenCount, startPosition, cache.pageSize, cache.qHeads, cache.kvHeads, cache.headDim, stream);
+        }
+        if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+        if (stream) cudaStreamDestroy(stream);
+        if (err != cudaSuccess) {
+            std::cout << "[GarnetAPI] device_paged_kv_write failed: " << cudaGetErrorString(err) << std::endl;
+            retValue = X::Value(false);
+            return;
+        }
+        retValue = X::Value(true);
+    }
+
+    void GarnetAPI::DevicePagedKVAttentionTensor(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 3 || !params[1].IsTensor()) {
+            std::cout << "[GarnetAPI] device_paged_kv_attention(handle, q_or_qkv_tensor, sequence_length) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        long long handle = params[0].ToLongLong();
+        X::Tensor q(params[1]);
+        int sequenceLength = static_cast<int>(params[2].ToLongLong());
+        if (q->GetDataType() != X::TensorDataType::FLOAT32 || q->GetDimCount() != 2 || q->GetDimSize(0) < 1) {
+            std::cout << "[GarnetAPI] device_paged_kv_attention requires a float32 2D q/qkv tensor." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        DevicePagedKVFP32 cache;
+        if (!GetDevicePagedKV(handle, cache)) {
+            std::cout << "[GarnetAPI] device_paged_kv_attention invalid handle: " << handle << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        int qWidth = cache.qHeads * cache.headDim;
+        if (q->GetDimSize(1) < qWidth || sequenceLength <= 0 ||
+            sequenceLength > cache.logicalPageCount * cache.pageSize) {
+            std::cout << "[GarnetAPI] device_paged_kv_attention invalid shape or sequence length." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        if (TensorHelper::EnsureGPUMemory(q) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] device_paged_kv_attention failed to ensure q GPU memory." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        float* dQBase = static_cast<float*>(TensorHelper::GetGPUMemory(q));
+        if (!dQBase) {
+            std::cout << "[GarnetAPI] device_paged_kv_attention q tensor has no GPU memory." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        int qStride = q->GetDimSize(1);
+        float* dQ = dQBase + static_cast<size_t>(q->GetDimSize(0) - 1) * static_cast<size_t>(qStride);
+        size_t outputBytes = static_cast<size_t>(qWidth) * sizeof(float);
+        float* dOut = nullptr;
+        cudaStream_t stream = nullptr;
+        cudaError_t err = cudaStreamCreate(&stream);
+        if (err == cudaSuccess) err = cudaMalloc(&dOut, outputBytes);
+        if (err == cudaSuccess) {
+            err = runTextPagedKVCachedAttentionFP32(
+                dQ, cache.keyPages, cache.valuePages, cache.pageTable, dOut,
+                sequenceLength, cache.pageSize, cache.qHeads, cache.kvHeads, cache.headDim, stream);
+        }
+        if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+        if (err != cudaSuccess) {
+            if (dOut) cudaFree(dOut);
+            if (stream) cudaStreamDestroy(stream);
+            std::cout << "[GarnetAPI] device_paged_kv_attention failed: " << cudaGetErrorString(err) << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        X::Tensor output;
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        X::Port::vector<int> outputShape(2);
+        outputShape.push_back(1);
+        outputShape.push_back(qWidth);
+        output->SetShape(outputShape);
+        X::Value initData;
+        if (!output->Create(initData) || output->GetData() == nullptr ||
+            TensorHelper::AttachGPUMemory(output, dOut) != TensorOpStatus::Success) {
+            cudaFree(dOut);
+            if (stream) cudaStreamDestroy(stream);
+            retValue = X::Value();
+            return;
+        }
+        const char* syncEnv = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
+        bool syncCPU = !syncEnv || !(syncEnv[0] == '0' && syncEnv[1] == '\0');
+        if (syncCPU) {
+            err = cudaMemcpyAsync(output->GetData(), dOut, outputBytes, cudaMemcpyDeviceToHost, stream);
+            if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+            if (err != cudaSuccess) {
+                cudaFree(dOut);
+                if (stream) cudaStreamDestroy(stream);
+                std::cout << "[GarnetAPI] device_paged_kv_attention CPU sync failed: " << cudaGetErrorString(err) << std::endl;
+                retValue = X::Value();
+                return;
+            }
+        }
+        if (stream) cudaStreamDestroy(stream);
+        retValue = X::Value(output);
+    }
+
+    void GarnetAPI::TensorToCPU(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 1 || !params[0].IsTensor()) {
+            std::cout << "[GarnetAPI] tensor_to_cpu(tensor) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        X::Tensor tensor(params[0]);
+        retValue = TensorHelper::CopyToCPUTensor(tensor);
+        if (!retValue.IsValid()) {
+            std::cout << "[GarnetAPI] tensor_to_cpu failed." << std::endl;
+        }
+    }
+
+    void GarnetAPI::TensorToGPU(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 1 || !params[0].IsTensor()) {
+            std::cout << "[GarnetAPI] tensor_to_gpu(tensor) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor tensor(params[0]);
+        if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] tensor_to_gpu failed." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        retValue = X::Value(tensor);
+    }
+
+    void GarnetAPI::TensorAdd(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 2 || !params[0].IsTensor() || !params[1].IsTensor()) {
+            std::cout << "[GarnetAPI] tensor_add(lhs, rhs) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor lhs(params[0]);
+        X::Tensor rhs(params[1]);
+        if (lhs->GetDataType() != X::TensorDataType::FLOAT32 ||
+            rhs->GetDataType() != X::TensorDataType::FLOAT32 ||
+            lhs->GetDimCount() != rhs->GetDimCount() ||
+            lhs->GetCount() != rhs->GetCount()) {
+            std::cout << "[GarnetAPI] tensor_add requires equal-shaped FLOAT32 tensors." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        for (int dim = 0; dim < lhs->GetDimCount(); ++dim) {
+            if (lhs->GetDimSize(dim) != rhs->GetDimSize(dim)) {
+                std::cout << "[GarnetAPI] tensor_add shape mismatch." << std::endl;
+                retValue = X::Value();
+                return;
+            }
+        }
+        if (TensorHelper::EnsureGPUMemory(lhs) != TensorOpStatus::Success ||
+            TensorHelper::EnsureGPUMemory(rhs) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] tensor_add failed to ensure GPU inputs." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        size_t bytes = static_cast<size_t>(lhs->GetDataSize());
+        float* outputDevice = nullptr;
+        cudaStream_t stream = nullptr;
+        cudaError_t err = cudaStreamCreate(&stream);
+        if (err == cudaSuccess) err = cudaMalloc(&outputDevice, bytes);
+        if (err == cudaSuccess) {
+            err = runTensorAddFP32(
+                static_cast<const float*>(TensorHelper::GetGPUMemory(lhs)),
+                static_cast<const float*>(TensorHelper::GetGPUMemory(rhs)),
+                outputDevice,
+                static_cast<int>(lhs->GetCount()),
+                stream);
+        }
+        if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+        if (err != cudaSuccess) {
+            if (outputDevice) cudaFree(outputDevice);
+            if (stream) cudaStreamDestroy(stream);
+            std::cout << "[GarnetAPI] tensor_add failed: " << cudaGetErrorString(err) << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        X::Tensor output = X::g_pXHost->CreateTensor();
+        X::Port::vector<int> shape(lhs->GetDimCount());
+        for (int dim = 0; dim < lhs->GetDimCount(); ++dim) {
+            shape.push_back(static_cast<int>(lhs->GetDimSize(dim)));
+        }
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        output->SetShape(shape);
+        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
+            cudaFree(outputDevice);
+            cudaStreamDestroy(stream);
+            retValue = X::Value();
+            return;
+        }
+        cudaStreamDestroy(stream);
+        retValue = X::Value(output);
+    }
+
+    void GarnetAPI::Embedding(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 2 || !params[0].IsTensor() || !params[1].IsTensor()) {
+            std::cout << "[GarnetAPI] embedding(weight, token_ids) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor weight(params[0]);
+        X::Tensor tokenIds(params[1]);
+        if (weight->GetDataType() != X::TensorDataType::FLOAT32 || weight->GetDimCount() != 2 ||
+            tokenIds->GetDataType() != X::TensorDataType::LONGLONG || tokenIds->GetDimCount() != 1) {
+            std::cout << "[GarnetAPI] embedding requires FLOAT32 [vocab, hidden] and INT64 [tokens]." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        if (TensorHelper::EnsureGPUMemory(weight) != TensorOpStatus::Success ||
+            TensorHelper::EnsureGPUMemory(tokenIds) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] embedding failed to ensure GPU inputs." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        int tokens = static_cast<int>(tokenIds->GetDimSize(0));
+        int vocab = static_cast<int>(weight->GetDimSize(0));
+        int hidden = static_cast<int>(weight->GetDimSize(1));
+        size_t bytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        float* outputDevice = nullptr;
+        cudaStream_t stream = nullptr;
+        cudaError_t err = cudaStreamCreate(&stream);
+        if (err == cudaSuccess) err = cudaMalloc(&outputDevice, bytes);
+        if (err == cudaSuccess) {
+            err = runEmbeddingGatherInt64FP32(
+                static_cast<const float*>(TensorHelper::GetGPUMemory(weight)),
+                static_cast<const long long*>(TensorHelper::GetGPUMemory(tokenIds)),
+                outputDevice, tokens, vocab, hidden, stream);
+        }
+        if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+        if (err != cudaSuccess) {
+            if (outputDevice) cudaFree(outputDevice);
+            if (stream) cudaStreamDestroy(stream);
+            std::cout << "[GarnetAPI] embedding failed: " << cudaGetErrorString(err) << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor output = X::g_pXHost->CreateTensor();
+        X::Port::vector<int> shape(2);
+        shape.push_back(tokens);
+        shape.push_back(hidden);
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        output->SetShape(shape);
+        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
+            cudaFree(outputDevice);
+            cudaStreamDestroy(stream);
+            retValue = X::Value();
+            return;
+        }
+        cudaStreamDestroy(stream);
+        retValue = X::Value(output);
+    }
+
+    void GarnetAPI::ReplaceRowsByMask(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 3 || !params[0].IsTensor() || !params[1].IsTensor() || !params[2].IsTensor()) {
+            std::cout << "[GarnetAPI] replace_rows_by_mask(base, mask, replacements, mask_value=1) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor base(params[0]);
+        X::Tensor mask(params[1]);
+        X::Tensor replacements(params[2]);
+        long long maskValue = params.size() >= 4 ? params[3].ToLongLong() : 1;
+        if (base->GetDataType() != X::TensorDataType::FLOAT32 || base->GetDimCount() != 2 ||
+            mask->GetDataType() != X::TensorDataType::LONGLONG || mask->GetDimCount() != 1 ||
+            replacements->GetDataType() != X::TensorDataType::FLOAT32 || replacements->GetDimCount() != 2 ||
+            mask->GetDimSize(0) != base->GetDimSize(0) ||
+            replacements->GetDimSize(1) != base->GetDimSize(1)) {
+            std::cout << "[GarnetAPI] replace_rows_by_mask shape or dtype mismatch." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        if (TensorHelper::EnsureGPUMemory(base) != TensorOpStatus::Success ||
+            TensorHelper::EnsureGPUMemory(mask) != TensorOpStatus::Success ||
+            TensorHelper::EnsureGPUMemory(replacements) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] replace_rows_by_mask failed to ensure GPU inputs." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        size_t bytes = static_cast<size_t>(base->GetDataSize());
+        float* outputDevice = nullptr;
+        cudaStream_t stream = nullptr;
+        cudaError_t err = cudaStreamCreate(&stream);
+        if (err == cudaSuccess) err = cudaMalloc(&outputDevice, bytes);
+        if (err == cudaSuccess) {
+            err = cudaMemcpyAsync(outputDevice, TensorHelper::GetGPUMemory(base), bytes, cudaMemcpyDeviceToDevice, stream);
+        }
+        if (err == cudaSuccess) {
+            err = runReplaceRowsByMaskInt64FP32(
+                outputDevice,
+                static_cast<const long long*>(TensorHelper::GetGPUMemory(mask)),
+                static_cast<const float*>(TensorHelper::GetGPUMemory(replacements)),
+                static_cast<int>(base->GetDimSize(0)),
+                static_cast<int>(replacements->GetDimSize(0)),
+                static_cast<int>(base->GetDimSize(1)),
+                maskValue,
+                stream);
+        }
+        if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+        if (err != cudaSuccess) {
+            if (outputDevice) cudaFree(outputDevice);
+            if (stream) cudaStreamDestroy(stream);
+            std::cout << "[GarnetAPI] replace_rows_by_mask failed: " << cudaGetErrorString(err) << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor output = X::g_pXHost->CreateTensor();
+        X::Port::vector<int> shape(2);
+        shape.push_back(static_cast<int>(base->GetDimSize(0)));
+        shape.push_back(static_cast<int>(base->GetDimSize(1)));
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        output->SetShape(shape);
+        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
+            cudaFree(outputDevice);
+            cudaStreamDestroy(stream);
+            retValue = X::Value();
+            return;
+        }
+        cudaStreamDestroy(stream);
+        retValue = X::Value(output);
+    }
+
+    void GarnetAPI::TensorLastRow(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 1 || !params[0].IsTensor()) {
+            std::cout << "[GarnetAPI] tensor_last_row(tensor) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor input(params[0]);
+        if (input->GetDimCount() != 2 || input->GetDimSize(0) <= 0 ||
+            TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] tensor_last_row requires a non-empty 2D tensor." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        int rows = static_cast<int>(input->GetDimSize(0));
+        int columns = static_cast<int>(input->GetDimSize(1));
+        size_t rowBytes = static_cast<size_t>(columns) * static_cast<size_t>(input->GetItemSize());
+        auto* inputDevice = static_cast<const char*>(TensorHelper::GetGPUMemory(input));
+        void* outputDevice = nullptr;
+        cudaError_t err = cudaMalloc(&outputDevice, rowBytes);
+        if (err == cudaSuccess) {
+            err = cudaMemcpy(
+                outputDevice,
+                inputDevice + static_cast<size_t>(rows - 1) * rowBytes,
+                rowBytes,
+                cudaMemcpyDeviceToDevice);
+        }
+        if (err != cudaSuccess) {
+            if (outputDevice) cudaFree(outputDevice);
+            std::cout << "[GarnetAPI] tensor_last_row failed: " << cudaGetErrorString(err) << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor output = X::g_pXHost->CreateTensor();
+        X::Port::vector<int> shape(2);
+        shape.push_back(1);
+        shape.push_back(columns);
+        output->SetDataType(input->GetDataType());
+        output->SetShape(shape);
+        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
+            cudaFree(outputDevice);
+            retValue = X::Value();
+            return;
+        }
+        retValue = X::Value(output);
     }
 
     void GarnetAPI::LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
@@ -1359,6 +3024,130 @@ namespace Garnet
         }
     }
 
+    void GarnetAPI::QwenVLCreateRequest(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        auto totalStart = std::chrono::steady_clock::now();
+        try {
+            std::string modelDir = GetStringArg(params, kwParams, 0, "model_dir", "");
+            std::string imagePath = GetStringArg(params, kwParams, 1, "image_path", "");
+            std::string prompt = GetStringArg(params, kwParams, 2, "prompt", "");
+            int minPixels = GetIntArg(params, kwParams, 3, "min_pixels", 65536);
+            int maxPixels = GetIntArg(params, kwParams, 4, "max_pixels", 65536);
+            if (modelDir.empty() || imagePath.empty() || prompt.empty()) {
+                std::cout << "[GarnetAPI] qwen_vl_create_request requires model_dir, image_path, and prompt." << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            constexpr int patchSize = 16;
+            constexpr int temporalPatchSize = 2;
+            constexpr int mergeSize = 2;
+            int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
+
+            auto imageStart = std::chrono::steady_clock::now();
+            auto imageResult = Image::QwenVL::PreprocessJpegFileToTensor(imagePath, minPixels, maxPixels);
+            double imageMs = MsSince(imageStart);
+            X::Tensor pixelValues(imageResult.pixelValues);
+            X::Tensor imageGridTensor(imageResult.imageGridTHW);
+            auto* gridData = reinterpret_cast<long long*>(imageGridTensor->GetData());
+            long long grid[3] = { gridData[0], gridData[1], gridData[2] };
+
+            int patchCount = (imageResult.resizedHeight / patchSize) * (imageResult.resizedWidth / patchSize);
+            if (patchCount <= 0) {
+                std::cout << "[GarnetAPI] qwen_vl_create_request invalid patch count: " << patchCount << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            auto tokenStart = std::chrono::steady_clock::now();
+            std::string tokenError;
+            auto tokenizer = Tokenization::GetCachedQwenTokenizer(modelDir, &tokenError);
+            if (!tokenizer) {
+                std::cout << "[GarnetAPI] qwen_vl_create_request tokenizer load failed: " << tokenError << std::endl;
+                retValue = X::Value();
+                return;
+            }
+            std::vector<int64_t> promptIds = Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
+                *tokenizer,
+                prompt,
+                grid,
+                mergeSize);
+            int64_t imagePadId = tokenizer->TokenId("<|image_pad|>");
+            if (imagePadId < 0 ||
+                tokenizer->TokenId("<|vision_start|>") < 0 ||
+                tokenizer->TokenId("<|vision_end|>") < 0 ||
+                tokenizer->TokenId("<|im_start|>") < 0 ||
+                tokenizer->TokenId("<|im_end|>") < 0) {
+                std::cout << "[GarnetAPI] qwen_vl_create_request tokenizer missing required Qwen-VL special tokens." << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            std::vector<long long> inputIds;
+            std::vector<long long> mmTypes;
+            inputIds.reserve(promptIds.size());
+            mmTypes.reserve(promptIds.size());
+            int visualTokenCount = 0;
+            for (int64_t id : promptIds) {
+                inputIds.push_back(static_cast<long long>(id));
+                long long mmType = id == imagePadId ? 1LL : 0LL;
+                mmTypes.push_back(mmType);
+                if (mmType == 1) {
+                    ++visualTokenCount;
+                }
+            }
+            int expectedVisualTokenCount = static_cast<int>((grid[0] * grid[1] * grid[2]) / (mergeSize * mergeSize));
+            if (visualTokenCount != expectedVisualTokenCount) {
+                std::cout << "[GarnetAPI] qwen_vl_create_request visual token mismatch: prompt="
+                    << visualTokenCount << ", grid=" << expectedVisualTokenCount << std::endl;
+                retValue = X::Value();
+                return;
+            }
+            double tokenizeMs = MsSince(tokenStart);
+
+            auto uploadStart = std::chrono::steady_clock::now();
+            X::Value inputIdsTensor = MakeInt64Tensor(inputIds, true);
+            X::Value mmTypesTensor = MakeInt64Tensor(mmTypes, true);
+            double uploadMs = MsSince(uploadStart);
+            if (!inputIdsTensor.IsTensor() || !mmTypesTensor.IsTensor() ||
+                TensorHelper::GetGPUMemory(pixelValues) == nullptr) {
+                std::cout << "[GarnetAPI] qwen_vl_create_request failed to create GPU tensors." << std::endl;
+                retValue = X::Value();
+                return;
+            }
+
+            X::XPackageValue<QwenVLRequestContext> requestValue;
+            QwenVLRequestContext& request = *requestValue;
+            request.inputIds = inputIdsTensor;
+            request.mmTokenTypeIds = mmTypesTensor;
+            request.pixelValues = imageResult.pixelValues;
+            request.imageGridTHW = imageResult.imageGridTHW;
+            request.modelDir = modelDir;
+            request.imagePath = imagePath;
+            request.prompt = prompt;
+            request.sourceHeight = imageResult.sourceHeight;
+            request.sourceWidth = imageResult.sourceWidth;
+            request.resizedHeight = imageResult.resizedHeight;
+            request.resizedWidth = imageResult.resizedWidth;
+            request.promptTokenCount = static_cast<int>(inputIds.size());
+            request.visualTokenCount = visualTokenCount;
+            request.pixelValueCount = patchCount * featureDim;
+            request.patchSize = patchSize;
+            request.temporalPatchSize = temporalPatchSize;
+            request.mergeSize = mergeSize;
+            request.imagePreprocessUs = static_cast<long long>(imageMs * 1000.0);
+            request.tokenizeUs = static_cast<long long>(tokenizeMs * 1000.0);
+            request.tensorUploadUs = static_cast<long long>(uploadMs * 1000.0);
+            request.totalUs = static_cast<long long>(MsSince(totalStart) * 1000.0);
+            retValue = requestValue;
+        }
+        catch (const std::exception& exc) {
+            std::cout << "[GarnetAPI] qwen_vl_create_request failed: " << exc.what() << std::endl;
+            retValue = X::Value();
+        }
+    }
+
     void GarnetAPI::QwenVLPrepareRequest(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
@@ -1378,60 +3167,45 @@ namespace Garnet
             constexpr int patchSize = 16;
             constexpr int temporalPatchSize = 2;
             constexpr int mergeSize = 2;
-            int pixelBudget = minPixels > maxPixels ? minPixels : maxPixels;
-            int maxPatchCount = (pixelBudget + patchSize * patchSize - 1) / (patchSize * patchSize);
-            if (maxPatchCount < 1) {
-                maxPatchCount = 1;
-            }
             int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
-            std::vector<float> pixelScratch(static_cast<size_t>(maxPatchCount) * static_cast<size_t>(featureDim));
-            long long grid[3] = {};
-            int sourceHeight = 0;
-            int sourceWidth = 0;
-            int resizedHeight = 0;
-            int resizedWidth = 0;
-            char imageError[512] = {};
 
             auto imageStart = std::chrono::steady_clock::now();
-            int rc = GarnetQwenVLPreprocessJpegFile(
-                imagePath.c_str(),
-                minPixels,
-                maxPixels,
-                pixelScratch.data(),
-                grid,
-                &sourceHeight,
-                &sourceWidth,
-                &resizedHeight,
-                &resizedWidth,
-                imageError,
-                static_cast<int>(sizeof(imageError)));
+            auto imageResult = Image::QwenVL::PreprocessJpegFileToTensor(imagePath, minPixels, maxPixels);
             double imageMs = MsSince(imageStart);
-            if (rc != 0) {
-                std::cout << "[GarnetAPI] qwen_vl_prepare_request image preprocess failed: " << imageError << std::endl;
-                retValue = X::Value();
-                return;
-            }
-            int patchCount = (resizedHeight / patchSize) * (resizedWidth / patchSize);
-            if (patchCount <= 0 || patchCount > maxPatchCount) {
+            int patchCount = (imageResult.resizedHeight / patchSize) * (imageResult.resizedWidth / patchSize);
+            if (patchCount <= 0) {
                 std::cout << "[GarnetAPI] qwen_vl_prepare_request invalid patch count: " << patchCount << std::endl;
                 retValue = X::Value();
                 return;
             }
+            X::Tensor pixelValues(imageResult.pixelValues);
+            X::Tensor imageGridTensor(imageResult.imageGridTHW);
+            auto* gridData = reinterpret_cast<long long*>(imageGridTensor->GetData());
+            long long grid[3] = { gridData[0], gridData[1], gridData[2] };
 
             auto tokenStart = std::chrono::steady_clock::now();
-            Tokenization::QwenTokenizer tokenizer;
             std::string tokenError;
-            if (!tokenizer.LoadFromFolder(modelDir, &tokenError)) {
+            auto tokenizer = Tokenization::GetCachedQwenTokenizer(modelDir, &tokenError);
+            if (!tokenizer) {
                 std::cout << "[GarnetAPI] qwen_vl_prepare_request tokenizer load failed: " << tokenError << std::endl;
                 retValue = X::Value();
                 return;
             }
             std::vector<int64_t> promptIds = Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
-                tokenizer,
+                *tokenizer,
                 prompt,
                 grid,
                 mergeSize);
-            int64_t imagePadId = tokenizer.TokenId("<|image_pad|>");
+            int64_t imagePadId = tokenizer->TokenId("<|image_pad|>");
+            if (imagePadId < 0 ||
+                tokenizer->TokenId("<|vision_start|>") < 0 ||
+                tokenizer->TokenId("<|vision_end|>") < 0 ||
+                tokenizer->TokenId("<|im_start|>") < 0 ||
+                tokenizer->TokenId("<|im_end|>") < 0) {
+                std::cout << "[GarnetAPI] qwen_vl_prepare_request tokenizer missing required Qwen-VL special tokens." << std::endl;
+                retValue = X::Value();
+                return;
+            }
             double tokenizeMs = MsSince(tokenStart);
 
             std::vector<long long> inputIds;
@@ -1460,12 +3234,30 @@ namespace Garnet
             X::Dict dict;
             dict->Set("input_ids", MakeInt64List(inputIds));
             dict->Set("mm_token_type_ids", MakeInt64List(mmTypes));
+            X::Value inputIdsTensorValue = MakeInt64Tensor(inputIds, true);
+            X::Value mmTypesTensorValue = MakeInt64Tensor(mmTypes, true);
+            dict->Set("input_ids_tensor", inputIdsTensorValue);
+            dict->Set("mm_token_type_ids_tensor", mmTypesTensorValue);
+            dict->Set("pixel_values", imageResult.pixelValues);
             dict->Set("pixel_values_shape", MakeInt64List({
                 static_cast<long long>(patchCount),
                 static_cast<long long>(featureDim),
             }));
             dict->Set("pixel_value_count", X::Value(patchCount * featureDim));
             dict->Set("image_grid_thw", MakeInt64List(gridVector));
+            dict->Set("pixel_values_gpu", X::Value(TensorHelper::GetGPUMemory(pixelValues) != nullptr));
+            bool inputIdsGpu = false;
+            bool mmTypesGpu = false;
+            if (inputIdsTensorValue.IsTensor()) {
+                X::Tensor inputIdsTensor(inputIdsTensorValue);
+                inputIdsGpu = TensorHelper::GetGPUMemory(inputIdsTensor) != nullptr;
+            }
+            if (mmTypesTensorValue.IsTensor()) {
+                X::Tensor mmTypesTensor(mmTypesTensorValue);
+                mmTypesGpu = TensorHelper::GetGPUMemory(mmTypesTensor) != nullptr;
+            }
+            dict->Set("input_ids_gpu", X::Value(inputIdsGpu));
+            dict->Set("mm_token_type_ids_gpu", X::Value(mmTypesGpu));
 
             X::Dict timings;
             timings->Set("image_preprocess_us", X::Value(static_cast<long long>(imageMs * 1000.0)));
@@ -1473,14 +3265,14 @@ namespace Garnet
             timings->Set("total_us", X::Value(static_cast<long long>(MsSince(totalStart) * 1000.0)));
             dict->Set("prompt_token_count", X::Value(static_cast<int>(inputIds.size())));
             dict->Set("visual_token_count", X::Value(visualTokenCount));
-            dict->Set("source_height", X::Value(sourceHeight));
-            dict->Set("source_width", X::Value(sourceWidth));
-            dict->Set("height", X::Value(resizedHeight));
-            dict->Set("width", X::Value(resizedWidth));
+            dict->Set("source_height", X::Value(imageResult.sourceHeight));
+            dict->Set("source_width", X::Value(imageResult.sourceWidth));
+            dict->Set("height", X::Value(imageResult.resizedHeight));
+            dict->Set("width", X::Value(imageResult.resizedWidth));
             dict->Set("patch_size", X::Value(patchSize));
             dict->Set("temporal_patch_size", X::Value(temporalPatchSize));
             dict->Set("merge_size", X::Value(mergeSize));
-            dict->Set("backend", X::Value("qwen_vl_request_native_tokenizer_nvjpeg_cuda"));
+            dict->Set("backend", X::Value("qwen_vl_request_native_tokenizer_nvjpeg_cuda_gpu_xtensor"));
             dict->Set("timings", timings);
             retValue = dict;
         }
@@ -1517,6 +3309,8 @@ namespace Garnet
             X::Dict dict;
             dict->Set("pixel_values", result.pixelValues);
             dict->Set("image_grid_thw", result.imageGridTHW);
+            dict->Set("source_height", X::Value(result.sourceHeight));
+            dict->Set("source_width", X::Value(result.sourceWidth));
             dict->Set("height", X::Value(result.resizedHeight));
             dict->Set("width", X::Value(result.resizedWidth));
             dict->Set("patch_size", X::Value(result.patchSize));
@@ -1544,85 +3338,21 @@ namespace Garnet
                 return;
             }
 
-            constexpr int patchSize = 16;
-            constexpr int temporalPatchSize = 2;
-            constexpr int mergeSize = 2;
-            int pixelBudget = minPixels > maxPixels ? minPixels : maxPixels;
-            int maxPatchCount = (pixelBudget + patchSize * patchSize - 1) / (patchSize * patchSize);
-            if (maxPatchCount < 1) {
-                maxPatchCount = 1;
-            }
-            int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
-            std::vector<float> scratch(static_cast<size_t>(maxPatchCount) * static_cast<size_t>(featureDim));
-            long long grid[3] = {};
-            int sourceHeight = 0;
-            int sourceWidth = 0;
-            int resizedHeight = 0;
-            int resizedWidth = 0;
-            char error[512] = {};
-
-            int rc = GarnetQwenVLPreprocessJpegFile(
-                path.c_str(),
-                minPixels,
-                maxPixels,
-                scratch.data(),
-                grid,
-                &sourceHeight,
-                &sourceWidth,
-                &resizedHeight,
-                &resizedWidth,
-                error,
-                static_cast<int>(sizeof(error)));
-            if (rc != 0) {
-                std::cout << "[GarnetAPI] qwen_vl_preprocess_jpeg_file failed: " << error << std::endl;
-                retValue = X::Value();
-                return;
-            }
-
-            int patchCount = (resizedHeight / patchSize) * (resizedWidth / patchSize);
-            if (patchCount <= 0 || patchCount > maxPatchCount) {
-                std::cout << "[GarnetAPI] qwen_vl_preprocess_jpeg_file invalid patch count: " << patchCount << std::endl;
-                retValue = X::Value();
-                return;
-            }
-
-            X::Tensor pixelValues;
-            X::Port::vector<int> pixelShape;
-            pixelShape.push_back(patchCount);
-            pixelShape.push_back(featureDim);
-            pixelValues->SetDataType(X::TensorDataType::FLOAT32);
-            pixelValues->SetShape(pixelShape);
-            X::Value pixelInit;
-            pixelValues->Create(pixelInit);
-            std::memcpy(
-                pixelValues->GetData(),
-                scratch.data(),
-                static_cast<size_t>(patchCount) * static_cast<size_t>(featureDim) * sizeof(float));
-
-            X::Tensor imageGrid;
-            X::Port::vector<int> gridShape;
-            gridShape.push_back(1);
-            gridShape.push_back(3);
-            imageGrid->SetDataType(X::TensorDataType::INT64);
-            imageGrid->SetShape(gridShape);
-            X::Value gridInit;
-            imageGrid->Create(gridInit);
-            auto* gridData = reinterpret_cast<long long*>(imageGrid->GetData());
-            gridData[0] = grid[0];
-            gridData[1] = grid[1];
-            gridData[2] = grid[2];
+            auto result = Image::QwenVL::PreprocessJpegFileToTensor(path, minPixels, maxPixels);
+            X::Tensor pixelValues(result.pixelValues);
+            X::Tensor imageGrid(result.imageGridTHW);
 
             X::Dict dict;
-            dict->Set("pixel_values", X::Value(pixelValues));
-            dict->Set("image_grid_thw", X::Value(imageGrid));
-            dict->Set("source_height", X::Value(sourceHeight));
-            dict->Set("source_width", X::Value(sourceWidth));
-            dict->Set("height", X::Value(resizedHeight));
-            dict->Set("width", X::Value(resizedWidth));
-            dict->Set("patch_size", X::Value(patchSize));
-            dict->Set("temporal_patch_size", X::Value(temporalPatchSize));
-            dict->Set("merge_size", X::Value(mergeSize));
-            dict->Set("backend", X::Value("cuda_nvjpeg_jpeg_file"));
+            dict->Set("pixel_values", result.pixelValues);
+            dict->Set("image_grid_thw", result.imageGridTHW);
+            dict->Set("height", X::Value(result.resizedHeight));
+            dict->Set("width", X::Value(result.resizedWidth));
+            dict->Set("patch_size", X::Value(result.patchSize));
+            dict->Set("temporal_patch_size", X::Value(result.temporalPatchSize));
+            dict->Set("merge_size", X::Value(result.mergeSize));
+            dict->Set("pixel_values_gpu", X::Value(TensorHelper::GetGPUMemory(pixelValues) != nullptr));
+            dict->Set("image_grid_gpu", X::Value(TensorHelper::GetGPUMemory(imageGrid) != nullptr));
+            dict->Set("backend", X::Value("cuda_nvjpeg_to_gpu_xtensor"));
             retValue = dict;
         }
         catch (const std::exception& exc) {
