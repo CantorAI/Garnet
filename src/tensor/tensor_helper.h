@@ -4,6 +4,7 @@
 #include <cuda_bf16.h>    // For __nv_bfloat16
 #include <cuda_fp8.h>     // For __nv_fp8_e4m3 and __nv_fp8_e5m2
 #include <cstdint>
+#include <cstdlib>
 #include <vector>
 
 namespace Garnet
@@ -30,7 +31,17 @@ namespace Garnet
                     if (params.size() > 0) {
                         void* ptr = reinterpret_cast<void*>(static_cast<uintptr_t>(params[0].ToLongLong()));
                         if (ptr) {
-                            cudaFree(ptr);
+                            const char* syncCpu = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
+                            if (syncCpu && syncCpu[0] == '0' && syncCpu[1] == '\0') {
+                                cudaError_t err = cudaFreeAsync(ptr, cudaStreamPerThread);
+                                if (err == cudaErrorNotSupported) {
+                                    cudaGetLastError();
+                                    cudaFree(ptr);
+                                }
+                            }
+                            else {
+                                cudaFree(ptr);
+                            }
                         }
                     }
                     retValue = X::Value(true);
@@ -286,6 +297,7 @@ namespace Garnet
 
             long long totalSize = tensor->GetDataSize();
             std::vector<char> host(static_cast<size_t>(totalSize));
+            cudaStreamSynchronize(cudaStreamPerThread);
             cudaError_t err = cudaMemcpy(host.data(), gpuMemory, totalSize, cudaMemcpyDeviceToHost);
             if (err != cudaSuccess)
             {

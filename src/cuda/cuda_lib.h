@@ -253,6 +253,23 @@ extern "C" {
         long long maskValue,
         cudaStream_t stream = 0);
 
+    cudaError_t runGeluTanhFP32(
+        const float* input,
+        float* output,
+        int count,
+        cudaStream_t stream = 0);
+
+    // Applies rotary embedding to Q and K in packed [tokens, Q|K|V].
+    cudaError_t runVisionRoPEFP32(
+        const float* qkv,
+        const float* cos,
+        const float* sin,
+        float* output,
+        int tokens,
+        int numHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
     //void cleanup();
 
 #ifdef __cplusplus

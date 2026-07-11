@@ -68,6 +68,31 @@ replace_actual = cpu_array(
 ).reshape(base.shape)
 np.testing.assert_allclose(replace_actual, replace_expected, rtol=0.0, atol=0.0)
 
+gelu_input = np.linspace(-3.0, 3.0, 17, dtype=np.float32).reshape(1, 17)
+gelu_expected = 0.5 * gelu_input * (
+    1.0 + np.tanh(np.sqrt(2.0 / np.pi) * (gelu_input + 0.044715 * gelu_input**3))
+)
+gelu_actual = cpu_array(garnet, garnet.gelu_tanh(gelu_input)).reshape(gelu_input.shape)
+np.testing.assert_allclose(gelu_actual, gelu_expected, rtol=2e-6, atol=2e-6)
+
+rope_tokens = 2
+rope_heads = 2
+rope_head_dim = 4
+rope_hidden = rope_heads * rope_head_dim
+qkv = np.arange(rope_tokens * 3 * rope_hidden, dtype=np.float32).reshape(rope_tokens, 3 * rope_hidden) / 20.0
+angles = np.asarray([[0.1, 0.2, 0.1, 0.2], [0.3, 0.4, 0.3, 0.4]], dtype=np.float32)
+cos = np.cos(angles).astype(np.float32)
+sin = np.sin(angles).astype(np.float32)
+rope_expected = qkv.copy().reshape(rope_tokens, 3, rope_heads, rope_head_dim)
+for tensor_index in (0, 1):
+    value = rope_expected[:, tensor_index].copy()
+    rotated = np.concatenate([-value[..., rope_head_dim // 2 :], value[..., : rope_head_dim // 2]], axis=-1)
+    rope_expected[:, tensor_index] = value * cos[:, None, :] + rotated * sin[:, None, :]
+rope_expected = rope_expected.reshape(qkv.shape)
+rope_actual = cpu_array(garnet, garnet.vision_rope(qkv, cos, sin, rope_heads)).reshape(qkv.shape)
+np.testing.assert_allclose(rope_actual, rope_expected, rtol=2e-6, atol=2e-6)
+
 print(f"garnet={garnet_dll}")
 print("tensor_to_gpu=pass tensor_add=pass tensor_last_row=pass embedding=pass replace_rows_by_mask=pass")
+print("gelu_tanh=pass vision_rope=pass")
 print("Phase 23 GPU tensor ops passed.")

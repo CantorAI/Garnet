@@ -330,6 +330,38 @@ The next optimization boundary is no longer the text layer loop. It is:
 2. Move the vision block loop and GELU/RoPE glue out of Python/NumPy into a model-owned GPU runner.
 3. Expose the complete request lifecycle through the production one-call `generate` boundary.
 
+### Model-Owned C++ Vision Runner Checkpoint
+
+`QwenVisionRunner` now executes all 24 vision blocks and the patch merger in one C++ call. The active performance path keeps patch embeddings, QKV, rotary output, attention, residuals, MLP activations, and merged visual tokens as GPU-backed `X::Tensor` values.
+
+New generic CUDA tensor operations:
+
+- exact Qwen vision RoPE over packed `[tokens, Q|K|V]`
+- tanh-GELU matching the Qwen/PyTorch formula
+- GPU residual addition and merger reshape/copy
+
+The vision runner owns layer and merger model bundles with persistent GPU weights. The merged `[visual_tokens, 2048]` output goes directly into `replace_rows_by_mask`; it is not converted to NumPy before text prefill.
+
+Verified Qwen3-VL-2B result with both C++ runners enabled:
+
+```text
+output: A man sits in
+cpp_vision_runner: true
+cpp_text_runner: true
+vision model prepare: 1865.71 ms (one-time)
+vision warm-up: 131.06 ms (one-time)
+vision patch/position input: 24.78 ms
+24 vision blocks + merger: 106.56 ms
+text model prepare: 4861.64 ms (one-time)
+text prefill, 79 tokens: 950.10 ms
+decode tokens: 84.45 ms, 64.48 ms, 67.09 ms
+steady pipeline, image embeddings through three decode tokens: 1299.92 ms
+```
+
+Compared with the previous Python/NumPy vision loop at about 4.02 seconds, steady C++ vision execution is about 30.6x faster when including the patch stage (`131.34 ms`) and about 37.7x faster for the 24 blocks plus merger alone (`106.56 ms`). Model preparation is now explicitly separated from request execution and must move into long-lived server/model startup.
+
+The dominant warm-path cost is now text prefill (`950 ms`). The next large optimization should fuse each text decoder layer into one TensorRT graph, retain a shared CUDA stream/workspace, and move the weight/activation path to FP16/BF16. Reworking small Python calls is no longer the useful target.
+
 ## Implementation Stages
 
 ## Current Checkpoint
@@ -453,7 +485,22 @@ Implemented now:
     - Native device-KV smoke validates host ABI and device-pointer ABI parity: output absolute sum `2.31298`, max diff versus host ABI `0`.
     - Native request-KV smoke validates request-level logical length: initial logical length `0`, after device write `64`, and attention over-read `65` is rejected before the valid `64`-token attention read.
     - Phase 22 validates this same bridge from xlang `model.forward`: synthetic `[3,4096]` QKV writes three tokens into device KV, `text_attention_core` reads it back as GPU output, and `debug_probe("logits_top1")` runs on that output.
-  - Next target: a C++ Qwen text runner that uses this bridge across all layers, then keeps attention output, `o_proj`, norms, MLP, and logits as GPU `X::Tensor` values between operations.
+  - Completed: `QwenTextRunner` executes all 28 decoder layers in C++ and keeps attention, projection, norm, MLP, residual, and KV values as GPU `X::Tensor` objects.
+  - Completed: `QwenVisionRunner` executes all 24 vision blocks plus the merger in C++, with GPU RoPE and GELU operations and no NumPy tensor round trip.
+
+### GPU Asynchronous Chain Checkpoint
+
+The GPU-resident TensorRT path now uses one ordered CUDA per-thread execution stream. TensorRT outputs are wrapped immediately as GPU `X::Tensor` values; synchronization is deferred until `tensor_to_cpu` or another explicit CPU observation. Temporary tensor storage uses CUDA stream-ordered allocation/free so destructors do not introduce a device-wide synchronization after every subgraph.
+
+Full Qwen3-VL-2B smoke, `frame_0.jpg`, 79-token prompt, 60 visual tokens, 28 text layers, four generated tokens on RTX 4080:
+
+- Output remained `A man sits in` across repeated runs.
+- Vision blocks plus merger: `80.9-82.6 ms` (previous baseline `113.0 ms`).
+- Text prefill: `928-952 ms` (previous baseline `1088 ms`).
+- Warm decode samples: `57.1-87.3 ms/token`; first decode after setup can still vary up to about `128 ms`.
+- Steady image-to-four-token pipeline: `1.27-1.35 s` after model/frontend setup.
+
+The remaining decode variance comes from per-subgraph output/workspace allocation and separate FP32 decoder engines. The next performance stage is runner-owned persistent workspaces plus fused FP16/BF16 TensorRT decoder-layer engines; it is not Python-loop optimization.
 
 New tests:
 

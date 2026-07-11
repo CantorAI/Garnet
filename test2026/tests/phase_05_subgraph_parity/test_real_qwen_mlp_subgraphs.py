@@ -2483,8 +2483,152 @@ class GarnetQwen3VLForwardFacade:
         self.final_norm = load_tensor(key_to_file, "language_model.norm.weight")
         self.text_layer_count = text_layer_count_from_weights(key_to_file)
         self.vision_block_count = vision_block_count_from_weights(key_to_file)
+        self.cpp_vision_runner_enabled = os.environ.get("GARNET_QWEN_CPP_VISION_RUNNER", "1").strip().lower() in {"1", "true", "yes", "on"}
+        self.gpu_vision_layer_weights = {}
+        self.gpu_vision_models = {}
+        self.gpu_vision_runner = None
+        self.gpu_vision_runner_bundles = None
+        self.gpu_vision_merger_bundle = None
+        self.gpu_vision_patch_model = None
+        self.gpu_vision_patch_weights = None
+        self.vision_runner_prepare_ms = 0.0
+        self.vision_runner_warmup_ms = 0.0
+        self.vision_patch_ms = 0.0
+        self.vision_execute_ms = 0.0
+
+    def _gpu_vision_models_for_layer(self, layer_idx, patch_count):
+        layer_idx = int(layer_idx)
+        cached = self.gpu_vision_models.get(layer_idx)
+        if cached is not None:
+            return cached
+        prefix = f"visual.blocks.{layer_idx}"
+        cpu_weights = {
+            "norm1_w": load_tensor(self.key_to_file, prefix + ".norm1.weight"),
+            "norm1_b": load_tensor(self.key_to_file, prefix + ".norm1.bias"),
+            "norm2_w": load_tensor(self.key_to_file, prefix + ".norm2.weight"),
+            "norm2_b": load_tensor(self.key_to_file, prefix + ".norm2.bias"),
+            "qkv_w": load_tensor(self.key_to_file, prefix + ".attn.qkv.weight"),
+            "qkv_b": load_tensor(self.key_to_file, prefix + ".attn.qkv.bias"),
+            "proj_w": load_tensor(self.key_to_file, prefix + ".attn.proj.weight"),
+            "proj_b": load_tensor(self.key_to_file, prefix + ".attn.proj.bias"),
+            "fc1_w": load_tensor(self.key_to_file, prefix + ".mlp.linear_fc1.weight"),
+            "fc1_b": load_tensor(self.key_to_file, prefix + ".mlp.linear_fc1.bias"),
+            "fc2_w": load_tensor(self.key_to_file, prefix + ".mlp.linear_fc2.weight"),
+            "fc2_b": load_tensor(self.key_to_file, prefix + ".mlp.linear_fc2.bias"),
+        }
+        weights = {name: self.garnet.tensor_to_gpu(value) for name, value in cpu_weights.items()}
+        self.gpu_vision_layer_weights[layer_idx] = weights
+        cache_dir = self.cache_root / "gpu_vision_runner" / f"patches_{patch_count}"
+        payloads = {
+            "norm1": {"visual.blocks.0.norm1.weight": weights["norm1_w"], "visual.blocks.0.norm1.bias": weights["norm1_b"]},
+            "norm2": {"visual.blocks.0.norm1.weight": weights["norm2_w"], "visual.blocks.0.norm1.bias": weights["norm2_b"]},
+            "qkv": {"W": weights["qkv_w"], "B": weights["qkv_b"]},
+            "proj": {"W": weights["proj_w"], "B": weights["proj_b"]},
+            "mlp_fc1": {"W": weights["fc1_w"], "B": weights["fc1_b"]},
+            "mlp_fc2": {"W": weights["fc2_w"], "B": weights["fc2_b"]},
+        }
+        models = {
+            "norm1": self.garnet.load_model(str(SCRIPT_DIR / "layer_norm_trt.x"), weights=payloads["norm1"], cache_dir=str(cache_dir / "norm"), input_shapes=[[patch_count, 1024]], subgraph="layer_norm"),
+            "qkv": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=payloads["qkv"], cache_dir=str(cache_dir / "qkv"), input_shapes=[[patch_count, 1024]], subgraph="linear_bias"),
+            "attention": self.garnet.load_model(str(SCRIPT_DIR / "vision_attention_core_trt.x"), weights={}, cache_dir=str(cache_dir / "attention"), input_shapes=[[patch_count, 3072]], subgraph="vision_attention_core"),
+            "proj": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=payloads["proj"], cache_dir=str(cache_dir / "proj"), input_shapes=[[patch_count, 1024]], subgraph="linear_bias"),
+            "norm2": self.garnet.load_model(str(SCRIPT_DIR / "layer_norm_trt.x"), weights=payloads["norm2"], cache_dir=str(cache_dir / "norm"), input_shapes=[[patch_count, 1024]], subgraph="layer_norm"),
+            "mlp_fc1": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=payloads["mlp_fc1"], cache_dir=str(cache_dir / "mlp_fc1"), input_shapes=[[patch_count, 1024]], subgraph="linear_bias"),
+            "mlp_fc2": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=payloads["mlp_fc2"], cache_dir=str(cache_dir / "mlp_fc2"), input_shapes=[[patch_count, 4096]], subgraph="linear_bias"),
+            "_payloads": payloads,
+        }
+        self.gpu_vision_models[layer_idx] = models
+        return models
+
+    def _create_gpu_vision_runner(self, patch_count):
+        if self.gpu_vision_runner is not None:
+            return self.gpu_vision_runner
+        bundle_keys = ["norm1", "qkv", "attention", "proj", "norm2", "mlp_fc1", "mlp_fc2"]
+        bundles = []
+        for layer_idx in range(self.vision_block_count):
+            models = self._gpu_vision_models_for_layer(layer_idx, patch_count)
+            bundles.append({name: models[name] for name in bundle_keys})
+
+        merger_cpu = {
+            "norm_w": load_tensor(self.key_to_file, "visual.merger.norm.weight"),
+            "norm_b": load_tensor(self.key_to_file, "visual.merger.norm.bias"),
+            "fc1_w": load_tensor(self.key_to_file, "visual.merger.linear_fc1.weight"),
+            "fc1_b": load_tensor(self.key_to_file, "visual.merger.linear_fc1.bias"),
+            "fc2_w": load_tensor(self.key_to_file, "visual.merger.linear_fc2.weight"),
+            "fc2_b": load_tensor(self.key_to_file, "visual.merger.linear_fc2.bias"),
+        }
+        merger_weights = {name: self.garnet.tensor_to_gpu(value) for name, value in merger_cpu.items()}
+        cache_dir = self.cache_root / "gpu_vision_runner" / f"patches_{patch_count}" / "merger"
+        merger_payloads = {
+            "norm": {"visual.blocks.0.norm1.weight": merger_weights["norm_w"], "visual.blocks.0.norm1.bias": merger_weights["norm_b"]},
+            "fc1": {"W": merger_weights["fc1_w"], "B": merger_weights["fc1_b"]},
+            "fc2": {"W": merger_weights["fc2_w"], "B": merger_weights["fc2_b"]},
+        }
+        visual_tokens = patch_count // 4
+        merger_bundle = {
+            "norm": self.garnet.load_model(str(SCRIPT_DIR / "layer_norm_trt.x"), weights=merger_payloads["norm"], cache_dir=str(cache_dir / "norm"), input_shapes=[[patch_count, 1024]], subgraph="layer_norm"),
+            "fc1": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=merger_payloads["fc1"], cache_dir=str(cache_dir / "fc1"), input_shapes=[[visual_tokens, 4096]], subgraph="linear_bias"),
+            "fc2": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=merger_payloads["fc2"], cache_dir=str(cache_dir / "fc2"), input_shapes=[[visual_tokens, 4096]], subgraph="linear_bias"),
+            "_weights": merger_weights,
+            "_payloads": merger_payloads,
+        }
+        runner = self.garnet.QwenVisionRunner(bundles, {name: merger_bundle[name] for name in ["norm", "fc1", "fc2"]})
+        if runner is None or int(runner.stats()["layer_count"]) != self.vision_block_count:
+            raise AssertionError("failed to create C++ QwenVisionRunner")
+        self.gpu_vision_runner_bundles = bundles
+        self.gpu_vision_merger_bundle = merger_bundle
+        self.gpu_vision_runner = runner
+        return runner
+
+    def _visual_tokens_gpu(self, pixel_values, image_grid_thw, visual_token_count):
+        prepare_start = time.perf_counter()
+        patch_count = int(visual_token_count) * 4
+        pixel_values = np.asarray(pixel_values[:patch_count], dtype=np.float32)
+        grid_thw = np.asarray(image_grid_thw, dtype=np.int64)
+        patch_weight_5d = load_tensor(self.key_to_file, "visual.patch_embed.proj.weight")
+        patch_weight = patch_weight_5d.reshape(patch_weight_5d.shape[0], -1).astype(np.float32)
+        patch_bias = load_tensor(self.key_to_file, "visual.patch_embed.proj.bias")
+        pos_weight = load_tensor(self.key_to_file, "visual.pos_embed.weight")
+        bilinear_indices, bilinear_weights = qwen3_vl_vision_bilinear_numpy(grid_thw)
+        pos = np.sum(pos_weight[bilinear_indices[:, :patch_count]] * bilinear_weights[:, :patch_count, None], axis=0).astype(np.float32)
+
+        if self.gpu_vision_patch_model is None:
+            patch_weights = {
+                "visual.patch_embed.proj.weight": self.garnet.tensor_to_gpu(patch_weight),
+                "visual.patch_embed.proj.bias": self.garnet.tensor_to_gpu(patch_bias),
+            }
+            self.gpu_vision_patch_weights = patch_weights
+            self.gpu_vision_patch_model = self.garnet.load_model(
+                str(SCRIPT_DIR / "vision_patch_embed_trt.x"),
+                weights=patch_weights,
+                cache_dir=str(self.cache_root / "gpu_vision_runner" / f"patches_{patch_count}" / "patch"),
+                input_shapes=[[patch_count, pixel_values.shape[1]]],
+                subgraph="vision_patch_embed",
+            )
+        runner = self._create_gpu_vision_runner(patch_count)
+        cos, sin = vision_rope_cos_sin_numpy(grid_thw, self.model_dir, patch_count)
+        self.vision_runner_prepare_ms = (time.perf_counter() - prepare_start) * 1000.0
+
+        patch_start = time.perf_counter()
+        patch = self.gpu_vision_patch_model.forward(pixel_values)
+        hidden = self.garnet.tensor_add(patch, pos)
+        self.vision_patch_ms = (time.perf_counter() - patch_start) * 1000.0
+        if os.environ.get("GARNET_QWEN_VISION_RUNNER_WARMUP", "1").strip().lower() in {"1", "true", "yes", "on"}:
+            warmup_start = time.perf_counter()
+            warmup_output = runner.forward(hidden, cos, sin)
+            if warmup_output is None:
+                raise AssertionError("C++ QwenVisionRunner warm-up failed")
+            self.vision_runner_warmup_ms = (time.perf_counter() - warmup_start) * 1000.0
+        execute_start = time.perf_counter()
+        output = runner.forward(hidden, cos, sin)
+        self.vision_execute_ms = (time.perf_counter() - execute_start) * 1000.0
+        if output is None:
+            raise AssertionError("C++ QwenVisionRunner forward failed")
+        return output
 
     def _visual_tokens(self, pixel_values, image_grid_thw, visual_token_count):
+        if getattr(self, "gpu_tensor_chain", False) and self.cpp_vision_runner_enabled:
+            return self._visual_tokens_gpu(pixel_values, image_grid_thw, visual_token_count)
         patch_count = int(visual_token_count) * 4
         x = vision_patch_with_pos_from_arrays(self.key_to_file, pixel_values, image_grid_thw, patch_count).astype(np.float32)
         if self.use_all_vision_blocks:
@@ -2841,10 +2985,13 @@ class GarnetQwen3VLCachedForwardFacade(GarnetQwen3VLForwardFacade):
         visual_positions = np.flatnonzero(mm_token_type_ids == 1)
         if visual_positions.size:
             if visual_tokens_override is not None:
-                visual_tokens = np.asarray(visual_tokens_override, dtype=np.float32)
+                if type(visual_tokens_override).__name__ == "XlangObject":
+                    visual_tokens = visual_tokens_override
+                else:
+                    visual_tokens = np.asarray(visual_tokens_override, dtype=np.float32)
             else:
                 visual_tokens = self._visual_tokens(pixel_values, image_grid_thw, int(visual_positions.size))
-            if visual_tokens.shape[0] != visual_positions.size:
+            if type(visual_tokens).__name__ != "XlangObject" and visual_tokens.shape[0] != visual_positions.size:
                 raise AssertionError(
                     f"visual token cache has {visual_tokens.shape[0]} tokens, "
                     f"but prompt has {visual_positions.size} visual placeholders"
@@ -3526,6 +3673,16 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     visual_token_start = time.perf_counter()
     visual_tokens = facade._visual_tokens(pixel_values, image_grid_thw, int(visual_positions.size)) if visual_positions.size else None
     timing["visual_tokens_once_ms"] = (time.perf_counter() - visual_token_start) * 1000.0
+    if getattr(facade, "cpp_vision_runner_enabled", False):
+        timing["vision_runner_prepare_ms"] = float(getattr(facade, "vision_runner_prepare_ms", 0.0))
+        timing["vision_runner_warmup_ms"] = float(getattr(facade, "vision_runner_warmup_ms", 0.0))
+        timing["vision_patch_ms"] = float(getattr(facade, "vision_patch_ms", 0.0))
+        timing["vision_execute_ms"] = float(getattr(facade, "vision_execute_ms", 0.0))
+    if use_cached_text_decode and getattr(facade, "gpu_tensor_chain", False) and getattr(facade, "cpp_text_runner_enabled", False):
+        text_runner_prepare_start = time.perf_counter()
+        facade._cpp_text_runner(int(cur_ids.shape[0]))
+        facade._cpp_text_runner(1)
+        timing["text_runner_prepare_ms"] = (time.perf_counter() - text_runner_prepare_start) * 1000.0
     decode_start = time.perf_counter()
     if use_cached_text_decode:
         try:
@@ -3603,7 +3760,17 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     timing["decode_loop_ms"] = (time.perf_counter() - decode_start) * 1000.0
     if use_cached_text_decode:
         timing["decode_token_loop_ms"] = timing["decode_loop_ms"] - timing.get("text_prefill_ms", 0.0)
-    timing["total_after_frontend_ms"] = timing["visual_tokens_once_ms"] + timing["decode_loop_ms"]
+    timing["total_after_frontend_ms"] = (
+        timing["visual_tokens_once_ms"]
+        + timing.get("text_runner_prepare_ms", 0.0)
+        + timing["decode_loop_ms"]
+    )
+    timing["steady_pipeline_ms"] = (
+        timing.get("vision_patch_ms", timing["visual_tokens_once_ms"])
+        + timing.get("vision_execute_ms", 0.0)
+        + timing.get("text_prefill_ms", 0.0)
+        + timing.get("decode_token_loop_ms", 0.0)
+    )
     if kv_manager is not None:
         kv_stats_before_free = kv_manager.stats()
         kv_free_result = bool(kv_manager.free(kv_sequence_id))
@@ -3633,6 +3800,7 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
         "text_decode_mode": "cached_prefill_decode" if use_cached_text_decode else "full_sequence_recompute",
         "gpu_tensor_chain": bool(use_cached_text_decode and getattr(facade, "gpu_tensor_chain", False)),
         "cpp_text_runner": bool(use_cached_text_decode and getattr(facade, "cpp_text_runner_enabled", False)),
+        "cpp_vision_runner": bool(use_cached_text_decode and getattr(facade, "cpp_vision_runner_enabled", False)),
         "kv_cache_manager": {
             "enabled": kv_manager is not None,
             "sequence_id": kv_sequence_id if kv_manager is not None else None,
@@ -4578,7 +4746,7 @@ def run_vision_attention_core_from_patch_pos(garnet, model_dir, key_to_file):
     }
 
 
-def apply_vision_rope_numpy(qkv, grid_thw, model_dir, patch_count):
+def vision_rope_cos_sin_numpy(grid_thw, model_dir, patch_count):
     try:
         import torch
         from transformers import AutoConfig
@@ -4589,7 +4757,6 @@ def apply_vision_rope_numpy(qkv, grid_thw, model_dir, patch_count):
     except Exception as exc:
         skip(f"HF vision RoPE helpers are not available: {exc}")
     config = AutoConfig.from_pretrained(str(model_dir), trust_remote_code=True).vision_config
-    q, k, v = qkv.reshape(patch_count, 3, config.num_heads, -1).transpose(1, 0, 2, 3)
     with torch.inference_mode():
         position_ids = get_vision_position_ids(
             torch.from_numpy(grid_thw),
@@ -4600,6 +4767,17 @@ def apply_vision_rope_numpy(qkv, grid_thw, model_dir, patch_count):
     emb = np.concatenate([rotary_pos, rotary_pos], axis=-1)
     cos = np.cos(emb).astype(np.float32)
     sin = np.sin(emb).astype(np.float32)
+    return cos, sin
+
+
+def apply_vision_rope_numpy(qkv, grid_thw, model_dir, patch_count):
+    try:
+        from transformers import AutoConfig
+    except Exception as exc:
+        skip(f"HF vision config is not available: {exc}")
+    config = AutoConfig.from_pretrained(str(model_dir), trust_remote_code=True).vision_config
+    q, k, v = qkv.reshape(patch_count, 3, config.num_heads, -1).transpose(1, 0, 2, 3)
+    cos, sin = vision_rope_cos_sin_numpy(grid_thw, model_dir, patch_count)
     q = (q * cos[:, None, :]) + (rotate_half(q) * sin[:, None, :])
     k = (k * cos[:, None, :]) + (rotate_half(k) * sin[:, None, :])
     qkv_rope = np.concatenate([

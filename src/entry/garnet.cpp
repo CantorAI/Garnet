@@ -20,6 +20,24 @@
 #include <unordered_map>
 #include <cuda_runtime.h>
 
+namespace
+{
+    cudaError_t CreateEntryExecutionStream(cudaStream_t* stream)
+    {
+        if (!stream) return cudaErrorInvalidValue;
+        *stream = cudaStreamPerThread;
+        return cudaSuccess;
+    }
+
+    cudaError_t DestroyEntryExecutionStream(cudaStream_t)
+    {
+        return cudaSuccess;
+    }
+}
+
+#define cudaStreamCreate CreateEntryExecutionStream
+#define cudaStreamDestroy DestroyEntryExecutionStream
+
 #if defined(_WIN32)
 #define GARNET_ENTRY_EXPORT __declspec(dllexport)
 #else
@@ -2198,6 +2216,19 @@ namespace Garnet
         retValue = X::Value(runner);
     }
 
+    void GarnetAPI::CreateQwenVisionRunner(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 2 || !params[0].IsList() || !params[1].IsObject()) {
+            std::cout << "[GarnetAPI] QwenVisionRunner(layer_bundles, merger_bundle) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::XPackageValue<QwenVisionRunner> runner;
+        runner->Configure(params[0], params[1]);
+        retValue = X::Value(runner);
+    }
+
     void GarnetAPI::DevicePagedKVWriteTensor(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
@@ -2631,6 +2662,121 @@ namespace Garnet
             retValue = X::Value();
             return;
         }
+        retValue = X::Value(output);
+    }
+
+    void GarnetAPI::GeluTanh(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 1 || !params[0].IsTensor()) {
+            std::cout << "[GarnetAPI] gelu_tanh(tensor) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor input(params[0]);
+        if (input->GetDataType() != X::TensorDataType::FLOAT32 || input->GetCount() <= 0 ||
+            TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
+            retValue = X::Value();
+            return;
+        }
+        size_t bytes = static_cast<size_t>(input->GetDataSize());
+        float* outputDevice = nullptr;
+        cudaStream_t stream = nullptr;
+        cudaError_t err = cudaStreamCreate(&stream);
+        if (err == cudaSuccess) err = cudaMalloc(&outputDevice, bytes);
+        if (err == cudaSuccess) {
+            err = runGeluTanhFP32(
+                static_cast<const float*>(TensorHelper::GetGPUMemory(input)),
+                outputDevice,
+                static_cast<int>(input->GetCount()),
+                stream);
+        }
+        if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+        if (err != cudaSuccess) {
+            if (outputDevice) cudaFree(outputDevice);
+            if (stream) cudaStreamDestroy(stream);
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor output = X::g_pXHost->CreateTensor();
+        X::Port::vector<int> shape(input->GetDimCount());
+        for (int dim = 0; dim < input->GetDimCount(); ++dim) {
+            shape.push_back(static_cast<int>(input->GetDimSize(dim)));
+        }
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        output->SetShape(shape);
+        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
+            cudaFree(outputDevice);
+            cudaStreamDestroy(stream);
+            retValue = X::Value();
+            return;
+        }
+        cudaStreamDestroy(stream);
+        retValue = X::Value(output);
+    }
+
+    void GarnetAPI::VisionRoPE(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 3 || !params[0].IsTensor() || !params[1].IsTensor() || !params[2].IsTensor()) {
+            std::cout << "[GarnetAPI] vision_rope(qkv, cos, sin, num_heads=16) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor qkv(params[0]);
+        X::Tensor cos(params[1]);
+        X::Tensor sin(params[2]);
+        int numHeads = params.size() >= 4 ? static_cast<int>(params[3].ToLongLong()) : 16;
+        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2 ||
+            cos->GetDataType() != X::TensorDataType::FLOAT32 || cos->GetDimCount() != 2 ||
+            sin->GetDataType() != X::TensorDataType::FLOAT32 || sin->GetDimCount() != 2 ||
+            qkv->GetDimSize(0) != cos->GetDimSize(0) || cos->GetDimSize(0) != sin->GetDimSize(0) ||
+            cos->GetDimSize(1) != sin->GetDimSize(1) || numHeads <= 0) {
+            std::cout << "[GarnetAPI] vision_rope shape or dtype mismatch." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        int tokens = static_cast<int>(qkv->GetDimSize(0));
+        int headDim = static_cast<int>(cos->GetDimSize(1));
+        if (qkv->GetDimSize(1) != 3 * numHeads * headDim ||
+            TensorHelper::EnsureGPUMemory(qkv) != TensorOpStatus::Success ||
+            TensorHelper::EnsureGPUMemory(cos) != TensorOpStatus::Success ||
+            TensorHelper::EnsureGPUMemory(sin) != TensorOpStatus::Success) {
+            retValue = X::Value();
+            return;
+        }
+        size_t bytes = static_cast<size_t>(qkv->GetDataSize());
+        float* outputDevice = nullptr;
+        cudaStream_t stream = nullptr;
+        cudaError_t err = cudaStreamCreate(&stream);
+        if (err == cudaSuccess) err = cudaMalloc(&outputDevice, bytes);
+        if (err == cudaSuccess) {
+            err = runVisionRoPEFP32(
+                static_cast<const float*>(TensorHelper::GetGPUMemory(qkv)),
+                static_cast<const float*>(TensorHelper::GetGPUMemory(cos)),
+                static_cast<const float*>(TensorHelper::GetGPUMemory(sin)),
+                outputDevice, tokens, numHeads, headDim, stream);
+        }
+        if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
+        if (err != cudaSuccess) {
+            if (outputDevice) cudaFree(outputDevice);
+            if (stream) cudaStreamDestroy(stream);
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor output = X::g_pXHost->CreateTensor();
+        X::Port::vector<int> shape(2);
+        shape.push_back(tokens);
+        shape.push_back(static_cast<int>(qkv->GetDimSize(1)));
+        output->SetDataType(X::TensorDataType::FLOAT32);
+        output->SetShape(shape);
+        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
+            cudaFree(outputDevice);
+            cudaStreamDestroy(stream);
+            retValue = X::Value();
+            return;
+        }
+        cudaStreamDestroy(stream);
         retValue = X::Value(output);
     }
 

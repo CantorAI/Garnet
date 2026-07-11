@@ -52,9 +52,8 @@ namespace Garnet
 
             size_t bytes = static_cast<size_t>(lhs->GetDataSize());
             float* outputDevice = nullptr;
-            cudaStream_t stream = nullptr;
-            cudaError_t err = cudaStreamCreate(&stream);
-            if (err == cudaSuccess) err = cudaMalloc(&outputDevice, bytes);
+            cudaStream_t stream = cudaStreamPerThread;
+            cudaError_t err = cudaMallocAsync(&outputDevice, bytes, stream);
             if (err == cudaSuccess) {
                 err = runTensorAddFP32(
                     static_cast<const float*>(TensorHelper::GetGPUMemory(lhs)),
@@ -63,10 +62,8 @@ namespace Garnet
                     static_cast<int>(lhs->GetCount()),
                     stream);
             }
-            if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
             if (err != cudaSuccess) {
-                if (outputDevice) cudaFree(outputDevice);
-                if (stream) cudaStreamDestroy(stream);
+                if (outputDevice) cudaFreeAsync(outputDevice, stream);
                 return X::Value();
             }
 
@@ -79,10 +76,8 @@ namespace Garnet
             output->SetShape(shape);
             if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
                 cudaFree(outputDevice);
-                cudaStreamDestroy(stream);
                 return X::Value();
             }
-            cudaStreamDestroy(stream);
             return X::Value(output);
         }
     }

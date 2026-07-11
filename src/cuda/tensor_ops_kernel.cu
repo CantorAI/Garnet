@@ -69,6 +69,54 @@ namespace
             ++replacementIndex;
         }
     }
+
+    __global__ void GeluTanhFP32Kernel(const float* input, float* output, int count)
+    {
+        int index = blockIdx.x * blockDim.x + threadIdx.x;
+        if (index >= count) {
+            return;
+        }
+        float x = input[index];
+        constexpr float kAlpha = 0.7978845608028654f;
+        output[index] = 0.5f * x * (1.0f + tanhf(kAlpha * (x + 0.044715f * x * x * x)));
+    }
+
+    __global__ void VisionRoPEFP32Kernel(
+        const float* qkv,
+        const float* cos,
+        const float* sin,
+        float* output,
+        int tokens,
+        int hidden,
+        int headDim)
+    {
+        int index = blockIdx.x * blockDim.x + threadIdx.x;
+        int packedWidth = 3 * hidden;
+        int count = tokens * packedWidth;
+        if (index >= count) {
+            return;
+        }
+        int token = index / packedWidth;
+        int feature = index % packedWidth;
+        if (feature >= 2 * hidden) {
+            output[index] = qkv[index];
+            return;
+        }
+        int tensorOffset = feature < hidden ? 0 : hidden;
+        int localFeature = feature - tensorOffset;
+        int head = localFeature / headDim;
+        int dim = localFeature % headDim;
+        int half = headDim / 2;
+        int rotatedDim = dim < half ? dim + half : dim - half;
+        float rotated = qkv[
+            static_cast<long long>(token) * packedWidth + tensorOffset + head * headDim + rotatedDim];
+        if (dim < half) {
+            rotated = -rotated;
+        }
+        float c = cos[static_cast<long long>(token) * headDim + dim];
+        float s = sin[static_cast<long long>(token) * headDim + dim];
+        output[index] = qkv[index] * c + rotated * s;
+    }
 }
 
 extern "C" cudaError_t runTensorAddFP32(
@@ -120,5 +168,40 @@ extern "C" cudaError_t runReplaceRowsByMaskInt64FP32(
     }
     ReplaceRowsByMaskInt64FP32Kernel<<<1, 1, 0, stream>>>(
         output, rowMask, replacementRows, rowCount, replacementCount, rowWidth, maskValue);
+    return cudaGetLastError();
+}
+
+extern "C" cudaError_t runGeluTanhFP32(
+    const float* input,
+    float* output,
+    int count,
+    cudaStream_t stream)
+{
+    if (!input || !output || count <= 0) {
+        return cudaErrorInvalidValue;
+    }
+    int blocks = (count + kBlockSize - 1) / kBlockSize;
+    GeluTanhFP32Kernel<<<blocks, kBlockSize, 0, stream>>>(input, output, count);
+    return cudaGetLastError();
+}
+
+extern "C" cudaError_t runVisionRoPEFP32(
+    const float* qkv,
+    const float* cos,
+    const float* sin,
+    float* output,
+    int tokens,
+    int numHeads,
+    int headDim,
+    cudaStream_t stream)
+{
+    if (!qkv || !cos || !sin || !output || tokens <= 0 || numHeads <= 0 || headDim <= 0 || (headDim % 2) != 0) {
+        return cudaErrorInvalidValue;
+    }
+    int hidden = numHeads * headDim;
+    int count = tokens * 3 * hidden;
+    int blocks = (count + kBlockSize - 1) / kBlockSize;
+    VisionRoPEFP32Kernel<<<blocks, kBlockSize, 0, stream>>>(
+        qkv, cos, sin, output, tokens, hidden, headDim);
     return cudaGetLastError();
 }

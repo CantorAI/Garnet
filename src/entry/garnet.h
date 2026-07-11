@@ -5,6 +5,7 @@
 #include "garnet_tensor.h"
 #include "model.h"
 #include "qwen_text_runner.h"
+#include "qwen_vision_runner.h"
 #include "log.h"
 #include <string>
 #include <deque>
@@ -144,17 +145,21 @@ namespace Garnet
 			APISET().AddVarFunc("qwen_vl_preprocess_jpeg_file", &GarnetAPI::QwenVLPreprocessJpegFile);
 			APISET().AddVarFunc("KVCacheManager", &GarnetAPI::CreateKVCacheManager);
 			APISET().AddVarFunc("QwenTextRunner", &GarnetAPI::CreateQwenTextRunner);
+			APISET().AddVarFunc("QwenVisionRunner", &GarnetAPI::CreateQwenVisionRunner);
 			APISET().AddVarFunc("device_paged_kv_write", &GarnetAPI::DevicePagedKVWriteTensor);
 			APISET().AddVarFunc("device_paged_kv_attention", &GarnetAPI::DevicePagedKVAttentionTensor);
 			APISET().AddVarFunc("tensor_add", &GarnetAPI::TensorAdd);
 			APISET().AddVarFunc("embedding", &GarnetAPI::Embedding);
 			APISET().AddVarFunc("replace_rows_by_mask", &GarnetAPI::ReplaceRowsByMask);
 			APISET().AddVarFunc("tensor_last_row", &GarnetAPI::TensorLastRow);
+			APISET().AddVarFunc("gelu_tanh", &GarnetAPI::GeluTanh);
+			APISET().AddVarFunc("vision_rope", &GarnetAPI::VisionRoPE);
 			APISET().AddVarFunc("tensor_to_gpu", &GarnetAPI::TensorToGPU);
 			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
 			APISET().AddClass<0, QwenTextRunner>("QwenTextRunnerClass");
+			APISET().AddClass<0, QwenVisionRunner>("QwenVisionRunnerClass");
 			APISET().AddClass<0, QwenVLRequestContext>("QwenVLRequestContext");
 			APISET().AddClass<0, Model>("model");
 			APISET().AddClass<0, GarnetTensor>("tensor");
@@ -195,6 +200,8 @@ namespace Garnet
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void CreateQwenTextRunner(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void CreateQwenVisionRunner(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void QwenVLSmartResize(X::XRuntime* rt, X::XObj* pContext,
@@ -218,6 +225,10 @@ namespace Garnet
 		void ReplaceRowsByMask(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void TensorLastRow(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void GeluTanh(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void VisionRoPE(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void TensorToGPU(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

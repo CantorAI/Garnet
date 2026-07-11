@@ -92,6 +92,42 @@ namespace Garnet {
             return !(value[0] == '0' && value[1] == '\0');
         }
 
+        // GPU-resident model execution is ordered on CUDA's per-thread stream.
+        // The stream is synchronized only at a CPU observation boundary.
+        cudaError_t CreateExecutionStream(cudaStream_t* stream) {
+            if (!stream) return cudaErrorInvalidValue;
+            *stream = cudaStreamPerThread;
+            return cudaSuccess;
+        }
+
+        cudaError_t DestroyExecutionStream(cudaStream_t) {
+            return cudaSuccess;
+        }
+
+        cudaError_t AllocateExecutionMemory(void** ptr, size_t bytes) {
+            cudaError_t err = cudaMallocAsync(ptr, bytes, cudaStreamPerThread);
+            if (err == cudaErrorNotSupported) {
+                cudaGetLastError();
+                return cudaMalloc(ptr, bytes);
+            }
+            return err;
+        }
+
+        cudaError_t FreeExecutionMemory(void* ptr) {
+            if (!ptr) return cudaSuccess;
+            cudaError_t err = cudaFreeAsync(ptr, cudaStreamPerThread);
+            if (err == cudaErrorNotSupported) {
+                cudaGetLastError();
+                return cudaFree(ptr);
+            }
+            return err;
+        }
+
+#define cudaStreamCreate CreateExecutionStream
+#define cudaStreamDestroy DestroyExecutionStream
+#define cudaMalloc AllocateExecutionMemory
+#define cudaFree FreeExecutionMemory
+
         struct TensorDeviceBinding {
             void* ptr = nullptr;
             bool owned = false;
@@ -134,11 +170,13 @@ namespace Garnet {
             void* gpuOutput,
             size_t outputBytes,
             cudaStream_t stream) {
-            cudaError_t syncErr = cudaStreamSynchronize(stream);
-            if (syncErr != cudaSuccess) {
-                std::cout << "[TRTBuilder] MakeGPUBackedTensor2D stream sync failed before tensor wrap: "
-                    << cudaGetErrorString(syncErr) << std::endl;
-                return X::Value();
+            if (ShouldSyncTRTOutputToCPU()) {
+                cudaError_t syncErr = cudaStreamSynchronize(stream);
+                if (syncErr != cudaSuccess) {
+                    std::cout << "[TRTBuilder] MakeGPUBackedTensor2D stream sync failed before tensor wrap: "
+                        << cudaGetErrorString(syncErr) << std::endl;
+                    return X::Value();
+                }
             }
             cudaError_t lastErr = cudaGetLastError();
             if (lastErr != cudaSuccess) {
@@ -186,11 +224,13 @@ namespace Garnet {
             void* gpuOutput,
             size_t outputBytes,
             cudaStream_t stream) {
-            cudaError_t syncErr = cudaStreamSynchronize(stream);
-            if (syncErr != cudaSuccess) {
-                std::cout << "[TRTBuilder] RebindExistingTensor2D stream sync failed: "
-                    << cudaGetErrorString(syncErr) << std::endl;
-                return X::Value();
+            if (ShouldSyncTRTOutputToCPU()) {
+                cudaError_t syncErr = cudaStreamSynchronize(stream);
+                if (syncErr != cudaSuccess) {
+                    std::cout << "[TRTBuilder] RebindExistingTensor2D stream sync failed: "
+                        << cudaGetErrorString(syncErr) << std::endl;
+                    return X::Value();
+                }
             }
 
             X::Port::vector<int> outputShape(2);
