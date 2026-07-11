@@ -17,6 +17,19 @@ load inputs, lower xlang model expressions, run the model, compare correctness,
 and then optimize latency?
 ```
 
+## Normative Architecture
+
+The production ABI, compiled xmodel plan, parallel pipeline, scheduler, KV cache,
+probe, and multi-GPU contract is defined in:
+
+- `compiled-xmodel-pipeline-and-multigpu-architecture.md`
+- `compiled-runtime-implementation-plan.md`
+
+The architecture document is the normative design; the implementation plan is
+its required staged execution and test sequence. They supersede older notes
+where those notes permit Python-assembled subgraphs, direct DLL orchestration,
+or hardcoded Qwen C++ runners.
+
 ## Current Baseline
 
 Already in the repo:
@@ -65,9 +78,8 @@ Deliverables:
 - `input_ids`, image tensors, image grid shape, position ids
 - prompt set used by both HF and Garnet tests
 
-Open question:
-
-Garnet can initially call Python/HF processor for preprocessing, then move critical pieces native later.
+The production path uses Garnet's native tokenizer and GPU image processor. HF
+is a correctness oracle only and is not a production preprocessing fallback.
 
 ### Track C: Model Loading And Weight Binding
 
@@ -144,9 +156,10 @@ Phase 5 success:
 
 ## Immediate Next Steps
 
-1. Expand the HF test from one free-form prompt to a small fixed prompt suite.
-2. Save reference outputs under an ignored or explicit artifact path.
-3. Add processor-output dump mode: image tensor shape, token ids, image grid metadata.
-4. Make Garnet test consume the dumped processor outputs.
-5. Implement/load Qwen3-VL config metadata in Garnet.
-6. Add Workbench validation for weights/config against `.x` model source.
+Follow stages 0-3 of `compiled-runtime-implementation-plan.md`:
+
+1. Freeze the current correctness/performance baseline and forbidden-path
+   counters.
+2. Freeze the production `load_model`, `forward`, prefix, and probe ABI.
+3. Implement root `.x` graph capture plus validated captured-graph reuse.
+4. Complete generic backend lowering before further Qwen runner optimization.
