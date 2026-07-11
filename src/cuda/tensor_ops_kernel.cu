@@ -58,8 +58,6 @@ namespace
             : __bfloat162float(weights[tokenId * static_cast<long long>(hiddenSize) + featureIndex]);
     }
 
-    // The multimodal mask is short compared with model GEMMs. A single device
-    // thread preserves replacement order without a host prefix-scan boundary.
     __global__ void ReplaceRowsByMaskInt64FP32Kernel(
         float* output,
         const long long* rowMask,
@@ -69,23 +67,22 @@ namespace
         int rowWidth,
         long long maskValue)
     {
-        if (blockIdx.x != 0 || threadIdx.x != 0) {
-            return;
+        int row = static_cast<int>(blockIdx.x);
+        if (row >= rowCount || rowMask[row] != maskValue) return;
+        __shared__ int replacementIndex;
+        if (threadIdx.x == 0) {
+            int index = 0;
+            for (int previous = 0; previous < row; ++previous) {
+                index += rowMask[previous] == maskValue ? 1 : 0;
+            }
+            replacementIndex = index;
         }
-        int replacementIndex = 0;
-        for (int row = 0; row < rowCount; ++row) {
-            if (rowMask[row] != maskValue) {
-                continue;
-            }
-            if (replacementIndex >= replacementCount) {
-                return;
-            }
-            float* destination = output + static_cast<long long>(row) * rowWidth;
-            const float* source = replacementRows + static_cast<long long>(replacementIndex) * rowWidth;
-            for (int column = 0; column < rowWidth; ++column) {
-                destination[column] = source[column];
-            }
-            ++replacementIndex;
+        __syncthreads();
+        if (replacementIndex >= replacementCount) return;
+        float* destination = output + static_cast<long long>(row) * rowWidth;
+        const float* source = replacementRows + static_cast<long long>(replacementIndex) * rowWidth;
+        for (int column = static_cast<int>(threadIdx.x); column < rowWidth; column += blockDim.x) {
+            destination[column] = source[column];
         }
     }
 
@@ -98,23 +95,50 @@ namespace
         int rowWidth,
         long long maskValue)
     {
-        if (blockIdx.x != 0 || threadIdx.x != 0) {
-            return;
+        int row = static_cast<int>(blockIdx.x);
+        if (row >= rowCount || rowMask[row] != maskValue) return;
+        __shared__ int additionIndex;
+        if (threadIdx.x == 0) {
+            int index = 0;
+            for (int previous = 0; previous < row; ++previous) {
+                index += rowMask[previous] == maskValue ? 1 : 0;
+            }
+            additionIndex = index;
         }
-        int additionIndex = 0;
-        for (int row = 0; row < rowCount; ++row) {
-            if (rowMask[row] != maskValue) {
-                continue;
-            }
-            if (additionIndex >= additionCount) {
-                return;
-            }
-            float* destination = output + static_cast<long long>(row) * rowWidth;
-            const float* source = additionRows + static_cast<long long>(additionIndex) * rowWidth;
-            for (int column = 0; column < rowWidth; ++column) {
-                destination[column] += source[column];
-            }
-            ++additionIndex;
+        __syncthreads();
+        if (additionIndex >= additionCount) return;
+        float* destination = output + static_cast<long long>(row) * rowWidth;
+        const float* source = additionRows + static_cast<long long>(additionIndex) * rowWidth;
+        for (int column = static_cast<int>(threadIdx.x); column < rowWidth; column += blockDim.x) {
+            destination[column] += source[column];
+        }
+    }
+
+    __global__ void RMSNormFP32Kernel(
+        const float* input,
+        const float* weight,
+        float* output,
+        int hidden,
+        float epsilon)
+    {
+        int row = static_cast<int>(blockIdx.x);
+        const float* rowInput = input + static_cast<long long>(row) * hidden;
+        float* rowOutput = output + static_cast<long long>(row) * hidden;
+        float squareSum = 0.0f;
+        for (int column = static_cast<int>(threadIdx.x); column < hidden; column += blockDim.x) {
+            float value = rowInput[column];
+            squareSum += value * value;
+        }
+        __shared__ float partial[256];
+        partial[threadIdx.x] = squareSum;
+        __syncthreads();
+        for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+            if (threadIdx.x < stride) partial[threadIdx.x] += partial[threadIdx.x + stride];
+            __syncthreads();
+        }
+        float invRms = rsqrtf(partial[0] / static_cast<float>(hidden) + epsilon);
+        for (int column = static_cast<int>(threadIdx.x); column < hidden; column += blockDim.x) {
+            rowOutput[column] = rowInput[column] * invRms * weight[column];
         }
     }
 
@@ -233,7 +257,7 @@ extern "C" cudaError_t runReplaceRowsByMaskInt64FP32(
     if (!output || !rowMask || !replacementRows || rowCount <= 0 || replacementCount < 0 || rowWidth <= 0) {
         return cudaErrorInvalidValue;
     }
-    ReplaceRowsByMaskInt64FP32Kernel<<<1, 1, 0, stream>>>(
+    ReplaceRowsByMaskInt64FP32Kernel<<<rowCount, kBlockSize, 0, stream>>>(
         output, rowMask, replacementRows, rowCount, replacementCount, rowWidth, maskValue);
     return cudaGetLastError();
 }
@@ -251,8 +275,24 @@ extern "C" cudaError_t runAddRowsByMaskInt64FP32(
     if (!output || !rowMask || !additionRows || rowCount <= 0 || additionCount <= 0 || rowWidth <= 0) {
         return cudaErrorInvalidValue;
     }
-    AddRowsByMaskInt64FP32Kernel<<<1, 1, 0, stream>>>(
+    AddRowsByMaskInt64FP32Kernel<<<rowCount, kBlockSize, 0, stream>>>(
         output, rowMask, additionRows, rowCount, additionCount, rowWidth, maskValue);
+    return cudaGetLastError();
+}
+
+extern "C" cudaError_t runRMSNormFP32(
+    const float* input,
+    const float* weight,
+    float* output,
+    int rows,
+    int hidden,
+    float epsilon,
+    cudaStream_t stream)
+{
+    if (!input || !weight || !output || rows <= 0 || hidden <= 0 || epsilon <= 0.0f) {
+        return cudaErrorInvalidValue;
+    }
+    RMSNormFP32Kernel<<<rows, kBlockSize, 0, stream>>>(input, weight, output, hidden, epsilon);
     return cudaGetLastError();
 }
 

@@ -2567,9 +2567,6 @@ namespace Garnet {
         int tokens = input->GetDimSize(0);
         int hidden = input->GetDimSize(1);
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
-        if (!context) return X::Value();
-
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
         size_t weightBytes = static_cast<size_t>(hidden) * sizeof(float);
         TensorDeviceBinding dInput;
@@ -2588,10 +2585,14 @@ namespace Garnet {
             cudaStreamDestroy(stream);
             return X::Value();
         }
-        bool bound = context->setTensorAddress("x", dInput.ptr)
-            && context->setTensorAddress("weight", dWeight.ptr)
-            && context->setTensorAddress("output", dOutput);
-        if (!bound || !context->enqueueV3(stream)) {
+        cudaError_t status = runRMSNormFP32(
+            static_cast<const float*>(dInput.ptr),
+            static_cast<const float*>(dWeight.ptr),
+            static_cast<float*>(dOutput),
+            tokens, hidden, 1.0e-6f, stream);
+        if (status != cudaSuccess) {
+            std::cout << "[TRTBuilder] CUDA RMSNorm failed: "
+                << cudaGetErrorString(status) << std::endl;
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dWeight);
             cudaFree(dOutput); cudaStreamDestroy(stream);

@@ -266,6 +266,15 @@ extern "C" {
         int count,
         cudaStream_t stream = 0);
 
+    cudaError_t runRMSNormFP32(
+        const float* input,
+        const float* weight,
+        float* output,
+        int rows,
+        int hidden,
+        float epsilon,
+        cudaStream_t stream = 0);
+
     cudaError_t runEmbeddingGatherInt64FP32(
         const float* weights,
         const long long* tokenIds,
