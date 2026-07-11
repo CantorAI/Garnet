@@ -209,6 +209,38 @@ extern "C" {
         int inFeatures,
         int outFeatures,
         cudaStream_t stream = 0);
+    cudaError_t runLinearTransposeBF16WeightFP32(
+        const float* input,
+        const bfloat16* weight,
+        float* output,
+        int rows,
+        int inFeatures,
+        int outFeatures,
+        cudaStream_t stream = 0);
+    cudaError_t runLinearBiasTransposeBF16WeightFP32(
+        const float* input,
+        const bfloat16* weight,
+        const bfloat16* bias,
+        float* output,
+        int rows,
+        int inFeatures,
+        int outFeatures,
+        cudaStream_t stream = 0);
+    cudaError_t runQKVHeadNormBF16WeightFP32(
+        const float* input,
+        const bfloat16* qWeight,
+        const bfloat16* kWeight,
+        const bfloat16* vWeight,
+        const bfloat16* qNormWeight,
+        const bfloat16* kNormWeight,
+        float* packedOutput,
+        int tokens,
+        int hidden,
+        int qOut,
+        int kOut,
+        int headDim,
+        float epsilon,
+        cudaStream_t stream = 0);
 
     cudaError_t runSiluMulFP32(
         const float* gate,
@@ -242,6 +274,14 @@ extern "C" {
         int vocabSize,
         int hiddenSize,
         cudaStream_t stream = 0);
+    cudaError_t runEmbeddingGatherInt64BF16ToFP32(
+        const bfloat16* weights,
+        const long long* tokenIds,
+        float* output,
+        int tokenCount,
+        int vocabSize,
+        int hiddenSize,
+        cudaStream_t stream = 0);
 
     cudaError_t runReplaceRowsByMaskInt64FP32(
         float* output,
@@ -249,6 +289,16 @@ extern "C" {
         const float* replacementRows,
         int rowCount,
         int replacementCount,
+        int rowWidth,
+        long long maskValue,
+        cudaStream_t stream = 0);
+
+    cudaError_t runAddRowsByMaskInt64FP32(
+        float* output,
+        const long long* rowMask,
+        const float* additionRows,
+        int rowCount,
+        int additionCount,
         int rowWidth,
         long long maskValue,
         cudaStream_t stream = 0);

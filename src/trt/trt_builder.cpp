@@ -141,9 +141,6 @@ namespace Garnet {
                 return true;
             }
 
-            // Tensor ownership is the device-memory contract. Promote a CPU
-            // tensor once and retain its CUDA allocation for the tensor's
-            // lifetime instead of uploading/freeing weights on every forward.
             if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
                 return false;
             }
@@ -686,11 +683,14 @@ namespace Garnet {
         X::Tensor gate(gateWeight);
         X::Tensor up(upWeight);
         X::Tensor down(downWeight);
+        bool bf16Weights = gate->GetDataType() == X::TensorDataType::BFLOAT16 &&
+            up->GetDataType() == X::TensorDataType::BFLOAT16 &&
+            down->GetDataType() == X::TensorDataType::BFLOAT16;
         if (input->GetDataType() != X::TensorDataType::FLOAT32 ||
-            gate->GetDataType() != X::TensorDataType::FLOAT32 ||
-            up->GetDataType() != X::TensorDataType::FLOAT32 ||
-            down->GetDataType() != X::TensorDataType::FLOAT32) {
-            std::cout << "[TRTBuilder] RunTextMLPEngine supports float32 only." << std::endl;
+            (!bf16Weights && (gate->GetDataType() != X::TensorDataType::FLOAT32 ||
+                up->GetDataType() != X::TensorDataType::FLOAT32 ||
+                down->GetDataType() != X::TensorDataType::FLOAT32))) {
+            std::cout << "[TRTBuilder] RunTextMLPEngine requires FP32 activations and uniform FP32/BF16 weights." << std::endl;
             return X::Value();
         }
         if (input->GetDimCount() != 2 || gate->GetDimCount() != 2 || up->GetDimCount() != 2 || down->GetDimCount() != 2) {
@@ -708,12 +708,12 @@ namespace Garnet {
             return X::Value();
         }
 
-        if (enginePath == "cuda_text_mlp") {
+        if (enginePath == "cuda_text_mlp" || bf16Weights) {
             std::cout << "[TRTBuilder] Running CUDA TextMLP: tokens=" << tokens
                 << ", hidden=" << hidden << ", intermediate=" << intermediate << std::endl;
             size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
-            size_t projBytes = static_cast<size_t>(intermediate) * static_cast<size_t>(hidden) * sizeof(float);
-            size_t downBytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * sizeof(float);
+            size_t projBytes = static_cast<size_t>(intermediate) * static_cast<size_t>(hidden) * gate->GetItemSize();
+            size_t downBytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * down->GetItemSize();
             size_t intermediateBytes = static_cast<size_t>(tokens) * static_cast<size_t>(intermediate) * sizeof(float);
             size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
 
@@ -757,23 +757,20 @@ namespace Garnet {
             dUpW = upBinding.ptr;
             dDownW = downBinding.ptr;
 
-            cudaError_t status = runLinearTransposeFP32(
-                static_cast<const float*>(dInput),
-                static_cast<const float*>(dGateW),
-                static_cast<float*>(dGate),
-                tokens,
-                hidden,
-                intermediate,
-                stream);
+            auto linear = [&](const float* source, const void* weights, float* output,
+                int rows, int inFeatures, int outFeatures) {
+                return bf16Weights
+                    ? runLinearTransposeBF16WeightFP32(source, static_cast<const bfloat16*>(weights),
+                        output, rows, inFeatures, outFeatures, stream)
+                    : runLinearTransposeFP32(source, static_cast<const float*>(weights),
+                        output, rows, inFeatures, outFeatures, stream);
+            };
+            cudaError_t status = linear(
+                static_cast<const float*>(dInput), dGateW, static_cast<float*>(dGate),
+                tokens, hidden, intermediate);
             if (status == cudaSuccess) {
-                status = runLinearTransposeFP32(
-                    static_cast<const float*>(dInput),
-                    static_cast<const float*>(dUpW),
-                    static_cast<float*>(dUp),
-                    tokens,
-                    hidden,
-                    intermediate,
-                    stream);
+                status = linear(static_cast<const float*>(dInput), dUpW, static_cast<float*>(dUp),
+                    tokens, hidden, intermediate);
             }
             if (status == cudaSuccess) {
                 status = runSiluMulFP32(
@@ -784,14 +781,8 @@ namespace Garnet {
                     stream);
             }
             if (status == cudaSuccess) {
-                status = runLinearTransposeFP32(
-                    static_cast<const float*>(dHidden),
-                    static_cast<const float*>(dDownW),
-                    static_cast<float*>(dOutput),
-                    tokens,
-                    intermediate,
-                    hidden,
-                    stream);
+                status = linear(static_cast<const float*>(dHidden), dDownW, static_cast<float*>(dOutput),
+                    tokens, intermediate, hidden);
             }
             if (status != cudaSuccess) {
                 std::cout << "[TRTBuilder] CUDA TextMLP launch failed: "
@@ -1169,9 +1160,13 @@ namespace Garnet {
         X::Tensor v(vWeight);
         X::Tensor qNorm(qNormWeight);
         X::Tensor kNorm(kNormWeight);
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || q->GetDataType() != X::TensorDataType::FLOAT32 ||
-            k->GetDataType() != X::TensorDataType::FLOAT32 || v->GetDataType() != X::TensorDataType::FLOAT32 ||
-            qNorm->GetDataType() != X::TensorDataType::FLOAT32 || kNorm->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
+        bool bf16Weights = q->GetDataType() == X::TensorDataType::BFLOAT16 &&
+            k->GetDataType() == X::TensorDataType::BFLOAT16 && v->GetDataType() == X::TensorDataType::BFLOAT16 &&
+            qNorm->GetDataType() == X::TensorDataType::BFLOAT16 && kNorm->GetDataType() == X::TensorDataType::BFLOAT16;
+        if (input->GetDataType() != X::TensorDataType::FLOAT32 ||
+            (!bf16Weights && (q->GetDataType() != X::TensorDataType::FLOAT32 ||
+                k->GetDataType() != X::TensorDataType::FLOAT32 || v->GetDataType() != X::TensorDataType::FLOAT32 ||
+                qNorm->GetDataType() != X::TensorDataType::FLOAT32 || kNorm->GetDataType() != X::TensorDataType::FLOAT32))) return X::Value();
         if (input->GetDimCount() != 2 || q->GetDimCount() != 2 || k->GetDimCount() != 2 || v->GetDimCount() != 2 ||
             qNorm->GetDimCount() != 1 || kNorm->GetDimCount() != 1) return X::Value();
         int tokens = input->GetDimSize(0);
@@ -1183,14 +1178,14 @@ namespace Garnet {
         if (headDim <= 0 || kNorm->GetDimSize(0) != headDim || q->GetDimSize(1) != hidden || k->GetDimSize(1) != hidden ||
             v->GetDimSize(1) != hidden || qOut % headDim != 0 || kOut % headDim != 0 || vOut != kOut) return X::Value();
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
-        if (!context) return X::Value();
+        auto context = bf16Weights ? nullptr : GetCachedTRTExecutionContext(enginePath);
+        if (!bf16Weights && !context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
-        size_t qBytes = static_cast<size_t>(qOut) * static_cast<size_t>(hidden) * sizeof(float);
-        size_t kBytes = static_cast<size_t>(kOut) * static_cast<size_t>(hidden) * sizeof(float);
-        size_t vBytes = static_cast<size_t>(vOut) * static_cast<size_t>(hidden) * sizeof(float);
-        size_t normBytes = static_cast<size_t>(headDim) * sizeof(float);
+        size_t qBytes = static_cast<size_t>(qOut) * static_cast<size_t>(hidden) * q->GetItemSize();
+        size_t kBytes = static_cast<size_t>(kOut) * static_cast<size_t>(hidden) * k->GetItemSize();
+        size_t vBytes = static_cast<size_t>(vOut) * static_cast<size_t>(hidden) * v->GetItemSize();
+        size_t normBytes = static_cast<size_t>(headDim) * qNorm->GetItemSize();
         size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(qOut + kOut + vOut) * sizeof(float);
         TensorDeviceBinding dInput;
         TensorDeviceBinding dQ;
@@ -1220,14 +1215,22 @@ namespace Garnet {
             cudaStreamDestroy(stream);
             return X::Value();
         }
-        bool bound = context->setTensorAddress("x", dInput.ptr)
-            && context->setTensorAddress("W_q", dQ.ptr)
-            && context->setTensorAddress("W_k", dK.ptr)
-            && context->setTensorAddress("W_v", dV.ptr)
-            && context->setTensorAddress("q_norm", dQNorm.ptr)
-            && context->setTensorAddress("k_norm", dKNorm.ptr)
-            && context->setTensorAddress("output", dOutput);
-        if (!bound || !context->enqueueV3(stream)) {
+        bool executed = bf16Weights
+            ? runQKVHeadNormBF16WeightFP32(
+                static_cast<const float*>(dInput.ptr),
+                static_cast<const bfloat16*>(dQ.ptr), static_cast<const bfloat16*>(dK.ptr),
+                static_cast<const bfloat16*>(dV.ptr), static_cast<const bfloat16*>(dQNorm.ptr),
+                static_cast<const bfloat16*>(dKNorm.ptr), static_cast<float*>(dOutput),
+                tokens, hidden, qOut, kOut, headDim, 1.0e-6f, stream) == cudaSuccess
+            : (context->setTensorAddress("x", dInput.ptr)
+                && context->setTensorAddress("W_q", dQ.ptr)
+                && context->setTensorAddress("W_k", dK.ptr)
+                && context->setTensorAddress("W_v", dV.ptr)
+                && context->setTensorAddress("q_norm", dQNorm.ptr)
+                && context->setTensorAddress("k_norm", dKNorm.ptr)
+                && context->setTensorAddress("output", dOutput)
+                && context->enqueueV3(stream));
+        if (!executed) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dQ);
             FreeOwnedBinding(dK);
@@ -1992,19 +1995,21 @@ namespace Garnet {
         if (!inputValue.IsTensor() || !weightValue.IsTensor()) return X::Value();
         X::Tensor input(inputValue);
         X::Tensor weight(weightValue);
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || weight->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
+        bool bf16Weight = weight->GetDataType() == X::TensorDataType::BFLOAT16;
+        if (input->GetDataType() != X::TensorDataType::FLOAT32 ||
+            (!bf16Weight && weight->GetDataType() != X::TensorDataType::FLOAT32)) return X::Value();
         if (input->GetDimCount() != 2 || weight->GetDimCount() != 2) return X::Value();
         int tokens = input->GetDimSize(0);
         int inFeatures = input->GetDimSize(1);
         int outFeatures = weight->GetDimSize(0);
         if (weight->GetDimSize(1) != inFeatures) return X::Value();
 
-        if (enginePath == "cuda_linear_transpose") {
+        if (enginePath == "cuda_linear_transpose" || bf16Weight) {
             std::cout << "[TRTBuilder] Running CUDA linear transpose: ["
                 << tokens << ", " << inFeatures << "] x [" << outFeatures << ", "
                 << inFeatures << "]" << std::endl;
             size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
-            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
+            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * weight->GetItemSize();
             size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
             TensorDeviceBinding dInput;
             TensorDeviceBinding dWeight;
@@ -2017,22 +2022,29 @@ namespace Garnet {
             if (!BindTensorInput(input, inputBytes, stream, dInput) ||
                 !BindTensorInput(weight, weightBytes, stream, dWeight) ||
                 cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                size_t freeBytes = 0;
+                size_t totalBytes = 0;
+                cudaMemGetInfo(&freeBytes, &totalBytes);
                 std::cout << "[TRTBuilder] CUDA linear transpose allocation/bind failed: "
-                    << cudaGetErrorString(cudaGetLastError()) << std::endl;
+                    << cudaGetErrorString(cudaGetLastError())
+                    << ", free=" << (freeBytes / (1024 * 1024)) << " MiB"
+                    << ", requested_output=" << (outputBytes / (1024 * 1024)) << " MiB"
+                    << std::endl;
                 FreeOwnedBinding(dInput);
                 FreeOwnedBinding(dWeight);
                 if (dOutput) cudaFree(dOutput);
                 cudaStreamDestroy(stream);
                 return X::Value();
             }
-            cudaError_t status = runLinearTransposeFP32(
-                static_cast<const float*>(dInput.ptr),
-                static_cast<const float*>(dWeight.ptr),
-                static_cast<float*>(dOutput),
-                tokens,
-                inFeatures,
-                outFeatures,
-                stream);
+            cudaError_t status = bf16Weight
+                ? runLinearTransposeBF16WeightFP32(
+                    static_cast<const float*>(dInput.ptr),
+                    static_cast<const bfloat16*>(dWeight.ptr),
+                    static_cast<float*>(dOutput), tokens, inFeatures, outFeatures, stream)
+                : runLinearTransposeFP32(
+                    static_cast<const float*>(dInput.ptr),
+                    static_cast<const float*>(dWeight.ptr),
+                    static_cast<float*>(dOutput), tokens, inFeatures, outFeatures, stream);
             if (status != cudaSuccess) {
                 std::cout << "[TRTBuilder] CUDA linear transpose launch failed: "
                     << cudaGetErrorString(status) << std::endl;
@@ -2170,20 +2182,24 @@ namespace Garnet {
         X::Tensor input(inputValue);
         X::Tensor weight(weightValue);
         X::Tensor bias(biasValue);
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || weight->GetDataType() != X::TensorDataType::FLOAT32 || bias->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
+        bool bf16Weights = weight->GetDataType() == X::TensorDataType::BFLOAT16 &&
+            bias->GetDataType() == X::TensorDataType::BFLOAT16;
+        if (input->GetDataType() != X::TensorDataType::FLOAT32 ||
+            (!bf16Weights && (weight->GetDataType() != X::TensorDataType::FLOAT32 ||
+                bias->GetDataType() != X::TensorDataType::FLOAT32))) return X::Value();
         if (input->GetDimCount() != 2 || weight->GetDimCount() != 2 || bias->GetDimCount() != 1) return X::Value();
         int tokens = input->GetDimSize(0);
         int inFeatures = input->GetDimSize(1);
         int outFeatures = weight->GetDimSize(0);
         if (weight->GetDimSize(1) != inFeatures || bias->GetDimSize(0) != outFeatures) return X::Value();
 
-        if (enginePath == "cuda_linear_bias_transpose") {
+        if (enginePath == "cuda_linear_bias_transpose" || bf16Weights) {
             std::cout << "[TRTBuilder] Running CUDA linear+bias transpose: ["
                 << tokens << ", " << inFeatures << "] x [" << outFeatures << ", "
                 << inFeatures << "]" << std::endl;
             size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
-            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
-            size_t biasBytes = static_cast<size_t>(outFeatures) * sizeof(float);
+            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * weight->GetItemSize();
+            size_t biasBytes = static_cast<size_t>(outFeatures) * bias->GetItemSize();
             size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
             void* dInput = nullptr;
             void* dWeight = nullptr;
@@ -2209,15 +2225,17 @@ namespace Garnet {
             dInput = inputBinding.ptr;
             dWeight = weightBinding.ptr;
             dBias = biasBinding.ptr;
-            cudaError_t launchErr = runLinearBiasTransposeFP32(
-                static_cast<const float*>(dInput),
-                static_cast<const float*>(dWeight),
-                static_cast<const float*>(dBias),
-                static_cast<float*>(dOutput),
-                tokens,
-                inFeatures,
-                outFeatures,
-                stream);
+            cudaError_t launchErr = bf16Weights
+                ? runLinearBiasTransposeBF16WeightFP32(
+                    static_cast<const float*>(dInput),
+                    static_cast<const bfloat16*>(dWeight),
+                    static_cast<const bfloat16*>(dBias),
+                    static_cast<float*>(dOutput), tokens, inFeatures, outFeatures, stream)
+                : runLinearBiasTransposeFP32(
+                    static_cast<const float*>(dInput),
+                    static_cast<const float*>(dWeight),
+                    static_cast<const float*>(dBias),
+                    static_cast<float*>(dOutput), tokens, inFeatures, outFeatures, stream);
             if (launchErr != cudaSuccess) {
                 std::cout << "[TRTBuilder] CUDA linear+bias launch failed: "
                     << cudaGetErrorString(launchErr) << std::endl;

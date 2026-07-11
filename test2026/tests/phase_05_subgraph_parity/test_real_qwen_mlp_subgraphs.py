@@ -65,6 +65,24 @@ def load_tensor(key_to_file, key):
         return tensor.numpy().astype(np.float32, copy=False)
 
 
+def load_bfloat16_gpu_tensor(garnet, key_to_file, key, reshape=None):
+    from safetensors import safe_open
+    import torch
+
+    if key not in key_to_file:
+        raise AssertionError(f"missing real Qwen weight: {key}")
+    with safe_open(str(key_to_file[key]), framework="pt", device="cpu") as handle:
+        raw_key = key if key in handle.keys() else "model." + key
+        tensor = handle.get_tensor(raw_key).to(torch.bfloat16).contiguous()
+        if reshape is not None:
+            tensor = tensor.reshape(*reshape).contiguous()
+        bits = tensor.view(torch.uint16).numpy()
+    value = garnet.tensor_from_bfloat16_bits(bits)
+    if value is None:
+        raise AssertionError(f"failed to create BF16 GPU X::Tensor for {key}")
+    return value
+
+
 def silu(x):
     return x / (1.0 + np.exp(-x))
 
@@ -481,7 +499,7 @@ def configure_native_tokenizer_ctypes(dll, model_dir):
         )
         if rc_decode != 0:
             raise AssertionError(f"GarnetQwenTokenizerDecode failed rc={rc_decode}: {decode_error.value.decode(errors='ignore')}")
-        return text_buf.value.decode("utf-8")
+        return text_buf.value.decode("utf-8", errors="replace")
 
     return native_token_id, native_decode
 
@@ -1263,6 +1281,32 @@ def load_text_layer_weights_as_layer0_aliases(key_to_file, layer_idx):
         "mlp.down_proj.weight",
     ]:
         aliases[f"{dst_layer}.{suffix}"] = load_tensor(key_to_file, f"{src_layer}.{suffix}")
+    return aliases
+
+
+def load_text_layer_mixed_weights_as_layer0_aliases(garnet, key_to_file, layer_idx):
+    src_layer = f"language_model.layers.{layer_idx}"
+    dst_layer = "language_model.layers.0"
+    aliases = {}
+    for suffix in [
+        "input_layernorm.weight",
+        "post_attention_layernorm.weight",
+        "self_attn.q_proj.weight",
+        "self_attn.k_proj.weight",
+        "self_attn.v_proj.weight",
+        "self_attn.q_norm.weight",
+        "self_attn.k_norm.weight",
+        "self_attn.o_proj.weight",
+        "mlp.gate_proj.weight",
+        "mlp.up_proj.weight",
+        "mlp.down_proj.weight",
+    ]:
+        source_key = f"{src_layer}.{suffix}"
+        destination_key = f"{dst_layer}.{suffix}"
+        if suffix in {"input_layernorm.weight", "post_attention_layernorm.weight"}:
+            aliases[destination_key] = load_tensor(key_to_file, source_key)
+        else:
+            aliases[destination_key] = load_bfloat16_gpu_tensor(garnet, key_to_file, source_key)
     return aliases
 
 
@@ -2489,10 +2533,13 @@ class GarnetQwen3VLForwardFacade:
         self.gpu_vision_runner = None
         self.gpu_vision_runner_bundles = None
         self.gpu_vision_merger_bundle = None
+        self.gpu_vision_deepstack_bundles = []
+        self.deepstack_visual_tokens = []
         self.gpu_vision_patch_model = None
         self.gpu_vision_patch_weights = None
         self.vision_runner_prepare_ms = 0.0
         self.vision_runner_warmup_ms = 0.0
+        self.vision_runner_warmed = False
         self.vision_patch_ms = 0.0
         self.vision_execute_ms = 0.0
 
@@ -2516,7 +2563,22 @@ class GarnetQwen3VLForwardFacade:
             "fc2_w": load_tensor(self.key_to_file, prefix + ".mlp.linear_fc2.weight"),
             "fc2_b": load_tensor(self.key_to_file, prefix + ".mlp.linear_fc2.bias"),
         }
-        weights = {name: self.garnet.tensor_to_gpu(value) for name, value in cpu_weights.items()}
+        # TRT engines own their device-side constant weights. Keeping a second
+        # X::Tensor CUDA copy here nearly doubles model VRAM for no runtime gain.
+        weights = {
+            "norm1_w": cpu_weights["norm1_w"],
+            "norm1_b": cpu_weights["norm1_b"],
+            "norm2_w": cpu_weights["norm2_w"],
+            "norm2_b": cpu_weights["norm2_b"],
+            "qkv_w": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".attn.qkv.weight"),
+            "qkv_b": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".attn.qkv.bias"),
+            "proj_w": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".attn.proj.weight"),
+            "proj_b": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".attn.proj.bias"),
+            "fc1_w": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".mlp.linear_fc1.weight"),
+            "fc1_b": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".mlp.linear_fc1.bias"),
+            "fc2_w": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".mlp.linear_fc2.weight"),
+            "fc2_b": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".mlp.linear_fc2.bias"),
+        }
         self.gpu_vision_layer_weights[layer_idx] = weights
         cache_dir = self.cache_root / "gpu_vision_runner" / f"patches_{patch_count}"
         payloads = {
@@ -2549,6 +2611,35 @@ class GarnetQwen3VLForwardFacade:
             models = self._gpu_vision_models_for_layer(layer_idx, patch_count)
             bundles.append({name: models[name] for name in bundle_keys})
 
+        visual_tokens = patch_count // 4
+        for slot, layer_idx in enumerate(self.config.vision_config.deepstack_visual_indexes):
+            prefix = f"visual.deepstack_merger_list.{slot}"
+            merger_weights = {
+                "norm_w": load_tensor(self.key_to_file, prefix + ".norm.weight"),
+                "norm_b": load_tensor(self.key_to_file, prefix + ".norm.bias"),
+                "fc1_w": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".linear_fc1.weight"),
+                "fc1_b": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".linear_fc1.bias"),
+                "fc2_w": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".linear_fc2.weight"),
+                "fc2_b": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, prefix + ".linear_fc2.bias"),
+            }
+            cache_dir = self.cache_root / "gpu_vision_runner" / f"patches_{patch_count}" / f"deepstack_{slot}"
+            payloads = {
+                "norm": {"visual.blocks.0.norm1.weight": merger_weights["norm_w"], "visual.blocks.0.norm1.bias": merger_weights["norm_b"]},
+                "fc1": {"W": merger_weights["fc1_w"], "B": merger_weights["fc1_b"]},
+                "fc2": {"W": merger_weights["fc2_w"], "B": merger_weights["fc2_b"]},
+            }
+            deepstack_bundle = {
+                "norm": self.garnet.load_model(str(SCRIPT_DIR / "layer_norm_trt.x"), weights=payloads["norm"], cache_dir=str(cache_dir / "norm"), input_shapes=[[visual_tokens, 4096]], subgraph="layer_norm"),
+                "fc1": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=payloads["fc1"], cache_dir=str(cache_dir / "fc1"), input_shapes=[[visual_tokens, 4096]], subgraph="linear_bias"),
+                "fc2": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=payloads["fc2"], cache_dir=str(cache_dir / "fc2"), input_shapes=[[visual_tokens, 4096]], subgraph="linear_bias"),
+                "_weights": merger_weights,
+                "_payloads": payloads,
+            }
+            bundles[int(layer_idx)]["deepstack"] = {
+                name: deepstack_bundle[name] for name in ["norm", "fc1", "fc2"]
+            }
+            self.gpu_vision_deepstack_bundles.append(deepstack_bundle)
+
         merger_cpu = {
             "norm_w": load_tensor(self.key_to_file, "visual.merger.norm.weight"),
             "norm_b": load_tensor(self.key_to_file, "visual.merger.norm.bias"),
@@ -2557,14 +2648,20 @@ class GarnetQwen3VLForwardFacade:
             "fc2_w": load_tensor(self.key_to_file, "visual.merger.linear_fc2.weight"),
             "fc2_b": load_tensor(self.key_to_file, "visual.merger.linear_fc2.bias"),
         }
-        merger_weights = {name: self.garnet.tensor_to_gpu(value) for name, value in merger_cpu.items()}
+        merger_weights = {
+            "norm_w": merger_cpu["norm_w"],
+            "norm_b": merger_cpu["norm_b"],
+            "fc1_w": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, "visual.merger.linear_fc1.weight"),
+            "fc1_b": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, "visual.merger.linear_fc1.bias"),
+            "fc2_w": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, "visual.merger.linear_fc2.weight"),
+            "fc2_b": load_bfloat16_gpu_tensor(self.garnet, self.key_to_file, "visual.merger.linear_fc2.bias"),
+        }
         cache_dir = self.cache_root / "gpu_vision_runner" / f"patches_{patch_count}" / "merger"
         merger_payloads = {
             "norm": {"visual.blocks.0.norm1.weight": merger_weights["norm_w"], "visual.blocks.0.norm1.bias": merger_weights["norm_b"]},
             "fc1": {"W": merger_weights["fc1_w"], "B": merger_weights["fc1_b"]},
             "fc2": {"W": merger_weights["fc2_w"], "B": merger_weights["fc2_b"]},
         }
-        visual_tokens = patch_count // 4
         merger_bundle = {
             "norm": self.garnet.load_model(str(SCRIPT_DIR / "layer_norm_trt.x"), weights=merger_payloads["norm"], cache_dir=str(cache_dir / "norm"), input_shapes=[[patch_count, 1024]], subgraph="layer_norm"),
             "fc1": self.garnet.load_model(str(SCRIPT_DIR / "linear_bias_trt.x"), weights=merger_payloads["fc1"], cache_dir=str(cache_dir / "fc1"), input_shapes=[[visual_tokens, 4096]], subgraph="linear_bias"),
@@ -2594,8 +2691,13 @@ class GarnetQwen3VLForwardFacade:
 
         if self.gpu_vision_patch_model is None:
             patch_weights = {
-                "visual.patch_embed.proj.weight": self.garnet.tensor_to_gpu(patch_weight),
-                "visual.patch_embed.proj.bias": self.garnet.tensor_to_gpu(patch_bias),
+                "visual.patch_embed.proj.weight": load_bfloat16_gpu_tensor(
+                    self.garnet, self.key_to_file, "visual.patch_embed.proj.weight",
+                    reshape=(patch_weight.shape[0], patch_weight.shape[1]),
+                ),
+                "visual.patch_embed.proj.bias": load_bfloat16_gpu_tensor(
+                    self.garnet, self.key_to_file, "visual.patch_embed.proj.bias"
+                ),
             }
             self.gpu_vision_patch_weights = patch_weights
             self.gpu_vision_patch_model = self.garnet.load_model(
@@ -2613,18 +2715,24 @@ class GarnetQwen3VLForwardFacade:
         patch = self.gpu_vision_patch_model.forward(pixel_values)
         hidden = self.garnet.tensor_add(patch, pos)
         self.vision_patch_ms = (time.perf_counter() - patch_start) * 1000.0
-        if os.environ.get("GARNET_QWEN_VISION_RUNNER_WARMUP", "1").strip().lower() in {"1", "true", "yes", "on"}:
+        if (not self.vision_runner_warmed and
+                os.environ.get("GARNET_QWEN_VISION_RUNNER_WARMUP", "1").strip().lower() in {"1", "true", "yes", "on"}):
             warmup_start = time.perf_counter()
-            warmup_output = runner.forward(hidden, cos, sin)
-            if warmup_output is None:
+            warmup_result = runner.forward(hidden, cos, sin)
+            if warmup_result is None or warmup_result["pooler_output"] is None:
                 raise AssertionError("C++ QwenVisionRunner warm-up failed")
             self.vision_runner_warmup_ms = (time.perf_counter() - warmup_start) * 1000.0
+            self.vision_runner_warmed = True
+        else:
+            self.vision_runner_warmup_ms = 0.0
         execute_start = time.perf_counter()
         output = runner.forward(hidden, cos, sin)
         self.vision_execute_ms = (time.perf_counter() - execute_start) * 1000.0
-        if output is None:
+        if output is None or output["pooler_output"] is None:
             raise AssertionError("C++ QwenVisionRunner forward failed")
-        return output
+        visual_tokens = output["pooler_output"]
+        self.deepstack_visual_tokens = output["deepstack_features"]
+        return visual_tokens
 
     def _visual_tokens(self, pixel_values, image_grid_thw, visual_token_count):
         if getattr(self, "gpu_tensor_chain", False) and self.cpp_vision_runner_enabled:
@@ -2764,11 +2872,12 @@ class GarnetQwen3VLCachedForwardFacade(GarnetQwen3VLForwardFacade):
 
         layer_weights = self.gpu_layer_weights.get(int(layer_idx))
         if layer_weights is None:
-            cpu_layer_weights = load_text_layer_weights_as_layer0_aliases(self.key_to_file, layer_idx)
-            layer_weights = {
-                name: self.garnet.tensor_to_gpu(value)
-                for name, value in cpu_layer_weights.items()
-            }
+            if os.environ.get("GARNET_QWEN_BFLOAT16_WEIGHTS", "1").strip().lower() in {"1", "true", "yes", "on"}:
+                layer_weights = load_text_layer_mixed_weights_as_layer0_aliases(
+                    self.garnet, self.key_to_file, layer_idx
+                )
+            else:
+                layer_weights = load_text_layer_weights_as_layer0_aliases(self.key_to_file, layer_idx)
             self.gpu_layer_weights[int(layer_idx)] = layer_weights
         layer_prefix = "language_model.layers.0"
         attn_prefix = layer_prefix + ".self_attn"
@@ -2894,15 +3003,15 @@ class GarnetQwen3VLCachedForwardFacade(GarnetQwen3VLForwardFacade):
     def _gpu_sample_hidden(self, hidden, tokens):
         hidden = self.garnet.tensor_last_row(hidden)
         tokens = 1
-        if self.gpu_final_norm is None:
-            self.gpu_final_norm = self.garnet.tensor_to_gpu(self.final_norm)
         if self.gpu_embed_tokens is None:
-            self.gpu_embed_tokens = self.garnet.tensor_to_gpu(self.embed_tokens)
+            self.gpu_embed_tokens = load_bfloat16_gpu_tensor(
+                self.garnet, self.key_to_file, "language_model.embed_tokens.weight"
+            )
         cached = self.gpu_output_models.get(tokens)
         if cached is None:
             cache_dir = self.cache_root / "gpu_tensor_chain" / f"tokens_{tokens}"
             output_weight_payloads = {
-                "norm": {"language_model.layers.0.input_layernorm.weight": self.gpu_final_norm},
+                "norm": {"language_model.layers.0.input_layernorm.weight": self.final_norm},
                 "lm_head": {"language_model.embed_tokens.weight": self.gpu_embed_tokens},
             }
             cached = {
@@ -3001,7 +3110,9 @@ class GarnetQwen3VLCachedForwardFacade(GarnetQwen3VLForwardFacade):
 
         if self.gpu_tensor_chain:
             if self.gpu_embed_tokens is None:
-                self.gpu_embed_tokens = self.garnet.tensor_to_gpu(self.embed_tokens)
+                self.gpu_embed_tokens = load_bfloat16_gpu_tensor(
+                    self.garnet, self.key_to_file, "language_model.embed_tokens.weight"
+                )
             hidden = self.garnet.embedding(self.gpu_embed_tokens, input_ids)
             if visual_positions.size:
                 hidden = self.garnet.replace_rows_by_mask(hidden, mm_token_type_ids, visual_tokens, 1)
@@ -3029,7 +3140,8 @@ class GarnetQwen3VLCachedForwardFacade(GarnetQwen3VLForwardFacade):
 
         if self.gpu_tensor_chain and self.cpp_text_runner_enabled:
             hidden = self._cpp_text_runner(self.prefill_length).prefill(
-                hidden, cos_np, sin_np, self.layer_caches, 0, self.prefill_length
+                hidden, cos_np, sin_np, self.layer_caches, 0, self.prefill_length,
+                self.deepstack_visual_tokens, mm_token_type_ids
             )
             if hidden is None:
                 raise AssertionError("C++ QwenTextRunner prefill failed")
@@ -3334,7 +3446,8 @@ def run_model_forward_facade_native_rope_against_hf_modules(garnet, model_dir, k
     }
 
 
-def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
+def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file, serving_state=None):
+    frontend_start = time.perf_counter()
     use_garnet_tokenizer = env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_GARNET_TOKENIZER")
     tokenizer = None
     if not use_garnet_tokenizer:
@@ -3487,7 +3600,7 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
                     )
                     if rc_decode != 0:
                         raise AssertionError(f"GarnetQwenTokenizerDecode failed rc={rc_decode}: {decode_error.value.decode(errors='ignore')}")
-                    return text_buf.value.decode("utf-8")
+                    return text_buf.value.decode("utf-8", errors="replace")
 
                 native_token_id = _native_token_id
                 native_decode = _native_decode
@@ -3624,6 +3737,7 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     expected_visual_count = int(np.prod(image_grid_thw[0]) // 4)
     if visual_count != expected_visual_count:
         raise AssertionError(f"visual placeholder count {visual_count} != reduced-grid token count {expected_visual_count}")
+    frontend_prepare_ms = (time.perf_counter() - frontend_start) * 1000.0
 
     max_new_tokens = int(os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_TOKENS", "2"))
     use_cached_text_decode = env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_USE_CACHED_TEXT")
@@ -3639,13 +3753,17 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
             "page_size": int(os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_TEXT_KV_PAGE_SIZE", "16")),
             "text_layer_count": cached_text_layer_count,
         })
-    facade = facade_cls(
-        garnet,
-        model_dir,
-        key_to_file,
-        SCRIPT_DIR / "cache_qwen3vl_model_forward_native_rope_decode",
-        **facade_kwargs,
-    )
+    facade = serving_state.get("facade") if serving_state is not None else None
+    if facade is None:
+        facade = facade_cls(
+            garnet,
+            model_dir,
+            key_to_file,
+            SCRIPT_DIR / "cache_qwen3vl_model_forward_native_rope_decode",
+            **facade_kwargs,
+        )
+        if serving_state is not None:
+            serving_state["facade"] = facade
     generated = []
     step_summaries = []
     cur_ids = input_ids.copy()
@@ -3658,9 +3776,11 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
     kv_free_result = None
     kv_sequence_id = int(os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_SEQUENCE_ID", "1"))
     if env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_USE_KV_MANAGER"):
+        manager_page_size = int(os.environ.get("GARNET_QWEN_KV_PAGE_SIZE", "16"))
+        request_pages = (int(cur_ids.shape[0]) + max_new_tokens + manager_page_size - 1) // manager_page_size
         kv_manager = garnet.KVCacheManager(
-            max_num_pages=int(os.environ.get("GARNET_QWEN_KV_MAX_PAGES", "4096")),
-            page_size=int(os.environ.get("GARNET_QWEN_KV_PAGE_SIZE", "16")),
+            max_num_pages=int(os.environ.get("GARNET_QWEN_KV_MAX_PAGES", str(request_pages + 2))),
+            page_size=manager_page_size,
             head_dim=int(os.environ.get("GARNET_QWEN_KV_HEAD_DIM", "128")),
             num_kv_heads=int(os.environ.get("GARNET_QWEN_KV_HEADS", "8")),
             num_layers=int(facade.text_layer_count),
@@ -3669,6 +3789,7 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
         )
         kv_prefill_pages = [int(x) for x in kv_manager.allocate(kv_sequence_id, sequence_length=int(cur_ids.shape[0]))]
     timing = {}
+    timing["frontend_prepare_ms"] = frontend_prepare_ms
     visual_positions = np.flatnonzero(mm_types == 1)
     visual_token_start = time.perf_counter()
     visual_tokens = facade._visual_tokens(pixel_values, image_grid_thw, int(visual_positions.size)) if visual_positions.size else None
@@ -3678,11 +3799,10 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
         timing["vision_runner_warmup_ms"] = float(getattr(facade, "vision_runner_warmup_ms", 0.0))
         timing["vision_patch_ms"] = float(getattr(facade, "vision_patch_ms", 0.0))
         timing["vision_execute_ms"] = float(getattr(facade, "vision_execute_ms", 0.0))
-    if use_cached_text_decode and getattr(facade, "gpu_tensor_chain", False) and getattr(facade, "cpp_text_runner_enabled", False):
-        text_runner_prepare_start = time.perf_counter()
-        facade._cpp_text_runner(int(cur_ids.shape[0]))
-        facade._cpp_text_runner(1)
-        timing["text_runner_prepare_ms"] = (time.perf_counter() - text_runner_prepare_start) * 1000.0
+    # Build the prefill runner lazily inside prefill, after the shared embedding
+    # table is resident. Eager runner construction can consume the remaining
+    # device memory and make the embedding upload fail on 16 GB cards.
+    timing["text_runner_prepare_ms"] = 0.0
     decode_start = time.perf_counter()
     if use_cached_text_decode:
         try:
@@ -3725,8 +3845,18 @@ def run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file):
                     kv_manager.append(kv_sequence_id, tokens=1)
                 if next_id == eos_id:
                     break
+                if "json" in user_prompt.lower():
+                    partial_text = native_decode(generated, False) if use_garnet_tokenizer else tokenizer.decode(generated)
+                    json_start = partial_text.find("{")
+                    if json_start >= 0:
+                        try:
+                            json.JSONDecoder().raw_decode(partial_text[json_start:])
+                            break
+                        except json.JSONDecodeError:
+                            pass
         finally:
-            facade.close()
+            if serving_state is None:
+                facade.close()
     else:
         for step in range(max_new_tokens):
             step_start = time.perf_counter()
@@ -4953,6 +5083,42 @@ def run_text_mlp(garnet, key_to_file):
     }
 
 
+def run_text_mlp_bfloat16_weights(garnet, key_to_file):
+    import torch
+
+    prefix = "language_model.layers.0.mlp"
+    keys = [prefix + suffix for suffix in (
+        ".gate_proj.weight", ".up_proj.weight", ".down_proj.weight")]
+    cpu_weights = {
+        key: torch.from_numpy(load_tensor(key_to_file, key)).to(torch.bfloat16).float().numpy()
+        for key in keys
+    }
+    gpu_weights = {key: load_bfloat16_gpu_tensor(garnet, key_to_file, key) for key in keys}
+    rng = np.random.default_rng(20260720)
+    x = rng.normal(0.0, 0.02, size=(3, cpu_weights[keys[0]].shape[1])).astype(np.float32)
+    gate = x @ cpu_weights[keys[0]].T
+    up = x @ cpu_weights[keys[1]].T
+    expected = (silu(gate) * up) @ cpu_weights[keys[2]].T
+    engine = garnet.load_model(
+        str(SCRIPT_DIR / "text_mlp_trt.x"),
+        weights=gpu_weights,
+        cache_dir=str(SCRIPT_DIR / "cache_real_bfloat16"),
+        input_shapes=[list(x.shape)],
+        subgraph="qwen3_text_mlp",
+    )
+    actual_value = engine.forward(x)
+    actual = logits_to_numpy_or_cpu_copy(garnet, actual_value, x.shape[0], x.shape[1])
+    np.testing.assert_allclose(actual, expected, rtol=1.5e-2, atol=2e-2)
+    return {
+        "weight_dtype": "bfloat16",
+        "activation_dtype": "float32",
+        "input_shape": list(x.shape),
+        "output_shape": list(actual.shape),
+        "max_error": float(np.max(np.abs(actual - expected))),
+        "mean_error": float(np.mean(np.abs(actual - expected))),
+    }
+
+
 def run_vision_mlp(garnet, key_to_file):
     prefix = "visual.blocks.0.mlp"
     weights = {
@@ -5000,9 +5166,68 @@ if model_dir is None or not Path(model_dir).exists():
 garnet, garnet_dll = import_garnet()
 key_to_file = load_weight_map(model_dir)
 
+if env_flag("RUN_GARNET_REAL_QWEN_BFLOAT16_MLP_ONLY"):
+    result = run_text_mlp_bfloat16_weights(garnet, key_to_file)
+    print(__import__("json").dumps(result, indent=2))
+    raise SystemExit(0)
+
 if env_flag("RUN_GARNET_REAL_QWEN_MODEL_FORWARD_NATIVE_ROPE_DECODE") and env_flag("GARNET_QWEN_NATIVE_ROPE_DECODE_ONLY"):
-    model_forward_native_rope_decode_result = run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file)
     import json
+    image_list_value = os.environ.get("GARNET_QWEN_NATIVE_ROPE_DECODE_IMAGES", "").strip()
+    if image_list_value:
+        image_paths = [Path(value) for value in image_list_value.split(";") if value.strip()]
+        if not image_paths:
+            raise AssertionError("GARNET_QWEN_NATIVE_ROPE_DECODE_IMAGES did not contain an image")
+        serving_state = {}
+        requests = []
+        batch_start = time.perf_counter()
+        try:
+            for request_index, image_path in enumerate(image_paths):
+                if not image_path.exists():
+                    raise AssertionError(f"multi-image test input does not exist: {image_path}")
+                os.environ["GARNET_QWEN_NATIVE_ROPE_DECODE_IMAGE"] = str(image_path)
+                os.environ["GARNET_QWEN_NATIVE_ROPE_DECODE_SEQUENCE_ID"] = str(request_index + 1)
+                request_start = time.perf_counter()
+                request_result = run_model_forward_facade_native_rope_decode(
+                    garnet, model_dir, key_to_file, serving_state=serving_state
+                )
+                request_result["request_index"] = request_index
+                request_result["request_wall_ms"] = (time.perf_counter() - request_start) * 1000.0
+                requests.append(request_result)
+        finally:
+            facade = serving_state.get("facade")
+            if facade is not None:
+                facade.close()
+        steady_requests = requests[1:] if len(requests) > 1 else requests
+        steady_values = [float(item["timing_ms"]["steady_pipeline_ms"]) for item in steady_requests]
+        wall_values = [float(item["request_wall_ms"]) for item in steady_requests]
+        decode_values = [
+            float(step["step_ms"])
+            for item in steady_requests
+            for step in item["steps"]
+            if step["mode"] == "cached_decode_one"
+        ]
+        model_forward_native_rope_decode_result = {
+            "mode": "persistent_facade_multi_image",
+            "request_count": len(requests),
+            "first_request_is_warmup": len(requests) > 1,
+            "batch_wall_ms": (time.perf_counter() - batch_start) * 1000.0,
+            "requests": requests,
+            "aggregate": {
+                "steady_request_count": len(steady_requests),
+                "steady_pipeline_avg_ms": float(np.mean(steady_values)),
+                "steady_pipeline_min_ms": float(np.min(steady_values)),
+                "steady_pipeline_max_ms": float(np.max(steady_values)),
+                "full_request_avg_ms": float(np.mean(wall_values)),
+                "full_request_min_ms": float(np.min(wall_values)),
+                "full_request_max_ms": float(np.max(wall_values)),
+                "decode_token_avg_ms": float(np.mean(decode_values)) if decode_values else 0.0,
+                "decode_token_min_ms": float(np.min(decode_values)) if decode_values else 0.0,
+                "decode_token_max_ms": float(np.max(decode_values)) if decode_values else 0.0,
+            },
+        }
+    else:
+        model_forward_native_rope_decode_result = run_model_forward_facade_native_rope_decode(garnet, model_dir, key_to_file)
     print(json.dumps(model_forward_native_rope_decode_result, indent=2))
     raise SystemExit(0)
 

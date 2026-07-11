@@ -185,23 +185,23 @@ extern "C" GARNET_ENTRY_EXPORT int GarnetQwenVLPrepareJpegPrompt(
         if (resizedHeight != nullptr) *resizedHeight = outH;
         if (resizedWidth != nullptr) *resizedWidth = outW;
 
-        Garnet::Tokenization::QwenTokenizer tokenizer;
         std::string tokenizerError;
-        if (!tokenizer.LoadFromFolder(modelDir, &tokenizerError)) {
+        auto tokenizer = Garnet::Tokenization::GetCachedQwenTokenizer(modelDir, &tokenizerError);
+        if (!tokenizer) {
             setError(tokenizerError);
             return 1;
         }
         std::vector<int64_t> promptIds = Garnet::Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
-            tokenizer,
+            *tokenizer,
             prompt,
             grid,
             mergeSize);
-        int64_t imagePadId = tokenizer.TokenId("<|image_pad|>");
+        int64_t imagePadId = tokenizer->TokenId("<|image_pad|>");
         if (imagePadId < 0 ||
-            tokenizer.TokenId("<|vision_start|>") < 0 ||
-            tokenizer.TokenId("<|vision_end|>") < 0 ||
-            tokenizer.TokenId("<|im_start|>") < 0 ||
-            tokenizer.TokenId("<|im_end|>") < 0) {
+            tokenizer->TokenId("<|vision_start|>") < 0 ||
+            tokenizer->TokenId("<|vision_end|>") < 0 ||
+            tokenizer->TokenId("<|im_start|>") < 0 ||
+            tokenizer->TokenId("<|im_end|>") < 0) {
             setError("model tokenizer is missing required Qwen-VL special tokens");
             return 1;
         }
@@ -2414,6 +2414,42 @@ namespace Garnet
         retValue = X::Value(tensor);
     }
 
+    void GarnetAPI::TensorFromBFloat16Bits(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() == 0 || !params[0].IsTensor()) {
+            std::cout << "[GarnetAPI] tensor_from_bfloat16_bits(uint16_tensor) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor bits(params[0]);
+        if (bits->GetDataType() != X::TensorDataType::USHORT || !bits->GetData()) {
+            std::cout << "[GarnetAPI] BF16 source must be a CPU uint16 tensor." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor tensor = X::g_pXHost->CreateTensor();
+        X::Port::vector<int> shape(bits->GetDimCount());
+        for (int dim = 0; dim < bits->GetDimCount(); ++dim) {
+            shape.push_back(static_cast<int>(bits->GetDimSize(dim)));
+        }
+        tensor->SetDataType(X::TensorDataType::BFLOAT16);
+        tensor->SetShape(shape);
+        X::Value dummy;
+        tensor->Create(dummy);
+        if (!tensor->GetData() || tensor->GetDataSize() != bits->GetDataSize()) {
+            retValue = X::Value();
+            return;
+        }
+        std::memcpy(tensor->GetData(), bits->GetData(), static_cast<size_t>(bits->GetDataSize()));
+        if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] BF16 tensor GPU upload failed." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        retValue = X::Value(tensor);
+    }
+
     void GarnetAPI::TensorAdd(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
@@ -2495,9 +2531,10 @@ namespace Garnet
         }
         X::Tensor weight(params[0]);
         X::Tensor tokenIds(params[1]);
-        if (weight->GetDataType() != X::TensorDataType::FLOAT32 || weight->GetDimCount() != 2 ||
+        bool bf16Weight = weight->GetDataType() == X::TensorDataType::BFLOAT16;
+        if ((!bf16Weight && weight->GetDataType() != X::TensorDataType::FLOAT32) || weight->GetDimCount() != 2 ||
             tokenIds->GetDataType() != X::TensorDataType::LONGLONG || tokenIds->GetDimCount() != 1) {
-            std::cout << "[GarnetAPI] embedding requires FLOAT32 [vocab, hidden] and INT64 [tokens]." << std::endl;
+            std::cout << "[GarnetAPI] embedding requires FLOAT32/BF16 [vocab, hidden] and INT64 [tokens]." << std::endl;
             retValue = X::Value();
             return;
         }
@@ -2516,10 +2553,15 @@ namespace Garnet
         cudaError_t err = cudaStreamCreate(&stream);
         if (err == cudaSuccess) err = cudaMalloc(&outputDevice, bytes);
         if (err == cudaSuccess) {
-            err = runEmbeddingGatherInt64FP32(
-                static_cast<const float*>(TensorHelper::GetGPUMemory(weight)),
-                static_cast<const long long*>(TensorHelper::GetGPUMemory(tokenIds)),
-                outputDevice, tokens, vocab, hidden, stream);
+            err = bf16Weight
+                ? runEmbeddingGatherInt64BF16ToFP32(
+                    static_cast<const bfloat16*>(TensorHelper::GetGPUMemory(weight)),
+                    static_cast<const long long*>(TensorHelper::GetGPUMemory(tokenIds)),
+                    outputDevice, tokens, vocab, hidden, stream)
+                : runEmbeddingGatherInt64FP32(
+                    static_cast<const float*>(TensorHelper::GetGPUMemory(weight)),
+                    static_cast<const long long*>(TensorHelper::GetGPUMemory(tokenIds)),
+                    outputDevice, tokens, vocab, hidden, stream);
         }
         if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
         if (err != cudaSuccess) {

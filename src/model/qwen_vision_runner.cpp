@@ -163,6 +163,28 @@ namespace Garnet
             if (!wrapped.IsValid()) cudaFree(output);
             return wrapped;
         }
+
+        X::Value RunMerger(X::Value bundle, X::Value hidden, bool postShuffleNorm)
+        {
+            if (!bundle.IsObject() || !hidden.IsTensor()) return X::Value();
+            X::Tensor hiddenTensor(hidden);
+            int patchCount = static_cast<int>(hiddenTensor->GetDimSize(0));
+            int hiddenSize = static_cast<int>(hiddenTensor->GetDimSize(1));
+            if ((patchCount % 4) != 0) return X::Value();
+
+            X::Value mergedInput;
+            if (postShuffleNorm) {
+                X::Value reshaped = ReshapeCopyGPU(hidden, patchCount / 4, hiddenSize * 4);
+                mergedInput = CallForward(bundle["norm"], { reshaped });
+            }
+            else {
+                X::Value normed = CallForward(bundle["norm"], { hidden });
+                mergedInput = ReshapeCopyGPU(normed, patchCount / 4, hiddenSize * 4);
+            }
+            X::Value fc1 = CallForward(bundle["fc1"], { mergedInput });
+            X::Value activated = GeluGPU(fc1);
+            return CallForward(bundle["fc2"], { activated });
+        }
     }
 
     void QwenVisionRunner::Forward(X::XRuntime* rt, X::XObj* pContext,
@@ -178,6 +200,7 @@ namespace Garnet
         X::Value cos = params[1];
         X::Value sin = params[2];
         X::List layers(mLayerBundles);
+        X::List deepstackFeatures;
         for (long long layerIndex = 0; layerIndex < layers->Size(); ++layerIndex) {
             X::Value bundle = layers->Get(layerIndex);
             X::Value norm1 = CallForward(bundle["norm1"], { hidden });
@@ -196,20 +219,23 @@ namespace Garnet
                 retValue = X::Value();
                 return;
             }
+            X::Value deepstackBundle = bundle["deepstack"];
+            if (deepstackBundle.IsObject()) {
+                X::Value feature = RunMerger(deepstackBundle, hidden, true);
+                if (!feature.IsTensor()) {
+                    std::cout << "[QwenVisionRunner] deepstack merger failed at layer " << layerIndex << std::endl;
+                    retValue = X::Value();
+                    return;
+                }
+                deepstackFeatures->AddItem(feature);
+            }
         }
-
-        X::Value normed = CallForward(mMergerBundle["norm"], { hidden });
-        X::Tensor normedTensor(normed);
-        int patchCount = static_cast<int>(normedTensor->GetDimSize(0));
-        int hiddenSize = static_cast<int>(normedTensor->GetDimSize(1));
-        if ((patchCount % 4) != 0) {
-            retValue = X::Value();
-            return;
-        }
-        X::Value merged = ReshapeCopyGPU(normed, patchCount / 4, hiddenSize * 4);
-        X::Value fc1 = CallForward(mMergerBundle["fc1"], { merged });
-        X::Value activated = GeluGPU(fc1);
-        retValue = CallForward(mMergerBundle["fc2"], { activated });
+        X::Value poolerOutput = RunMerger(mMergerBundle, hidden, false);
+        X::Dict result;
+        result->Set("last_hidden_state", hidden);
+        result->Set("pooler_output", poolerOutput);
+        result->Set("deepstack_features", X::Value(deepstackFeatures));
+        retValue = result;
     }
 
     void QwenVisionRunner::Stats(X::XRuntime* rt, X::XObj* pContext,
@@ -218,6 +244,7 @@ namespace Garnet
         X::Dict stats;
         stats->Set("layer_count", X::Value(mLayerBundles.IsList() ? static_cast<int>(X::List(mLayerBundles)->Size()) : 0));
         stats->Set("merger_configured", X::Value(mMergerBundle.IsObject()));
+        stats->Set("deepstack_supported", X::Value(true));
         stats->Set("device_tensor_chain", X::Value(true));
         retValue = stats;
     }

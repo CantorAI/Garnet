@@ -80,6 +80,31 @@ namespace Garnet
             }
             return X::Value(output);
         }
+
+        bool AddRowsByMaskGPU(X::Value hiddenValue, X::Value maskValue, X::Value additionsValue)
+        {
+            if (!hiddenValue.IsTensor() || !maskValue.IsTensor() || !additionsValue.IsTensor()) return false;
+            X::Tensor hidden(hiddenValue);
+            X::Tensor mask(maskValue);
+            X::Tensor additions(additionsValue);
+            if (hidden->GetDataType() != X::TensorDataType::FLOAT32 || hidden->GetDimCount() != 2 ||
+                mask->GetDataType() != X::TensorDataType::INT64 || mask->GetDimCount() != 1 ||
+                additions->GetDataType() != X::TensorDataType::FLOAT32 || additions->GetDimCount() != 2 ||
+                mask->GetDimSize(0) != hidden->GetDimSize(0) ||
+                additions->GetDimSize(1) != hidden->GetDimSize(1) ||
+                TensorHelper::EnsureGPUMemory(hidden) != TensorOpStatus::Success ||
+                TensorHelper::EnsureGPUMemory(mask) != TensorOpStatus::Success ||
+                TensorHelper::EnsureGPUMemory(additions) != TensorOpStatus::Success) return false;
+            return runAddRowsByMaskInt64FP32(
+                static_cast<float*>(TensorHelper::GetGPUMemory(hidden)),
+                static_cast<const long long*>(TensorHelper::GetGPUMemory(mask)),
+                static_cast<const float*>(TensorHelper::GetGPUMemory(additions)),
+                static_cast<int>(hidden->GetDimSize(0)),
+                static_cast<int>(additions->GetDimSize(0)),
+                static_cast<int>(hidden->GetDimSize(1)),
+                1,
+                cudaStreamPerThread) == cudaSuccess;
+        }
     }
 
     X::Value QwenTextRunner::RunLayers(
@@ -89,7 +114,9 @@ namespace Garnet
         X::Value kvHandles,
         int startPosition,
         int sequenceLength,
-        bool prefill)
+        bool prefill,
+        X::Value deepstackFeatures,
+        X::Value visualMask)
     {
         if (!hidden.IsTensor() || !cos.IsTensor() || !sin.IsTensor() ||
             !mLayerBundles.IsList() || !kvHandles.IsList()) {
@@ -98,6 +125,8 @@ namespace Garnet
         }
         X::List layers(mLayerBundles);
         X::List handles(kvHandles);
+        X::List deepstack;
+        if (prefill && deepstackFeatures.IsList()) deepstack = X::List(deepstackFeatures);
         if (layers->Size() <= 0 || layers->Size() != handles->Size()) {
             std::cout << "[QwenTextRunner] layer and KV handle counts differ." << std::endl;
             return X::Value();
@@ -141,6 +170,12 @@ namespace Garnet
                 std::cout << "[QwenTextRunner] layer output failed at layer " << layerIndex << std::endl;
                 return X::Value();
             }
+            if (prefill && visualMask.IsTensor() && layerIndex < deepstack->Size()) {
+                if (!AddRowsByMaskGPU(hidden, visualMask, deepstack->Get(layerIndex))) {
+                    std::cout << "[QwenTextRunner] deepstack add failed at text layer " << layerIndex << std::endl;
+                    return X::Value();
+                }
+            }
         }
         return hidden;
     }
@@ -164,11 +199,13 @@ namespace Garnet
             retValue = X::Value();
             return;
         }
+        X::Value deepstackFeatures = params.size() >= 7 ? params[6] : X::Value();
+        X::Value visualMask = params.size() >= 8 ? params[7] : X::Value();
         retValue = RunLayers(
             params[0], params[1], params[2], params[3],
             static_cast<int>(params[4].ToLongLong()),
             static_cast<int>(params[5].ToLongLong()),
-            true);
+            true, deepstackFeatures, visualMask);
     }
 
     void QwenTextRunner::Decode(X::XRuntime* rt, X::XObj* pContext,

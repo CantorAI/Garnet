@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -34,12 +35,18 @@ PROMPT = os.environ.get(
 )
 MAX_IMAGES = int(os.environ.get("HF_QWEN_VL_MAX_IMAGES", "3"))
 MAX_NEW_TOKENS = int(os.environ.get("HF_QWEN_VL_MAX_NEW_TOKENS", "64"))
+MAX_PIXELS = int(os.environ.get("HF_QWEN_VL_MAX_PIXELS", "65536"))
 OUTPUT = Path(os.environ.get(
     "HF_QWEN_VL_DATASET_OUTPUT",
     Path(__file__).resolve().parents[2] / "artifacts" / "qwen_vl_reference" / "hf_qwen3_vl_dataset_answers.json",
 ))
 
-images = sorted(IMAGE_DIR.glob("*.jpg"))[:MAX_IMAGES]
+image_list_value = os.environ.get("HF_QWEN_VL_IMAGES", "").strip()
+images = (
+    [Path(value) for value in image_list_value.split(";") if value.strip()]
+    if image_list_value
+    else sorted(IMAGE_DIR.glob("*.jpg"))[:MAX_IMAGES]
+)
 if not images:
     raise FileNotFoundError(f"No JPG files found in {IMAGE_DIR}")
 
@@ -52,7 +59,14 @@ print(f"prompt={PROMPT}")
 print(f"max_images={MAX_IMAGES}")
 print(f"output={OUTPUT}")
 
-processor = AutoProcessor.from_pretrained(MODEL_ID, trust_remote_code=True)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(errors="backslashreplace")
+processor = AutoProcessor.from_pretrained(
+    MODEL_ID,
+    trust_remote_code=True,
+    min_pixels=MAX_PIXELS,
+    max_pixels=MAX_PIXELS,
+)
 model = AutoQwenVLModel.from_pretrained(
     MODEL_ID,
     trust_remote_code=True,

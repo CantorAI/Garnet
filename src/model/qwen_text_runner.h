@@ -16,7 +16,9 @@ namespace Garnet
             X::Value kvHandles,
             int startPosition,
             int sequenceLength,
-            bool prefill);
+            bool prefill,
+            X::Value deepstackFeatures = X::Value(),
+            X::Value visualMask = X::Value());
 
     public:
         BEGIN_PACKAGE(QwenTextRunner)

@@ -57,6 +57,20 @@ token_ids = np.asarray([7, 2, 9], dtype=np.int64)
 embedding_actual = cpu_array(garnet, garnet.embedding(weight, token_ids)).reshape(3, 4)
 np.testing.assert_allclose(embedding_actual, weight[token_ids], rtol=0.0, atol=0.0)
 
+import torch
+bf16_source = torch.from_numpy(weight).to(torch.bfloat16)
+bf16_bits = bf16_source.view(torch.uint16).numpy()
+bf16_weight = garnet.tensor_from_bfloat16_bits(bf16_bits)
+if bf16_weight is None:
+    raise AssertionError("tensor_from_bfloat16_bits failed")
+bf16_embedding_actual = cpu_array(garnet, garnet.embedding(bf16_weight, token_ids)).reshape(3, 4)
+np.testing.assert_allclose(
+    bf16_embedding_actual,
+    bf16_source.float().numpy()[token_ids],
+    rtol=0.0,
+    atol=0.0,
+)
+
 base = np.arange(20, dtype=np.float32).reshape(5, 4)
 mask = np.asarray([0, 1, 0, 1, 0], dtype=np.int64)
 replacements = np.asarray([[100, 101, 102, 103], [200, 201, 202, 203]], dtype=np.float32)
@@ -93,6 +107,6 @@ rope_actual = cpu_array(garnet, garnet.vision_rope(qkv, cos, sin, rope_heads)).r
 np.testing.assert_allclose(rope_actual, rope_expected, rtol=2e-6, atol=2e-6)
 
 print(f"garnet={garnet_dll}")
-print("tensor_to_gpu=pass tensor_add=pass tensor_last_row=pass embedding=pass replace_rows_by_mask=pass")
+print("tensor_to_gpu=pass tensor_add=pass tensor_last_row=pass embedding_fp32=pass embedding_bf16=pass replace_rows_by_mask=pass")
 print("gelu_tanh=pass vision_rope=pass")
 print("Phase 23 GPU tensor ops passed.")

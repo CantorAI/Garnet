@@ -135,7 +135,7 @@ endif()
 # On Windows, link against cudart (the CUDA runtime) explicitly.
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
-            nvrtc.lib "D:/CantorAI/ThirdPartySDK/TensorRT/lib/nvinfer_10.lib"
+            nvrtc.lib cublas.lib "D:/CantorAI/ThirdPartySDK/TensorRT/lib/nvinfer_10.lib"
             nppc.lib nppig.lib nvjpeg.lib
             ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
     ) 

@@ -155,6 +155,7 @@ namespace Garnet
 			APISET().AddVarFunc("gelu_tanh", &GarnetAPI::GeluTanh);
 			APISET().AddVarFunc("vision_rope", &GarnetAPI::VisionRoPE);
 			APISET().AddVarFunc("tensor_to_gpu", &GarnetAPI::TensorToGPU);
+			APISET().AddVarFunc("tensor_from_bfloat16_bits", &GarnetAPI::TensorFromBFloat16Bits);
 			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
@@ -231,6 +232,8 @@ namespace Garnet
 		void VisionRoPE(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void TensorToGPU(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void TensorFromBFloat16Bits(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void TensorToCPU(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

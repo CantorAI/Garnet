@@ -39,6 +39,25 @@ namespace
         output[index] = weights[tokenId * static_cast<long long>(hiddenSize) + featureIndex];
     }
 
+    __global__ void EmbeddingGatherInt64BF16ToFP32Kernel(
+        const __nv_bfloat16* weights,
+        const long long* tokenIds,
+        float* output,
+        int tokenCount,
+        int vocabSize,
+        int hiddenSize)
+    {
+        int index = blockIdx.x * blockDim.x + threadIdx.x;
+        int count = tokenCount * hiddenSize;
+        if (index >= count) return;
+        int tokenIndex = index / hiddenSize;
+        int featureIndex = index % hiddenSize;
+        long long tokenId = tokenIds[tokenIndex];
+        output[index] = (tokenId < 0 || tokenId >= vocabSize)
+            ? 0.0f
+            : __bfloat162float(weights[tokenId * static_cast<long long>(hiddenSize) + featureIndex]);
+    }
+
     // The multimodal mask is short compared with model GEMMs. A single device
     // thread preserves replacement order without a host prefix-scan boundary.
     __global__ void ReplaceRowsByMaskInt64FP32Kernel(
@@ -67,6 +86,35 @@ namespace
                 destination[column] = source[column];
             }
             ++replacementIndex;
+        }
+    }
+
+    __global__ void AddRowsByMaskInt64FP32Kernel(
+        float* output,
+        const long long* rowMask,
+        const float* additionRows,
+        int rowCount,
+        int additionCount,
+        int rowWidth,
+        long long maskValue)
+    {
+        if (blockIdx.x != 0 || threadIdx.x != 0) {
+            return;
+        }
+        int additionIndex = 0;
+        for (int row = 0; row < rowCount; ++row) {
+            if (rowMask[row] != maskValue) {
+                continue;
+            }
+            if (additionIndex >= additionCount) {
+                return;
+            }
+            float* destination = output + static_cast<long long>(row) * rowWidth;
+            const float* source = additionRows + static_cast<long long>(additionIndex) * rowWidth;
+            for (int column = 0; column < rowWidth; ++column) {
+                destination[column] += source[column];
+            }
+            ++additionIndex;
         }
     }
 
@@ -153,6 +201,25 @@ extern "C" cudaError_t runEmbeddingGatherInt64FP32(
     return cudaGetLastError();
 }
 
+extern "C" cudaError_t runEmbeddingGatherInt64BF16ToFP32(
+    const __nv_bfloat16* weights,
+    const long long* tokenIds,
+    float* output,
+    int tokenCount,
+    int vocabSize,
+    int hiddenSize,
+    cudaStream_t stream)
+{
+    if (!weights || !tokenIds || !output || tokenCount <= 0 || vocabSize <= 0 || hiddenSize <= 0) {
+        return cudaErrorInvalidValue;
+    }
+    int count = tokenCount * hiddenSize;
+    int blocks = (count + kBlockSize - 1) / kBlockSize;
+    EmbeddingGatherInt64BF16ToFP32Kernel<<<blocks, kBlockSize, 0, stream>>>(
+        weights, tokenIds, output, tokenCount, vocabSize, hiddenSize);
+    return cudaGetLastError();
+}
+
 extern "C" cudaError_t runReplaceRowsByMaskInt64FP32(
     float* output,
     const long long* rowMask,
@@ -168,6 +235,24 @@ extern "C" cudaError_t runReplaceRowsByMaskInt64FP32(
     }
     ReplaceRowsByMaskInt64FP32Kernel<<<1, 1, 0, stream>>>(
         output, rowMask, replacementRows, rowCount, replacementCount, rowWidth, maskValue);
+    return cudaGetLastError();
+}
+
+extern "C" cudaError_t runAddRowsByMaskInt64FP32(
+    float* output,
+    const long long* rowMask,
+    const float* additionRows,
+    int rowCount,
+    int additionCount,
+    int rowWidth,
+    long long maskValue,
+    cudaStream_t stream)
+{
+    if (!output || !rowMask || !additionRows || rowCount <= 0 || additionCount <= 0 || rowWidth <= 0) {
+        return cudaErrorInvalidValue;
+    }
+    AddRowsByMaskInt64FP32Kernel<<<1, 1, 0, stream>>>(
+        output, rowMask, additionRows, rowCount, additionCount, rowWidth, maskValue);
     return cudaGetLastError();
 }
 
