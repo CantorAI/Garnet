@@ -619,6 +619,198 @@ namespace
         }
         output[static_cast<size_t>(qHead) * headDim + dimension] = __float2bfloat16(value);
     }
+
+    constexpr int kFlashDecodeHeadDim = 128;
+    constexpr int kFlashDecodeWarps = 4;
+    constexpr int kFlashDecodeThreads = kFlashDecodeWarps * 32;
+    constexpr int kFlashDecodePositionsPerSplit = 128;
+
+    __device__ __forceinline__ float garnet_warp_sum(float value)
+    {
+        for (int offset = 16; offset > 0; offset >>= 1) {
+            value += __shfl_down_sync(0xffffffffU, value, offset);
+        }
+        return __shfl_sync(0xffffffffU, value, 0);
+    }
+
+    __global__ void garnet_text_paged_kv_write_decode_batched_bf16_kernel(
+        const __nv_bfloat16* qkv,
+        __nv_bfloat16* keyPages,
+        __nv_bfloat16* valuePages,
+        const int* pageTables,
+        const int* slotPositions,
+        int batchSize,
+        int maxLogicalPages,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim)
+    {
+        const int kvWidth = kvHeads * headDim;
+        const int linear = blockIdx.x * blockDim.x + threadIdx.x;
+        if (linear >= batchSize * kvWidth) return;
+        const int batch = linear / kvWidth;
+        const int within = linear - batch * kvWidth;
+        const int kvHead = within / headDim;
+        const int dimension = within - kvHead * headDim;
+        const int slot = slotPositions[batch];
+        const int logicalPage = slot / pageSize;
+        if (logicalPage < 0 || logicalPage >= maxLogicalPages) return;
+        const int physicalPage = pageTables[batch * maxLogicalPages + logicalPage];
+        const int pageOffset = slot - logicalPage * pageSize;
+        const int qWidth = qHeads * headDim;
+        const int qkvWidth = qWidth + 2 * kvWidth;
+        const __nv_bfloat16* row = qkv + static_cast<size_t>(batch) * qkvWidth;
+        const size_t cacheOffset =
+            (((static_cast<size_t>(physicalPage) * pageSize + pageOffset) * kvHeads + kvHead) * headDim) +
+            dimension;
+        keyPages[cacheOffset] = row[qWidth + kvHead * headDim + dimension];
+        valuePages[cacheOffset] = row[qWidth + kvWidth + kvHead * headDim + dimension];
+    }
+
+    __global__ void garnet_text_paged_kv_flash_partials_bf16_kernel(
+        const __nv_bfloat16* qkv,
+        const __nv_bfloat16* keyPages,
+        const __nv_bfloat16* valuePages,
+        const int* pageTables,
+        const int* contextLengths,
+        float* partialStats,
+        float* partialOutputs,
+        int maxLogicalPages,
+        int splitCount,
+        int pageSize,
+        int qHeads,
+        int kvHeads)
+    {
+        const int batch = blockIdx.z;
+        const int qHead = blockIdx.x;
+        const int split = blockIdx.y;
+        const int warp = threadIdx.x >> 5;
+        const int lane = threadIdx.x & 31;
+        const int contextLength = contextLengths[batch];
+        const int start = split * kFlashDecodePositionsPerSplit;
+        const int end = min(contextLength, start + kFlashDecodePositionsPerSplit);
+        const int kvHead = qHead / (qHeads / kvHeads);
+        const int qWidth = qHeads * kFlashDecodeHeadDim;
+        const int kvWidth = kvHeads * kFlashDecodeHeadDim;
+        const int qkvWidth = qWidth + 2 * kvWidth;
+        const __nv_bfloat16* qRow = qkv +
+            static_cast<size_t>(batch) * qkvWidth + qHead * kFlashDecodeHeadDim;
+        const int* pageTable = pageTables + batch * maxLogicalPages;
+
+        float runningMax = -FLT_MAX;
+        float runningSum = 0.0f;
+        float output0 = 0.0f;
+        float output1 = 0.0f;
+        float output2 = 0.0f;
+        float output3 = 0.0f;
+        constexpr float scale = 0.08838834764831845f;
+
+        for (int position = start + warp; position < end; position += kFlashDecodeWarps) {
+            const __nv_bfloat16* keyRow = garnet_paged_kv_row_bf16(
+                keyPages, pageTable, position, pageSize, kvHead, kvHeads,
+                kFlashDecodeHeadDim);
+            float dot =
+                __bfloat162float(qRow[lane]) * __bfloat162float(keyRow[lane]) +
+                __bfloat162float(qRow[lane + 32]) * __bfloat162float(keyRow[lane + 32]) +
+                __bfloat162float(qRow[lane + 64]) * __bfloat162float(keyRow[lane + 64]) +
+                __bfloat162float(qRow[lane + 96]) * __bfloat162float(keyRow[lane + 96]);
+            const float score = garnet_warp_sum(dot) * scale;
+            const float nextMax = fmaxf(runningMax, score);
+            const float previousScale = runningSum == 0.0f ? 0.0f : __expf(runningMax - nextMax);
+            const float weight = __expf(score - nextMax);
+            const __nv_bfloat16* valueRow = garnet_paged_kv_row_bf16(
+                valuePages, pageTable, position, pageSize, kvHead, kvHeads,
+                kFlashDecodeHeadDim);
+            output0 = output0 * previousScale + weight * __bfloat162float(valueRow[lane]);
+            output1 = output1 * previousScale + weight * __bfloat162float(valueRow[lane + 32]);
+            output2 = output2 * previousScale + weight * __bfloat162float(valueRow[lane + 64]);
+            output3 = output3 * previousScale + weight * __bfloat162float(valueRow[lane + 96]);
+            runningSum = runningSum * previousScale + weight;
+            runningMax = nextMax;
+        }
+
+        __shared__ float warpMax[kFlashDecodeWarps];
+        __shared__ float warpSum[kFlashDecodeWarps];
+        __shared__ float warpOutput[kFlashDecodeWarps][kFlashDecodeHeadDim];
+        if (lane == 0) {
+            warpMax[warp] = runningMax;
+            warpSum[warp] = runningSum;
+        }
+        warpOutput[warp][lane] = output0;
+        warpOutput[warp][lane + 32] = output1;
+        warpOutput[warp][lane + 64] = output2;
+        warpOutput[warp][lane + 96] = output3;
+        __syncthreads();
+
+        const int dimension = threadIdx.x;
+        float splitMax = -FLT_MAX;
+        for (int sourceWarp = 0; sourceWarp < kFlashDecodeWarps; ++sourceWarp) {
+            if (warpSum[sourceWarp] > 0.0f) splitMax = fmaxf(splitMax, warpMax[sourceWarp]);
+        }
+        float splitSum = 0.0f;
+        float splitOutput = 0.0f;
+        for (int sourceWarp = 0; sourceWarp < kFlashDecodeWarps; ++sourceWarp) {
+            if (warpSum[sourceWarp] <= 0.0f) continue;
+            const float mergeScale = __expf(warpMax[sourceWarp] - splitMax);
+            splitSum += mergeScale * warpSum[sourceWarp];
+            splitOutput += mergeScale * warpOutput[sourceWarp][dimension];
+        }
+        const size_t stateIndex =
+            (static_cast<size_t>(batch) * qHeads + qHead) * splitCount + split;
+        if (dimension == 0) {
+            partialStats[stateIndex * 2] = splitMax;
+            partialStats[stateIndex * 2 + 1] = splitSum;
+        }
+        partialOutputs[stateIndex * kFlashDecodeHeadDim + dimension] = splitOutput;
+    }
+
+    __global__ void garnet_text_paged_kv_flash_reduce_bf16_kernel(
+        const float* partialStats,
+        const float* partialOutputs,
+        __nv_bfloat16* output,
+        const int* contextLengths,
+        int splitCount,
+        int qHeads)
+    {
+        const int batchHead = blockIdx.x;
+        const int batch = batchHead / qHeads;
+        const int qHead = batchHead - batch * qHeads;
+        const int activeSplits = min(
+            splitCount,
+            (contextLengths[batch] + kFlashDecodePositionsPerSplit - 1) /
+                kFlashDecodePositionsPerSplit);
+        __shared__ float mergeScales[32];
+        __shared__ float inverseSum;
+        if (threadIdx.x == 0) {
+            float maximum = -FLT_MAX;
+            for (int split = 0; split < activeSplits; ++split) {
+                const size_t stateIndex =
+                    static_cast<size_t>(batchHead) * splitCount + split;
+                maximum = fmaxf(maximum, partialStats[stateIndex * 2]);
+            }
+            float sum = 0.0f;
+            for (int split = 0; split < activeSplits; ++split) {
+                const size_t stateIndex =
+                    static_cast<size_t>(batchHead) * splitCount + split;
+                const float scale = __expf(partialStats[stateIndex * 2] - maximum);
+                mergeScales[split] = scale;
+                sum += scale * partialStats[stateIndex * 2 + 1];
+            }
+            inverseSum = sum > 0.0f ? 1.0f / sum : 0.0f;
+        }
+        __syncthreads();
+        const int dimension = threadIdx.x;
+        float value = 0.0f;
+        for (int split = 0; split < activeSplits; ++split) {
+            const size_t stateIndex =
+                static_cast<size_t>(batchHead) * splitCount + split;
+            value += mergeScales[split] *
+                partialOutputs[stateIndex * kFlashDecodeHeadDim + dimension];
+        }
+        output[(static_cast<size_t>(batch) * qHeads + qHead) * kFlashDecodeHeadDim + dimension] =
+            __float2bfloat16(value * inverseSum);
+    }
 }
 
 extern "C" cudaError_t runTextPagedKVCachedAttentionBF16(
@@ -829,5 +1021,67 @@ extern "C" cudaError_t runTextPagedKVDecodeSplitKBF16DeviceMetadata(
             reinterpret_cast<__nv_bfloat16*>(output),
             maxSequenceLength, pageSize, qHeads, kvHeads, headDim);
     }
+    return cudaGetLastError();
+}
+
+extern "C" cudaError_t runTextPagedKVDecodeFlashBF16DeviceMetadata(
+    const bfloat16* qkv,
+    bfloat16* keyPages,
+    bfloat16* valuePages,
+    const int* pageTables,
+    const int* contextLengths,
+    const int* slotPositions,
+    bfloat16* output,
+    float* partialStats,
+    float* partialOutputs,
+    int batchSize,
+    int maxSequenceLength,
+    int pageSize,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    cudaStream_t stream)
+{
+    if (!qkv || !keyPages || !valuePages || !pageTables || !contextLengths ||
+        !slotPositions || !output || !partialStats || !partialOutputs ||
+        batchSize <= 0 || maxSequenceLength <= 0 || pageSize <= 0 ||
+        qHeads <= 0 || kvHeads <= 0 || qHeads % kvHeads != 0 ||
+        headDim != kFlashDecodeHeadDim) {
+        return cudaErrorInvalidValue;
+    }
+    const int maxLogicalPages = (maxSequenceLength + pageSize - 1) / pageSize;
+    const int splitCount =
+        (maxSequenceLength + kFlashDecodePositionsPerSplit - 1) /
+        kFlashDecodePositionsPerSplit;
+    if (splitCount > 32) return cudaErrorNotSupported;
+
+    constexpr int writeThreads = 256;
+    const int writeElements = batchSize * kvHeads * headDim;
+    garnet_text_paged_kv_write_decode_batched_bf16_kernel<<<
+        (writeElements + writeThreads - 1) / writeThreads,
+        writeThreads, 0, stream>>>(
+        reinterpret_cast<const __nv_bfloat16*>(qkv),
+        reinterpret_cast<__nv_bfloat16*>(keyPages),
+        reinterpret_cast<__nv_bfloat16*>(valuePages),
+        pageTables, slotPositions, batchSize, maxLogicalPages, pageSize,
+        qHeads, kvHeads, headDim);
+    cudaError_t status = cudaGetLastError();
+    if (status != cudaSuccess) return status;
+
+    garnet_text_paged_kv_flash_partials_bf16_kernel<<<
+        dim3(qHeads, splitCount, batchSize), kFlashDecodeThreads, 0, stream>>>(
+        reinterpret_cast<const __nv_bfloat16*>(qkv),
+        reinterpret_cast<const __nv_bfloat16*>(keyPages),
+        reinterpret_cast<const __nv_bfloat16*>(valuePages),
+        pageTables, contextLengths, partialStats, partialOutputs,
+        maxLogicalPages, splitCount, pageSize, qHeads, kvHeads);
+    status = cudaGetLastError();
+    if (status != cudaSuccess) return status;
+
+    garnet_text_paged_kv_flash_reduce_bf16_kernel<<<
+        batchSize * qHeads, kFlashDecodeHeadDim, 0, stream>>>(
+        partialStats, partialOutputs,
+        reinterpret_cast<__nv_bfloat16*>(output), contextLengths,
+        splitCount, qHeads);
     return cudaGetLastError();
 }

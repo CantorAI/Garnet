@@ -92,17 +92,23 @@ namespace Garnet
         const PluginTensorDesc* inputs, int inputCount, const PluginTensorDesc*, int) const noexcept
     {
         if (!inputs || inputCount <= 3) return 0;
-        int logicalPages = 1;
+        int pageTableElements = 1;
         const Dims& pageTableDimensions = inputs[3].dims;
         for (int index = 0; index < pageTableDimensions.nbDims; ++index) {
             if (pageTableDimensions.d[index] <= 0) return 0;
-            logicalPages *= pageTableDimensions.d[index];
+            pageTableElements *= pageTableDimensions.d[index];
         }
+        const Dims& qkvDimensions = inputs[0].dims;
+        const int batchSize = qkvDimensions.nbDims > 1 ? qkvDimensions.d[0] : 1;
+        if (batchSize <= 0 || pageTableElements % batchSize != 0) return 0;
+        const int logicalPages = pageTableElements / batchSize;
         const int maxSequenceLength = logicalPages * m_pageSize;
         constexpr int positionsPerSplit = 128;
         const int splitCount = (maxSequenceLength + positionsPerSplit - 1) / positionsPerSplit;
-        const size_t scoreBytes = static_cast<size_t>(m_qHeads) * maxSequenceLength * sizeof(float);
-        const size_t partialBytes = static_cast<size_t>(m_qHeads) * splitCount * m_headDim * sizeof(float);
+        const size_t scoreBytes = static_cast<size_t>(batchSize) * m_qHeads *
+            maxSequenceLength * sizeof(float);
+        const size_t partialBytes = static_cast<size_t>(batchSize) * m_qHeads *
+            splitCount * m_headDim * sizeof(float);
         return scoreBytes + partialBytes;
     }
 
@@ -129,44 +135,58 @@ namespace Garnet
         bfloat16* keyPages = layerPointer(inputs[1], 1);
         bfloat16* valuePages = layerPointer(inputs[2], 2);
         if (!keyPages || !valuePages) return 1;
+        const Dims& qkvDimensions = inputDesc[0].dims;
+        const int batchSize = qkvDimensions.nbDims > 1 ? qkvDimensions.d[0] : 1;
+        if (batchSize <= 0) return 1;
         int maxSequenceLength = m_pageSize;
         const Dims& pageTableDimensions = inputDesc[3].dims;
         if (pageTableDimensions.nbDims > 0) {
-            int logicalPages = 1;
+            int pageTableElements = 1;
             for (int index = 0; index < pageTableDimensions.nbDims; ++index) {
                 if (pageTableDimensions.d[index] <= 0) return 1;
-                logicalPages *= pageTableDimensions.d[index];
+                pageTableElements *= pageTableDimensions.d[index];
             }
+            if (pageTableElements % batchSize != 0) return 1;
+            const int logicalPages = pageTableElements / batchSize;
             maxSequenceLength = logicalPages * m_pageSize;
         }
+        const char* flash = std::getenv("GARNET_PAGED_KV_FLASH");
+        const bool useFlash = m_headDim == 128 &&
+            !(flash && flash[0] == '0' && flash[1] == '\0');
         const char* splitK = std::getenv("GARNET_PAGED_KV_SPLIT_K");
         const bool useSplitK = !(splitK && splitK[0] == '0' && splitK[1] == '\0');
         const char* splitValue = std::getenv("GARNET_PAGED_KV_SPLIT_VALUE");
         const bool useSplitValue = !(splitValue && splitValue[0] == '0' && splitValue[1] == '\0');
         float* scoreWorkspace = static_cast<float*>(workspace);
         float* valuePartialWorkspace = scoreWorkspace +
-            static_cast<size_t>(m_qHeads) * maxSequenceLength;
-        const cudaError_t status = useSplitK
-            ? runTextPagedKVDecodeSplitKBF16DeviceMetadata(
+            static_cast<size_t>(batchSize) * m_qHeads * maxSequenceLength;
+        cudaError_t status = cudaSuccess;
+        if (useFlash) {
+            status = runTextPagedKVDecodeFlashBF16DeviceMetadata(
+                static_cast<const bfloat16*>(inputs[0]), keyPages, valuePages,
+                static_cast<const int*>(inputs[3]), static_cast<const int*>(inputs[4]),
+                static_cast<const int*>(inputs[5]), static_cast<bfloat16*>(outputs[0]),
+                scoreWorkspace, valuePartialWorkspace, batchSize, maxSequenceLength,
+                m_pageSize, m_qHeads, m_kvHeads, m_headDim, stream);
+        }
+        else if (batchSize != 1) {
+            return 1;
+        }
+        else if (useSplitK) {
+            status = runTextPagedKVDecodeSplitKBF16DeviceMetadata(
                 static_cast<const bfloat16*>(inputs[0]), keyPages, valuePages,
                 static_cast<const int*>(inputs[3]), static_cast<const int*>(inputs[4]),
                 static_cast<const int*>(inputs[5]), static_cast<bfloat16*>(outputs[0]),
                 scoreWorkspace, valuePartialWorkspace, maxSequenceLength, m_pageSize,
-                m_qHeads, m_kvHeads, m_headDim, useSplitValue ? 1 : 0, stream)
-            : runTextPagedKVDecodeBF16DeviceMetadata(
-            static_cast<const bfloat16*>(inputs[0]),
-            keyPages,
-            valuePages,
-            static_cast<const int*>(inputs[3]),
-            static_cast<const int*>(inputs[4]),
-            static_cast<const int*>(inputs[5]),
-            static_cast<bfloat16*>(outputs[0]),
-            maxSequenceLength,
-            m_pageSize,
-            m_qHeads,
-            m_kvHeads,
-            m_headDim,
-            stream);
+                m_qHeads, m_kvHeads, m_headDim, useSplitValue ? 1 : 0, stream);
+        }
+        else {
+            status = runTextPagedKVDecodeBF16DeviceMetadata(
+                static_cast<const bfloat16*>(inputs[0]), keyPages, valuePages,
+                static_cast<const int*>(inputs[3]), static_cast<const int*>(inputs[4]),
+                static_cast<const int*>(inputs[5]), static_cast<bfloat16*>(outputs[0]),
+                maxSequenceLength, m_pageSize, m_qHeads, m_kvHeads, m_headDim, stream);
+        }
         return status == cudaSuccess ? 0 : 1;
     }
 

@@ -704,6 +704,42 @@ changes.
 
 ## Implementation Stages
 
+### Fused attention checkpoint (2026-07-12)
+
+Stage 1 now has an initial verified implementation in
+`src/cuda/text_kv_attention_kernel.cu`. The TensorRT
+`GarnetPagedKVDecodeBF16` plugin selects the fused path by default for Qwen's
+128-element head dimension. `GARNET_PAGED_KV_FLASH=0` selects the previous
+split score/softmax/value implementation for matched diagnostics.
+
+Direct batch-one output parity passed against both the original attention
+kernel and the optimized split implementation at context lengths 64, 256,
+1,024, and 1,280. The maximum observed FP32 value difference after BF16 output
+conversion was `0.000031`.
+
+The unchanged regular-resolution four-image benchmark on RTX 4080, with 943
+visual tokens, 1,013 prompt tokens, and exactly 100 generated tokens per image,
+measured:
+
+```text
+                                  split path       fused online path
+average total latency             890.71 ms        874.22 ms
+average decode latency            761.83 ms        745.27 ms
+average decode throughput         129.95 tok/s     132.84 tok/s
+average TTFT                      128.51 ms        128.54 ms
+```
+
+The fused path improved decode throughput by approximately 2.2% and reduced
+average end-to-end latency by approximately 16.5 ms (1.9%). TensorRT decoder
+GEMMs remain the dominant decode cost, so this kernel optimization is useful
+but is not expected by itself to produce a large end-to-end multiple.
+
+The dedicated regression is:
+
+```text
+test2026/tests/phase_24_compiled_xmodel_runtime/test_paged_flash_attention.py
+```
+
 ### Stage 1: fused paged decode attention
 
 - Implement a batch-shaped fused paged FlashAttention-style decode kernel.

@@ -1459,12 +1459,63 @@ namespace Garnet
                 status = cudaMalloc(&outputDevice, static_cast<size_t>(qWidth) * sizeof(unsigned short));
             }
             const bfloat16* lastQ = qkvDevice + static_cast<size_t>(tokenCount - 1) * qkvWidth;
-            if (status == cudaSuccess) {
+            const std::string implementation = options["implementation"].IsValid()
+                ? options["implementation"].ToString()
+                : "reference";
+            void* workspaceDevice = nullptr;
+            int* metadataDevice = nullptr;
+            if (status == cudaSuccess && implementation == "reference") {
                 status = runTextPagedKVCachedAttentionBF16(
                     lastQ, keyDevice, valueDevice, tableDevice,
                     static_cast<bfloat16*>(outputDevice), sequenceLength, pageSize,
                     qHeads, kvHeads, headDim, cudaStreamPerThread);
             }
+            else if (status == cudaSuccess &&
+                     (implementation == "split" || implementation == "flash")) {
+                int pageTableElements = 1;
+                for (int dimension = 0; dimension < pageTable->GetDimCount(); ++dimension) {
+                    pageTableElements *= pageTable->GetDimSize(dimension);
+                }
+                const int maxSequenceLength = pageTableElements * pageSize;
+                const int splitCount = (maxSequenceLength + 127) / 128;
+                const size_t scoreFloats = static_cast<size_t>(qHeads) * maxSequenceLength;
+                const size_t partialFloats = static_cast<size_t>(qHeads) * splitCount * headDim;
+                status = cudaMalloc(&workspaceDevice,
+                    (scoreFloats + partialFloats) * sizeof(float));
+                if (status == cudaSuccess) status = cudaMalloc(&metadataDevice, 2 * sizeof(int));
+                const int metadata[2]{sequenceLength, sequenceLength - 1};
+                if (status == cudaSuccess) {
+                    status = cudaMemcpyAsync(
+                        metadataDevice, metadata, sizeof(metadata), cudaMemcpyHostToDevice,
+                        cudaStreamPerThread);
+                }
+                if (status == cudaSuccess && implementation == "flash") {
+                    status = runTextPagedKVDecodeFlashBF16DeviceMetadata(
+                        lastQ, keyDevice, valueDevice, tableDevice,
+                        metadataDevice, metadataDevice + 1,
+                        static_cast<bfloat16*>(outputDevice),
+                        static_cast<float*>(workspaceDevice),
+                        static_cast<float*>(workspaceDevice) + scoreFloats,
+                        1, maxSequenceLength, pageSize, qHeads, kvHeads, headDim,
+                        cudaStreamPerThread);
+                }
+                else if (status == cudaSuccess) {
+                    status = runTextPagedKVDecodeSplitKBF16DeviceMetadata(
+                        lastQ, keyDevice, valueDevice, tableDevice,
+                        metadataDevice, metadataDevice + 1,
+                        static_cast<bfloat16*>(outputDevice),
+                        static_cast<float*>(workspaceDevice),
+                        static_cast<float*>(workspaceDevice) + scoreFloats,
+                        maxSequenceLength, pageSize, qHeads, kvHeads, headDim, 1,
+                        cudaStreamPerThread);
+                }
+                if (status == cudaSuccess) status = cudaStreamSynchronize(cudaStreamPerThread);
+            }
+            else if (status == cudaSuccess) {
+                status = cudaErrorInvalidValue;
+            }
+            if (metadataDevice) cudaFree(metadataDevice);
+            if (workspaceDevice) cudaFree(workspaceDevice);
             if (status != cudaSuccess) {
                 if (outputDevice) cudaFree(outputDevice);
                 result->Set("status", X::Value("error"));
@@ -1489,6 +1540,7 @@ namespace Garnet
             result->Set("key_pages", keyPagesValue);
             result->Set("value_pages", valuePagesValue);
             result->Set("sequence_length", X::Value(sequenceLength));
+            result->Set("implementation", X::Value(implementation));
             return result;
         }
         if (probe != "weight") {
