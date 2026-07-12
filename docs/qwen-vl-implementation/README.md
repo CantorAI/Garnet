@@ -24,6 +24,7 @@ probe, and multi-GPU contract is defined in:
 
 - `compiled-xmodel-pipeline-and-multigpu-architecture.md`
 - `compiled-runtime-implementation-plan.md`
+- `continuous-batching-and-vlm-scheduler-design.md`
 
 The architecture document is the normative design; the implementation plan is
 its required staged execution and test sequence. They supersede older notes
@@ -131,6 +132,7 @@ Docs:
 
 - `milestones.md`
 - `runtime-architecture.md`
+- `continuous-batching-and-vlm-scheduler-design.md`
 
 ## Success Criteria
 
