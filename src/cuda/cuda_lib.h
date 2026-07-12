@@ -241,6 +241,7 @@ extern "C" {
         const int* contextLength,
         const int* slotPosition,
         bfloat16* output,
+        int maxSequenceLength,
         int pageSize,
         int qHeads,
         int kvHeads,

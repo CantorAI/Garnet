@@ -379,6 +379,7 @@ namespace
         const int* pageTable,
         __nv_bfloat16* output,
         int sequenceLength,
+        int maxSequenceLength,
         int pageSize,
         int qHeads,
         int kvHeads,
@@ -389,45 +390,56 @@ namespace
         const int qHead = blockIdx.x;
         const int tid = threadIdx.x;
         extern __shared__ float shared[];
-        float* reduceMax = shared;
-        float* reduceSum = shared + blockDim.x;
+        float* scores = shared;
+        float* reduction = shared + maxSequenceLength;
         const int kvHead = qHead / (qHeads / kvHeads);
+        if (sequenceLength <= 0 || sequenceLength > maxSequenceLength) {
+            if (tid < headDim) {
+                output[static_cast<size_t>(qHead) * headDim + tid] =
+                    __float2bfloat16(0.0f);
+            }
+            return;
+        }
 
         float maxValue = -FLT_MAX;
         for (int position = tid; position < sequenceLength; position += blockDim.x) {
-            maxValue = fmaxf(maxValue, garnet_text_paged_kv_attention_score_bf16(
-                q, keyPages, pageTable, position, pageSize, qHead, kvHead, kvHeads, headDim));
+            const float score = garnet_text_paged_kv_attention_score_bf16(
+                q, keyPages, pageTable, position, pageSize,
+                qHead, kvHead, kvHeads, headDim);
+            scores[position] = score;
+            maxValue = fmaxf(maxValue, score);
         }
-        reduceMax[tid] = maxValue;
+        reduction[tid] = maxValue;
         __syncthreads();
         for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
-            if (tid < stride) reduceMax[tid] = fmaxf(reduceMax[tid], reduceMax[tid + stride]);
+            if (tid < stride) {
+                reduction[tid] = fmaxf(reduction[tid], reduction[tid + stride]);
+            }
             __syncthreads();
         }
-        maxValue = reduceMax[0];
+        maxValue = reduction[0];
 
         float sumValue = 0.0f;
         for (int position = tid; position < sequenceLength; position += blockDim.x) {
-            const float score = garnet_text_paged_kv_attention_score_bf16(
-                q, keyPages, pageTable, position, pageSize, qHead, kvHead, kvHeads, headDim);
-            sumValue += expf(score - maxValue);
+            const float weight = expf(scores[position] - maxValue);
+            scores[position] = weight;
+            sumValue += weight;
         }
-        reduceSum[tid] = sumValue;
+        reduction[tid] = sumValue;
         __syncthreads();
         for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
-            if (tid < stride) reduceSum[tid] += reduceSum[tid + stride];
+            if (tid < stride) reduction[tid] += reduction[tid + stride];
             __syncthreads();
         }
-        sumValue = reduceSum[0];
+        sumValue = reduction[0];
 
         for (int dimension = tid; dimension < headDim; dimension += blockDim.x) {
             float value = 0.0f;
             for (int position = 0; position < sequenceLength; ++position) {
-                const float score = garnet_text_paged_kv_attention_score_bf16(
-                    q, keyPages, pageTable, position, pageSize, qHead, kvHead, kvHeads, headDim);
                 const __nv_bfloat16* valueRow = garnet_paged_kv_row_bf16(
                     valuePages, pageTable, position, pageSize, kvHead, kvHeads, headDim);
-                value += expf(score - maxValue) / sumValue * __bfloat162float(valueRow[dimension]);
+                value += scores[position] / sumValue *
+                    __bfloat162float(valueRow[dimension]);
             }
             output[static_cast<size_t>(qHead) * headDim + dimension] = __float2bfloat16(value);
         }
@@ -490,13 +502,15 @@ extern "C" cudaError_t runTextPagedKVCachedAttentionBF16(
     }
     constexpr int threads = 256;
     garnet_text_paged_kv_cached_attention_bf16_kernel<<<
-        qHeads, threads, threads * 2 * sizeof(float), stream>>>(
+        qHeads, threads,
+        (static_cast<size_t>(sequenceLength) + threads) * sizeof(float), stream>>>(
         reinterpret_cast<const __nv_bfloat16*>(q),
         reinterpret_cast<const __nv_bfloat16*>(keyPages),
         reinterpret_cast<const __nv_bfloat16*>(valuePages),
         pageTable,
         reinterpret_cast<__nv_bfloat16*>(output),
-        sequenceLength, pageSize, qHeads, kvHeads, headDim, nullptr);
+        sequenceLength, sequenceLength, pageSize,
+        qHeads, kvHeads, headDim, nullptr);
     return cudaGetLastError();
 }
 
@@ -567,6 +581,7 @@ extern "C" cudaError_t runTextPagedKVDecodeBF16DeviceMetadata(
     const int* contextLength,
     const int* slotPosition,
     bfloat16* output,
+    int maxSequenceLength,
     int pageSize,
     int qHeads,
     int kvHeads,
@@ -574,7 +589,8 @@ extern "C" cudaError_t runTextPagedKVDecodeBF16DeviceMetadata(
     cudaStream_t stream)
 {
     if (!qkv || !keyPages || !valuePages || !pageTable || !contextLength ||
-        !slotPosition || !output || pageSize <= 0 || qHeads <= 0 || kvHeads <= 0 ||
+        !slotPosition || !output || maxSequenceLength <= 0 || pageSize <= 0 ||
+        qHeads <= 0 || kvHeads <= 0 ||
         headDim <= 0 || qHeads % kvHeads != 0) {
         return cudaErrorInvalidValue;
     }
@@ -590,12 +606,14 @@ extern "C" cudaError_t runTextPagedKVDecodeBF16DeviceMetadata(
     cudaError_t status = cudaGetLastError();
     if (status != cudaSuccess) return status;
     garnet_text_paged_kv_cached_attention_bf16_kernel<<<
-        qHeads, threads, threads * 2 * sizeof(float), stream>>>(
+        qHeads, threads,
+        (static_cast<size_t>(maxSequenceLength) + threads) * sizeof(float), stream>>>(
         reinterpret_cast<const __nv_bfloat16*>(qkv),
         reinterpret_cast<const __nv_bfloat16*>(keyPages),
         reinterpret_cast<const __nv_bfloat16*>(valuePages),
         pageTable,
         reinterpret_cast<__nv_bfloat16*>(output),
-        0, pageSize, qHeads, kvHeads, headDim, contextLength);
+        0, maxSequenceLength, pageSize,
+        qHeads, kvHeads, headDim, contextLength);
     return cudaGetLastError();
 }

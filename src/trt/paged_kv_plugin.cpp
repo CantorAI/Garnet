@@ -117,6 +117,16 @@ namespace Garnet
         bfloat16* keyPages = layerPointer(inputs[1], 1);
         bfloat16* valuePages = layerPointer(inputs[2], 2);
         if (!keyPages || !valuePages) return 1;
+        int maxSequenceLength = m_pageSize;
+        const Dims& pageTableDimensions = inputDesc[3].dims;
+        if (pageTableDimensions.nbDims > 0) {
+            int logicalPages = 1;
+            for (int index = 0; index < pageTableDimensions.nbDims; ++index) {
+                if (pageTableDimensions.d[index] <= 0) return 1;
+                logicalPages *= pageTableDimensions.d[index];
+            }
+            maxSequenceLength = logicalPages * m_pageSize;
+        }
         const cudaError_t status = runTextPagedKVDecodeBF16DeviceMetadata(
             static_cast<const bfloat16*>(inputs[0]),
             keyPages,
@@ -125,6 +135,7 @@ namespace Garnet
             static_cast<const int*>(inputs[4]),
             static_cast<const int*>(inputs[5]),
             static_cast<bfloat16*>(outputs[0]),
+            maxSequenceLength,
             m_pageSize,
             m_qHeads,
             m_kvHeads,

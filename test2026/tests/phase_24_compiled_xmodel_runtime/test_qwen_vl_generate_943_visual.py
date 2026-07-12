@@ -31,7 +31,7 @@ assert image_path.exists()
 patch_count = 3772
 visual_token_count = 943
 max_tokens = 1024
-kv_pages = 64
+kv_pages = 80
 garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
 load_start = time.perf_counter()
 model = garnet.load_model(
@@ -72,7 +72,8 @@ request = {
     "prompt": "Describe the image in one sentence.",
     "min_pixels": 256 * 28 * 28,
     "max_pixels": 1280 * 28 * 28,
-    "max_new_tokens": int(os.environ.get("GARNET_BALANCED_MAX_NEW_TOKENS", "10")),
+    "max_new_tokens": int(os.environ.get("GARNET_BALANCED_MAX_NEW_TOKENS", "100")),
+    "ignore_eos": int(os.environ.get("GARNET_BALANCED_IGNORE_EOS", "1")),
 }
 
 cold_start = time.perf_counter()
@@ -109,9 +110,14 @@ for frame in frames:
     frame_result = model.forward(frame_request)
     assert frame_result["status"] == "ok", frame_result
     assert int(frame_result["visual_token_count"]) == visual_token_count, frame_result
+    assert int(frame_result["generated_token_count"]) == request["max_new_tokens"], frame_result
     frame_results.append({
         "frame": frame.stem,
         "ms": (time.perf_counter() - frame_start) * 1000.0,
+        "generated": int(frame_result["generated_token_count"]),
+        "ttft_ms": float(frame_result["time_to_first_token_ms"]),
+        "decode_ms": float(frame_result["decode_ms"]),
+        "decode_tokens_per_second": float(frame_result["decode_tokens_per_second"]),
         "text": str(frame_result["text"]),
     })
 
@@ -126,5 +132,9 @@ print(
 for frame_result in frame_results:
     print(
         f"{frame_result['frame']}: {frame_result['ms']:.2f} ms, "
+        f"generated={frame_result['generated']}, "
+        f"ttft_ms={frame_result['ttft_ms']:.2f}, "
+        f"decode_ms={frame_result['decode_ms']:.2f}, "
+        f"decode_tokens_per_second={frame_result['decode_tokens_per_second']:.2f}, "
         f"text={frame_result['text']!r}"
     )

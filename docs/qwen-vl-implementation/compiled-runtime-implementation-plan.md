@@ -209,7 +209,9 @@ verified properties:
   ready model that performs lazy engine preparation during its first request.
 - The balanced production profile now has a dedicated regression using the
   original 1920x1080 JPEG, Qwen smart resize to 1312x736, 3,772 vision patches,
-  943 merged visual tokens, a 1,024-token text profile, and 64 KV pages. Captured
+  943 merged visual tokens, a 1,024-token text profile, and 80 KV pages. The
+  1,280-token KV capacity covers the 960-token prompt plus a 100-token output
+  cap. Captured
   graph compilation accepts a fingerprinted `builder_workspace_mb` option; this
   profile uses 4 GB because its vision-merger tactic requires more than 1 GB,
   while the independent one-token decode compiler remains at 64 MB.
@@ -228,6 +230,28 @@ verified properties:
   (72.21 ms/token). Therefore image/vision dominates first-token latency, but
   text decode is about 68% of the ten-token request and is the primary next
   optimization target.
+- The BF16 paged-attention decode kernel now computes every Q-K score once per
+  layer and keeps its softmax weights in shared memory. The prior kernel
+  recomputed each score for max, sum, and every one of 128 output dimensions.
+  On the same RTX 4080 balanced profile this raised sustained decode from about
+  13.8 tokens/s to roughly 50 tokens/s. The four-image performance regression
+  uses `ignore_eos=1` and generates exactly 100 tokens so different EOS points
+  cannot bias throughput. Its measured totals were 2,270-2,543 ms, with
+  327-338 ms TTFT and 44.9-51.1 tokens/s decode; averages were 2,345 ms total,
+  333 ms TTFT, and 2,012 ms for the remaining 99 iterations. Normal serving
+  keeps `ignore_eos` disabled and stops naturally; the same images completed
+  meaningful 38-56-token descriptions in about 0.97-1.32 s during the earlier
+  semantic run. The runtime now reports `time_to_first_token_ms`, `decode_ms`,
+  `decode_tokens_per_second`, and `total_ms`, and benchmark output always
+  includes the actual generated count.
+- Persistent GPU metadata tensors remove per-token allocation of token,
+  position, context-length, and slot-position inputs. This cleans up the serving
+  loop but did not materially change the 943-token benchmark. BF16-pair
+  vectorization, a two-block-per-head attention split, and TensorRT decode CUDA
+  Graph replay were each measured and rejected because they were neutral or
+  slower on this profile. Future optimization should profile TensorRT decoder
+  GEMMs and use a proper split-K paged-attention workspace before revisiting
+  those approaches.
 - Decode graph capture must execute on the xlang calling thread when its cache
   is missing. A prior attempt to initialize it asynchronously deadlocked on a
   new 64-page profile because xlang runtime capture is not a background-thread

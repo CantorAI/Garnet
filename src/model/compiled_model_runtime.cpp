@@ -1046,6 +1046,7 @@ namespace Garnet
     X::Value CompiledModelRuntime::Forward(X::Value request)
     {
         std::lock_guard<std::mutex> guard(m_mutex);
+        const auto requestStart = std::chrono::steady_clock::now();
         X::Dict result;
         if (!m_ready) {
             result->Set("status", X::Value("error"));
@@ -1169,6 +1170,9 @@ namespace Garnet
             result->Set("token_id", X::Value(tokenId));
             result->Set("token_value", X::Value(tokenValue));
             sampledTokenId = tokenId;
+            const auto firstTokenReady = std::chrono::steady_clock::now();
+            result->Set("time_to_first_token_ms", X::Value(
+                std::chrono::duration<double, std::milli>(firstTokenReady - requestStart).count()));
         }
 
         if (requestedNewTokens > 0) {
@@ -1196,6 +1200,8 @@ namespace Garnet
             }
             const int64_t endOfText = tokenizer->TokenId("<|endoftext|>");
             const int64_t imEnd = tokenizer->TokenId("<|im_end|>");
+            const bool ignoreEos = requestDict["ignore_eos"].IsValid() &&
+                requestDict["ignore_eos"].ToLongLong() != 0;
             const int cacheCapacity = m_inputShapes.size() > 11 && m_inputShapes[11].size() >= 3
                 ? m_inputShapes[11][1] * m_inputShapes[11][2]
                 : 0;
@@ -1205,25 +1211,72 @@ namespace Garnet
                 result->Set("error_code", X::Value("compiled_generation_exceeds_kv_profile"));
                 return result;
             }
+            int64_t decodeTokenValue = sampledTokenId;
+            int64_t decodeRopePositions[3] = {};
+            int decodeContextLength = 0;
+            int decodeSlotPosition = 0;
+            X::Value decodeTokenTensor = MakeCudaTensorFromHost(
+                X::TensorDataType::LONGLONG, {1, 1}, &decodeTokenValue, sizeof(decodeTokenValue));
+            X::Value decodePositionTensor = MakeCudaTensorFromHost(
+                X::TensorDataType::LONGLONG, {3, 1, 1}, decodeRopePositions, sizeof(decodeRopePositions));
+            X::Value decodeContextTensor = MakeCudaTensorFromHost(
+                X::TensorDataType::INT, {1}, &decodeContextLength, sizeof(decodeContextLength));
+            X::Value decodeSlotTensor = MakeCudaTensorFromHost(
+                X::TensorDataType::INT, {1}, &decodeSlotPosition, sizeof(decodeSlotPosition));
+            if (!decodeTokenTensor.IsTensor() || !decodePositionTensor.IsTensor() ||
+                !decodeContextTensor.IsTensor() || !decodeSlotTensor.IsTensor()) {
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_decode_metadata_allocation_failed"));
+                return result;
+            }
+            X::Tensor decodeTokenGpu(decodeTokenTensor);
+            X::Tensor decodePositionGpu(decodePositionTensor);
+            X::Tensor decodeContextGpu(decodeContextTensor);
+            X::Tensor decodeSlotGpu(decodeSlotTensor);
+            void* decodeTokenDevice = TensorHelper::GetGPUMemory(decodeTokenGpu);
+            void* decodePositionDevice = TensorHelper::GetGPUMemory(decodePositionGpu);
+            void* decodeContextDevice = TensorHelper::GetGPUMemory(decodeContextGpu);
+            void* decodeSlotDevice = TensorHelper::GetGPUMemory(decodeSlotGpu);
+            const auto decodeStart = std::chrono::steady_clock::now();
             for (int generatedIndex = 1; generatedIndex < requestedNewTokens; ++generatedIndex) {
-                if (sampledTokenId == endOfText || sampledTokenId == imEnd) break;
+                if (!ignoreEos && (sampledTokenId == endOfText || sampledTokenId == imEnd)) break;
                 const int slotPosition = frontendInputs.promptTokenCount + generatedIndex - 1;
                 const int contextLength = slotPosition + 1;
                 const int64_t ropePosition = static_cast<int64_t>(slotPosition) +
                     frontendInputs.mropePositionDelta;
                 const int64_t ropePositions[3] = {ropePosition, ropePosition, ropePosition};
+                decodeTokenValue = sampledTokenId;
+                decodeRopePositions[0] = ropePositions[0];
+                decodeRopePositions[1] = ropePositions[1];
+                decodeRopePositions[2] = ropePositions[2];
+                decodeContextLength = contextLength;
+                decodeSlotPosition = slotPosition;
+                cudaError_t metadataStatus = cudaMemcpyAsync(
+                    decodeTokenDevice, &decodeTokenValue, sizeof(decodeTokenValue),
+                    cudaMemcpyHostToDevice, cudaStreamPerThread);
+                if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
+                    decodePositionDevice, decodeRopePositions, sizeof(decodeRopePositions),
+                    cudaMemcpyHostToDevice, cudaStreamPerThread);
+                if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
+                    decodeContextDevice, &decodeContextLength, sizeof(decodeContextLength),
+                    cudaMemcpyHostToDevice, cudaStreamPerThread);
+                if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
+                    decodeSlotDevice, &decodeSlotPosition, sizeof(decodeSlotPosition),
+                    cudaMemcpyHostToDevice, cudaStreamPerThread);
+                if (metadataStatus != cudaSuccess) {
+                    result->Set("status", X::Value("error"));
+                    result->Set("error_code", X::Value("compiled_decode_metadata_upload_failed"));
+                    result->Set("error_message", X::Value(cudaGetErrorString(metadataStatus)));
+                    return result;
+                }
                 X::V<X::XList> decodeInputs;
-                decodeInputs->AddItem(MakeCudaTensorFromHost(
-                    X::TensorDataType::LONGLONG, {1, 1}, &sampledTokenId, sizeof(sampledTokenId)));
-                decodeInputs->AddItem(MakeCudaTensorFromHost(
-                    X::TensorDataType::LONGLONG, {3, 1, 1}, ropePositions, sizeof(ropePositions)));
+                decodeInputs->AddItem(decodeTokenTensor);
+                decodeInputs->AddItem(decodePositionTensor);
                 decodeInputs->AddItem(activeInputs->Get(11));
                 decodeInputs->AddItem(activeInputs->Get(12));
                 decodeInputs->AddItem(activeInputs->Get(13));
-                decodeInputs->AddItem(MakeCudaTensorFromHost(
-                    X::TensorDataType::INT, {1}, &contextLength, sizeof(contextLength)));
-                decodeInputs->AddItem(MakeCudaTensorFromHost(
-                    X::TensorDataType::INT, {1}, &slotPosition, sizeof(slotPosition)));
+                decodeInputs->AddItem(decodeContextTensor);
+                decodeInputs->AddItem(decodeSlotTensor);
                 X::Dict decodeRequest;
                 decodeRequest->Set("inputs", X::Value(decodeInputs));
                 decodeRequest->Set("sample", X::Value("greedy"));
@@ -1238,11 +1291,19 @@ namespace Garnet
                 sampledTokenId = decodeResult["token_id"].ToLongLong();
                 generatedTokens.push_back(sampledTokenId);
             }
+            const auto decodeEnd = std::chrono::steady_clock::now();
+            const double decodeMs =
+                std::chrono::duration<double, std::milli>(decodeEnd - decodeStart).count();
             X::V<X::XList> tokenList;
             for (const int64_t token : generatedTokens) tokenList->AddItem(X::Value(token));
             result->Set("token_ids", X::Value(tokenList));
             result->Set("text", X::Value(tokenizer->Decode(generatedTokens, true)));
             result->Set("generated_token_count", X::Value(static_cast<long long>(generatedTokens.size())));
+            result->Set("decode_ms", X::Value(decodeMs));
+            result->Set("decode_tokens_per_second", X::Value(
+                generatedTokens.size() > 1 && decodeMs > 0.0
+                    ? static_cast<double>(generatedTokens.size() - 1) * 1000.0 / decodeMs
+                    : 0.0));
             result->Set("token_id", X::Value(sampledTokenId));
         }
         const bool returnLogits = !sampleGreedy ||
@@ -1256,6 +1317,9 @@ namespace Garnet
             result->Set("height", X::Value(frontendInputs.resizedHeight));
             result->Set("width", X::Value(frontendInputs.resizedWidth));
         }
+        result->Set("total_ms", X::Value(
+            std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - requestStart).count()));
         return result;
     }
 
