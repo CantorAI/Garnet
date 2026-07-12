@@ -45,7 +45,7 @@ def add_dll_dirs(garnet_dll):
 
 
 def load_dll():
-    garnet_dll = Path(os.environ.get("GARNET_DLL_PATH", REPO_ROOT / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll"))
+    garnet_dll = Path(os.environ.get("GARNET_DLL_PATH", REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"))
     if not garnet_dll.exists():
         skip(f"garnet.dll not found: {garnet_dll}")
     add_dll_dirs(garnet_dll)
@@ -228,9 +228,9 @@ def main():
         "<|im_start|>user\n"
         "<|vision_start|>"
         + "<|image_pad|>" * visual_count
-        + "<|vision_end|>\n"
+        + "<|vision_end|>"
         + prompt
-        + "\n<|im_end|>\n"
+        + "<|im_end|>\n"
         "<|im_start|>assistant\n"
     )
     native_prompt = build_prompt_native(dll, model_dir, prompt, grid)

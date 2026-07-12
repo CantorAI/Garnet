@@ -1,8 +1,32 @@
-import CpuTensor as T
+from garnet import garnet
 
-from vision_encoder import Qwen3VisionEncoder
-from vl_adapter import Qwen3GetRopeIndex, Qwen3PrepareInputsEmbeds
-from qwen_llm import Qwen3TextModel
+T = garnet.tensor()
+T.set_backend("TensorRT")
+
+from "." import vision_encoder as vision
+from "." import vl_adapter as adapter
+from "." import qwen_llm as llm
+
+GARNET_MODEL_SPEC = {
+    "arguments": [
+        {"name": "input_ids", "kind": "tensor"},
+        {"name": "pixel_values", "kind": "tensor"},
+        {"name": "image_grid_thw", "kind": "tensor"},
+        {"name": "vision_bilinear_indices", "kind": "tensor"},
+        {"name": "vision_bilinear_weights", "kind": "tensor"},
+        {"name": "vision_position_ids", "kind": "tensor"},
+        {"name": "vision_cu_seqlens", "kind": "tensor"},
+        {"name": "video_grid_thw", "kind": "none"},
+        {"name": "mm_token_type_ids", "kind": "tensor"},
+        {"name": "attention_mask", "kind": "tensor"},
+        {"name": "position_ids", "kind": "tensor"},
+        {"name": "mrope_position_deltas", "kind": "tensor"},
+        {"name": "weights", "kind": "weights"},
+        {"name": "config", "kind": "config"},
+        {"name": "past_key_values", "kind": "none"},
+        {"name": "use_cache", "kind": "bool", "value": False}
+    ]
+}
 
 # Qwen3-VL dense model forward skeleton.
 #
@@ -20,43 +44,43 @@ def Qwen3VLModel(
     input_ids,
     pixel_values,
     image_grid_thw,
+    vision_bilinear_indices,
+    vision_bilinear_weights,
+    vision_position_ids,
+    vision_cu_seqlens,
     video_grid_thw,
     mm_token_type_ids,
     attention_mask,
+    position_ids,
+    mrope_position_deltas,
     weights,
     config,
     past_key_values=None,
     use_cache=True
 ):
-    visual_outputs = Qwen3VisionEncoder(
+    visual_outputs = vision.Qwen3VisionEncoder(
         pixel_values,
         image_grid_thw,
+        vision_bilinear_indices,
+        vision_bilinear_weights,
+        vision_position_ids,
+        vision_cu_seqlens,
         weights,
         config
     )
 
-    prepared = Qwen3PrepareInputsEmbeds(
+    prepared = adapter.Qwen3PrepareInputsEmbeds(
         input_ids,
         visual_outputs,
         weights,
         config
     )
 
-    rope = Qwen3GetRopeIndex(
-        input_ids,
-        mm_token_type_ids,
-        image_grid_thw,
-        video_grid_thw,
-        attention_mask,
-        config
-    )
-
-    text_outputs = Qwen3TextModel(
-        input_ids=None,
+    text_outputs = llm.Qwen3TextModel(
+        input_ids=input_ids,
         inputs_embeds=prepared["inputs_embeds"],
-        position_ids=rope["position_ids"],
+        position_ids=position_ids,
         attention_mask=attention_mask,
-        visual_pos_masks=prepared["visual_pos_masks"],
         deepstack_visual_embeds=prepared["deepstack_visual_embeds"],
         past_key_values=past_key_values,
         weights=weights,
@@ -68,15 +92,16 @@ def Qwen3VLModel(
 
     # Qwen3-VL-2B config ties word embeddings. If a model provides an untied
     # lm_head, backend can map this op to lm_head.weight instead.
-    logits = hidden_states * T.binary_op(
+    logits = hidden_states * T.unary_op(
         "lm_head",
-        tied_word_embeddings=config.tie_word_embeddings
-    ) * weights["language_model.embed_tokens.weight"]
+        tied_word_embeddings=config.tie_word_embeddings,
+        weight_name="model.language_model.embed_tokens.weight"
+    )
 
     return {
         "logits": logits,
         "past_key_values": text_outputs["past_key_values"],
-        "rope_deltas": rope["mrope_position_deltas"],
+        "rope_deltas": mrope_position_deltas,
         "visual_outputs": visual_outputs
     }
 

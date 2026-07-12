@@ -16,6 +16,20 @@ __global__ void astypeKernel(const InType* __restrict__ input,
 // Extern "C" interface for converting from __nv_bfloat16 to float.
 extern "C" {
 
+    cudaError_t runConvertFP32ToBF16Async(
+        const float* input,
+        __nv_bfloat16* output,
+        int num_elements,
+        cudaStream_t stream)
+    {
+        if (!input || !output || num_elements <= 0) return cudaErrorInvalidValue;
+        int blockSize = 256;
+        int gridSize = (num_elements + blockSize - 1) / blockSize;
+        astypeKernel<float, __nv_bfloat16><<<gridSize, blockSize, 0, stream>>>(
+            input, output, num_elements);
+        return cudaGetLastError();
+    }
+
     // Launch function for converting __nv_bfloat16 to float.
     void runAstype_bf16_to_fp32(const __nv_bfloat16* input, float* output, int num_elements)
     {

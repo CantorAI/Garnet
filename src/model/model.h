@@ -2,6 +2,9 @@
 
 #include "xpackage.h"
 #include "xlang.h"
+#include "compiled_model_runtime.h"
+
+#include <memory>
 
 namespace Garnet
 {
@@ -15,6 +18,7 @@ namespace Garnet
 		X::Value mRmsNormWeight;
 
 		X::Value mTokenizer;
+        std::shared_ptr<CompiledModelRuntime> mCompiledRuntime;
 	public:
 		X::Value m_engine;
 		void SetEngine(X::Value engine) { m_engine = engine; }
@@ -25,6 +29,7 @@ namespace Garnet
             APISET().AddVarFunc("tokenizer", &Model::Tokenizer);
             APISET().AddVarFunc("detokenizer", &Model::Detokenizer);
             APISET().AddVarFunc("debug_probe", &Model::DebugProbe);
+            APISET().AddVarFunc("runtime_status", &Model::RuntimeStatus);
             APISET().AddVarFunc("forward", &Model::Forward);
             APISET().AddVarFunc("forward_request", &Model::ForwardRequest);
             APISET().AddVarFunc("create_device_kv_cache", &Model::CreateDeviceKVCache);
@@ -56,8 +61,17 @@ namespace Garnet
             X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
         void SampleLogits(X::XRuntime* rt, X::XObj* pContext,
             X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+        bool InitializeCompiledRuntime(
+            const std::string& rootXModel,
+            const std::string& cacheDirectory,
+            const std::string& weightsLocation,
+            const std::string& entryFunction,
+            const std::string& frontend,
+            const std::vector<std::vector<int>>& inputShapes,
+            const std::vector<std::string>& inputDataTypes);
+        void RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
+            X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 
-        void BuildTRTEngine(X::Value forwardFunc, X::Value inputShapes);
         void Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
         void ForwardRequest(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
         void CreateDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

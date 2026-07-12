@@ -1,0 +1,67 @@
+#pragma once
+
+#include "xlang.h"
+#include "safetensors_index.h"
+
+#include <mutex>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+namespace Garnet
+{
+    class CompiledModelRuntime
+    {
+    public:
+        struct Diagnostics
+        {
+            long long rootXExecutions = 0;
+            long long hardcodedQwenRunnerCalls = 0;
+            long long pythonSubgraphCalls = 0;
+            long long directInternalExportCalls = 0;
+            long long cpuTensorIntermediates = 0;
+            long long graphCacheHits = 0;
+            long long graphCacheMisses = 0;
+        };
+
+    private:
+        mutable std::mutex m_mutex;
+        std::string m_rootXModel;
+        std::string m_cacheDirectory;
+        std::string m_weightsLocation;
+        std::string m_entryFunction;
+        std::string m_frontend;
+        std::vector<std::vector<int>> m_inputShapes;
+        std::string m_state = "uninitialized";
+        std::string m_errorCode;
+        std::string m_errorMessage;
+        bool m_ready = false;
+        X::Value m_module;
+        std::vector<X::Value> m_dependencyModules;
+        X::Value m_rootFunction;
+        X::Value m_graph;
+        std::string m_graphSummary;
+        std::string m_enginePath;
+        SafeTensorsIndex m_weightIndex;
+        std::string m_weightIndexError;
+        std::unordered_map<std::string, X::Value> m_loadedWeights;
+        long long m_loadedWeightBytes = 0;
+        Diagnostics m_diagnostics;
+        std::shared_ptr<CompiledModelRuntime> m_decodeRuntime;
+
+    public:
+        bool Initialize(
+            const std::string& rootXModel,
+            const std::string& cacheDirectory,
+            const std::string& weightsLocation,
+            const std::string& entryFunction,
+            const std::string& frontend,
+            const std::vector<std::vector<int>>& inputShapes,
+            const std::vector<std::string>& inputDataTypes);
+
+        X::Value Status() const;
+        X::Value Forward(X::Value request);
+        X::Value DebugProbe(const std::string& probe, X::Value argument);
+    };
+}

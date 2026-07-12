@@ -1,4 +1,7 @@
-import CpuTensor as T
+from garnet import garnet
+
+T = garnet.tensor()
+T.set_backend("TensorRT")
 
 # Qwen3-VL multimodal glue.
 #
@@ -23,14 +26,26 @@ def Qwen3GetRopeIndex(input_ids, mm_token_type_ids, image_grid_thw, video_grid_t
     # Produces multimodal position_ids and mrope_position_deltas.
     # position_ids shape follows HF: (3, batch, sequence), while the text model
     # internally expands/handles the text position channel as well.
-    return input_ids * T.unary_op(
-        "qwen3_vl_get_rope_index",
+    position_ids = input_ids * T.unary_op(
+        "qwen3_vl_get_position_ids",
         mm_token_type_ids=mm_token_type_ids,
         image_grid_thw=image_grid_thw,
         video_grid_thw=video_grid_thw,
         attention_mask=attention_mask,
         spatial_merge_size=config.vision_config.spatial_merge_size
     )
+    mrope_position_deltas = input_ids * T.unary_op(
+        "qwen3_vl_get_mrope_position_deltas",
+        mm_token_type_ids=mm_token_type_ids,
+        image_grid_thw=image_grid_thw,
+        video_grid_thw=video_grid_thw,
+        attention_mask=attention_mask,
+        spatial_merge_size=config.vision_config.spatial_merge_size
+    )
+    return {
+        "position_ids": position_ids,
+        "mrope_position_deltas": mrope_position_deltas
+    }
 
 
 def Qwen3MergeVisualEmbeddings(input_ids, text_embeddings, visual_embeds, image_token_id, video_token_id):
@@ -45,8 +60,11 @@ def Qwen3MergeVisualEmbeddings(input_ids, text_embeddings, visual_embeds, image_
 
 
 def Qwen3PrepareInputsEmbeds(input_ids, visual_outputs, weights, config):
-    text_embeddings = input_ids * T.binary_op("embedding") * weights["language_model.embed_tokens.weight"]
-    merged = Qwen3MergeVisualEmbeddings(
+    text_embeddings = input_ids * T.unary_op(
+        "embedding",
+        weight_name="model.language_model.embed_tokens.weight"
+    )
+    inputs_embeds = Qwen3MergeVisualEmbeddings(
         input_ids,
         text_embeddings,
         visual_outputs["pooler_output"],
@@ -54,7 +72,6 @@ def Qwen3PrepareInputsEmbeds(input_ids, visual_outputs, weights, config):
         video_token_id=config.video_token_id
     )
     return {
-        "inputs_embeds": merged["inputs_embeds"],
-        "visual_pos_masks": merged["visual_pos_masks"],
+        "inputs_embeds": inputs_embeds,
         "deepstack_visual_embeds": visual_outputs["deepstack_features"]
     }

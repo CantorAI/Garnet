@@ -14,6 +14,187 @@ No stage is complete because a smoke test returns text. A stage is complete only
 when its ownership, graph-source, device-residency, correctness, and performance
 gates pass.
 
+### Implementation Progress (2026-07-11)
+
+The new implementation branch now has a production-path foundation with these
+verified properties:
+
+- `runtime_mode="compiled_xmodel"` loads the selected root `.x` and does not
+  invoke Python subgraph assembly, direct internal exports, or hardcoded Qwen
+  runners.
+- Qwen model expressions use `garnet.tensor()` as their tensor-expression
+  implementation and select the TensorRT backend.
+- A decorated root function can execute with symbolic `X::Tensor` inputs and
+  return an xlang `TensorGraph` without entering the old NVRTC launch path.
+- Local imported `.x` files, explicit `# garnet-dependency:` files, entry
+  function, input shapes, runtime schema, and weight-location metadata
+  contribute to the graph compatibility fingerprint.
+- A validated graph/engine cache hit performs zero root `.x` executions.
+  Missing, stale, or corrupt graph cache data recaptures and atomically replaces
+  derived artifacts.
+- Generic TensorRT lowering maps graph tensor identity across an
+  `add -> multiply -> subtract` chain, nested functions, a five-iteration
+  xmodel loop, static branches, matrix multiplication, Qwen-layout linear
+  projection, and activation unary ops.
+- FP32 and BF16 symbolic input contracts compile to matching TensorRT bindings.
+  Execution returns GPU `X::Tensor` outputs; BF16-to-FP32 conversion occurs only
+  when the test explicitly calls `tensor_to_cpu` as an observation boundary.
+- Unsupported operators fail with the operation name and do not publish an
+  engine artifact.
+- The complete Qwen3-VL-2B root expression captures from the real 625-tensor,
+  4,255,064,064-byte checkpoint without a native xlang assertion. Model
+  weights are resolved by canonical safetensors name through a read-only mapped
+  file; graph metadata never owns temporary weight tensor wrappers.
+- The checkpoint names in `.x` now exactly use `model.visual.*` and
+  `model.language_model.*`. Embedding, flattened Conv3D patch projection,
+  learned-position interpolation, vision LayerNorm/MLP/RoPE/attention,
+  DeepStack and final patch mergers, multimodal scatter, text RMSNorm/QKV/
+  interleaved MRoPE/causal GQA, DeepStack injection, and tied LM head all lower
+  from the captured graph.
+- Grid-dependent vision metadata and multimodal text position metadata are
+  explicit GPU request tensors. The native image/request frontend owns their
+  construction because the reference implementation also precomputes these
+  data-dependent loops before graph compilation.
+- A cacheless fixed-shape Qwen3-VL-2B prefill graph serialized successfully on
+  the RTX 4080. The observed monolithic plan was 9,757,430,436 bytes and
+  TensorRT compilation peaked at approximately 21.56 GB host working set. This
+  proves complete lowering, but the plan is not a production artifact: it was
+  removed after measurement and must be replaced by partitioned and/or
+  stripped-refittable plans.
+- Stripped, individually refittable plans are now implemented and verified with
+  a numerical named-weight fixture. Its plan is 18,724 bytes and refits directly
+  from the mapped safetensors range. Rebuilding the full Qwen graph with the
+  same policy reduced the plan to 13,172,492 bytes (about 741x smaller than the
+  initial 9.76 GB plan).
+- Cached engine deserialization now uses TensorRT `IStreamReaderV2` instead of
+  first copying the complete plan into a host `std::vector`.
+- The stripped full engine refits all 625 checkpoint tensors and executes to a
+  finite GPU logits tensor of shape `[1, 16, 151936]`. Measured smoke timings on
+  the RTX 4080 were approximately 3,592 ms for cold refit plus first forward and
+  23.05 ms for a warm forward including explicit logits observation.
+- A real `frame_0.jpg` smoke request now traverses native tokenizer, nvJPEG,
+  CUDA resize/normalize/patch layout, asynchronous GPU FP32-to-BF16 conversion,
+  native GPU vision interpolation/position metadata, native multimodal text
+  MRoPE metadata, the compiled engine, and logits. For the intentionally tiny
+  32x32 profile (four patches, one merged visual token), the latest cold
+  frontend-to-logits run was 327.17 ms and steady-state was 29.37 ms. These are
+  plumbing metrics, not semantic or HD performance claims: the profile is tiny
+  and still performs no decode loop.
+- `frontend="qwen3_vl"` now installs a model-owned compiled frontend. A caller
+  can pass only `image_path`, `prompt`, and image-profile limits to
+  `model.forward`; C++ constructs all eleven root graph inputs as GPU
+  `X::Tensor` values and executes the cached engine. The one-call output is
+  bit-identical to the expanded debug-input path.
+- Greedy top-1 sampling now supports FP32 and BF16 logits directly on GPU and
+  reads back only the selected token ID/value. On the same tiny warm profile,
+  one-call JPEG plus prompt to the first GPU-sampled token measured 25.36 ms.
+  The full-logits parity path measured 59.26 ms because it explicitly copied
+  and compared the entire `[1,16,151936]` tensor.
+- Native BF16 paged-KV write and grouped-query attention kernels now operate on
+  GPU page arenas and an INT32 logical-to-physical page table. A model-scoped
+  `debug_probe("paged_kv_bf16", ...)` fixture validates a five-token write/read
+  against a NumPy numerical reference while keeping QKV, K pages, V pages, and
+  attention output as GPU `X::Tensor` values. This is the backend primitive;
+  the production decode graph still needs explicit cache, block-table, and
+  context-length operands plus prefill/decode partition execution.
+- Captured TensorRT networks are now strongly typed, preserving the dtype of
+  each graph `X::Tensor` and preventing implicit FP32 conversion at custom
+  boundaries. A serializable `GarnetPagedKVDecodeBF16` plugin consumes explicit
+  QKV, key-page, value-page, page-table, context-length, and slot-position
+  tensor edges from `.x`; no opaque cache handle appears in the graph.
+- The actual 28-layer Qwen text-decode `.x` entry compiles against all real 2B
+  weights into a 5,820,116-byte stripped/refittable engine. Cache-hit load was
+  76.78 ms, first refit/forward was 1,785.73 ms, warm GPU-sampled decode was
+  7.52 ms, and a persistent 16-token page averaged 8.11 ms/token with 8.51 ms
+  p95. This is a batch-1, one-page decode profile; it does not include visual
+  prefill or continuous batching and must not be presented as final serving
+  throughput.
+- `GarnetPagedKVPrefillWriteBF16` is now a separate serializable TensorRT
+  plugin. It accepts explicit QKV, layer-page, page-table, and device
+  start-position tensors, writes every prompt K/V row, and passes QKV onward
+  to the ordinary full causal attention graph. A five-token fixture crosses a
+  page boundary with a non-identity physical page table; a separately cached
+  decode engine consumes all six logical positions with numerical parity.
+- `qwen_text_prefill.x` and `qwen_vl_prefill.x` now define real paged prefill
+  graphs. The latter contains vision encoding, visual embedding replacement,
+  DeepStack injection, all 28 text layers, per-layer BF16 page writes, and the
+  tied LM head. Its two-page test writes 16 multimodal tokens and hands the
+  same GPU `X::Tensor` pages to token-17 decode. Measured warm timings were
+  12.03 ms for VLM prefill and 8.87 ms for decode; cold refit was about 3.29 s
+  and 2.00 s respectively.
+- A 15-input `frontend="qwen3_vl"` profile now allocates model-owned BF16 KV
+  pages on CUDA and initializes an internal compiled text-decode runtime. One
+  public `model.forward({image_path, prompt, max_new_tokens})` call performs
+  nvJPEG/CUDA preprocessing, native Qwen tokenization, VLM prefill, GPU greedy
+  sampling, paged decode, stop-token handling, and native detokenization. On
+  the one-visual-token plumbing profile, a warm JPEG plus 14-token prompt plus
+  four generated tokens took 48.44 ms total after the packed-cache alias fix.
+  The output was `This image shows a`; its first three token decisions exactly
+  matched cacheless full-sequence execution. This proves ownership, page
+  persistence, and execution-flow parity, not semantic image quality at a
+  useful visual resolution.
+- Packed per-layer cache selection is metadata, not a TensorRT slice. The
+  prefill/decode plugins offset directly into the model-owned
+  `[layers,pages,page_size,kv_heads,head_dim]` allocation. The earlier slice
+  lowering mutated temporary TensorRT buffers and produced repetitive decode;
+  a cacheless-token regression now prevents that failure from returning.
+- Vision learned-position interpolation now reduces the four bilinear
+  neighbors on axis 1, producing `[patches, hidden]`. The old axis-0 reduction
+  accidentally worked only when `patches == 4` and failed at realistic grids.
+- The 60-visual-token reference profile now compiles and runs with a 192x320
+  resize, 240 vision patches, a 96-token text profile, and ten generated tokens.
+  Four distinct JPEGs measured 122.08-123.72 ms end to end after warmup. For
+  `frame_0.jpg`, Garnet returned
+  `A person is weaving a basket in a traditional,`, consistent with the visible
+  basket-weaving scene. These are batch-1 RTX 4080 measurements; formal HF
+  logits parity and larger visual profiles remain required quality gates.
+- The native single-image chat template now matches the official Qwen template
+  token for token: user text directly follows `<|vision_end|>`, and
+  `<|im_end|>` directly follows user text. The 60-visual-token sentence prompt
+  is 77 tokens in both Garnet and HF. HF chose
+  `A man sits in a rustic, bamboo-flo`; Garnet chose
+  `A person is weaving a basket in a traditional setting`. Both are consistent
+  with the frame, but token-level generation diverges after the shared first
+  token. GPU preprocessing currently measures 0.0384 mean absolute pixel error
+  versus the HF processor, so image preprocessing and full-logit numerical
+  parity remain explicit follow-up work.
+- The runtime cache schema now includes the strongly typed/paged-KV compiler
+  ABI. A clean rebuild of the complete 625-weight VLM root succeeded under that
+  schema and produced an 11,393,228-byte stripped engine. The rebuilt one-call
+  tiny-profile JPEG path returned its first GPU-sampled token in 16.77 ms;
+  explicit full-logits observation took about 120 ms and is a debug boundary,
+  not the serving path.
+- The original `qwen_vl_model.x` remains the cacheless correctness graph.
+  Production generation uses the explicit paged `qwen_vl_prefill.x` plus
+  `qwen_text_decode.x` partition; neither graph uses opaque cache handles.
+- Multi-result model operations are represented as explicit single-output
+  expressions or packed tensor state. Tensor expressions are never indexed as
+  dictionaries; this is enforced by the root-capture regression test.
+- The cache-hit model executes the same engine and result without executing the
+  root `.x` again.
+- `QwenTextRunner`, `QwenVisionRunner`, and the unused alternate
+  `Model::BuildTRTEngine -> TRTBuilder::BuildEngine` path have been removed from
+  this branch.
+
+Verified tests:
+
+```text
+Release build: build_scripts/windows/build_release.bat garnet
+Compiled path: test2026/tests/phase_24_compiled_xmodel_runtime/test.py
+Qwen root: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_root_capture.py
+Qwen text prefill: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_prefill.py
+Qwen VLM prefill/decode: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_vl_prefill.py
+Native one-call generation: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_vl_generate.py
+Reference path: RUN_GARNET_TRT_PREFLIGHT=1 phase_00_trt_expression_preflight/test.py
+```
+
+This completes the core Stage 2 gates, most fixed-shape Stage 3 lowering
+mechanics, explicit batch-1 paged prefill/decode, and the first model-owned
+one-call Stage 9 path. It does not complete dynamic profiles, semantic VLM
+parity, prefix persistence, continuous batching, or production-resolution
+image gates. Next work is HF intermediate parity at useful visual profiles,
+persistent decode buffers/CUDA Graphs, and scheduler-owned page allocation.
+
 ## Branch Strategy
 
 Use a new branch for implementation:

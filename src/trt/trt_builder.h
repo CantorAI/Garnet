@@ -3,7 +3,9 @@
 #include "xlang.h"
 #include "xpackage.h"
 #include "trt_context.h"
+#include "safetensors_index.h"
 #include <string>
+#include <deque>
 #include <vector>
 #include <unordered_map>
 #include <NvInfer.h>
@@ -24,7 +26,6 @@ namespace Garnet {
         TRTBuilder();
         ~TRTBuilder();
 
-        X::Value BuildEngine(X::Value forwardFunc, X::Value inputShapes, X::Value weightsDict);
         X::Value ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape);
         X::Value RunMatmulEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue);
         X::Value ExportTextMLPEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& gateShape, const std::vector<int>& upShape, const std::vector<int>& downShape);
@@ -50,8 +51,24 @@ namespace Garnet {
         X::Value ExportLayerNormEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape, float eps);
         X::Value RunLayerNormEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue, X::Value biasValue);
 
-        X::Value HandleBinaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input1, X::Value input2) override;
-        X::Value HandleUnaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input) override;
+        bool BuildCapturedGraph(
+            X::Value graph,
+            X::Value forwardFunction,
+            X::ARGS& graphArguments,
+            X::ARGS& symbolicInputs,
+            const SafeTensorsIndex* weightIndex,
+            const std::string& enginePath,
+            std::string& errorMessage);
+        X::Value RunCapturedEngine(
+            const std::string& enginePath,
+            X::Value inputs,
+            const SafeTensorsIndex* weightIndex,
+            std::string& errorMessage);
+
+        X::Value HandleBinaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input1, X::Value input2, X::Value output) override;
+        X::Value HandleUnaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value output) override;
+        X::Value HandleBranchBegin(const std::string& condition, int branchType, unsigned long long flowId, int branchId) override;
+        X::Value HandleBranchEnd() override;
 
     private:
         nvinfer1::IBuilder* builder = nullptr;
@@ -60,8 +77,51 @@ namespace Garnet {
         nvinfer1::ICudaEngine* engine = nullptr;
 
         std::unordered_map<unsigned long long, nvinfer1::ITensor*> tensorMap;
+        std::unordered_map<std::string, nvinfer1::ITensor*> weightTensorMap;
+        std::deque<float> scalarWeights;
+        std::deque<long long> integerWeights;
+        std::deque<std::vector<float>> vectorWeights;
+        std::deque<std::vector<int>> integerVectorWeights;
+        const SafeTensorsIndex* capturedWeightIndex = nullptr;
+        SafeTensorsMappedFile capturedWeightFile;
+        nvinfer1::ITensor* lastOutput = nullptr;
+        nvinfer1::ITensor* pendingKVKeyPages = nullptr;
+        nvinfer1::ITensor* pendingKVValuePages = nullptr;
+        nvinfer1::ITensor* pendingKVPageTable = nullptr;
+        nvinfer1::ITensor* pendingKVContextLength = nullptr;
+        nvinfer1::ITensor* pendingKVSlotPosition = nullptr;
+        int pendingKVLayerIndex = -1;
+        std::vector<nvinfer1::IPluginV2*> ownedPlugins;
+        std::string loweringError;
+        bool loweringActive = true;
+        std::vector<bool> branchParentActivity;
+        std::unordered_map<unsigned long long, bool> flowBranchTaken;
 
         nvinfer1::ITensor* GetOrCreateTRTTensor(X::Value garnetTensorVal);
+        nvinfer1::ITensor* GetOrCreateTRTWeight(const std::string& weightName);
+        nvinfer1::ITensor* BroadcastLastDimension(
+            nvinfer1::ITensor* tensor,
+            int targetRank,
+            const std::string& layerName);
+        nvinfer1::ITensor* BroadcastMatrixWeight(
+            nvinfer1::ITensor* tensor,
+            int targetRank);
+        nvinfer1::ITensor* LowerVisionRope(
+            nvinfer1::ITensor* qkv,
+            nvinfer1::ITensor* positionIds,
+            X::KWARGS& options);
+        nvinfer1::ITensor* LowerVisionAttention(
+            nvinfer1::ITensor* qkv,
+            nvinfer1::ITensor* cuSeqlens,
+            X::KWARGS& options);
+        nvinfer1::ITensor* LowerTextRope(
+            nvinfer1::ITensor* qkv,
+            nvinfer1::ITensor* positionIds,
+            X::KWARGS& options);
+        nvinfer1::ITensor* LowerTextAttention(
+            nvinfer1::ITensor* qkv,
+            nvinfer1::ITensor* attentionMask,
+            X::KWARGS& options);
     };
 
     extern thread_local ITRTContext* g_trtContext;

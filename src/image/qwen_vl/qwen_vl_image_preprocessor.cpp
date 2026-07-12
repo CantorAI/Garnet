@@ -1,4 +1,5 @@
 #include "qwen_vl_image_preprocessor.h"
+#include "qwen_vl_vision_metadata.h"
 #include "../cuda/jpeg_decode_nvjpeg.h"
 #include "../../tensor/garnet_tensor.h"
 #include "../../tensor/tensor_helper.h"
@@ -375,6 +376,11 @@ namespace Garnet::Image::QwenVL
         PreprocessResult result;
         result.pixelValues = X::Value(pixelValues);
         result.imageGridTHW = X::Value(imageGrid);
+        auto metadata = BuildVisionMetadataTensors(1, gridH, gridW, config.mergeSize);
+        result.bilinearIndices = metadata.bilinearIndices;
+        result.bilinearWeights = metadata.bilinearWeights;
+        result.visionPositionIds = metadata.positionIds;
+        result.visionCuSeqlens = metadata.cuSeqlens;
         result.sourceHeight = height;
         result.sourceWidth = width;
         result.resizedHeight = height;
@@ -425,6 +431,15 @@ namespace Garnet::Image::QwenVL
         PreprocessResult result;
         result.pixelValues = X::Value(pixelValues);
         result.imageGridTHW = X::Value(imageGrid);
+        auto metadata = BuildVisionMetadataTensors(
+            static_cast<int>(deviceResult.imageGridTHW[0]),
+            static_cast<int>(deviceResult.imageGridTHW[1]),
+            static_cast<int>(deviceResult.imageGridTHW[2]),
+            deviceResult.mergeSize);
+        result.bilinearIndices = metadata.bilinearIndices;
+        result.bilinearWeights = metadata.bilinearWeights;
+        result.visionPositionIds = metadata.positionIds;
+        result.visionCuSeqlens = metadata.cuSeqlens;
         result.sourceHeight = deviceResult.sourceHeight;
         result.sourceWidth = deviceResult.sourceWidth;
         result.resizedHeight = deviceResult.resizedHeight;

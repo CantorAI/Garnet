@@ -490,6 +490,11 @@ namespace Garnet
         }
 
         std::string key = params[0].ToString();
+        if (mCompiledRuntime) {
+            X::Value argument = params.size() >= 2 ? params[1] : X::Value();
+            retValue = mCompiledRuntime->DebugProbe(key, argument);
+            return;
+        }
         if (key == "logits_top1") {
             X::ARGS sampleParams(1);
             if (params.size() >= 2) {
@@ -594,18 +599,41 @@ namespace Garnet
         retValue = result;
     }
 
-    void Model::BuildTRTEngine(X::Value forwardFunc, X::Value inputShapes)
+    bool Model::InitializeCompiledRuntime(
+        const std::string& rootXModel,
+        const std::string& cacheDirectory,
+        const std::string& weightsLocation,
+        const std::string& entryFunction,
+        const std::string& frontend,
+        const std::vector<std::vector<int>>& inputShapes,
+        const std::vector<std::string>& inputDataTypes)
     {
-        TRTBuilder builder;
-        // In Phase 1, we just invoke TRTBuilder
-        // mTRTEngine = builder.BuildEngine(forwardFunc, inputShapes, mModel);
-        // For now, we print a message.
-        std::cout << "[Model] Building TRT Engine with shapes..." << std::endl;
-        builder.BuildEngine(forwardFunc, inputShapes, mModel);
+        mCompiledRuntime = std::make_shared<CompiledModelRuntime>();
+        return mCompiledRuntime->Initialize(
+            rootXModel, cacheDirectory, weightsLocation, entryFunction, frontend, inputShapes, inputDataTypes);
+    }
+
+    void Model::RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (!mCompiledRuntime) {
+            X::Dict status;
+            status->Set("mode", X::Value("legacy"));
+            status->Set("state", X::Value("legacy_runner"));
+            status->Set("ready", X::Value(m_engine.IsValid()));
+            retValue = status;
+            return;
+        }
+        retValue = mCompiledRuntime->Status();
     }
 
     void Model::Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
+        if (mCompiledRuntime) {
+            X::Value request = params.size() == 0 ? X::Value() : params[0];
+            retValue = mCompiledRuntime->Forward(request);
+            return;
+        }
         std::cout << "[Model] Executing forward pass..." << std::endl;
         if (!m_engine.IsValid()) {
             std::cout << "[Model] No compiled engine attached." << std::endl;

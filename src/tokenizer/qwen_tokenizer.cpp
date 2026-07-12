@@ -491,9 +491,9 @@ namespace Garnet::Tokenization
         for (int64_t i = 0; i < visualTokens; ++i) {
             text += "<|image_pad|>";
         }
-        text += "<|vision_end|>\n";
+        text += "<|vision_end|>";
         text += userPrompt;
-        text += "\n<|im_end|>\n<|im_start|>assistant\n";
+        text += "<|im_end|>\n<|im_start|>assistant\n";
         return text;
     }
 
@@ -504,6 +504,78 @@ namespace Garnet::Tokenization
         int mergeSize)
     {
         return tokenizer.Encode(BuildSingleImagePromptText(userPrompt, imageGridTHW, mergeSize), false);
+    }
+
+    QwenVLMRoPEMetadata QwenVLPromptBuilder::BuildSingleImageMRoPEMetadata(
+        const std::vector<int64_t>& mmTokenTypeIds,
+        const int64_t imageGridTHW[3],
+        int mergeSize)
+    {
+        if (!imageGridTHW || mergeSize <= 0 || imageGridTHW[0] <= 0 ||
+            imageGridTHW[1] <= 0 || imageGridTHW[2] <= 0 ||
+            imageGridTHW[1] % mergeSize != 0 || imageGridTHW[2] % mergeSize != 0) {
+            throw std::invalid_argument("invalid image grid for Qwen MRoPE metadata");
+        }
+
+        const int64_t tokenCount = static_cast<int64_t>(mmTokenTypeIds.size());
+        QwenVLMRoPEMetadata result;
+        result.positionIds.resize(static_cast<size_t>(3 * tokenCount));
+        int64_t currentPosition = 0;
+        int64_t tokenIndex = 0;
+        bool consumedImage = false;
+
+        auto setPosition = [&](int dimension, int64_t index, int64_t value) {
+            result.positionIds[static_cast<size_t>(dimension * tokenCount + index)] = value;
+        };
+
+        while (tokenIndex < tokenCount) {
+            const int64_t modality = mmTokenTypeIds[static_cast<size_t>(tokenIndex)];
+            int64_t spanEnd = tokenIndex + 1;
+            while (spanEnd < tokenCount &&
+                mmTokenTypeIds[static_cast<size_t>(spanEnd)] == modality) {
+                ++spanEnd;
+            }
+            const int64_t spanLength = spanEnd - tokenIndex;
+            if (modality == 0) {
+                for (int64_t offset = 0; offset < spanLength; ++offset) {
+                    for (int dimension = 0; dimension < 3; ++dimension) {
+                        setPosition(dimension, tokenIndex + offset, currentPosition + offset);
+                    }
+                }
+                currentPosition += spanLength;
+            }
+            else if (modality == 1 && !consumedImage) {
+                const int64_t llmGridT = imageGridTHW[0];
+                const int64_t llmGridH = imageGridTHW[1] / mergeSize;
+                const int64_t llmGridW = imageGridTHW[2] / mergeSize;
+                if (spanLength != llmGridT * llmGridH * llmGridW) {
+                    throw std::invalid_argument("Qwen visual token span does not match image grid");
+                }
+                int64_t offset = 0;
+                for (int64_t t = 0; t < llmGridT; ++t) {
+                    for (int64_t h = 0; h < llmGridH; ++h) {
+                        for (int64_t w = 0; w < llmGridW; ++w, ++offset) {
+                            setPosition(0, tokenIndex + offset, currentPosition + t);
+                            setPosition(1, tokenIndex + offset, currentPosition + h);
+                            setPosition(2, tokenIndex + offset, currentPosition + w);
+                        }
+                    }
+                }
+                currentPosition += std::max(imageGridTHW[1], imageGridTHW[2]) / mergeSize;
+                consumedImage = true;
+            }
+            else {
+                throw std::invalid_argument("single-image Qwen prompt contains an unsupported modality span");
+            }
+            tokenIndex = spanEnd;
+        }
+
+        int64_t maximumPosition = -1;
+        for (const int64_t position : result.positionIds) {
+            maximumPosition = std::max(maximumPosition, position);
+        }
+        result.positionDelta = maximumPosition + 1 - tokenCount;
+        return result;
     }
 
 extern "C" GARNET_TOKENIZER_EXPORT int GarnetQwenTokenizerEncode(

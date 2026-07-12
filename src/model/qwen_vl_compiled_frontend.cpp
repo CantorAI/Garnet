@@ -1,0 +1,238 @@
+#include "qwen_vl_compiled_frontend.h"
+
+#include "cuda_lib.h"
+#include "garnet_tensor.h"
+#include "tensor_helper.h"
+#include "qwen_tokenizer.h"
+#include "qwen_vl_image_preprocessor.h"
+
+#include <cuda_runtime.h>
+
+#include <algorithm>
+#include <cstring>
+#include <limits>
+#include <stdexcept>
+
+namespace Garnet
+{
+    namespace
+    {
+        X::Value MakeGpuTensor(
+            X::TensorDataType dataType,
+            const std::vector<int>& dimensions,
+            const void* hostData,
+            size_t bytes)
+        {
+            X::Tensor tensor(X::g_pXHost->CreateTensor());
+            X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
+            for (const int dimension : dimensions) shape.push_back(dimension);
+            tensor->SetDataType(dataType);
+            tensor->SetShape(shape);
+
+            void* deviceMemory = nullptr;
+            if (cudaMalloc(&deviceMemory, bytes) != cudaSuccess) return X::Value();
+            if (bytes > 0 && hostData &&
+                cudaMemcpy(deviceMemory, hostData, bytes, cudaMemcpyHostToDevice) != cudaSuccess) {
+                cudaFree(deviceMemory);
+                return X::Value();
+            }
+            if (TensorHelper::AttachGPUMemory(tensor, deviceMemory) != TensorOpStatus::Success) {
+                cudaFree(deviceMemory);
+                return X::Value();
+            }
+            return X::Value(tensor);
+        }
+
+        X::Value ConvertPixelsToBF16(X::Value sourceValue)
+        {
+            if (!sourceValue.IsTensor()) return X::Value();
+            X::Tensor source(sourceValue);
+            if (source->GetDataType() != X::TensorDataType::FLOAT32 ||
+                TensorHelper::EnsureGPUMemory(source) != TensorOpStatus::Success) {
+                return X::Value();
+            }
+            const long long elementCount = source->GetDataSize() / sizeof(float);
+            if (elementCount <= 0 || elementCount > std::numeric_limits<int>::max()) {
+                return X::Value();
+            }
+            X::Tensor output(X::g_pXHost->CreateTensor());
+            X::Port::vector<int> shape(source->GetDimCount());
+            for (int dimension = 0; dimension < source->GetDimCount(); ++dimension) {
+                shape.push_back(static_cast<int>(source->GetDimSize(dimension)));
+            }
+            output->SetDataType(X::TensorDataType::BFLOAT16);
+            output->SetShape(shape);
+            void* deviceMemory = nullptr;
+            if (cudaMalloc(&deviceMemory, static_cast<size_t>(elementCount) * sizeof(unsigned short)) != cudaSuccess) {
+                return X::Value();
+            }
+            const cudaError_t status = runConvertFP32ToBF16Async(
+                static_cast<const float*>(TensorHelper::GetGPUMemory(source)),
+                static_cast<bfloat16*>(deviceMemory),
+                static_cast<int>(elementCount),
+                cudaStreamPerThread);
+            if (status != cudaSuccess ||
+                TensorHelper::AttachGPUMemory(output, deviceMemory) != TensorOpStatus::Success) {
+                cudaFree(deviceMemory);
+                return X::Value();
+            }
+            return X::Value(output);
+        }
+
+        X::Value MakeZeroGpuTensor(
+            X::TensorDataType dataType,
+            const std::vector<int>& dimensions,
+            size_t elementBytes)
+        {
+            size_t elementCount = 1;
+            for (const int dimension : dimensions) {
+                if (dimension <= 0 || elementCount > std::numeric_limits<size_t>::max() /
+                    static_cast<size_t>(dimension)) return X::Value();
+                elementCount *= static_cast<size_t>(dimension);
+            }
+            if (elementCount > std::numeric_limits<size_t>::max() / elementBytes) return X::Value();
+            X::Tensor tensor(X::g_pXHost->CreateTensor());
+            X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
+            for (const int dimension : dimensions) shape.push_back(dimension);
+            tensor->SetDataType(dataType);
+            tensor->SetShape(shape);
+            void* deviceMemory = nullptr;
+            const size_t bytes = elementCount * elementBytes;
+            if (cudaMalloc(&deviceMemory, bytes) != cudaSuccess) return X::Value();
+            if (cudaMemsetAsync(deviceMemory, 0, bytes, cudaStreamPerThread) != cudaSuccess ||
+                TensorHelper::AttachGPUMemory(tensor, deviceMemory) != TensorOpStatus::Success) {
+                cudaFree(deviceMemory);
+                return X::Value();
+            }
+            return X::Value(tensor);
+        }
+    }
+
+    QwenVLCompiledInputs BuildQwenVLCompiledInputs(
+        const std::string& modelDirectory,
+        const std::string& imagePath,
+        const std::string& prompt,
+        int minPixels,
+        int maxPixels,
+        const std::vector<std::vector<int>>& profileShapes)
+    {
+        QwenVLCompiledInputs result;
+        try {
+            if ((profileShapes.size() != 11 && profileShapes.size() != 15) ||
+                profileShapes[0].size() != 2 ||
+                profileShapes[1].size() != 2 || profileShapes[9].size() != 3) {
+                throw std::invalid_argument("Qwen-VL compiled frontend requires an 11-input root or 15-input paged-prefill profile");
+            }
+            const int batch = profileShapes[0][0];
+            const int maxTokens = profileShapes[0][1];
+            if (batch != 1 || profileShapes[9][0] != 3 || profileShapes[9][1] != 1 ||
+                profileShapes[9][2] != maxTokens) {
+                throw std::invalid_argument("Qwen-VL frontend currently requires batch-1 matching token profiles");
+            }
+
+            auto image = Image::QwenVL::PreprocessJpegFileToTensor(imagePath, minPixels, maxPixels);
+            X::Tensor gridTensor(image.imageGridTHW);
+            const auto* gridData = reinterpret_cast<const long long*>(gridTensor->GetData());
+            const int64_t grid[3] = {gridData[0], gridData[1], gridData[2]};
+            constexpr int mergeSize = 2;
+
+            std::string tokenizerError;
+            auto tokenizer = Tokenization::GetCachedQwenTokenizer(modelDirectory, &tokenizerError);
+            if (!tokenizer) throw std::runtime_error(tokenizerError);
+            const auto promptIds = Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
+                *tokenizer, prompt, grid, mergeSize);
+            const int64_t imagePadId = tokenizer->TokenId("<|image_pad|>");
+            if (imagePadId < 0) throw std::runtime_error("Qwen tokenizer is missing image_pad");
+            if (promptIds.size() > static_cast<size_t>(maxTokens)) {
+                throw std::invalid_argument("prompt and visual tokens exceed the compiled token profile");
+            }
+
+            std::vector<int64_t> inputIds(static_cast<size_t>(maxTokens), 0);
+            std::vector<int64_t> mmTypes(static_cast<size_t>(maxTokens), 0);
+            std::vector<int64_t> attentionMask(static_cast<size_t>(maxTokens), 0);
+            std::vector<int64_t> unpaddedTypes;
+            unpaddedTypes.reserve(promptIds.size());
+            for (size_t index = 0; index < promptIds.size(); ++index) {
+                inputIds[index] = promptIds[index];
+                mmTypes[index] = promptIds[index] == imagePadId ? 1 : 0;
+                attentionMask[index] = 1;
+                unpaddedTypes.push_back(mmTypes[index]);
+                result.visualTokenCount += static_cast<int>(mmTypes[index]);
+            }
+            result.promptTokenCount = static_cast<int>(promptIds.size());
+            const int expectedVisualTokens = static_cast<int>(grid[0] * grid[1] * grid[2] / 4);
+            if (result.visualTokenCount != expectedVisualTokens) {
+                throw std::runtime_error("visual token count does not match image grid");
+            }
+
+            const auto mrope = Tokenization::QwenVLPromptBuilder::BuildSingleImageMRoPEMetadata(
+                unpaddedTypes, grid, mergeSize);
+            std::vector<int64_t> paddedPositions(static_cast<size_t>(3 * maxTokens), 0);
+            for (int dimension = 0; dimension < 3; ++dimension) {
+                std::copy_n(
+                    mrope.positionIds.data() + static_cast<size_t>(dimension * result.promptTokenCount),
+                    result.promptTokenCount,
+                    paddedPositions.data() + static_cast<size_t>(dimension * maxTokens));
+            }
+
+            if (profileShapes[1][0] != grid[0] * grid[1] * grid[2] ||
+                profileShapes[1][1] != 1536) {
+                throw std::invalid_argument("image patch grid does not match the compiled vision profile");
+            }
+
+            X::V<X::XList> inputs;
+            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[0],
+                inputIds.data(), inputIds.size() * sizeof(int64_t)));
+            inputs->AddItem(ConvertPixelsToBF16(image.pixelValues));
+            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[2],
+                grid, sizeof(grid)));
+            inputs->AddItem(image.bilinearIndices);
+            inputs->AddItem(image.bilinearWeights);
+            inputs->AddItem(image.visionPositionIds);
+            inputs->AddItem(image.visionCuSeqlens);
+            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[7],
+                mmTypes.data(), mmTypes.size() * sizeof(int64_t)));
+            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[8],
+                attentionMask.data(), attentionMask.size() * sizeof(int64_t)));
+            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[9],
+                paddedPositions.data(), paddedPositions.size() * sizeof(int64_t)));
+            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[10],
+                &mrope.positionDelta, sizeof(mrope.positionDelta)));
+            result.mropePositionDelta = mrope.positionDelta;
+            if (profileShapes.size() == 15) {
+                if (profileShapes[11] != profileShapes[12] || profileShapes[11].size() != 5 ||
+                    profileShapes[13].size() != 1 || profileShapes[14] != std::vector<int>{1}) {
+                    throw std::invalid_argument("Qwen-VL paged prefill cache profile is invalid");
+                }
+                inputs->AddItem(MakeZeroGpuTensor(
+                    X::TensorDataType::BFLOAT16, profileShapes[11], sizeof(bfloat16)));
+                inputs->AddItem(MakeZeroGpuTensor(
+                    X::TensorDataType::BFLOAT16, profileShapes[12], sizeof(bfloat16)));
+                std::vector<int> pageTable(static_cast<size_t>(profileShapes[13][0]));
+                for (int index = 0; index < profileShapes[13][0]; ++index) pageTable[index] = index;
+                inputs->AddItem(MakeGpuTensor(
+                    X::TensorDataType::INT, profileShapes[13], pageTable.data(),
+                    pageTable.size() * sizeof(int)));
+                const int startPosition = 0;
+                inputs->AddItem(MakeGpuTensor(
+                    X::TensorDataType::INT, profileShapes[14], &startPosition, sizeof(startPosition)));
+            }
+            for (long long index = 0; index < inputs->Size(); ++index) {
+                if (!inputs->Get(index).IsTensor()) {
+                    throw std::runtime_error("failed to construct GPU input_" + std::to_string(index));
+                }
+            }
+
+            result.inputs = X::Value(inputs);
+            result.sourceHeight = image.sourceHeight;
+            result.sourceWidth = image.sourceWidth;
+            result.resizedHeight = image.resizedHeight;
+            result.resizedWidth = image.resizedWidth;
+        }
+        catch (const std::exception& exception) {
+            result.inputs = X::Value();
+            result.error = exception.what();
+        }
+        return result;
+    }
+}

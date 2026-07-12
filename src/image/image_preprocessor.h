@@ -8,6 +8,10 @@ namespace Garnet::Image
     {
         X::Value pixelValues;
         X::Value imageGridTHW;
+        X::Value bilinearIndices;
+        X::Value bilinearWeights;
+        X::Value visionPositionIds;
+        X::Value visionCuSeqlens;
         int sourceHeight = 0;
         int sourceWidth = 0;
         int resizedHeight = 0;

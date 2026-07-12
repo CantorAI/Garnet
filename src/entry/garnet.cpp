@@ -1694,7 +1694,11 @@ namespace Garnet
             return list;
         }
 
-        X::Value MakeInt64Tensor2D(const std::vector<long long>& values, int rows, int cols)
+        X::Value MakeInt64Tensor2D(
+            const std::vector<long long>& values,
+            int rows,
+            int cols,
+            bool ensureGpu = false)
         {
             X::Tensor tensor;
             X::Port::vector<int> shape(2);
@@ -1710,6 +1714,39 @@ namespace Garnet
             }
             if (!values.empty()) {
                 std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
+            }
+            if (ensureGpu && TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+                return X::Value();
+            }
+            return X::Value(tensor);
+        }
+
+        X::Value MakeInt64Tensor3DGpu(
+            const std::vector<long long>& values,
+            int dimension0,
+            int dimension1,
+            int dimension2)
+        {
+            if (dimension0 < 0 || dimension1 < 0 || dimension2 < 0 ||
+                static_cast<size_t>(dimension0) * dimension1 * dimension2 != values.size()) {
+                return X::Value();
+            }
+            X::Tensor tensor;
+            X::Port::vector<int> shape(3);
+            shape.push_back(dimension0);
+            shape.push_back(dimension1);
+            shape.push_back(dimension2);
+            tensor->SetDataType(X::TensorDataType::INT64);
+            tensor->SetShape(shape);
+            X::Value init;
+            if (!tensor->Create(init) || tensor->GetData() == nullptr) {
+                return X::Value();
+            }
+            if (!values.empty()) {
+                std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
+            }
+            if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+                return X::Value();
             }
             return X::Value(tensor);
         }
@@ -2201,34 +2238,6 @@ namespace Garnet
         retValue = manager;
     }
 
-    void GarnetAPI::CreateQwenTextRunner(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
-    {
-        X::XPackageValue<QwenTextRunner> runner;
-        if (params.size() > 0) {
-            if (!params[0].IsList()) {
-                std::cout << "[GarnetAPI] QwenTextRunner(layer_bundles) requires a list." << std::endl;
-                retValue = X::Value();
-                return;
-            }
-            runner->SetLayerBundles(params[0]);
-        }
-        retValue = X::Value(runner);
-    }
-
-    void GarnetAPI::CreateQwenVisionRunner(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
-    {
-        if (params.size() < 2 || !params[0].IsList() || !params[1].IsObject()) {
-            std::cout << "[GarnetAPI] QwenVisionRunner(layer_bundles, merger_bundle) expected." << std::endl;
-            retValue = X::Value();
-            return;
-        }
-        X::XPackageValue<QwenVisionRunner> runner;
-        runner->Configure(params[0], params[1]);
-        retValue = X::Value(runner);
-    }
-
     void GarnetAPI::DevicePagedKVWriteTensor(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
@@ -2394,6 +2403,29 @@ namespace Garnet
         retValue = TensorHelper::CopyToCPUTensor(tensor);
         if (!retValue.IsValid()) {
             std::cout << "[GarnetAPI] tensor_to_cpu failed." << std::endl;
+            return;
+        }
+        if (tensor->GetDataType() == X::TensorDataType::BFLOAT16) {
+            X::Tensor raw(retValue);
+            X::Tensor converted = X::g_pXHost->CreateTensor();
+            X::Port::vector<int> shape(raw->GetDimCount());
+            for (int dimension = 0; dimension < raw->GetDimCount(); ++dimension) {
+                shape.push_back(raw->GetDimSize(dimension));
+            }
+            converted->SetDataType(X::TensorDataType::FLOAT32);
+            converted->SetShape(shape);
+            X::Value initialValue;
+            if (!converted->Create(initialValue) || !converted->GetData()) {
+                retValue = X::Value();
+                return;
+            }
+            const auto* source = reinterpret_cast<const unsigned short*>(raw->GetData());
+            auto* destination = reinterpret_cast<float*>(converted->GetData());
+            for (long long index = 0; index < raw->GetCount(); ++index) {
+                const unsigned int bits = static_cast<unsigned int>(source[index]) << 16;
+                std::memcpy(destination + index, &bits, sizeof(float));
+            }
+            retValue = X::Value(converted);
         }
     }
 
@@ -2412,6 +2444,53 @@ namespace Garnet
             return;
         }
         retValue = X::Value(tensor);
+    }
+
+    void GarnetAPI::TensorToBFloat16(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() < 1 || !params[0].IsTensor()) {
+            std::cout << "[GarnetAPI] tensor_to_bfloat16(tensor) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::Tensor source(params[0]);
+        if (source->GetDataType() == X::TensorDataType::BFLOAT16) {
+            retValue = X::Value(source);
+            return;
+        }
+        if (source->GetDataType() != X::TensorDataType::FLOAT32 ||
+            TensorHelper::EnsureGPUMemory(source) != TensorOpStatus::Success) {
+            std::cout << "[GarnetAPI] tensor_to_bfloat16 requires a GPU-capable FLOAT32 tensor." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        X::Tensor output(X::g_pXHost->CreateTensor());
+        X::Port::vector<int> shape(source->GetDimCount());
+        for (int dimension = 0; dimension < source->GetDimCount(); ++dimension) {
+            shape.push_back(static_cast<int>(source->GetDimSize(dimension)));
+        }
+        output->SetDataType(X::TensorDataType::BFLOAT16);
+        output->SetShape(shape);
+        void* outputDevice = nullptr;
+        const size_t outputBytes = static_cast<size_t>(source->GetCount()) * sizeof(bfloat16);
+        if (cudaMalloc(&outputDevice, outputBytes) != cudaSuccess) {
+            retValue = X::Value();
+            return;
+        }
+        const cudaError_t status = runConvertFP32ToBF16Async(
+            static_cast<const float*>(TensorHelper::GetGPUMemory(source)),
+            static_cast<bfloat16*>(outputDevice),
+            static_cast<int>(source->GetCount()),
+            cudaStreamPerThread);
+        if (status != cudaSuccess ||
+            TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
+            cudaFree(outputDevice);
+            retValue = X::Value();
+            return;
+        }
+        retValue = X::Value(output);
     }
 
     void GarnetAPI::TensorFromBFloat16Bits(X::XRuntime* rt, X::XObj* pContext,
@@ -2444,6 +2523,92 @@ namespace Garnet
         std::memcpy(tensor->GetData(), bits->GetData(), static_cast<size_t>(bits->GetDataSize()));
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] BF16 tensor GPU upload failed." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        retValue = X::Value(tensor);
+    }
+
+    void GarnetAPI::TensorFromHost(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    {
+        if (params.size() == 0 || !params[0].IsList()) {
+            std::cout << "[GarnetAPI] tensor_from_host(values, dtype='int32', shape=[...]) expected." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+        X::List values(params[0]);
+        const std::string dataTypeName = GetStringArg(params, kwParams, 1, "dtype", "float32");
+        X::TensorDataType dataType;
+        size_t elementBytes = 0;
+        if (dataTypeName == "int32") {
+            dataType = X::TensorDataType::INT;
+            elementBytes = sizeof(int);
+        }
+        else if (dataTypeName == "int64") {
+            dataType = X::TensorDataType::LONGLONG;
+            elementBytes = sizeof(long long);
+        }
+        else if (dataTypeName == "float32") {
+            dataType = X::TensorDataType::FLOAT32;
+            elementBytes = sizeof(float);
+        }
+        else {
+            std::cout << "[GarnetAPI] tensor_from_host unsupported dtype: " << dataTypeName << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        std::vector<int> dimensions;
+        X::Value shapeValue = GetKwarg(kwParams, "shape");
+        if (shapeValue.IsList()) {
+            X::List shape(shapeValue);
+            for (long long index = 0; index < shape->Size(); ++index) {
+                dimensions.push_back(static_cast<int>(shape->Get(index).ToLongLong()));
+            }
+        }
+        if (dimensions.empty()) dimensions.push_back(static_cast<int>(values->Size()));
+        size_t expectedCount = 1;
+        for (const int dimension : dimensions) {
+            if (dimension <= 0) {
+                retValue = X::Value();
+                return;
+            }
+            expectedCount *= static_cast<size_t>(dimension);
+        }
+        if (expectedCount != static_cast<size_t>(values->Size())) {
+            std::cout << "[GarnetAPI] tensor_from_host shape does not match value count." << std::endl;
+            retValue = X::Value();
+            return;
+        }
+
+        std::vector<char> bytes(expectedCount * elementBytes);
+        for (size_t index = 0; index < expectedCount; ++index) {
+            X::Value value = values->Get(static_cast<long long>(index));
+            if (dataType == X::TensorDataType::INT) {
+                reinterpret_cast<int*>(bytes.data())[index] = static_cast<int>(value.ToLongLong());
+            }
+            else if (dataType == X::TensorDataType::LONGLONG) {
+                reinterpret_cast<long long*>(bytes.data())[index] = value.ToLongLong();
+            }
+            else {
+                reinterpret_cast<float*>(bytes.data())[index] = static_cast<float>(value.ToDouble());
+            }
+        }
+
+        X::Tensor tensor(X::g_pXHost->CreateTensor());
+        X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
+        for (const int dimension : dimensions) shape.push_back(dimension);
+        tensor->SetDataType(dataType);
+        tensor->SetShape(shape);
+        X::Value init;
+        if (!tensor->Create(init) || !tensor->GetData()) {
+            retValue = X::Value();
+            return;
+        }
+        std::memcpy(tensor->GetData(), bytes.data(), bytes.size());
+        const std::string device = GetStringArg(params, kwParams, 3, "device", "cuda");
+        if (device == "cuda" && TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
             retValue = X::Value();
             return;
         }
@@ -2827,10 +2992,69 @@ namespace Garnet
     {
         if (params.size() == 0) return;
         std::string modelPath = params[0].ToString();
-        
+        std::string runtimeMode;
+        std::string weightsLocation;
+        std::string compiledCacheDirectory;
+        std::string entryFunction;
+        std::string compiledFrontend;
+        std::vector<std::vector<int>> compiledInputShapes;
+        std::vector<std::string> compiledInputDataTypes;
+        for (auto& item : kwParams) {
+            const std::string key(item.key);
+            if (key == "runtime_mode") runtimeMode = item.val.ToString();
+            else if (key == "weights" && item.val.IsString()) weightsLocation = item.val.ToString();
+            else if (key == "cache_dir") compiledCacheDirectory = item.val.ToString();
+            else if (key == "entry_function") entryFunction = item.val.ToString();
+            else if (key == "frontend") compiledFrontend = item.val.ToString();
+            else if (key == "input_shapes" && item.val.IsList()) {
+                X::List shapes(item.val);
+                for (long long inputIndex = 0; inputIndex < shapes->Size(); ++inputIndex) {
+                    X::Value dimensionsValue = shapes->Get(inputIndex);
+                    if (!dimensionsValue.IsList()) {
+                        compiledInputShapes.clear();
+                        break;
+                    }
+                    X::List dimensions(dimensionsValue);
+                    std::vector<int> shape;
+                    for (long long dimension = 0; dimension < dimensions->Size(); ++dimension) {
+                        shape.push_back(static_cast<int>(dimensions->Get(dimension).ToLongLong()));
+                    }
+                    compiledInputShapes.push_back(std::move(shape));
+                }
+            }
+            else if (key == "input_dtypes" && item.val.IsList()) {
+                X::List dataTypes(item.val);
+                for (long long index = 0; index < dataTypes->Size(); ++index) {
+                    compiledInputDataTypes.push_back(dataTypes->Get(index).ToString());
+                }
+            }
+        }
+
         namespace fs = std::filesystem;
         fs::path path(modelPath);
-        
+
+        if (runtimeMode == "compiled_xmodel") {
+            X::XPackageValue<Model> varModel;
+            Model& model = *varModel;
+            X::Dict emptyWeights;
+            std::string directory = path.parent_path().string();
+            std::string emptyString;
+            model.SetInfo(directory, emptyString, emptyString, emptyWeights);
+            if (compiledCacheDirectory.empty()) {
+                compiledCacheDirectory = (path.parent_path() / "compiled_cache").string();
+            }
+            model.InitializeCompiledRuntime(
+                modelPath,
+                compiledCacheDirectory,
+                weightsLocation,
+                entryFunction,
+                compiledFrontend,
+                compiledInputShapes,
+                compiledInputDataTypes);
+            retValue = varModel;
+            return;
+        }
+
         X::Value modelVal;
         
         // Check if the path is a .x file
@@ -3419,6 +3643,10 @@ namespace Garnet
             }
 
             std::vector<long long> gridVector = { grid[0], grid[1], grid[2] };
+            const auto mropeMetadata = Tokenization::QwenVLPromptBuilder::BuildSingleImageMRoPEMetadata(
+                mmTypes,
+                grid,
+                mergeSize);
             X::Dict dict;
             dict->Set("input_ids", MakeInt64List(inputIds));
             dict->Set("mm_token_type_ids", MakeInt64List(mmTypes));
@@ -3427,6 +3655,17 @@ namespace Garnet
             dict->Set("input_ids_tensor", inputIdsTensorValue);
             dict->Set("mm_token_type_ids_tensor", mmTypesTensorValue);
             dict->Set("pixel_values", imageResult.pixelValues);
+            dict->Set("vision_bilinear_indices", imageResult.bilinearIndices);
+            dict->Set("vision_bilinear_weights", imageResult.bilinearWeights);
+            dict->Set("vision_position_ids", imageResult.visionPositionIds);
+            dict->Set("vision_cu_seqlens", imageResult.visionCuSeqlens);
+            dict->Set("position_ids", MakeInt64Tensor3DGpu(
+                mropeMetadata.positionIds,
+                3,
+                1,
+                static_cast<int>(inputIds.size())));
+            dict->Set("mrope_position_deltas", MakeInt64Tensor2D(
+                { mropeMetadata.positionDelta }, 1, 1, true));
             dict->Set("pixel_values_shape", MakeInt64List({
                 static_cast<long long>(patchCount),
                 static_cast<long long>(featureDim),
@@ -3497,6 +3736,10 @@ namespace Garnet
             X::Dict dict;
             dict->Set("pixel_values", result.pixelValues);
             dict->Set("image_grid_thw", result.imageGridTHW);
+            dict->Set("vision_bilinear_indices", result.bilinearIndices);
+            dict->Set("vision_bilinear_weights", result.bilinearWeights);
+            dict->Set("vision_position_ids", result.visionPositionIds);
+            dict->Set("vision_cu_seqlens", result.visionCuSeqlens);
             dict->Set("source_height", X::Value(result.sourceHeight));
             dict->Set("source_width", X::Value(result.sourceWidth));
             dict->Set("height", X::Value(result.resizedHeight));
@@ -3533,6 +3776,10 @@ namespace Garnet
             X::Dict dict;
             dict->Set("pixel_values", result.pixelValues);
             dict->Set("image_grid_thw", result.imageGridTHW);
+            dict->Set("vision_bilinear_indices", result.bilinearIndices);
+            dict->Set("vision_bilinear_weights", result.bilinearWeights);
+            dict->Set("vision_position_ids", result.visionPositionIds);
+            dict->Set("vision_cu_seqlens", result.visionCuSeqlens);
             dict->Set("height", X::Value(result.resizedHeight));
             dict->Set("width", X::Value(result.resizedWidth));
             dict->Set("patch_size", X::Value(result.patchSize));

@@ -1,14 +1,17 @@
 #include "trt_builder.h"
+#include "paged_kv_plugin.h"
 #include "cuda_lib.h"
-#include "garnet_tensor.h"
 #include "garnet_tensor.h"
 #include "tensor_helper.h"
 #include <iostream>
+#include <algorithm>
 #include <fstream>
 #include <filesystem>
 #include <cmath>
 #include <cstdlib>
+#include <limits>
 #include <mutex>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -33,6 +36,64 @@ namespace Garnet {
     thread_local ITRTContext* g_trtContext = nullptr;
 
     namespace {
+        class TensorRTFileStreamReader final : public nvinfer1::IStreamReaderV2 {
+        public:
+            explicit TensorRTFileStreamReader(const std::string& path)
+                : stream(path, std::ios::binary) {}
+
+            bool IsOpen() const { return stream.is_open(); }
+
+            int64_t read(void* destination, int64_t byteCount, cudaStream_t cudaStream) noexcept override {
+                if (!stream.is_open() || !destination || byteCount < 0) return -1;
+                cudaPointerAttributes attributes{};
+                const cudaError_t attributeStatus = cudaPointerGetAttributes(&attributes, destination);
+                const bool isDevice = attributeStatus == cudaSuccess &&
+                    attributes.type == cudaMemoryTypeDevice;
+                if (attributeStatus != cudaSuccess) cudaGetLastError();
+                if (!isDevice) {
+                    stream.read(static_cast<char*>(destination), byteCount);
+                    return static_cast<int64_t>(stream.gcount());
+                }
+
+                constexpr std::streamsize kChunkBytes = 8 * 1024 * 1024;
+                std::vector<char> staging(static_cast<size_t>(std::min<int64_t>(byteCount, kChunkBytes)));
+                int64_t copied = 0;
+                while (copied < byteCount) {
+                    const std::streamsize requested = static_cast<std::streamsize>(
+                        std::min<int64_t>(byteCount - copied, static_cast<int64_t>(staging.size())));
+                    stream.read(staging.data(), requested);
+                    const std::streamsize received = stream.gcount();
+                    if (received <= 0) break;
+                    if (cudaMemcpyAsync(
+                            static_cast<char*>(destination) + copied,
+                            staging.data(),
+                            static_cast<size_t>(received),
+                            cudaMemcpyHostToDevice,
+                            cudaStream) != cudaSuccess ||
+                        cudaStreamSynchronize(cudaStream) != cudaSuccess) {
+                        return -1;
+                    }
+                    copied += received;
+                    if (received != requested) break;
+                }
+                return copied;
+            }
+
+            bool seek(int64_t offset, nvinfer1::SeekPosition where) noexcept override {
+                if (!stream.is_open()) return false;
+                std::ios_base::seekdir direction;
+                if (where == nvinfer1::SeekPosition::kSET) direction = std::ios::beg;
+                else if (where == nvinfer1::SeekPosition::kCUR) direction = std::ios::cur;
+                else direction = std::ios::end;
+                stream.clear();
+                stream.seekg(offset, direction);
+                return stream.good();
+            }
+
+        private:
+            std::ifstream stream;
+        };
+
         struct CachedTRTExecution {
             nvinfer1::IRuntime* runtime = nullptr;
             nvinfer1::ICudaEngine* engine = nullptr;
@@ -42,23 +103,18 @@ namespace Garnet {
         std::mutex g_trtExecutionCacheMutex;
         std::unordered_map<std::string, CachedTRTExecution> g_trtExecutionCache;
 
-        nvinfer1::IExecutionContext* GetCachedTRTExecutionContext(const std::string& enginePath) {
+        nvinfer1::IExecutionContext* GetCachedTRTExecutionContext(
+            const std::string& enginePath,
+            const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
             std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
             auto found = g_trtExecutionCache.find(enginePath);
             if (found != g_trtExecutionCache.end()) {
                 return found->second.context;
             }
 
-            std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-            if (!in.is_open()) {
+            TensorRTFileStreamReader engineStream(enginePath);
+            if (!engineStream.IsOpen()) {
                 std::cout << "[TRTBuilder] Failed to open engine for read: " << enginePath << std::endl;
-                return nullptr;
-            }
-            std::streamsize size = in.tellg();
-            in.seekg(0, std::ios::beg);
-            std::vector<char> engineBytes(static_cast<size_t>(size));
-            if (!in.read(engineBytes.data(), size)) {
-                std::cout << "[TRTBuilder] Failed to read engine bytes: " << enginePath << std::endl;
                 return nullptr;
             }
 
@@ -68,10 +124,68 @@ namespace Garnet {
                 std::cout << "[TRTBuilder] createInferRuntime failed for cached engine: " << enginePath << std::endl;
                 return nullptr;
             }
-            cached.engine = cached.runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
+            cached.engine = cached.runtime->deserializeCudaEngine(engineStream);
             if (!cached.engine) {
                 std::cout << "[TRTBuilder] deserializeCudaEngine failed for cached engine: " << enginePath << std::endl;
                 return nullptr;
+            }
+            if (weightIndex && weightIndex->TensorCount() > 0) {
+                std::unique_ptr<nvinfer1::IRefitter> refitter(
+                    nvinfer1::createInferRefitter(*cached.engine, gLogger));
+                if (!refitter) {
+                    std::cout << "[TRTBuilder] createInferRefitter failed: " << enginePath << std::endl;
+                    return nullptr;
+                }
+                const int32_t weightCount = refitter->getAllWeights(0, nullptr);
+                if (weightCount > 0) {
+                    std::vector<const char*> weightNames(static_cast<size_t>(weightCount));
+                    refitter->getAllWeights(weightCount, weightNames.data());
+                    Garnet::SafeTensorsMappedFile mappedWeights;
+                    std::string mappingError;
+                    if (!mappedWeights.Open(weightIndex->FilePath(), mappingError)) {
+                        std::cout << "[TRTBuilder] refit mapping failed: " << mappingError << std::endl;
+                        return nullptr;
+                    }
+                    for (const char* weightName : weightNames) {
+                        const Garnet::SafeTensorMetadata* metadata = weightIndex->Find(weightName);
+                        if (!metadata) {
+                            std::cout << "[TRTBuilder] refit weight absent: " << weightName << std::endl;
+                            return nullptr;
+                        }
+                        DataType dataType;
+                        size_t elementBytes = 0;
+                        if (metadata->dataType == "BF16") {
+                            dataType = DataType::kBF16;
+                            elementBytes = 2;
+                        }
+                        else if (metadata->dataType == "F16") {
+                            dataType = DataType::kHALF;
+                            elementBytes = 2;
+                        }
+                        else if (metadata->dataType == "F32") {
+                            dataType = DataType::kFLOAT;
+                            elementBytes = 4;
+                        }
+                        else {
+                            std::cout << "[TRTBuilder] unsupported refit dtype: " << metadata->dataType << std::endl;
+                            return nullptr;
+                        }
+                        const void* data = mappedWeights.DataAt(
+                            metadata->dataOffset,
+                            metadata->dataSize);
+                        const int64_t elementCount = static_cast<int64_t>(metadata->dataSize / elementBytes);
+                        if (!data || !refitter->setNamedWeights(
+                                weightName,
+                                Weights{dataType, data, elementCount})) {
+                            std::cout << "[TRTBuilder] setNamedWeights failed: " << weightName << std::endl;
+                            return nullptr;
+                        }
+                    }
+                    if (!refitter->refitCudaEngine()) {
+                        std::cout << "[TRTBuilder] refitCudaEngine failed: " << enginePath << std::endl;
+                        return nullptr;
+                    }
+                }
             }
             cached.context = cached.engine->createExecutionContext();
             if (!cached.context) {
@@ -80,8 +194,41 @@ namespace Garnet {
             }
 
             auto inserted = g_trtExecutionCache.emplace(enginePath, cached);
-            std::cout << "[TRTBuilder] Cached TensorRT execution context: " << enginePath << std::endl;
             return inserted.first->second.context;
+        }
+
+        bool GetCachedTRTExecutionObjects(
+            const std::string& enginePath,
+            nvinfer1::ICudaEngine*& engine,
+            nvinfer1::IExecutionContext*& context,
+            const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
+            context = GetCachedTRTExecutionContext(enginePath, weightIndex);
+            if (!context) {
+                engine = nullptr;
+                return false;
+            }
+            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+            auto found = g_trtExecutionCache.find(enginePath);
+            if (found == g_trtExecutionCache.end()) {
+                engine = nullptr;
+                context = nullptr;
+                return false;
+            }
+            engine = found->second.engine;
+            context = found->second.context;
+            return engine != nullptr && context != nullptr;
+        }
+
+        void InvalidateCachedTRTExecution(const std::string& enginePath) {
+            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+            auto found = g_trtExecutionCache.find(enginePath);
+            if (found == g_trtExecutionCache.end()) {
+                return;
+            }
+            delete found->second.context;
+            delete found->second.engine;
+            delete found->second.runtime;
+            g_trtExecutionCache.erase(found);
         }
 
         bool ShouldSyncTRTOutputToCPU() {
@@ -261,111 +408,6 @@ namespace Garnet {
     }
 
     TRTBuilder::~TRTBuilder() {
-    }
-
-    X::Value TRTBuilder::BuildEngine(X::Value forwardFunc, X::Value inputShapes, X::Value weightsDict) {
-        std::cout << "[TRTBuilder] Entered BuildEngine" << std::endl;
-        // Initialize builder
-        auto builder = createInferBuilder(gLogger);
-        std::cout << "[TRTBuilder] createInferBuilder returned" << std::endl;
-        if (!builder) return X::Value();
-
-        std::cout << "[TRTBuilder] Calling createNetworkV2" << std::endl;
-        uint32_t flag = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
-        auto network = builder->createNetworkV2(flag);
-        if (!network) return X::Value();
-
-        std::cout << "[TRTBuilder] Calling createBuilderConfig" << std::endl;
-        auto config = builder->createBuilderConfig();
-        if (!config) return X::Value();
-
-        std::cout << "[TRTBuilder] Converting input shapes" << std::endl;
-        
-        X::ARGS params;
-        if (inputShapes.IsList()) {
-            X::List shapeList(inputShapes);
-            long long list_size = shapeList->Size();
-            std::cout << "[TRTBuilder] shapeList size: " << list_size << std::endl;
-            params.resize(list_size);
-            for (long long i = 0; i < list_size; ++i) {
-                X::Value shape_val = shapeList->Get(i);
-                std::cout << "[TRTBuilder] shape_val type: " << (int)shape_val.GetType() << ", is list: " << shape_val.IsList() << std::endl;
-                if (shape_val.IsList()) {
-                    X::List dims(shape_val);
-                    long long dim_size = dims->Size();
-                    X::Port::vector<int> shape_vec(dim_size);
-                    std::cout << "[TRTBuilder] dim_size: " << dim_size << std::endl;
-                    for (long long j = 0; j < dim_size; ++j) {
-                        X::Value dim = dims->Get(j);
-                        shape_vec.push_back((int)dim.ToLongLong());
-                    }
-                    std::cout << "[TRTBuilder] Created shape vec, dim0: " << shape_vec[0] << std::endl;
-                    X::Tensor tensor(X::g_pXHost->CreateTensor());
-                    if (tensor) {
-                        tensor->SetShape(shape_vec);
-                        std::cout << "[TRTBuilder] SetShape done" << std::endl;
-                        params.push_back(tensor);
-                    }
-                }
-            }
-        }
-
-        X::KWARGS kwParams;
-        std::cout << "[TRTBuilder] Calling forwardFunc.ObjCall..." << std::endl;
-        X::Value output = forwardFunc.ObjCall(params, kwParams);
-        std::cout << "[TRTBuilder] ObjCall finished." << std::endl;
-        
-        X::ARGS params_t;
-        if (output.IsList()) {
-            X::List list(output);
-            long long lsize = list->Size();
-            params_t.resize(lsize);
-            for (long long i = 0; i < lsize; ++i) {
-                params_t.push_back(list->Get(i));
-            }
-        } else if (output.IsDict()) {
-            X::Dict dict(output);
-            // Too complex, skip for now, dict size not easily accessed via API
-            params_t.resize(1);
-            params_t.push_back(output);
-        } else {
-            params_t.resize(1);
-            params_t.push_back(output);
-        }
-
-        std::cout << "[TRTBuilder] Creating TensorGraph" << std::endl;
-        GarnetTensor* pHandler = new GarnetTensor();
-        pHandler->m_trtContext = (long long)this;
-        X::Value trtHandler(pHandler->APISET().GetProxy(pHandler));
-
-        X::KWARGS kwParams_t;
-        auto* pTensorGraph = X::g_pXHost->CreateTensorGraph();
-        if (pTensorGraph) {
-            std::cout << "[TRTBuilder] TensorGraph created. Calling Create..." << std::endl;
-            pTensorGraph->Create(trtHandler.GetObj(), params_t, kwParams_t);
-            std::cout << "[TRTBuilder] TensorGraph Create done." << std::endl;
-
-            X::KWARGS kwArgs;
-            kwArgs.Add("Func", forwardFunc);
-            kwArgs.Add("TRT_Context", X::Value((long long)this)); // Keep this just in case
-
-            std::cout << "[TRTBuilder] Running TensorGraph..." << std::endl;
-            Garnet::g_trtContext = this;
-            pTensorGraph->Run(params, kwArgs);
-            Garnet::g_trtContext = nullptr;
-            std::cout << "[TRTBuilder] TensorGraph finished." << std::endl;
-        } else {
-            std::cout << "[TRTBuilder] pTensorGraph is NULL!" << std::endl;
-        }
-
-        // Placeholder cleanup
-        // Do not delete TRT objects yet to prevent crash if versions differ
-        // delete config;
-        // delete network;
-        // delete builder;
-        std::cout << "[TRTBuilder] BuildEngine completed successfully." << std::endl;
-
-        return X::Value(true);
     }
 
     X::Value TRTBuilder::ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape) {
@@ -2744,14 +2786,1864 @@ namespace Garnet {
         return output;
     }
 
-    X::Value TRTBuilder::HandleBinaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input1, X::Value input2) {
-        // Here we map "matmul" -> addMatrixMultiply, etc.
-        std::cout << "[TRTBuilder] Handling binary op: " << op_name << std::endl;
-        return X::Value(); // Return ITensor* wrapped in X::Value eventually
+    nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTWeight(const std::string& weightName) {
+        auto existing = weightTensorMap.find(weightName);
+        if (existing != weightTensorMap.end()) {
+            return existing->second;
+        }
+        if (!capturedWeightIndex || !capturedWeightFile.IsOpen()) {
+            loweringError = "native safetensors mapping is unavailable for weight: " + weightName;
+            return nullptr;
+        }
+        const SafeTensorMetadata* metadata = capturedWeightIndex->Find(weightName);
+        if (!metadata) {
+            loweringError = "weight is absent from safetensors index: " + weightName;
+            return nullptr;
+        }
+        DataType dataType;
+        if (metadata->dataType == "BF16") dataType = DataType::kBF16;
+        else if (metadata->dataType == "F16") dataType = DataType::kHALF;
+        else if (metadata->dataType == "F32") dataType = DataType::kFLOAT;
+        else {
+            loweringError = "unsupported TensorRT constant dtype for weight: " + weightName;
+            return nullptr;
+        }
+        if (metadata->shape.empty() || metadata->shape.size() > Dims::MAX_DIMS) {
+            loweringError = "unsupported TensorRT constant rank for weight: " + weightName;
+            return nullptr;
+        }
+        Dims dimensions{};
+        dimensions.nbDims = static_cast<int>(metadata->shape.size());
+        std::int64_t elementCount = 1;
+        for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+            const long long size = metadata->shape[dimension];
+            if (size <= 0 || size > std::numeric_limits<int>::max() ||
+                elementCount > std::numeric_limits<std::int64_t>::max() / size) {
+                loweringError = "invalid TensorRT constant shape for weight: " + weightName;
+                return nullptr;
+            }
+            dimensions.d[dimension] = static_cast<int>(size);
+            elementCount *= size;
+        }
+        const void* data = capturedWeightFile.DataAt(metadata->dataOffset, metadata->dataSize);
+        if (!data) {
+            loweringError = "safetensors range is unavailable for weight: " + weightName;
+            return nullptr;
+        }
+        Weights weights{dataType, data, elementCount};
+        auto* constant = network->addConstant(dimensions, weights);
+        if (!constant || !constant->getOutput(0)) {
+            loweringError = "TensorRT constant lowering failed for weight: " + weightName;
+            return nullptr;
+        }
+        if (!network->setWeightsName(weights, weightName.c_str()) ||
+            !network->markWeightsRefittable(weightName.c_str())) {
+            loweringError = "TensorRT could not mark checkpoint weight refittable: " + weightName;
+            return nullptr;
+        }
+        constant->setName(weightName.c_str());
+        ITensor* output = constant->getOutput(0);
+        output->setName(weightName.c_str());
+        weightTensorMap[weightName] = output;
+        return output;
     }
 
-    X::Value TRTBuilder::HandleUnaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input) {
-        std::cout << "[TRTBuilder] Handling unary op: " << op_name << std::endl;
-        return X::Value(); // Return ITensor* wrapped in X::Value eventually
+    nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTTensor(X::Value value) {
+        if (!value.IsObject()) {
+            loweringError = "scalar operands are not implemented in generic TensorRT lowering";
+            return nullptr;
+        }
+        const unsigned long long id = value.GetObj()->GetID();
+        auto found = tensorMap.find(id);
+        if (found != tensorMap.end()) {
+            return found->second;
+        }
+        if (value.IsTensor()) {
+            X::Tensor tensor(value);
+            const std::string weightName = tensor->GetName().ToString();
+            if (capturedWeightIndex && capturedWeightIndex->Find(weightName)) {
+                ITensor* weight = GetOrCreateTRTWeight(weightName);
+                if (weight) tensorMap[id] = weight;
+                return weight;
+            }
+        }
+        loweringError = "graph operand was not produced by an input or an earlier lowered operation";
+        return nullptr;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::BroadcastLastDimension(
+        ITensor* tensor,
+        int targetRank,
+        const std::string& layerName) {
+        if (!tensor) return nullptr;
+        const Dims sourceDimensions = tensor->getDimensions();
+        if (sourceDimensions.nbDims == targetRank) return tensor;
+        if (sourceDimensions.nbDims != 1 || targetRank <= 1 || targetRank > Dims::MAX_DIMS) {
+            loweringError = "cannot broadcast " + layerName + " to target rank";
+            return nullptr;
+        }
+        Dims broadcastDimensions{};
+        broadcastDimensions.nbDims = targetRank;
+        for (int dimension = 0; dimension < targetRank - 1; ++dimension) {
+            broadcastDimensions.d[dimension] = 1;
+        }
+        broadcastDimensions.d[targetRank - 1] = sourceDimensions.d[0];
+        auto* reshape = network->addShuffle(*tensor);
+        if (!reshape) {
+            loweringError = "TensorRT broadcast reshape failed for " + layerName;
+            return nullptr;
+        }
+        reshape->setReshapeDimensions(broadcastDimensions);
+        return reshape->getOutput(0);
+    }
+
+    nvinfer1::ITensor* TRTBuilder::BroadcastMatrixWeight(ITensor* tensor, int targetRank) {
+        if (!tensor) return nullptr;
+        const Dims sourceDimensions = tensor->getDimensions();
+        if (sourceDimensions.nbDims == targetRank) return tensor;
+        if (sourceDimensions.nbDims != 2 || targetRank < 2 || targetRank > Dims::MAX_DIMS) {
+            loweringError = "matrix weight cannot be broadcast to activation rank";
+            return nullptr;
+        }
+        Dims broadcastDimensions{};
+        broadcastDimensions.nbDims = targetRank;
+        for (int dimension = 0; dimension < targetRank - 2; ++dimension) {
+            broadcastDimensions.d[dimension] = 1;
+        }
+        broadcastDimensions.d[targetRank - 2] = sourceDimensions.d[0];
+        broadcastDimensions.d[targetRank - 1] = sourceDimensions.d[1];
+        auto* reshape = network->addShuffle(*tensor);
+        if (reshape) reshape->setReshapeDimensions(broadcastDimensions);
+        return reshape ? reshape->getOutput(0) : nullptr;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerVisionRope(
+        ITensor* qkv,
+        ITensor* positionIds,
+        X::KWARGS& options) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims positionDims = positionIds->getDimensions();
+        auto* headsItem = options.find("num_heads");
+        auto* headDimItem = options.find("head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 2 || positionDims.nbDims != 2 || positionDims.d[1] != 2 ||
+            heads <= 0 || headDim <= 0 || headDim % 4 != 0 ||
+            qkvDims.d[1] != 3 * heads * headDim) {
+            loweringError = "Qwen3-VL vision RoPE received incompatible static dimensions";
+            return nullptr;
+        }
+        const int tokens = qkvDims.d[0];
+        const int hidden = heads * headDim;
+        auto slice = [&](ITensor* source, int axis, int startValue, int sizeValue) -> ITensor* {
+            const Dims sourceDims = source->getDimensions();
+            Dims start{};
+            Dims size = sourceDims;
+            Dims stride{};
+            start.nbDims = sourceDims.nbDims;
+            stride.nbDims = sourceDims.nbDims;
+            for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
+            start.d[axis] = startValue;
+            size.d[axis] = sizeValue;
+            auto* layer = network->addSlice(*source, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto reshape = [&](ITensor* source, const Dims& dimensions) -> ITensor* {
+            auto* layer = source ? network->addShuffle(*source) : nullptr;
+            if (layer) layer->setReshapeDimensions(dimensions);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+
+        Dims thd{};
+        thd.nbDims = 3;
+        thd.d[0] = tokens;
+        thd.d[1] = heads;
+        thd.d[2] = headDim;
+        ITensor* q = reshape(slice(qkv, 1, 0, hidden), thd);
+        ITensor* k = reshape(slice(qkv, 1, hidden, hidden), thd);
+        ITensor* v = reshape(slice(qkv, 1, 2 * hidden, hidden), thd);
+        auto* qFloat = q ? network->addCast(*q, DataType::kFLOAT) : nullptr;
+        auto* kFloat = k ? network->addCast(*k, DataType::kFLOAT) : nullptr;
+        q = qFloat ? qFloat->getOutput(0) : nullptr;
+        k = kFloat ? kFloat->getOutput(0) : nullptr;
+
+        auto* positionCast = network->addCast(*positionIds, DataType::kFLOAT);
+        Dims positionExpanded{};
+        positionExpanded.nbDims = 3;
+        positionExpanded.d[0] = tokens;
+        positionExpanded.d[1] = 2;
+        positionExpanded.d[2] = 1;
+        ITensor* positions = positionCast
+            ? reshape(positionCast->getOutput(0), positionExpanded)
+            : nullptr;
+        const int frequencyCount = headDim / 4;
+        vectorWeights.emplace_back(static_cast<size_t>(frequencyCount));
+        for (int i = 0; i < frequencyCount; ++i) {
+            vectorWeights.back()[i] = 1.0F / std::pow(
+                10000.0F,
+                static_cast<float>(2 * i) / static_cast<float>(headDim / 2));
+        }
+        Dims frequencyDims{};
+        frequencyDims.nbDims = 3;
+        frequencyDims.d[0] = 1;
+        frequencyDims.d[1] = 1;
+        frequencyDims.d[2] = frequencyCount;
+        Weights frequencies{DataType::kFLOAT, vectorWeights.back().data(), frequencyCount};
+        auto* frequency = network->addConstant(frequencyDims, frequencies);
+        auto* phaseGrid = positions && frequency
+            ? network->addElementWise(
+                *positions,
+                *frequency->getOutput(0),
+                ElementWiseOperation::kPROD)
+            : nullptr;
+        Dims halfPhaseDims{};
+        halfPhaseDims.nbDims = 2;
+        halfPhaseDims.d[0] = tokens;
+        halfPhaseDims.d[1] = headDim / 2;
+        ITensor* halfPhase = phaseGrid
+            ? reshape(phaseGrid->getOutput(0), halfPhaseDims)
+            : nullptr;
+        ITensor* phaseParts[] = {halfPhase, halfPhase};
+        auto* phaseConcat = halfPhase ? network->addConcatenation(phaseParts, 2) : nullptr;
+        if (phaseConcat) phaseConcat->setAxis(1);
+        auto* cosine = phaseConcat
+            ? network->addUnary(*phaseConcat->getOutput(0), UnaryOperation::kCOS)
+            : nullptr;
+        auto* sine = phaseConcat
+            ? network->addUnary(*phaseConcat->getOutput(0), UnaryOperation::kSIN)
+            : nullptr;
+        Dims phaseBroadcastDims{};
+        phaseBroadcastDims.nbDims = 3;
+        phaseBroadcastDims.d[0] = tokens;
+        phaseBroadcastDims.d[1] = 1;
+        phaseBroadcastDims.d[2] = headDim;
+        ITensor* cosBroadcast = cosine
+            ? reshape(cosine->getOutput(0), phaseBroadcastDims)
+            : nullptr;
+        ITensor* sinBroadcast = sine
+            ? reshape(sine->getOutput(0), phaseBroadcastDims)
+            : nullptr;
+        auto rotateHalf = [&](ITensor* source) -> ITensor* {
+            ITensor* first = slice(source, 2, 0, headDim / 2);
+            ITensor* second = slice(source, 2, headDim / 2, headDim / 2);
+            auto* negativeSecond = second
+                ? network->addUnary(*second, UnaryOperation::kNEG)
+                : nullptr;
+            ITensor* parts[] = {negativeSecond ? negativeSecond->getOutput(0) : nullptr, first};
+            auto* concat = parts[0] && parts[1]
+                ? network->addConcatenation(parts, 2)
+                : nullptr;
+            if (concat) concat->setAxis(2);
+            return concat ? concat->getOutput(0) : nullptr;
+        };
+        auto applyRope = [&](ITensor* source) -> ITensor* {
+            ITensor* rotated = rotateHalf(source);
+            auto* base = source && cosBroadcast
+                ? network->addElementWise(*source, *cosBroadcast, ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* cross = rotated && sinBroadcast
+                ? network->addElementWise(*rotated, *sinBroadcast, ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* sum = base && cross
+                ? network->addElementWise(
+                    *base->getOutput(0),
+                    *cross->getOutput(0),
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            return sum ? sum->getOutput(0) : nullptr;
+        };
+        Dims flatHidden{};
+        flatHidden.nbDims = 2;
+        flatHidden.d[0] = tokens;
+        flatHidden.d[1] = hidden;
+        ITensor* qRotated = applyRope(q);
+        ITensor* kRotated = applyRope(k);
+        auto* qCast = qRotated ? network->addCast(*qRotated, qkv->getType()) : nullptr;
+        auto* kCast = kRotated ? network->addCast(*kRotated, qkv->getType()) : nullptr;
+        qRotated = reshape(qCast ? qCast->getOutput(0) : nullptr, flatHidden);
+        kRotated = reshape(kCast ? kCast->getOutput(0) : nullptr, flatHidden);
+        v = reshape(v, flatHidden);
+        ITensor* packedParts[] = {qRotated, kRotated, v};
+        auto* packed = qRotated && kRotated && v
+            ? network->addConcatenation(packedParts, 3)
+            : nullptr;
+        if (packed) packed->setAxis(1);
+        return packed ? packed->getOutput(0) : nullptr;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerVisionAttention(
+        ITensor* qkv,
+        ITensor* cuSeqlens,
+        X::KWARGS& options) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims sequenceDims = cuSeqlens->getDimensions();
+        auto* headsItem = options.find("num_heads");
+        auto* headDimItem = options.find("head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 2 || sequenceDims.nbDims != 1 || sequenceDims.d[0] != 2 ||
+            heads <= 0 || headDim <= 0 || qkvDims.d[1] != 3 * heads * headDim) {
+            loweringError = "vision attention currently requires one packed vision sequence";
+            return nullptr;
+        }
+        const int tokens = qkvDims.d[0];
+        const int hidden = heads * headDim;
+        auto sliceColumns = [&](int startColumn) -> ITensor* {
+            Dims start{};
+            start.nbDims = 2;
+            start.d[1] = startColumn;
+            Dims size{};
+            size.nbDims = 2;
+            size.d[0] = tokens;
+            size.d[1] = hidden;
+            Dims stride{};
+            stride.nbDims = 2;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            auto* layer = network->addSlice(*qkv, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto toHeadMajorFloat = [&](ITensor* source) -> ITensor* {
+            Dims dimensions{};
+            dimensions.nbDims = 3;
+            dimensions.d[0] = tokens;
+            dimensions.d[1] = heads;
+            dimensions.d[2] = headDim;
+            auto* shuffle = source ? network->addShuffle(*source) : nullptr;
+            if (!shuffle) return nullptr;
+            shuffle->setReshapeDimensions(dimensions);
+            Permutation permutation{};
+            permutation.order[0] = 1;
+            permutation.order[1] = 0;
+            permutation.order[2] = 2;
+            shuffle->setSecondTranspose(permutation);
+            auto* cast = network->addCast(*shuffle->getOutput(0), DataType::kFLOAT);
+            return cast ? cast->getOutput(0) : nullptr;
+        };
+        ITensor* q = toHeadMajorFloat(sliceColumns(0));
+        ITensor* k = toHeadMajorFloat(sliceColumns(hidden));
+        ITensor* v = toHeadMajorFloat(sliceColumns(2 * hidden));
+        auto* scores = q && k
+            ? network->addMatrixMultiply(
+                *q,
+                MatrixOperation::kNONE,
+                *k,
+                MatrixOperation::kTRANSPOSE)
+            : nullptr;
+        scalarWeights.push_back(1.0F / std::sqrt(static_cast<float>(headDim)));
+        Dims scaleDims{};
+        scaleDims.nbDims = 3;
+        scaleDims.d[0] = 1;
+        scaleDims.d[1] = 1;
+        scaleDims.d[2] = 1;
+        Weights scaleWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+        auto* scale = network->addConstant(scaleDims, scaleWeights);
+        auto* scaledScores = scores && scale
+            ? network->addElementWise(
+                *scores->getOutput(0),
+                *scale->getOutput(0),
+                ElementWiseOperation::kPROD)
+            : nullptr;
+        auto* softmax = scaledScores
+            ? network->addSoftMax(*scaledScores->getOutput(0))
+            : nullptr;
+        if (softmax) softmax->setAxes(1U << 2);
+        auto* context = softmax && v
+            ? network->addMatrixMultiply(
+                *softmax->getOutput(0),
+                MatrixOperation::kNONE,
+                *v,
+                MatrixOperation::kNONE)
+            : nullptr;
+        auto* contextCast = context
+            ? network->addCast(*context->getOutput(0), qkv->getType())
+            : nullptr;
+        auto* output = contextCast
+            ? network->addShuffle(*contextCast->getOutput(0))
+            : nullptr;
+        if (!output) return nullptr;
+        Permutation permutation{};
+        permutation.order[0] = 1;
+        permutation.order[1] = 0;
+        permutation.order[2] = 2;
+        output->setFirstTranspose(permutation);
+        Dims outputDims{};
+        outputDims.nbDims = 2;
+        outputDims.d[0] = tokens;
+        outputDims.d[1] = hidden;
+        output->setReshapeDimensions(outputDims);
+        return output->getOutput(0);
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerTextRope(
+        ITensor* qkv,
+        ITensor* positionIds,
+        X::KWARGS& options) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims positionDims = positionIds->getDimensions();
+        auto* headsItem = options.find("num_heads");
+        auto* kvHeadsItem = options.find("num_kv_heads");
+        auto* headDimItem = options.find("head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->val.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 3 || positionDims.nbDims != 3 || positionDims.d[0] != 3 ||
+            heads <= 0 || kvHeads <= 0 || headDim <= 0 || headDim % 2 != 0 ||
+            qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
+            loweringError = "Qwen3-VL text RoPE received incompatible static dimensions";
+            return nullptr;
+        }
+        const int batch = qkvDims.d[0];
+        const int tokens = qkvDims.d[1];
+        const int qWidth = heads * headDim;
+        const int kvWidth = kvHeads * headDim;
+        auto reshape = [&](ITensor* source, const Dims& dimensions) -> ITensor* {
+            auto* layer = source ? network->addShuffle(*source) : nullptr;
+            if (layer) layer->setReshapeDimensions(dimensions);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto sliceLast = [&](ITensor* source, int startValue, int sizeValue) -> ITensor* {
+            const Dims sourceDims = source->getDimensions();
+            Dims start{};
+            Dims size = sourceDims;
+            Dims stride{};
+            start.nbDims = sourceDims.nbDims;
+            stride.nbDims = sourceDims.nbDims;
+            for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
+            start.d[sourceDims.nbDims - 1] = startValue;
+            size.d[sourceDims.nbDims - 1] = sizeValue;
+            auto* layer = network->addSlice(*source, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+
+        const int frequencyCount = headDim / 2;
+        int sections[3] = {24, 20, 20};
+        auto* sectionsItem = options.find("mrope_section");
+        if (sectionsItem && sectionsItem->val.IsList()) {
+            X::List sectionValues(sectionsItem->val);
+            if (sectionValues->Size() == 3) {
+                for (int i = 0; i < 3; ++i) {
+                    sections[i] = static_cast<int>(sectionValues[i].ToLongLong());
+                }
+            }
+        }
+        integerVectorWeights.emplace_back(static_cast<size_t>(frequencyCount), 0);
+        for (int i = 0; i < sections[1]; ++i) {
+            const int index = 1 + 3 * i;
+            if (index < frequencyCount) integerVectorWeights.back()[index] = 1;
+        }
+        for (int i = 0; i < sections[2]; ++i) {
+            const int index = 2 + 3 * i;
+            if (index < frequencyCount) integerVectorWeights.back()[index] = 2;
+        }
+        Dims selectorDims{};
+        selectorDims.nbDims = 1;
+        selectorDims.d[0] = frequencyCount;
+        Weights selectorWeights{
+            DataType::kINT32,
+            integerVectorWeights.back().data(),
+            frequencyCount};
+        auto* selector = network->addConstant(selectorDims, selectorWeights);
+        auto* selectedPositions = selector
+            ? network->addGather(*positionIds, *selector->getOutput(0), 0)
+            : nullptr;
+        auto* positionTranspose = selectedPositions
+            ? network->addShuffle(*selectedPositions->getOutput(0))
+            : nullptr;
+        if (positionTranspose) {
+            Permutation permutation{};
+            permutation.order[0] = 1;
+            permutation.order[1] = 2;
+            permutation.order[2] = 0;
+            positionTranspose->setFirstTranspose(permutation);
+        }
+        auto* positionFloat = positionTranspose
+            ? network->addCast(*positionTranspose->getOutput(0), DataType::kFLOAT)
+            : nullptr;
+
+        vectorWeights.emplace_back(static_cast<size_t>(frequencyCount));
+        auto* thetaItem = options.find("rope_theta");
+        const float theta = thetaItem ? static_cast<float>(thetaItem->val.ToDouble()) : 10000.0F;
+        for (int i = 0; i < frequencyCount; ++i) {
+            vectorWeights.back()[i] = 1.0F / std::pow(
+                theta,
+                static_cast<float>(2 * i) / static_cast<float>(headDim));
+        }
+        Dims frequencyDims{};
+        frequencyDims.nbDims = 3;
+        frequencyDims.d[0] = 1;
+        frequencyDims.d[1] = 1;
+        frequencyDims.d[2] = frequencyCount;
+        Weights frequencyWeights{
+            DataType::kFLOAT,
+            vectorWeights.back().data(),
+            frequencyCount};
+        auto* frequencies = network->addConstant(frequencyDims, frequencyWeights);
+        auto* phase = positionFloat && frequencies
+            ? network->addElementWise(
+                *positionFloat->getOutput(0),
+                *frequencies->getOutput(0),
+                ElementWiseOperation::kPROD)
+            : nullptr;
+        ITensor* phaseParts[] = {phase ? phase->getOutput(0) : nullptr, phase ? phase->getOutput(0) : nullptr};
+        auto* fullPhase = phase ? network->addConcatenation(phaseParts, 2) : nullptr;
+        if (fullPhase) fullPhase->setAxis(2);
+        auto* cosine = fullPhase
+            ? network->addUnary(*fullPhase->getOutput(0), UnaryOperation::kCOS)
+            : nullptr;
+        auto* sine = fullPhase
+            ? network->addUnary(*fullPhase->getOutput(0), UnaryOperation::kSIN)
+            : nullptr;
+        Dims ropeBroadcastDims{};
+        ropeBroadcastDims.nbDims = 4;
+        ropeBroadcastDims.d[0] = batch;
+        ropeBroadcastDims.d[1] = tokens;
+        ropeBroadcastDims.d[2] = 1;
+        ropeBroadcastDims.d[3] = headDim;
+        ITensor* cosBroadcast = cosine
+            ? reshape(cosine->getOutput(0), ropeBroadcastDims)
+            : nullptr;
+        ITensor* sinBroadcast = sine
+            ? reshape(sine->getOutput(0), ropeBroadcastDims)
+            : nullptr;
+
+        Dims qHeadDims{};
+        qHeadDims.nbDims = 4;
+        qHeadDims.d[0] = batch;
+        qHeadDims.d[1] = tokens;
+        qHeadDims.d[2] = heads;
+        qHeadDims.d[3] = headDim;
+        Dims kvHeadDims = qHeadDims;
+        kvHeadDims.d[2] = kvHeads;
+        ITensor* q = reshape(sliceLast(qkv, 0, qWidth), qHeadDims);
+        ITensor* k = reshape(sliceLast(qkv, qWidth, kvWidth), kvHeadDims);
+        ITensor* v = sliceLast(qkv, qWidth + kvWidth, kvWidth);
+        auto applyRope = [&](ITensor* source) -> ITensor* {
+            auto* sourceFloatLayer = source ? network->addCast(*source, DataType::kFLOAT) : nullptr;
+            ITensor* sourceFloat = sourceFloatLayer ? sourceFloatLayer->getOutput(0) : nullptr;
+            ITensor* first = sliceLast(sourceFloat, 0, headDim / 2);
+            ITensor* second = sliceLast(sourceFloat, headDim / 2, headDim / 2);
+            auto* negativeSecond = second
+                ? network->addUnary(*second, UnaryOperation::kNEG)
+                : nullptr;
+            ITensor* rotatedParts[] = {negativeSecond ? negativeSecond->getOutput(0) : nullptr, first};
+            auto* rotated = rotatedParts[0] && rotatedParts[1]
+                ? network->addConcatenation(rotatedParts, 2)
+                : nullptr;
+            if (rotated) rotated->setAxis(3);
+            auto* base = sourceFloat && cosBroadcast
+                ? network->addElementWise(*sourceFloat, *cosBroadcast, ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* cross = rotated && sinBroadcast
+                ? network->addElementWise(
+                    *rotated->getOutput(0),
+                    *sinBroadcast,
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* sum = base && cross
+                ? network->addElementWise(
+                    *base->getOutput(0),
+                    *cross->getOutput(0),
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            auto* cast = sum ? network->addCast(*sum->getOutput(0), qkv->getType()) : nullptr;
+            return cast ? cast->getOutput(0) : nullptr;
+        };
+        q = applyRope(q);
+        k = applyRope(k);
+        Dims qFlatDims{};
+        qFlatDims.nbDims = 3;
+        qFlatDims.d[0] = batch;
+        qFlatDims.d[1] = tokens;
+        qFlatDims.d[2] = qWidth;
+        Dims kvFlatDims = qFlatDims;
+        kvFlatDims.d[2] = kvWidth;
+        q = reshape(q, qFlatDims);
+        k = reshape(k, kvFlatDims);
+        ITensor* packedInputs[] = {q, k, v};
+        auto* packed = q && k && v ? network->addConcatenation(packedInputs, 3) : nullptr;
+        if (packed) packed->setAxis(2);
+        return packed ? packed->getOutput(0) : nullptr;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerTextAttention(
+        ITensor* qkv,
+        ITensor* attentionMask,
+        X::KWARGS& options) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims maskDims = attentionMask->getDimensions();
+        auto* headsItem = options.find("num_heads");
+        auto* kvHeadsItem = options.find("num_key_value_heads");
+        auto* headDimItem = options.find("head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->val.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 3 || maskDims.nbDims != 2 || heads <= 0 || kvHeads <= 0 ||
+            heads % kvHeads != 0 || headDim <= 0 ||
+            qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
+            loweringError = "Qwen3 text attention received incompatible static dimensions";
+            return nullptr;
+        }
+        const int batch = qkvDims.d[0];
+        const int tokens = qkvDims.d[1];
+        const int qWidth = heads * headDim;
+        const int kvWidth = kvHeads * headDim;
+        auto sliceLast = [&](int startValue, int sizeValue) -> ITensor* {
+            Dims start{};
+            Dims size = qkvDims;
+            Dims stride{};
+            start.nbDims = qkvDims.nbDims;
+            stride.nbDims = qkvDims.nbDims;
+            for (int i = 0; i < qkvDims.nbDims; ++i) stride.d[i] = 1;
+            start.d[2] = startValue;
+            size.d[2] = sizeValue;
+            auto* layer = network->addSlice(*qkv, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto reshape = [&](ITensor* source, const Dims& dimensions) -> ITensor* {
+            auto* layer = source ? network->addShuffle(*source) : nullptr;
+            if (layer) layer->setReshapeDimensions(dimensions);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        Dims qHeadDims{};
+        qHeadDims.nbDims = 4;
+        qHeadDims.d[0] = batch;
+        qHeadDims.d[1] = tokens;
+        qHeadDims.d[2] = heads;
+        qHeadDims.d[3] = headDim;
+        Dims kvHeadDims = qHeadDims;
+        kvHeadDims.d[2] = kvHeads;
+        ITensor* q = reshape(sliceLast(0, qWidth), qHeadDims);
+        ITensor* k = reshape(sliceLast(qWidth, kvWidth), kvHeadDims);
+        ITensor* v = reshape(sliceLast(qWidth + kvWidth, kvWidth), kvHeadDims);
+
+        integerVectorWeights.emplace_back(static_cast<size_t>(heads));
+        const int repeats = heads / kvHeads;
+        for (int head = 0; head < heads; ++head) {
+            integerVectorWeights.back()[head] = head / repeats;
+        }
+        Dims repeatIndexDims{};
+        repeatIndexDims.nbDims = 1;
+        repeatIndexDims.d[0] = heads;
+        Weights repeatIndexWeights{
+            DataType::kINT32,
+            integerVectorWeights.back().data(),
+            heads};
+        auto* repeatIndices = network->addConstant(repeatIndexDims, repeatIndexWeights);
+        auto* repeatedK = repeatIndices ? network->addGather(*k, *repeatIndices->getOutput(0), 2) : nullptr;
+        auto* repeatedV = repeatIndices ? network->addGather(*v, *repeatIndices->getOutput(0), 2) : nullptr;
+        k = repeatedK ? repeatedK->getOutput(0) : nullptr;
+        v = repeatedV ? repeatedV->getOutput(0) : nullptr;
+        auto headMajorFloat = [&](ITensor* source) -> ITensor* {
+            auto* shuffle = source ? network->addShuffle(*source) : nullptr;
+            if (!shuffle) return nullptr;
+            Permutation permutation{};
+            permutation.order[0] = 0;
+            permutation.order[1] = 2;
+            permutation.order[2] = 1;
+            permutation.order[3] = 3;
+            shuffle->setFirstTranspose(permutation);
+            auto* cast = network->addCast(*shuffle->getOutput(0), DataType::kFLOAT);
+            return cast ? cast->getOutput(0) : nullptr;
+        };
+        q = headMajorFloat(q);
+        k = headMajorFloat(k);
+        v = headMajorFloat(v);
+        auto* scores = q && k
+            ? network->addMatrixMultiply(
+                *q,
+                MatrixOperation::kNONE,
+                *k,
+                MatrixOperation::kTRANSPOSE)
+            : nullptr;
+        scalarWeights.push_back(1.0F / std::sqrt(static_cast<float>(headDim)));
+        Dims scalar4Dims{};
+        scalar4Dims.nbDims = 4;
+        scalar4Dims.d[0] = 1;
+        scalar4Dims.d[1] = 1;
+        scalar4Dims.d[2] = 1;
+        scalar4Dims.d[3] = 1;
+        Weights scaleWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+        auto* scale = network->addConstant(scalar4Dims, scaleWeights);
+        auto* scaledScores = scores && scale
+            ? network->addElementWise(
+                *scores->getOutput(0),
+                *scale->getOutput(0),
+                ElementWiseOperation::kPROD)
+            : nullptr;
+
+        integerWeights.push_back(0);
+        Dims maskScalarDims{};
+        maskScalarDims.nbDims = 2;
+        maskScalarDims.d[0] = 1;
+        maskScalarDims.d[1] = 1;
+        Weights zeroWeights{DataType::kINT64, &integerWeights.back(), 1};
+        auto* zero = network->addConstant(maskScalarDims, zeroWeights);
+        auto* paddingMask = zero
+            ? network->addElementWise(*attentionMask, *zero->getOutput(0), ElementWiseOperation::kEQUAL)
+            : nullptr;
+        auto* paddingFloat = paddingMask
+            ? network->addCast(*paddingMask->getOutput(0), DataType::kFLOAT)
+            : nullptr;
+        Dims paddingDims{};
+        paddingDims.nbDims = 4;
+        paddingDims.d[0] = batch;
+        paddingDims.d[1] = 1;
+        paddingDims.d[2] = 1;
+        paddingDims.d[3] = tokens;
+        ITensor* padding = paddingFloat ? reshape(paddingFloat->getOutput(0), paddingDims) : nullptr;
+        scalarWeights.push_back(-10000.0F);
+        Weights negativeWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+        auto* negative = network->addConstant(scalar4Dims, negativeWeights);
+        auto* paddingBias = padding && negative
+            ? network->addElementWise(*padding, *negative->getOutput(0), ElementWiseOperation::kPROD)
+            : nullptr;
+
+        vectorWeights.emplace_back(static_cast<size_t>(tokens) * static_cast<size_t>(tokens), 0.0F);
+        for (int query = 0; query < tokens; ++query) {
+            for (int key = query + 1; key < tokens; ++key) {
+                vectorWeights.back()[static_cast<size_t>(query) * tokens + key] = -10000.0F;
+            }
+        }
+        Dims causalDims{};
+        causalDims.nbDims = 4;
+        causalDims.d[0] = 1;
+        causalDims.d[1] = 1;
+        causalDims.d[2] = tokens;
+        causalDims.d[3] = tokens;
+        Weights causalWeights{
+            DataType::kFLOAT,
+            vectorWeights.back().data(),
+            static_cast<int64_t>(tokens) * tokens};
+        auto* causal = network->addConstant(causalDims, causalWeights);
+        auto* withCausal = scaledScores && causal
+            ? network->addElementWise(
+                *scaledScores->getOutput(0),
+                *causal->getOutput(0),
+                ElementWiseOperation::kSUM)
+            : nullptr;
+        auto* maskedScores = withCausal && paddingBias
+            ? network->addElementWise(
+                *withCausal->getOutput(0),
+                *paddingBias->getOutput(0),
+                ElementWiseOperation::kSUM)
+            : nullptr;
+        auto* softmax = maskedScores ? network->addSoftMax(*maskedScores->getOutput(0)) : nullptr;
+        if (softmax) softmax->setAxes(1U << 3);
+        auto* context = softmax && v
+            ? network->addMatrixMultiply(
+                *softmax->getOutput(0),
+                MatrixOperation::kNONE,
+                *v,
+                MatrixOperation::kNONE)
+            : nullptr;
+        auto* contextCast = context
+            ? network->addCast(*context->getOutput(0), qkv->getType())
+            : nullptr;
+        auto* output = contextCast ? network->addShuffle(*contextCast->getOutput(0)) : nullptr;
+        if (!output) return nullptr;
+        Permutation permutation{};
+        permutation.order[0] = 0;
+        permutation.order[1] = 2;
+        permutation.order[2] = 1;
+        permutation.order[3] = 3;
+        output->setFirstTranspose(permutation);
+        Dims outputDims{};
+        outputDims.nbDims = 3;
+        outputDims.d[0] = batch;
+        outputDims.d[1] = tokens;
+        outputDims.d[2] = qWidth;
+        output->setReshapeDimensions(outputDims);
+        return output->getOutput(0);
+    }
+
+    bool TRTBuilder::BuildCapturedGraph(
+        X::Value graph,
+        X::Value forwardFunction,
+        X::ARGS& graphArguments,
+        X::ARGS& symbolicInputs,
+        const SafeTensorsIndex* weightIndex,
+        const std::string& enginePath,
+        std::string& errorMessage) {
+        tensorMap.clear();
+        weightTensorMap.clear();
+        scalarWeights.clear();
+        integerWeights.clear();
+        vectorWeights.clear();
+        integerVectorWeights.clear();
+        lastOutput = nullptr;
+        pendingKVKeyPages = nullptr;
+        pendingKVValuePages = nullptr;
+        pendingKVPageTable = nullptr;
+        pendingKVContextLength = nullptr;
+        pendingKVSlotPosition = nullptr;
+        for (auto* plugin : ownedPlugins) plugin->destroy();
+        ownedPlugins.clear();
+        loweringError.clear();
+        loweringActive = true;
+        branchParentActivity.clear();
+        flowBranchTaken.clear();
+        capturedWeightIndex = weightIndex;
+        capturedWeightFile.Close();
+        if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0) {
+            if (!capturedWeightFile.Open(capturedWeightIndex->FilePath(), loweringError)) {
+                errorMessage = loweringError;
+                capturedWeightIndex = nullptr;
+                return false;
+            }
+        }
+
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return false;
+        }
+        builder = createInferBuilder(gLogger);
+        if (!builder) {
+            errorMessage = "TensorRT createInferBuilder failed";
+            return false;
+        }
+        const uint32_t flags =
+            (1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH)) |
+            (1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kSTRONGLY_TYPED));
+        network = builder->createNetworkV2(flags);
+        config = builder->createBuilderConfig();
+        if (!network || !config) {
+            errorMessage = "TensorRT network/config creation failed";
+            delete config;
+            delete network;
+            delete builder;
+            config = nullptr;
+            network = nullptr;
+            builder = nullptr;
+            return false;
+        }
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 64ULL << 20);
+        if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0) {
+            config->setFlag(BuilderFlag::kREFIT_INDIVIDUAL);
+            config->setFlag(BuilderFlag::kSTRIP_PLAN);
+        }
+
+        for (size_t index = 0; index < symbolicInputs.size(); ++index) {
+            X::Value inputValue = symbolicInputs[index];
+            if (!inputValue.IsTensor()) {
+                loweringError = "compiled graph inputs must be tensors";
+                break;
+            }
+            X::Tensor input(inputValue);
+            DataType trtDataType;
+            if (input->GetDataType() == X::TensorDataType::FLOAT32) {
+                trtDataType = DataType::kFLOAT;
+            }
+            else if (input->GetDataType() == X::TensorDataType::BFLOAT16) {
+                trtDataType = DataType::kBF16;
+            }
+            else if (input->GetDataType() == X::TensorDataType::LONGLONG) {
+                trtDataType = DataType::kINT64;
+            }
+            else if (input->GetDataType() == X::TensorDataType::INT) {
+                trtDataType = DataType::kINT32;
+            }
+            else {
+                loweringError = "unsupported symbolic TensorRT input dtype";
+                break;
+            }
+            Dims dimensions{};
+            dimensions.nbDims = input->GetDimCount();
+            if (dimensions.nbDims <= 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+                loweringError = "invalid symbolic input rank";
+                break;
+            }
+            for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+                dimensions.d[dimension] = input->GetDimSize(dimension);
+            }
+            const std::string name = "input_" + std::to_string(index);
+            ITensor* trtInput = network->addInput(name.c_str(), trtDataType, dimensions);
+            if (!trtInput) {
+                loweringError = "TensorRT addInput failed for " + name;
+                break;
+            }
+            tensorMap[inputValue.GetObj()->GetID()] = trtInput;
+        }
+
+        if (loweringError.empty()) {
+            X::TensorGraph tensorGraph(graph);
+            X::KWARGS runOptions;
+            runOptions.Add("Func", forwardFunction);
+            g_trtContext = this;
+            const bool ran = tensorGraph->Run(graphArguments, runOptions);
+            g_trtContext = nullptr;
+            if (!ran && loweringError.empty()) {
+                loweringError = "xlang TensorGraph replay failed";
+            }
+        }
+
+        if (loweringError.empty() && !lastOutput) {
+            loweringError = "captured graph produced no lowerable output";
+        }
+        if (loweringError.empty()) {
+            lastOutput->setName("output_0");
+            network->markOutput(*lastOutput);
+            auto* serialized = builder->buildSerializedNetwork(*network, *config);
+            if (!serialized) {
+                loweringError = "TensorRT buildSerializedNetwork failed";
+            }
+            else {
+                const std::filesystem::path outputPath(enginePath);
+                std::filesystem::create_directories(outputPath.parent_path());
+                const std::filesystem::path temporaryPath = outputPath.string() + ".tmp";
+                std::ofstream output(temporaryPath, std::ios::binary | std::ios::trunc);
+                output.write(
+                    static_cast<const char*>(serialized->data()),
+                    static_cast<std::streamsize>(serialized->size()));
+                output.close();
+                InvalidateCachedTRTExecution(enginePath);
+                std::error_code fileError;
+                std::filesystem::remove(outputPath, fileError);
+                fileError.clear();
+                std::filesystem::rename(temporaryPath, outputPath, fileError);
+                if (fileError) {
+                    loweringError = "failed to publish TensorRT engine atomically: " + fileError.message();
+                }
+                delete serialized;
+            }
+        }
+
+        delete config;
+        delete network;
+        delete builder;
+        config = nullptr;
+        network = nullptr;
+        builder = nullptr;
+        for (auto* plugin : ownedPlugins) plugin->destroy();
+        ownedPlugins.clear();
+        tensorMap.clear();
+        capturedWeightFile.Close();
+        capturedWeightIndex = nullptr;
+        lastOutput = nullptr;
+        errorMessage = loweringError;
+        return loweringError.empty();
+    }
+
+    X::Value TRTBuilder::RunCapturedEngine(
+        const std::string& enginePath,
+        X::Value inputsValue,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage) {
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return X::Value();
+        }
+        if (!inputsValue.IsList()) {
+            errorMessage = "compiled forward requires an inputs list";
+            return X::Value();
+        }
+
+        ICudaEngine* cachedEngine = nullptr;
+        IExecutionContext* cachedContext = nullptr;
+        if (!GetCachedTRTExecutionObjects(enginePath, cachedEngine, cachedContext, weightIndex)) {
+            errorMessage = "failed to load cached TensorRT engine";
+            return X::Value();
+        }
+
+        X::List inputs(inputsValue);
+        for (long long index = 0; index < inputs->Size(); ++index) {
+            X::Value inputValue = inputs->Get(index);
+            if (!inputValue.IsTensor()) {
+                errorMessage = "compiled forward input_" + std::to_string(index) +
+                    " must be an X::Tensor value";
+                return X::Value();
+            }
+            X::Tensor input(inputValue);
+            if (input->GetDataType() != X::TensorDataType::FLOAT32 &&
+                input->GetDataType() != X::TensorDataType::BFLOAT16 &&
+                input->GetDataType() != X::TensorDataType::INT &&
+                input->GetDataType() != X::TensorDataType::LONGLONG) {
+                errorMessage = "compiled forward accepts FLOAT32, BFLOAT16, INT32, or INT64 inputs";
+                return X::Value();
+            }
+            if (TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
+                errorMessage = "failed to make compiled input GPU-resident";
+                return X::Value();
+            }
+            void* devicePointer = TensorHelper::GetGPUMemory(input);
+            const std::string name = "input_" + std::to_string(index);
+            if (!devicePointer || !cachedContext->setTensorAddress(name.c_str(), devicePointer)) {
+                errorMessage = "failed to bind TensorRT input " + name;
+                return X::Value();
+            }
+        }
+
+        const Dims outputDimensions = cachedEngine->getTensorShape("output_0");
+        if (outputDimensions.nbDims <= 0 || outputDimensions.nbDims > Dims::MAX_DIMS) {
+            errorMessage = "TensorRT engine returned an invalid output shape";
+            return X::Value();
+        }
+        size_t outputCount = 1;
+        X::Port::vector<int> outputShape(outputDimensions.nbDims);
+        for (int dimension = 0; dimension < outputDimensions.nbDims; ++dimension) {
+            if (outputDimensions.d[dimension] <= 0) {
+                errorMessage = "dynamic output shapes are not implemented in compiled fixture execution";
+                return X::Value();
+            }
+            outputShape.push_back(outputDimensions.d[dimension]);
+            outputCount *= static_cast<size_t>(outputDimensions.d[dimension]);
+        }
+
+        void* outputDevicePointer = nullptr;
+        const DataType outputDataType = cachedEngine->getTensorDataType("output_0");
+        X::TensorDataType xlangOutputDataType;
+        size_t elementBytes = 0;
+        if (outputDataType == DataType::kFLOAT) {
+            xlangOutputDataType = X::TensorDataType::FLOAT32;
+            elementBytes = sizeof(float);
+        }
+        else if (outputDataType == DataType::kBF16) {
+            xlangOutputDataType = X::TensorDataType::BFLOAT16;
+            elementBytes = sizeof(unsigned short);
+        }
+        else {
+            errorMessage = "unsupported TensorRT output dtype";
+            return X::Value();
+        }
+        const size_t outputBytes = outputCount * elementBytes;
+        if (cudaMalloc(&outputDevicePointer, outputBytes) != cudaSuccess) {
+            errorMessage = "failed to allocate TensorRT output on GPU";
+            return X::Value();
+        }
+        if (!cachedContext->setTensorAddress("output_0", outputDevicePointer) ||
+            !cachedContext->enqueueV3(cudaStreamPerThread)) {
+            cudaFree(outputDevicePointer);
+            errorMessage = "TensorRT enqueueV3 failed";
+            return X::Value();
+        }
+
+        X::Tensor output(X::g_pXHost->CreateTensor());
+        output->SetDataType(xlangOutputDataType);
+        output->SetShape(outputShape);
+        if (TensorHelper::AttachGPUMemory(output, outputDevicePointer) != TensorOpStatus::Success) {
+            cudaFree(outputDevicePointer);
+            errorMessage = "failed to attach TensorRT output to X::Tensor";
+            return X::Value();
+        }
+        errorMessage.clear();
+        return X::Value(output);
+    }
+
+    X::Value TRTBuilder::HandleBinaryOp(
+        const std::string& opName,
+        X::Value graph,
+        X::ARGS& params,
+        X::KWARGS& kwParams,
+        X::Value input1,
+        X::Value input2,
+        X::Value output) {
+        if (!network || loweringError.size() > 0) {
+            return X::Value();
+        }
+        if (!loweringActive) {
+            return X::Value(true);
+        }
+        const bool isLinear =
+            opName == "linear" || opName == "qkv_linear" ||
+            opName == "q_proj" || opName == "k_proj" ||
+            opName == "v_proj" || opName == "o_proj" ||
+            opName == "gate_proj" || opName == "up_proj" ||
+            opName == "down_proj" || opName == "lm_head";
+        const bool isElementwise =
+            opName == "add" || opName == "minus" || opName == "mul";
+        const bool isMatrix = opName == "matmul" || isLinear;
+        const bool isVisionPositionInterpolate =
+            opName == "qwen3_vl_pos_embed_interpolate";
+        const bool isVisionRope = opName == "qwen3_vl_apply_vision_rope_packed";
+        const bool isVisionAttention = opName == "vision_varlen_attention_packed";
+        const bool isVisualEmbeddingMerge = opName == "qwen3_vl_merge_visual_embeddings";
+        const bool isTextRope = opName == "qwen3_vl_apply_text_rope_packed";
+        const bool isTextAttention = opName == "paged_attention_packed";
+        const bool isDeepstackAdd = opName == "qwen3_vl_deepstack_add";
+        const bool isPagedKVBinding =
+            opName == "paged_kv_bind_key_pages" ||
+            opName == "paged_kv_bind_value_pages" ||
+            opName == "paged_kv_bind_page_table" ||
+            opName == "paged_kv_bind_context_length" ||
+            opName == "paged_kv_bind_slot_position";
+        if (!isElementwise && !isMatrix && !isVisionPositionInterpolate &&
+            !isVisionRope && !isVisionAttention && !isVisualEmbeddingMerge &&
+            !isTextRope && !isTextAttention && !isDeepstackAdd && !isPagedKVBinding) {
+            loweringError = "unsupported binary operation: " + opName;
+            return X::Value();
+        }
+        if (opName == "mul" && (!input1.IsObject() || !input2.IsObject())) {
+            // xlang represents `x * T.binary_op(name) * y` with an empty
+            // structural mul followed by the named binary operation. The
+            // named item owns the output identity and performs the lowering.
+            return X::Value(true);
+        }
+        ITensor* left = GetOrCreateTRTTensor(input1);
+        ITensor* right = GetOrCreateTRTTensor(input2);
+        if (!left || !right) {
+            return X::Value();
+        }
+
+        if (isPagedKVBinding) {
+            if (opName == "paged_kv_bind_key_pages") pendingKVKeyPages = right;
+            else if (opName == "paged_kv_bind_value_pages") pendingKVValuePages = right;
+            else if (opName == "paged_kv_bind_page_table") pendingKVPageTable = right;
+            else if (opName == "paged_kv_bind_context_length") pendingKVContextLength = right;
+            else pendingKVSlotPosition = right;
+            lastOutput = left;
+        }
+
+        else if (isDeepstackAdd) {
+            auto* inputIdsItem = kwParams.find("input_ids");
+            auto* imageTokenItem = kwParams.find("image_token_id");
+            auto* videoTokenItem = kwParams.find("video_token_id");
+            if (!inputIdsItem || !imageTokenItem || !videoTokenItem) {
+                loweringError = "DeepStack add requires input_ids and visual token ids";
+                return X::Value();
+            }
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->val);
+            auto makeTokenConstant = [&](long long tokenId) -> ITensor* {
+                integerWeights.push_back(tokenId);
+                Dims dimensions{};
+                dimensions.nbDims = 2;
+                dimensions.d[0] = 1;
+                dimensions.d[1] = 1;
+                Weights weights{DataType::kINT64, &integerWeights.back(), 1};
+                auto* constant = network->addConstant(dimensions, weights);
+                return constant ? constant->getOutput(0) : nullptr;
+            };
+            ITensor* imageToken = makeTokenConstant(imageTokenItem->val.ToLongLong());
+            ITensor* videoToken = makeTokenConstant(videoTokenItem->val.ToLongLong());
+            auto* imageMask = inputIds && imageToken
+                ? network->addElementWise(*inputIds, *imageToken, ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* videoMask = inputIds && videoToken
+                ? network->addElementWise(*inputIds, *videoToken, ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* visualMask = imageMask && videoMask
+                ? network->addElementWise(
+                    *imageMask->getOutput(0),
+                    *videoMask->getOutput(0),
+                    ElementWiseOperation::kOR)
+                : nullptr;
+            auto* nonzero = visualMask
+                ? network->addNonZero(*visualMask->getOutput(0), DataType::kINT32)
+                : nullptr;
+            auto* indices = nonzero ? network->addShuffle(*nonzero->getOutput(0)) : nullptr;
+            if (indices) {
+                Permutation transpose{};
+                transpose.order[0] = 1;
+                transpose.order[1] = 0;
+                indices->setFirstTranspose(transpose);
+            }
+            auto* currentRows = indices
+                ? network->addGatherV2(*left, *indices->getOutput(0), GatherMode::kND)
+                : nullptr;
+            auto* updatedRows = currentRows
+                ? network->addElementWise(
+                    *currentRows->getOutput(0),
+                    *right,
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            auto* scatter = indices && updatedRows
+                ? network->addScatter(
+                    *left,
+                    *indices->getOutput(0),
+                    *updatedRows->getOutput(0),
+                    ScatterMode::kND)
+                : nullptr;
+            lastOutput = scatter ? scatter->getOutput(0) : nullptr;
+        }
+        else if (isTextAttention) {
+            lastOutput = LowerTextAttention(left, right, kwParams);
+        }
+        else if (isTextRope) {
+            lastOutput = LowerTextRope(left, right, kwParams);
+        }
+        else if (isVisualEmbeddingMerge) {
+            auto* inputIdsItem = kwParams.find("input_ids");
+            auto* imageTokenItem = kwParams.find("image_token_id");
+            auto* videoTokenItem = kwParams.find("video_token_id");
+            if (!inputIdsItem || !imageTokenItem || !videoTokenItem) {
+                loweringError = "visual embedding merge requires input_ids and visual token ids";
+                return X::Value();
+            }
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->val);
+            if (!inputIds || inputIds->getDimensions().nbDims != 2 ||
+                left->getDimensions().nbDims != 3 || right->getDimensions().nbDims != 2) {
+                loweringError = "visual embedding merge received incompatible tensor ranks";
+                return X::Value();
+            }
+            auto makeTokenConstant = [&](long long tokenId) -> ITensor* {
+                integerWeights.push_back(tokenId);
+                Dims dimensions{};
+                dimensions.nbDims = 2;
+                dimensions.d[0] = 1;
+                dimensions.d[1] = 1;
+                Weights weights{DataType::kINT64, &integerWeights.back(), 1};
+                auto* constant = network->addConstant(dimensions, weights);
+                return constant ? constant->getOutput(0) : nullptr;
+            };
+            ITensor* imageToken = makeTokenConstant(imageTokenItem->val.ToLongLong());
+            ITensor* videoToken = makeTokenConstant(videoTokenItem->val.ToLongLong());
+            auto* imageMask = imageToken
+                ? network->addElementWise(*inputIds, *imageToken, ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* videoMask = videoToken
+                ? network->addElementWise(*inputIds, *videoToken, ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* visualMask = imageMask && videoMask
+                ? network->addElementWise(
+                    *imageMask->getOutput(0),
+                    *videoMask->getOutput(0),
+                    ElementWiseOperation::kOR)
+                : nullptr;
+            auto* nonzero = visualMask
+                ? network->addNonZero(*visualMask->getOutput(0), DataType::kINT32)
+                : nullptr;
+            auto* indices = nonzero ? network->addShuffle(*nonzero->getOutput(0)) : nullptr;
+            if (indices) {
+                Permutation transpose{};
+                transpose.order[0] = 1;
+                transpose.order[1] = 0;
+                indices->setFirstTranspose(transpose);
+            }
+            auto* scatter = indices
+                ? network->addScatter(
+                    *left,
+                    *indices->getOutput(0),
+                    *right,
+                    ScatterMode::kND)
+                : nullptr;
+            lastOutput = scatter ? scatter->getOutput(0) : nullptr;
+        }
+        else if (isVisionRope) {
+            lastOutput = LowerVisionRope(left, right, kwParams);
+        }
+        else if (isVisionAttention) {
+            lastOutput = LowerVisionAttention(left, right, kwParams);
+        }
+        else if (isVisionPositionInterpolate) {
+            auto* weightNameItem = kwParams.find("weight_name");
+            if (!weightNameItem) {
+                loweringError = "vision position interpolation requires weight_name";
+                return X::Value();
+            }
+            ITensor* positionTable = GetOrCreateTRTWeight(weightNameItem->val.ToString());
+            auto* gather = positionTable
+                ? network->addGather(*positionTable, *left, 0)
+                : nullptr;
+            const Dims weightDimensions = right->getDimensions();
+            if (!gather || weightDimensions.nbDims != 2) {
+                loweringError = "vision position interpolation requires rank-2 indices and weights";
+                return X::Value();
+            }
+            Dims expandedWeightDimensions{};
+            expandedWeightDimensions.nbDims = 3;
+            expandedWeightDimensions.d[0] = weightDimensions.d[0];
+            expandedWeightDimensions.d[1] = weightDimensions.d[1];
+            expandedWeightDimensions.d[2] = 1;
+            auto* expand = network->addShuffle(*right);
+            if (expand) {
+                expand->setReshapeDimensions(expandedWeightDimensions);
+            }
+            auto* weighted = expand
+                ? network->addElementWise(
+                    *gather->getOutput(0),
+                    *expand->getOutput(0),
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* sum = weighted
+                ? network->addReduce(
+                    *weighted->getOutput(0),
+                    ReduceOperation::kSUM,
+                    1U << 1,
+                    false)
+                : nullptr;
+            lastOutput = sum ? sum->getOutput(0) : nullptr;
+        }
+        else if (opName == "matmul" || isLinear) {
+            auto* layer = network->addMatrixMultiply(
+                *left,
+                MatrixOperation::kNONE,
+                *right,
+                isLinear ? MatrixOperation::kTRANSPOSE : MatrixOperation::kNONE);
+            if (!layer || !layer->getOutput(0)) {
+                loweringError = "TensorRT matrix multiply lowering failed for " + opName;
+                return X::Value();
+            }
+            lastOutput = layer->getOutput(0);
+        }
+        else if (opName == "add" || opName == "minus" || opName == "mul") {
+            const ElementWiseOperation operation =
+                opName == "add" ? ElementWiseOperation::kSUM :
+                opName == "minus" ? ElementWiseOperation::kSUB :
+                ElementWiseOperation::kPROD;
+            auto* layer = network->addElementWise(*left, *right, operation);
+            if (!layer || !layer->getOutput(0)) {
+                loweringError = "TensorRT elementwise lowering failed for " + opName;
+                return X::Value();
+            }
+            lastOutput = layer->getOutput(0);
+        }
+        if (!lastOutput) {
+            if (loweringError.empty()) {
+                loweringError = "TensorRT binary lowering failed for " + opName;
+            }
+            return X::Value();
+        }
+        if (!output.IsObject()) {
+            loweringError = "binary operation has no graph output identity";
+            return X::Value();
+        }
+        tensorMap[output.GetObj()->GetID()] = lastOutput;
+        return X::Value(true);
+    }
+
+    X::Value TRTBuilder::HandleUnaryOp(
+        const std::string& opName,
+        X::Value graph,
+        X::ARGS& params,
+        X::KWARGS& kwParams,
+        X::Value input,
+        X::Value output) {
+        if (!loweringActive) {
+            return X::Value(true);
+        }
+        if (!network || loweringError.size() > 0) {
+            return X::Value();
+        }
+        ITensor* source = GetOrCreateTRTTensor(input);
+        if (!source) {
+            loweringError = "unary operation " + opName + " input: " + loweringError;
+            return X::Value();
+        }
+
+        const bool isLinear =
+            opName == "linear" || opName == "qkv_linear" ||
+            opName == "q_proj" || opName == "k_proj" ||
+            opName == "v_proj" || opName == "o_proj" ||
+            opName == "gate_proj" || opName == "up_proj" ||
+            opName == "down_proj" || opName == "lm_head";
+
+        if (opName == "paged_kv_select_layer") {
+            auto* layerItem = kwParams.find("layer_idx");
+            if (!layerItem) {
+                loweringError = "paged_kv_select_layer requires layer_idx";
+                return X::Value();
+            }
+            const int layerIndex = static_cast<int>(layerItem->val.ToLongLong());
+            const Dims sourceDimensions = source->getDimensions();
+            if (sourceDimensions.nbDims < 2 || layerIndex < 0 ||
+                layerIndex >= sourceDimensions.d[0]) {
+                loweringError = "paged_kv_select_layer index is outside the packed cache";
+                return X::Value();
+            }
+            pendingKVLayerIndex = layerIndex;
+            lastOutput = source;
+        }
+
+        else if (opName == "paged_kv_prefill_write_bf16") {
+            auto getIntOption = [&](const char* name, int defaultValue) {
+                auto* item = kwParams.find(name);
+                return item ? static_cast<int>(item->val.ToLongLong()) : defaultValue;
+            };
+            const int pageSize = getIntOption("page_size", 16);
+            const int qHeads = getIntOption("q_heads", 0);
+            const int kvHeads = getIntOption("kv_heads", 0);
+            const int headDim = getIntOption("head_dim", 0);
+            if (!pendingKVKeyPages || !pendingKVValuePages || !pendingKVPageTable ||
+                !pendingKVSlotPosition || pageSize <= 0 || qHeads <= 0 ||
+                kvHeads <= 0 || headDim <= 0) {
+                loweringError = "paged_kv_prefill_write_bf16 requires explicit cache bindings and geometry";
+                return X::Value();
+            }
+            auto* plugin = new PagedKVPrefillWritePlugin(
+                pageSize, qHeads, kvHeads, headDim, pendingKVLayerIndex);
+            ownedPlugins.push_back(plugin);
+            ITensor* pluginInputs[] = {
+                source,
+                pendingKVKeyPages,
+                pendingKVValuePages,
+                pendingKVPageTable,
+                pendingKVSlotPosition,
+            };
+            auto* layer = network->addPluginV2(pluginInputs, 5, *plugin);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+            pendingKVKeyPages = nullptr;
+            pendingKVValuePages = nullptr;
+            pendingKVPageTable = nullptr;
+            pendingKVSlotPosition = nullptr;
+            pendingKVLayerIndex = -1;
+        }
+
+        else if (opName == "paged_kv_decode_bf16") {
+            auto getIntOption = [&](const char* name, int defaultValue) {
+                auto* item = kwParams.find(name);
+                return item ? static_cast<int>(item->val.ToLongLong()) : defaultValue;
+            };
+            const int pageSize = getIntOption("page_size", 16);
+            const int qHeads = getIntOption("q_heads", 0);
+            const int kvHeads = getIntOption("kv_heads", 0);
+            const int headDim = getIntOption("head_dim", 0);
+            if (!pendingKVKeyPages || !pendingKVValuePages || !pendingKVPageTable ||
+                !pendingKVContextLength || !pendingKVSlotPosition || pageSize <= 0 ||
+                qHeads <= 0 || kvHeads <= 0 || headDim <= 0) {
+                loweringError = "paged_kv_decode_bf16 requires explicit cache bindings and geometry";
+                return X::Value();
+            }
+            auto* plugin = new PagedKVDecodePlugin(
+                pageSize, qHeads, kvHeads, headDim, pendingKVLayerIndex);
+            ownedPlugins.push_back(plugin);
+            ITensor* pluginInputs[] = {
+                source,
+                pendingKVKeyPages,
+                pendingKVValuePages,
+                pendingKVPageTable,
+                pendingKVContextLength,
+                pendingKVSlotPosition,
+            };
+            auto* layer = network->addPluginV2(pluginInputs, 6, *plugin);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+            pendingKVKeyPages = nullptr;
+            pendingKVValuePages = nullptr;
+            pendingKVPageTable = nullptr;
+            pendingKVContextLength = nullptr;
+            pendingKVSlotPosition = nullptr;
+            pendingKVLayerIndex = -1;
+        }
+
+        else if (opName == "embedding") {
+            auto* weightNameItem = kwParams.find("weight_name");
+            if (!weightNameItem) {
+                loweringError = "embedding operation is missing weight_name";
+                return X::Value();
+            }
+            const std::string weightName = weightNameItem->val.ToString();
+            ITensor* weight = GetOrCreateTRTWeight(weightName);
+            if (!weight) {
+                loweringError = "embedding weight " + weightName + ": " + loweringError;
+                return X::Value();
+            }
+            auto* layer = network->addGather(*weight, *source, 0);
+            if (layer) {
+                layer->setName("embedding");
+            }
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (isLinear) {
+            auto* weightNameItem = kwParams.find("weight_name");
+            if (!weightNameItem) {
+                loweringError = opName + " operation is missing weight_name";
+                return X::Value();
+            }
+            ITensor* weight = GetOrCreateTRTWeight(weightNameItem->val.ToString());
+            weight = BroadcastMatrixWeight(weight, source->getDimensions().nbDims);
+            auto* projection = weight
+                ? network->addMatrixMultiply(
+                    *source,
+                    MatrixOperation::kNONE,
+                    *weight,
+                    MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            if (!projection) {
+                loweringError = opName + " matrix projection failed: " + loweringError;
+                return X::Value();
+            }
+            lastOutput = projection->getOutput(0);
+            auto* biasNameItem = kwParams.find("bias_name");
+            if (biasNameItem && !biasNameItem->val.IsNone()) {
+                const std::string biasName = biasNameItem->val.ToString();
+                if (!biasName.empty()) {
+                    ITensor* bias = GetOrCreateTRTWeight(biasName);
+                    bias = BroadcastLastDimension(
+                        bias,
+                        lastOutput->getDimensions().nbDims,
+                        opName + "_bias_broadcast");
+                    auto* biased = bias
+                        ? network->addElementWise(*lastOutput, *bias, ElementWiseOperation::kSUM)
+                        : nullptr;
+                    if (!biased) {
+                        loweringError = opName + " bias addition failed: " + loweringError;
+                        return X::Value();
+                    }
+                    lastOutput = biased->getOutput(0);
+                }
+            }
+        }
+        else if (opName == "layer_norm") {
+            auto* weightNameItem = kwParams.find("weight_name");
+            auto* biasNameItem = kwParams.find("bias_name");
+            if (!weightNameItem || !biasNameItem) {
+                loweringError = "layer_norm requires weight_name and bias_name";
+                return X::Value();
+            }
+            ITensor* scale = GetOrCreateTRTWeight(weightNameItem->val.ToString());
+            ITensor* bias = GetOrCreateTRTWeight(biasNameItem->val.ToString());
+            const Dims sourceDimensions = source->getDimensions();
+            scale = BroadcastLastDimension(scale, sourceDimensions.nbDims, "layer_norm_scale_broadcast");
+            bias = BroadcastLastDimension(bias, sourceDimensions.nbDims, "layer_norm_bias_broadcast");
+            if (!scale || !bias || sourceDimensions.nbDims <= 0) {
+                loweringError = "layer_norm constants or input rank are invalid: " + loweringError;
+                return X::Value();
+            }
+            auto* layer = network->addNormalization(
+                *source,
+                *scale,
+                *bias,
+                1U << (sourceDimensions.nbDims - 1));
+            auto* epsilonItem = kwParams.find("eps");
+            if (layer && epsilonItem) {
+                layer->setEpsilon(static_cast<float>(epsilonItem->val.ToDouble()));
+            }
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "rms_norm") {
+            auto* weightNameItem = kwParams.find("weight_name");
+            if (!weightNameItem) {
+                loweringError = "rms_norm requires weight_name";
+                return X::Value();
+            }
+            ITensor* scale = GetOrCreateTRTWeight(weightNameItem->val.ToString());
+            const Dims sourceDimensions = source->getDimensions();
+            scale = BroadcastLastDimension(scale, sourceDimensions.nbDims, "rms_norm_scale_broadcast");
+            if (!scale || sourceDimensions.nbDims <= 0) {
+                loweringError = "rms_norm scale or input rank is invalid: " + loweringError;
+                return X::Value();
+            }
+            auto* sourceFloatLayer = network->addCast(*source, DataType::kFLOAT);
+            ITensor* sourceFloat = sourceFloatLayer ? sourceFloatLayer->getOutput(0) : nullptr;
+            auto* scaleFloatLayer = scale ? network->addCast(*scale, DataType::kFLOAT) : nullptr;
+            ITensor* scaleFloat = scaleFloatLayer ? scaleFloatLayer->getOutput(0) : nullptr;
+            auto* square = sourceFloat
+                ? network->addElementWise(*sourceFloat, *sourceFloat, ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* mean = square
+                ? network->addReduce(
+                    *square->getOutput(0),
+                    ReduceOperation::kAVG,
+                    1U << (sourceDimensions.nbDims - 1),
+                    true)
+                : nullptr;
+            auto* epsilonItem = kwParams.find("eps");
+            scalarWeights.push_back(epsilonItem
+                ? static_cast<float>(epsilonItem->val.ToDouble())
+                : 1.0e-6F);
+            Dims scalarDimensions{};
+            scalarDimensions.nbDims = sourceDimensions.nbDims;
+            for (int dimension = 0; dimension < scalarDimensions.nbDims; ++dimension) {
+                scalarDimensions.d[dimension] = 1;
+            }
+            Weights epsilonWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+            auto* epsilon = network->addConstant(scalarDimensions, epsilonWeights);
+            auto* variance = mean && epsilon
+                ? network->addElementWise(
+                    *mean->getOutput(0),
+                    *epsilon->getOutput(0),
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            auto* root = variance
+                ? network->addUnary(*variance->getOutput(0), UnaryOperation::kSQRT)
+                : nullptr;
+            auto* normalized = root
+                ? network->addElementWise(
+                    *sourceFloat,
+                    *root->getOutput(0),
+                    ElementWiseOperation::kDIV)
+                : nullptr;
+            auto* scaled = normalized
+                ? network->addElementWise(
+                    *normalized->getOutput(0),
+                    *scaleFloat,
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* outputCast = scaled
+                ? network->addCast(*scaled->getOutput(0), source->getType())
+                : nullptr;
+            lastOutput = outputCast ? outputCast->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_text_qkv_packed") {
+            auto weight = [&](const char* name) -> ITensor* {
+                auto* item = kwParams.find(name);
+                return item ? GetOrCreateTRTWeight(item->val.ToString()) : nullptr;
+            };
+            ITensor* qWeight = weight("q_weight_name");
+            ITensor* kWeight = weight("k_weight_name");
+            ITensor* vWeight = weight("v_weight_name");
+            ITensor* qNormWeight = weight("q_norm_weight_name");
+            ITensor* kNormWeight = weight("k_norm_weight_name");
+            auto* numHeadsItem = kwParams.find("num_heads");
+            auto* numKvHeadsItem = kwParams.find("num_kv_heads");
+            auto* headDimItem = kwParams.find("head_dim");
+            const int numHeads = numHeadsItem ? static_cast<int>(numHeadsItem->val.ToLongLong()) : 0;
+            const int numKvHeads = numKvHeadsItem ? static_cast<int>(numKvHeadsItem->val.ToLongLong()) : 0;
+            const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+            if (!qWeight || !kWeight || !vWeight || !qNormWeight || !kNormWeight ||
+                numHeads <= 0 || numKvHeads <= 0 || headDim <= 0) {
+                loweringError = "Qwen3 text packed QKV metadata or weights are incomplete";
+                return X::Value();
+            }
+            auto project = [&](ITensor* projectionWeight) -> ITensor* {
+                projectionWeight = BroadcastMatrixWeight(
+                    projectionWeight,
+                    source->getDimensions().nbDims);
+                if (!projectionWeight) return nullptr;
+                auto* layer = network->addMatrixMultiply(
+                    *source,
+                    MatrixOperation::kNONE,
+                    *projectionWeight,
+                    MatrixOperation::kTRANSPOSE);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            auto headRmsNorm = [&](ITensor* projected, ITensor* normWeight, int heads) -> ITensor* {
+                if (!projected || !normWeight) return nullptr;
+                const Dims projectedDimensions = projected->getDimensions();
+                if (projectedDimensions.nbDims != 3) return nullptr;
+                Dims headDimensions{};
+                headDimensions.nbDims = 4;
+                headDimensions.d[0] = projectedDimensions.d[0];
+                headDimensions.d[1] = projectedDimensions.d[1];
+                headDimensions.d[2] = heads;
+                headDimensions.d[3] = headDim;
+                auto* reshape = network->addShuffle(*projected);
+                if (!reshape) return nullptr;
+                reshape->setReshapeDimensions(headDimensions);
+                ITensor* headed = reshape->getOutput(0);
+                ITensor* broadcastScale = BroadcastLastDimension(
+                    normWeight,
+                    4,
+                    "qwen3_text_head_norm_scale");
+                auto* headedFloatLayer = network->addCast(*headed, DataType::kFLOAT);
+                auto* scaleFloatLayer = broadcastScale
+                    ? network->addCast(*broadcastScale, DataType::kFLOAT)
+                    : nullptr;
+                ITensor* headedFloat = headedFloatLayer ? headedFloatLayer->getOutput(0) : nullptr;
+                auto* square = headedFloat
+                    ? network->addElementWise(*headedFloat, *headedFloat, ElementWiseOperation::kPROD)
+                    : nullptr;
+                auto* mean = square
+                    ? network->addReduce(
+                        *square->getOutput(0),
+                        ReduceOperation::kAVG,
+                        1U << 3,
+                        true)
+                    : nullptr;
+                auto* epsilonItem = kwParams.find("norm_eps");
+                scalarWeights.push_back(epsilonItem
+                    ? static_cast<float>(epsilonItem->val.ToDouble())
+                    : 1.0e-6F);
+                Dims scalarDimensions{};
+                scalarDimensions.nbDims = 4;
+                scalarDimensions.d[0] = 1;
+                scalarDimensions.d[1] = 1;
+                scalarDimensions.d[2] = 1;
+                scalarDimensions.d[3] = 1;
+                Weights epsilonWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+                auto* epsilon = network->addConstant(scalarDimensions, epsilonWeights);
+                auto* variance = mean && epsilon
+                    ? network->addElementWise(
+                        *mean->getOutput(0),
+                        *epsilon->getOutput(0),
+                        ElementWiseOperation::kSUM)
+                    : nullptr;
+                auto* root = variance
+                    ? network->addUnary(*variance->getOutput(0), UnaryOperation::kSQRT)
+                    : nullptr;
+                auto* normalized = root
+                    ? network->addElementWise(
+                        *headedFloat,
+                        *root->getOutput(0),
+                        ElementWiseOperation::kDIV)
+                    : nullptr;
+                auto* scaled = normalized && scaleFloatLayer
+                    ? network->addElementWise(
+                        *normalized->getOutput(0),
+                        *scaleFloatLayer->getOutput(0),
+                        ElementWiseOperation::kPROD)
+                    : nullptr;
+                auto* cast = scaled
+                    ? network->addCast(*scaled->getOutput(0), projected->getType())
+                    : nullptr;
+                auto* flatten = cast ? network->addShuffle(*cast->getOutput(0)) : nullptr;
+                if (flatten) flatten->setReshapeDimensions(projectedDimensions);
+                return flatten ? flatten->getOutput(0) : nullptr;
+            };
+            ITensor* q = headRmsNorm(project(qWeight), qNormWeight, numHeads);
+            ITensor* k = headRmsNorm(project(kWeight), kNormWeight, numKvHeads);
+            ITensor* v = project(vWeight);
+            ITensor* packedInputs[] = {q, k, v};
+            auto* packed = q && k && v ? network->addConcatenation(packedInputs, 3) : nullptr;
+            if (packed) packed->setAxis(2);
+            lastOutput = packed ? packed->getOutput(0) : nullptr;
+        }
+        else if (opName == "paged_kv_update_packed") {
+            auto* enabledItem = kwParams.find("enabled");
+            const bool enabled = enabledItem && enabledItem->val.ToLongLong() != 0;
+            if (enabled) {
+                loweringError = "paged KV update requires the decode engine profile and cache bindings";
+                return X::Value();
+            }
+            lastOutput = source;
+        }
+        else if (opName == "merge_attention_heads") {
+            // LowerTextAttention already returns [batch, tokens, hidden].
+            lastOutput = source;
+        }
+        else if (opName == "qwen3_vl_patch_embed_conv3d") {
+            auto* weightNameItem = kwParams.find("weight_name");
+            auto* biasNameItem = kwParams.find("bias_name");
+            if (!weightNameItem || !biasNameItem) {
+                loweringError = "Qwen3-VL patch embedding requires weight_name and bias_name";
+                return X::Value();
+            }
+            const std::string weightName = weightNameItem->val.ToString();
+            const std::string biasName = biasNameItem->val.ToString();
+            const SafeTensorMetadata* weightMetadata = capturedWeightIndex
+                ? capturedWeightIndex->Find(weightName)
+                : nullptr;
+            if (!weightMetadata || weightMetadata->shape.size() != 5) {
+                loweringError = "Qwen3-VL patch embedding weight must be rank 5: " + weightName;
+                return X::Value();
+            }
+            ITensor* weight = GetOrCreateTRTWeight(weightName);
+            ITensor* bias = GetOrCreateTRTWeight(biasName);
+            if (!weight || !bias) {
+                loweringError = "Qwen3-VL patch embedding constants: " + loweringError;
+                return X::Value();
+            }
+            const long long outputWidth = weightMetadata->shape[0];
+            long long inputWidth = 1;
+            for (size_t dimension = 1; dimension < weightMetadata->shape.size(); ++dimension) {
+                inputWidth *= weightMetadata->shape[dimension];
+            }
+            if (outputWidth > std::numeric_limits<int>::max() ||
+                inputWidth > std::numeric_limits<int>::max()) {
+                loweringError = "Qwen3-VL patch embedding dimensions exceed TensorRT limits";
+                return X::Value();
+            }
+            Dims flattenedWeightShape{};
+            flattenedWeightShape.nbDims = 2;
+            flattenedWeightShape.d[0] = static_cast<int>(outputWidth);
+            flattenedWeightShape.d[1] = static_cast<int>(inputWidth);
+            auto* flatten = network->addShuffle(*weight);
+            if (flatten) {
+                flatten->setReshapeDimensions(flattenedWeightShape);
+                flatten->setName("qwen3_vl_patch_embed_flatten_weight");
+            }
+            auto* projection = flatten
+                ? network->addMatrixMultiply(
+                    *source,
+                    MatrixOperation::kNONE,
+                    *flatten->getOutput(0),
+                    MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            bias = projection
+                ? BroadcastLastDimension(
+                    bias,
+                    projection->getOutput(0)->getDimensions().nbDims,
+                    "qwen3_vl_patch_embed_bias_broadcast")
+                : nullptr;
+            auto* biased = projection
+                ? network->addElementWise(
+                    *projection->getOutput(0),
+                    *bias,
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            lastOutput = biased ? biased->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_vl_patch_merger_shuffle") {
+            const Dims sourceDimensions = source->getDimensions();
+            auto* mergeSizeItem = kwParams.find("spatial_merge_size");
+            const int mergeSize = mergeSizeItem
+                ? static_cast<int>(mergeSizeItem->val.ToLongLong())
+                : 0;
+            const int mergeUnit = mergeSize * mergeSize;
+            if (sourceDimensions.nbDims != 2 || mergeUnit <= 0 ||
+                sourceDimensions.d[0] % mergeUnit != 0) {
+                loweringError = "Qwen3-VL patch merger received incompatible static dimensions";
+                return X::Value();
+            }
+            Dims mergedDimensions{};
+            mergedDimensions.nbDims = 2;
+            mergedDimensions.d[0] = sourceDimensions.d[0] / mergeUnit;
+            mergedDimensions.d[1] = sourceDimensions.d[1] * mergeUnit;
+            auto* layer = network->addShuffle(*source);
+            if (layer) {
+                layer->setReshapeDimensions(mergedDimensions);
+            }
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "silu") {
+            auto* sigmoid = network->addActivation(*source, ActivationType::kSIGMOID);
+            auto* product = sigmoid
+                ? network->addElementWise(*source, *sigmoid->getOutput(0), ElementWiseOperation::kPROD)
+                : nullptr;
+            lastOutput = product ? product->getOutput(0) : nullptr;
+        }
+        else {
+            ActivationType activation;
+            if (opName == "relu") activation = ActivationType::kRELU;
+            else if (opName == "sigmoid") activation = ActivationType::kSIGMOID;
+            else if (opName == "tanh") activation = ActivationType::kTANH;
+            else if (opName == "gelu_pytorch_tanh" || opName == "gelu_tanh") {
+                activation = ActivationType::kGELU_TANH;
+            }
+            else {
+                loweringError = "unsupported unary operation: " + opName;
+                return X::Value();
+            }
+            auto* layer = network->addActivation(*source, activation);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        if (!lastOutput || !output.IsObject()) {
+            loweringError = "TensorRT unary lowering failed for " + opName;
+            return X::Value();
+        }
+        tensorMap[output.GetObj()->GetID()] = lastOutput;
+        return X::Value(true);
+    }
+
+    X::Value TRTBuilder::HandleBranchBegin(
+        const std::string& condition,
+        int branchType,
+        unsigned long long flowId,
+        int branchId) {
+        const bool parentActive = loweringActive;
+        branchParentActivity.push_back(parentActive);
+
+        bool selectBranch = false;
+        if (branchType == 2 || branchId == -1) {
+            selectBranch = !flowBranchTaken[flowId];
+        }
+        else {
+            bool conditionValue = false;
+            if (condition == "True" || condition == "true" || condition == "1") {
+                conditionValue = true;
+            }
+            else if (condition == "False" || condition == "false" || condition == "0") {
+                conditionValue = false;
+            }
+            else {
+                loweringError = "dynamic branch lowering is not implemented; condition=" + condition;
+                loweringActive = false;
+                return X::Value();
+            }
+            selectBranch = !flowBranchTaken[flowId] && conditionValue;
+            if (conditionValue) {
+                flowBranchTaken[flowId] = true;
+            }
+        }
+        loweringActive = parentActive && selectBranch;
+        return X::Value(true);
+    }
+
+    X::Value TRTBuilder::HandleBranchEnd() {
+        if (branchParentActivity.empty()) {
+            loweringError = "unbalanced branchEnd in captured graph";
+            return X::Value();
+        }
+        loweringActive = branchParentActivity.back();
+        branchParentActivity.pop_back();
+        return X::Value(true);
     }
 }

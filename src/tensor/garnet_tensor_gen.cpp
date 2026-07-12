@@ -1,5 +1,6 @@
 // garnet_tensor_gen.cpp
 #include "garnet_tensor.h"
+#include "compiled_graph_capture.h"
 #include <cuda_runtime.h>
 #include "tensor_helper.h"
 #include "trt_builder.h"
@@ -14,6 +15,9 @@ namespace Garnet {
     // Generate CUDA file header code
     X::Value GarnetTensor::Header(X::Value& graph, X::ARGS& params)
     {
+        if (Garnet::g_trtContext) {
+            return X::Value("");
+        }
         // Ensure that at least one parameter (the XLang function) is provided.
         if (params.size() < 1) {
             return X::Value("// Error: Insufficient parameters: expected at least one parameter (the XLang function)\n");
@@ -157,6 +161,24 @@ namespace Garnet {
     X::Value GarnetTensor::Multiply(X::Value& graph, X::ARGS& params,
         X::KWARGS& kwParams, X::Value input1, X::Value input2, X::Value& output)
     {
+        if (IsCompiledGraphCaptureActive()) {
+            X::Value source = input1.IsTensor() ? input1 : input2;
+            if (source.IsTensor() && output.IsTensor()) {
+                X::Tensor sourceTensor(source);
+                X::Tensor outputTensor(output);
+                X::Port::vector<int> dimensions(sourceTensor->GetDimCount());
+                for (int i = 0; i < sourceTensor->GetDimCount(); ++i) {
+                    dimensions.push_back(sourceTensor->GetDimSize(i));
+                }
+                outputTensor->SetDataType(sourceTensor->GetDataType());
+                outputTensor->SetShape(dimensions);
+            }
+            return X::Value("mul");
+        }
+        if (Garnet::g_trtContext) {
+            return Garnet::g_trtContext->HandleBinaryOp(
+                "mul", graph, params, kwParams, input1, input2, output);
+        }
         std::string cudaCodeString;
         bool isTensor1 = input1.IsTensor();
         bool isTensor2 = input2.IsTensor();
@@ -421,6 +443,26 @@ namespace Garnet {
     X::Value GarnetTensor::Add(X::Value& graph, X::ARGS& params,
         X::KWARGS& kwParams, X::Value input1, X::Value input2, X::Value& output)
     {
+        if (IsCompiledGraphCaptureActive()) {
+            X::Value source = input1.IsTensor() ? input1 : input2;
+            if (!source.IsTensor() || !output.IsTensor()) {
+                return X::Value("add");
+            }
+            X::Tensor sourceTensor(source);
+            X::Tensor outputTensor(output);
+            X::Port::vector<int> dimensions(sourceTensor->GetDimCount());
+            for (int i = 0; i < sourceTensor->GetDimCount(); ++i) {
+                dimensions.push_back(sourceTensor->GetDimSize(i));
+            }
+            outputTensor->SetDataType(sourceTensor->GetDataType());
+            outputTensor->SetShape(dimensions);
+            return X::Value("add");
+        }
+        if (Garnet::g_trtContext) {
+            return Garnet::g_trtContext->HandleBinaryOp(
+                "add", graph, params, kwParams, input1, input2, output);
+        }
+
         std::string cudaCodeString;
         bool isTensor1 = input1.IsTensor();
         bool isTensor2 = input2.IsTensor();
@@ -696,6 +738,24 @@ namespace Garnet {
     X::Value GarnetTensor::Minus(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
         X::Value input1, X::Value input2, X::Value& output)
     {
+        if (IsCompiledGraphCaptureActive()) {
+            X::Value source = input1.IsTensor() ? input1 : input2;
+            if (source.IsTensor() && output.IsTensor()) {
+                X::Tensor sourceTensor(source);
+                X::Tensor outputTensor(output);
+                X::Port::vector<int> dimensions(sourceTensor->GetDimCount());
+                for (int i = 0; i < sourceTensor->GetDimCount(); ++i) {
+                    dimensions.push_back(sourceTensor->GetDimSize(i));
+                }
+                outputTensor->SetDataType(sourceTensor->GetDataType());
+                outputTensor->SetShape(dimensions);
+            }
+            return X::Value("minus");
+        }
+        if (Garnet::g_trtContext) {
+            return Garnet::g_trtContext->HandleBinaryOp(
+                "minus", graph, params, kwParams, input1, input2, output);
+        }
         std::string cudaCodeString;
         bool isTensor1 = input1.IsTensor();
         bool isTensor2 = input2.IsTensor();
@@ -971,6 +1031,25 @@ namespace Garnet {
     X::Value GarnetTensor::Matmul(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
         X::Value input1, X::Value input2, X::Value& output)
     {
+        if (IsCompiledGraphCaptureActive()) {
+            if (input1.IsTensor() && input2.IsTensor() && output.IsTensor()) {
+                X::Tensor left(input1);
+                X::Tensor right(input2);
+                X::Tensor result(output);
+                if (left->GetDimCount() == 2 && right->GetDimCount() == 2) {
+                    X::Port::vector<int> dimensions(2);
+                    dimensions.push_back(left->GetDimSize(0));
+                    dimensions.push_back(right->GetDimSize(1));
+                    result->SetDataType(left->GetDataType());
+                    result->SetShape(dimensions);
+                }
+            }
+            return X::Value("matmul");
+        }
+        if (Garnet::g_trtContext) {
+            return Garnet::g_trtContext->HandleBinaryOp(
+                "matmul", graph, params, kwParams, input1, input2, output);
+        }
         std::string cudaCodeString;
         bool isTensor1 = input1.IsTensor();
         bool isTensor2 = input2.IsTensor();
@@ -1581,7 +1660,7 @@ namespace Garnet {
             if (params.size() > 0) {
                 opName = params[0].ToString();
             }
-            return trt->HandleBinaryOp(opName, graph, params, kwParams, input1, input2);
+            return trt->HandleBinaryOp(opName, graph, params, kwParams, input1, input2, output);
         }
         return X::Value("// Error: binary_op is only supported when TRT_Context is provided.\n");
     }
@@ -1595,7 +1674,7 @@ namespace Garnet {
             if (params.size() > 0) {
                 opName = params[0].ToString();
             }
-            return trt->HandleUnaryOp(opName, graph, params, kwParams, input);
+            return trt->HandleUnaryOp(opName, graph, params, kwParams, input, output);
         }
         return X::Value("// Error: unary_op is only supported when TRT_Context is provided.\n");
     }

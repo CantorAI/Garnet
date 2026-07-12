@@ -1,6 +1,11 @@
 #include "garnet_tensor.h"
 #include "md5.h"
 #include "garnet.h"
+#include "compiled_graph_capture.h"
+#include "trt_builder.h"
+
+#include <memory>
+
 
 namespace Garnet
 {
@@ -8,6 +13,20 @@ namespace Garnet
     bool Fusionist::Call(X::XRuntime* rt, X::ARGS& params,
         X::KWARGS& kwParams, X::Value& retValue)
     {
+        const bool captureOnly = IsCompiledGraphCaptureActive();
+        if (captureOnly && IsCompiledFusionCaptureRootActive())
+        {
+            // A compiled model has one fusion boundary at its root. This path
+            // remains for compatibility, but model helper functions should be
+            // plain functions so xlang naturally inlines them into that graph.
+            retValue = mFunc.ObjCall(params, kwParams);
+            return retValue.IsValid();
+        }
+        std::unique_ptr<ScopedCompiledFusionCaptureRoot> captureRoot;
+        if (captureOnly)
+        {
+            captureRoot = std::make_unique<ScopedCompiledFusionCaptureRoot>();
+        }
         X::Func func(mFunc);
         X::Value valParamNames = func->GetParameterNameList();
         X::List nameList(valParamNames);
@@ -22,7 +41,7 @@ namespace Garnet
             for (int i = 0; i < (int)params.size(); i++)
             {
                 auto& v = params[i];
-                if (!v.IsTensor())
+                if (!v.IsTensor() && !v.IsDict() && !v.IsNone())
                 {
                     X::Tensor tensor;
                     tensor->Create(v);
@@ -40,7 +59,7 @@ namespace Garnet
             // Convert keyword parameters.
             for (auto& it : kwParams)
             {
-                if (!it.val.IsTensor())
+                if (!it.val.IsTensor() && !it.val.IsDict() && !it.val.IsNone())
                 {
                     X::Tensor tensor;
                     tensor->Create(it.val);
@@ -59,6 +78,7 @@ namespace Garnet
                 {
                     params_t.push_back(it);
                 }
+                params_t.Close();
             }
             else if (t.IsDict())
             {
@@ -68,11 +88,13 @@ namespace Garnet
                 {
                     params_t.push_back(it.second());
                 }
+                params_t.Close();
             }
             else
             {
                 params_t.resize(1);
                 params_t.push_back(t);
+                params_t.Close();
             }
 
             // Create and run the tensor graph.
@@ -80,6 +102,11 @@ namespace Garnet
             auto* pTensorGraph = X::g_pXHost->CreateTensorGraph();
             pTensorGraph->Create(mVarTensor.GetObj(), params_t, kwParams_t);
             mTensorGraph = X::Value(pTensorGraph);
+            if (captureOnly)
+            {
+                retValue = mTensorGraph;
+                return true;
+            }
             X::KWARGS kwArgs;
             kwArgs.Add("Func", mFunc);
             pTensorGraph->Run(params, kwArgs);
@@ -104,6 +131,10 @@ namespace Garnet
 				return false; // Indicate failure
             }
             mNeedGenAndCompile = false;
+        }
+        if (captureOnly)
+        {
+            return true;
         }
         if (!mHasKernel)
         {
@@ -244,6 +275,14 @@ namespace Garnet
 	// Implementation of BranchBegin function
     X::Value GarnetTensor::BranchBegin(X::Value& graph, X::ARGS& params)
     {
+        if (Garnet::g_trtContext) {
+            const std::string condition = ProcessCondition(params[0]);
+            return Garnet::g_trtContext->HandleBranchBegin(
+                condition,
+                params[1].ToInt(),
+                static_cast<unsigned long long>(params[2].ToLongLong()),
+                params[3].ToInt());
+        }
         std::string code = "    // Begin branch\n";
 
         // Extract parameters
@@ -320,6 +359,9 @@ namespace Garnet
 	// Implementation of BranchEnd function
 	X::Value GarnetTensor::BranchEnd(X::Value& graph, X::ARGS& params)
 	{
+		if (Garnet::g_trtContext) {
+			return Garnet::g_trtContext->HandleBranchEnd();
+		}
 		std::string code = "    }\n";  // Close the scope for the branch
 		return X::Value(code);
 	}

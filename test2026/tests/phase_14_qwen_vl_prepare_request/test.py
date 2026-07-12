@@ -12,6 +12,7 @@ def add_dll_dirs():
     if os.name != "nt" or not hasattr(os, "add_dll_directory"):
         return
     for dll_dir in [
+        REPO_ROOT / "out" / "build" / "x64-Release" / "bin",
         REPO_ROOT / "out" / "build" / "x64-Debug" / "bin",
         REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Debug" / "bin",
         REPO_ROOT.parent / "out" / "build" / "x64-Debug" / "bin",
@@ -75,7 +76,7 @@ def main():
         raise AssertionError(f"test image missing: {DEFAULT_IMAGE}")
 
     add_dll_dirs()
-    garnet_dll = REPO_ROOT / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll"
+    garnet_dll = REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
     if not garnet_dll.exists():
         print(f"SKIP: garnet.dll not found: {garnet_dll}")
         raise SystemExit(0)
@@ -115,7 +116,7 @@ def main():
         len(error),
     )
     assert rc == 3
-    assert input_count.value == 79
+    assert input_count.value == 78, input_count.value
     assert pixel_count.value == 240 * 1536
     assert list(grid) == [1, 12, 20]
 
@@ -146,7 +147,7 @@ def main():
         len(error2),
     )
     assert rc == 0, error2.value.decode(errors="ignore")
-    assert input_count.value == 79
+    assert input_count.value == 78
     assert pixel_count.value == 240 * 1536
     assert list(grid) == [1, 12, 20]
     assert source_h.value == 1080
@@ -172,8 +173,8 @@ def main():
         min_pixels=65536,
         max_pixels=65536,
     )
-    assert prepared["backend"] == "qwen_vl_request_native_tokenizer_nvjpeg_cuda"
-    assert prepared["prompt_token_count"] == 79
+    assert prepared["backend"] == "qwen_vl_request_native_tokenizer_nvjpeg_cuda_gpu_xtensor"
+    assert prepared["prompt_token_count"] == 78
     assert prepared["visual_token_count"] == 60
     assert prepared["pixel_value_count"] == 240 * 1536
     assert prepared["source_height"] == 1080
@@ -184,6 +185,18 @@ def main():
     assert list(prepared["image_grid_thw"]) == [1, 12, 20]
     assert sum(1 for item in prepared["mm_token_type_ids"] if item == 1) == 60
     assert list(prepared["pixel_values_shape"]) == [240, 1536]
+    for tensor_name in [
+        "input_ids_tensor",
+        "mm_token_type_ids_tensor",
+        "pixel_values",
+        "vision_bilinear_indices",
+        "vision_bilinear_weights",
+        "vision_position_ids",
+        "vision_cu_seqlens",
+        "position_ids",
+        "mrope_position_deltas",
+    ]:
+        assert prepared[tensor_name] is not None, tensor_name
 
     print("Phase 14: one-call Qwen-VL JPEG+prompt request prepare passed.")
 

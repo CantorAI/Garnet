@@ -17,6 +17,12 @@
 
 namespace Garnet::Tokenization
 {
+    struct QwenVLMRoPEMetadata
+    {
+        std::vector<int64_t> positionIds;
+        int64_t positionDelta = 0;
+    };
+
     class QwenTokenizer : public Tokenizer
     {
     public:
@@ -58,6 +64,11 @@ namespace Garnet::Tokenization
         static std::vector<int64_t> BuildSingleImagePromptIds(
             const QwenTokenizer& tokenizer,
             const std::string& userPrompt,
+            const int64_t imageGridTHW[3],
+            int mergeSize = 2);
+
+        static QwenVLMRoPEMetadata BuildSingleImageMRoPEMetadata(
+            const std::vector<int64_t>& mmTokenTypeIds,
             const int64_t imageGridTHW[3],
             int mergeSize = 2);
     };

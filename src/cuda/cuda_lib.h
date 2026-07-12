@@ -118,6 +118,11 @@ extern "C" {
     // ------------------------
     void runConvertFP32ToFP16(float* src, __half* dest, int totalElements);
     void runConvertFP32ToBF16(float* src, bfloat16* dest, int totalElements);
+    cudaError_t runConvertFP32ToBF16Async(
+        const float* src,
+        bfloat16* dest,
+        int totalElements,
+        cudaStream_t stream = 0);
     void runConvertFP32ToFP8E4M3(float* src, fp8_e4m3* dest, int totalElements);
     void runConvertFP32ToFP8E5M2(float* src, fp8_e5m2* dest, int totalElements);
 
@@ -189,6 +194,59 @@ extern "C" {
         int headDim,
         cudaStream_t stream = 0);
 
+    cudaError_t runTextPagedKVCachedAttentionBF16(
+        const bfloat16* q,
+        const bfloat16* keyPages,
+        const bfloat16* valuePages,
+        const int* pageTable,
+        bfloat16* output,
+        int sequenceLength,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
+    cudaError_t runTextPagedKVWriteBF16(
+        const bfloat16* qkv,
+        bfloat16* keyPages,
+        bfloat16* valuePages,
+        const int* pageTable,
+        int tokenCount,
+        int startPosition,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
+    cudaError_t runTextPagedKVWriteBF16DeviceStart(
+        const bfloat16* qkv,
+        bfloat16* keyPages,
+        bfloat16* valuePages,
+        const int* pageTable,
+        const int* startPosition,
+        int tokenCount,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
+    cudaError_t runTextPagedKVDecodeBF16DeviceMetadata(
+        const bfloat16* qkv,
+        bfloat16* keyPages,
+        bfloat16* valuePages,
+        const int* pageTable,
+        const int* contextLength,
+        const int* slotPosition,
+        bfloat16* output,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
     // Row-major linear layer: output[M, N] = input[M, K] * weight[N, K]^T + bias[N].
     cudaError_t runLinearBiasTransposeFP32(
         const float* input,
@@ -252,6 +310,13 @@ extern "C" {
     // Greedy sampler for row-major logits. Samples argmax from the last row.
     cudaError_t runLogitsTop1FP32(
         const float* logits,
+        long long* outputTokenId,
+        float* outputTokenValue,
+        int rows,
+        int vocabSize,
+        cudaStream_t stream = 0);
+    cudaError_t runLogitsTop1BF16(
+        const bfloat16* logits,
         long long* outputTokenId,
         float* outputTokenValue,
         int rows,

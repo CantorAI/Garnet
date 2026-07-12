@@ -1,4 +1,7 @@
-import CpuTensor as T
+from garnet import garnet
+
+T = garnet.tensor()
+T.set_backend("TensorRT")
 
 # Qwen3-VL text decoder.
 #
@@ -10,15 +13,12 @@ import CpuTensor as T
 #   final RMSNorm
 
 
-def linear(x, weight, bias=None, op="linear"):
-    y = x * T.binary_op(op) * weight
-    if bias is not None:
-        y = y + bias
-    return y
+def linear(x, weight_name, bias_name=None, op="linear"):
+    return x * T.unary_op(op, weight_name=weight_name, bias_name=bias_name)
 
 
-def rms_norm(x, weight, eps=1e-6):
-    return x * T.unary_op("rms_norm", weight=weight, eps=eps)
+def rms_norm(x, weight_name, eps=1e-6):
+    return x * T.unary_op("rms_norm", weight_name=weight_name, eps=eps)
 
 
 def Qwen3TextRotaryEmbedding(hidden_states, position_ids, config):
@@ -33,68 +33,77 @@ def Qwen3TextRotaryEmbedding(hidden_states, position_ids, config):
     )
 
 
-def Qwen3TextAttention(x, position_embeddings, attention_mask, past_key_values, weights, config, layer_idx, use_cache=True):
-    prefix = "language_model.layers." + str(layer_idx) + ".self_attn"
+def Qwen3TextAttention(x, position_ids, attention_mask, past_key_values, weights, config, layer_idx, use_cache=True):
+    prefix = "model.language_model.layers." + str(layer_idx) + ".self_attn"
     head_dim = config.text_config.head_dim
     num_heads = config.text_config.num_attention_heads
     num_kv_heads = config.text_config.num_key_value_heads
 
-    q = linear(x, weights[prefix + ".q_proj.weight"], None, op="q_proj")
-    k = linear(x, weights[prefix + ".k_proj.weight"], None, op="k_proj")
-    v = linear(x, weights[prefix + ".v_proj.weight"], None, op="v_proj")
+    # Keep Q/K/V in one graph value. Tensor expressions have one output; tuple
+    # assignment here would incorrectly ask one expression to become two values.
+    # The TensorRT backend may lower this sequence as fused QKV/RoPE/KV kernels.
+    qkv = x * T.unary_op(
+        "qwen3_text_qkv_packed",
+        q_weight_name=prefix + ".q_proj.weight",
+        k_weight_name=prefix + ".k_proj.weight",
+        v_weight_name=prefix + ".v_proj.weight",
+        q_norm_weight_name=prefix + ".q_norm.weight",
+        k_norm_weight_name=prefix + ".k_norm.weight",
+        norm_eps=config.text_config.rms_norm_eps,
+        num_heads=num_heads,
+        num_kv_heads=num_kv_heads,
+        head_dim=head_dim
+    )
+    qkv = qkv * T.binary_op(
+        "qwen3_vl_apply_text_rope_packed",
+        rope_theta=config.text_config.rope_theta,
+        mrope_section=config.text_config.rope_scaling.mrope_section,
+        num_heads=num_heads,
+        num_kv_heads=num_kv_heads,
+        head_dim=head_dim
+    ) * position_ids
 
-    q = q * T.unary_op("reshape_q_heads", num_heads=num_heads, head_dim=head_dim)
-    k = k * T.unary_op("reshape_kv_heads", num_heads=num_kv_heads, head_dim=head_dim)
-    v = v * T.unary_op("reshape_kv_heads", num_heads=num_kv_heads, head_dim=head_dim)
+    qkv = qkv * T.unary_op(
+        "paged_kv_update_packed",
+        past_key_values=past_key_values,
+        layer_idx=layer_idx,
+        enabled=use_cache
+    )
 
-    # Qwen3-VL normalizes Q and K per head_dim before RoPE.
-    q = rms_norm(q, weights[prefix + ".q_norm.weight"], eps=config.text_config.rms_norm_eps)
-    k = rms_norm(k, weights[prefix + ".k_norm.weight"], eps=config.text_config.rms_norm_eps)
-
-    q, k = q * T.binary_op("qwen3_vl_apply_text_rope", position_embeddings=position_embeddings) * k
-
-    if use_cache:
-        k, v = k * T.binary_op(
-            "paged_kv_update",
-            past_key_values=past_key_values,
-            layer_idx=layer_idx
-        ) * v
-
-    attn = q * T.binary_op(
-        "paged_attention",
-        attention_mask=attention_mask,
+    attn = qkv * T.binary_op(
+        "paged_attention_packed",
         past_key_values=past_key_values,
         layer_idx=layer_idx,
         num_heads=num_heads,
         num_key_value_heads=num_kv_heads,
-        scale=head_dim ** -0.5,
+        head_dim=head_dim,
         causal=True
-    ) * v
+    ) * attention_mask
     attn = attn * T.unary_op("merge_attention_heads")
-    attn = linear(attn, weights[prefix + ".o_proj.weight"], None, op="o_proj")
+    attn = linear(attn, prefix + ".o_proj.weight", None, op="o_proj")
     return attn
 
 
 def Qwen3TextMLP(x, weights, config, layer_idx):
-    prefix = "language_model.layers." + str(layer_idx) + ".mlp"
-    gate = linear(x, weights[prefix + ".gate_proj.weight"], None, op="gate_proj")
-    up = linear(x, weights[prefix + ".up_proj.weight"], None, op="up_proj")
+    prefix = "model.language_model.layers." + str(layer_idx) + ".mlp"
+    gate = linear(x, prefix + ".gate_proj.weight", None, op="gate_proj")
+    up = linear(x, prefix + ".up_proj.weight", None, op="up_proj")
     hidden = gate * T.unary_op(config.text_config.hidden_act) * up
-    return linear(hidden, weights[prefix + ".down_proj.weight"], None, op="down_proj")
+    return linear(hidden, prefix + ".down_proj.weight", None, op="down_proj")
 
 
-def Qwen3TextDecoderLayer(x, position_embeddings, attention_mask, past_key_values, weights, config, layer_idx, use_cache=True):
-    prefix = "language_model.layers." + str(layer_idx)
+def Qwen3TextDecoderLayer(x, position_ids, attention_mask, past_key_values, weights, config, layer_idx, use_cache=True):
+    prefix = "model.language_model.layers." + str(layer_idx)
 
     residual = x
     x = rms_norm(
         x,
-        weights[prefix + ".input_layernorm.weight"],
+        prefix + ".input_layernorm.weight",
         eps=config.text_config.rms_norm_eps
     )
     x = Qwen3TextAttention(
         x,
-        position_embeddings,
+        position_ids,
         attention_mask,
         past_key_values,
         weights,
@@ -107,7 +116,7 @@ def Qwen3TextDecoderLayer(x, position_embeddings, attention_mask, past_key_value
     residual = x
     x = rms_norm(
         x,
-        weights[prefix + ".post_attention_layernorm.weight"],
+        prefix + ".post_attention_layernorm.weight",
         eps=config.text_config.rms_norm_eps
     )
     x = Qwen3TextMLP(x, weights, config, layer_idx)
@@ -115,36 +124,27 @@ def Qwen3TextDecoderLayer(x, position_embeddings, attention_mask, past_key_value
     return x
 
 
-@T.fusion()
 def Qwen3TextModel(
     input_ids,
     inputs_embeds,
     position_ids,
     attention_mask,
-    visual_pos_masks,
     deepstack_visual_embeds,
     past_key_values,
     weights,
     config,
     use_cache=True
 ):
-    if inputs_embeds is None:
-        x = input_ids * T.binary_op("embedding") * weights["language_model.embed_tokens.weight"]
-    else:
-        x = inputs_embeds
+    # The VLM root always supplies merged text/visual embeddings. A text-only
+    # entry point can perform embedding lookup before calling this function.
+    x = inputs_embeds
 
-    causal_mask = x * T.unary_op(
-        "create_causal_mask",
-        attention_mask=attention_mask,
-        past_key_values=past_key_values
-    )
-    position_embeddings = Qwen3TextRotaryEmbedding(x, position_ids, config)
-
-    for layer_idx in range(config.text_config.num_hidden_layers):
+    deepstack_count = len(deepstack_visual_embeds)
+    for layer_idx in range(deepstack_count):
         x = Qwen3TextDecoderLayer(
             x,
-            position_embeddings,
-            causal_mask,
+            position_ids,
+            attention_mask,
             past_key_values,
             weights,
             config,
@@ -152,15 +152,27 @@ def Qwen3TextModel(
             use_cache=use_cache
         )
 
-        # DeepStack injects selected merged vision features into early decoder
-        # hidden states at visual token positions.
-        if deepstack_visual_embeds is not None and layer_idx < len(deepstack_visual_embeds):
-            x = x * T.binary_op(
-                "qwen3_vl_deepstack_add",
-                visual_pos_masks=visual_pos_masks
-            ) * deepstack_visual_embeds[layer_idx]
+        x = x * T.binary_op(
+            "qwen3_vl_deepstack_add",
+            input_ids=input_ids,
+            image_token_id=config.image_token_id,
+            video_token_id=config.video_token_id
+        ) * deepstack_visual_embeds[layer_idx]
 
-    x = rms_norm(x, weights["language_model.norm.weight"], eps=config.text_config.rms_norm_eps)
+    for layer_offset in range(config.text_config.num_hidden_layers - deepstack_count):
+        layer_idx = deepstack_count + layer_offset
+        x = Qwen3TextDecoderLayer(
+            x,
+            position_ids,
+            attention_mask,
+            past_key_values,
+            weights,
+            config,
+            layer_idx,
+            use_cache=use_cache
+        )
+
+    x = rms_norm(x, "model.language_model.norm.weight", eps=config.text_config.rms_norm_eps)
     return {
         "last_hidden_state": x,
         "past_key_values": past_key_values
