@@ -66,12 +66,12 @@ namespace Garnet::Image::QwenVL
         void* cuSeqlensDevice = nullptr;
         X::Tensor indices = MakeDeviceTensor(
             X::TensorDataType::LONGLONG,
-            {4, patchCount},
+            {patchCount, 4},
             static_cast<size_t>(4) * patchCount * sizeof(long long),
             &indicesDevice);
         X::Tensor weights = MakeDeviceTensor(
             X::TensorDataType::BFLOAT16,
-            {4, patchCount},
+            {patchCount, 4},
             static_cast<size_t>(4) * patchCount * sizeof(__nv_bfloat16),
             &weightsDevice);
         X::Tensor positions = MakeDeviceTensor(

@@ -335,6 +335,14 @@ namespace Garnet::Tokenization
                 out.push_back(text.substr(i, 1));
                 ++i;
             }
+            else if (!std::isspace(c) && i + 1 < text.size() &&
+                     IsAsciiLetter(static_cast<unsigned char>(text[i + 1]))) {
+                // Qwen's pre-tokenizer permits one non-letter prefix before a
+                // letter run (for example ",y" in JSON coordinates).
+                size_t start = i++;
+                while (i < text.size() && IsAsciiLetter(static_cast<unsigned char>(text[i]))) ++i;
+                out.push_back(text.substr(start, i - start));
+            }
             else if (c == ' ' && i + 1 < text.size() && !std::isspace(static_cast<unsigned char>(text[i + 1])) &&
                      !IsAsciiLetter(static_cast<unsigned char>(text[i + 1])) &&
                      !IsAsciiDigit(static_cast<unsigned char>(text[i + 1]))) {

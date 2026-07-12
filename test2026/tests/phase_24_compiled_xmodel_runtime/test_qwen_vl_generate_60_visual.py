@@ -43,7 +43,10 @@ model = garnet.load_model(
         "int64", "bfloat16", "int64", "int64", "bfloat16", "int64", "int32",
         "int64", "int64", "int64", "int64", "bfloat16", "bfloat16", "int32", "int32",
     ],
-    cache_dir=str(SCRIPT_DIR / "qwen_vl_generate_60_visual_cache"),
+    cache_dir=os.environ.get(
+        "GARNET_60_CACHE_DIR",
+        str(SCRIPT_DIR / "qwen_vl_generate_60_visual_cache"),
+    ),
 )
 status = model.runtime_status()
 assert bool(status["ready"]), status

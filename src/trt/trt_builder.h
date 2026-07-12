@@ -128,9 +128,11 @@ namespace Garnet {
         unsigned long long capturedWorkspaceBytes = 64ULL << 20;
         std::unordered_map<std::string, nvinfer1::ITensor*> weightTensorMap;
         std::deque<float> scalarWeights;
+        std::deque<unsigned short> bfloat16ScalarWeights;
         std::deque<long long> integerWeights;
         std::deque<std::vector<float>> vectorWeights;
         std::deque<std::vector<int>> integerVectorWeights;
+        std::deque<std::vector<unsigned char>> booleanVectorWeights;
         const SafeTensorsIndex* capturedWeightIndex = nullptr;
         SafeTensorsMappedFile capturedWeightFile;
         nvinfer1::ITensor* lastOutput = nullptr;
@@ -178,6 +180,10 @@ namespace Garnet {
             nvinfer1::ITensor* positionIds,
             X::KWARGS& options);
         nvinfer1::ITensor* LowerTextAttention(
+            nvinfer1::ITensor* qkv,
+            nvinfer1::ITensor* attentionMask,
+            X::KWARGS& options);
+        nvinfer1::ITensor* LowerFusedTextAttention(
             nvinfer1::ITensor* qkv,
             nvinfer1::ITensor* attentionMask,
             X::KWARGS& options);

@@ -25,7 +25,7 @@ namespace
 {
     constexpr const char* kGraphCacheMagic = "GARNET_RUNTIME_GRAPH_CACHE_V2";
     constexpr const char* kRuntimeSchema =
-        "compiled_xmodel_runtime_v12_keyword_tensor_dependencies";
+        "compiled_xmodel_runtime_v17_fused_vision_attention";
 
     std::string ReadFile(const std::filesystem::path& path)
     {
@@ -326,6 +326,10 @@ namespace
         material << kRuntimeSchema << '\n'
                  << "tensorrt:" << NV_TENSORRT_VERSION << '\n'
                  << entryFunction << '\n';
+        const char* fusedTextAttention = std::getenv("GARNET_FUSED_TEXT_ATTENTION");
+        if (fusedTextAttention && std::string(fusedTextAttention) == "1") {
+            material << "fused_text_attention:1\n";
+        }
         int device = 0;
         cudaDeviceProp deviceProperties{};
         if (cudaGetDevice(&device) == cudaSuccess &&

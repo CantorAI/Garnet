@@ -252,6 +252,34 @@ verified properties:
   slower on this profile. Future optimization should profile TensorRT decoder
   GEMMs and use a proper split-K paged-attention workspace before revisiting
   those approaches.
+- Vision attention now lowers to TensorRT 10 `IAttention` in BF16 instead of
+  casting Q/K/V to FP32 and materializing a `[16, 3772, 3772]` score tensor in
+  every vision block. Garnet applies the Qwen scale `1/sqrt(head_dim)` to Q as
+  strongly typed BF16 weights before fused attention. On the balanced profile,
+  the vision partition fell from approximately 209 ms to 50-53 ms. The exact
+  100-token four-image run measured 2,002-2,026 ms total, 129-132 ms TTFT, and
+  52.2-52.9 decode tokens/s; averages were approximately 2,015 ms total and
+  130 ms TTFT. Semantic descriptions remained correct across all four images.
+- Regular-resolution grounding exposed and fixed a vision metadata layout bug.
+  The CUDA producer wrote bilinear interpolation indices and weights in
+  `[4, patch_count]` order while the captured TensorRT graph consumed
+  `[patch_count, 4]`. Four-patch fixtures could not detect the mismatch because
+  both dimensions were four. The producer now emits interleaved per-patch
+  metadata matching the graph profile. At 3,772 patches, the canonical `.x`
+  vision pooler reaches 0.9962 cosine similarity with HF, and person boxes on
+  four 1920x1080 frames visually align with the intended subjects. With EOS
+  enabled and a 100-token ceiling, those requests measured 1.04-1.36 s total,
+  131-152 ms TTFT, and 49.4-51.5 decode tokens/s.
+- A matched Hugging Face Transformers 5.13 / PyTorch 2.11 BF16-SDPA run on the
+  same RTX 4080, images, 960-token prompt, and forced 100-token output averaged
+  2,890 ms total, 214 ms TTFT, and 37.0 decode tokens/s. The current Garnet path
+  is therefore about 1.43x faster end to end, 1.65x faster to first token, and
+  1.42x faster in decode than that plain HF baseline.
+- TensorRT fused causal text attention was evaluated and rejected. Both native
+  unequal-head GQA and explicit Qwen KV-head repetition passed small fixtures
+  but produced incorrect balanced-profile descriptions. Production keeps the
+  semantically verified FP32 masked text-prefill lowering, currently about
+  66-73 ms, until a padded-profile logits-parity test supports a replacement.
 - Decode graph capture must execute on the xlang calling thread when its cache
   is missing. A prior attempt to initialize it asynchronously deadlocked on a
   new 64-page profile because xlang runtime capture is not a background-thread

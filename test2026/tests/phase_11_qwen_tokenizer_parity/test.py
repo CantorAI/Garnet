@@ -203,6 +203,7 @@ def main():
         "user\nDescribe this picture in one short sentence.\n",
         "<|im_start|>user\nhello<|im_end|>\n<|im_start|>assistant\n",
         "A man sits in a rustic wooden hut, surrounded",
+        '{"bbox": [x1,y1,x2,y2], "persons": []}',
     ]
     sample_results = []
     for text in samples:

@@ -65,7 +65,7 @@ __global__ void qwenVLVisionMetadataKernel(
         rowFraction * columnFraction,
     };
     for (int corner = 0; corner < 4; ++corner) {
-        const int index = corner * patchCount + outputIndex;
+        const int index = outputIndex * 4 + corner;
         bilinearIndices[index] = corners[corner];
         bilinearWeights[index] = __float2bfloat16(weights[corner]);
     }

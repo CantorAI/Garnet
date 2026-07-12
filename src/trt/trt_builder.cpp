@@ -12,6 +12,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <limits>
+#include <cstring>
 #include <mutex>
 #include <memory>
 #include <unordered_map>
@@ -3211,69 +3212,66 @@ namespace Garnet {
             auto* layer = network->addSlice(*qkv, start, size, stride);
             return layer ? layer->getOutput(0) : nullptr;
         };
-        auto toHeadMajorFloat = [&](ITensor* source) -> ITensor* {
+        auto toAttentionInput = [&](ITensor* source) -> ITensor* {
             Dims dimensions{};
-            dimensions.nbDims = 3;
-            dimensions.d[0] = tokens;
-            dimensions.d[1] = heads;
-            dimensions.d[2] = headDim;
+            dimensions.nbDims = 4;
+            dimensions.d[0] = 1;
+            dimensions.d[1] = tokens;
+            dimensions.d[2] = heads;
+            dimensions.d[3] = headDim;
             auto* shuffle = source ? network->addShuffle(*source) : nullptr;
             if (!shuffle) return nullptr;
             shuffle->setReshapeDimensions(dimensions);
             Permutation permutation{};
-            permutation.order[0] = 1;
-            permutation.order[1] = 0;
-            permutation.order[2] = 2;
+            permutation.order[0] = 0;
+            permutation.order[1] = 2;
+            permutation.order[2] = 1;
+            permutation.order[3] = 3;
             shuffle->setSecondTranspose(permutation);
-            auto* cast = network->addCast(*shuffle->getOutput(0), DataType::kFLOAT);
-            return cast ? cast->getOutput(0) : nullptr;
+            return shuffle->getOutput(0);
         };
-        ITensor* q = toHeadMajorFloat(sliceColumns(0));
-        ITensor* k = toHeadMajorFloat(sliceColumns(hidden));
-        ITensor* v = toHeadMajorFloat(sliceColumns(2 * hidden));
-        auto* scores = q && k
-            ? network->addMatrixMultiply(
-                *q,
-                MatrixOperation::kNONE,
-                *k,
-                MatrixOperation::kTRANSPOSE)
+        ITensor* q = toAttentionInput(sliceColumns(0));
+        ITensor* k = toAttentionInput(sliceColumns(hidden));
+        ITensor* v = toAttentionInput(sliceColumns(2 * hidden));
+        const float queryScaleValue = 1.0F / std::sqrt(static_cast<float>(headDim));
+        DataType queryScaleType = q ? q->getType() : DataType::kFLOAT;
+        const void* queryScalePointer = nullptr;
+        if (queryScaleType == DataType::kBF16) {
+            uint32_t scaleBits = 0;
+            std::memcpy(&scaleBits, &queryScaleValue, sizeof(scaleBits));
+            scaleBits += 0x7FFFU + ((scaleBits >> 16U) & 1U);
+            bfloat16ScalarWeights.push_back(static_cast<unsigned short>(scaleBits >> 16U));
+            queryScalePointer = &bfloat16ScalarWeights.back();
+        }
+        else if (queryScaleType == DataType::kFLOAT) {
+            scalarWeights.push_back(queryScaleValue);
+            queryScalePointer = &scalarWeights.back();
+        }
+        else {
+            loweringError = "fused vision attention requires BF16 or FP32 QKV";
+            return nullptr;
+        }
+        Weights emptyWeights{queryScaleType, nullptr, 0};
+        Weights queryScaleWeights{queryScaleType, queryScalePointer, 1};
+        auto* queryScale = q
+            ? network->addScale(
+                *q, ScaleMode::kUNIFORM,
+                emptyWeights, queryScaleWeights, emptyWeights)
             : nullptr;
-        scalarWeights.push_back(1.0F / std::sqrt(static_cast<float>(headDim)));
-        Dims scaleDims{};
-        scaleDims.nbDims = 3;
-        scaleDims.d[0] = 1;
-        scaleDims.d[1] = 1;
-        scaleDims.d[2] = 1;
-        Weights scaleWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
-        auto* scale = network->addConstant(scaleDims, scaleWeights);
-        auto* scaledScores = scores && scale
-            ? network->addElementWise(
-                *scores->getOutput(0),
-                *scale->getOutput(0),
-                ElementWiseOperation::kPROD)
+        q = queryScale ? queryScale->getOutput(0) : nullptr;
+        auto* attention = q && k && v
+            ? network->addAttention(
+                *q, *k, *v, AttentionNormalizationOp::kSOFTMAX, false)
             : nullptr;
-        auto* softmax = scaledScores
-            ? network->addSoftMax(*scaledScores->getOutput(0))
-            : nullptr;
-        if (softmax) softmax->setAxes(1U << 2);
-        auto* context = softmax && v
-            ? network->addMatrixMultiply(
-                *softmax->getOutput(0),
-                MatrixOperation::kNONE,
-                *v,
-                MatrixOperation::kNONE)
-            : nullptr;
-        auto* contextCast = context
-            ? network->addCast(*context->getOutput(0), qkv->getType())
-            : nullptr;
-        auto* output = contextCast
-            ? network->addShuffle(*contextCast->getOutput(0))
+        auto* output = attention
+            ? network->addShuffle(*attention->getOutput(0))
             : nullptr;
         if (!output) return nullptr;
         Permutation permutation{};
-        permutation.order[0] = 1;
-        permutation.order[1] = 0;
-        permutation.order[2] = 2;
+        permutation.order[0] = 0;
+        permutation.order[1] = 2;
+        permutation.order[2] = 1;
+        permutation.order[3] = 3;
         output->setFirstTranspose(permutation);
         Dims outputDims{};
         outputDims.nbDims = 2;
@@ -3478,6 +3476,10 @@ namespace Garnet {
         ITensor* qkv,
         ITensor* attentionMask,
         X::KWARGS& options) {
+        const char* fusedTextAttention = std::getenv("GARNET_FUSED_TEXT_ATTENTION");
+        if (fusedTextAttention && std::string(fusedTextAttention) == "1") {
+            return LowerFusedTextAttention(qkv, attentionMask, options);
+        }
         const Dims qkvDims = qkv->getDimensions();
         const Dims maskDims = attentionMask->getDimensions();
         auto* headsItem = options.find("num_heads");
@@ -3665,6 +3667,190 @@ namespace Garnet {
         return output->getOutput(0);
     }
 
+    nvinfer1::ITensor* TRTBuilder::LowerFusedTextAttention(
+        ITensor* qkv,
+        ITensor* attentionMask,
+        X::KWARGS& options) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims maskDims = attentionMask->getDimensions();
+        auto* headsItem = options.find("num_heads");
+        auto* kvHeadsItem = options.find("num_key_value_heads");
+        auto* headDimItem = options.find("head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->val.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 3 || maskDims.nbDims != 2 || heads <= 0 || kvHeads <= 0 ||
+            heads % kvHeads != 0 || headDim <= 0 ||
+            qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
+            loweringError = "fused Qwen3 text attention received incompatible static dimensions";
+            return nullptr;
+        }
+        const int batch = qkvDims.d[0];
+        const int tokens = qkvDims.d[1];
+        const int qWidth = heads * headDim;
+        const int kvWidth = kvHeads * headDim;
+        auto sliceLast = [&](int startValue, int sizeValue) -> ITensor* {
+            Dims start{};
+            Dims size = qkvDims;
+            Dims stride{};
+            start.nbDims = qkvDims.nbDims;
+            stride.nbDims = qkvDims.nbDims;
+            for (int index = 0; index < qkvDims.nbDims; ++index) stride.d[index] = 1;
+            start.d[2] = startValue;
+            size.d[2] = sizeValue;
+            auto* layer = network->addSlice(*qkv, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto reshape = [&](ITensor* source, const Dims& dimensions) -> ITensor* {
+            auto* layer = source ? network->addShuffle(*source) : nullptr;
+            if (layer) layer->setReshapeDimensions(dimensions);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        Dims qHeadDims{};
+        qHeadDims.nbDims = 4;
+        qHeadDims.d[0] = batch;
+        qHeadDims.d[1] = tokens;
+        qHeadDims.d[2] = heads;
+        qHeadDims.d[3] = headDim;
+        Dims kvHeadDims = qHeadDims;
+        kvHeadDims.d[2] = kvHeads;
+        ITensor* q = reshape(sliceLast(0, qWidth), qHeadDims);
+        ITensor* k = reshape(sliceLast(qWidth, kvWidth), kvHeadDims);
+        ITensor* v = reshape(sliceLast(qWidth + kvWidth, kvWidth), kvHeadDims);
+
+        integerVectorWeights.emplace_back(static_cast<size_t>(heads));
+        const int repeats = heads / kvHeads;
+        for (int head = 0; head < heads; ++head) {
+            integerVectorWeights.back()[head] = head / repeats;
+        }
+        Dims repeatIndexDims{};
+        repeatIndexDims.nbDims = 1;
+        repeatIndexDims.d[0] = heads;
+        Weights repeatIndexWeights{
+            DataType::kINT32, integerVectorWeights.back().data(), heads};
+        auto* repeatIndices = network->addConstant(repeatIndexDims, repeatIndexWeights);
+        auto* repeatedK = repeatIndices
+            ? network->addGather(*k, *repeatIndices->getOutput(0), 2)
+            : nullptr;
+        auto* repeatedV = repeatIndices
+            ? network->addGather(*v, *repeatIndices->getOutput(0), 2)
+            : nullptr;
+        k = repeatedK ? repeatedK->getOutput(0) : nullptr;
+        v = repeatedV ? repeatedV->getOutput(0) : nullptr;
+
+        auto headMajor = [&](ITensor* source) -> ITensor* {
+            auto* shuffle = source ? network->addShuffle(*source) : nullptr;
+            if (!shuffle) return nullptr;
+            Permutation permutation{};
+            permutation.order[0] = 0;
+            permutation.order[1] = 2;
+            permutation.order[2] = 1;
+            permutation.order[3] = 3;
+            shuffle->setFirstTranspose(permutation);
+            return shuffle->getOutput(0);
+        };
+        q = headMajor(q);
+        k = headMajor(k);
+        v = headMajor(v);
+
+        const float queryScaleValue = 1.0F / std::sqrt(static_cast<float>(headDim));
+        DataType queryScaleType = q ? q->getType() : DataType::kFLOAT;
+        const void* queryScalePointer = nullptr;
+        if (queryScaleType == DataType::kBF16) {
+            uint32_t scaleBits = 0;
+            std::memcpy(&scaleBits, &queryScaleValue, sizeof(scaleBits));
+            scaleBits += 0x7FFFU + ((scaleBits >> 16U) & 1U);
+            bfloat16ScalarWeights.push_back(static_cast<unsigned short>(scaleBits >> 16U));
+            queryScalePointer = &bfloat16ScalarWeights.back();
+        }
+        else if (queryScaleType == DataType::kFLOAT) {
+            scalarWeights.push_back(queryScaleValue);
+            queryScalePointer = &scalarWeights.back();
+        }
+        else {
+            loweringError = "fused text attention requires BF16 or FP32 QKV";
+            return nullptr;
+        }
+        Weights emptyWeights{queryScaleType, nullptr, 0};
+        Weights queryScaleWeights{queryScaleType, queryScalePointer, 1};
+        auto* queryScale = q
+            ? network->addScale(
+                *q, ScaleMode::kUNIFORM,
+                emptyWeights, queryScaleWeights, emptyWeights)
+            : nullptr;
+        q = queryScale ? queryScale->getOutput(0) : nullptr;
+
+        integerWeights.push_back(0);
+        Dims zeroDims{};
+        zeroDims.nbDims = 2;
+        zeroDims.d[0] = 1;
+        zeroDims.d[1] = 1;
+        Weights zeroWeights{DataType::kINT64, &integerWeights.back(), 1};
+        auto* zero = network->addConstant(zeroDims, zeroWeights);
+        auto* paddingInvalid = zero
+            ? network->addElementWise(
+                *attentionMask, *zero->getOutput(0), ElementWiseOperation::kEQUAL)
+            : nullptr;
+        auto* paddingValid = paddingInvalid
+            ? network->addUnary(*paddingInvalid->getOutput(0), UnaryOperation::kNOT)
+            : nullptr;
+        Dims paddingDims{};
+        paddingDims.nbDims = 4;
+        paddingDims.d[0] = batch;
+        paddingDims.d[1] = 1;
+        paddingDims.d[2] = 1;
+        paddingDims.d[3] = tokens;
+        ITensor* validKeys = paddingValid
+            ? reshape(paddingValid->getOutput(0), paddingDims)
+            : nullptr;
+
+        booleanVectorWeights.emplace_back(
+            static_cast<size_t>(tokens) * static_cast<size_t>(tokens), 0);
+        for (int query = 0; query < tokens; ++query) {
+            for (int key = 0; key <= query; ++key) {
+                booleanVectorWeights.back()[static_cast<size_t>(query) * tokens + key] = 1;
+            }
+        }
+        Dims causalDims{};
+        causalDims.nbDims = 4;
+        causalDims.d[0] = 1;
+        causalDims.d[1] = 1;
+        causalDims.d[2] = tokens;
+        causalDims.d[3] = tokens;
+        Weights causalWeights{
+            DataType::kBOOL,
+            booleanVectorWeights.back().data(),
+            static_cast<int64_t>(tokens) * tokens};
+        auto* causal = network->addConstant(causalDims, causalWeights);
+        auto* allowed = causal && validKeys
+            ? network->addElementWise(
+                *causal->getOutput(0), *validKeys, ElementWiseOperation::kAND)
+            : nullptr;
+        auto* attention = q && k && v
+            ? network->addAttention(
+                *q, *k, *v, AttentionNormalizationOp::kSOFTMAX, false)
+            : nullptr;
+        if (!attention || !allowed || !attention->setMask(*allowed->getOutput(0))) {
+            loweringError = "failed to configure fused text attention mask";
+            return nullptr;
+        }
+        auto* output = network->addShuffle(*attention->getOutput(0));
+        if (!output) return nullptr;
+        Permutation permutation{};
+        permutation.order[0] = 0;
+        permutation.order[1] = 2;
+        permutation.order[2] = 1;
+        permutation.order[3] = 3;
+        output->setFirstTranspose(permutation);
+        Dims outputDims{};
+        outputDims.nbDims = 3;
+        outputDims.d[0] = batch;
+        outputDims.d[1] = tokens;
+        outputDims.d[2] = qWidth;
+        output->setReshapeDimensions(outputDims);
+        return output->getOutput(0);
+    }
+
     bool TRTBuilder::BuildCapturedGraph(
         X::Value graph,
         X::Value forwardFunction,
@@ -3676,9 +3862,11 @@ namespace Garnet {
         tensorMap.clear();
         weightTensorMap.clear();
         scalarWeights.clear();
+        bfloat16ScalarWeights.clear();
         integerWeights.clear();
         vectorWeights.clear();
         integerVectorWeights.clear();
+        booleanVectorWeights.clear();
         lastOutput = nullptr;
         pendingKVKeyPages = nullptr;
         pendingKVValuePages = nullptr;
