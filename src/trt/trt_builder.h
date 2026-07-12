@@ -4,6 +4,7 @@
 #include "xpackage.h"
 #include "trt_context.h"
 #include "safetensors_index.h"
+#include "compiled_graph_capture.h"
 #include <string>
 #include <deque>
 #include <vector>
@@ -11,6 +12,20 @@
 #include <NvInfer.h>
 
 namespace Garnet {
+    struct EnginePartitionBinding {
+        std::string name;
+        unsigned long long tensorId = 0;
+        int requestInputIndex = -1;
+        bool terminalOutput = false;
+    };
+
+    struct EnginePartitionSpec {
+        int id = 0;
+        std::string enginePath;
+        std::vector<EnginePartitionBinding> inputs;
+        std::vector<EnginePartitionBinding> outputs;
+    };
+
     class TRTEngine {
     public:
         // Holds nvinfer1::ICudaEngine, etc.
@@ -25,6 +40,10 @@ namespace Garnet {
     public:
         TRTBuilder();
         ~TRTBuilder();
+
+        void SetCapturedWorkspaceBytes(unsigned long long bytes) {
+            capturedWorkspaceBytes = bytes;
+        }
 
         X::Value ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape);
         X::Value RunMatmulEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue);
@@ -59,8 +78,37 @@ namespace Garnet {
             const SafeTensorsIndex* weightIndex,
             const std::string& enginePath,
             std::string& errorMessage);
+        bool AnalyzeCapturedGraph(
+            X::Value graph,
+            X::Value forwardFunction,
+            X::ARGS& graphArguments,
+            std::vector<CapturedTensorOperation>& operations,
+            std::string& errorMessage);
+        bool BuildCapturedPartitions(
+            X::Value graph,
+            X::Value forwardFunction,
+            X::ARGS& graphArguments,
+            X::ARGS& symbolicInputs,
+            const SafeTensorsIndex* weightIndex,
+            const std::string& baseEnginePath,
+            const std::vector<CapturedTensorOperation>& operations,
+            std::vector<EnginePartitionSpec>& partitions,
+            std::string& errorMessage);
+        bool PrepareCapturedEngine(
+            const std::string& enginePath,
+            const SafeTensorsIndex* weightIndex,
+            std::string& errorMessage);
+        bool PrepareCapturedPartitions(
+            const std::vector<EnginePartitionSpec>& partitions,
+            const SafeTensorsIndex* weightIndex,
+            std::string& errorMessage);
         X::Value RunCapturedEngine(
             const std::string& enginePath,
+            X::Value inputs,
+            const SafeTensorsIndex* weightIndex,
+            std::string& errorMessage);
+        X::Value RunCapturedPartitions(
+            const std::vector<EnginePartitionSpec>& partitions,
             X::Value inputs,
             const SafeTensorsIndex* weightIndex,
             std::string& errorMessage);
@@ -77,6 +125,7 @@ namespace Garnet {
         nvinfer1::ICudaEngine* engine = nullptr;
 
         std::unordered_map<unsigned long long, nvinfer1::ITensor*> tensorMap;
+        unsigned long long capturedWorkspaceBytes = 64ULL << 20;
         std::unordered_map<std::string, nvinfer1::ITensor*> weightTensorMap;
         std::deque<float> scalarWeights;
         std::deque<long long> integerWeights;
@@ -94,6 +143,16 @@ namespace Garnet {
         std::vector<nvinfer1::IPluginV2*> ownedPlugins;
         std::string loweringError;
         bool loweringActive = true;
+        bool analysisActive = false;
+        std::vector<CapturedTensorOperation> analyzedOperations;
+        bool partitionBuildActive = false;
+        int activePartition = 0;
+        size_t replayOperationIndex = 0;
+        std::unordered_map<unsigned long long, std::string> partitionInputNames;
+        std::unordered_map<unsigned long long, std::string> partitionOutputNames;
+        std::unordered_map<
+            unsigned long long,
+            std::pair<nvinfer1::DataType, nvinfer1::Dims>> partitionBoundaryMetadata;
         std::vector<bool> branchParentActivity;
         std::unordered_map<unsigned long long, bool> flowBranchTaken;
 

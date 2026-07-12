@@ -1,4 +1,5 @@
 import os
+import json
 import time
 from pathlib import Path
 
@@ -52,6 +53,23 @@ model = garnet.load_model(
 )
 status = model.runtime_status()
 assert bool(status["ready"]), status
+assert status["scheduler"] == "cpu_control_gpu_execution", status
+execution_plan = json.loads(status["execution_plan_json"])
+decode_regions = [
+    region for region in execution_plan["regions"]
+    if region["role"] == "transformer_decode"
+]
+layer_regions = [
+    region for region in execution_plan["regions"]
+    if region["role"] == "decoder_layer"
+]
+assert len(decode_regions) == 1, execution_plan
+assert decode_regions[0]["boundary"] == "required", execution_plan
+assert decode_regions[0]["cuda_graph"] is True, execution_plan
+assert len(layer_regions) == 28, execution_plan
+assert all(region["atomic"] for region in layer_regions), execution_plan
+assert all(region["operation_count"] > 0 for region in layer_regions), execution_plan
+assert [region["invocation"] for region in layer_regions] == list(range(28)), execution_plan
 load_ms = (time.perf_counter() - start) * 1000.0
 
 zero_page_bits = np.zeros((28, 1, 16, 8, 128), dtype=np.uint16)

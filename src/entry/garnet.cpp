@@ -2999,6 +2999,7 @@ namespace Garnet
         std::string compiledFrontend;
         std::vector<std::vector<int>> compiledInputShapes;
         std::vector<std::string> compiledInputDataTypes;
+        FusionPartitionOptions compiledPartitionOptions;
         for (auto& item : kwParams) {
             const std::string key(item.key);
             if (key == "runtime_mode") runtimeMode = item.val.ToString();
@@ -3028,6 +3029,34 @@ namespace Garnet
                     compiledInputDataTypes.push_back(dataTypes->Get(index).ToString());
                 }
             }
+            else if (key == "compile" && item.val.IsDict()) {
+                X::Dict compileOptions(item.val);
+                X::Value workspaceMb = compileOptions["builder_workspace_mb"];
+                if (workspaceMb.IsValid()) {
+                    const unsigned long long megabytes = static_cast<unsigned long long>(
+                        (std::max)(64LL, workspaceMb.ToLongLong()));
+                    compiledPartitionOptions.builderWorkspaceBytes = megabytes << 20;
+                }
+                X::Value partitionValue = compileOptions["partition"];
+                if (partitionValue.IsDict()) {
+                    X::Dict partition(partitionValue);
+                    X::Value preferredEnabled = partition["enable_preferred_boundaries"];
+                    X::Value preferredMin = partition["preferred_min_operations"];
+                    X::Value maxAtomic = partition["max_atomic_regions_per_partition"];
+                    if (preferredEnabled.IsValid()) {
+                        compiledPartitionOptions.enablePreferredBoundaries =
+                            preferredEnabled.ToInt() != 0;
+                    }
+                    if (preferredMin.IsValid()) {
+                        compiledPartitionOptions.preferredMinOperations =
+                            (std::max)(1, static_cast<int>(preferredMin.ToLongLong()));
+                    }
+                    if (maxAtomic.IsValid()) {
+                        compiledPartitionOptions.maxAtomicRegionsPerPartition =
+                            (std::max)(0, static_cast<int>(maxAtomic.ToLongLong()));
+                    }
+                }
+            }
         }
 
         namespace fs = std::filesystem;
@@ -3050,7 +3079,8 @@ namespace Garnet
                 entryFunction,
                 compiledFrontend,
                 compiledInputShapes,
-                compiledInputDataTypes);
+                compiledInputDataTypes,
+                compiledPartitionOptions);
             retValue = varModel;
             return;
         }

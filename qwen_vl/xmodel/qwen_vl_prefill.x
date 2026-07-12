@@ -32,7 +32,11 @@ GARNET_MODEL_SPEC = {
 }
 
 
-@T.fusion()
+@T.fusion(
+    name="vlm_prefill",
+    role="multimodal_prefill",
+    boundary="required"
+)
 def Qwen3VLPrefill(
     input_ids,
     pixel_values,

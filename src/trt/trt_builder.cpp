@@ -5,14 +5,18 @@
 #include "tensor_helper.h"
 #include <iostream>
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <filesystem>
+#include <future>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
 #include <mutex>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
+#include <set>
 #include <vector>
 
 #include <NvInfer.h>
@@ -36,6 +40,45 @@ namespace Garnet {
     thread_local ITRTContext* g_trtContext = nullptr;
 
     namespace {
+        void AppendTensorDependencies(
+            const X::Value& value,
+            std::vector<unsigned long long>& tensorIds)
+        {
+            if (value.IsList()) {
+                X::List list(value);
+                for (long long index = 0; index < list->Size(); ++index) {
+                    AppendTensorDependencies(list->Get(index), tensorIds);
+                }
+                return;
+            }
+            if (value.IsDict()) {
+                X::Dict dictionary(value);
+                for (auto& entry : *dictionary) {
+                    AppendTensorDependencies(entry.second(), tensorIds);
+                }
+                return;
+            }
+            if (!value.IsObject() ||
+                (value.GetObj()->GetType() != X::ObjType::TensorExpression &&
+                 value.GetObj()->GetType() != X::ObjType::Tensor)) {
+                return;
+            }
+            const unsigned long long tensorId = value.GetObj()->GetID();
+            if (std::find(tensorIds.begin(), tensorIds.end(), tensorId) ==
+                tensorIds.end()) {
+                tensorIds.push_back(tensorId);
+            }
+        }
+
+        void AppendTensorKeywordDependencies(
+            X::KWARGS& keywordArguments,
+            std::vector<unsigned long long>& tensorIds)
+        {
+            for (auto& item : keywordArguments) {
+                AppendTensorDependencies(item.val, tensorIds);
+            }
+        }
+
         class TensorRTFileStreamReader final : public nvinfer1::IStreamReaderV2 {
         public:
             explicit TensorRTFileStreamReader(const std::string& path)
@@ -102,14 +145,40 @@ namespace Garnet {
 
         std::mutex g_trtExecutionCacheMutex;
         std::unordered_map<std::string, CachedTRTExecution> g_trtExecutionCache;
+        std::unordered_map<std::string, std::shared_ptr<std::mutex>>
+            g_trtEngineLoadMutexes;
+        std::mutex g_trtProfileLogMutex;
+
+        void WriteTRTProfileLog(const std::string& message) {
+            const char* profileLogPath = std::getenv("GARNET_PARTITION_PROFILE_LOG");
+            if (!profileLogPath || !*profileLogPath) return;
+            std::lock_guard<std::mutex> lock(g_trtProfileLogMutex);
+            std::ofstream profileLog(profileLogPath, std::ios::app);
+            profileLog << message << '\n';
+        }
 
         nvinfer1::IExecutionContext* GetCachedTRTExecutionContext(
             const std::string& enginePath,
             const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
-            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
-            auto found = g_trtExecutionCache.find(enginePath);
-            if (found != g_trtExecutionCache.end()) {
-                return found->second.context;
+            std::shared_ptr<std::mutex> engineLoadMutex;
+            {
+                std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+                auto found = g_trtExecutionCache.find(enginePath);
+                if (found != g_trtExecutionCache.end()) {
+                    return found->second.context;
+                }
+                auto& mutexSlot = g_trtEngineLoadMutexes[enginePath];
+                if (!mutexSlot) mutexSlot = std::make_shared<std::mutex>();
+                engineLoadMutex = mutexSlot;
+            }
+
+            std::lock_guard<std::mutex> engineLock(*engineLoadMutex);
+            {
+                std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+                auto found = g_trtExecutionCache.find(enginePath);
+                if (found != g_trtExecutionCache.end()) {
+                    return found->second.context;
+                }
             }
 
             TensorRTFileStreamReader engineStream(enginePath);
@@ -193,6 +262,7 @@ namespace Garnet {
                 return nullptr;
             }
 
+            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
             auto inserted = g_trtExecutionCache.emplace(enginePath, cached);
             return inserted.first->second.context;
         }
@@ -2867,6 +2937,44 @@ namespace Garnet {
                 return weight;
             }
         }
+        const auto partitionInput = partitionInputNames.find(id);
+        if (partitionBuildActive && partitionInput != partitionInputNames.end()) {
+            DataType dataType;
+            Dims dimensions{};
+            const auto boundaryMetadata = partitionBoundaryMetadata.find(id);
+            if (boundaryMetadata != partitionBoundaryMetadata.end()) {
+                dataType = boundaryMetadata->second.first;
+                dimensions = boundaryMetadata->second.second;
+            }
+            else {
+                X::Tensor tensor(value);
+                if (tensor->GetDataType() == X::TensorDataType::FLOAT32) dataType = DataType::kFLOAT;
+                else if (tensor->GetDataType() == X::TensorDataType::BFLOAT16) dataType = DataType::kBF16;
+                else if (tensor->GetDataType() == X::TensorDataType::LONGLONG) dataType = DataType::kINT64;
+                else if (tensor->GetDataType() == X::TensorDataType::INT) dataType = DataType::kINT32;
+                else {
+                    loweringError = "unsupported partition boundary dtype";
+                    return nullptr;
+                }
+                dimensions.nbDims = tensor->GetDimCount();
+                if (dimensions.nbDims <= 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+                    loweringError = "invalid partition boundary rank";
+                    return nullptr;
+                }
+                for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+                    dimensions.d[dimension] = tensor->GetDimSize(dimension);
+                }
+            }
+            ITensor* input = network->addInput(
+                partitionInput->second.c_str(), dataType, dimensions);
+            if (!input) {
+                loweringError = "TensorRT failed to add partition input " +
+                    partitionInput->second;
+                return nullptr;
+            }
+            tensorMap[id] = input;
+            return input;
+        }
         loweringError = "graph operand was not produced by an input or an earlier lowered operation";
         return nullptr;
     }
@@ -3617,7 +3725,8 @@ namespace Garnet {
             builder = nullptr;
             return false;
         }
-        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 64ULL << 20);
+        config->setMemoryPoolLimit(
+            MemoryPoolType::kWORKSPACE, capturedWorkspaceBytes);
         if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0) {
             config->setFlag(BuilderFlag::kREFIT_INDIVIDUAL);
             config->setFlag(BuilderFlag::kSTRIP_PLAN);
@@ -3625,6 +3734,11 @@ namespace Garnet {
 
         for (size_t index = 0; index < symbolicInputs.size(); ++index) {
             X::Value inputValue = symbolicInputs[index];
+            if (partitionBuildActive &&
+                partitionInputNames.find(inputValue.GetObj()->GetID()) ==
+                    partitionInputNames.end()) {
+                continue;
+            }
             if (!inputValue.IsTensor()) {
                 loweringError = "compiled graph inputs must be tensors";
                 break;
@@ -3656,7 +3770,9 @@ namespace Garnet {
             for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
                 dimensions.d[dimension] = input->GetDimSize(dimension);
             }
-            const std::string name = "input_" + std::to_string(index);
+            const std::string name = partitionBuildActive
+                ? partitionInputNames.at(inputValue.GetObj()->GetID())
+                : "input_" + std::to_string(index);
             ITensor* trtInput = network->addInput(name.c_str(), trtDataType, dimensions);
             if (!trtInput) {
                 loweringError = "TensorRT addInput failed for " + name;
@@ -3669,20 +3785,42 @@ namespace Garnet {
             X::TensorGraph tensorGraph(graph);
             X::KWARGS runOptions;
             runOptions.Add("Func", forwardFunction);
+            replayOperationIndex = 0;
             g_trtContext = this;
             const bool ran = tensorGraph->Run(graphArguments, runOptions);
             g_trtContext = nullptr;
             if (!ran && loweringError.empty()) {
                 loweringError = "xlang TensorGraph replay failed";
             }
+            if (partitionBuildActive && loweringError.empty() &&
+                replayOperationIndex != GetCapturedTensorOperations().size()) {
+                loweringError = "partition replay did not consume the analyzed operation DAG";
+            }
         }
 
-        if (loweringError.empty() && !lastOutput) {
+        if (loweringError.empty() && !partitionBuildActive && !lastOutput) {
             loweringError = "captured graph produced no lowerable output";
         }
         if (loweringError.empty()) {
-            lastOutput->setName("output_0");
-            network->markOutput(*lastOutput);
+            if (partitionBuildActive) {
+                for (const auto& item : partitionOutputNames) {
+                    const auto tensor = tensorMap.find(item.first);
+                    if (tensor == tensorMap.end() || !tensor->second) {
+                        loweringError = "partition output was not produced: " + item.second;
+                        break;
+                    }
+                    tensor->second->setName(item.second.c_str());
+                    network->markOutput(*tensor->second);
+                    partitionBoundaryMetadata[item.first] = {
+                        tensor->second->getType(), tensor->second->getDimensions()};
+                }
+            }
+            else {
+                lastOutput->setName("output_0");
+                network->markOutput(*lastOutput);
+            }
+        }
+        if (loweringError.empty()) {
             auto* serialized = builder->buildSerializedNetwork(*network, *config);
             if (!serialized) {
                 loweringError = "TensorRT buildSerializedNetwork failed";
@@ -3722,6 +3860,230 @@ namespace Garnet {
         lastOutput = nullptr;
         errorMessage = loweringError;
         return loweringError.empty();
+    }
+
+    bool TRTBuilder::AnalyzeCapturedGraph(
+        X::Value graph,
+        X::Value forwardFunction,
+        X::ARGS& graphArguments,
+        std::vector<CapturedTensorOperation>& operations,
+        std::string& errorMessage)
+    {
+        analyzedOperations.clear();
+        analysisActive = true;
+        X::TensorGraph tensorGraph(graph);
+        X::KWARGS runOptions;
+        runOptions.Add("Func", forwardFunction);
+        g_trtContext = this;
+        const bool ran = tensorGraph->Run(graphArguments, runOptions);
+        g_trtContext = nullptr;
+        analysisActive = false;
+        if (!ran) {
+            errorMessage = "xlang TensorGraph analysis replay failed";
+            analyzedOperations.clear();
+            return false;
+        }
+        operations = std::move(analyzedOperations);
+        errorMessage.clear();
+        return true;
+    }
+
+    bool TRTBuilder::BuildCapturedPartitions(
+        X::Value graph,
+        X::Value forwardFunction,
+        X::ARGS& graphArguments,
+        X::ARGS& symbolicInputs,
+        const SafeTensorsIndex* weightIndex,
+        const std::string& baseEnginePath,
+        const std::vector<CapturedTensorOperation>& operations,
+        std::vector<EnginePartitionSpec>& partitions,
+        std::string& errorMessage)
+    {
+        partitions.clear();
+        if (operations.empty()) {
+            errorMessage = "captured graph contains no partitionable operations";
+            return false;
+        }
+
+        int partitionCount = 0;
+        std::unordered_map<unsigned long long, int> producerPartition;
+        std::unordered_map<unsigned long long, std::set<int>> consumerPartitions;
+        for (const auto& operation : operations) {
+            partitionCount = std::max(partitionCount, operation.candidatePartition + 1);
+            if (operation.outputTensorId != 0) {
+                producerPartition[operation.outputTensorId] = operation.candidatePartition;
+            }
+            for (const auto inputId : operation.inputTensorIds) {
+                if (inputId != 0) {
+                    consumerPartitions[inputId].insert(operation.candidatePartition);
+                }
+            }
+        }
+        if (partitionCount <= 1) {
+            errorMessage = "captured graph does not require physical partitioning";
+            return false;
+        }
+
+        std::unordered_map<unsigned long long, int> requestInputIndices;
+        for (size_t index = 0; index < symbolicInputs.size(); ++index) {
+            if (symbolicInputs[index].IsObject()) {
+                requestInputIndices[symbolicInputs[index].GetObj()->GetID()] =
+                    static_cast<int>(index);
+            }
+        }
+
+        const std::filesystem::path basePath(baseEnginePath);
+        partitionBuildActive = true;
+        partitionBoundaryMetadata.clear();
+        for (int partitionId = 0; partitionId < partitionCount; ++partitionId) {
+            EnginePartitionSpec spec;
+            spec.id = partitionId;
+            spec.enginePath = partitionId == 0
+                ? basePath.string()
+                : (basePath.parent_path() /
+                    (basePath.stem().string() + ".partition_" +
+                     std::to_string(partitionId) + basePath.extension().string())).string();
+
+            std::set<unsigned long long> inputIds;
+            std::set<unsigned long long> outputIds;
+            for (const auto& operation : operations) {
+                if (operation.candidatePartition != partitionId) continue;
+                for (const auto inputId : operation.inputTensorIds) {
+                    const auto producer = producerPartition.find(inputId);
+                    if (requestInputIndices.find(inputId) != requestInputIndices.end() ||
+                        (producer != producerPartition.end() &&
+                         producer->second != partitionId)) {
+                        inputIds.insert(inputId);
+                    }
+                }
+                const auto consumers = consumerPartitions.find(operation.outputTensorId);
+                bool crossesPartition = false;
+                if (consumers != consumerPartitions.end()) {
+                    for (const int consumerPartition : consumers->second) {
+                        crossesPartition = crossesPartition || consumerPartition != partitionId;
+                    }
+                }
+                const bool terminal = consumers == consumerPartitions.end() ||
+                    consumers->second.empty();
+                if (crossesPartition || terminal) outputIds.insert(operation.outputTensorId);
+            }
+
+            partitionInputNames.clear();
+            partitionOutputNames.clear();
+            for (const auto inputId : inputIds) {
+                EnginePartitionBinding binding;
+                binding.tensorId = inputId;
+                const auto requestInput = requestInputIndices.find(inputId);
+                if (requestInput != requestInputIndices.end()) {
+                    binding.requestInputIndex = requestInput->second;
+                    binding.name = "input_" + std::to_string(requestInput->second);
+                }
+                else {
+                    binding.name = "edge_" + std::to_string(inputId);
+                }
+                partitionInputNames[inputId] = binding.name;
+                spec.inputs.push_back(binding);
+            }
+            int terminalIndex = 0;
+            for (const auto outputId : outputIds) {
+                const auto consumers = consumerPartitions.find(outputId);
+                const bool terminal = consumers == consumerPartitions.end() ||
+                    consumers->second.empty();
+                EnginePartitionBinding binding;
+                binding.tensorId = outputId;
+                binding.terminalOutput = terminal;
+                binding.name = terminal
+                    ? "output_" + std::to_string(terminalIndex++)
+                    : "edge_" + std::to_string(outputId);
+                partitionOutputNames[outputId] = binding.name;
+                spec.outputs.push_back(binding);
+            }
+
+            activePartition = partitionId;
+            if (!BuildCapturedGraph(
+                    graph,
+                    forwardFunction,
+                    graphArguments,
+                    symbolicInputs,
+                    weightIndex,
+                    spec.enginePath,
+                    errorMessage)) {
+                partitionBuildActive = false;
+                partitionInputNames.clear();
+                partitionOutputNames.clear();
+                partitionBoundaryMetadata.clear();
+                partitions.clear();
+                return false;
+            }
+            partitions.push_back(std::move(spec));
+        }
+        partitionBuildActive = false;
+        partitionInputNames.clear();
+        partitionOutputNames.clear();
+        partitionBoundaryMetadata.clear();
+        errorMessage.clear();
+        return true;
+    }
+
+    bool TRTBuilder::PrepareCapturedEngine(
+        const std::string& enginePath,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage)
+    {
+        const auto prepareStart = std::chrono::steady_clock::now();
+        WriteTRTProfileLog("engine prepare begin: " + enginePath);
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return false;
+        }
+        if (!GetCachedTRTExecutionContext(enginePath, weightIndex)) {
+            errorMessage = "failed to prepare captured engine " + enginePath;
+            return false;
+        }
+        const double prepareMs = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - prepareStart).count();
+        WriteTRTProfileLog(
+            "engine prepare complete_ms=" + std::to_string(prepareMs) +
+            ": " + enginePath);
+        errorMessage.clear();
+        return true;
+    }
+
+    bool TRTBuilder::PrepareCapturedPartitions(
+        const std::vector<EnginePartitionSpec>& partitions,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage)
+    {
+        if (partitions.empty()) {
+            errorMessage = "captured engine partition list is empty";
+            return false;
+        }
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return false;
+        }
+        std::vector<std::future<std::pair<bool, std::string>>> preparations;
+        preparations.reserve(partitions.size());
+        for (const auto& partition : partitions) {
+            preparations.push_back(std::async(
+                std::launch::async,
+                [enginePath = partition.enginePath, weightIndex]() {
+                    TRTBuilder builder;
+                    std::string localError;
+                    const bool prepared = builder.PrepareCapturedEngine(
+                        enginePath, weightIndex, localError);
+                    return std::make_pair(prepared, std::move(localError));
+                }));
+        }
+        for (auto& preparation : preparations) {
+            auto result = preparation.get();
+            if (!result.first) {
+                errorMessage = std::move(result.second);
+                return false;
+            }
+        }
+        errorMessage.clear();
+        return true;
     }
 
     X::Value TRTBuilder::RunCapturedEngine(
@@ -3829,6 +4191,180 @@ namespace Garnet {
         return X::Value(output);
     }
 
+    X::Value TRTBuilder::RunCapturedPartitions(
+        const std::vector<EnginePartitionSpec>& partitions,
+        X::Value inputsValue,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage)
+    {
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return X::Value();
+        }
+        if (!inputsValue.IsList() || partitions.empty()) {
+            errorMessage = "partitioned execution requires partitions and an inputs list";
+            return X::Value();
+        }
+        X::List requestInputs(inputsValue);
+        std::unordered_map<unsigned long long, X::Value> intermediates;
+        X::Value terminalOutput;
+        const char* profileEnvironment = std::getenv("GARNET_PROFILE_PARTITIONS");
+        const bool profilePartitions =
+            profileEnvironment && std::string(profileEnvironment) == "1";
+        const char* profileLogPath = std::getenv("GARNET_PARTITION_PROFILE_LOG");
+        auto writePartitionProfile = [&](const std::string& message) {
+            if (!profilePartitions) return;
+            std::cout << message << std::endl;
+            if (profileLogPath && *profileLogPath) {
+                std::ofstream profileLog(profileLogPath, std::ios::app);
+                profileLog << message << '\n';
+            }
+        };
+
+        for (const auto& partition : partitions) {
+            const auto partitionStart = std::chrono::steady_clock::now();
+            if (profilePartitions) {
+                writePartitionProfile(
+                    "partition " + std::to_string(partition.id) +
+                    " begin: " + partition.enginePath);
+            }
+            ICudaEngine* engine = nullptr;
+            IExecutionContext* context = nullptr;
+            if (!GetCachedTRTExecutionObjects(
+                    partition.enginePath, engine, context, weightIndex)) {
+                errorMessage = "failed to load partition engine " + partition.enginePath;
+                return X::Value();
+            }
+
+            for (const auto& binding : partition.inputs) {
+                X::Value inputValue;
+                if (binding.requestInputIndex >= 0) {
+                    if (binding.requestInputIndex >= requestInputs->Size()) {
+                        errorMessage = "partition request input index is out of range";
+                        return X::Value();
+                    }
+                    inputValue = requestInputs->Get(binding.requestInputIndex);
+                }
+                else {
+                    const auto found = intermediates.find(binding.tensorId);
+                    if (found == intermediates.end()) {
+                        errorMessage = "partition input dependency is unavailable: " + binding.name;
+                        return X::Value();
+                    }
+                    inputValue = found->second;
+                }
+                if (!inputValue.IsTensor()) {
+                    errorMessage = "partition binding " + binding.name + " is not an X::Tensor";
+                    return X::Value();
+                }
+                X::Tensor input(inputValue);
+                if (TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
+                    errorMessage = "partition input is not GPU resident: " + binding.name;
+                    return X::Value();
+                }
+                void* devicePointer = TensorHelper::GetGPUMemory(input);
+                if (!devicePointer ||
+                    !context->setTensorAddress(binding.name.c_str(), devicePointer)) {
+                    errorMessage = "failed to bind partition input " + binding.name;
+                    return X::Value();
+                }
+            }
+
+            std::vector<std::pair<EnginePartitionBinding, X::Value>> outputs;
+            for (const auto& binding : partition.outputs) {
+                const Dims dimensions = engine->getTensorShape(binding.name.c_str());
+                if (dimensions.nbDims <= 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+                    errorMessage = "invalid partition output shape for " + binding.name;
+                    return X::Value();
+                }
+                size_t elementCount = 1;
+                X::Port::vector<int> outputShape(dimensions.nbDims);
+                for (int index = 0; index < dimensions.nbDims; ++index) {
+                    if (dimensions.d[index] <= 0) {
+                        errorMessage = "dynamic partition outputs are not implemented";
+                        return X::Value();
+                    }
+                    outputShape.push_back(dimensions.d[index]);
+                    elementCount *= static_cast<size_t>(dimensions.d[index]);
+                }
+
+                const DataType dataType = engine->getTensorDataType(binding.name.c_str());
+                X::TensorDataType xlangDataType;
+                size_t elementBytes = 0;
+                if (dataType == DataType::kFLOAT) {
+                    xlangDataType = X::TensorDataType::FLOAT32;
+                    elementBytes = sizeof(float);
+                }
+                else if (dataType == DataType::kBF16) {
+                    xlangDataType = X::TensorDataType::BFLOAT16;
+                    elementBytes = sizeof(unsigned short);
+                }
+                else if (dataType == DataType::kINT32) {
+                    xlangDataType = X::TensorDataType::INT;
+                    elementBytes = sizeof(int);
+                }
+                else if (dataType == DataType::kINT64) {
+                    xlangDataType = X::TensorDataType::LONGLONG;
+                    elementBytes = sizeof(long long);
+                }
+                else {
+                    errorMessage = "unsupported partition output dtype";
+                    return X::Value();
+                }
+
+                void* devicePointer = nullptr;
+                if (cudaMalloc(&devicePointer, elementCount * elementBytes) != cudaSuccess) {
+                    errorMessage = "failed to allocate partition output " + binding.name;
+                    return X::Value();
+                }
+                X::Tensor output(X::g_pXHost->CreateTensor());
+                output->SetDataType(xlangDataType);
+                output->SetShape(outputShape);
+                if (TensorHelper::AttachGPUMemory(output, devicePointer) !=
+                    TensorOpStatus::Success) {
+                    cudaFree(devicePointer);
+                    errorMessage = "failed to attach partition output " + binding.name;
+                    return X::Value();
+                }
+                if (!context->setTensorAddress(binding.name.c_str(), devicePointer)) {
+                    errorMessage = "failed to bind partition output " + binding.name;
+                    return X::Value();
+                }
+                outputs.emplace_back(binding, X::Value(output));
+            }
+
+            if (!context->enqueueV3(cudaStreamPerThread)) {
+                errorMessage = "TensorRT enqueue failed for partition " +
+                    std::to_string(partition.id);
+                return X::Value();
+            }
+            if (profilePartitions) {
+                const cudaError_t syncStatus = cudaStreamSynchronize(cudaStreamPerThread);
+                if (syncStatus != cudaSuccess) {
+                    errorMessage = "partition profiling synchronization failed: " +
+                        std::string(cudaGetErrorString(syncStatus));
+                    return X::Value();
+                }
+                const double elapsedMs = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - partitionStart).count();
+                writePartitionProfile(
+                    "partition " + std::to_string(partition.id) +
+                    " complete_ms=" + std::to_string(elapsedMs));
+            }
+            for (auto& output : outputs) {
+                intermediates[output.first.tensorId] = output.second;
+                if (output.first.terminalOutput) terminalOutput = output.second;
+            }
+        }
+
+        if (!terminalOutput.IsValid()) {
+            errorMessage = "partitioned execution produced no terminal output";
+            return X::Value();
+        }
+        errorMessage.clear();
+        return terminalOutput;
+    }
+
     X::Value TRTBuilder::HandleBinaryOp(
         const std::string& opName,
         X::Value graph,
@@ -3837,6 +4373,41 @@ namespace Garnet {
         X::Value input1,
         X::Value input2,
         X::Value output) {
+        if (analysisActive) {
+            if (opName == "mul" && (!input1.IsObject() || !input2.IsObject())) {
+                return X::Value(true);
+            }
+            CapturedTensorOperation operation;
+            operation.index = static_cast<int>(analyzedOperations.size());
+            operation.name = opName;
+            if (input1.IsObject()) {
+                operation.inputTensorIds.push_back(input1.GetObj()->GetID());
+            }
+            if (input2.IsObject()) {
+                operation.inputTensorIds.push_back(input2.GetObj()->GetID());
+            }
+            AppendTensorKeywordDependencies(kwParams, operation.inputTensorIds);
+            if (output.IsObject()) operation.outputTensorId = output.GetObj()->GetID();
+            analyzedOperations.push_back(std::move(operation));
+            return X::Value(true);
+        }
+        if (partitionBuildActive) {
+            if (opName == "mul" && (!input1.IsObject() || !input2.IsObject())) {
+                return X::Value(true);
+            }
+            const auto& operations = GetCapturedTensorOperations();
+            if (replayOperationIndex >= operations.size()) {
+                loweringError = "partition replay produced more binary operations than analysis";
+                return X::Value();
+            }
+            const auto& operation = operations[replayOperationIndex++];
+            if (operation.name != opName) {
+                loweringError = "partition replay operation mismatch: expected " +
+                    operation.name + ", received " + opName;
+                return X::Value();
+            }
+            if (operation.candidatePartition != activePartition) return X::Value(true);
+        }
         if (!network || loweringError.size() > 0) {
             return X::Value();
         }
@@ -3971,7 +4542,16 @@ namespace Garnet {
             ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->val);
             if (!inputIds || inputIds->getDimensions().nbDims != 2 ||
                 left->getDimensions().nbDims != 3 || right->getDimensions().nbDims != 2) {
-                loweringError = "visual embedding merge received incompatible tensor ranks";
+                const int inputIdsRank = inputIds
+                    ? inputIds->getDimensions().nbDims
+                    : -1;
+                loweringError =
+                    "visual embedding merge received incompatible tensor ranks: "
+                    "input_ids=" + std::to_string(inputIdsRank) +
+                    ", text_embeddings=" +
+                    std::to_string(left->getDimensions().nbDims) +
+                    ", visual_embeddings=" +
+                    std::to_string(right->getDimensions().nbDims);
                 return X::Value();
             }
             auto makeTokenConstant = [&](long long tokenId) -> ITensor* {
@@ -4107,6 +4687,32 @@ namespace Garnet {
         X::KWARGS& kwParams,
         X::Value input,
         X::Value output) {
+        if (analysisActive) {
+            CapturedTensorOperation operation;
+            operation.index = static_cast<int>(analyzedOperations.size());
+            operation.name = opName;
+            if (input.IsObject()) {
+                operation.inputTensorIds.push_back(input.GetObj()->GetID());
+            }
+            AppendTensorKeywordDependencies(kwParams, operation.inputTensorIds);
+            if (output.IsObject()) operation.outputTensorId = output.GetObj()->GetID();
+            analyzedOperations.push_back(std::move(operation));
+            return X::Value(true);
+        }
+        if (partitionBuildActive) {
+            const auto& operations = GetCapturedTensorOperations();
+            if (replayOperationIndex >= operations.size()) {
+                loweringError = "partition replay produced more unary operations than analysis";
+                return X::Value();
+            }
+            const auto& operation = operations[replayOperationIndex++];
+            if (operation.name != opName) {
+                loweringError = "partition replay operation mismatch: expected " +
+                    operation.name + ", received " + opName;
+                return X::Value();
+            }
+            if (operation.candidatePartition != activePartition) return X::Value(true);
+        }
         if (!loweringActive) {
             return X::Value(true);
         }

@@ -19,6 +19,31 @@ gates pass.
 The new implementation branch now has a production-path foundation with these
 verified properties:
 
+- Parameterized `@T.fusion(...)` annotations now accept and validate `name`,
+  `role`, `boundary`, `atomic`, and `cuda_graph` metadata directly from xlang
+  decorator expression objects. Nested calls and repeated loops retain parent,
+  depth, and invocation identity during compiled graph capture.
+- Graph cache V2 persists a generated execution-plan sidecar. Cache hits restore
+  fusion regions and partition candidates without executing `.x`. Runtime
+  status explicitly reports `cpu_control_gpu_execution`, current CUDA stream
+  ordering, planned cross-partition CUDA events, and no intermediate host-copy
+  or device-wide-sync policy.
+- The real Qwen text-decode expression captures one required CUDA-Graph-eligible
+  decode region and 28 distinct atomic decoder-layer instances. Its paged-KV
+  regression remains numerically valid.
+- Required nested fusion boundaries now produce physical TensorRT engines. A
+  two-partition fixture records the operation DAG, derives each function's
+  operation slice from its tensor input/output contract, compiles two engine
+  files, and passes the producer's GPU `X::Tensor` allocation directly to the
+  consumer engine on the same CUDA stream. Numerical parity and cache-hit reuse
+  pass with no intermediate host tensor or device-wide synchronization.
+- Preferred boundaries now use inclusive operation cost, while repeated atomic
+  regions can be grouped with `max_atomic_regions_per_partition`. Required and
+  selected preferred regions produce stable, topologically ordered physical
+  engine partitions. Incremental per-partition rebuilds and optional
+  multi-stream CUDA event edges remain Stage 4 work. Same-stream engine chains
+  require no event; stream ordering already enforces their GPU dependency.
+
 - `runtime_mode="compiled_xmodel"` loads the selected root `.x` and does not
   invoke Python subgraph assembly, direct internal exports, or hardcoded Qwen
   runners.
@@ -158,6 +183,56 @@ verified properties:
   token. GPU preprocessing currently measures 0.0384 mean absolute pixel error
   versus the HF processor, so image preprocessing and full-logit numerical
   parity remain explicit follow-up work.
+- The same 60-visual-token Qwen VLM graph now selects the preferred vision
+  boundary and physically compiles a multi-engine plan from the captured `.x`
+  operation DAG. Tensor-valued keyword operands are first-class DAG
+  dependencies, which is required for `input_ids`, attention metadata, and
+  other non-positional graph edges to cross partitions correctly. A focused
+  fixture guards this contract.
+- The schema-clean partitioned Qwen compile took 142.70 s on the RTX 4080. A clean
+  process then loaded the persisted graph and engines in 229.31 ms, registered
+  Garnet paged-KV plugin creators before partition deserialization, and ran the
+  warm JPEG-to-ten-token path in 120.97-123.06 ms across four frames. The first
+  post-load request remained a 5.16 s refit/cold-execution cost; eliminating or
+  amortizing that cost remains production work.
+- Serving readiness now eagerly deserializes, refits, and creates execution
+  contexts for every prefill partition and the decode engine. On a clean cached
+  process this moved refit into explicit model startup. Readiness also loads the
+  native tokenizer instead of parsing it on the first prompt. Per-engine load
+  locks allow independent prefill partitions to prepare concurrently. Decode
+  initialization remains on the xlang calling thread so cache misses can safely
+  capture its graph. A clean 60-token cached process loaded in 4.64 s, including
+  4.30 s engine preparation and 178 ms frontend preparation. The first JPEG
+  request fell from 5.16 s to 160.87 ms, versus approximately 122 ms warm.
+  Runtime status reports `engines_prepared`, `engine_prepare_ms`,
+  `frontend_prepared`, and `frontend_prepare_ms`; the real VLM test rejects a
+  ready model that performs lazy engine preparation during its first request.
+- The balanced production profile now has a dedicated regression using the
+  original 1920x1080 JPEG, Qwen smart resize to 1312x736, 3,772 vision patches,
+  943 merged visual tokens, a 1,024-token text profile, and 64 KV pages. Captured
+  graph compilation accepts a fingerprinted `builder_workspace_mb` option; this
+  profile uses 4 GB because its vision-merger tactic requires more than 1 GB,
+  while the independent one-token decode compiler remains at 64 MB.
+- On the RTX 4080, the cached balanced image-to-first-token request took
+  302.63 ms. Ten generated tokens took 945.89-1,014.89 ms across four images.
+  Profiled prefill partitions were 206.36 ms for vision, 65.88 ms for the main
+  text region, and about 5.65 ms for the remaining boundaries. The result misses
+  the current sub-700-ms balanced target because decode at roughly 960-token
+  context is about 73 ms/token, not because JPEG/vision prefill exceeds target.
+  Example output for `frame_0.jpg` was
+  `A man sits in a dimly lit, rustic` (truncated at ten tokens).
+- Matched post-warmup four-image runs separated one-token and ten-token costs.
+  Mean image-to-first-token latency was 305.58 ms and mean ten-token latency was
+  955.44 ms. The vision partition averaged 205.54 ms, text prefill averaged
+  73.32 ms, and the additional nine decode iterations averaged 649.86 ms total
+  (72.21 ms/token). Therefore image/vision dominates first-token latency, but
+  text decode is about 68% of the ten-token request and is the primary next
+  optimization target.
+- Decode graph capture must execute on the xlang calling thread when its cache
+  is missing. A prior attempt to initialize it asynchronously deadlocked on a
+  new 64-page profile because xlang runtime capture is not a background-thread
+  operation. Concurrency is limited to already-built TensorRT engine
+  deserialization/refit, where per-engine locks are safe.
 - The runtime cache schema now includes the strongly typed/paged-KV compiler
   ABI. A clean rebuild of the complete 625-weight VLM root succeeded under that
   schema and produced an 11,393,228-byte stripped engine. The rebuilt one-call
@@ -185,6 +260,9 @@ Qwen root: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_root_captur
 Qwen text prefill: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_prefill.py
 Qwen VLM prefill/decode: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_vl_prefill.py
 Native one-call generation: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_vl_generate.py
+Fusion/partition planner: test2026/tests/phase_24_compiled_xmodel_runtime/test_fusion_annotations.py
+Partitioned 60-token VLM: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_vl_generate_60_visual.py
+Balanced 943-token VLM: test2026/tests/phase_24_compiled_xmodel_runtime/test_qwen_vl_generate_943_visual.py
 Reference path: RUN_GARNET_TRT_PREFLIGHT=1 phase_00_trt_expression_preflight/test.py
 ```
 
@@ -337,19 +415,43 @@ Every stage must preserve these rules:
 
 ### Deliverables
 
+- Extend `@T.fusion(...)` capture so `name`, `role`, `boundary`, `atomic`, and
+  `cuda_graph` keyword arguments are validated and retained on expanded graph
+  regions. Do not add a separate `T.stage` language construct.
+- Preserve nested-function and loop-instance scope identity so repeated atomic
+  layers are individually visible to the partition planner.
+- Reject conflicting annotations, including a required boundary inside an
+  atomic parent region.
 - Partition captured graphs into TensorRT regions and custom CUDA nodes.
+- Combine annotation constraints with operator support, shape profiles, build
+  memory, runtime memory, launch cost, invocation frequency, and placement cost.
+- Group repeated atomic layers automatically; do not hardcode Qwen model names,
+  layer counts, or layer-group sizes in C++.
 - Calculate semantic fingerprints per partition.
 - Compile and atomically store rank/device-specific engines.
 - Reuse unchanged partitions after a local `.x` change.
 - Select dynamic profiles for vision, prefill, and decode.
+- Emit a generated execution manifest with GPU tensor bindings, streams,
+  events, custom operations, and CUDA Graph eligibility.
 
 ### Exit Tests
 
+- `T.fusion` keyword metadata survives capture, graph-cache serialization, and
+  graph-cache reload without executing `.x` on the cache-hit path.
+- Required boundaries always partition; preferred boundaries may merge under a
+  deterministic cost configuration; atomic regions are never split.
+- A five-layer loop annotated with an atomic layer function partitions only
+  between complete layer instances.
+- Invalid and conflicting fusion parameters fail with source path and expanded
+  graph-region diagnostics.
 - Changing one partition rebuilds only that engine.
 - Prompt/image contents and runtime batch values within profiles do not rebuild.
 - Shape/profile, precision, weight, plugin, or engine-boundary changes rebuild
   the affected engine.
 - Concurrent cache loaders never observe partial artifacts.
+- A two-engine fixture passes an intermediate GPU `X::Tensor` directly between
+  engines using stream/event dependencies, with no host tensor copy or device-
+  wide synchronization.
 
 ## Stage 5: Compile-Time VLM Flow Placement
 
@@ -361,6 +463,9 @@ Every stage must preserve these rules:
   costs.
 - Emit fixed engine/device placement and explicit transfer nodes.
 - Keep decode-loop communication strongly penalized.
+- Build runtime launch DAGs from the generated execution manifest. The C++
+  scheduler submits request and continuous-batch work; CUDA streams/events and
+  optional CUDA Graph buckets execute dependencies without CPU tensor access.
 
 ### Exit Tests
 
@@ -368,6 +473,8 @@ Every stage must preserve these rules:
 - Each engine runs only on its compiled device.
 - Only declared boundary tensors cross devices.
 - Runtime cannot dynamically move engines or change the partition.
+- Multi-engine execution performs zero intermediate D2H copies and zero
+  `cudaDeviceSynchronize` calls in the production request path.
 
 ## Stage 6: Full Qwen-VL Graph Correctness
 

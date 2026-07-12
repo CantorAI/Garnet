@@ -2,6 +2,7 @@
 
 #include "xlang.h"
 #include "safetensors_index.h"
+#include "trt_builder.h"
 
 #include <mutex>
 #include <memory>
@@ -33,6 +34,7 @@ namespace Garnet
         std::string m_entryFunction;
         std::string m_frontend;
         std::vector<std::vector<int>> m_inputShapes;
+        FusionPartitionOptions m_partitionOptions;
         std::string m_state = "uninitialized";
         std::string m_errorCode;
         std::string m_errorMessage;
@@ -42,11 +44,17 @@ namespace Garnet
         X::Value m_rootFunction;
         X::Value m_graph;
         std::string m_graphSummary;
+        std::string m_executionPlanJson;
         std::string m_enginePath;
+        std::vector<EnginePartitionSpec> m_enginePartitions;
         SafeTensorsIndex m_weightIndex;
         std::string m_weightIndexError;
         std::unordered_map<std::string, X::Value> m_loadedWeights;
         long long m_loadedWeightBytes = 0;
+        double m_enginePreparationMs = 0.0;
+        double m_frontendPreparationMs = 0.0;
+        bool m_enginesPrepared = false;
+        bool m_frontendPrepared = false;
         Diagnostics m_diagnostics;
         std::shared_ptr<CompiledModelRuntime> m_decodeRuntime;
 
@@ -58,7 +66,8 @@ namespace Garnet
             const std::string& entryFunction,
             const std::string& frontend,
             const std::vector<std::vector<int>>& inputShapes,
-            const std::vector<std::string>& inputDataTypes);
+            const std::vector<std::string>& inputDataTypes,
+            const FusionPartitionOptions& partitionOptions = {});
 
         X::Value Status() const;
         X::Value Forward(X::Value request);

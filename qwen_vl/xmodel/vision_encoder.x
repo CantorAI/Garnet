@@ -106,6 +106,7 @@ def VisionAttention(x, cu_seqlens, vision_position_ids, weights, config, prefix)
     return attn_out
 
 
+@T.fusion(role="vision_layer", atomic=True)
 def VisionBlock(x, cu_seqlens, vision_position_ids, weights, config, layer_idx):
     prefix = "model.visual.blocks." + str(layer_idx)
 
@@ -141,6 +142,7 @@ def VisionBlock(x, cu_seqlens, vision_position_ids, weights, config, layer_idx):
     return x
 
 
+@T.fusion(name="vision", role="encoder", boundary="preferred")
 def Qwen3VisionEncoder(pixel_values, grid_thw, bilinear_indices, bilinear_weights, vision_position_ids, cu_seqlens, weights, config):
     # PatchEmbed is Conv3d with kernel/stride:
     # (temporal_patch_size, patch_size, patch_size).

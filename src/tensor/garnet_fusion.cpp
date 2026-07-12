@@ -5,6 +5,7 @@
 #include "trt_builder.h"
 
 #include <memory>
+#include <set>
 
 
 namespace Garnet
@@ -14,12 +15,19 @@ namespace Garnet
         X::KWARGS& kwParams, X::Value& retValue)
     {
         const bool captureOnly = IsCompiledGraphCaptureActive();
+        std::unique_ptr<ScopedCompiledFusionRegion> captureRegion;
+        if (captureOnly) {
+            captureRegion = std::make_unique<ScopedCompiledFusionRegion>(mAnnotation);
+            if (!captureRegion->IsValid()) return false;
+            captureRegion->CaptureInputs(params);
+        }
         if (captureOnly && IsCompiledFusionCaptureRootActive())
         {
             // A compiled model has one fusion boundary at its root. This path
             // remains for compatibility, but model helper functions should be
             // plain functions so xlang naturally inlines them into that graph.
             retValue = mFunc.ObjCall(params, kwParams);
+            captureRegion->CaptureResult(retValue);
             return retValue.IsValid();
         }
         std::unique_ptr<ScopedCompiledFusionCaptureRoot> captureRoot;
@@ -69,6 +77,7 @@ namespace Garnet
 
             // Call the original function.
             X::Value t = mFunc.ObjCall(params, kwParams);
+            if (captureRegion) captureRegion->CaptureResult(t);
             X::ARGS params_t;
             if (t.IsList())
             {
@@ -264,6 +273,81 @@ namespace Garnet
 		bool bHasSameAndNoChange = mCompiler.check_module_hash(funcName, codeHash);
 		X::XPackageValue<Fusionist> varFusion;
 		Fusionist& f = *varFusion;
+        FusionAnnotation annotation;
+        annotation.name = funcName;
+        annotation.functionName = funcName;
+        const std::set<std::string> supportedKeys{
+            "name", "role", "boundary", "atomic", "cuda_graph"};
+        std::set<std::string> seenKeys;
+        auto applyAnnotationValue = [&](const std::string& key, X::Value value) {
+            if (supportedKeys.find(key) == supportedKeys.end()) {
+                annotation.validationError =
+                    "T.fusion for '" + funcName + "' has unsupported parameter '" + key + "'";
+                return;
+            }
+            if (!seenKeys.insert(key).second) {
+                annotation.validationError =
+                    "T.fusion for '" + funcName + "' repeats parameter '" + key + "'";
+                return;
+            }
+            if ((key == "name" || key == "role" || key == "boundary") &&
+                !value.IsString()) {
+                annotation.validationError =
+                    "T.fusion parameter '" + key + "' for '" + funcName +
+                    "' must be a string";
+                return;
+            }
+            if ((key == "atomic" || key == "cuda_graph") && !value.IsBool()) {
+                annotation.validationError =
+                    "T.fusion parameter '" + key + "' for '" + funcName +
+                    "' must be a boolean";
+                return;
+            }
+            if (key == "name") annotation.name = value.ToString();
+            else if (key == "role") annotation.role = value.ToString();
+            else if (key == "boundary") annotation.boundary = value.ToString();
+            else if (key == "atomic") annotation.atomic = value.ToInt() != 0;
+            else if (key == "cuda_graph") annotation.cudaGraph = value.ToInt() != 0;
+        };
+        // xlang decorators expose each `key=value` argument as an Expr. ToKV()
+        // evaluates the constant right side and preserves the assignment name.
+        for (size_t index = 0;
+             index < params.size() && annotation.validationError.empty();
+             ++index) {
+            if (!params[index].IsObject()) {
+                annotation.validationError =
+                    "T.fusion for '" + funcName + "' accepts named arguments only";
+                break;
+            }
+            auto* expression = dynamic_cast<X::XExpr*>(params[index].GetObj());
+            X::Value keyValue = expression ? expression->ToKV() : X::Value();
+            if (!keyValue.IsDict()) {
+                annotation.validationError =
+                    "T.fusion for '" + funcName + "' accepts key=value arguments only";
+                break;
+            }
+            X::Dict dictionary(keyValue);
+            for (auto& entry : *dictionary) {
+                applyAnnotationValue(entry.first().ToString(), entry.second());
+            }
+        }
+        for (auto& item : kwParams) {
+            if (!annotation.validationError.empty()) break;
+            applyAnnotationValue(std::string(item.key), item.val);
+        }
+        if (annotation.validationError.empty() && annotation.name.empty()) {
+            annotation.validationError =
+                "T.fusion for '" + funcName + "' requires a non-empty name";
+        }
+        if (annotation.validationError.empty() &&
+            annotation.boundary != "none" &&
+            annotation.boundary != "preferred" &&
+            annotation.boundary != "required") {
+            annotation.validationError =
+                "T.fusion for '" + funcName +
+                "' has invalid boundary '" + annotation.boundary + "'";
+        }
+        f.SetAnnotation(std::move(annotation));
         //if not existed or changed
         f.SetNeedGenAndCompile(!bHasSameAndNoChange);
         X::Value varGarnetTensor(pContext);

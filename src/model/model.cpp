@@ -606,11 +606,13 @@ namespace Garnet
         const std::string& entryFunction,
         const std::string& frontend,
         const std::vector<std::vector<int>>& inputShapes,
-        const std::vector<std::string>& inputDataTypes)
+        const std::vector<std::string>& inputDataTypes,
+        const FusionPartitionOptions& partitionOptions)
     {
         mCompiledRuntime = std::make_shared<CompiledModelRuntime>();
         return mCompiledRuntime->Initialize(
-            rootXModel, cacheDirectory, weightsLocation, entryFunction, frontend, inputShapes, inputDataTypes);
+            rootXModel, cacheDirectory, weightsLocation, entryFunction, frontend,
+            inputShapes, inputDataTypes, partitionOptions);
     }
 
     void Model::RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,

@@ -70,6 +70,7 @@ def PrefillAttention(x, position_ids, attention_mask, key_pages, value_pages,
     return llm.linear(attention, prefix + ".o_proj.weight", None, op="o_proj")
 
 
+@T.fusion(role="decoder_layer", atomic=True)
 def PrefillLayer(x, position_ids, attention_mask, key_pages, value_pages,
                  page_table, start_position, weights, config, layer_idx):
     prefix = "model.language_model.layers." + str(layer_idx)
@@ -88,7 +89,11 @@ def PrefillLayer(x, position_ids, attention_mask, key_pages, value_pages,
     return residual + llm.Qwen3TextMLP(normalized, weights, config, layer_idx)
 
 
-@T.fusion()
+@T.fusion(
+    name="text_prefill",
+    role="transformer_prefill",
+    boundary="required"
+)
 def Qwen3TextPrefill(input_ids, position_ids, attention_mask, key_pages,
                      value_pages, page_table, start_position, weights, config):
     x = input_ids * T.unary_op(

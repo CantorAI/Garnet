@@ -65,6 +65,7 @@ def DecodeAttention(x, position_ids, key_pages, value_pages, page_table,
     return llm.linear(attention, prefix + ".o_proj.weight", None, op="o_proj")
 
 
+@T.fusion(role="decoder_layer", atomic=True)
 def DecodeLayer(x, position_ids, key_pages, value_pages, page_table,
                 context_length, slot_position, weights, config, layer_idx):
     prefix = "model.language_model.layers." + str(layer_idx)
@@ -95,7 +96,12 @@ def DecodeLayer(x, position_ids, key_pages, value_pages, page_table,
     return residual + llm.Qwen3TextMLP(normalized, weights, config, layer_idx)
 
 
-@T.fusion()
+@T.fusion(
+    name="text_decode",
+    role="transformer_decode",
+    boundary="required",
+    cuda_graph=True
+)
 def Qwen3TextDecode(input_ids, position_ids, key_pages, value_pages,
                     page_table, context_length, slot_position, weights, config):
     x = input_ids * T.unary_op(

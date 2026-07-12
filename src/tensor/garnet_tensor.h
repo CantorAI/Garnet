@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include "cuda_jit_compiler.h"
+#include "compiled_graph_capture.h"
 
 namespace Garnet
 {
@@ -31,6 +32,7 @@ namespace Garnet
 		bool mNeedGenAndCompile = false;
 		CUfunction m_kernel;
 		bool mHasKernel = false;
+		FusionAnnotation mAnnotation;
 
 		BEGIN_PACKAGE(Fusionist)
 			APISET().SetCallHandler(&Fusionist::Call);
@@ -47,6 +49,10 @@ namespace Garnet
 			mNeedGenAndCompile = b;
 		}
 		inline void SetParent(X::Value& t) { mVarTensor = t; }
+		inline void SetAnnotation(FusionAnnotation annotation)
+		{
+			mAnnotation = std::move(annotation);
+		}
 		bool Call(X::XRuntime* rt, X::ARGS& params, X::KWARGS& kwParams, X::Value& outputue);
 		inline void SetFunc(X::Value& func,std::string& funcName,std::string& funcCodeHash)
 		{

@@ -68,7 +68,8 @@ namespace Garnet
             const std::string& entryFunction,
             const std::string& frontend,
             const std::vector<std::vector<int>>& inputShapes,
-            const std::vector<std::string>& inputDataTypes);
+            const std::vector<std::string>& inputDataTypes,
+            const FusionPartitionOptions& partitionOptions = {});
         void RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
             X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 

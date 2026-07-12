@@ -112,6 +112,9 @@ low-level DLL exports for normal inference.
     the normal local execution path.
 15. Matching requests on one model replica share one physical set of immutable
     prefix KV pages; they must not receive copied per-request prefix pages.
+16. `.x` functions express generic compilation intent through parameterized
+    `T.fusion(...)` annotations. Garnet must not infer Qwen-specific engine
+    boundaries from C++ model names or fixed layer counts.
 
 ## Architectural Boundaries
 
@@ -277,6 +280,107 @@ Likely custom nodes include:
 The partitions and their dependencies are compiler outputs, not hand-authored
 Qwen execution order.
 
+### Parameterized `T.fusion` Contract
+
+Garnet extends the existing `@T.fusion(...)` decorator instead of introducing a
+second `T.stage` construct. A fusion annotation names a captured graph region
+and supplies constraints and hints to the generic partition planner. It is
+compile-time metadata; it does not execute an operation, move a tensor, or
+force a CPU synchronization.
+
+```xlang
+@T.fusion(
+    name="vision",
+    role="encoder",
+    boundary="preferred"
+)
+def Qwen3VisionEncoder(...):
+    ...
+
+
+@T.fusion(
+    name="text_prefill",
+    role="transformer_prefill",
+    boundary="required"
+)
+def Qwen3TextPrefill(...):
+    ...
+
+
+@T.fusion(
+    name="text_decode",
+    role="transformer_decode",
+    boundary="required",
+    cuda_graph=True
+)
+def Qwen3TextDecode(...):
+    ...
+
+
+@T.fusion(
+    role="decoder_layer",
+    atomic=True
+)
+def DecodeLayer(...):
+    ...
+```
+
+Supported metadata has the following meaning:
+
+| Parameter | Meaning |
+| --- | --- |
+| `name` | Stable region identity used by diagnostics, profiling, cache manifests, and generated engine names. |
+| `role` | Generic workload classification such as `encoder`, `transformer_prefill`, `transformer_decode`, `decoder_layer`, `moe_router`, or `moe_expert`. It selects generic cost-model rules, never model-specific C++ code. |
+| `boundary="required"` | The planner must end one backend partition and begin another at this function boundary. |
+| `boundary="preferred"` | The planner should consider this boundary, but may merge adjacent compatible regions when memory and runtime costs favor one engine. |
+| `boundary="none"` | No partition preference. This is the default. |
+| `atomic=True` | The planner must not split inside the expanded function region. It may place a boundary immediately before or after it. |
+| `cuda_graph=True` | The runtime may place executions of this region in a CUDA Graph bucket when its bindings and launch topology satisfy capture requirements. |
+
+`T.fusion` means that operations inside the region are candidates for backend
+fusion; it does not mean that every annotated function must become exactly one
+TensorRT engine. The planner may merge adjacent `preferred` regions or group
+multiple repeated atomic layers into one engine. It may not cross a `required`
+boundary or split an `atomic` region.
+
+Nested and repeated calls retain their expanded scope identities. For example,
+an atomic `DecodeLayer` called by a 28-iteration `.x` loop produces 28 atomic
+instances. The planner may create layer groups such as `[0, 7)`, `[7, 14)`,
+`[14, 21)`, and `[21, 28)` according to measured build memory, runtime memory,
+launch overhead, and device placement. Neither the annotation nor C++ embeds
+the number 28 or those group sizes.
+
+The compiler validates annotations before lowering:
+
+- region names must be stable and unique after scope expansion
+- `required` boundaries must have representable GPU tensor contracts
+- an `atomic` region cannot contain a conflicting required inner boundary
+- unknown roles remain valid metadata but receive only the default cost model
+- unsupported parameter names or values are compilation errors
+
+The existing `GarnetTensor::Fusion` API already receives positional and keyword
+arguments. The implementation must copy those arguments into `Fusionist` and
+then into the captured `TensorGraph` region metadata. Merely accepting
+`params`/`kwParams` and ignoring them does not implement this contract.
+
+### Partition Planner Inputs
+
+Annotations constrain and guide the planner; they do not replace planning. The
+generic planner combines:
+
+- `T.fusion` region metadata and expanded function/loop topology
+- backend operator support and custom CUDA operation boundaries
+- min/opt/max input profiles
+- weight, activation, workspace, and engine-build memory estimates
+- expected invocation frequency for vision, prefill, and decode regions
+- launch, synchronization, and cross-device transfer costs
+- compile configuration, including target devices and build-memory limits
+
+The planner emits an internal execution manifest containing partitions, engine
+fingerprints, GPU bindings, cross-partition tensors, streams, events, custom
+operations, and eligible CUDA Graph buckets. This manifest is a disposable
+cache artifact. The `.x` files remain the only model-structure source of truth.
+
 ### Compile-Time VLM Flow Partitioning
 
 The compiler partitions a VLM by execution phase as well as by supported
@@ -330,6 +434,39 @@ vision tower              -> transfer [visual_tokens, vision_hidden] -> projecti
 
 The runtime may pipeline different requests through these fixed engines, but it
 must not dynamically move an engine or change the compiled partition.
+
+### Multi-Engine GPU Execution
+
+A non-monolithic compiled graph does not require tensor data to return to the
+CPU and does not require a model-specific persistent GPU scheduler. Partition
+outputs remain GPU-backed `X::Tensor` values and become bindings of downstream
+engines or custom CUDA operations.
+
+The C++ serving scheduler owns request admission, continuous-batch membership,
+KV page allocation, and dependency submission. CUDA streams and events enforce
+GPU data dependencies. Stable launch sequences may be captured as CUDA Graphs
+to reduce per-iteration CPU launch overhead:
+
+```text
+C++ request/continuous-batch scheduler
+  -> enqueue partition A on stream A
+  -> record CUDA event A-ready
+  -> stream B waits for A-ready
+  -> enqueue partition B or custom CUDA node
+  -> launch captured decode CUDA Graph when eligible
+```
+
+The CPU observes only compact scheduling state and selected output-token/status
+metadata. It must not read intermediate activations, copy partition tensors, or
+call `cudaDeviceSynchronize` in the normal path. A future persistent GPU
+scheduler is an optional measured optimization, not a requirement created by
+partitioning.
+
+For partitions submitted to the same CUDA stream, stream ordering is the
+dependency mechanism and no CUDA event is needed. An event is emitted only for
+a dependency crossing streams or devices. This keeps the single-stream decode
+path minimal while preserving an explicit DAG for concurrent vision, prefill,
+transfer, and decode work.
 
 ## Runtime Graph and Compiled Cache
 

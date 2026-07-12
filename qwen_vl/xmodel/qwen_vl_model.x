@@ -39,7 +39,11 @@ GARNET_MODEL_SPEC = {
 #   logits = tied lm_head / embed_tokens projection
 
 
-@T.fusion()
+@T.fusion(
+    name="qwen3_vl_model",
+    role="multimodal_prefill",
+    boundary="required"
+)
 def Qwen3VLModel(
     input_ids,
     pixel_values,

@@ -13,6 +13,7 @@
 #include <cuda_runtime.h>
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -22,8 +23,9 @@
 
 namespace
 {
-    constexpr const char* kGraphCacheMagic = "GARNET_RUNTIME_GRAPH_CACHE_V1";
-    constexpr const char* kRuntimeSchema = "compiled_xmodel_runtime_v4_vision_position_axis";
+    constexpr const char* kGraphCacheMagic = "GARNET_RUNTIME_GRAPH_CACHE_V2";
+    constexpr const char* kRuntimeSchema =
+        "compiled_xmodel_runtime_v12_keyword_tensor_dependencies";
 
     std::string ReadFile(const std::filesystem::path& path)
     {
@@ -56,6 +58,149 @@ namespace
             return X::Value(dictionary);
         }
         return X::Value();
+    }
+
+    std::string BuildExecutionPlanJson(
+        const std::vector<Garnet::CapturedFusionRegion>& regions,
+        const std::vector<Garnet::CapturedTensorOperation>& operations,
+        const std::vector<Garnet::EnginePartitionSpec>& enginePartitions,
+        const Garnet::FusionPartitionOptions& partitionOptions)
+    {
+        nlohmann::json plan = {
+            {"schema", "garnet_execution_plan_v8"},
+            {"control_plane", "cpu"},
+            {"tensor_plane", "gpu"},
+            {"synchronization", "cuda_stream_ordering"},
+            {"cross_partition_synchronization", "cuda_events_planned"},
+            {"intermediate_host_copies", false},
+            {"device_wide_synchronization", false},
+            {"partition_state", enginePartitions.size() > 1
+                ? "physical_engines_compiled"
+                : "operation_dag_partitioned"},
+            {"regions", nlohmann::json::array()},
+            {"operations", nlohmann::json::array()},
+            {"engine_partitions", nlohmann::json::array()},
+            {"partition_candidates", nlohmann::json::array()}
+        };
+        plan["planner_options"] = {
+            {"enable_preferred_boundaries", partitionOptions.enablePreferredBoundaries},
+            {"preferred_min_operations", partitionOptions.preferredMinOperations},
+            {"max_atomic_regions_per_partition", partitionOptions.maxAtomicRegionsPerPartition},
+            {"builder_workspace_bytes", partitionOptions.builderWorkspaceBytes}
+        };
+
+        int maxPartition = 0;
+        for (const auto& region : regions) {
+            int regionPartition = 0;
+            for (const auto& operation : operations) {
+                if (operation.regionId == region.id) {
+                    regionPartition = operation.candidatePartition;
+                    break;
+                }
+            }
+            nlohmann::json item = {
+                {"id", region.id},
+                {"parent_id", region.parentId},
+                {"depth", region.depth},
+                {"invocation", region.invocation},
+                {"operation_count", region.operationCount},
+                {"inclusive_operation_count", region.inclusiveOperationCount},
+                {"input_tensor_ids", region.inputTensorIds},
+                {"output_tensor_ids", region.outputTensorIds},
+                {"name", region.annotation.name},
+                {"function", region.annotation.functionName},
+                {"role", region.annotation.role},
+                {"boundary", region.annotation.boundary},
+                {"atomic", region.annotation.atomic},
+                {"cuda_graph", region.annotation.cudaGraph},
+                {"candidate_partition", regionPartition}
+            };
+            plan["regions"].push_back(item);
+            if (region.annotation.boundary != "none") {
+                plan["partition_candidates"].push_back({
+                    {"region_id", region.id},
+                    {"kind", region.annotation.boundary},
+                    {"candidate_partition", regionPartition}
+                });
+            }
+        }
+        for (const auto& operation : operations) {
+            maxPartition = std::max(maxPartition, operation.candidatePartition);
+            plan["operations"].push_back({
+                {"index", operation.index},
+                {"name", operation.name},
+                {"region_id", operation.regionId},
+                {"candidate_partition", operation.candidatePartition},
+                {"partition_reason", operation.partitionReason},
+                {"input_tensor_ids", operation.inputTensorIds},
+                {"output_tensor_id", operation.outputTensorId}
+            });
+        }
+        plan["candidate_partition_count"] = operations.empty() ? 0 : maxPartition + 1;
+        for (const auto& partition : enginePartitions) {
+            nlohmann::json partitionJson = {
+                {"id", partition.id},
+                {"engine_path", partition.enginePath},
+                {"inputs", nlohmann::json::array()},
+                {"outputs", nlohmann::json::array()}
+            };
+            for (const auto& binding : partition.inputs) {
+                partitionJson["inputs"].push_back({
+                    {"name", binding.name},
+                    {"tensor_id", binding.tensorId},
+                    {"request_input_index", binding.requestInputIndex}
+                });
+            }
+            for (const auto& binding : partition.outputs) {
+                partitionJson["outputs"].push_back({
+                    {"name", binding.name},
+                    {"tensor_id", binding.tensorId},
+                    {"terminal", binding.terminalOutput}
+                });
+            }
+            plan["engine_partitions"].push_back(std::move(partitionJson));
+        }
+        plan["execution_mode"] = enginePartitions.size() > 1
+            ? "partitioned_engines"
+            : "monolithic_engine";
+        return plan.dump();
+    }
+
+    bool ParseEnginePartitions(
+        const std::string& executionPlanJson,
+        std::vector<Garnet::EnginePartitionSpec>& partitions)
+    {
+        partitions.clear();
+        try {
+            const auto plan = nlohmann::json::parse(executionPlanJson);
+            if (!plan.contains("engine_partitions") ||
+                !plan["engine_partitions"].is_array()) return true;
+            for (const auto& partitionJson : plan["engine_partitions"]) {
+                Garnet::EnginePartitionSpec partition;
+                partition.id = partitionJson.at("id").get<int>();
+                partition.enginePath = partitionJson.at("engine_path").get<std::string>();
+                for (const auto& inputJson : partitionJson.at("inputs")) {
+                    Garnet::EnginePartitionBinding binding;
+                    binding.name = inputJson.at("name").get<std::string>();
+                    binding.tensorId = inputJson.at("tensor_id").get<unsigned long long>();
+                    binding.requestInputIndex = inputJson.at("request_input_index").get<int>();
+                    partition.inputs.push_back(std::move(binding));
+                }
+                for (const auto& outputJson : partitionJson.at("outputs")) {
+                    Garnet::EnginePartitionBinding binding;
+                    binding.name = outputJson.at("name").get<std::string>();
+                    binding.tensorId = outputJson.at("tensor_id").get<unsigned long long>();
+                    binding.terminalOutput = outputJson.at("terminal").get<bool>();
+                    partition.outputs.push_back(std::move(binding));
+                }
+                partitions.push_back(std::move(partition));
+            }
+            return true;
+        }
+        catch (const std::exception&) {
+            partitions.clear();
+            return false;
+        }
     }
 
     X::Value MakeCudaTensorFromHost(
@@ -171,7 +316,8 @@ namespace
         const std::string& weightsLocation,
         const std::string& entryFunction,
         const std::vector<std::vector<int>>& inputShapes,
-        const std::vector<std::string>& inputDataTypes)
+        const std::vector<std::string>& inputDataTypes,
+        const Garnet::FusionPartitionOptions& partitionOptions)
     {
         std::set<std::filesystem::path> dependencies;
         CollectXModelDependencies(rootPath, dependencies);
@@ -197,6 +343,14 @@ namespace
         for (const auto& dataType : inputDataTypes) {
             material << "dtype:" << dataType << '\n';
         }
+        material << "partition.enable_preferred:"
+                 << partitionOptions.enablePreferredBoundaries << '\n'
+                 << "partition.preferred_min_operations:"
+                 << partitionOptions.preferredMinOperations << '\n'
+                 << "partition.max_atomic_regions:"
+                 << partitionOptions.maxAtomicRegionsPerPartition << '\n'
+                 << "builder.workspace_bytes:"
+                 << partitionOptions.builderWorkspaceBytes << '\n';
         for (const auto& dependency : dependencies) {
             material << dependency.generic_string() << '\n';
             material << MD5(ReadFile(dependency)).hexdigest() << '\n';
@@ -277,26 +431,32 @@ namespace
     bool LoadGraphCache(
         const std::filesystem::path& cachePath,
         const std::string& fingerprint,
-        std::string& graphSummary)
+        std::string& graphSummary,
+        std::string& executionPlanJson)
     {
         std::ifstream stream(cachePath, std::ios::binary);
         std::string magic;
         std::string cachedFingerprint;
         std::string encodedSummary;
+        std::string encodedExecutionPlan;
         if (!std::getline(stream, magic) ||
             !std::getline(stream, cachedFingerprint) ||
             !std::getline(stream, encodedSummary) ||
+            !std::getline(stream, encodedExecutionPlan) ||
             magic != kGraphCacheMagic ||
             cachedFingerprint != fingerprint) {
             return false;
         }
-        return HexDecode(encodedSummary, graphSummary) && !graphSummary.empty();
+        return HexDecode(encodedSummary, graphSummary) && !graphSummary.empty() &&
+            HexDecode(encodedExecutionPlan, executionPlanJson) &&
+            !executionPlanJson.empty();
     }
 
     bool StoreGraphCache(
         const std::filesystem::path& cachePath,
         const std::string& fingerprint,
-        const std::string& graphSummary)
+        const std::string& graphSummary,
+        const std::string& executionPlanJson)
     {
         const auto temporaryPath = cachePath.string() + ".tmp";
         {
@@ -306,7 +466,8 @@ namespace
             }
             stream << kGraphCacheMagic << '\n'
                    << fingerprint << '\n'
-                   << HexEncode(graphSummary) << '\n';
+                   << HexEncode(graphSummary) << '\n'
+                   << HexEncode(executionPlanJson) << '\n';
             if (!stream.good()) {
                 return false;
             }
@@ -328,7 +489,8 @@ namespace Garnet
         const std::string& entryFunction,
         const std::string& frontend,
         const std::vector<std::vector<int>>& inputShapes,
-        const std::vector<std::string>& inputDataTypes)
+        const std::vector<std::string>& inputDataTypes,
+        const FusionPartitionOptions& partitionOptions)
     {
         std::lock_guard<std::mutex> guard(m_mutex);
         m_rootXModel = std::filesystem::absolute(rootXModel).lexically_normal().string();
@@ -337,9 +499,16 @@ namespace Garnet
         m_entryFunction = entryFunction.empty() ? "Qwen3VLModel" : entryFunction;
         m_frontend = frontend;
         m_inputShapes = inputShapes;
+        m_partitionOptions = partitionOptions;
         m_ready = false;
         m_loadedWeights.clear();
         m_loadedWeightBytes = 0;
+        m_enginePreparationMs = 0.0;
+        m_frontendPreparationMs = 0.0;
+        m_enginesPrepared = false;
+        m_frontendPrepared = false;
+        m_executionPlanJson.clear();
+        m_enginePartitions.clear();
         m_errorCode.clear();
         m_errorMessage.clear();
         m_diagnostics = {};
@@ -405,14 +574,19 @@ namespace Garnet
         const std::filesystem::path enginePath =
             std::filesystem::path(m_cacheDirectory) / "model.engine";
         m_enginePath = enginePath.string();
-        auto initializeDecodeRuntime = [&]() -> bool {
-            if (m_frontend != "qwen3_vl" || m_inputShapes.size() != 15) return true;
+        auto createDecodeRuntime = [&]()
+            -> std::pair<std::shared_ptr<CompiledModelRuntime>, std::string> {
+            if (m_frontend != "qwen3_vl" || m_inputShapes.size() != 15) {
+                return {nullptr, {}};
+            }
             const std::filesystem::path decodeModel = rootPath.parent_path() / "qwen_text_decode.x";
             std::vector<std::vector<int>> decodeShapes{
                 {1, 1}, {3, 1, 1}, m_inputShapes[11], m_inputShapes[12],
                 m_inputShapes[13], {1}, {1}};
             std::vector<std::string> decodeTypes{
                 "int64", "int64", "bfloat16", "bfloat16", "int32", "int32", "int32"};
+            FusionPartitionOptions decodePartitionOptions = m_partitionOptions;
+            decodePartitionOptions.builderWorkspaceBytes = 64ULL << 20;
             auto decodeRuntime = std::make_shared<CompiledModelRuntime>();
             if (!decodeRuntime->Initialize(
                     decodeModel.string(),
@@ -421,24 +595,75 @@ namespace Garnet
                     "Qwen3TextDecode",
                     "",
                     decodeShapes,
-                    decodeTypes)) {
+                    decodeTypes,
+                    decodePartitionOptions)) {
                 X::Dict decodeStatus(decodeRuntime->Status());
-                m_errorCode = "decode_runtime_initialization_failed";
-                m_errorMessage = decodeStatus["error_message"].ToString();
+                return {nullptr, decodeStatus["error_message"].ToString()};
+            }
+            return {std::move(decodeRuntime), {}};
+        };
+        auto prepareServingEngines = [&]() -> bool {
+            const auto start = std::chrono::steady_clock::now();
+            const bool needsDecodeRuntime =
+                m_frontend == "qwen3_vl" && m_inputShapes.size() == 15;
+            TRTBuilder builder;
+            std::string preparationError;
+            const bool prepared = m_enginePartitions.size() > 1
+                ? builder.PrepareCapturedPartitions(
+                    m_enginePartitions, &m_weightIndex, preparationError)
+                : builder.PrepareCapturedEngine(
+                    m_enginePath, &m_weightIndex, preparationError);
+            if (!prepared) {
+                m_errorCode = "engine_preparation_failed";
+                m_errorMessage = preparationError;
                 return false;
             }
-            m_decodeRuntime = std::move(decodeRuntime);
+            m_enginesPrepared = true;
+            std::pair<std::shared_ptr<CompiledModelRuntime>, std::string> decodeResult;
+            if (needsDecodeRuntime) decodeResult = createDecodeRuntime();
+            if (needsDecodeRuntime && !decodeResult.first) {
+                m_errorCode = "decode_runtime_initialization_failed";
+                m_errorMessage = decodeResult.second;
+                return false;
+            }
+            m_decodeRuntime = std::move(decodeResult.first);
+            m_enginePreparationMs = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - start).count();
+            if (m_frontend == "qwen3_vl") {
+                const auto frontendStart = std::chrono::steady_clock::now();
+                std::string tokenizerError;
+                if (!Tokenization::GetCachedQwenTokenizer(
+                        m_weightsLocation, &tokenizerError)) {
+                    m_errorCode = "frontend_preparation_failed";
+                    m_errorMessage = tokenizerError;
+                    return false;
+                }
+                m_frontendPreparationMs = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - frontendStart).count();
+                m_frontendPrepared = true;
+            }
             return true;
         };
         const std::string graphFingerprint = MakeGraphFingerprint(
-            rootPath, m_weightsLocation, m_entryFunction, inputShapes, inputDataTypes);
+            rootPath, m_weightsLocation, m_entryFunction, inputShapes,
+            inputDataTypes, m_partitionOptions);
         if (!inputShapes.empty() &&
-            LoadGraphCache(graphCachePath, graphFingerprint, m_graphSummary)) {
-            if (std::filesystem::is_regular_file(enginePath)) {
+            LoadGraphCache(
+                graphCachePath,
+                graphFingerprint,
+                m_graphSummary,
+                m_executionPlanJson)) {
+            bool partitionCacheValid = ParseEnginePartitions(
+                m_executionPlanJson, m_enginePartitions);
+            for (const auto& partition : m_enginePartitions) {
+                partitionCacheValid = partitionCacheValid &&
+                    std::filesystem::is_regular_file(partition.enginePath);
+            }
+            if (partitionCacheValid && std::filesystem::is_regular_file(enginePath)) {
                 ++m_diagnostics.graphCacheHits;
                 m_ready = true;
                 m_state = "engine_cache_loaded";
-                if (!initializeDecodeRuntime()) {
+                if (!prepareServingEngines()) {
                     m_ready = false;
                     m_state = "failed";
                     return false;
@@ -652,6 +877,12 @@ namespace Garnet
                     ScopedCompiledGraphCapture capture;
                     X::KWARGS captureKwargs;
                     m_graph = m_rootFunction.ObjCall(rootArguments, captureKwargs);
+                    if (!GetCompiledGraphCaptureError().empty()) {
+                        m_state = "failed";
+                        m_errorCode = "invalid_fusion_annotation";
+                        m_errorMessage = GetCompiledGraphCaptureError();
+                        return false;
+                    }
                 }
                 if (!m_graph.IsObject() || m_graph.GetObj()->GetType() != X::ObjType::TensorGraph) {
                     m_state = "failed";
@@ -660,30 +891,78 @@ namespace Garnet
                     return false;
                 }
                 m_graphSummary = m_graph.ToString();
-                if (!StoreGraphCache(graphCachePath, graphFingerprint, m_graphSummary)) {
+                TRTBuilder builder;
+                builder.SetCapturedWorkspaceBytes(
+                    m_partitionOptions.builderWorkspaceBytes);
+                std::vector<CapturedTensorOperation> analyzedOperations;
+                if (!builder.AnalyzeCapturedGraph(
+                        m_graph,
+                        m_rootFunction,
+                        rootArguments,
+                        analyzedOperations,
+                        m_errorMessage) ||
+                    !AssignCapturedFusionOperations(
+                        std::move(analyzedOperations),
+                        m_partitionOptions,
+                        m_errorMessage)) {
                     m_state = "failed";
-                    m_errorCode = "graph_cache_write_failed";
-                    m_errorMessage = "captured graph could not be stored atomically";
+                    m_errorCode = "graph_partition_analysis_failed";
                     return false;
                 }
-                TRTBuilder builder;
-                if (!builder.BuildCapturedGraph(
+                int partitionCount = 0;
+                for (const auto& operation : GetCapturedTensorOperations()) {
+                    partitionCount = std::max(
+                        partitionCount, operation.candidatePartition + 1);
+                }
+                m_executionPlanJson = BuildExecutionPlanJson(
+                    GetCapturedFusionRegions(),
+                    GetCapturedTensorOperations(),
+                    {},
+                    m_partitionOptions);
+                const bool built = partitionCount > 1
+                    ? builder.BuildCapturedPartitions(
                         m_graph,
                         m_rootFunction,
                         rootArguments,
                         symbolicInputs,
                         &m_weightIndex,
                         m_enginePath,
-                        m_errorMessage)) {
+                        GetCapturedTensorOperations(),
+                        m_enginePartitions,
+                        m_errorMessage)
+                    : builder.BuildCapturedGraph(
+                        m_graph,
+                        m_rootFunction,
+                        rootArguments,
+                        symbolicInputs,
+                        &m_weightIndex,
+                        m_enginePath,
+                        m_errorMessage);
+                if (!built) {
                     m_state = "failed";
                     m_errorCode = "generic_lowering_failed";
+                    return false;
+                }
+                m_executionPlanJson = BuildExecutionPlanJson(
+                    GetCapturedFusionRegions(),
+                    GetCapturedTensorOperations(),
+                    m_enginePartitions,
+                    m_partitionOptions);
+                if (!StoreGraphCache(
+                        graphCachePath,
+                        graphFingerprint,
+                        m_graphSummary,
+                        m_executionPlanJson)) {
+                    m_state = "failed";
+                    m_errorCode = "graph_cache_write_failed";
+                    m_errorMessage = "captured graph could not be stored atomically";
                     return false;
                 }
                 m_ready = true;
                 m_state = "compiled_engine_ready";
                 m_errorCode.clear();
                 m_errorMessage.clear();
-                if (!initializeDecodeRuntime()) {
+                if (!prepareServingEngines()) {
                     m_ready = false;
                     m_state = "failed";
                     return false;
@@ -711,12 +990,44 @@ namespace Garnet
         status->Set("entry_function", X::Value(m_entryFunction));
         status->Set("frontend", X::Value(m_frontend));
         status->Set("graph_summary", X::Value(m_graphSummary));
+        status->Set("scheduler", X::Value("cpu_control_gpu_execution"));
+        status->Set("execution_plan_json", X::Value(m_executionPlanJson));
+        try {
+            status->Set(
+                "execution_plan",
+                JsonToXValue(nlohmann::json::parse(m_executionPlanJson)));
+        }
+        catch (const std::exception&) {
+            status->Set("execution_plan", X::Value(X::ValueType::None));
+        }
         status->Set("engine_path", X::Value(m_enginePath));
+        status->Set(
+            "engine_partition_count",
+            X::Value(static_cast<long long>(
+                m_enginePartitions.empty() ? 1 : m_enginePartitions.size())));
+        X::Dict partitionOptions;
+        partitionOptions->Set(
+            "enable_preferred_boundaries",
+            X::Value(m_partitionOptions.enablePreferredBoundaries));
+        partitionOptions->Set(
+            "preferred_min_operations",
+            X::Value(m_partitionOptions.preferredMinOperations));
+        partitionOptions->Set(
+            "max_atomic_regions_per_partition",
+            X::Value(m_partitionOptions.maxAtomicRegionsPerPartition));
+        partitionOptions->Set(
+            "builder_workspace_bytes",
+            X::Value(m_partitionOptions.builderWorkspaceBytes));
+        status->Set("partition_options", partitionOptions);
         status->Set("weight_tensor_count", X::Value(static_cast<long long>(m_weightIndex.TensorCount())));
         status->Set("weight_tensor_bytes", X::Value(static_cast<long long>(m_weightIndex.TensorBytes())));
         status->Set("weight_index_error", X::Value(m_weightIndexError));
         status->Set("loaded_weight_count", X::Value(static_cast<long long>(m_loadedWeights.size())));
         status->Set("loaded_weight_bytes", X::Value(m_loadedWeightBytes));
+        status->Set("engines_prepared", X::Value(m_enginesPrepared));
+        status->Set("engine_prepare_ms", X::Value(m_enginePreparationMs));
+        status->Set("frontend_prepared", X::Value(m_frontendPrepared));
+        status->Set("frontend_prepare_ms", X::Value(m_frontendPreparationMs));
         status->Set("error_code", X::Value(m_errorCode));
         status->Set("error_message", X::Value(m_errorMessage));
 
@@ -773,11 +1084,17 @@ namespace Garnet
         }
         TRTBuilder builder;
         std::string executionError;
-        X::Value output = builder.RunCapturedEngine(
-            m_enginePath,
-            inputs,
-            &m_weightIndex,
-            executionError);
+        X::Value output = m_enginePartitions.size() > 1
+            ? builder.RunCapturedPartitions(
+                m_enginePartitions,
+                inputs,
+                &m_weightIndex,
+                executionError)
+            : builder.RunCapturedEngine(
+                m_enginePath,
+                inputs,
+                &m_weightIndex,
+                executionError);
         if (!output.IsTensor()) {
             result->Set("status", X::Value("error"));
             result->Set("error_code", X::Value("compiled_engine_execution_failed"));
