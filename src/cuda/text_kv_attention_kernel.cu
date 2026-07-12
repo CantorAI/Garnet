@@ -480,6 +480,145 @@ namespace
         keyPages[cacheOffset] = qkvRow[qWidth + kvHead * headDim + dimension];
         valuePages[cacheOffset] = qkvRow[qWidth + kvWidth + kvHead * headDim + dimension];
     }
+
+    __global__ void garnet_text_paged_kv_score_split_bf16_kernel(
+        const __nv_bfloat16* q,
+        const __nv_bfloat16* keyPages,
+        const int* pageTable,
+        const int* sequenceLengthDevice,
+        float* scores,
+        int maxSequenceLength,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim)
+    {
+        const int qHead = blockIdx.x;
+        const int position = blockIdx.y * blockDim.x + threadIdx.x;
+        const int sequenceLength = sequenceLengthDevice[0];
+        if (position >= sequenceLength || sequenceLength > maxSequenceLength) return;
+        const int kvHead = qHead / (qHeads / kvHeads);
+        scores[static_cast<size_t>(qHead) * maxSequenceLength + position] =
+            garnet_text_paged_kv_attention_score_bf16(
+                q, keyPages, pageTable, position, pageSize,
+                qHead, kvHead, kvHeads, headDim);
+    }
+
+    __global__ void garnet_text_paged_kv_softmax_split_bf16_kernel(
+        float* scores,
+        const int* sequenceLengthDevice,
+        int maxSequenceLength)
+    {
+        const int qHead = blockIdx.x;
+        const int tid = threadIdx.x;
+        const int sequenceLength = sequenceLengthDevice[0];
+        if (sequenceLength <= 0 || sequenceLength > maxSequenceLength) return;
+        float* row = scores + static_cast<size_t>(qHead) * maxSequenceLength;
+        extern __shared__ float reduction[];
+        float maxValue = -FLT_MAX;
+        for (int position = tid; position < sequenceLength; position += blockDim.x) {
+            maxValue = fmaxf(maxValue, row[position]);
+        }
+        reduction[tid] = maxValue;
+        __syncthreads();
+        for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+            if (tid < stride) reduction[tid] = fmaxf(reduction[tid], reduction[tid + stride]);
+            __syncthreads();
+        }
+        maxValue = reduction[0];
+        float sumValue = 0.0f;
+        for (int position = tid; position < sequenceLength; position += blockDim.x) {
+            const float weight = expf(row[position] - maxValue);
+            row[position] = weight;
+            sumValue += weight;
+        }
+        reduction[tid] = sumValue;
+        __syncthreads();
+        for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+            if (tid < stride) reduction[tid] += reduction[tid + stride];
+            __syncthreads();
+        }
+        const float inverseSum = 1.0f / reduction[0];
+        for (int position = tid; position < sequenceLength; position += blockDim.x) {
+            row[position] *= inverseSum;
+        }
+    }
+
+    __global__ void garnet_text_paged_kv_value_split_bf16_kernel(
+        const __nv_bfloat16* valuePages,
+        const int* pageTable,
+        const int* sequenceLengthDevice,
+        const float* scores,
+        __nv_bfloat16* output,
+        int maxSequenceLength,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim)
+    {
+        const int qHead = blockIdx.x;
+        const int dimension = threadIdx.x;
+        const int sequenceLength = sequenceLengthDevice[0];
+        if (dimension >= headDim || sequenceLength <= 0 || sequenceLength > maxSequenceLength) return;
+        const int kvHead = qHead / (qHeads / kvHeads);
+        const float* scoreRow = scores + static_cast<size_t>(qHead) * maxSequenceLength;
+        float value = 0.0f;
+        for (int position = 0; position < sequenceLength; ++position) {
+            const __nv_bfloat16* valueRow = garnet_paged_kv_row_bf16(
+                valuePages, pageTable, position, pageSize, kvHead, kvHeads, headDim);
+            value = fmaf(scoreRow[position], __bfloat162float(valueRow[dimension]), value);
+        }
+        output[static_cast<size_t>(qHead) * headDim + dimension] = __float2bfloat16(value);
+    }
+
+    __global__ void garnet_text_paged_kv_value_partials_bf16_kernel(
+        const __nv_bfloat16* valuePages,
+        const int* pageTable,
+        const int* sequenceLengthDevice,
+        const float* scores,
+        float* partials,
+        int maxSequenceLength,
+        int splitCount,
+        int positionsPerSplit,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim)
+    {
+        const int qHead = blockIdx.x;
+        const int split = blockIdx.y;
+        const int dimension = threadIdx.x;
+        if (dimension >= headDim) return;
+        const int sequenceLength = sequenceLengthDevice[0];
+        const int start = split * positionsPerSplit;
+        const int end = min(sequenceLength, start + positionsPerSplit);
+        const int kvHead = qHead / (qHeads / kvHeads);
+        const float* scoreRow = scores + static_cast<size_t>(qHead) * maxSequenceLength;
+        float value = 0.0f;
+        for (int position = start; position < end; ++position) {
+            const __nv_bfloat16* valueRow = garnet_paged_kv_row_bf16(
+                valuePages, pageTable, position, pageSize, kvHead, kvHeads, headDim);
+            value = fmaf(scoreRow[position], __bfloat162float(valueRow[dimension]), value);
+        }
+        partials[(static_cast<size_t>(qHead) * splitCount + split) * headDim + dimension] = value;
+    }
+
+    __global__ void garnet_text_paged_kv_value_reduce_bf16_kernel(
+        const float* partials,
+        __nv_bfloat16* output,
+        int splitCount,
+        int headDim)
+    {
+        const int qHead = blockIdx.x;
+        const int dimension = threadIdx.x;
+        if (dimension >= headDim) return;
+        float value = 0.0f;
+        const float* row = partials + static_cast<size_t>(qHead) * splitCount * headDim;
+        for (int split = 0; split < splitCount; ++split) {
+            value += row[static_cast<size_t>(split) * headDim + dimension];
+        }
+        output[static_cast<size_t>(qHead) * headDim + dimension] = __float2bfloat16(value);
+    }
 }
 
 extern "C" cudaError_t runTextPagedKVCachedAttentionBF16(
@@ -615,5 +754,80 @@ extern "C" cudaError_t runTextPagedKVDecodeBF16DeviceMetadata(
         reinterpret_cast<__nv_bfloat16*>(output),
         0, maxSequenceLength, pageSize,
         qHeads, kvHeads, headDim, contextLength);
+    return cudaGetLastError();
+}
+
+extern "C" cudaError_t runTextPagedKVDecodeSplitKBF16DeviceMetadata(
+    const bfloat16* qkv,
+    bfloat16* keyPages,
+    bfloat16* valuePages,
+    const int* pageTable,
+    const int* contextLength,
+    const int* slotPosition,
+    bfloat16* output,
+    float* scores,
+    float* valuePartials,
+    int maxSequenceLength,
+    int pageSize,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    int splitValue,
+    cudaStream_t stream)
+{
+    if (!qkv || !keyPages || !valuePages || !pageTable || !contextLength ||
+        !slotPosition || !output || !scores || !valuePartials || maxSequenceLength <= 0 || pageSize <= 0 ||
+        qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || qHeads % kvHeads != 0) {
+        return cudaErrorInvalidValue;
+    }
+    constexpr int writeThreads = 256;
+    const int writeElements = kvHeads * headDim;
+    garnet_text_paged_kv_write_bf16_kernel<<<
+        (writeElements + writeThreads - 1) / writeThreads, writeThreads, 0, stream>>>(
+        reinterpret_cast<const __nv_bfloat16*>(qkv),
+        reinterpret_cast<__nv_bfloat16*>(keyPages),
+        reinterpret_cast<__nv_bfloat16*>(valuePages),
+        pageTable, 1, 0, pageSize, qHeads, kvHeads, headDim, slotPosition);
+    cudaError_t status = cudaGetLastError();
+    if (status != cudaSuccess) return status;
+
+    constexpr int scoreThreads = 128;
+    const dim3 scoreGrid(qHeads, (maxSequenceLength + scoreThreads - 1) / scoreThreads);
+    garnet_text_paged_kv_score_split_bf16_kernel<<<scoreGrid, scoreThreads, 0, stream>>>(
+        reinterpret_cast<const __nv_bfloat16*>(qkv),
+        reinterpret_cast<const __nv_bfloat16*>(keyPages),
+        pageTable, contextLength, scores, maxSequenceLength,
+        pageSize, qHeads, kvHeads, headDim);
+    status = cudaGetLastError();
+    if (status != cudaSuccess) return status;
+
+    constexpr int softmaxThreads = 256;
+    garnet_text_paged_kv_softmax_split_bf16_kernel<<<
+        qHeads, softmaxThreads, softmaxThreads * sizeof(float), stream>>>(
+        scores, contextLength, maxSequenceLength);
+    status = cudaGetLastError();
+    if (status != cudaSuccess) return status;
+
+    const int valueThreads = 1 << static_cast<int>(ceilf(log2f(static_cast<float>(headDim))));
+    if (splitValue) {
+        constexpr int positionsPerSplit = 128;
+        const int splitCount = (maxSequenceLength + positionsPerSplit - 1) / positionsPerSplit;
+        garnet_text_paged_kv_value_partials_bf16_kernel<<<
+            dim3(qHeads, splitCount), valueThreads, 0, stream>>>(
+            reinterpret_cast<const __nv_bfloat16*>(valuePages), pageTable, contextLength,
+            scores, valuePartials, maxSequenceLength, splitCount, positionsPerSplit,
+            pageSize, qHeads, kvHeads, headDim);
+        status = cudaGetLastError();
+        if (status != cudaSuccess) return status;
+        garnet_text_paged_kv_value_reduce_bf16_kernel<<<qHeads, valueThreads, 0, stream>>>(
+            valuePartials, reinterpret_cast<__nv_bfloat16*>(output), splitCount, headDim);
+    }
+    else {
+        garnet_text_paged_kv_value_split_bf16_kernel<<<qHeads, valueThreads, 0, stream>>>(
+            reinterpret_cast<const __nv_bfloat16*>(valuePages),
+            pageTable, contextLength, scores,
+            reinterpret_cast<__nv_bfloat16*>(output),
+            maxSequenceLength, pageSize, qHeads, kvHeads, headDim);
+    }
     return cudaGetLastError();
 }

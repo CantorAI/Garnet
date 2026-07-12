@@ -149,6 +149,91 @@ namespace Garnet {
         std::unordered_map<std::string, std::shared_ptr<std::mutex>>
             g_trtEngineLoadMutexes;
         std::mutex g_trtProfileLogMutex;
+        std::mutex g_trtLayerProfileMutex;
+        std::unordered_set<std::string> g_profiledTRTEngines;
+
+        struct DecodeCudaGraphState {
+            cudaGraph_t graph = nullptr;
+            cudaGraphExec_t executable = nullptr;
+            std::vector<void*> bindingSignature;
+            bool warmed = false;
+        };
+
+        std::mutex g_decodeCudaGraphMutex;
+        std::unordered_map<std::string, DecodeCudaGraphState> g_decodeCudaGraphs;
+
+        bool EnqueueTRTWithOptionalCudaGraph(
+            const std::string& enginePath,
+            nvinfer1::IExecutionContext* context,
+            const std::vector<void*>& bindingSignature,
+            cudaStream_t stream)
+        {
+            const char* enabled = std::getenv("GARNET_DECODE_CUDA_GRAPH");
+            const bool useCudaGraph = !(enabled && enabled[0] == '0' && enabled[1] == '\0') &&
+                context->getProfiler() == nullptr &&
+                (enginePath.find("/decode/") != std::string::npos ||
+                 enginePath.find("\\decode\\") != std::string::npos);
+            if (!useCudaGraph) return context->enqueueV3(stream);
+
+            std::lock_guard<std::mutex> lock(g_decodeCudaGraphMutex);
+            DecodeCudaGraphState& state = g_decodeCudaGraphs[enginePath];
+            if (state.bindingSignature != bindingSignature) {
+                if (state.executable) cudaGraphExecDestroy(state.executable);
+                if (state.graph) cudaGraphDestroy(state.graph);
+                state = {};
+                state.bindingSignature = bindingSignature;
+            }
+            if (state.executable) {
+                return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
+            }
+            if (!state.warmed) {
+                state.warmed = true;
+                return context->enqueueV3(stream);
+            }
+
+            cudaError_t status = cudaStreamBeginCapture(stream, cudaStreamCaptureModeThreadLocal);
+            if (status != cudaSuccess) return context->enqueueV3(stream);
+            const bool enqueued = context->enqueueV3(stream);
+            status = cudaStreamEndCapture(stream, &state.graph);
+            if (!enqueued || status != cudaSuccess || !state.graph) {
+                if (state.graph) cudaGraphDestroy(state.graph);
+                state.graph = nullptr;
+                return context->enqueueV3(stream);
+            }
+            status = cudaGraphInstantiate(&state.executable, state.graph, 0);
+            if (status != cudaSuccess || !state.executable) {
+                cudaGraphDestroy(state.graph);
+                state.graph = nullptr;
+                state.executable = nullptr;
+                return context->enqueueV3(stream);
+            }
+            return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
+        }
+
+        class OneShotTRTLayerProfiler final : public nvinfer1::IProfiler {
+        public:
+            void reportLayerTime(const char* layerName, float milliseconds) noexcept override {
+                samples.emplace_back(layerName ? layerName : "", milliseconds);
+            }
+
+            void Write(const std::string& path, const std::string& enginePath) const {
+                std::ofstream output(path, std::ios::app);
+                output << "engine\tlayer\tmilliseconds\n";
+                for (const auto& sample : samples) {
+                    output << enginePath << '\t' << sample.first << '\t' << sample.second << '\n';
+                }
+            }
+
+        private:
+            std::vector<std::pair<std::string, float>> samples;
+        };
+
+        class DisabledTRTLayerProfiler final : public nvinfer1::IProfiler {
+        public:
+            void reportLayerTime(const char*, float) noexcept override {}
+        };
+
+        DisabledTRTLayerProfiler g_disabledTRTLayerProfiler;
 
         void WriteTRTProfileLog(const std::string& message) {
             const char* profileLogPath = std::getenv("GARNET_PARTITION_PROFILE_LOG");
@@ -3915,6 +4000,7 @@ namespace Garnet {
         }
         config->setMemoryPoolLimit(
             MemoryPoolType::kWORKSPACE, capturedWorkspaceBytes);
+        config->setBuilderOptimizationLevel(capturedOptimizationLevel);
         if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0) {
             config->setFlag(BuilderFlag::kREFIT_INDIVIDUAL);
             config->setFlag(BuilderFlag::kSTRIP_PLAN);
@@ -4278,6 +4364,7 @@ namespace Garnet {
         const std::string& enginePath,
         X::Value inputsValue,
         const SafeTensorsIndex* weightIndex,
+        X::Value reusableOutput,
         std::string& errorMessage) {
         if (!EnsurePagedKVDecodePluginRegistered()) {
             errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
@@ -4296,6 +4383,8 @@ namespace Garnet {
         }
 
         X::List inputs(inputsValue);
+        std::vector<void*> bindingSignature;
+        bindingSignature.reserve(static_cast<size_t>(inputs->Size()) + 1);
         for (long long index = 0; index < inputs->Size(); ++index) {
             X::Value inputValue = inputs->Get(index);
             if (!inputValue.IsTensor()) {
@@ -4321,6 +4410,7 @@ namespace Garnet {
                 errorMessage = "failed to bind TensorRT input " + name;
                 return X::Value();
             }
+            bindingSignature.push_back(devicePointer);
         }
 
         const Dims outputDimensions = cachedEngine->getTensorShape("output_0");
@@ -4356,27 +4446,67 @@ namespace Garnet {
             return X::Value();
         }
         const size_t outputBytes = outputCount * elementBytes;
-        if (cudaMalloc(&outputDevicePointer, outputBytes) != cudaSuccess) {
-            errorMessage = "failed to allocate TensorRT output on GPU";
-            return X::Value();
+        X::Value outputValue;
+        bool allocatedOutput = false;
+        if (reusableOutput.IsTensor()) {
+            X::Tensor candidate(reusableOutput);
+            bool shapeMatches = candidate->GetDimCount() == outputDimensions.nbDims;
+            for (int dimension = 0; shapeMatches && dimension < outputDimensions.nbDims; ++dimension) {
+                shapeMatches = candidate->GetDimSize(dimension) == outputDimensions.d[dimension];
+            }
+            if (shapeMatches && candidate->GetDataType() == xlangOutputDataType &&
+                TensorHelper::EnsureGPUMemory(candidate) == TensorOpStatus::Success) {
+                outputDevicePointer = TensorHelper::GetGPUMemory(candidate);
+                outputValue = reusableOutput;
+            }
         }
+        if (!outputDevicePointer) {
+            if (cudaMalloc(&outputDevicePointer, outputBytes) != cudaSuccess) {
+                errorMessage = "failed to allocate TensorRT output on GPU";
+                return X::Value();
+            }
+            allocatedOutput = true;
+        }
+        const char* layerProfilePath = std::getenv("GARNET_PROFILE_DECODE_LAYERS");
+        bool profileDecodeLayers = false;
+        if (layerProfilePath && *layerProfilePath &&
+            (enginePath.find("/decode/") != std::string::npos ||
+             enginePath.find("\\decode\\") != std::string::npos)) {
+            std::lock_guard<std::mutex> lock(g_trtLayerProfileMutex);
+            profileDecodeLayers = g_profiledTRTEngines.insert(enginePath).second;
+        }
+        OneShotTRTLayerProfiler layerProfiler;
+        if (profileDecodeLayers) {
+            cachedContext->setProfiler(&layerProfiler);
+            cachedContext->setEnqueueEmitsProfile(true);
+        }
+        bindingSignature.push_back(outputDevicePointer);
         if (!cachedContext->setTensorAddress("output_0", outputDevicePointer) ||
-            !cachedContext->enqueueV3(cudaStreamPerThread)) {
-            cudaFree(outputDevicePointer);
+            !EnqueueTRTWithOptionalCudaGraph(
+                enginePath, cachedContext, bindingSignature, cudaStreamPerThread)) {
+            if (profileDecodeLayers) cachedContext->setProfiler(&g_disabledTRTLayerProfiler);
+            if (allocatedOutput) cudaFree(outputDevicePointer);
             errorMessage = "TensorRT enqueueV3 failed";
             return X::Value();
         }
+        if (profileDecodeLayers) {
+            cachedContext->setProfiler(&g_disabledTRTLayerProfiler);
+            layerProfiler.Write(layerProfilePath, enginePath);
+        }
 
-        X::Tensor output(X::g_pXHost->CreateTensor());
-        output->SetDataType(xlangOutputDataType);
-        output->SetShape(outputShape);
-        if (TensorHelper::AttachGPUMemory(output, outputDevicePointer) != TensorOpStatus::Success) {
-            cudaFree(outputDevicePointer);
-            errorMessage = "failed to attach TensorRT output to X::Tensor";
-            return X::Value();
+        if (!outputValue.IsTensor()) {
+            X::Tensor output(X::g_pXHost->CreateTensor());
+            output->SetDataType(xlangOutputDataType);
+            output->SetShape(outputShape);
+            if (TensorHelper::AttachGPUMemory(output, outputDevicePointer) != TensorOpStatus::Success) {
+                cudaFree(outputDevicePointer);
+                errorMessage = "failed to attach TensorRT output to X::Tensor";
+                return X::Value();
+            }
+            outputValue = X::Value(output);
         }
         errorMessage.clear();
-        return X::Value(output);
+        return outputValue;
     }
 
     X::Value TRTBuilder::RunCapturedPartitions(

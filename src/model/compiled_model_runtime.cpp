@@ -25,7 +25,7 @@ namespace
 {
     constexpr const char* kGraphCacheMagic = "GARNET_RUNTIME_GRAPH_CACHE_V2";
     constexpr const char* kRuntimeSchema =
-        "compiled_xmodel_runtime_v17_fused_vision_attention";
+        "compiled_xmodel_runtime_v19_paged_kv_split_value_workspace";
 
     std::string ReadFile(const std::filesystem::path& path)
     {
@@ -86,7 +86,8 @@ namespace
             {"enable_preferred_boundaries", partitionOptions.enablePreferredBoundaries},
             {"preferred_min_operations", partitionOptions.preferredMinOperations},
             {"max_atomic_regions_per_partition", partitionOptions.maxAtomicRegionsPerPartition},
-            {"builder_workspace_bytes", partitionOptions.builderWorkspaceBytes}
+            {"builder_workspace_bytes", partitionOptions.builderWorkspaceBytes},
+            {"builder_optimization_level", partitionOptions.builderOptimizationLevel}
         };
 
         int maxPartition = 0;
@@ -354,7 +355,9 @@ namespace
                  << "partition.max_atomic_regions:"
                  << partitionOptions.maxAtomicRegionsPerPartition << '\n'
                  << "builder.workspace_bytes:"
-                 << partitionOptions.builderWorkspaceBytes << '\n';
+                 << partitionOptions.builderWorkspaceBytes << '\n'
+                 << "builder.optimization_level:"
+                 << partitionOptions.builderOptimizationLevel << '\n';
         for (const auto& dependency : dependencies) {
             material << dependency.generic_string() << '\n';
             material << MD5(ReadFile(dependency)).hexdigest() << '\n';
@@ -486,6 +489,12 @@ namespace
 
 namespace Garnet
 {
+    CompiledModelRuntime::~CompiledModelRuntime()
+    {
+        if (m_sampleTokenDevice) cudaFree(m_sampleTokenDevice);
+        if (m_sampleValueDevice) cudaFree(m_sampleValueDevice);
+    }
+
     bool CompiledModelRuntime::Initialize(
         const std::string& rootXModel,
         const std::string& cacheDirectory,
@@ -590,7 +599,22 @@ namespace Garnet
             std::vector<std::string> decodeTypes{
                 "int64", "int64", "bfloat16", "bfloat16", "int32", "int32", "int32"};
             FusionPartitionOptions decodePartitionOptions = m_partitionOptions;
-            decodePartitionOptions.builderWorkspaceBytes = 64ULL << 20;
+            const char* decodeWorkspaceMb = std::getenv("GARNET_DECODE_WORKSPACE_MB");
+            if (decodeWorkspaceMb && *decodeWorkspaceMb) {
+                char* end = nullptr;
+                const unsigned long long parsed = std::strtoull(decodeWorkspaceMb, &end, 10);
+                if (end != decodeWorkspaceMb && *end == '\0' && parsed > 0) {
+                    decodePartitionOptions.builderWorkspaceBytes = parsed << 20;
+                }
+            }
+            const char* decodeOptimizationLevel = std::getenv("GARNET_DECODE_OPTIMIZATION_LEVEL");
+            if (decodeOptimizationLevel && *decodeOptimizationLevel) {
+                char* end = nullptr;
+                const long parsed = std::strtol(decodeOptimizationLevel, &end, 10);
+                if (end != decodeOptimizationLevel && *end == '\0' && parsed >= 0 && parsed <= 5) {
+                    decodePartitionOptions.builderOptimizationLevel = static_cast<int>(parsed);
+                }
+            }
             auto decodeRuntime = std::make_shared<CompiledModelRuntime>();
             if (!decodeRuntime->Initialize(
                     decodeModel.string(),
@@ -898,6 +922,8 @@ namespace Garnet
                 TRTBuilder builder;
                 builder.SetCapturedWorkspaceBytes(
                     m_partitionOptions.builderWorkspaceBytes);
+                builder.SetCapturedOptimizationLevel(
+                    m_partitionOptions.builderOptimizationLevel);
                 std::vector<CapturedTensorOperation> analyzedOperations;
                 if (!builder.AnalyzeCapturedGraph(
                         m_graph,
@@ -1022,6 +1048,9 @@ namespace Garnet
         partitionOptions->Set(
             "builder_workspace_bytes",
             X::Value(m_partitionOptions.builderWorkspaceBytes));
+        partitionOptions->Set(
+            "builder_optimization_level",
+            X::Value(m_partitionOptions.builderOptimizationLevel));
         status->Set("partition_options", partitionOptions);
         status->Set("weight_tensor_count", X::Value(static_cast<long long>(m_weightIndex.TensorCount())));
         status->Set("weight_tensor_bytes", X::Value(static_cast<long long>(m_weightIndex.TensorBytes())));
@@ -1099,12 +1128,21 @@ namespace Garnet
                 m_enginePath,
                 inputs,
                 &m_weightIndex,
+                requestDict["reuse_output"].IsValid() &&
+                    requestDict["reuse_output"].ToLongLong() != 0
+                    ? m_reusableExecutionOutput
+                    : X::Value(),
                 executionError);
         if (!output.IsTensor()) {
             result->Set("status", X::Value("error"));
             result->Set("error_code", X::Value("compiled_engine_execution_failed"));
             result->Set("error_message", X::Value(executionError));
             return result;
+        }
+        if (requestDict["reuse_output"].IsValid() &&
+            requestDict["reuse_output"].ToLongLong() != 0 &&
+            !m_reusableExecutionOutput.IsTensor()) {
+            m_reusableExecutionOutput = output;
         }
         result->Set("status", X::Value("ok"));
         const int requestedNewTokens = requestDict["max_new_tokens"].IsValid()
@@ -1134,10 +1172,15 @@ namespace Garnet
                 result->Set("error_code", X::Value("compiled_sampling_row_invalid"));
                 return result;
             }
-            long long* deviceTokenId = nullptr;
-            float* deviceTokenValue = nullptr;
-            cudaError_t sampleStatus = cudaMalloc(&deviceTokenId, sizeof(long long));
-            if (sampleStatus == cudaSuccess) sampleStatus = cudaMalloc(&deviceTokenValue, sizeof(float));
+            cudaError_t sampleStatus = cudaSuccess;
+            if (!m_sampleTokenDevice) {
+                sampleStatus = cudaMalloc(&m_sampleTokenDevice, sizeof(long long));
+            }
+            if (sampleStatus == cudaSuccess && !m_sampleValueDevice) {
+                sampleStatus = cudaMalloc(&m_sampleValueDevice, sizeof(float));
+            }
+            auto* deviceTokenId = static_cast<long long*>(m_sampleTokenDevice);
+            auto* deviceTokenValue = static_cast<float*>(m_sampleValueDevice);
             const void* logitsDevice = TensorHelper::GetGPUMemory(logits);
             if (sampleStatus == cudaSuccess && logits->GetDataType() == X::TensorDataType::FLOAT32) {
                 sampleStatus = runLogitsTop1FP32(
@@ -1163,8 +1206,6 @@ namespace Garnet
                     &tokenValue, deviceTokenValue, sizeof(tokenValue), cudaMemcpyDeviceToHost, cudaStreamPerThread);
             }
             if (sampleStatus == cudaSuccess) sampleStatus = cudaStreamSynchronize(cudaStreamPerThread);
-            if (deviceTokenId) cudaFree(deviceTokenId);
-            if (deviceTokenValue) cudaFree(deviceTokenValue);
             if (sampleStatus != cudaSuccess) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_gpu_sampling_failed"));
@@ -1284,6 +1325,7 @@ namespace Garnet
                 X::Dict decodeRequest;
                 decodeRequest->Set("inputs", X::Value(decodeInputs));
                 decodeRequest->Set("sample", X::Value("greedy"));
+                decodeRequest->Set("reuse_output", X::Value(1));
                 X::Value decodeValue = m_decodeRuntime->Forward(decodeRequest);
                 if (!decodeValue.IsDict()) {
                     result->Set("status", X::Value("error"));

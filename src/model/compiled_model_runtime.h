@@ -57,8 +57,13 @@ namespace Garnet
         bool m_frontendPrepared = false;
         Diagnostics m_diagnostics;
         std::shared_ptr<CompiledModelRuntime> m_decodeRuntime;
+        void* m_sampleTokenDevice = nullptr;
+        void* m_sampleValueDevice = nullptr;
+        X::Value m_reusableExecutionOutput;
 
     public:
+        ~CompiledModelRuntime();
+
         bool Initialize(
             const std::string& rootXModel,
             const std::string& cacheDirectory,

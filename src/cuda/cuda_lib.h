@@ -248,6 +248,24 @@ extern "C" {
         int headDim,
         cudaStream_t stream = 0);
 
+    cudaError_t runTextPagedKVDecodeSplitKBF16DeviceMetadata(
+        const bfloat16* qkv,
+        bfloat16* keyPages,
+        bfloat16* valuePages,
+        const int* pageTable,
+        const int* contextLength,
+        const int* slotPosition,
+        bfloat16* output,
+        float* scores,
+        float* valuePartials,
+        int maxSequenceLength,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        int splitValue,
+        cudaStream_t stream = 0);
+
     // Row-major linear layer: output[M, N] = input[M, K] * weight[N, K]^T + bias[N].
     cudaError_t runLinearBiasTransposeFP32(
         const float* input,

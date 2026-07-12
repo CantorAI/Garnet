@@ -48,6 +48,7 @@ namespace Garnet
         int preferredMinOperations = 32;
         int maxAtomicRegionsPerPartition = 0;
         unsigned long long builderWorkspaceBytes = 64ULL << 20;
+        int builderOptimizationLevel = 3;
     };
 
     bool IsCompiledGraphCaptureActive();

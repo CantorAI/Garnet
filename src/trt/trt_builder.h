@@ -44,6 +44,9 @@ namespace Garnet {
         void SetCapturedWorkspaceBytes(unsigned long long bytes) {
             capturedWorkspaceBytes = bytes;
         }
+        void SetCapturedOptimizationLevel(int level) {
+            capturedOptimizationLevel = level;
+        }
 
         X::Value ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape);
         X::Value RunMatmulEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue);
@@ -106,6 +109,7 @@ namespace Garnet {
             const std::string& enginePath,
             X::Value inputs,
             const SafeTensorsIndex* weightIndex,
+            X::Value reusableOutput,
             std::string& errorMessage);
         X::Value RunCapturedPartitions(
             const std::vector<EnginePartitionSpec>& partitions,
@@ -126,6 +130,7 @@ namespace Garnet {
 
         std::unordered_map<unsigned long long, nvinfer1::ITensor*> tensorMap;
         unsigned long long capturedWorkspaceBytes = 64ULL << 20;
+        int capturedOptimizationLevel = 3;
         std::unordered_map<std::string, nvinfer1::ITensor*> weightTensorMap;
         std::deque<float> scalarWeights;
         std::deque<unsigned short> bfloat16ScalarWeights;

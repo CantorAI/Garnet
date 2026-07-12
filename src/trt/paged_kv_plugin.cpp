@@ -89,9 +89,21 @@ namespace Garnet
     }
 
     size_t PagedKVDecodePlugin::getWorkspaceSize(
-        const PluginTensorDesc*, int, const PluginTensorDesc*, int) const noexcept
+        const PluginTensorDesc* inputs, int inputCount, const PluginTensorDesc*, int) const noexcept
     {
-        return 0;
+        if (!inputs || inputCount <= 3) return 0;
+        int logicalPages = 1;
+        const Dims& pageTableDimensions = inputs[3].dims;
+        for (int index = 0; index < pageTableDimensions.nbDims; ++index) {
+            if (pageTableDimensions.d[index] <= 0) return 0;
+            logicalPages *= pageTableDimensions.d[index];
+        }
+        const int maxSequenceLength = logicalPages * m_pageSize;
+        constexpr int positionsPerSplit = 128;
+        const int splitCount = (maxSequenceLength + positionsPerSplit - 1) / positionsPerSplit;
+        const size_t scoreBytes = static_cast<size_t>(m_qHeads) * maxSequenceLength * sizeof(float);
+        const size_t partialBytes = static_cast<size_t>(m_qHeads) * splitCount * m_headDim * sizeof(float);
+        return scoreBytes + partialBytes;
     }
 
     int PagedKVDecodePlugin::enqueue(
@@ -99,7 +111,7 @@ namespace Garnet
         const PluginTensorDesc*,
         const void* const* inputs,
         void* const* outputs,
-        void*,
+        void* workspace,
         cudaStream_t stream) noexcept
     {
         const auto layerPointer = [&](const void* pointer, int inputIndex) -> bfloat16* {
@@ -127,7 +139,21 @@ namespace Garnet
             }
             maxSequenceLength = logicalPages * m_pageSize;
         }
-        const cudaError_t status = runTextPagedKVDecodeBF16DeviceMetadata(
+        const char* splitK = std::getenv("GARNET_PAGED_KV_SPLIT_K");
+        const bool useSplitK = !(splitK && splitK[0] == '0' && splitK[1] == '\0');
+        const char* splitValue = std::getenv("GARNET_PAGED_KV_SPLIT_VALUE");
+        const bool useSplitValue = !(splitValue && splitValue[0] == '0' && splitValue[1] == '\0');
+        float* scoreWorkspace = static_cast<float*>(workspace);
+        float* valuePartialWorkspace = scoreWorkspace +
+            static_cast<size_t>(m_qHeads) * maxSequenceLength;
+        const cudaError_t status = useSplitK
+            ? runTextPagedKVDecodeSplitKBF16DeviceMetadata(
+                static_cast<const bfloat16*>(inputs[0]), keyPages, valuePages,
+                static_cast<const int*>(inputs[3]), static_cast<const int*>(inputs[4]),
+                static_cast<const int*>(inputs[5]), static_cast<bfloat16*>(outputs[0]),
+                scoreWorkspace, valuePartialWorkspace, maxSequenceLength, m_pageSize,
+                m_qHeads, m_kvHeads, m_headDim, useSplitValue ? 1 : 0, stream)
+            : runTextPagedKVDecodeBF16DeviceMetadata(
             static_cast<const bfloat16*>(inputs[0]),
             keyPages,
             valuePages,

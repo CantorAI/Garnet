@@ -3037,6 +3037,11 @@ namespace Garnet
                         (std::max)(64LL, workspaceMb.ToLongLong()));
                     compiledPartitionOptions.builderWorkspaceBytes = megabytes << 20;
                 }
+                X::Value optimizationLevel = compileOptions["builder_optimization_level"];
+                if (optimizationLevel.IsValid()) {
+                    compiledPartitionOptions.builderOptimizationLevel = (std::max)(
+                        0, (std::min)(5, static_cast<int>(optimizationLevel.ToLongLong())));
+                }
                 X::Value partitionValue = compileOptions["partition"];
                 if (partitionValue.IsDict()) {
                     X::Dict partition(partitionValue);
