@@ -33,27 +33,35 @@ namespace Garnet
     }
 
     PagedKVDecodePlugin::PagedKVDecodePlugin(
-        int pageSize, int qHeads, int kvHeads, int headDim, int layerIndex)
+        int pageSize, int qHeads, int kvHeads, int headDim, int layerIndex,
+        bool useActiveMask)
         : m_pageSize(pageSize), m_qHeads(qHeads), m_kvHeads(kvHeads),
-          m_headDim(headDim), m_layerIndex(layerIndex)
+          m_headDim(headDim), m_layerIndex(layerIndex),
+          m_useActiveMask(useActiveMask)
     {
     }
 
     PagedKVDecodePlugin::PagedKVDecodePlugin(const void* data, size_t length)
     {
-        if (length != getSerializationSize()) return;
+        if (length != sizeof(int) * 5 && length != sizeof(int) * 6) return;
         const char* source = static_cast<const char*>(data);
         Read(source, m_pageSize);
         Read(source, m_qHeads);
         Read(source, m_kvHeads);
         Read(source, m_headDim);
         Read(source, m_layerIndex);
+        if (length == sizeof(int) * 6) {
+            int useActiveMask = 0;
+            Read(source, useActiveMask);
+            m_useActiveMask = useActiveMask != 0;
+        }
     }
 
     IPluginV2DynamicExt* PagedKVDecodePlugin::clone() const noexcept
     {
         auto* plugin = new PagedKVDecodePlugin(
-            m_pageSize, m_qHeads, m_kvHeads, m_headDim, m_layerIndex);
+            m_pageSize, m_qHeads, m_kvHeads, m_headDim, m_layerIndex,
+            m_useActiveMask);
         plugin->setPluginNamespace(m_namespace.c_str());
         return plugin;
     }
@@ -65,7 +73,10 @@ namespace Garnet
         IExprBuilder& expressionBuilder) noexcept
     {
         DimsExprs output = inputs[0];
-        if (outputIndex != 0 || nbInputs != 6 || output.nbDims <= 0) return output;
+        const int expectedInputs = m_useActiveMask ? 7 : 6;
+        if (outputIndex != 0 || nbInputs != expectedInputs || output.nbDims <= 0) {
+            return output;
+        }
         output.d[output.nbDims - 1] = expressionBuilder.constant(m_qHeads * m_headDim);
         return output;
     }
@@ -76,9 +87,11 @@ namespace Garnet
         int nbInputs,
         int nbOutputs) noexcept
     {
-        if (nbInputs != 6 || nbOutputs != 1 || position < 0 || position >= 7) return false;
+        const int expectedInputs = m_useActiveMask ? 7 : 6;
+        if (nbInputs != expectedInputs || nbOutputs != 1 ||
+            position < 0 || position >= expectedInputs + 1) return false;
         const bool linear = inOut[position].format == TensorFormat::kLINEAR;
-        return linear && ((position <= 2 || position == 6)
+        return linear && ((position <= 2 || position == expectedInputs)
             ? inOut[position].type == DataType::kBF16
             : inOut[position].type == DataType::kINT32);
     }
@@ -161,7 +174,16 @@ namespace Garnet
         float* valuePartialWorkspace = scoreWorkspace +
             static_cast<size_t>(batchSize) * m_qHeads * maxSequenceLength;
         cudaError_t status = cudaSuccess;
-        if (useFlash) {
+        if (useFlash && m_useActiveMask) {
+            status = runTextPagedKVDecodeFlashMaskedBF16DeviceMetadata(
+                static_cast<const bfloat16*>(inputs[0]), keyPages, valuePages,
+                static_cast<const int*>(inputs[3]), static_cast<const int*>(inputs[4]),
+                static_cast<const int*>(inputs[5]), static_cast<const int*>(inputs[6]),
+                static_cast<bfloat16*>(outputs[0]), scoreWorkspace,
+                valuePartialWorkspace, batchSize, maxSequenceLength,
+                m_pageSize, m_qHeads, m_kvHeads, m_headDim, stream);
+        }
+        else if (useFlash) {
             status = runTextPagedKVDecodeFlashBF16DeviceMetadata(
                 static_cast<const bfloat16*>(inputs[0]), keyPages, valuePages,
                 static_cast<const int*>(inputs[3]), static_cast<const int*>(inputs[4]),
@@ -201,7 +223,10 @@ namespace Garnet
     int PagedKVDecodePlugin::getNbOutputs() const noexcept { return 1; }
     int PagedKVDecodePlugin::initialize() noexcept { return 0; }
     void PagedKVDecodePlugin::terminate() noexcept {}
-    size_t PagedKVDecodePlugin::getSerializationSize() const noexcept { return sizeof(int) * 5; }
+    size_t PagedKVDecodePlugin::getSerializationSize() const noexcept
+    {
+        return sizeof(int) * (m_useActiveMask ? 6 : 5);
+    }
 
     void PagedKVDecodePlugin::serialize(void* buffer) const noexcept
     {
@@ -211,6 +236,7 @@ namespace Garnet
         Write(destination, m_kvHeads);
         Write(destination, m_headDim);
         Write(destination, m_layerIndex);
+        if (m_useActiveMask) Write(destination, 1);
     }
 
     void PagedKVDecodePlugin::destroy() noexcept { delete this; }

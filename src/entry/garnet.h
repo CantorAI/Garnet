@@ -162,6 +162,7 @@ namespace Garnet
 			APISET().AddVarFunc("tensor_to_bfloat16", &GarnetAPI::TensorToBFloat16);
 			APISET().AddVarFunc("tensor_from_bfloat16_bits", &GarnetAPI::TensorFromBFloat16Bits);
 			APISET().AddVarFunc("tensor_from_host", &GarnetAPI::TensorFromHost);
+			APISET().AddVarFunc("tensor_update_from_host", &GarnetAPI::TensorUpdateFromHost);
 			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
 			APISET().AddVarFunc("serve_model", &GarnetAPI::ServeModel);
 			APISET().AddVarFunc("serve_status_json", &GarnetAPI::ServeStatusJson);
@@ -242,6 +243,8 @@ namespace Garnet
 		void TensorFromBFloat16Bits(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void TensorFromHost(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void TensorUpdateFromHost(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void TensorToCPU(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

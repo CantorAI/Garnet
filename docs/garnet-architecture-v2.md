@@ -1,346 +1,168 @@
-# Garnet Architecture V2
+# Garnet Multi-Backend Architecture
 
-## Purpose
+## Contract
 
-Garnet V2 is a cross-platform VLM/LLM serving and compilation runtime.
-
-The core idea is:
+Garnet uses the xlang tensor-expression graph as its single model IR:
 
 ```text
-model is written once as xlang tensor expression
-  -> TensorExpression captures ops and control flow
-  -> TensorGraph schedules the graph
-  -> backend handlers lower the graph to JIT CUDA, TensorRT, custom kernels, or debug/workbench traces
+xModel .x source
+  -> xlang tensor-expression capture
+  -> TensorGraph
+  -> validation and partitioning
+  -> selected backend lowering
+  -> compiled executable
 ```
 
-Qwen3-VL is the first serious target, but the architecture is model-agnostic.
-
-## Architecture Diagram
-
-![Garnet Architecture V2](images/garnet-architecture-v2.svg)
-
-## Layer Overview
-
-### 1. Model Source Layer
-
-Model architecture is described in `.x` files:
-
-```text
-qwen_vl/xmodel/qwen_vl_model.x
-qwen_vl/xmodel/vision_encoder.x
-qwen_vl/xmodel/vl_adapter.x
-qwen_vl/xmodel/qwen_llm.x
-```
-
-These files should express the real model forward path:
-
-- vision encoder
-- visual-language adapter
-- text embedding
-- visual/text merge
-- decoder blocks
-- attention
-- MLP
-- logits
-
-The `.x` model file is not only documentation. It is the source program Garnet compiles.
-
-### 2. Metadata Layer
-
-The xlang model expression is combined with:
-
-- `config.json`
-- tokenizer and processor metadata
-- safetensors/bin weight index
-- runtime input shapes
-- backend selection
-
-This metadata fills layer counts, hidden sizes, head counts, visual token rules, weight shapes, dtype, and execution policy.
-
-### 3. Tensor Expression Layer
-
-The xlang host records tensor expressions instead of immediately executing model ops.
-
-Example:
+Model source describes a model, not a runtime. A model must not call
+`set_backend`. The host selects the backend when it compiles or loads the
+model:
 
 ```python
-output = a * T.binary_op("trt_matmul") * weights["W"]
+model = garnet.load_model(
+    "xModel/qwen3/vl_2b_instruct/qwen_text_decode_batch.x",
+    runtime_mode="compiled_xmodel",
+    backend="tensorrt",
+)
 ```
 
-This becomes a tensor-expression node:
+TensorRT is the first backend. Other backends implement the same lowering
+contract; they do not require a second model graph.
+
+## Source Layout
 
 ```text
-binary_op("trt_matmul", a, weights["W"])
+src/
+  core/                         backend-neutral lowering context
+  tensor/                       TensorGraph capture/replay bridge
+  model/                        model loading and compiled runtime
+  runtime/
+    scheduler/                  continuous batching policy
+    kv/                         global paged GPU KV pool
+    executor/                   persistent scheduler-to-graph bindings
+  backends/
+    tensorrt/                   TensorRT lowering and plugins
+  cuda/                         optimized semantic CUDA operations
+  tokenizer/                    native tokenization
+  image/                        native vision preprocessing
+  entry/                        public xlang package boundary
+
+xModel/
+  qwen3/
+    vl_2b_instruct/              Qwen3-VL-2B-Instruct model programs
 ```
 
-Loops and branches are also part of the model program:
+There is no permanent legacy or direct CUDA-source-generation tree.
+
+## Tensor Frontend
+
+`GarnetTensor` is deliberately small. It records and replays only generic
+unary and binary operations plus TensorGraph structure. It does not own a
+TensorRT builder, execute eager model kernels, or generate CUDA source.
+
+Model programs use semantic operation names:
 
 ```python
-for i in range(config.num_hidden_layers):
-    hidden = decoder_layer(hidden, weights, i)
-
-if config.use_moe:
-    hidden = moe_layer(hidden)
-else:
-    hidden = dense_mlp(hidden)
+qkv = x * T.unary_op("qwen3_text_qkv_packed", ...)
+state = qkv * T.binary_op("paged_kv_bind_key_pages") * key_pages
+attention = state * T.unary_op("paged_kv_decode_masked_bf16", ...)
 ```
 
-Compile-time branches should be folded during graph build. Runtime branches must be preserved or lowered to custom backend ops.
+The selected lowerer must either map each operation to an executable backend
+implementation or fail compilation explicitly. Silent fallback is forbidden.
 
-### 4. TensorGraph Layer
+## Tensor and Device Memory
 
-`TensorGraph` turns the expression tree into scheduled graph items:
+The xlang `Tensor` is the cross-runtime data ABI. It carries:
 
-- tensor ops
-- structural ops
-- `Header`
-- `Trailer`
-- `BranchBegin`
-- `BranchEnd`
-- tensor cache entries
-- generated code fragments
+- shape and data type;
+- CPU or device type;
+- data pointer;
+- device context and device operations;
+- optional descriptor metadata.
 
-This is the common IR-like layer for backend lowering.
+Backend boundaries exchange tensors, not backend-owned public buffer types.
+Paged KV arenas remain allocated for the lifetime of the serving pool. Request
+page tables map logical pages to those physical GPU pages; changing a batch
+never copies the KV contents.
 
-### 5. Backend Handler Layer
+## TensorRT Backend
 
-The same TensorGraph can be interpreted by different handlers.
+TensorRT lowering lives entirely under `src/backends/tensorrt`.
 
-#### JIT CUDA Handler
+Standard dense operations become TensorRT layers. Scheduler-sensitive
+operations such as paged attention become TensorRT plugins backed by optimized
+CUDA kernels. This still produces one compiled TensorRT execution graph; the
+model source does not directly launch the kernels.
 
-The original Garnet path:
+Graph annotations such as `cuda_graph=True` are captured in the execution plan
+and passed explicitly to the runtime. Optimization behavior must not depend on
+file or cache-directory names.
+
+## Continuous Batching
+
+The scheduler is backend-neutral. Each scheduling tick produces tensor-ready
+batch plans:
+
+- request IDs and token IDs;
+- context lengths and KV write slots;
+- logical-to-physical page tables;
+- a fixed bucket size;
+- an active-row mask.
+
+Decode uses fixed B1/B2/B4/B8 profiles. Inactive rows are masked inside the
+paged-attention plugin and cannot write or read KV pages. Fixed buffer
+addresses permit CUDA-graph replay. Requests may join or leave at every token
+without rebuilding or moving the global KV pool.
+
+The compiled decode executor converts those plans into persistent xlang GPU
+tensors. KV arenas are borrowed tensor bindings owned by the global pool;
+metadata and output buffers are owned by the bucket executor. It invokes the
+generic compiled runtime, not TensorRT APIs, so the scheduling layer remains
+independent of the selected backend.
+
+Prefill and decode are separate graph entrypoints. Decode receives priority;
+prefill is admitted under a token budget so it cannot create unbounded
+inter-token latency.
+
+## Model Organization
+
+Model-specific graph programs belong below `xModel`, not in the generic
+runtime:
 
 ```text
-TensorGraph
-  -> GarnetTensor op handlers
-  -> CUDA C++ code string
-  -> NVRTC
-  -> PTX / CUmodule / CUfunction
-  -> kernel launch
+xModel/qwen3/vl_2b_instruct/
+  qwen_vl_model.x
+  qwen_vl_prefill.x
+  vision_encoder.x
+  vl_adapter.x
+  qwen_llm.x
+  qwen_text_prefill.x
+  qwen_text_decode.x
+  qwen_text_decode_batch.x
 ```
 
-#### TensorRT Handler
+Reusable runtime mechanisms—scheduling, memory allocation, lowering,
+execution, sampling, and probes—remain model-neutral C++ code.
 
-The TensorRT branch introduces an open-op lowering path:
+## Validation and Debugging
 
-```text
-T.binary_op("trt_matmul")
-  -> GarnetTensor::BinaryOp
-  -> ITRTContext::HandleBinaryOp
-  -> TRTBuilder
-  -> TensorRT network layer / plugin / engine
-```
+Correctness is checked at the Garnet boundary:
 
-This keeps the frontend unified while allowing TensorRT-specific lowering.
+- graph capture and explicit unsupported-op failure;
+- backend engine construction and cache invalidation;
+- native safetensors loading;
+- paged KV write/read and inactive-row preservation;
+- end-to-end model output;
+- debug probes for selected shapes, statistics, and tensor snapshots.
 
-#### Custom Kernel Handler
+PyTorch/Hugging Face may be used to establish an external reference, but
+production code and the permanent test architecture do not pair every Garnet
+operator with a PyTorch implementation.
 
-Dynamic serving operations can stay in Garnet:
+## First Production Target
 
-- RoPE / MRoPE
-- paged KV write
-- paged attention
-- FlashAttention integration
-- sampling
-- cache block copy
-- tensor stats/snapshot kernels
-
-#### Debug / Workbench Handler
-
-The Workbench backend can consume the same graph to emit:
-
-- architecture graph
-- tensor graph
-- backend partition graph
-- shapes
-- op metadata
-- missing-op status
-- runtime trace hooks
-
-### 6. Runtime Serving Layer
-
-The serving runtime manages:
-
-- OpenAI-compatible API
-- local C++ API
-- tokenizer and image/video preprocessing
-- request lifecycle
-- continuous batching
-- fresh-frame scheduling
-- prefill/decode scheduling
-- paged KV cache
-- multimodal cache when reuse exists
-- CUDA streams and events
-- metrics and tracing
-
-For world-sense VLM serving, the scheduler must support frame freshness:
-
-```text
-latest frame is often more valuable than every frame
-```
-
-So Garnet should support frame admission, frame dropping, and visual-token budgeting.
-
-### 7. Workbench Layer
-
-Garnet Workbench is a companion web tool.
-
-It should visualize:
-
-- model architecture
-- expanded TensorGraph
-- backend partitions
-- prompt/media layout
-- cacheable system prefix
-- image-dependent visual span
-- KV cache block table
-- scheduler state
-- tensor stats
-- GPU snapshots
-- layer-by-layer diff against HF/vLLM
-
-This is important because model adapter bugs are usually hidden inside intermediate tensors.
-
-## Backend Partitioning
-
-For Qwen3-VL, the V2 direction is a hybrid backend:
-
-```text
-TensorRT:
-  dense static math
-  matmul
-  MLP
-  some norm/projection blocks
-
-Garnet custom CUDA:
-  RoPE / MRoPE
-  paged KV cache
-  flash/paged attention
-  sampling
-  scheduler-sensitive kernels
-
-Workbench/debug:
-  trace
-  snapshot
-  shape inspection
-  backend status
-```
-
-This avoids treating TensorRT as a black box while still using it for the parts it does well.
-
-## Open Ops
-
-Open ops allow xlang source to name operations without hardcoding every backend path into the frontend:
-
-```python
-x = x * T.binary_op("trt_matmul") * w
-x = x * T.unary_op("rms_norm")
-x = x * T.unary_op("rope")
-```
-
-The backend registry decides:
-
-```text
-mapped to TensorRT layer
-mapped to TensorRT plugin
-mapped to Garnet CUDA kernel
-mapped to JIT-generated CUDA
-unsupported
-debug-only
-```
-
-Workbench should show this mapping explicitly.
-
-## Control Flow
-
-Garnet should distinguish:
-
-```text
-compile-time control flow:
-  config/model architecture decisions
-  should be folded during graph construction
-
-runtime control flow:
-  depends on request/tensor values
-  must be lowered to backend-supported branch, custom op, or scheduler decision
-```
-
-Examples:
-
-```text
-config says dense model:
-  omit MoE graph
-
-config says MoE model:
-  include MoE graph
-
-runtime expert routing:
-  lower to topk/grouped-gemm/scatter custom ops, not many naive if statements
-```
-
-## Debug And Snapshot Path
-
-Debug must be optional and low overhead when disabled.
-
-Modes:
-
-```text
-off:
-  no debug work
-
-shape:
-  tensor name, shape, dtype, device
-
-stats:
-  min/max/mean/std/nan/inf via small GPU reduction
-
-sample:
-  selected tensor values copied to CPU
-
-snapshot:
-  selected full tensor copied to CPU
-
-compare:
-  compare with HF/vLLM/reference trace
-```
-
-Runtime emits JSONL traces and optional tensor snapshot files. Workbench renders them on top of the graph.
-
-## V2 Build Order
-
-1. Define model graph and debug JSON schemas.
-2. Make `.x` model files expose explicit forward functions.
-3. Add Workbench static graph viewer for `.x`/metadata.
-4. Implement backend mapping status reporting.
-5. Complete first `HandleBinaryOp("trt_matmul")` TensorRT lowering.
-6. Add runtime trace events from TensorGraph execution.
-7. Add KV cache visualization.
-8. Add fresh-frame benchmark timeline.
-9. Add selected GPU tensor snapshots.
-10. Add Garnet vs HF/vLLM layer diff.
-
-## Current Branch Status
-
-Implemented or sketched:
-
-- Qwen VL `.x` model sketches
-- TensorRT builder skeleton
-- `ITRTContext`
-- `HandleBinaryOp`
-- `HandleUnaryOp`
-- `T.binary_op`
-- `T.unary_op`
-- TensorRT CMake wiring
-- design docs and tests
-
-Incomplete:
-
-- real backend state from `T.set_backend`
-- model script convention for forward/build entry point
-- TensorRT ITensor mapping
-- TensorRT layer creation
-- engine wrapper and execution
-- paged KV manager
-- attention backend
-- Workbench graph/trace schema
-- GPU snapshot path
+The first optimized target is Qwen3-VL-2B-Instruct on TensorRT with BF16,
+batched decode, continuous scheduling, paged KV cache, GPU sampling, and
+CUDA-graph-capable fixed bucket execution. Qwen3-1.7B text-only should reuse
+the same runtime after its separate model graph and checkpoint mapping are
+validated.

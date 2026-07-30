@@ -5,10 +5,10 @@ const path = require("path");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const defaultInputs = [
-  "qwen_vl/xmodel/qwen_vl_model.x",
-  "qwen_vl/xmodel/vision_encoder.x",
-  "qwen_vl/xmodel/vl_adapter.x",
-  "qwen_vl/xmodel/qwen_llm.x"
+  "xModel/qwen3/vl_2b_instruct/qwen_vl_model.x",
+  "xModel/qwen3/vl_2b_instruct/vision_encoder.x",
+  "xModel/qwen3/vl_2b_instruct/vl_adapter.x",
+  "xModel/qwen3/vl_2b_instruct/qwen_llm.x"
 ];
 
 const qwen3Vl2B = {
@@ -168,7 +168,7 @@ function extractGraph(filesToRead) {
     model: {
       name: "Qwen3-VL from xmodel",
       family: "qwen3_vl",
-      source: "qwen_vl/xmodel/qwen_vl_model.x"
+      source: "xModel/qwen3/vl_2b_instruct/qwen_vl_model.x"
     },
     nodes,
     edges: dedupeEdges(edges)

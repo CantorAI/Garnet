@@ -377,7 +377,7 @@ The public runtime flow is:
 
 ```python
 model = garnet.load_model(
-    xmodel="qwen_vl/xmodel/qwen_vl_model.x",
+    xmodel="xModel/qwen3/vl_2b_instruct/qwen_vl_model.x",
     weights="models/Qwen3-VL-2B-Instruct",
     compile=compile_config,
     runtime=runtime_config,

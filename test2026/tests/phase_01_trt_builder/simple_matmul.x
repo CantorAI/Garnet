@@ -1,7 +1,6 @@
 from garnet import garnet
 T = garnet.tensor()
 
-T.set_backend("TensorRT")
 
 # Just declare shapes using standard XLang tensor()
 a = tensor(shape=[1, 128], dtype=tensor.float32)

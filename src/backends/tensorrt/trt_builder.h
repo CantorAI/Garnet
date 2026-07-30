@@ -2,7 +2,7 @@
 
 #include "xlang.h"
 #include "xpackage.h"
-#include "trt_context.h"
+#include "lowering_context.h"
 #include "safetensors_index.h"
 #include "compiled_graph_capture.h"
 #include <string>
@@ -36,7 +36,7 @@ namespace Garnet {
         END_PACKAGE
     };
 
-    class TRTBuilder : public ITRTContext {
+    class TRTBuilder : public ILoweringContext {
     public:
         TRTBuilder();
         ~TRTBuilder();
@@ -110,6 +110,7 @@ namespace Garnet {
             X::Value inputs,
             const SafeTensorsIndex* weightIndex,
             X::Value reusableOutput,
+            bool enableCudaGraph,
             std::string& errorMessage);
         X::Value RunCapturedPartitions(
             const std::vector<EnginePartitionSpec>& partitions,
@@ -146,6 +147,7 @@ namespace Garnet {
         nvinfer1::ITensor* pendingKVPageTable = nullptr;
         nvinfer1::ITensor* pendingKVContextLength = nullptr;
         nvinfer1::ITensor* pendingKVSlotPosition = nullptr;
+        nvinfer1::ITensor* pendingKVActiveMask = nullptr;
         int pendingKVLayerIndex = -1;
         std::vector<nvinfer1::IPluginV2*> ownedPlugins;
         std::string loweringError;
@@ -193,7 +195,5 @@ namespace Garnet {
             nvinfer1::ITensor* attentionMask,
             X::KWARGS& options);
     };
-
-    extern thread_local ITRTContext* g_trtContext;
 
 }

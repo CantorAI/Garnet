@@ -27,7 +27,7 @@ try:
     weights = garnet.load_weights(weights_path)
 
     # Initialize execution engine using the .x graph
-    xmodel_path = os.path.abspath(os.path.join(__file__, "../../../../../qwen_vl/xmodel/qwen_vl_model.x"))
+    xmodel_path = os.path.abspath(os.path.join(__file__, "../../../../../xModel/qwen3/vl_2b_instruct/qwen_vl_model.x"))
     
     engine = garnet.load_model(
         xmodel_path, 

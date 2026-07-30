@@ -1,230 +1,130 @@
 #pragma once
-#include "xpackage.h"
-#include "xlang.h"
-#include <set>
-#include <string>
-#include <sstream>
-#include "cuda_jit_compiler.h"
+
 #include "compiled_graph_capture.h"
+#include "lowering_context.h"
+#include "xlang.h"
+#include "xpackage.h"
+
+#include <string>
 
 namespace Garnet
 {
-	class TensorDescriptor
-	{
-		friend class GarnetTensor;
-		friend class TensorHelper;
-		std::string mDeviceName;//such as cuda device name
-		void* gpuMemory = nullptr;
-	public:
-		BEGIN_PACKAGE(TensorDescriptor)
-			APISET().AddPropWithType<std::string>("DeviceName", &TensorDescriptor::mDeviceName);
-		END_PACKAGE
-	};
-	class GarnetTensor;
-	class Fusionist
-	{
-		X::Value mVarTensor;//bind to a tensor
-		X::Value mFunc;//the Func with this Fusion dectoration
-		std::string mFuncName;
-		std::string mFuncCodeHash;
-		X::Value mTensorGraph;
-		X::Value mReturnValue;//the xlang return value, then if kernl run ok, it will be set to this value
-		bool mNeedGenAndCompile = false;
-		CUfunction m_kernel;
-		bool mHasKernel = false;
-		FusionAnnotation mAnnotation;
+    // Compatibility descriptor for XLang tensors backed by device memory.
+    // Ownership remains on XLang Tensor; this object only describes the binding.
+    class TensorDescriptor
+    {
+        friend class TensorHelper;
 
-		BEGIN_PACKAGE(Fusionist)
-			APISET().SetCallHandler(&Fusionist::Call);
-		END_PACKAGE
+        std::string mDeviceName;
+        void* gpuMemory = nullptr;
 
-	public:
-		Fusionist() {}
-		Fusionist(X::Value& func) :
-			mFunc(func)
-		{
-		}
-		inline void SetNeedGenAndCompile(bool b)
-		{
-			mNeedGenAndCompile = b;
-		}
-		inline void SetParent(X::Value& t) { mVarTensor = t; }
-		inline void SetAnnotation(FusionAnnotation annotation)
-		{
-			mAnnotation = std::move(annotation);
-		}
-		bool Call(X::XRuntime* rt, X::ARGS& params, X::KWARGS& kwParams, X::Value& outputue);
-		inline void SetFunc(X::Value& func,std::string& funcName,std::string& funcCodeHash)
-		{
-			mFunc = func;
-			mFuncName = funcName;
-			mFuncCodeHash = funcCodeHash;
-		}
-	};
-	// Helper functions for CUDA code generation
-	class CudaCodeGen {
-		friend class GarnetTensor;
+    public:
+        BEGIN_PACKAGE(TensorDescriptor)
+            APISET().AddPropWithType<std::string>(
+                "DeviceName", &TensorDescriptor::mDeviceName);
+        END_PACKAGE
+    };
 
-		std::set<std::string> declaredVariables;
-		// Function to reset the declared variables set
-		void ResetDeclaredVariables() {
-			declaredVariables.clear();
-		}
+    class Fusionist
+    {
+        X::Value mFunc;
+        X::Value mTensorProvider;
+        FusionAnnotation mAnnotation;
 
-		std::string GetTensorName(X::Tensor& tensor)
-		{
-			std::string strName = tensor->GetName().ToString();
-			if (strName.empty())
-			{
-				strName = "tensor_" + std::to_string(tensor->GetID());
-			}
-			return strName;
-		}
-		// Convert tensor data type to CUDA type string
-		std::string GetTypeString(X::TensorDataType type) {
-			switch (type) {
-			case X::TensorDataType::FLOAT32:
-				return "float";
-			case X::TensorDataType::FLOAT16:
-				return "__half";
-			case X::TensorDataType::BFLOAT16:
-				return "__nv_bfloat16";
-			case X::TensorDataType::FLOAT8_E4M3FN:
-				return "__nv_fp8_e4m3";
-			case X::TensorDataType::FLOAT8_E5M2:
-				return "__nv_fp8_e5m2";
-			default:
-				return "float"; // Default to float
-			}
-		}
+    public:
+        Fusionist() = default;
+        explicit Fusionist(X::Value& func) : mFunc(func) {}
 
-		// Generate pointer variable declaration and assignment
-			// Updated to avoid duplicate declarations
-		std::string GenerateVariableDeclaration(const std::string& varName,
-			X::TensorDataType type,
-			void* memoryPtr) {
-			// Check if variable is already declared
-			if (declaredVariables.find(varName) != declaredVariables.end()) {
-				return ""; // Variable already declared, return empty string
-			}
+        BEGIN_PACKAGE(Fusionist)
+            APISET().SetCallHandler(&Fusionist::Call);
+        END_PACKAGE
 
-			// Add variable to declared set
-			declaredVariables.insert(varName);
+        void SetFunction(X::Value function) { mFunc = std::move(function); }
+        void SetTensorProvider(X::Value provider)
+        {
+            mTensorProvider = std::move(provider);
+        }
+        void SetAnnotation(FusionAnnotation annotation)
+        {
+            mAnnotation = std::move(annotation);
+        }
 
-			// Generate declaration as before
-			std::string typeStr = GetTypeString(type);
-			std::stringstream ss;
-			ss << std::hex << reinterpret_cast<uintptr_t>(memoryPtr);
-			std::string addrStr = "0x" + ss.str();
-			return typeStr + "* " + varName + " = (" + typeStr + "*)" + addrStr + ";\n";
-		}
+        bool Call(
+            X::XRuntime* runtime,
+            X::ARGS& params,
+            X::KWARGS& keywordParams,
+            X::Value& output);
+    };
 
-		// Generate operation comment header
-		std::string GenerateCommentHeader(const std::string& opName,
-			X::Tensor& tensor1,
-			X::Tensor& tensor2) {
-			std::string comment = "// " + opName + " operation for tensor " +
-				GetTensorName(tensor1);
-			if (tensor2) {
-				comment += " and tensor " + GetTensorName(tensor2);
-			}
-			comment += "\n";
-			return comment;
-		}
+    // XLang TensorGraph capture adapter. It performs no eager execution and
+    // owns no backend. Concrete backends are supplied through ILoweringContext
+    // only while a captured graph is compiled.
+    class GarnetTensor
+    {
+        std::string ProcessCondition(X::Value& astNode);
 
-		std::string GenerateCommentHeader(const std::string& opName, X::Tensor& tensor) {
-			std::string comment = "// " + opName + " operation for tensor " +
-				GetTensorName(tensor);
-			comment += "\n";
-			return comment;
-		}
-	};
+        X::Value IntrinsicBinary(
+            const char* opName,
+            X::Value& graph,
+            X::ARGS& params,
+            X::KWARGS& keywordParams,
+            X::Value input1,
+            X::Value input2,
+            X::Value& output);
 
-	class GarnetTensor
-	{
-		bool mTreatDoubleAsFloat = true;
-		CudaCodeGen mCodeGen;
-		CudaJitCompiler mCompiler;
-		std::string ProcessCondition(X::Value& astNode);
-	public:
-		long long m_trtContext = 0;
-		BEGIN_PACKAGE(GarnetTensor)
-			APISET().AddClass<0, Fusionist>("fusionist");
-			APISET().AddVarFuncEx("fusion", &GarnetTensor::Fusion);
-			APISET().AddVarFunc("set_backend", &GarnetTensor::SetBackend);
-			APISET().AddVarFunc("set_weights", &GarnetTensor::SetWeights);
-			//APISET().AddVarFuncEx("compile", &GarnetTensor::Fusion);
+    public:
+        BEGIN_PACKAGE(GarnetTensor)
+            APISET().AddClass<0, Fusionist>("fusionist");
+            APISET().AddVarFuncEx("fusion", &GarnetTensor::Fusion);
 
-			APISET().AddTensorStructuralOps("header", &GarnetTensor::Header);
-			APISET().AddTensorStructuralOps("trailer", &GarnetTensor::Trailer);
-			APISET().AddTensorStructuralOps("branchBegin", &GarnetTensor::BranchBegin);
-			APISET().AddTensorStructuralOps("branchEnd", &GarnetTensor::BranchEnd);
+            APISET().AddTensorStructuralOps("header", &GarnetTensor::Header);
+            APISET().AddTensorStructuralOps("trailer", &GarnetTensor::Trailer);
+            APISET().AddTensorStructuralOps("branchBegin", &GarnetTensor::BranchBegin);
+            APISET().AddTensorStructuralOps("branchEnd", &GarnetTensor::BranchEnd);
 
-			APISET().AddTensorBinaryOp("add", &GarnetTensor::Add);
-			APISET().AddTensorBinaryOp("minus", &GarnetTensor::Minus);
-			APISET().AddTensorBinaryOp("mul", &GarnetTensor::Multiply);
-			APISET().AddTensorBinaryOp("matmul", &GarnetTensor::Matmul);
-			APISET().AddTensorUnaryOp("permute", &GarnetTensor::Permute);
-			APISET().AddTensorBinaryOp("gather", &GarnetTensor::Gather);
-			APISET().AddTensorUnaryOp("convert", &GarnetTensor::Convert);
+            // XLang uses these intrinsic hooks to represent expression syntax.
+            // They only forward graph nodes; there is no eager CUDA path.
+            APISET().AddTensorBinaryOp("add", &GarnetTensor::Add);
+            APISET().AddTensorBinaryOp("minus", &GarnetTensor::Minus);
+            APISET().AddTensorBinaryOp("mul", &GarnetTensor::Multiply);
+            APISET().AddTensorBinaryOp("matmul", &GarnetTensor::Matmul);
 
-			APISET().AddTensorBinaryOp("binary_op", &GarnetTensor::BinaryOp);
-			APISET().AddTensorUnaryOp("unary_op", &GarnetTensor::UnaryOp);
+            APISET().AddTensorBinaryOp("binary_op", &GarnetTensor::BinaryOp);
+            APISET().AddTensorUnaryOp("unary_op", &GarnetTensor::UnaryOp);
+        END_PACKAGE
 
-			APISET().AddTensorUnaryOp("zeros", &GarnetTensor::InitZeros);
-			APISET().AddTensorUnaryOp("ones", &GarnetTensor::InitOnes);
-			APISET().AddTensorUnaryOp("full", &GarnetTensor::InitFull);
-			APISET().AddTensorUnaryOp("rand", &GarnetTensor::InitRand);
-			APISET().AddTensorUnaryOp("randn", &GarnetTensor::InitRandn);
-			APISET().AddTensorUnaryOp("uniform", &GarnetTensor::InitUniform);
-			APISET().AddTensorUnaryOp("normal", &GarnetTensor::InitNormal);
-			APISET().AddTensorUnaryOp("trunc_normal", &GarnetTensor::InitTruncNormal);
+        void Fusion(
+            X::XRuntime* runtime,
+            X::XObj* self,
+            X::XObj* context,
+            X::ARGS& params,
+            X::KWARGS& keywordParams,
+            X::Value& decoratedFunction,
+            X::Value& output);
 
-			END_PACKAGE
-	public:
-		GarnetTensor();
-		CudaJitCompiler& GetCompiler() { return mCompiler; }
-		// Fusion function
-		void Fusion(X::XRuntime* rt, X::XObj* pThis, X::XObj* pContext,
-					X::ARGS& params, X::KWARGS& kwParams, X::Value& trailer, X::Value& outputue);
+        X::Value Header(X::Value& graph, X::ARGS& params);
+        X::Value Trailer(X::Value& graph, X::ARGS& params);
+        X::Value BranchBegin(X::Value& graph, X::ARGS& params);
+        X::Value BranchEnd(X::Value& graph, X::ARGS& params);
 
-		void SetBackend(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void SetWeights(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+        X::Value Add(
+            X::Value& graph, X::ARGS& params, X::KWARGS& keywordParams,
+            X::Value input1, X::Value input2, X::Value& output);
+        X::Value Minus(
+            X::Value& graph, X::ARGS& params, X::KWARGS& keywordParams,
+            X::Value input1, X::Value input2, X::Value& output);
+        X::Value Multiply(
+            X::Value& graph, X::ARGS& params, X::KWARGS& keywordParams,
+            X::Value input1, X::Value input2, X::Value& output);
+        X::Value Matmul(
+            X::Value& graph, X::ARGS& params, X::KWARGS& keywordParams,
+            X::Value input1, X::Value input2, X::Value& output);
 
-		X::Value Header(X::Value& graph,X::ARGS& params);
-		X::Value Trailer(X::Value& graph, X::ARGS& params);
-		X::Value BranchBegin(X::Value& graph, X::ARGS& params);
-		X::Value BranchEnd(X::Value& graph, X::ARGS& params);
-
-		X::Value Add(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-				X::Value input1, X::Value input2, X::Value& output);
-		X::Value Minus(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& output);
-		X::Value Multiply(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& output);
-		X::Value Matmul(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& output);
-		X::Value Permute(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-				X::Value input, X::Value& output);
-		X::Value Gather(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& output);
-		X::Value Convert(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input, X::Value& output);
-
-		X::Value BinaryOp(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input1, X::Value input2, X::Value& output);
-		X::Value UnaryOp(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams,
-			X::Value input, X::Value& output);
-
-		X::Value InitZeros(X::Value& graph,X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
-		X::Value InitOnes(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
-		X::Value InitFull(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
-		X::Value InitRand(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
-		X::Value InitRandn(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
-		X::Value InitUniform(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
-		X::Value InitNormal(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
-		X::Value InitTruncNormal(X::Value& graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input, X::Value& output);
-	};
+        X::Value BinaryOp(
+            X::Value& graph, X::ARGS& params, X::KWARGS& keywordParams,
+            X::Value input1, X::Value input2, X::Value& output);
+        X::Value UnaryOp(
+            X::Value& graph, X::ARGS& params, X::KWARGS& keywordParams,
+            X::Value input, X::Value& output);
+    };
 }

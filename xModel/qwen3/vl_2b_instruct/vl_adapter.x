@@ -1,7 +1,6 @@
 from garnet import garnet
 
 T = garnet.tensor()
-T.set_backend("TensorRT")
 
 # Qwen3-VL multimodal glue.
 #

@@ -1,7 +1,6 @@
 from garnet import garnet
 
 T = garnet.tensor()
-T.set_backend("TensorRT")
 
 qkv = tensor(shape=[4, 3072], dtype=tensor.float32)
 weights = {}

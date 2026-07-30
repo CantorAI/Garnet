@@ -35,10 +35,12 @@ include_directories(${xlang_sdk_folder})
 include_directories(${CUDA_INCLUDE_DIRS})
 # Include project directories.
 include_directories("src/common")
+include_directories("src/core")
 include_directories("src/entry")
-include_directories("src/compiler")
 include_directories("src/include")
 include_directories("src/model")
+include_directories("src/runtime/kv")
+include_directories("src/runtime/scheduler")
 include_directories("src/tensor")
 include_directories("src/test")
 include_directories("src/log")
@@ -49,38 +51,42 @@ include_directories("src/tokenizer")
 include_directories("third_party")
 include_directories("${xlang_sdk_folder}/../Tensor")
 include_directories("${xlang_sdk_folder}/../Core")
-include_directories("src/trt")
+include_directories("src/backends/tensorrt")
 
 # Optionally include xlang and Garnet includes.
 include_directories(
     ${XLANG_INCLUDE_DIR}
     ${PROJECT_SOURCE_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/src/common
-    ${PROJECT_SOURCE_DIR}/src/compiler
+    ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/src/tensor
     ${PROJECT_SOURCE_DIR}/src/test
     ${PROJECT_SOURCE_DIR}/src/log
     ${PROJECT_SOURCE_DIR}/src/model
+    ${PROJECT_SOURCE_DIR}/src/runtime/kv
+    ${PROJECT_SOURCE_DIR}/src/runtime/scheduler
     ${PROJECT_SOURCE_DIR}/src/image
     ${PROJECT_SOURCE_DIR}/src/image/qwen_vl
     ${PROJECT_SOURCE_DIR}/src/tokenizer
     ${PROJECT_SOURCE_DIR}/third_party
-    ${PROJECT_SOURCE_DIR}/src/trt
+    ${PROJECT_SOURCE_DIR}/src/backends/tensorrt
     "D:/CantorAI/ThirdPartySDK/TensorRT/include"
 )
 
 # Use absolute paths for source files.
 FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
 FILE(GLOB Common_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp")
+FILE(GLOB_RECURSE Core_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.cpp")
 FILE(GLOB Entry_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/entry/*.cpp")
 FILE(GLOB Model_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/model/*.cpp")
+FILE(GLOB_RECURSE Runtime_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/*.cpp")
 FILE(GLOB Tensor_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tensor/*.cpp")
 FILE(GLOB Log_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/log/*.cpp")
 FILE(GLOB_RECURSE Image_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/image/*.cpp")
 FILE(GLOB_RECURSE Tokenizer_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/tokenizer/*.cpp")
 FILE(GLOB_RECURSE Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
 list(FILTER Cuda_SRC EXCLUDE REGEX ".*/test\\.cu$")
-FILE(GLOB Trt_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/trt/*.cpp")
+FILE(GLOB_RECURSE Backend_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/*.cpp")
 
 # Create the shared library target.
 add_library(${PROJECT_NAME} 
@@ -90,11 +96,13 @@ add_library(${PROJECT_NAME}
     ${Tensor_SRC}
     ${Cuda_SRC}
     ${Common_SRC}
+    ${Core_SRC}
     ${Model_SRC}
+    ${Runtime_SRC}
     ${Log_SRC}
     ${Image_SRC}
     ${Tokenizer_SRC}
-    ${Trt_SRC}
+    ${Backend_SRC}
 )
 
 add_executable(garnet_qwen_vl_gpu_path_perf
@@ -124,6 +132,17 @@ add_executable(garnet_qwen_vl_request_kv_native_smoke
 )
 target_link_libraries(garnet_qwen_vl_request_kv_native_smoke ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY})
 
+add_executable(garnet_continuous_batch_scheduler_test
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/continuous_batch_scheduler_test.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/kv/paged_kv_pool.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/scheduler/continuous_batch_scheduler.cpp"
+)
+target_include_directories(garnet_continuous_batch_scheduler_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/kv"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/scheduler"
+)
+target_link_libraries(garnet_continuous_batch_scheduler_test ${CUDA_LIBRARIES})
+
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
@@ -135,7 +154,7 @@ endif()
 # On Windows, link against cudart (the CUDA runtime) explicitly.
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
-            nvrtc.lib cublas.lib "D:/CantorAI/ThirdPartySDK/TensorRT/lib/nvinfer_10.lib"
+            cublas.lib "D:/CantorAI/ThirdPartySDK/TensorRT/lib/nvinfer_10.lib"
             nppc.lib nppig.lib nvjpeg.lib
             ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
     ) 

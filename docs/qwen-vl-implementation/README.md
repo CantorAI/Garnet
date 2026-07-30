@@ -25,6 +25,7 @@ probe, and multi-GPU contract is defined in:
 - `compiled-xmodel-pipeline-and-multigpu-architecture.md`
 - `compiled-runtime-implementation-plan.md`
 - `continuous-batching-and-vlm-scheduler-design.md`
+- `performance-baseline.md`
 
 The architecture document is the normative design; the implementation plan is
 its required staged execution and test sequence. They supersede older notes
@@ -36,10 +37,10 @@ or hardcoded Qwen C++ runners.
 Already in the repo:
 
 - Qwen3-VL xlang model skeleton:
-  - `qwen_vl/xmodel/qwen_vl_model.x`
-  - `qwen_vl/xmodel/vision_encoder.x`
-  - `qwen_vl/xmodel/vl_adapter.x`
-  - `qwen_vl/xmodel/qwen_llm.x`
+  - `xModel/qwen3/vl_2b_instruct/qwen_vl_model.x`
+  - `xModel/qwen3/vl_2b_instruct/vision_encoder.x`
+  - `xModel/qwen3/vl_2b_instruct/vl_adapter.x`
+  - `xModel/qwen3/vl_2b_instruct/qwen_llm.x`
 - Workbench MVP for model graph visualization:
   - `workbench/`
 - Phase 04 VLM reference tests:

@@ -33,7 +33,7 @@ assert snapshots, "local Qwen3-VL-2B-Instruct snapshot is required"
 garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
 start = time.perf_counter()
 model = garnet.load_model(
-    str(REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_text_decode.x"),
+    str(REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_text_decode.x"),
     runtime_mode="compiled_xmodel",
     entry_function="Qwen3TextDecode",
     weights=str(snapshots[-1]),

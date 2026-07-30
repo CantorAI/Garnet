@@ -69,7 +69,8 @@ namespace Garnet
             const std::string& frontend,
             const std::vector<std::vector<int>>& inputShapes,
             const std::vector<std::string>& inputDataTypes,
-            const FusionPartitionOptions& partitionOptions = {});
+            const FusionPartitionOptions& partitionOptions = {},
+            const std::string& backend = "tensorrt");
         void RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
             X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 

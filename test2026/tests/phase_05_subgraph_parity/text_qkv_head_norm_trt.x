@@ -1,7 +1,6 @@
 from garnet import garnet
 
 T = garnet.tensor()
-T.set_backend("TensorRT")
 
 x = tensor(shape=[4, 8], dtype=tensor.float32)
 weights = {}

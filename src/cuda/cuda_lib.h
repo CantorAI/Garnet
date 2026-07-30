@@ -284,6 +284,25 @@ extern "C" {
         int headDim,
         cudaStream_t stream = 0);
 
+    cudaError_t runTextPagedKVDecodeFlashMaskedBF16DeviceMetadata(
+        const bfloat16* qkv,
+        bfloat16* keyPages,
+        bfloat16* valuePages,
+        const int* pageTables,
+        const int* contextLengths,
+        const int* slotPositions,
+        const int* activeMask,
+        bfloat16* output,
+        float* partialStats,
+        float* partialOutputs,
+        int batchSize,
+        int maxSequenceLength,
+        int pageSize,
+        int qHeads,
+        int kvHeads,
+        int headDim,
+        cudaStream_t stream = 0);
+
     // Row-major linear layer: output[M, N] = input[M, K] * weight[N, K]^T + bias[N].
     cudaError_t runLinearBiasTransposeFP32(
         const float* input,
@@ -356,6 +375,22 @@ extern "C" {
         const bfloat16* logits,
         long long* outputTokenId,
         float* outputTokenValue,
+        int rows,
+        int vocabSize,
+        cudaStream_t stream = 0);
+
+    cudaError_t runLogitsTop1BatchFP32(
+        const float* logits,
+        long long* outputTokenIds,
+        float* outputTokenValues,
+        int rows,
+        int vocabSize,
+        cudaStream_t stream = 0);
+
+    cudaError_t runLogitsTop1BatchBF16(
+        const bfloat16* logits,
+        long long* outputTokenIds,
+        float* outputTokenValues,
         int rows,
         int vocabSize,
         cudaStream_t stream = 0);

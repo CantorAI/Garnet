@@ -1,5 +1,5 @@
 #include "garnet.h"
-#include "../trt/trt_builder.h"
+#include "trt_builder.h"
 #include "../image/qwen_vl/qwen_vl_image_preprocessor.h"
 #include "../tokenizer/qwen_tokenizer.h"
 #include "../cuda/cuda_lib.h"
@@ -2878,6 +2878,68 @@ namespace Garnet
         retValue = X::Value(tensor);
     }
 
+    void GarnetAPI::TensorUpdateFromHost(
+        X::XRuntime*,
+        X::XObj*,
+        X::ARGS& params,
+        X::KWARGS&,
+        X::Value& retValue)
+    {
+        if (params.size() < 2 || !params[0].IsTensor() ||
+            !params[1].IsList()) {
+            retValue = X::Value(false);
+            return;
+        }
+        X::Tensor tensor(params[0]);
+        X::List values(params[1]);
+        const size_t count = static_cast<size_t>(tensor->GetCount());
+        if (count != static_cast<size_t>(values->Size()) ||
+            TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+            retValue = X::Value(false);
+            return;
+        }
+
+        size_t elementBytes = 0;
+        switch (tensor->GetDataType()) {
+        case X::TensorDataType::INT:
+            elementBytes = sizeof(int);
+            break;
+        case X::TensorDataType::LONGLONG:
+            elementBytes = sizeof(long long);
+            break;
+        case X::TensorDataType::FLOAT32:
+            elementBytes = sizeof(float);
+            break;
+        default:
+            retValue = X::Value(false);
+            return;
+        }
+
+        std::vector<char> bytes(count * elementBytes);
+        for (size_t index = 0; index < count; ++index) {
+            X::Value value = values->Get(static_cast<long long>(index));
+            if (tensor->GetDataType() == X::TensorDataType::INT) {
+                reinterpret_cast<int*>(bytes.data())[index] =
+                    static_cast<int>(value.ToLongLong());
+            }
+            else if (tensor->GetDataType() == X::TensorDataType::LONGLONG) {
+                reinterpret_cast<long long*>(bytes.data())[index] =
+                    value.ToLongLong();
+            }
+            else {
+                reinterpret_cast<float*>(bytes.data())[index] =
+                    static_cast<float>(value.ToDouble());
+            }
+        }
+        const cudaError_t status = cudaMemcpyAsync(
+            TensorHelper::GetGPUMemory(tensor),
+            bytes.data(),
+            bytes.size(),
+            cudaMemcpyHostToDevice,
+            cudaStreamPerThread);
+        retValue = X::Value(status == cudaSuccess);
+    }
+
     void GarnetAPI::TensorAdd(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
@@ -3260,6 +3322,7 @@ namespace Garnet
         std::string compiledCacheDirectory;
         std::string entryFunction;
         std::string compiledFrontend;
+        std::string compiledBackend = "tensorrt";
         std::vector<std::vector<int>> compiledInputShapes;
         std::vector<std::string> compiledInputDataTypes;
         FusionPartitionOptions compiledPartitionOptions;
@@ -3270,6 +3333,7 @@ namespace Garnet
             else if (key == "cache_dir") compiledCacheDirectory = item.val.ToString();
             else if (key == "entry_function") entryFunction = item.val.ToString();
             else if (key == "frontend") compiledFrontend = item.val.ToString();
+            else if (key == "backend") compiledBackend = item.val.ToString();
             else if (key == "input_shapes" && item.val.IsList()) {
                 X::List shapes(item.val);
                 for (long long inputIndex = 0; inputIndex < shapes->Size(); ++inputIndex) {
@@ -3348,7 +3412,8 @@ namespace Garnet
                 compiledFrontend,
                 compiledInputShapes,
                 compiledInputDataTypes,
-                compiledPartitionOptions);
+                compiledPartitionOptions,
+                compiledBackend);
             retValue = varModel;
             return;
         }

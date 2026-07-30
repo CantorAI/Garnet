@@ -6,10 +6,10 @@ structure. It is the first model target for Workbench.
 ## Source Files
 
 ```text
-qwen_vl/xmodel/qwen_vl_model.x
-qwen_vl/xmodel/vision_encoder.x
-qwen_vl/xmodel/vl_adapter.x
-qwen_vl/xmodel/qwen_llm.x
+xModel/qwen3/vl_2b_instruct/qwen_vl_model.x
+xModel/qwen3/vl_2b_instruct/vision_encoder.x
+xModel/qwen3/vl_2b_instruct/vl_adapter.x
+xModel/qwen3/vl_2b_instruct/qwen_llm.x
 ```
 
 ## Top-Level Flow

@@ -33,6 +33,7 @@ namespace Garnet
         std::string m_weightsLocation;
         std::string m_entryFunction;
         std::string m_frontend;
+        std::string m_backend = "tensorrt";
         std::vector<std::vector<int>> m_inputShapes;
         FusionPartitionOptions m_partitionOptions;
         std::string m_state = "uninitialized";
@@ -55,10 +56,12 @@ namespace Garnet
         double m_frontendPreparationMs = 0.0;
         bool m_enginesPrepared = false;
         bool m_frontendPrepared = false;
+        bool m_cudaGraphEnabled = false;
         Diagnostics m_diagnostics;
         std::shared_ptr<CompiledModelRuntime> m_decodeRuntime;
         void* m_sampleTokenDevice = nullptr;
         void* m_sampleValueDevice = nullptr;
+        int m_sampleCapacity = 0;
         X::Value m_reusableExecutionOutput;
 
     public:
@@ -72,7 +75,8 @@ namespace Garnet
             const std::string& frontend,
             const std::vector<std::vector<int>>& inputShapes,
             const std::vector<std::string>& inputDataTypes,
-            const FusionPartitionOptions& partitionOptions = {});
+            const FusionPartitionOptions& partitionOptions = {},
+            const std::string& backend = "tensorrt");
 
         X::Value Status() const;
         X::Value Forward(X::Value request);

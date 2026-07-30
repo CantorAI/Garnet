@@ -14,10 +14,17 @@ namespace Garnet
         int m_kvHeads = 0;
         int m_headDim = 0;
         int m_layerIndex = -1;
+        bool m_useActiveMask = false;
         std::string m_namespace;
 
     public:
-        PagedKVDecodePlugin(int pageSize, int qHeads, int kvHeads, int headDim, int layerIndex = -1);
+        PagedKVDecodePlugin(
+            int pageSize,
+            int qHeads,
+            int kvHeads,
+            int headDim,
+            int layerIndex = -1,
+            bool useActiveMask = false);
         PagedKVDecodePlugin(const void* data, size_t length);
 
         nvinfer1::IPluginV2DynamicExt* clone() const noexcept override;

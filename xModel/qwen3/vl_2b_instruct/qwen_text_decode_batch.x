@@ -1,7 +1,6 @@
 from garnet import garnet
 
 T = garnet.tensor()
-T.set_backend("TensorRT")
 
 from "." import qwen_llm as llm
 
@@ -9,23 +8,26 @@ GARNET_MODEL_SPEC = {
     "arguments": [
         {"name": "input_ids", "kind": "tensor"},
         {"name": "position_ids", "kind": "tensor"},
-        {"name": "attention_mask", "kind": "tensor"},
         {"name": "key_pages", "kind": "tensor"},
         {"name": "value_pages", "kind": "tensor"},
         {"name": "page_table", "kind": "tensor"},
-        {"name": "start_position", "kind": "tensor"},
+        {"name": "context_length", "kind": "tensor"},
+        {"name": "slot_position", "kind": "tensor"},
+        {"name": "active_mask", "kind": "tensor"},
         {"name": "weights", "kind": "weights"},
         {"name": "config", "kind": "config"}
     ]
 }
 
 
-def PrefillAttention(x, position_ids, attention_mask, key_pages, value_pages,
-                     page_table, start_position, config, layer_idx):
+def DecodeAttentionBatch(x, position_ids, key_pages, value_pages, page_table,
+                         context_length, slot_position, active_mask, config,
+                         layer_idx):
     prefix = "model.language_model.layers." + str(layer_idx) + ".self_attn"
     q_heads = config.text_config.num_attention_heads
     kv_heads = config.text_config.num_key_value_heads
     head_dim = config.text_config.head_dim
+
     qkv = x * T.unary_op(
         "qwen3_text_qkv_packed",
         q_weight_name=prefix + ".q_proj.weight",
@@ -46,66 +48,78 @@ def PrefillAttention(x, position_ids, attention_mask, key_pages, value_pages,
         num_kv_heads=kv_heads,
         head_dim=head_dim
     ) * position_ids
-    layer_keys = key_pages * T.unary_op("paged_kv_select_layer", layer_idx=layer_idx)
-    layer_values = value_pages * T.unary_op("paged_kv_select_layer", layer_idx=layer_idx)
+
+    layer_keys = key_pages * T.unary_op(
+        "paged_kv_select_layer", layer_idx=layer_idx)
+    layer_values = value_pages * T.unary_op(
+        "paged_kv_select_layer", layer_idx=layer_idx)
     state = qkv * T.binary_op("paged_kv_bind_key_pages") * layer_keys
     state = state * T.binary_op("paged_kv_bind_value_pages") * layer_values
     state = state * T.binary_op("paged_kv_bind_page_table") * page_table
-    state = state * T.binary_op("paged_kv_bind_slot_position") * start_position
-    qkv = state * T.unary_op(
-        "paged_kv_prefill_write_bf16",
+    state = state * T.binary_op(
+        "paged_kv_bind_context_length") * context_length
+    state = state * T.binary_op(
+        "paged_kv_bind_slot_position") * slot_position
+    state = state * T.binary_op("paged_kv_bind_active_mask") * active_mask
+    attention = state * T.unary_op(
+        "paged_kv_decode_masked_bf16",
         page_size=16,
         q_heads=q_heads,
         kv_heads=kv_heads,
         head_dim=head_dim
     )
-    attention = qkv * T.binary_op(
-        "paged_attention_packed",
-        num_heads=q_heads,
-        num_key_value_heads=kv_heads,
-        head_dim=head_dim,
-        causal=True
-    ) * attention_mask
-    attention = attention * T.unary_op("merge_attention_heads")
     return llm.linear(attention, prefix + ".o_proj.weight", None, op="o_proj")
 
 
 @T.fusion(role="decoder_layer", atomic=True)
-def PrefillLayer(x, position_ids, attention_mask, key_pages, value_pages,
-                 page_table, start_position, weights, config, layer_idx):
+def DecodeLayerBatch(x, position_ids, key_pages, value_pages, page_table,
+                     context_length, slot_position, active_mask, weights,
+                     config, layer_idx):
     prefix = "model.language_model.layers." + str(layer_idx)
     residual = x
     normalized = llm.rms_norm(
-        x, prefix + ".input_layernorm.weight", eps=config.text_config.rms_norm_eps
+        x,
+        prefix + ".input_layernorm.weight",
+        eps=config.text_config.rms_norm_eps
     )
-    x = residual + PrefillAttention(
-        normalized, position_ids, attention_mask, key_pages, value_pages,
-        page_table, start_position, config, layer_idx
+    attention = DecodeAttentionBatch(
+        normalized, position_ids, key_pages, value_pages, page_table,
+        context_length, slot_position, active_mask, config, layer_idx
     )
+    x = residual + attention
     residual = x
     normalized = llm.rms_norm(
-        x, prefix + ".post_attention_layernorm.weight", eps=config.text_config.rms_norm_eps
+        x,
+        prefix + ".post_attention_layernorm.weight",
+        eps=config.text_config.rms_norm_eps
     )
-    return residual + llm.Qwen3TextMLP(normalized, weights, config, layer_idx)
+    return residual + llm.Qwen3TextMLP(
+        normalized, weights, config, layer_idx)
 
 
 @T.fusion(
-    name="text_prefill",
-    role="transformer_prefill",
-    boundary="required"
+    name="text_decode_batch",
+    role="transformer_decode",
+    boundary="required",
+    cuda_graph=True
 )
-def Qwen3TextPrefill(input_ids, position_ids, attention_mask, key_pages,
-                     value_pages, page_table, start_position, weights, config):
+def Qwen3TextDecodeBatch(input_ids, position_ids, key_pages, value_pages,
+                         page_table, context_length, slot_position, active_mask,
+                         weights, config):
     x = input_ids * T.unary_op(
-        "embedding", weight_name="model.language_model.embed_tokens.weight"
+        "embedding",
+        weight_name="model.language_model.embed_tokens.weight"
     )
     for layer_idx in range(config.text_config.num_hidden_layers):
-        x = PrefillLayer(
-            x, position_ids, attention_mask, key_pages, value_pages,
-            page_table, start_position, weights, config, layer_idx
+        x = DecodeLayerBatch(
+            x, position_ids, key_pages, value_pages, page_table,
+            context_length, slot_position, active_mask, weights, config,
+            layer_idx
         )
     x = llm.rms_norm(
-        x, "model.language_model.norm.weight", eps=config.text_config.rms_norm_eps
+        x,
+        "model.language_model.norm.weight",
+        eps=config.text_config.rms_norm_eps
     )
     return x * T.unary_op(
         "lm_head",

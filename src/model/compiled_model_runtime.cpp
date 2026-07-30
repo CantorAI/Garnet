@@ -204,6 +204,22 @@ namespace
         }
     }
 
+    bool ExecutionPlanRequestsCudaGraph(const std::string& executionPlanJson)
+    {
+        try {
+            const auto plan = nlohmann::json::parse(executionPlanJson);
+            if (!plan.contains("regions") || !plan["regions"].is_array()) {
+                return false;
+            }
+            for (const auto& region : plan["regions"]) {
+                if (region.value("cuda_graph", false)) return true;
+            }
+        }
+        catch (const std::exception&) {
+        }
+        return false;
+    }
+
     X::Value MakeCudaTensorFromHost(
         X::TensorDataType dataType,
         const std::vector<int>& dimensions,
@@ -316,6 +332,7 @@ namespace
         const std::filesystem::path& rootPath,
         const std::string& weightsLocation,
         const std::string& entryFunction,
+        const std::string& backend,
         const std::vector<std::vector<int>>& inputShapes,
         const std::vector<std::string>& inputDataTypes,
         const Garnet::FusionPartitionOptions& partitionOptions)
@@ -325,6 +342,7 @@ namespace
 
         std::ostringstream material;
         material << kRuntimeSchema << '\n'
+                 << "backend:" << backend << '\n'
                  << "tensorrt:" << NV_TENSORRT_VERSION << '\n'
                  << entryFunction << '\n';
         const char* fusedTextAttention = std::getenv("GARNET_FUSED_TEXT_ATTENTION");
@@ -503,7 +521,8 @@ namespace Garnet
         const std::string& frontend,
         const std::vector<std::vector<int>>& inputShapes,
         const std::vector<std::string>& inputDataTypes,
-        const FusionPartitionOptions& partitionOptions)
+        const FusionPartitionOptions& partitionOptions,
+        const std::string& backend)
     {
         std::lock_guard<std::mutex> guard(m_mutex);
         m_rootXModel = std::filesystem::absolute(rootXModel).lexically_normal().string();
@@ -511,6 +530,7 @@ namespace Garnet
         m_weightsLocation = weightsLocation;
         m_entryFunction = entryFunction.empty() ? "Qwen3VLModel" : entryFunction;
         m_frontend = frontend;
+        m_backend = backend.empty() ? "tensorrt" : backend;
         m_inputShapes = inputShapes;
         m_partitionOptions = partitionOptions;
         m_ready = false;
@@ -526,6 +546,15 @@ namespace Garnet
         m_errorMessage.clear();
         m_diagnostics = {};
         m_decodeRuntime.reset();
+
+        if (m_backend != "tensorrt") {
+            m_state = "failed";
+            m_errorCode = "backend_not_available";
+            m_errorMessage =
+                "backend '" + m_backend +
+                "' is not available; this build currently provides tensorrt";
+            return false;
+        }
 
         std::error_code error;
         const std::filesystem::path rootPath(m_rootXModel);
@@ -624,7 +653,8 @@ namespace Garnet
                     "",
                     decodeShapes,
                     decodeTypes,
-                    decodePartitionOptions)) {
+                    decodePartitionOptions,
+                    m_backend)) {
                 X::Dict decodeStatus(decodeRuntime->Status());
                 return {nullptr, decodeStatus["error_message"].ToString()};
             }
@@ -673,7 +703,7 @@ namespace Garnet
             return true;
         };
         const std::string graphFingerprint = MakeGraphFingerprint(
-            rootPath, m_weightsLocation, m_entryFunction, inputShapes,
+            rootPath, m_weightsLocation, m_entryFunction, m_backend, inputShapes,
             inputDataTypes, m_partitionOptions);
         if (!inputShapes.empty() &&
             LoadGraphCache(
@@ -681,6 +711,8 @@ namespace Garnet
                 graphFingerprint,
                 m_graphSummary,
                 m_executionPlanJson)) {
+            m_cudaGraphEnabled =
+                ExecutionPlanRequestsCudaGraph(m_executionPlanJson);
             bool partitionCacheValid = ParseEnginePartitions(
                 m_executionPlanJson, m_enginePartitions);
             for (const auto& partition : m_enginePartitions) {
@@ -978,6 +1010,8 @@ namespace Garnet
                     GetCapturedTensorOperations(),
                     m_enginePartitions,
                     m_partitionOptions);
+                m_cudaGraphEnabled =
+                    ExecutionPlanRequestsCudaGraph(m_executionPlanJson);
                 if (!StoreGraphCache(
                         graphCachePath,
                         graphFingerprint,
@@ -1019,6 +1053,7 @@ namespace Garnet
         status->Set("weights_location", X::Value(m_weightsLocation));
         status->Set("entry_function", X::Value(m_entryFunction));
         status->Set("frontend", X::Value(m_frontend));
+        status->Set("backend", X::Value(m_backend));
         status->Set("graph_summary", X::Value(m_graphSummary));
         status->Set("scheduler", X::Value("cpu_control_gpu_execution"));
         status->Set("execution_plan_json", X::Value(m_executionPlanJson));
@@ -1133,6 +1168,7 @@ namespace Garnet
                     requestDict["reuse_output"].ToLongLong() != 0
                     ? m_reusableExecutionOutput
                     : X::Value(),
+                m_cudaGraphEnabled,
                 executionError);
         if (!output.IsTensor()) {
             result->Set("status", X::Value("error"));
@@ -1149,8 +1185,12 @@ namespace Garnet
         const int requestedNewTokens = requestDict["max_new_tokens"].IsValid()
             ? std::max(0, static_cast<int>(requestDict["max_new_tokens"].ToLongLong()))
             : 0;
+        const std::string sampleMode = requestDict["sample"].IsValid()
+            ? requestDict["sample"].ToString()
+            : std::string();
+        const bool sampleBatch = sampleMode == "greedy_batch";
         const bool sampleGreedy = requestedNewTokens > 0 ||
-            (requestDict["sample"].IsValid() && requestDict["sample"].ToString() == "greedy");
+            sampleMode == "greedy" || sampleBatch;
         long long sampledTokenId = -1;
         if (sampleGreedy) {
             X::Tensor logits(output);
@@ -1161,6 +1201,98 @@ namespace Garnet
             }
             const int tokenRows = static_cast<int>(logits->GetDimSize(1));
             const int vocabSize = static_cast<int>(logits->GetDimSize(2));
+            const int batchSize = static_cast<int>(logits->GetDimSize(0));
+            if (sampleBatch) {
+                const int sampleRows = batchSize * tokenRows;
+                if (sampleRows <= 0) {
+                    result->Set("status", X::Value("error"));
+                    result->Set(
+                        "error_code",
+                        X::Value("compiled_sampling_shape_invalid"));
+                    return result;
+                }
+                cudaError_t sampleStatus = cudaSuccess;
+                if (m_sampleCapacity < sampleRows) {
+                    if (m_sampleTokenDevice) cudaFree(m_sampleTokenDevice);
+                    if (m_sampleValueDevice) cudaFree(m_sampleValueDevice);
+                    m_sampleTokenDevice = nullptr;
+                    m_sampleValueDevice = nullptr;
+                    sampleStatus = cudaMalloc(
+                        &m_sampleTokenDevice,
+                        static_cast<size_t>(sampleRows) * sizeof(long long));
+                    if (sampleStatus == cudaSuccess) {
+                        sampleStatus = cudaMalloc(
+                            &m_sampleValueDevice,
+                            static_cast<size_t>(sampleRows) * sizeof(float));
+                    }
+                    if (sampleStatus == cudaSuccess) {
+                        m_sampleCapacity = sampleRows;
+                    }
+                }
+                const void* logitsDevice = TensorHelper::GetGPUMemory(logits);
+                if (sampleStatus == cudaSuccess &&
+                    logits->GetDataType() == X::TensorDataType::FLOAT32) {
+                    sampleStatus = runLogitsTop1BatchFP32(
+                        static_cast<const float*>(logitsDevice),
+                        static_cast<long long*>(m_sampleTokenDevice),
+                        static_cast<float*>(m_sampleValueDevice),
+                        sampleRows, vocabSize, cudaStreamPerThread);
+                }
+                else if (sampleStatus == cudaSuccess &&
+                    logits->GetDataType() == X::TensorDataType::BFLOAT16) {
+                    sampleStatus = runLogitsTop1BatchBF16(
+                        static_cast<const bfloat16*>(logitsDevice),
+                        static_cast<long long*>(m_sampleTokenDevice),
+                        static_cast<float*>(m_sampleValueDevice),
+                        sampleRows, vocabSize, cudaStreamPerThread);
+                }
+                else if (sampleStatus == cudaSuccess) {
+                    sampleStatus = cudaErrorInvalidValue;
+                }
+                std::vector<long long> tokenIds(
+                    static_cast<size_t>(sampleRows), -1);
+                std::vector<float> tokenValues(
+                    static_cast<size_t>(sampleRows), 0.0f);
+                if (sampleStatus == cudaSuccess) {
+                    sampleStatus = cudaMemcpyAsync(
+                        tokenIds.data(), m_sampleTokenDevice,
+                        tokenIds.size() * sizeof(long long),
+                        cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                }
+                if (sampleStatus == cudaSuccess) {
+                    sampleStatus = cudaMemcpyAsync(
+                        tokenValues.data(), m_sampleValueDevice,
+                        tokenValues.size() * sizeof(float),
+                        cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                }
+                if (sampleStatus == cudaSuccess) {
+                    sampleStatus = cudaStreamSynchronize(cudaStreamPerThread);
+                }
+                if (sampleStatus != cudaSuccess) {
+                    result->Set("status", X::Value("error"));
+                    result->Set(
+                        "error_code",
+                        X::Value("compiled_gpu_batch_sampling_failed"));
+                    result->Set(
+                        "error_message",
+                        X::Value(cudaGetErrorString(sampleStatus)));
+                    return result;
+                }
+                X::V<X::XList> tokenList;
+                X::V<X::XList> valueList;
+                for (int row = 0; row < sampleRows; ++row) {
+                    tokenList->AddItem(X::Value(tokenIds[row]));
+                    valueList->AddItem(X::Value(tokenValues[row]));
+                }
+                result->Set("token_ids", X::Value(tokenList));
+                result->Set("token_values", X::Value(valueList));
+                sampledTokenId = tokenIds.front();
+                const auto firstTokenReady = std::chrono::steady_clock::now();
+                result->Set("time_to_first_token_ms", X::Value(
+                    std::chrono::duration<double, std::milli>(
+                        firstTokenReady - requestStart).count()));
+            }
+            else {
             int selectedRow = tokenRows - 1;
             if (frontendInputs.promptTokenCount > 0) {
                 selectedRow = std::min(frontendInputs.promptTokenCount, tokenRows) - 1;
@@ -1219,6 +1351,7 @@ namespace Garnet
             const auto firstTokenReady = std::chrono::steady_clock::now();
             result->Set("time_to_first_token_ms", X::Value(
                 std::chrono::duration<double, std::milli>(firstTokenReady - requestStart).count()));
+            }
         }
 
         if (requestedNewTokens > 0) {

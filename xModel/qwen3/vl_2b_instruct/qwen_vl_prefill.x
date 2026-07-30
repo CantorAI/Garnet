@@ -1,7 +1,6 @@
 from garnet import garnet
 
 T = garnet.tensor()
-T.set_backend("TensorRT")
 
 from "." import vision_encoder as vision
 from "." import vl_adapter as adapter

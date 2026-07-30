@@ -38,7 +38,6 @@ class Logger : public ILogger
 
 namespace Garnet {
 
-    thread_local ITRTContext* g_trtContext = nullptr;
 
     namespace {
         void AppendTensorDependencies(
@@ -166,13 +165,14 @@ namespace Garnet {
             const std::string& enginePath,
             nvinfer1::IExecutionContext* context,
             const std::vector<void*>& bindingSignature,
+            bool enableCudaGraph,
             cudaStream_t stream)
         {
             const char* enabled = std::getenv("GARNET_DECODE_CUDA_GRAPH");
-            const bool useCudaGraph = !(enabled && enabled[0] == '0' && enabled[1] == '\0') &&
-                context->getProfiler() == nullptr &&
-                (enginePath.find("/decode/") != std::string::npos ||
-                 enginePath.find("\\decode\\") != std::string::npos);
+            const bool useCudaGraph =
+                enableCudaGraph &&
+                !(enabled && enabled[0] == '0' && enabled[1] == '\0') &&
+                context->getProfiler() == nullptr;
             if (!useCudaGraph) return context->enqueueV3(stream);
 
             std::lock_guard<std::mutex> lock(g_decodeCudaGraphMutex);
@@ -227,13 +227,6 @@ namespace Garnet {
         private:
             std::vector<std::pair<std::string, float>> samples;
         };
-
-        class DisabledTRTLayerProfiler final : public nvinfer1::IProfiler {
-        public:
-            void reportLayerTime(const char*, float) noexcept override {}
-        };
-
-        DisabledTRTLayerProfiler g_disabledTRTLayerProfiler;
 
         void WriteTRTProfileLog(const std::string& message) {
             const char* profileLogPath = std::getenv("GARNET_PARTITION_PROFILE_LOG");
@@ -3958,6 +3951,7 @@ namespace Garnet {
         pendingKVPageTable = nullptr;
         pendingKVContextLength = nullptr;
         pendingKVSlotPosition = nullptr;
+        pendingKVActiveMask = nullptr;
         for (auto* plugin : ownedPlugins) plugin->destroy();
         ownedPlugins.clear();
         loweringError.clear();
@@ -4060,9 +4054,8 @@ namespace Garnet {
             X::KWARGS runOptions;
             runOptions.Add("Func", forwardFunction);
             replayOperationIndex = 0;
-            g_trtContext = this;
+            ScopedLoweringContext loweringScope(*this);
             const bool ran = tensorGraph->Run(graphArguments, runOptions);
-            g_trtContext = nullptr;
             if (!ran && loweringError.empty()) {
                 loweringError = "xlang TensorGraph replay failed";
             }
@@ -4148,9 +4141,8 @@ namespace Garnet {
         X::TensorGraph tensorGraph(graph);
         X::KWARGS runOptions;
         runOptions.Add("Func", forwardFunction);
-        g_trtContext = this;
+        ScopedLoweringContext loweringScope(*this);
         const bool ran = tensorGraph->Run(graphArguments, runOptions);
-        g_trtContext = nullptr;
         analysisActive = false;
         if (!ran) {
             errorMessage = "xlang TensorGraph analysis replay failed";
@@ -4365,6 +4357,7 @@ namespace Garnet {
         X::Value inputsValue,
         const SafeTensorsIndex* weightIndex,
         X::Value reusableOutput,
+        bool enableCudaGraph,
         std::string& errorMessage) {
         if (!EnsurePagedKVDecodePluginRegistered()) {
             errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
@@ -4469,9 +4462,7 @@ namespace Garnet {
         }
         const char* layerProfilePath = std::getenv("GARNET_PROFILE_DECODE_LAYERS");
         bool profileDecodeLayers = false;
-        if (layerProfilePath && *layerProfilePath &&
-            (enginePath.find("/decode/") != std::string::npos ||
-             enginePath.find("\\decode\\") != std::string::npos)) {
+        if (layerProfilePath && *layerProfilePath && enableCudaGraph) {
             std::lock_guard<std::mutex> lock(g_trtLayerProfileMutex);
             profileDecodeLayers = g_profiledTRTEngines.insert(enginePath).second;
         }
@@ -4483,14 +4474,19 @@ namespace Garnet {
         bindingSignature.push_back(outputDevicePointer);
         if (!cachedContext->setTensorAddress("output_0", outputDevicePointer) ||
             !EnqueueTRTWithOptionalCudaGraph(
-                enginePath, cachedContext, bindingSignature, cudaStreamPerThread)) {
-            if (profileDecodeLayers) cachedContext->setProfiler(&g_disabledTRTLayerProfiler);
+                enginePath, cachedContext, bindingSignature, enableCudaGraph,
+                cudaStreamPerThread)) {
+            if (profileDecodeLayers) {
+                cachedContext->setProfiler(nullptr);
+                cachedContext->setEnqueueEmitsProfile(false);
+            }
             if (allocatedOutput) cudaFree(outputDevicePointer);
             errorMessage = "TensorRT enqueueV3 failed";
             return X::Value();
         }
         if (profileDecodeLayers) {
-            cachedContext->setProfiler(&g_disabledTRTLayerProfiler);
+            cachedContext->setProfiler(nullptr);
+            cachedContext->setEnqueueEmitsProfile(false);
             layerProfiler.Write(layerProfilePath, enginePath);
         }
 
@@ -4754,7 +4750,8 @@ namespace Garnet {
             opName == "paged_kv_bind_value_pages" ||
             opName == "paged_kv_bind_page_table" ||
             opName == "paged_kv_bind_context_length" ||
-            opName == "paged_kv_bind_slot_position";
+            opName == "paged_kv_bind_slot_position" ||
+            opName == "paged_kv_bind_active_mask";
         if (!isElementwise && !isMatrix && !isVisionPositionInterpolate &&
             !isVisionRope && !isVisionAttention && !isVisualEmbeddingMerge &&
             !isTextRope && !isTextAttention && !isDeepstackAdd && !isPagedKVBinding) {
@@ -4778,7 +4775,8 @@ namespace Garnet {
             else if (opName == "paged_kv_bind_value_pages") pendingKVValuePages = right;
             else if (opName == "paged_kv_bind_page_table") pendingKVPageTable = right;
             else if (opName == "paged_kv_bind_context_length") pendingKVContextLength = right;
-            else pendingKVSlotPosition = right;
+            else if (opName == "paged_kv_bind_slot_position") pendingKVSlotPosition = right;
+            else pendingKVActiveMask = right;
             lastOutput = left;
         }
 
@@ -5098,10 +5096,12 @@ namespace Garnet {
             pendingKVValuePages = nullptr;
             pendingKVPageTable = nullptr;
             pendingKVSlotPosition = nullptr;
+            pendingKVActiveMask = nullptr;
             pendingKVLayerIndex = -1;
         }
 
-        else if (opName == "paged_kv_decode_bf16") {
+        else if (opName == "paged_kv_decode_bf16" ||
+                 opName == "paged_kv_decode_masked_bf16") {
             auto getIntOption = [&](const char* name, int defaultValue) {
                 auto* item = kwParams.find(name);
                 return item ? static_cast<int>(item->val.ToLongLong()) : defaultValue;
@@ -5110,14 +5110,18 @@ namespace Garnet {
             const int qHeads = getIntOption("q_heads", 0);
             const int kvHeads = getIntOption("kv_heads", 0);
             const int headDim = getIntOption("head_dim", 0);
+            const bool useActiveMask = opName == "paged_kv_decode_masked_bf16";
             if (!pendingKVKeyPages || !pendingKVValuePages || !pendingKVPageTable ||
                 !pendingKVContextLength || !pendingKVSlotPosition || pageSize <= 0 ||
-                qHeads <= 0 || kvHeads <= 0 || headDim <= 0) {
-                loweringError = "paged_kv_decode_bf16 requires explicit cache bindings and geometry";
+                qHeads <= 0 || kvHeads <= 0 || headDim <= 0 ||
+                (useActiveMask && !pendingKVActiveMask)) {
+                loweringError = opName +
+                    " requires explicit cache bindings and geometry";
                 return X::Value();
             }
             auto* plugin = new PagedKVDecodePlugin(
-                pageSize, qHeads, kvHeads, headDim, pendingKVLayerIndex);
+                pageSize, qHeads, kvHeads, headDim, pendingKVLayerIndex,
+                useActiveMask);
             ownedPlugins.push_back(plugin);
             ITensor* pluginInputs[] = {
                 source,
@@ -5127,13 +5131,25 @@ namespace Garnet {
                 pendingKVContextLength,
                 pendingKVSlotPosition,
             };
-            auto* layer = network->addPluginV2(pluginInputs, 6, *plugin);
+            ITensor* maskedPluginInputs[] = {
+                source,
+                pendingKVKeyPages,
+                pendingKVValuePages,
+                pendingKVPageTable,
+                pendingKVContextLength,
+                pendingKVSlotPosition,
+                pendingKVActiveMask,
+            };
+            auto* layer = useActiveMask
+                ? network->addPluginV2(maskedPluginInputs, 7, *plugin)
+                : network->addPluginV2(pluginInputs, 6, *plugin);
             lastOutput = layer ? layer->getOutput(0) : nullptr;
             pendingKVKeyPages = nullptr;
             pendingKVValuePages = nullptr;
             pendingKVPageTable = nullptr;
             pendingKVContextLength = nullptr;
             pendingKVSlotPosition = nullptr;
+            pendingKVActiveMask = nullptr;
             pendingKVLayerIndex = -1;
         }
 
