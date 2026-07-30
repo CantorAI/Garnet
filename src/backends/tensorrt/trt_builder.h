@@ -7,6 +7,7 @@
 #include "compiled_graph_capture.h"
 #include <string>
 #include <deque>
+#include <memory>
 #include <vector>
 #include <unordered_map>
 #include <NvInfer.h>
@@ -140,7 +141,9 @@ namespace Garnet {
         std::deque<std::vector<int>> integerVectorWeights;
         std::deque<std::vector<unsigned char>> booleanVectorWeights;
         const SafeTensorsIndex* capturedWeightIndex = nullptr;
-        SafeTensorsMappedFile capturedWeightFile;
+        std::unordered_map<
+            std::string,
+            std::unique_ptr<SafeTensorsMappedFile>> capturedWeightFiles;
         nvinfer1::ITensor* lastOutput = nullptr;
         nvinfer1::ITensor* pendingKVKeyPages = nullptr;
         nvinfer1::ITensor* pendingKVValuePages = nullptr;
@@ -185,7 +188,8 @@ namespace Garnet {
         nvinfer1::ITensor* LowerTextRope(
             nvinfer1::ITensor* qkv,
             nvinfer1::ITensor* positionIds,
-            X::KWARGS& options);
+            X::KWARGS& options,
+            bool multimodal);
         nvinfer1::ITensor* LowerTextAttention(
             nvinfer1::ITensor* qkv,
             nvinfer1::ITensor* attentionMask,

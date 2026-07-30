@@ -288,12 +288,10 @@ namespace Garnet {
                 if (weightCount > 0) {
                     std::vector<const char*> weightNames(static_cast<size_t>(weightCount));
                     refitter->getAllWeights(weightCount, weightNames.data());
-                    Garnet::SafeTensorsMappedFile mappedWeights;
+                    std::unordered_map<
+                        std::string,
+                        std::unique_ptr<Garnet::SafeTensorsMappedFile>> mappedWeights;
                     std::string mappingError;
-                    if (!mappedWeights.Open(weightIndex->FilePath(), mappingError)) {
-                        std::cout << "[TRTBuilder] refit mapping failed: " << mappingError << std::endl;
-                        return nullptr;
-                    }
                     for (const char* weightName : weightNames) {
                         const Garnet::SafeTensorMetadata* metadata = weightIndex->Find(weightName);
                         if (!metadata) {
@@ -318,7 +316,17 @@ namespace Garnet {
                             std::cout << "[TRTBuilder] unsupported refit dtype: " << metadata->dataType << std::endl;
                             return nullptr;
                         }
-                        const void* data = mappedWeights.DataAt(
+                        const std::string sourcePath = metadata->filePath.string();
+                        auto& mappedFile = mappedWeights[sourcePath];
+                        if (!mappedFile) {
+                            mappedFile = std::make_unique<Garnet::SafeTensorsMappedFile>();
+                            if (!mappedFile->Open(metadata->filePath, mappingError)) {
+                                std::cout << "[TRTBuilder] refit mapping failed: "
+                                    << mappingError << std::endl;
+                                return nullptr;
+                            }
+                        }
+                        const void* data = mappedFile->DataAt(
                             metadata->dataOffset,
                             metadata->dataSize);
                         const int64_t elementCount = static_cast<int64_t>(metadata->dataSize / elementBytes);
@@ -2940,7 +2948,7 @@ namespace Garnet {
         if (existing != weightTensorMap.end()) {
             return existing->second;
         }
-        if (!capturedWeightIndex || !capturedWeightFile.IsOpen()) {
+        if (!capturedWeightIndex) {
             loweringError = "native safetensors mapping is unavailable for weight: " + weightName;
             return nullptr;
         }
@@ -2974,7 +2982,13 @@ namespace Garnet {
             dimensions.d[dimension] = static_cast<int>(size);
             elementCount *= size;
         }
-        const void* data = capturedWeightFile.DataAt(metadata->dataOffset, metadata->dataSize);
+        const std::string sourcePath = metadata->filePath.string();
+        auto& mappedFile = capturedWeightFiles[sourcePath];
+        if (!mappedFile) {
+            mappedFile = std::make_unique<SafeTensorsMappedFile>();
+            if (!mappedFile->Open(metadata->filePath, loweringError)) return nullptr;
+        }
+        const void* data = mappedFile->DataAt(metadata->dataOffset, metadata->dataSize);
         if (!data) {
             loweringError = "safetensors range is unavailable for weight: " + weightName;
             return nullptr;
@@ -3362,7 +3376,8 @@ namespace Garnet {
     nvinfer1::ITensor* TRTBuilder::LowerTextRope(
         ITensor* qkv,
         ITensor* positionIds,
-        X::KWARGS& options) {
+        X::KWARGS& options,
+        bool multimodal) {
         const Dims qkvDims = qkv->getDimensions();
         const Dims positionDims = positionIds->getDimensions();
         auto* headsItem = options.find("num_heads");
@@ -3371,10 +3386,14 @@ namespace Garnet {
         const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
         const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->val.ToLongLong()) : 0;
         const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
-        if (qkvDims.nbDims != 3 || positionDims.nbDims != 3 || positionDims.d[0] != 3 ||
+        const int positionComponents = multimodal ? 3 : 1;
+        if (qkvDims.nbDims != 3 || positionDims.nbDims != 3 ||
+            positionDims.d[0] != positionComponents ||
             heads <= 0 || kvHeads <= 0 || headDim <= 0 || headDim % 2 != 0 ||
             qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
-            loweringError = "Qwen3-VL text RoPE received incompatible static dimensions";
+            loweringError = multimodal
+                ? "Qwen3-VL text RoPE received incompatible static dimensions"
+                : "Qwen3 text RoPE received incompatible static dimensions";
             return nullptr;
         }
         const int batch = qkvDims.d[0];
@@ -3411,28 +3430,33 @@ namespace Garnet {
                 }
             }
         }
-        integerVectorWeights.emplace_back(static_cast<size_t>(frequencyCount), 0);
-        for (int i = 0; i < sections[1]; ++i) {
-            const int index = 1 + 3 * i;
-            if (index < frequencyCount) integerVectorWeights.back()[index] = 1;
+        ITensor* selectedPositionTensor = positionIds;
+        if (multimodal) {
+            integerVectorWeights.emplace_back(static_cast<size_t>(frequencyCount), 0);
+            for (int i = 0; i < sections[1]; ++i) {
+                const int index = 1 + 3 * i;
+                if (index < frequencyCount) integerVectorWeights.back()[index] = 1;
+            }
+            for (int i = 0; i < sections[2]; ++i) {
+                const int index = 2 + 3 * i;
+                if (index < frequencyCount) integerVectorWeights.back()[index] = 2;
+            }
+            Dims selectorDims{};
+            selectorDims.nbDims = 1;
+            selectorDims.d[0] = frequencyCount;
+            Weights selectorWeights{
+                DataType::kINT32,
+                integerVectorWeights.back().data(),
+                frequencyCount};
+            auto* selector = network->addConstant(selectorDims, selectorWeights);
+            auto* selectedPositions = selector
+                ? network->addGather(*positionIds, *selector->getOutput(0), 0)
+                : nullptr;
+            selectedPositionTensor =
+                selectedPositions ? selectedPositions->getOutput(0) : nullptr;
         }
-        for (int i = 0; i < sections[2]; ++i) {
-            const int index = 2 + 3 * i;
-            if (index < frequencyCount) integerVectorWeights.back()[index] = 2;
-        }
-        Dims selectorDims{};
-        selectorDims.nbDims = 1;
-        selectorDims.d[0] = frequencyCount;
-        Weights selectorWeights{
-            DataType::kINT32,
-            integerVectorWeights.back().data(),
-            frequencyCount};
-        auto* selector = network->addConstant(selectorDims, selectorWeights);
-        auto* selectedPositions = selector
-            ? network->addGather(*positionIds, *selector->getOutput(0), 0)
-            : nullptr;
-        auto* positionTranspose = selectedPositions
-            ? network->addShuffle(*selectedPositions->getOutput(0))
+        auto* positionTranspose = selectedPositionTensor
+            ? network->addShuffle(*selectedPositionTensor)
             : nullptr;
         if (positionTranspose) {
             Permutation permutation{};
@@ -3959,14 +3983,7 @@ namespace Garnet {
         branchParentActivity.clear();
         flowBranchTaken.clear();
         capturedWeightIndex = weightIndex;
-        capturedWeightFile.Close();
-        if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0) {
-            if (!capturedWeightFile.Open(capturedWeightIndex->FilePath(), loweringError)) {
-                errorMessage = loweringError;
-                capturedWeightIndex = nullptr;
-                return false;
-            }
-        }
+        capturedWeightFiles.clear();
 
         if (!EnsurePagedKVDecodePluginRegistered()) {
             errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
@@ -4122,7 +4139,7 @@ namespace Garnet {
         for (auto* plugin : ownedPlugins) plugin->destroy();
         ownedPlugins.clear();
         tensorMap.clear();
-        capturedWeightFile.Close();
+        capturedWeightFiles.clear();
         capturedWeightIndex = nullptr;
         lastOutput = nullptr;
         errorMessage = loweringError;
@@ -4742,7 +4759,10 @@ namespace Garnet {
         const bool isVisionRope = opName == "qwen3_vl_apply_vision_rope_packed";
         const bool isVisionAttention = opName == "vision_varlen_attention_packed";
         const bool isVisualEmbeddingMerge = opName == "qwen3_vl_merge_visual_embeddings";
-        const bool isTextRope = opName == "qwen3_vl_apply_text_rope_packed";
+        const bool isMultimodalTextRope =
+            opName == "qwen3_vl_apply_text_rope_packed";
+        const bool isTextRope =
+            isMultimodalTextRope || opName == "qwen3_apply_text_rope_packed";
         const bool isTextAttention = opName == "paged_attention_packed";
         const bool isDeepstackAdd = opName == "qwen3_vl_deepstack_add";
         const bool isPagedKVBinding =
@@ -4845,7 +4865,8 @@ namespace Garnet {
             lastOutput = LowerTextAttention(left, right, kwParams);
         }
         else if (isTextRope) {
-            lastOutput = LowerTextRope(left, right, kwParams);
+            lastOutput = LowerTextRope(
+                left, right, kwParams, isMultimodalTextRope);
         }
         else if (isVisualEmbeddingMerge) {
             auto* inputIdsItem = kwParams.find("input_ids");

@@ -26,6 +26,7 @@ namespace Garnet
         std::shared_ptr<PagedKVPool> m_kvPool;
         int m_bucketSize = 0;
         int m_maxLogicalPages = 0;
+        int m_positionComponents = 3;
 
         X::Value m_inputIds;
         X::Value m_positionIds;
@@ -45,7 +46,8 @@ namespace Garnet
             std::shared_ptr<PagedKVPool> kvPool,
             int bucketSize,
             int maxLogicalPages,
-            std::string& errorMessage);
+            std::string& errorMessage,
+            int positionComponents = 3);
 
         bool Execute(
             const BatchPlan& plan,

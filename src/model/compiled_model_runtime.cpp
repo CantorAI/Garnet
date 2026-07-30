@@ -5,6 +5,7 @@
 #include "garnet_tensor.h"
 #include "tensor_helper.h"
 #include "qwen_vl_compiled_frontend.h"
+#include "qwen_text_compiled_frontend.h"
 #include "cuda_lib.h"
 #include "qwen_tokenizer.h"
 #include "nlohmann/json.hpp"
@@ -576,16 +577,6 @@ namespace Garnet
         m_weightIndexError.clear();
         if (!m_weightsLocation.empty()) {
             std::filesystem::path weightsPath(m_weightsLocation);
-            if (std::filesystem::is_directory(weightsPath, error)) {
-                weightsPath /= "model.safetensors";
-            }
-            error.clear();
-            if (!std::filesystem::is_regular_file(weightsPath, error)) {
-                m_state = "failed";
-                m_errorCode = "weights_file_missing";
-                m_errorMessage = "compiled runtime requires model.safetensors at the weights location";
-                return false;
-            }
             if (!m_weightIndex.Open(weightsPath, m_weightIndexError)) {
                 m_state = "failed";
                 m_errorCode = "weights_index_invalid";
@@ -618,13 +609,23 @@ namespace Garnet
         m_enginePath = enginePath.string();
         auto createDecodeRuntime = [&]()
             -> std::pair<std::shared_ptr<CompiledModelRuntime>, std::string> {
-            if (m_frontend != "qwen3_vl" || m_inputShapes.size() != 15) {
+            const bool qwenVL =
+                m_frontend == "qwen3_vl" && m_inputShapes.size() == 15;
+            const bool qwenText =
+                m_frontend == "qwen3_text" && m_inputShapes.size() == 7;
+            if (!qwenVL && !qwenText) {
                 return {nullptr, {}};
             }
-            const std::filesystem::path decodeModel = rootPath.parent_path() / "qwen_text_decode.x";
+            const std::filesystem::path decodeModel =
+                rootPath.parent_path() /
+                (qwenVL ? "qwen_text_decode.x" : "decode.x");
+            const int keyIndex = qwenVL ? 11 : 3;
+            const int valueIndex = qwenVL ? 12 : 4;
+            const int tableIndex = qwenVL ? 13 : 5;
             std::vector<std::vector<int>> decodeShapes{
-                {1, 1}, {3, 1, 1}, m_inputShapes[11], m_inputShapes[12],
-                m_inputShapes[13], {1}, {1}};
+                {1, 1}, {qwenVL ? 3 : 1, 1, 1},
+                m_inputShapes[keyIndex], m_inputShapes[valueIndex],
+                m_inputShapes[tableIndex], {1}, {1}};
             std::vector<std::string> decodeTypes{
                 "int64", "int64", "bfloat16", "bfloat16", "int32", "int32", "int32"};
             FusionPartitionOptions decodePartitionOptions = m_partitionOptions;
@@ -649,7 +650,7 @@ namespace Garnet
                     decodeModel.string(),
                     (std::filesystem::path(m_cacheDirectory) / "decode").string(),
                     m_weightsLocation,
-                    "Qwen3TextDecode",
+                    qwenVL ? "Qwen3TextDecode" : "Qwen3Decode",
                     "",
                     decodeShapes,
                     decodeTypes,
@@ -663,7 +664,8 @@ namespace Garnet
         auto prepareServingEngines = [&]() -> bool {
             const auto start = std::chrono::steady_clock::now();
             const bool needsDecodeRuntime =
-                m_frontend == "qwen3_vl" && m_inputShapes.size() == 15;
+                (m_frontend == "qwen3_vl" && m_inputShapes.size() == 15) ||
+                (m_frontend == "qwen3_text" && m_inputShapes.size() == 7);
             TRTBuilder builder;
             std::string preparationError;
             const bool prepared = m_enginePartitions.size() > 1
@@ -687,7 +689,7 @@ namespace Garnet
             m_decodeRuntime = std::move(decodeResult.first);
             m_enginePreparationMs = std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - start).count();
-            if (m_frontend == "qwen3_vl") {
+            if (m_frontend == "qwen3_vl" || m_frontend == "qwen3_text") {
                 const auto frontendStart = std::chrono::steady_clock::now();
                 std::string tokenizerError;
                 if (!Tokenization::GetCachedQwenTokenizer(
@@ -1132,6 +1134,11 @@ namespace Garnet
         X::Dict requestDict(request);
         X::Value inputs = requestDict["inputs"];
         QwenVLCompiledInputs frontendInputs;
+        QwenTextCompiledInputs textFrontendInputs;
+        bool frontendActive = false;
+        bool frontendIsVL = false;
+        int frontendPromptTokenCount = 0;
+        long long frontendPositionDelta = 0;
         if (!inputs.IsList() && m_frontend == "qwen3_vl") {
             X::Value imageSource = requestDict["image"];
             if (!imageSource.IsValid()) imageSource = requestDict["image_path"];
@@ -1151,6 +1158,29 @@ namespace Garnet
                 return result;
             }
             inputs = frontendInputs.inputs;
+            frontendActive = true;
+            frontendIsVL = true;
+            frontendPromptTokenCount = frontendInputs.promptTokenCount;
+            frontendPositionDelta = frontendInputs.mropePositionDelta;
+        }
+        else if (!inputs.IsList() && m_frontend == "qwen3_text") {
+            const std::string prompt = requestDict["prompt"].ToString();
+            const bool enableThinking =
+                requestDict["enable_thinking"].IsValid() &&
+                requestDict["enable_thinking"].ToLongLong() != 0;
+            textFrontendInputs = BuildQwenTextCompiledInputs(
+                m_weightsLocation, prompt, enableThinking, m_inputShapes);
+            if (!textFrontendInputs.inputs.IsList()) {
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_frontend_failed"));
+                result->Set(
+                    "error_message", X::Value(textFrontendInputs.error));
+                return result;
+            }
+            inputs = textFrontendInputs.inputs;
+            frontendActive = true;
+            frontendPromptTokenCount =
+                textFrontendInputs.promptTokenCount;
         }
         TRTBuilder builder;
         std::string executionError;
@@ -1294,8 +1324,9 @@ namespace Garnet
             }
             else {
             int selectedRow = tokenRows - 1;
-            if (frontendInputs.promptTokenCount > 0) {
-                selectedRow = std::min(frontendInputs.promptTokenCount, tokenRows) - 1;
+            if (frontendPromptTokenCount > 0) {
+                selectedRow =
+                    std::min(frontendPromptTokenCount, tokenRows) - 1;
             }
             else if (requestDict["sample_row"].IsValid()) {
                 selectedRow = static_cast<int>(requestDict["sample_row"].ToLongLong());
@@ -1355,13 +1386,14 @@ namespace Garnet
         }
 
         if (requestedNewTokens > 0) {
-            if (!frontendInputs.inputs.IsList() || !m_decodeRuntime || sampledTokenId < 0) {
+            if (!frontendActive || !m_decodeRuntime || sampledTokenId < 0) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_generation_runtime_unavailable"));
                 return result;
             }
             X::List activeInputs(inputs);
-            if (activeInputs->Size() != 15) {
+            const int expectedInputCount = frontendIsVL ? 15 : 7;
+            if (activeInputs->Size() != expectedInputCount) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_generation_cache_bindings_missing"));
                 return result;
@@ -1381,23 +1413,32 @@ namespace Garnet
             const int64_t imEnd = tokenizer->TokenId("<|im_end|>");
             const bool ignoreEos = requestDict["ignore_eos"].IsValid() &&
                 requestDict["ignore_eos"].ToLongLong() != 0;
-            const int cacheCapacity = m_inputShapes.size() > 11 && m_inputShapes[11].size() >= 3
-                ? m_inputShapes[11][1] * m_inputShapes[11][2]
+            const int cacheInputIndex = frontendIsVL ? 11 : 3;
+            const int cacheCapacity =
+                m_inputShapes.size() > static_cast<size_t>(cacheInputIndex) &&
+                m_inputShapes[cacheInputIndex].size() >= 3
+                ? m_inputShapes[cacheInputIndex][1] *
+                    m_inputShapes[cacheInputIndex][2]
                 : 0;
             if (cacheCapacity <= 0 ||
-                frontendInputs.promptTokenCount + requestedNewTokens - 1 > cacheCapacity) {
+                frontendPromptTokenCount + requestedNewTokens - 1 >
+                    cacheCapacity) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_generation_exceeds_kv_profile"));
                 return result;
             }
             int64_t decodeTokenValue = sampledTokenId;
             int64_t decodeRopePositions[3] = {};
+            const int positionComponents = frontendIsVL ? 3 : 1;
             int decodeContextLength = 0;
             int decodeSlotPosition = 0;
             X::Value decodeTokenTensor = MakeCudaTensorFromHost(
                 X::TensorDataType::LONGLONG, {1, 1}, &decodeTokenValue, sizeof(decodeTokenValue));
             X::Value decodePositionTensor = MakeCudaTensorFromHost(
-                X::TensorDataType::LONGLONG, {3, 1, 1}, decodeRopePositions, sizeof(decodeRopePositions));
+                X::TensorDataType::LONGLONG,
+                {positionComponents, 1, 1},
+                decodeRopePositions,
+                static_cast<size_t>(positionComponents) * sizeof(int64_t));
             X::Value decodeContextTensor = MakeCudaTensorFromHost(
                 X::TensorDataType::INT, {1}, &decodeContextLength, sizeof(decodeContextLength));
             X::Value decodeSlotTensor = MakeCudaTensorFromHost(
@@ -1419,10 +1460,11 @@ namespace Garnet
             const auto decodeStart = std::chrono::steady_clock::now();
             for (int generatedIndex = 1; generatedIndex < requestedNewTokens; ++generatedIndex) {
                 if (!ignoreEos && (sampledTokenId == endOfText || sampledTokenId == imEnd)) break;
-                const int slotPosition = frontendInputs.promptTokenCount + generatedIndex - 1;
+                const int slotPosition =
+                    frontendPromptTokenCount + generatedIndex - 1;
                 const int contextLength = slotPosition + 1;
                 const int64_t ropePosition = static_cast<int64_t>(slotPosition) +
-                    frontendInputs.mropePositionDelta;
+                    frontendPositionDelta;
                 const int64_t ropePositions[3] = {ropePosition, ropePosition, ropePosition};
                 decodeTokenValue = sampledTokenId;
                 decodeRopePositions[0] = ropePositions[0];
@@ -1434,7 +1476,9 @@ namespace Garnet
                     decodeTokenDevice, &decodeTokenValue, sizeof(decodeTokenValue),
                     cudaMemcpyHostToDevice, cudaStreamPerThread);
                 if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
-                    decodePositionDevice, decodeRopePositions, sizeof(decodeRopePositions),
+                    decodePositionDevice,
+                    decodeRopePositions,
+                    static_cast<size_t>(positionComponents) * sizeof(int64_t),
                     cudaMemcpyHostToDevice, cudaStreamPerThread);
                 if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
                     decodeContextDevice, &decodeContextLength, sizeof(decodeContextLength),
@@ -1449,11 +1493,14 @@ namespace Garnet
                     return result;
                 }
                 X::V<X::XList> decodeInputs;
+                const int keyInputIndex = frontendIsVL ? 11 : 3;
+                const int valueInputIndex = frontendIsVL ? 12 : 4;
+                const int tableInputIndex = frontendIsVL ? 13 : 5;
                 decodeInputs->AddItem(decodeTokenTensor);
                 decodeInputs->AddItem(decodePositionTensor);
-                decodeInputs->AddItem(activeInputs->Get(11));
-                decodeInputs->AddItem(activeInputs->Get(12));
-                decodeInputs->AddItem(activeInputs->Get(13));
+                decodeInputs->AddItem(activeInputs->Get(keyInputIndex));
+                decodeInputs->AddItem(activeInputs->Get(valueInputIndex));
+                decodeInputs->AddItem(activeInputs->Get(tableInputIndex));
                 decodeInputs->AddItem(decodeContextTensor);
                 decodeInputs->AddItem(decodeSlotTensor);
                 X::Dict decodeRequest;
@@ -1489,8 +1536,11 @@ namespace Garnet
         const bool returnLogits = !sampleGreedy ||
             (requestDict["return_logits"].IsValid() && requestDict["return_logits"].ToLongLong() != 0);
         if (returnLogits) result->Set("output", output);
-        if (frontendInputs.inputs.IsList()) {
-            result->Set("prompt_token_count", X::Value(frontendInputs.promptTokenCount));
+        if (frontendActive) {
+            result->Set(
+                "prompt_token_count", X::Value(frontendPromptTokenCount));
+        }
+        if (frontendIsVL) {
             result->Set("visual_token_count", X::Value(frontendInputs.visualTokenCount));
             result->Set("source_height", X::Value(frontendInputs.sourceHeight));
             result->Set("source_width", X::Value(frontendInputs.sourceWidth));
@@ -1726,7 +1776,7 @@ namespace Garnet
         void* deviceMemory = nullptr;
         cudaError_t cudaError = cudaHostAlloc(&pinnedMemory, metadata->dataSize, cudaHostAllocDefault);
         if (cudaError == cudaSuccess) {
-            std::ifstream stream(m_weightIndex.FilePath(), std::ios::binary);
+            std::ifstream stream(metadata->filePath, std::ios::binary);
             stream.seekg(static_cast<std::streamoff>(metadata->dataOffset));
             stream.read(static_cast<char*>(pinnedMemory), static_cast<std::streamsize>(metadata->dataSize));
             if (!stream) {

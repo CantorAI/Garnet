@@ -36,12 +36,13 @@ namespace Garnet::Tokenization
     private:
         std::unordered_map<std::string, int64_t> m_tokenToId;
         std::unordered_map<int64_t, std::string> m_idToToken;
+        std::unordered_set<std::string> m_addedTokens;
         std::unordered_set<std::string> m_specialTokens;
         std::unordered_set<int64_t> m_specialIds;
         std::unordered_map<std::string, int> m_mergeRanks;
         std::unordered_map<unsigned char, std::string> m_byteToTokenChar;
         std::unordered_map<std::string, unsigned char> m_tokenCharToByte;
-        size_t m_maxSpecialTokenLength = 0;
+        size_t m_maxAddedTokenLength = 0;
 
         void InitByteLevelMaps();
         std::vector<std::string> SplitSpecialAware(const std::string& text) const;

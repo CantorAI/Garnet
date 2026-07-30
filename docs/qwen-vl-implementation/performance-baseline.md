@@ -18,6 +18,23 @@ The B4 result uses persistent input/output tensor addresses and TensorGraph
 507.65 tok/s. The first B4 engine build took 316.7 seconds. Loading the cached
 engine and refitting mapped safetensors took about 2.2 seconds.
 
+## Real-image pipeline
+
+The reorganized `xModel/qwen3/vl_2b_instruct/qwen_vl_prefill.x` pipeline was
+validated with real JPEG frames from `data/Dataset.1980Love/imgs`.
+
+| Input | End-to-end request | Generated text |
+|---|---:|---|
+| `frame_0.jpg` | 90.19 ms | `A man sits in a wooden hut, surrounded by` |
+| `frame_10050.jpg` | 89.19 ms | `A woman in a plaid shirt and long skirt` |
+| `frame_10200.jpg` | 89.52 ms | `A man and a woman stand in a dimly` |
+| `frame_10350.jpg` | 90.94 ms | `A woman in a plaid shirt and blue skirt` |
+
+The profile used 240 native vision patches, 60 merged visual tokens, 77 total
+prompt tokens, and 10 greedy output tokens. The first request measured
+118.14 ms and the repeated warm request measured 89.42 ms. The one-time
+rebuild after moving the model source took 144.0 seconds.
+
 ## Guardrails
 
 - Inactive batch rows must produce zero attention output and must not modify KV.

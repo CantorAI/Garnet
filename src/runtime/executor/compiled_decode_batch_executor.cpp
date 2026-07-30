@@ -71,10 +71,12 @@ namespace Garnet
         std::shared_ptr<PagedKVPool> kvPool,
         int bucketSize,
         int maxLogicalPages,
-        std::string& errorMessage)
+        std::string& errorMessage,
+        int positionComponents)
     {
         if (!runtime || !kvPool || !kvPool->KeyPages() ||
-            bucketSize <= 0 || maxLogicalPages <= 0) {
+            bucketSize <= 0 || maxLogicalPages <= 0 ||
+            (positionComponents != 1 && positionComponents != 3)) {
             errorMessage = "invalid compiled decode executor configuration";
             return false;
         }
@@ -87,11 +89,13 @@ namespace Garnet
         m_kvPool = std::move(kvPool);
         m_bucketSize = bucketSize;
         m_maxLogicalPages = maxLogicalPages;
+        m_positionComponents = positionComponents;
 
         m_inputIds = MakeOwnedDeviceTensor(
             X::TensorDataType::LONGLONG, {bucketSize, 1});
         m_positionIds = MakeOwnedDeviceTensor(
-            X::TensorDataType::LONGLONG, {3, bucketSize, 1});
+            X::TensorDataType::LONGLONG,
+            {positionComponents, bucketSize, 1});
         const std::vector<int> arenaShape{
             config.numLayers, config.totalPages, config.pageSize,
             config.numKVHeads, config.headDim};
@@ -144,7 +148,8 @@ namespace Garnet
         }
 
         std::vector<long long> inputIds(m_bucketSize, 0);
-        std::vector<long long> positions(3 * m_bucketSize, 0);
+        std::vector<long long> positions(
+            static_cast<std::size_t>(m_positionComponents) * m_bucketSize, 0);
         std::vector<int> pageTables(
             static_cast<std::size_t>(m_bucketSize) * m_maxLogicalPages, 0);
         std::vector<int> contextLengths(m_bucketSize, 1);
@@ -163,9 +168,12 @@ namespace Garnet
             const long long position =
                 static_cast<long long>(request.slotPosition) +
                 request.positionDelta;
-            positions[row] = position;
-            positions[m_bucketSize + row] = position;
-            positions[2 * m_bucketSize + row] = position;
+            for (int component = 0;
+                 component < m_positionComponents; ++component) {
+                positions[
+                    static_cast<std::size_t>(component * m_bucketSize) + row] =
+                    position;
+            }
             std::copy(
                 request.pageTable.begin(),
                 request.pageTable.end(),

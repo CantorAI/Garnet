@@ -31,6 +31,7 @@ namespace Garnet
     {
         std::string dataType;
         std::vector<long long> shape;
+        std::filesystem::path filePath;
         std::uint64_t dataOffset = 0;
         std::uint64_t dataSize = 0;
     };
@@ -43,6 +44,8 @@ namespace Garnet
         std::unordered_map<std::string, SafeTensorMetadata> m_tensors;
 
     public:
+        // Accepts a single .safetensors file, a Hugging Face
+        // model.safetensors.index.json, or a directory containing either.
         bool Open(const std::filesystem::path& filePath, std::string& errorMessage);
 
         const std::filesystem::path& FilePath() const { return m_filePath; }

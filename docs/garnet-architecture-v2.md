@@ -49,6 +49,7 @@ src/
 xModel/
   qwen3/
     vl_2b_instruct/              Qwen3-VL-2B-Instruct model programs
+    text_1_7b/                   Qwen3-1.7B pure-text model programs
 ```
 
 There is no permanent legacy or direct CUDA-source-generation tree.
@@ -124,6 +125,11 @@ Prefill and decode are separate graph entrypoints. Decode receives priority;
 prefill is admitted under a token budget so it cannot create unbounded
 inter-token latency.
 
+The `qwen3_text` frontend applies the Qwen3 chat template, tokenizes directly
+in native code, constructs one-component position IDs and paged-KV bindings,
+then hands the first sampled token to the cached decode graph. Frontend choice
+remains a runtime option; it is not embedded in the model graph.
+
 ## Model Organization
 
 Model-specific graph programs belong below `xModel`, not in the generic
@@ -139,6 +145,12 @@ xModel/qwen3/vl_2b_instruct/
   qwen_text_prefill.x
   qwen_text_decode.x
   qwen_text_decode_batch.x
+
+xModel/qwen3/text_1_7b/
+  qwen_llm.x
+  prefill.x
+  decode.x
+  decode_batch.x
 ```
 
 Reusable runtime mechanisms—scheduling, memory allocation, lowering,
