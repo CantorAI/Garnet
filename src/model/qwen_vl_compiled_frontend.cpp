@@ -110,7 +110,7 @@ namespace Garnet
 
     QwenVLCompiledInputs BuildQwenVLCompiledInputs(
         const std::string& modelDirectory,
-        const std::string& imagePath,
+        X::Value imageSource,
         const std::string& prompt,
         int minPixels,
         int maxPixels,
@@ -130,7 +130,28 @@ namespace Garnet
                 throw std::invalid_argument("Qwen-VL frontend currently requires batch-1 matching token profiles");
             }
 
-            auto image = Image::QwenVL::PreprocessJpegFileToTensor(imagePath, minPixels, maxPixels);
+            Image::PreprocessResult image;
+            if (imageSource.IsObject() &&
+                imageSource.GetObj()->GetType() == X::ObjType::Binary) {
+                auto* binary = dynamic_cast<X::XBin*>(imageSource.GetObj());
+                if (!binary || binary->Size() <= 0) {
+                    throw std::invalid_argument("Qwen-VL image binary is empty");
+                }
+                image = Image::QwenVL::PreprocessJpegBytesToTensor(
+                    reinterpret_cast<const unsigned char*>(binary->Data()),
+                    static_cast<size_t>(binary->Size()),
+                    minPixels,
+                    maxPixels);
+            }
+            else {
+                const std::string imagePath = imageSource.ToString();
+                if (imagePath.empty()) {
+                    throw std::invalid_argument(
+                        "Qwen-VL image must be a JPEG binary or file path");
+                }
+                image = Image::QwenVL::PreprocessJpegFileToTensor(
+                    imagePath, minPixels, maxPixels);
+            }
             X::Tensor gridTensor(image.imageGridTHW);
             const auto* gridData = reinterpret_cast<const long long*>(gridTensor->GetData());
             const int64_t grid[3] = {gridData[0], gridData[1], gridData[2]};

@@ -22,7 +22,7 @@ namespace Garnet
 
     QwenVLCompiledInputs BuildQwenVLCompiledInputs(
         const std::string& modelDirectory,
-        const std::string& imagePath,
+        X::Value imageSource,
         const std::string& prompt,
         int minPixels,
         int maxPixels,

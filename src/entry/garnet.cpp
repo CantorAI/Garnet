@@ -4,6 +4,7 @@
 #include "../tokenizer/qwen_tokenizer.h"
 #include "../cuda/cuda_lib.h"
 #include "../tensor/tensor_helper.h"
+#include "nlohmann/json.hpp"
 #include "xpackage.h"
 #include "xlang.h"
 #include <fstream> 
@@ -22,6 +23,50 @@
 
 namespace
 {
+    using json = nlohmann::json;
+
+    std::string GarnetJsonError(const std::string& code, const std::string& message)
+    {
+        return json({
+            {"status", "error"},
+            {"error_code", code},
+            {"error_message", message}
+        }).dump();
+    }
+
+    json GarnetServingStatus(X::Value modelValue,
+        const std::string& modelRoot,
+        const std::string& lastError,
+        X::XRuntime* runtime,
+        X::XObj* context)
+    {
+        json status = {
+            {"state", modelValue.IsValid() ? "ready" :
+                (lastError.empty() ? "stopped" : "error")},
+            {"ready", modelValue.IsValid()},
+            {"model_root", modelRoot},
+            {"error", lastError}
+        };
+        if (!modelValue.IsValid()) return status;
+        X::Value runtimeStatusCallable = modelValue["runtime_status"];
+        if (!runtimeStatusCallable.IsObject()) {
+            status["state"] = "error";
+            status["ready"] = false;
+            status["error"] = "Garnet serving model handle is invalid";
+            return status;
+        }
+        X::Value runtimeStatusValue = runtimeStatusCallable();
+        if (runtimeStatusValue.IsDict()) {
+            X::Dict runtimeStatus(runtimeStatusValue);
+            status["state"] = runtimeStatus["state"].ToString();
+            status["ready"] = runtimeStatus["ready"].ToLongLong() != 0;
+            if (runtimeStatus["error_message"].IsValid()) {
+                status["error"] = runtimeStatus["error_message"].ToString();
+            }
+        }
+        return status;
+    }
+
     cudaError_t CreateEntryExecutionStream(cudaStream_t* stream)
     {
         if (!stream) return cudaErrorInvalidValue;
@@ -1588,6 +1633,224 @@ extern "C" GARNET_ENTRY_EXPORT int GarnetDebugSampleLogitsTop1FP32(
 
 namespace Garnet
 {
+    void GarnetAPI::ServeModel(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("model_root_required",
+                "serve_model requires a Qwen model root");
+            return;
+        }
+        namespace fs = std::filesystem;
+        const fs::path modelRoot = fs::path(params[0].ToString());
+        const fs::path xmodelRoot = params.size() > 1 && !params[1].ToString().empty()
+            ? fs::path(params[1].ToString())
+            : modelRoot / "xmodel";
+        const fs::path xmodelPath = xmodelRoot / "qwen_vl_prefill.x";
+        const fs::path cacheRoot = params.size() > 2 && !params[2].ToString().empty()
+            ? fs::path(params[2].ToString())
+            : modelRoot / "compiled_cache";
+        int maxInputTokens = 1536;
+        int patchCount = 3772;
+        int kvPages = 128;
+        int minPixels = 256 * 28 * 28;
+        int maxPixels = 1280 * 28 * 28;
+        int maxOutputTokens = 256;
+        if (params.size() > 3 && !params[3].ToString().empty()) {
+            try {
+                const json profile = json::parse(params[3].ToString());
+                maxInputTokens = profile.value("maxInputTokens", maxInputTokens);
+                patchCount = profile.value("patchCount", patchCount);
+                kvPages = profile.value("kvPages", kvPages);
+                minPixels = profile.value("minPixels", minPixels);
+                maxPixels = profile.value("maxPixels", maxPixels);
+                maxOutputTokens = profile.value(
+                    "maxOutputTokens", maxOutputTokens);
+            }
+            catch (const std::exception&) {
+                retValue = GarnetJsonError(
+                    "profile_invalid", "The Garnet inference profile is invalid");
+                return;
+            }
+        }
+        const bool fastProfile =
+            maxInputTokens == 512 && patchCount == 240 && kvPages == 48 &&
+            minPixels == 65536 && maxPixels == 65536;
+        const bool visionProfile =
+            maxInputTokens == 1536 && patchCount == 3772 && kvPages == 128 &&
+            minPixels == 256 * 28 * 28 && maxPixels == 1280 * 28 * 28;
+        if ((!fastProfile && !visionProfile) ||
+            maxOutputTokens < 1 || maxOutputTokens > 512) {
+            retValue = GarnetJsonError(
+                "profile_unsupported",
+                "The requested Garnet inference profile is not supported");
+            return;
+        }
+        if (!fs::is_regular_file(xmodelPath)) {
+            retValue = GarnetJsonError("xmodel_missing",
+                "qwen_vl_prefill.x was not found under the model root");
+            return;
+        }
+        if (!fs::is_regular_file(modelRoot / "config.json") ||
+            !fs::is_regular_file(modelRoot / "tokenizer.json")) {
+            retValue = GarnetJsonError("model_incomplete",
+                "The Qwen model configuration or tokenizer is missing");
+            return;
+        }
+
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        try {
+            fs::create_directories(cacheRoot);
+            X::XPackageValue<Model> modelValue;
+            Model& model = *modelValue;
+            X::Dict emptyWeights;
+            std::string modelDirectory = xmodelPath.parent_path().string();
+            std::string emptyString;
+            model.SetInfo(modelDirectory, emptyString, emptyString, emptyWeights);
+            const std::vector<std::vector<int>> inputShapes = {
+                {1, maxInputTokens}, {patchCount, 1536}, {1, 3},
+                {patchCount, 4}, {patchCount, 4}, {patchCount, 2}, {2},
+                {1, maxInputTokens}, {1, maxInputTokens},
+                {3, 1, maxInputTokens}, {1, 1},
+                {28, kvPages, 16, 8, 128}, {28, kvPages, 16, 8, 128},
+                {kvPages}, {1}
+            };
+            const std::vector<std::string> inputDataTypes = {
+                "int64", "bfloat16", "int64", "int64", "bfloat16", "int64",
+                "int32", "int64", "int64", "int64", "int64", "bfloat16",
+                "bfloat16", "int32", "int32"
+            };
+            FusionPartitionOptions partitionOptions;
+            partitionOptions.builderWorkspaceBytes = 4096ULL << 20;
+            if (!model.InitializeCompiledRuntime(
+                    xmodelPath.string(), cacheRoot.string(), modelRoot.string(),
+                    "Qwen3VLPrefill", "qwen3_vl", inputShapes, inputDataTypes,
+                    partitionOptions)) {
+                m_servingModel = X::Value();
+                m_servingModelRoot.clear();
+                m_servingError = "Garnet failed to initialize the compiled Qwen runtime";
+                retValue = GarnetJsonError("model_load_failed", m_servingError);
+                return;
+            }
+            m_servingModel = X::Value(modelValue);
+            m_servingModelRoot = modelRoot.string();
+            m_servingMinPixels = minPixels;
+            m_servingMaxPixels = maxPixels;
+            m_servingMaxOutputTokens = maxOutputTokens;
+            m_servingError.clear();
+            retValue = GarnetServingStatus(
+                m_servingModel, m_servingModelRoot, m_servingError, rt, pContext
+            ).dump();
+        }
+        catch (const std::exception& exception) {
+            m_servingModel = X::Value();
+            m_servingModelRoot.clear();
+            m_servingError = exception.what();
+            retValue = GarnetJsonError("model_load_failed", m_servingError);
+        }
+    }
+
+    void GarnetAPI::ServeStatusJson(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS&, X::KWARGS&, X::Value& retValue)
+    {
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        retValue = GarnetServingStatus(
+            m_servingModel, m_servingModelRoot, m_servingError, rt, pContext
+        ).dump();
+    }
+
+    void GarnetAPI::InferJson(X::XRuntime* rt, X::XObj* pContext,
+        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() < 2) {
+            retValue = GarnetJsonError("request_invalid",
+                "infer_json requires prompt and image");
+            return;
+        }
+        const std::string prompt = params[0].ToString();
+        X::Value imageSource = params[1];
+        const bool hasImageBinary =
+            imageSource.IsObject() &&
+            imageSource.GetObj()->GetType() == X::ObjType::Binary &&
+            dynamic_cast<X::XBin*>(imageSource.GetObj()) &&
+            dynamic_cast<X::XBin*>(imageSource.GetObj())->Size() > 0;
+        const bool hasImagePath =
+            !hasImageBinary && !imageSource.ToString().empty();
+        const int requestedMaxNewTokens = params.size() > 2
+            ? static_cast<int>(params[2].ToLongLong())
+            : 0;
+        if (prompt.empty()) {
+            retValue = GarnetJsonError("request_invalid",
+                "Garnet Qwen-VL inference requires a prompt");
+            return;
+        }
+        if (!hasImageBinary && !hasImagePath) {
+            retValue = GarnetJsonError("request_invalid",
+                "Garnet Qwen-VL inference requires JPEG binary data or an image path");
+            return;
+        }
+
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        const int maxNewTokens = requestedMaxNewTokens > 0
+            ? (std::max)(1, (std::min)(
+                m_servingMaxOutputTokens, requestedMaxNewTokens))
+            : m_servingMaxOutputTokens;
+        if (!m_servingModel.IsValid()) {
+            retValue = GarnetJsonError("serving_not_ready",
+                m_servingError.empty() ? "Garnet serving is not started" : m_servingError);
+            return;
+        }
+        X::Value forwardCallable = m_servingModel["forward"];
+        if (!forwardCallable.IsObject()) {
+            retValue = GarnetJsonError("serving_not_ready",
+                "Garnet serving model handle is invalid");
+            return;
+        }
+        X::Dict request;
+        request->Set("image", imageSource);
+        request->Set("prompt", X::Value(prompt));
+        request->Set("min_pixels", X::Value(m_servingMinPixels));
+        request->Set("max_pixels", X::Value(m_servingMaxPixels));
+        request->Set("max_new_tokens", X::Value(maxNewTokens));
+        X::Value resultValue = forwardCallable(X::Value(request));
+        if (!resultValue.IsDict()) {
+            retValue = GarnetJsonError("inference_failed",
+                "Garnet returned an invalid inference result");
+            return;
+        }
+        X::Dict result(resultValue);
+        json response = {
+            {"status", result["status"].ToString()},
+            {"text", result["text"].ToString()},
+            {"error_code", result["error_code"].ToString()},
+            {"error_message", result["error_message"].ToString()},
+            {"prompt_tokens", result["prompt_token_count"].IsValid()
+                ? result["prompt_token_count"].ToLongLong() : 0},
+            {"output_tokens", result["generated_token_count"].IsValid()
+                ? result["generated_token_count"].ToLongLong() : 0},
+            {"visual_tokens", result["visual_token_count"].IsValid()
+                ? result["visual_token_count"].ToLongLong() : 0},
+            {"duration_ms", result["total_ms"].IsValid()
+                ? result["total_ms"].ToDouble() : 0.0},
+            {"tokens_per_second", result["decode_tokens_per_second"].IsValid()
+                ? result["decode_tokens_per_second"].ToDouble() : 0.0}
+        };
+        retValue = response.dump();
+    }
+
+    void GarnetAPI::StopServing(X::XRuntime*, X::XObj*,
+        X::ARGS&, X::KWARGS&, X::Value& retValue)
+    {
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        m_servingModel = X::Value();
+        m_servingModelRoot.clear();
+        m_servingError.clear();
+        m_servingMinPixels = 256 * 28 * 28;
+        m_servingMaxPixels = 1280 * 28 * 28;
+        m_servingMaxOutputTokens = 256;
+        retValue = true;
+    }
+
     namespace
     {
         std::vector<int> ReadIntList(X::Value value)

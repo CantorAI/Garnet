@@ -7,6 +7,7 @@
 #include "log.h"
 #include <string>
 #include <deque>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -126,6 +127,13 @@ namespace Garnet
 		std::string m_baseFolder;//like cantor's folder
 		X::Value m_current_weights;
 		X::Value m_compiledEngine;
+		X::Value m_servingModel;
+		std::string m_servingModelRoot;
+		std::string m_servingError;
+		int m_servingMinPixels = 256 * 28 * 28;
+		int m_servingMaxPixels = 1280 * 28 * 28;
+		int m_servingMaxOutputTokens = 256;
+		mutable std::mutex m_servingMutex;
 		bool LoadModelFromFile(std::string modelPath, X::Dict& model);
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
@@ -155,6 +163,10 @@ namespace Garnet
 			APISET().AddVarFunc("tensor_from_bfloat16_bits", &GarnetAPI::TensorFromBFloat16Bits);
 			APISET().AddVarFunc("tensor_from_host", &GarnetAPI::TensorFromHost);
 			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
+			APISET().AddVarFunc("serve_model", &GarnetAPI::ServeModel);
+			APISET().AddVarFunc("serve_status_json", &GarnetAPI::ServeStatusJson);
+			APISET().AddVarFunc("infer_json", &GarnetAPI::InferJson);
+			APISET().AddVarFunc("stop_serving", &GarnetAPI::StopServing);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
 			APISET().AddClass<0, QwenVLRequestContext>("QwenVLRequestContext");
@@ -232,6 +244,14 @@ namespace Garnet
 		void TensorFromHost(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void TensorToCPU(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ServeModel(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ServeStatusJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void InferJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void StopServing(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunTest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

@@ -59,8 +59,20 @@ namespace Garnet::Image::QwenVL
         int minPixels,
         int maxPixels);
 
+    PreprocessResult PreprocessJpegBytesToTensor(
+        const unsigned char* jpegData,
+        size_t jpegSize,
+        int minPixels,
+        int maxPixels);
+
     DevicePreprocessResult PreprocessJpegFileToDeviceBuffer(
         const std::string& jpegPath,
+        int minPixels,
+        int maxPixels);
+
+    DevicePreprocessResult PreprocessJpegBytesToDeviceBuffer(
+        const unsigned char* jpegData,
+        size_t jpegSize,
         int minPixels,
         int maxPixels);
 }

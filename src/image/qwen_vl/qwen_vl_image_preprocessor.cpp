@@ -116,36 +116,28 @@ namespace Garnet::Image::QwenVL
             }
         }
 
-        DevicePreprocessResult PreprocessJpegFileToDeviceBufferImpl(
-            const std::string& jpegPath,
+        DevicePreprocessResult PreprocessJpegBytesToDeviceBufferImpl(
+            const unsigned char* jpegBytes,
+            size_t jpegSize,
             int minPixels,
             int maxPixels)
         {
             constexpr int patchSize = 16;
             constexpr int temporalPatchSize = 2;
             constexpr int mergeSize = 2;
-            if (jpegPath.empty() || minPixels <= 0 || maxPixels <= 0) {
+            if (!jpegBytes || jpegSize == 0 || minPixels <= 0 || maxPixels <= 0) {
                 throw std::invalid_argument("invalid Qwen-VL JPEG preprocess arguments");
-            }
-
-            unsigned char* jpegBytes = nullptr;
-            size_t jpegSize = 0;
-            std::string readError;
-            if (!Cuda::ReadFileBytes(jpegPath.c_str(), &jpegBytes, &jpegSize, &readError)) {
-                throw std::runtime_error(readError.empty() ? "failed to read JPEG file" : readError);
             }
 
             cudaStream_t stream = nullptr;
             cudaError_t status = cudaStreamCreate(&stream);
             if (status != cudaSuccess) {
-                delete[] jpegBytes;
                 throw std::runtime_error("failed to create CUDA stream");
             }
 
             Cuda::GpuImageRGB8 decoded;
             std::string decodeError;
             status = Cuda::DecodeJpegToDeviceRGB8(jpegBytes, jpegSize, stream, &decoded, &decodeError);
-            delete[] jpegBytes;
             if (status != cudaSuccess) {
                 cudaStreamDestroy(stream);
                 throw std::runtime_error(decodeError.empty() ? cudaGetErrorString(status) : decodeError);
@@ -227,7 +219,36 @@ namespace Garnet::Image::QwenVL
         int minPixels,
         int maxPixels)
     {
-        return PreprocessJpegFileToDeviceBufferImpl(jpegPath, minPixels, maxPixels);
+        if (jpegPath.empty()) {
+            throw std::invalid_argument("invalid Qwen-VL JPEG path");
+        }
+        unsigned char* jpegBytes = nullptr;
+        size_t jpegSize = 0;
+        std::string readError;
+        if (!Cuda::ReadFileBytes(jpegPath.c_str(), &jpegBytes, &jpegSize, &readError)) {
+            throw std::runtime_error(
+                readError.empty() ? "failed to read JPEG file" : readError);
+        }
+        try {
+            DevicePreprocessResult result = PreprocessJpegBytesToDeviceBufferImpl(
+                jpegBytes, jpegSize, minPixels, maxPixels);
+            delete[] jpegBytes;
+            return result;
+        }
+        catch (...) {
+            delete[] jpegBytes;
+            throw;
+        }
+    }
+
+    DevicePreprocessResult PreprocessJpegBytesToDeviceBuffer(
+        const unsigned char* jpegData,
+        size_t jpegSize,
+        int minPixels,
+        int maxPixels)
+    {
+        return PreprocessJpegBytesToDeviceBufferImpl(
+            jpegData, jpegSize, minPixels, maxPixels);
     }
 
     SmartResizeResult SmartResize(
@@ -391,13 +412,9 @@ namespace Garnet::Image::QwenVL
         return result;
     }
 
-    PreprocessResult PreprocessJpegFileToTensor(
-        const std::string& jpegPath,
-        int minPixels,
-        int maxPixels)
+    PreprocessResult PreprocessJpegDeviceBufferToTensor(
+        DevicePreprocessResult deviceResult)
     {
-        DevicePreprocessResult deviceResult = PreprocessJpegFileToDeviceBuffer(jpegPath, minPixels, maxPixels);
-
         X::Tensor pixelValues = MakeTensor(X::TensorDataType::FLOAT32, { deviceResult.patchCount, deviceResult.featureDim });
         if (TensorHelper::AttachGPUMemory(pixelValues, deviceResult.pixelValuesDevice) != TensorOpStatus::Success) {
             cudaFree(deviceResult.pixelValuesDevice);
@@ -448,6 +465,26 @@ namespace Garnet::Image::QwenVL
         result.temporalPatchSize = deviceResult.temporalPatchSize;
         result.mergeSize = deviceResult.mergeSize;
         return result;
+    }
+
+    PreprocessResult PreprocessJpegFileToTensor(
+        const std::string& jpegPath,
+        int minPixels,
+        int maxPixels)
+    {
+        return PreprocessJpegDeviceBufferToTensor(
+            PreprocessJpegFileToDeviceBuffer(jpegPath, minPixels, maxPixels));
+    }
+
+    PreprocessResult PreprocessJpegBytesToTensor(
+        const unsigned char* jpegData,
+        size_t jpegSize,
+        int minPixels,
+        int maxPixels)
+    {
+        return PreprocessJpegDeviceBufferToTensor(
+            PreprocessJpegBytesToDeviceBuffer(
+                jpegData, jpegSize, minPixels, maxPixels));
     }
 }
 

@@ -1098,7 +1098,8 @@ namespace Garnet
         X::Value inputs = requestDict["inputs"];
         QwenVLCompiledInputs frontendInputs;
         if (!inputs.IsList() && m_frontend == "qwen3_vl") {
-            const std::string imagePath = requestDict["image_path"].ToString();
+            X::Value imageSource = requestDict["image"];
+            if (!imageSource.IsValid()) imageSource = requestDict["image_path"];
             const std::string prompt = requestDict["prompt"].ToString();
             const int minPixels = requestDict["min_pixels"].IsValid()
                 ? static_cast<int>(requestDict["min_pixels"].ToLongLong())
@@ -1107,7 +1108,7 @@ namespace Garnet
                 ? static_cast<int>(requestDict["max_pixels"].ToLongLong())
                 : 65536;
             frontendInputs = BuildQwenVLCompiledInputs(
-                m_weightsLocation, imagePath, prompt, minPixels, maxPixels, m_inputShapes);
+                m_weightsLocation, imageSource, prompt, minPixels, maxPixels, m_inputShapes);
             if (!frontendInputs.inputs.IsList()) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_frontend_failed"));
