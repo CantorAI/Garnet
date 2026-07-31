@@ -3,6 +3,7 @@ project("garnet" LANGUAGES CXX CUDA)
 
 # Find CUDA package
 find_package(CUDA REQUIRED)
+find_package(OpenMP QUIET COMPONENTS CXX)
 
 # Ensure that CUDA and CXX code uses C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -32,6 +33,27 @@ find_package(xlang REQUIRED)
 set(xlang_sdk_folder "${XLANG_INCLUDE_DIR}")
 include_directories(${xlang_sdk_folder})
 
+# OpenVINO is an optional compiled backend. The Python wheel contains the
+# native C++ SDK as well as the Python API, so discover its CMake package when
+# a system/archive installation was not configured explicitly.
+find_package(OpenVINO QUIET COMPONENTS Runtime)
+if(NOT OpenVINO_FOUND)
+    find_package(Python3 QUIET COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND)
+        execute_process(
+            COMMAND "${Python3_EXECUTABLE}" -c
+                "import pathlib,openvino; print(pathlib.Path(openvino.__file__).parent/'cmake')"
+            OUTPUT_VARIABLE GARNET_OPENVINO_CMAKE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+        if(GARNET_OPENVINO_CMAKE_DIR)
+            set(OpenVINO_DIR "${GARNET_OPENVINO_CMAKE_DIR}")
+            find_package(OpenVINO QUIET COMPONENTS Runtime)
+        endif()
+    endif()
+endif()
+
 include_directories(${CUDA_INCLUDE_DIRS})
 # Include project directories.
 include_directories("src/common")
@@ -52,6 +74,8 @@ include_directories("third_party")
 include_directories("${xlang_sdk_folder}/../Tensor")
 include_directories("${xlang_sdk_folder}/../Core")
 include_directories("src/backends/tensorrt")
+include_directories("src/backends/openvino")
+include_directories("src/backends/cpu")
 
 # Optionally include xlang and Garnet includes.
 include_directories(
@@ -70,6 +94,8 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src/tokenizer
     ${PROJECT_SOURCE_DIR}/third_party
     ${PROJECT_SOURCE_DIR}/src/backends/tensorrt
+    ${PROJECT_SOURCE_DIR}/src/backends/openvino
+    ${PROJECT_SOURCE_DIR}/src/backends/cpu
     "D:/CantorAI/ThirdPartySDK/TensorRT/include"
 )
 
@@ -104,6 +130,27 @@ add_library(${PROJECT_NAME}
     ${Tokenizer_SRC}
     ${Backend_SRC}
 )
+
+if(OpenVINO_FOUND)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_WITH_OPENVINO=1)
+    target_link_libraries(${PROJECT_NAME} openvino::runtime)
+    message(STATUS "Garnet OpenVINO backend enabled: ${OpenVINO_VERSION}")
+
+    # Keep the runtime and device plugins beside garnet.dll so loading Garnet
+    # never depends on a user-specific Python DLL search path.
+    get_filename_component(GARNET_OPENVINO_PACKAGE_DIR
+        "${OpenVINO_DIR}/.." ABSOLUTE)
+    file(GLOB GARNET_OPENVINO_DLLS
+        "${GARNET_OPENVINO_PACKAGE_DIR}/libs/*.dll")
+    foreach(GARNET_OPENVINO_DLL IN LISTS GARNET_OPENVINO_DLLS)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${GARNET_OPENVINO_DLL}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+        )
+    endforeach()
+else()
+    message(STATUS "Garnet OpenVINO backend disabled (OpenVINO SDK not found)")
+endif()
 
 add_executable(garnet_qwen_vl_gpu_path_perf
     "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/qwen_vl_gpu_path_perf.cpp"
@@ -143,6 +190,63 @@ target_include_directories(garnet_continuous_batch_scheduler_test PRIVATE
 )
 target_link_libraries(garnet_continuous_batch_scheduler_test ${CUDA_LIBRARIES})
 
+add_executable(garnet_weight_quantization_test
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/weight_quantization_test.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model/weight_quantization.cpp"
+)
+
+add_executable(garnet_q4q8_linear_v2_benchmark
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/q4q8_linear_benchmark.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/q4q8_linear.cpp"
+)
+
+add_executable(garnet_q4q8_linear_test
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/q4q8_linear_test.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/q4q8_linear.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model/weight_quantization.cpp"
+)
+
+add_executable(garnet_qwen3_native_prepare_test
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/qwen3_native_prepare_test.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/qwen3_native_decode_engine.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/q4q8_linear.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model/weight_quantization.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model/safetensors_index.cpp"
+)
+
+target_include_directories(garnet_q4q8_linear_v2_benchmark PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
+)
+
+target_include_directories(garnet_q4q8_linear_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
+)
+
+target_include_directories(garnet_qwen3_native_prepare_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
+)
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+    message(STATUS "Garnet native CPU INT4 OpenMP enabled")
+endif()
+
+if(MSVC)
+    set_source_files_properties(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/q4q8_linear.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/qwen3_native_decode_engine.cpp"
+        PROPERTIES COMPILE_OPTIONS "/arch:AVX2"
+    )
+endif()
+
+target_include_directories(garnet_weight_quantization_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
+)
+
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
@@ -158,6 +262,18 @@ if(WIN32)
             nppc.lib nppig.lib nvjpeg.lib
             ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
     ) 
+    # Keep the multi-backend runtime loadable on machines without NVIDIA
+    # software. These DLLs are resolved only if a CUDA/TensorRT operation is
+    # actually invoked; OpenVINO CPU/Intel-GPU execution does not require them.
+    if(MSVC)
+        target_link_libraries(${PROJECT_NAME} delayimp)
+        target_link_options(${PROJECT_NAME} PRIVATE
+            "/DELAYLOAD:cublas64_13.dll"
+            "/DELAYLOAD:nvinfer_10.dll"
+            "/DELAYLOAD:nppig64_13.dll"
+            "/DELAYLOAD:nvjpeg64_13.dll"
+        )
+    endif()
     # Add debug-specific libraries for Windows Debug build
     if(MSVC)
         # Debug build

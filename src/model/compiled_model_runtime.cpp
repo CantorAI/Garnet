@@ -2,6 +2,7 @@
 #include "compiled_graph_capture.h"
 #include "md5.h"
 #include "trt_builder.h"
+#include "openvino_builder.h"
 #include "garnet_tensor.h"
 #include "tensor_helper.h"
 #include "qwen_vl_compiled_frontend.h"
@@ -14,7 +15,9 @@
 #include <cuda_runtime.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -26,7 +29,7 @@ namespace
 {
     constexpr const char* kGraphCacheMagic = "GARNET_RUNTIME_GRAPH_CACHE_V2";
     constexpr const char* kRuntimeSchema =
-        "compiled_xmodel_runtime_v19_paged_kv_split_value_workspace";
+        "compiled_xmodel_runtime_v22_native_cpu_int4_decode";
 
     std::string ReadFile(const std::filesystem::path& path)
     {
@@ -243,6 +246,27 @@ namespace
         return X::Value(tensor);
     }
 
+    X::Value MakeCpuTensorFromHost(
+        X::TensorDataType dataType,
+        const std::vector<int>& dimensions,
+        const void* source,
+        size_t bytes)
+    {
+        X::Tensor tensor(X::g_pXHost->CreateTensor());
+        X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
+        for (const int dimension : dimensions) shape.push_back(dimension);
+        tensor->SetDataType(dataType);
+        tensor->SetShape(shape);
+        X::Value initial;
+        tensor->Create(initial);
+        if (!tensor->GetData() ||
+            static_cast<size_t>(tensor->GetDataSize()) != bytes) {
+            return X::Value();
+        }
+        std::memcpy(tensor->GetData(), source, bytes);
+        return X::Value(tensor);
+    }
+
     X::Value BuildSymbolicWeights(const Garnet::SafeTensorsIndex& index)
     {
         X::Dict weights;
@@ -334,6 +358,7 @@ namespace
         const std::string& weightsLocation,
         const std::string& entryFunction,
         const std::string& backend,
+        const std::string& precision,
         const std::vector<std::vector<int>>& inputShapes,
         const std::vector<std::string>& inputDataTypes,
         const Garnet::FusionPartitionOptions& partitionOptions)
@@ -344,8 +369,48 @@ namespace
         std::ostringstream material;
         material << kRuntimeSchema << '\n'
                  << "backend:" << backend << '\n'
+                 << "precision:" << precision << '\n'
                  << "tensorrt:" << NV_TENSORRT_VERSION << '\n'
                  << entryFunction << '\n';
+        if (backend == "openvino") {
+            const char* device = std::getenv("GARNET_OPENVINO_DEVICE");
+            material << "openvino_runtime_schema:"
+                     << "per_layer_device_state_native_q4q8_lm_head_v12\n";
+            material << "openvino_device:"
+                     << (device && *device ? device : "CPU") << '\n';
+            material << "openvino_precision:" << precision << '\n';
+            const char* dynamicGroup = std::getenv(
+                "GARNET_OPENVINO_CPU_DQ_GROUP_SIZE");
+            material << "GARNET_OPENVINO_CPU_DQ_GROUP_SIZE:"
+                     << (dynamicGroup && *dynamicGroup
+                             ? dynamicGroup
+                             : "default")
+                     << '\n';
+            const char* weightGroup = std::getenv(
+                "GARNET_OPENVINO_CPU_WEIGHT_GROUP_SIZE");
+            material << "GARNET_OPENVINO_CPU_WEIGHT_GROUP_SIZE:"
+                     << (weightGroup && *weightGroup
+                             ? weightGroup
+                             : "128")
+                     << '\n';
+            const char* packedProjections = std::getenv(
+                "GARNET_OPENVINO_CPU_PACKED_PROJECTIONS");
+            material << "GARNET_OPENVINO_CPU_PACKED_PROJECTIONS:"
+                     << (packedProjections && *packedProjections
+                             ? packedProjections
+                             : "0")
+                     << '\n';
+            const char* signedI4 = std::getenv(
+                "GARNET_OPENVINO_CPU_SIGNED_I4");
+            material << "GARNET_OPENVINO_CPU_SIGNED_I4:"
+                     << (signedI4 && *signedI4 ? signedI4 : "0")
+                     << '\n';
+            const char* nativeQ4Q8 = std::getenv(
+                "GARNET_OPENVINO_CPU_NATIVE_Q4Q8");
+            material << "GARNET_OPENVINO_CPU_NATIVE_Q4Q8:"
+                     << (nativeQ4Q8 && *nativeQ4Q8 ? nativeQ4Q8 : "0")
+                     << '\n';
+        }
         const char* fusedTextAttention = std::getenv("GARNET_FUSED_TEXT_ATTENTION");
         if (fusedTextAttention && std::string(fusedTextAttention) == "1") {
             material << "fused_text_attention:1\n";
@@ -508,6 +573,15 @@ namespace
 
 namespace Garnet
 {
+    namespace
+    {
+        std::uint64_t NextOpenVINOSessionId()
+        {
+            static std::atomic<std::uint64_t> nextSessionId{1};
+            return nextSessionId.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+
     CompiledModelRuntime::~CompiledModelRuntime()
     {
         ReleaseDeviceMemory();
@@ -544,6 +618,8 @@ namespace Garnet
             m_decodeRuntime->ReleaseDeviceMemory();
             m_decodeRuntime.reset();
         }
+        OpenVINOBuilder::ReleaseCachedSession(
+            m_enginePath, m_openVinoSessionId);
         m_ready = false;
         m_state = "released";
     }
@@ -557,7 +633,8 @@ namespace Garnet
         const std::vector<std::vector<int>>& inputShapes,
         const std::vector<std::string>& inputDataTypes,
         const FusionPartitionOptions& partitionOptions,
-        const std::string& backend)
+        const std::string& backend,
+        const std::string& precision)
     {
         std::lock_guard<std::mutex> guard(m_mutex);
         m_rootXModel = std::filesystem::absolute(rootXModel).lexically_normal().string();
@@ -566,6 +643,10 @@ namespace Garnet
         m_entryFunction = entryFunction.empty() ? "Qwen3VLModel" : entryFunction;
         m_frontend = frontend;
         m_backend = backend.empty() ? "tensorrt" : backend;
+        m_precision = precision.empty() ? "bf16" : precision;
+        if (m_backend == "openvino" && m_openVinoSessionId == 0) {
+            m_openVinoSessionId = NextOpenVINOSessionId();
+        }
         m_inputShapes = inputShapes;
         m_partitionOptions = partitionOptions;
         m_ready = false;
@@ -581,14 +662,56 @@ namespace Garnet
         m_errorMessage.clear();
         m_diagnostics = {};
         m_decodeRuntime.reset();
-
-        if (m_backend != "tensorrt") {
+        if (m_backend != "tensorrt" && m_backend != "openvino") {
             m_state = "failed";
             m_errorCode = "backend_not_available";
             m_errorMessage =
                 "backend '" + m_backend +
-                "' is not available; this build currently provides tensorrt";
+                "' is not available; expected tensorrt or openvino";
             return false;
+        }
+        if (m_backend == "openvino" && !OpenVINOBuilder::IsAvailable()) {
+            m_state = "failed";
+            m_errorCode = "backend_not_available";
+            m_errorMessage =
+                "OpenVINO was requested but this Garnet build does not include it";
+            return false;
+        }
+        if (m_backend == "openvino" &&
+            m_precision != "bf16" &&
+            m_precision != "fp16" &&
+            m_precision != "int4_fp16") {
+            m_state = "failed";
+            m_errorCode = "unsupported_precision";
+            m_errorMessage =
+                "OpenVINO precision must be 'bf16', 'fp16', or "
+                "'int4_fp16'";
+            return false;
+        }
+        if (m_backend == "tensorrt" &&
+            m_precision != "bf16" &&
+            m_precision != "int4_fp16") {
+            m_state = "failed";
+            m_errorCode = "unsupported_precision";
+            m_errorMessage =
+                "TensorRT precision must be 'bf16' or 'int4_fp16'";
+            return false;
+        }
+        if (m_backend == "tensorrt" &&
+            m_precision == "int4_fp16") {
+            int device = 0;
+            cudaDeviceProp properties{};
+            if (cudaGetDevice(&device) == cudaSuccess &&
+                cudaGetDeviceProperties(&properties, device) == cudaSuccess &&
+                properties.major < 9) {
+                m_state = "failed";
+                m_errorCode = "unsupported_precision";
+                m_errorMessage =
+                    "TensorRT INT4 weight-only execution in the full "
+                    "TensorRT backend requires a Hopper-class GPU on this "
+                    "runtime; use precision='bf16' on pre-Hopper GPUs";
+                return false;
+            }
         }
 
         std::error_code error;
@@ -689,7 +812,8 @@ namespace Garnet
                     decodeShapes,
                     decodeTypes,
                     decodePartitionOptions,
-                    m_backend)) {
+                    m_backend,
+                    m_precision)) {
                 X::Dict decodeStatus(decodeRuntime->Status());
                 return {nullptr, decodeStatus["error_message"].ToString()};
             }
@@ -700,13 +824,27 @@ namespace Garnet
             const bool needsDecodeRuntime =
                 (m_frontend == "qwen3_vl" && m_inputShapes.size() == 15) ||
                 (m_frontend == "qwen3_text" && m_inputShapes.size() == 7);
-            TRTBuilder builder;
             std::string preparationError;
-            const bool prepared = m_enginePartitions.size() > 1
-                ? builder.PrepareCapturedPartitions(
-                    m_enginePartitions, &m_weightIndex, preparationError)
-                : builder.PrepareCapturedEngine(
-                    m_enginePath, &m_weightIndex, preparationError);
+            bool prepared = false;
+            if (m_backend == "openvino") {
+                if (m_enginePartitions.size() > 1) {
+                    preparationError =
+                        "partitioned OpenVINO execution is not implemented";
+                }
+                else {
+                    OpenVINOBuilder builder;
+                    prepared = builder.PrepareCapturedEngine(
+                        m_enginePath, &m_weightIndex, preparationError);
+                }
+            }
+            else {
+                TRTBuilder builder;
+                prepared = m_enginePartitions.size() > 1
+                    ? builder.PrepareCapturedPartitions(
+                        m_enginePartitions, &m_weightIndex, preparationError)
+                    : builder.PrepareCapturedEngine(
+                        m_enginePath, &m_weightIndex, preparationError);
+            }
             if (!prepared) {
                 m_errorCode = "engine_preparation_failed";
                 m_errorMessage = preparationError;
@@ -739,7 +877,8 @@ namespace Garnet
             return true;
         };
         const std::string graphFingerprint = MakeGraphFingerprint(
-            rootPath, m_weightsLocation, m_entryFunction, m_backend, inputShapes,
+            rootPath, m_weightsLocation, m_entryFunction, m_backend, m_precision,
+            inputShapes,
             inputDataTypes, m_partitionOptions);
         if (!inputShapes.empty() &&
             LoadGraphCache(
@@ -987,18 +1126,26 @@ namespace Garnet
                     return false;
                 }
                 m_graphSummary = m_graph.ToString();
-                TRTBuilder builder;
-                builder.SetCapturedWorkspaceBytes(
-                    m_partitionOptions.builderWorkspaceBytes);
-                builder.SetCapturedOptimizationLevel(
-                    m_partitionOptions.builderOptimizationLevel);
                 std::vector<CapturedTensorOperation> analyzedOperations;
-                if (!builder.AnalyzeCapturedGraph(
-                        m_graph,
-                        m_rootFunction,
-                        rootArguments,
-                        analyzedOperations,
-                        m_errorMessage) ||
+                bool analyzed = false;
+                if (m_backend == "openvino") {
+                    OpenVINOBuilder builder;
+                    analyzed = builder.AnalyzeCapturedGraph(
+                        m_graph, m_rootFunction, rootArguments,
+                        analyzedOperations, m_errorMessage);
+                }
+                else {
+                    TRTBuilder builder;
+                    builder.SetCapturedWeightProfile(m_precision);
+                    builder.SetCapturedWorkspaceBytes(
+                        m_partitionOptions.builderWorkspaceBytes);
+                    builder.SetCapturedOptimizationLevel(
+                        m_partitionOptions.builderOptimizationLevel);
+                    analyzed = builder.AnalyzeCapturedGraph(
+                        m_graph, m_rootFunction, rootArguments,
+                        analyzedOperations, m_errorMessage);
+                }
+                if (!analyzed ||
                     !AssignCapturedFusionOperations(
                         std::move(analyzedOperations),
                         m_partitionOptions,
@@ -1017,25 +1164,48 @@ namespace Garnet
                     GetCapturedTensorOperations(),
                     {},
                     m_partitionOptions);
-                const bool built = partitionCount > 1
-                    ? builder.BuildCapturedPartitions(
-                        m_graph,
-                        m_rootFunction,
-                        rootArguments,
-                        symbolicInputs,
-                        &m_weightIndex,
-                        m_enginePath,
-                        GetCapturedTensorOperations(),
-                        m_enginePartitions,
-                        m_errorMessage)
-                    : builder.BuildCapturedGraph(
-                        m_graph,
-                        m_rootFunction,
-                        rootArguments,
-                        symbolicInputs,
-                        &m_weightIndex,
-                        m_enginePath,
-                        m_errorMessage);
+                bool built = false;
+                if (m_backend == "openvino") {
+                    if (partitionCount > 1) {
+                        m_errorMessage =
+                            "partitioned OpenVINO graph lowering is not implemented";
+                    }
+                    else {
+                        OpenVINOBuilder builder;
+                        built = builder.BuildCapturedGraph(
+                            m_graph, m_rootFunction, rootArguments,
+                            symbolicInputs, &m_weightIndex, m_enginePath,
+                            m_precision,
+                            m_errorMessage);
+                    }
+                }
+                else {
+                    TRTBuilder builder;
+                    builder.SetCapturedWeightProfile(m_precision);
+                    builder.SetCapturedWorkspaceBytes(
+                        m_partitionOptions.builderWorkspaceBytes);
+                    builder.SetCapturedOptimizationLevel(
+                        m_partitionOptions.builderOptimizationLevel);
+                    built = partitionCount > 1
+                        ? builder.BuildCapturedPartitions(
+                            m_graph,
+                            m_rootFunction,
+                            rootArguments,
+                            symbolicInputs,
+                            &m_weightIndex,
+                            m_enginePath,
+                            GetCapturedTensorOperations(),
+                            m_enginePartitions,
+                            m_errorMessage)
+                        : builder.BuildCapturedGraph(
+                            m_graph,
+                            m_rootFunction,
+                            rootArguments,
+                            symbolicInputs,
+                            &m_weightIndex,
+                            m_enginePath,
+                            m_errorMessage);
+                }
                 if (!built) {
                     m_state = "failed";
                     m_errorCode = "generic_lowering_failed";
@@ -1090,6 +1260,7 @@ namespace Garnet
         status->Set("entry_function", X::Value(m_entryFunction));
         status->Set("frontend", X::Value(m_frontend));
         status->Set("backend", X::Value(m_backend));
+        status->Set("precision", X::Value(m_precision));
         status->Set("graph_summary", X::Value(m_graphSummary));
         status->Set("scheduler", X::Value("cpu_control_gpu_execution"));
         status->Set("execution_plan_json", X::Value(m_executionPlanJson));
@@ -1215,7 +1386,8 @@ namespace Garnet
                 requestDict["enable_thinking"].ToLongLong() != 0;
             textFrontendInputs = BuildQwenTextCompiledInputs(
                 m_weightsLocation, prompt, enableThinking, m_inputShapes,
-                m_reusablePrefillKeyCache, m_reusablePrefillValueCache);
+                m_reusablePrefillKeyCache, m_reusablePrefillValueCache,
+                m_backend == "openvino");
             if (!textFrontendInputs.inputs.IsList()) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_frontend_failed"));
@@ -1237,28 +1409,41 @@ namespace Garnet
             frontendPromptTokenCount =
                 textFrontendInputs.promptTokenCount;
         }
-        TRTBuilder builder;
         std::string executionError;
-        X::Value output = m_enginePartitions.size() > 1
-            ? builder.RunCapturedPartitions(
-                m_enginePartitions,
-                inputs,
-                &m_weightIndex,
-                requestDict["reuse_output"].IsValid() &&
-                    requestDict["reuse_output"].ToLongLong() != 0
-                    ? m_reusableExecutionOutput
-                    : X::Value(),
-                executionError)
-            : builder.RunCapturedEngine(
-                m_enginePath,
-                inputs,
-                &m_weightIndex,
-                requestDict["reuse_output"].IsValid() &&
-                    requestDict["reuse_output"].ToLongLong() != 0
-                    ? m_reusableExecutionOutput
-                    : X::Value(),
-                m_cudaGraphEnabled,
+        const X::Value reusableOutput =
+            requestDict["reuse_output"].IsValid() &&
+            requestDict["reuse_output"].ToLongLong() != 0
+                ? m_reusableExecutionOutput
+                : X::Value();
+        X::Value output;
+        if (m_backend == "openvino") {
+            OpenVINOBuilder builder;
+            const bool resetOpenVINOState =
+                requestDict["reset_openvino_state"].IsValid() &&
+                requestDict["reset_openvino_state"].ToLongLong() != 0;
+            output = builder.RunCapturedEngine(
+                m_enginePath, inputs, &m_weightIndex, reusableOutput,
+                resetOpenVINOState,
+                m_openVinoSessionId,
                 executionError);
+        }
+        else {
+            TRTBuilder builder;
+            output = m_enginePartitions.size() > 1
+                ? builder.RunCapturedPartitions(
+                    m_enginePartitions,
+                    inputs,
+                    &m_weightIndex,
+                    reusableOutput,
+                    executionError)
+                : builder.RunCapturedEngine(
+                    m_enginePath,
+                    inputs,
+                    &m_weightIndex,
+                    reusableOutput,
+                    m_cudaGraphEnabled,
+                    executionError);
+        }
         if (!output.IsTensor()) {
             result->Set("status", X::Value("error"));
             result->Set("error_code", X::Value("compiled_engine_execution_failed"));
@@ -1395,44 +1580,129 @@ namespace Garnet
                 result->Set("error_code", X::Value("compiled_sampling_row_invalid"));
                 return result;
             }
-            cudaError_t sampleStatus = cudaSuccess;
-            if (!m_sampleTokenDevice) {
-                sampleStatus = cudaMalloc(&m_sampleTokenDevice, sizeof(long long));
-            }
-            if (sampleStatus == cudaSuccess && !m_sampleValueDevice) {
-                sampleStatus = cudaMalloc(&m_sampleValueDevice, sizeof(float));
-            }
-            auto* deviceTokenId = static_cast<long long*>(m_sampleTokenDevice);
-            auto* deviceTokenValue = static_cast<float*>(m_sampleValueDevice);
-            const void* logitsDevice = TensorHelper::GetGPUMemory(logits);
-            if (sampleStatus == cudaSuccess && logits->GetDataType() == X::TensorDataType::FLOAT32) {
-                sampleStatus = runLogitsTop1FP32(
-                    static_cast<const float*>(logitsDevice) + static_cast<size_t>(selectedRow) * vocabSize,
-                    deviceTokenId, deviceTokenValue, 1, vocabSize, cudaStreamPerThread);
-            }
-            else if (sampleStatus == cudaSuccess && logits->GetDataType() == X::TensorDataType::BFLOAT16) {
-                sampleStatus = runLogitsTop1BF16(
-                    static_cast<const bfloat16*>(logitsDevice) + static_cast<size_t>(selectedRow) * vocabSize,
-                    deviceTokenId, deviceTokenValue, 1, vocabSize, cudaStreamPerThread);
-            }
-            else if (sampleStatus == cudaSuccess) {
-                sampleStatus = cudaErrorInvalidValue;
-            }
             long long tokenId = -1;
             float tokenValue = 0.0f;
-            if (sampleStatus == cudaSuccess) {
-                sampleStatus = cudaMemcpyAsync(
-                    &tokenId, deviceTokenId, sizeof(tokenId), cudaMemcpyDeviceToHost, cudaStreamPerThread);
+            if (m_backend == "openvino") {
+                if (logits->GetDeviceType() != X::TensorDeviceType::CPU ||
+                    !logits->GetData()) {
+                    result->Set("status", X::Value("error"));
+                    result->Set(
+                        "error_code",
+                        X::Value("compiled_cpu_sampling_failed"));
+                    return result;
+                }
+                if (vocabSize == 1 &&
+                    logits->GetDataType() ==
+                        X::TensorDataType::LONGLONG) {
+                    tokenId = reinterpret_cast<const int64_t*>(
+                        logits->GetData())[selectedRow];
+                    tokenValue = 0.0F;
+                }
+                else {
+                    tokenValue = -std::numeric_limits<float>::infinity();
+                    for (int token = 0; token < vocabSize; ++token) {
+                        float value = 0.0F;
+                        const size_t offset =
+                            static_cast<size_t>(selectedRow) * vocabSize +
+                            token;
+                        if (logits->GetDataType() ==
+                            X::TensorDataType::FLOAT32) {
+                            value = reinterpret_cast<const float*>(
+                                logits->GetData())[offset];
+                        }
+                        else if (logits->GetDataType() ==
+                            X::TensorDataType::BFLOAT16) {
+                            const uint16_t bits =
+                                reinterpret_cast<const uint16_t*>(
+                                    logits->GetData())[offset];
+                            const uint32_t expanded =
+                                static_cast<uint32_t>(bits) << 16;
+                            std::memcpy(&value, &expanded, sizeof(value));
+                        }
+                        else {
+                            result->Set("status", X::Value("error"));
+                            result->Set(
+                                "error_code",
+                                X::Value(
+                                    "compiled_cpu_sampling_dtype_invalid"));
+                            return result;
+                        }
+                        if (value > tokenValue) {
+                            tokenValue = value;
+                            tokenId = token;
+                        }
+                    }
+                }
             }
-            if (sampleStatus == cudaSuccess) {
-                sampleStatus = cudaMemcpyAsync(
-                    &tokenValue, deviceTokenValue, sizeof(tokenValue), cudaMemcpyDeviceToHost, cudaStreamPerThread);
+            else {
+                cudaError_t sampleStatus = cudaSuccess;
+                if (!m_sampleTokenDevice) {
+                    sampleStatus = cudaMalloc(
+                        &m_sampleTokenDevice, sizeof(long long));
+                }
+                if (sampleStatus == cudaSuccess && !m_sampleValueDevice) {
+                    sampleStatus = cudaMalloc(
+                        &m_sampleValueDevice, sizeof(float));
+                }
+                auto* deviceTokenId =
+                    static_cast<long long*>(m_sampleTokenDevice);
+                auto* deviceTokenValue =
+                    static_cast<float*>(m_sampleValueDevice);
+                const void* logitsDevice = TensorHelper::GetGPUMemory(logits);
+                if (sampleStatus == cudaSuccess &&
+                    logits->GetDataType() == X::TensorDataType::FLOAT32) {
+                    sampleStatus = runLogitsTop1FP32(
+                        static_cast<const float*>(logitsDevice) +
+                            static_cast<size_t>(selectedRow) * vocabSize,
+                        deviceTokenId, deviceTokenValue, 1, vocabSize,
+                        cudaStreamPerThread);
+                }
+                else if (sampleStatus == cudaSuccess &&
+                    logits->GetDataType() == X::TensorDataType::BFLOAT16) {
+                    sampleStatus = runLogitsTop1BF16(
+                        static_cast<const bfloat16*>(logitsDevice) +
+                            static_cast<size_t>(selectedRow) * vocabSize,
+                        deviceTokenId, deviceTokenValue, 1, vocabSize,
+                        cudaStreamPerThread);
+                }
+                else if (sampleStatus == cudaSuccess) {
+                    sampleStatus = cudaErrorInvalidValue;
+                }
+                if (sampleStatus == cudaSuccess) {
+                    sampleStatus = cudaMemcpyAsync(
+                        &tokenId, deviceTokenId, sizeof(tokenId),
+                        cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                }
+                if (sampleStatus == cudaSuccess) {
+                    sampleStatus = cudaMemcpyAsync(
+                        &tokenValue, deviceTokenValue, sizeof(tokenValue),
+                        cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                }
+                if (sampleStatus == cudaSuccess) {
+                    sampleStatus = cudaStreamSynchronize(cudaStreamPerThread);
+                }
+                if (sampleStatus != cudaSuccess) {
+                    result->Set("status", X::Value("error"));
+                    result->Set(
+                        "error_code",
+                        X::Value("compiled_gpu_sampling_failed"));
+                    result->Set(
+                        "error_message",
+                        X::Value(cudaGetErrorString(sampleStatus)));
+                    return result;
+                }
             }
-            if (sampleStatus == cudaSuccess) sampleStatus = cudaStreamSynchronize(cudaStreamPerThread);
-            if (sampleStatus != cudaSuccess) {
+            if (m_backend == "openvino" && tokenId < 0) {
                 result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_gpu_sampling_failed"));
-                result->Set("error_message", X::Value(cudaGetErrorString(sampleStatus)));
+                result->Set(
+                    "error_code",
+                    X::Value("compiled_logits_non_finite"));
+                result->Set(
+                    "error_message",
+                    X::Value(
+                        "OpenVINO produced no finite logits; this device or "
+                        "driver does not safely execute the selected "
+                        "precision profile"));
                 return result;
             }
             result->Set("token_id", X::Value(tokenId));
@@ -1491,16 +1761,19 @@ namespace Garnet
             const int positionComponents = frontendIsVL ? 3 : 1;
             int decodeContextLength = 0;
             int decodeSlotPosition = 0;
-            X::Value decodeTokenTensor = MakeCudaTensorFromHost(
+            auto makeDecodeTensor = m_backend == "openvino"
+                ? MakeCpuTensorFromHost
+                : MakeCudaTensorFromHost;
+            X::Value decodeTokenTensor = makeDecodeTensor(
                 X::TensorDataType::LONGLONG, {1, 1}, &decodeTokenValue, sizeof(decodeTokenValue));
-            X::Value decodePositionTensor = MakeCudaTensorFromHost(
+            X::Value decodePositionTensor = makeDecodeTensor(
                 X::TensorDataType::LONGLONG,
                 {positionComponents, 1, 1},
                 decodeRopePositions,
                 static_cast<size_t>(positionComponents) * sizeof(int64_t));
-            X::Value decodeContextTensor = MakeCudaTensorFromHost(
+            X::Value decodeContextTensor = makeDecodeTensor(
                 X::TensorDataType::INT, {1}, &decodeContextLength, sizeof(decodeContextLength));
-            X::Value decodeSlotTensor = MakeCudaTensorFromHost(
+            X::Value decodeSlotTensor = makeDecodeTensor(
                 X::TensorDataType::INT, {1}, &decodeSlotPosition, sizeof(decodeSlotPosition));
             if (!decodeTokenTensor.IsTensor() || !decodePositionTensor.IsTensor() ||
                 !decodeContextTensor.IsTensor() || !decodeSlotTensor.IsTensor()) {
@@ -1508,14 +1781,22 @@ namespace Garnet
                 result->Set("error_code", X::Value("compiled_decode_metadata_allocation_failed"));
                 return result;
             }
-            X::Tensor decodeTokenGpu(decodeTokenTensor);
-            X::Tensor decodePositionGpu(decodePositionTensor);
-            X::Tensor decodeContextGpu(decodeContextTensor);
-            X::Tensor decodeSlotGpu(decodeSlotTensor);
-            void* decodeTokenDevice = TensorHelper::GetGPUMemory(decodeTokenGpu);
-            void* decodePositionDevice = TensorHelper::GetGPUMemory(decodePositionGpu);
-            void* decodeContextDevice = TensorHelper::GetGPUMemory(decodeContextGpu);
-            void* decodeSlotDevice = TensorHelper::GetGPUMemory(decodeSlotGpu);
+            X::Tensor decodeTokenStorage(decodeTokenTensor);
+            X::Tensor decodePositionStorage(decodePositionTensor);
+            X::Tensor decodeContextStorage(decodeContextTensor);
+            X::Tensor decodeSlotStorage(decodeSlotTensor);
+            void* decodeTokenDevice = m_backend == "openvino"
+                ? decodeTokenStorage->GetData()
+                : TensorHelper::GetGPUMemory(decodeTokenStorage);
+            void* decodePositionDevice = m_backend == "openvino"
+                ? decodePositionStorage->GetData()
+                : TensorHelper::GetGPUMemory(decodePositionStorage);
+            void* decodeContextDevice = m_backend == "openvino"
+                ? decodeContextStorage->GetData()
+                : TensorHelper::GetGPUMemory(decodeContextStorage);
+            void* decodeSlotDevice = m_backend == "openvino"
+                ? decodeSlotStorage->GetData()
+                : TensorHelper::GetGPUMemory(decodeSlotStorage);
             const auto decodeStart = std::chrono::steady_clock::now();
             for (int generatedIndex = 1; generatedIndex < requestedNewTokens; ++generatedIndex) {
                 if (!ignoreEos && (sampledTokenId == endOfText || sampledTokenId == imEnd)) break;
@@ -1531,20 +1812,39 @@ namespace Garnet
                 decodeRopePositions[2] = ropePositions[2];
                 decodeContextLength = contextLength;
                 decodeSlotPosition = slotPosition;
-                cudaError_t metadataStatus = cudaMemcpyAsync(
-                    decodeTokenDevice, &decodeTokenValue, sizeof(decodeTokenValue),
-                    cudaMemcpyHostToDevice, cudaStreamPerThread);
-                if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
-                    decodePositionDevice,
-                    decodeRopePositions,
-                    static_cast<size_t>(positionComponents) * sizeof(int64_t),
-                    cudaMemcpyHostToDevice, cudaStreamPerThread);
-                if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
-                    decodeContextDevice, &decodeContextLength, sizeof(decodeContextLength),
-                    cudaMemcpyHostToDevice, cudaStreamPerThread);
-                if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
-                    decodeSlotDevice, &decodeSlotPosition, sizeof(decodeSlotPosition),
-                    cudaMemcpyHostToDevice, cudaStreamPerThread);
+                cudaError_t metadataStatus = cudaSuccess;
+                if (m_backend == "openvino") {
+                    std::memcpy(
+                        decodeTokenDevice, &decodeTokenValue,
+                        sizeof(decodeTokenValue));
+                    std::memcpy(
+                        decodePositionDevice, decodeRopePositions,
+                        static_cast<size_t>(positionComponents) *
+                            sizeof(int64_t));
+                    std::memcpy(
+                        decodeContextDevice, &decodeContextLength,
+                        sizeof(decodeContextLength));
+                    std::memcpy(
+                        decodeSlotDevice, &decodeSlotPosition,
+                        sizeof(decodeSlotPosition));
+                }
+                else {
+                    metadataStatus = cudaMemcpyAsync(
+                        decodeTokenDevice, &decodeTokenValue,
+                        sizeof(decodeTokenValue),
+                        cudaMemcpyHostToDevice, cudaStreamPerThread);
+                    if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
+                        decodePositionDevice,
+                        decodeRopePositions,
+                        static_cast<size_t>(positionComponents) * sizeof(int64_t),
+                        cudaMemcpyHostToDevice, cudaStreamPerThread);
+                    if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
+                        decodeContextDevice, &decodeContextLength, sizeof(decodeContextLength),
+                        cudaMemcpyHostToDevice, cudaStreamPerThread);
+                    if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
+                        decodeSlotDevice, &decodeSlotPosition, sizeof(decodeSlotPosition),
+                        cudaMemcpyHostToDevice, cudaStreamPerThread);
+                }
                 if (metadataStatus != cudaSuccess) {
                     result->Set("status", X::Value("error"));
                     result->Set("error_code", X::Value("compiled_decode_metadata_upload_failed"));
@@ -1566,6 +1866,10 @@ namespace Garnet
                 decodeRequest->Set("inputs", X::Value(decodeInputs));
                 decodeRequest->Set("sample", X::Value("greedy"));
                 decodeRequest->Set("reuse_output", X::Value(1));
+                if (m_backend == "openvino" && generatedIndex == 1) {
+                    decodeRequest->Set(
+                        "reset_openvino_state", X::Value(1));
+                }
                 X::Value decodeValue = m_decodeRuntime->Forward(decodeRequest);
                 if (!decodeValue.IsDict()) {
                     result->Set("status", X::Value("error"));

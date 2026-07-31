@@ -4,6 +4,7 @@
 #include "xpackage.h"
 #include "lowering_context.h"
 #include "safetensors_index.h"
+#include "weight_quantization.h"
 #include "compiled_graph_capture.h"
 #include <string>
 #include <deque>
@@ -47,6 +48,9 @@ namespace Garnet {
         }
         void SetCapturedOptimizationLevel(int level) {
             capturedOptimizationLevel = level;
+        }
+        void SetCapturedWeightProfile(const std::string& profile) {
+            capturedWeightProfile = profile;
         }
 
         X::Value ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape);
@@ -146,6 +150,10 @@ namespace Garnet {
         std::unordered_map<
             std::string,
             std::unique_ptr<SafeTensorsMappedFile>> capturedWeightFiles;
+        std::unordered_map<
+            std::string,
+            std::shared_ptr<QuantizedWeight>> capturedQuantizedWeights;
+        std::string capturedWeightProfile = "bf16";
         nvinfer1::ITensor* lastOutput = nullptr;
         nvinfer1::ITensor* pendingKVKeyPages = nullptr;
         nvinfer1::ITensor* pendingKVValuePages = nullptr;

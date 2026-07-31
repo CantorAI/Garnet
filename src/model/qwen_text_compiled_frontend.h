@@ -20,5 +20,6 @@ namespace Garnet
         bool enableThinking,
         const std::vector<std::vector<int>>& profileShapes,
         X::Value reusableKeyCache = X::Value(),
-        X::Value reusableValueCache = X::Value());
+        X::Value reusableValueCache = X::Value(),
+        bool cpuTensors = false);
 }

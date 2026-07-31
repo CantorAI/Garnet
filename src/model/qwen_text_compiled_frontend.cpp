@@ -7,6 +7,7 @@
 #include <cuda_runtime.h>
 
 #include <algorithm>
+#include <cstring>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -39,6 +40,32 @@ namespace Garnet
                 TensorOpStatus::Success) {
                 cudaFree(deviceMemory);
                 return X::Value();
+            }
+            return X::Value(tensor);
+        }
+
+        X::Value MakeCpuTensor(
+            X::TensorDataType dataType,
+            const std::vector<int>& dimensions,
+            const void* hostData,
+            size_t bytes)
+        {
+            X::Tensor tensor(X::g_pXHost->CreateTensor());
+            X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
+            for (const int dimension : dimensions) shape.push_back(dimension);
+            tensor->SetDataType(dataType);
+            tensor->SetShape(shape);
+            X::Value initial;
+            tensor->Create(initial);
+            if (!tensor->GetData() ||
+                static_cast<size_t>(tensor->GetDataSize()) != bytes) {
+                return X::Value();
+            }
+            if (bytes && hostData) {
+                std::memcpy(tensor->GetData(), hostData, bytes);
+            }
+            else if (bytes) {
+                std::memset(tensor->GetData(), 0, bytes);
             }
             return X::Value(tensor);
         }
@@ -115,7 +142,8 @@ namespace Garnet
         bool enableThinking,
         const std::vector<std::vector<int>>& profileShapes,
         X::Value reusableKeyCache,
-        X::Value reusableValueCache)
+        X::Value reusableValueCache,
+        bool cpuTensors)
     {
         QwenTextCompiledInputs result;
         try {
@@ -182,25 +210,49 @@ namespace Garnet
             const int startPosition = 0;
 
             X::V<X::XList> inputs;
-            inputs->AddItem(MakeGpuTensor(
+            auto makeTensor = [&](X::TensorDataType type,
+                                  const std::vector<int>& shape,
+                                  const void* data,
+                                  size_t bytes) {
+                return cpuTensors
+                    ? MakeCpuTensor(type, shape, data, bytes)
+                    : MakeGpuTensor(type, shape, data, bytes);
+            };
+            inputs->AddItem(makeTensor(
                 X::TensorDataType::LONGLONG, profileShapes[0],
                 inputIds.data(), inputIds.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeGpuTensor(
+            inputs->AddItem(makeTensor(
                 X::TensorDataType::LONGLONG, profileShapes[1],
                 positions.data(), positions.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeGpuTensor(
+            inputs->AddItem(makeTensor(
                 X::TensorDataType::LONGLONG, profileShapes[2],
                 attentionMask.data(), attentionMask.size() * sizeof(int64_t)));
-            inputs->AddItem(ReuseOrMakeZeroGpuTensor(
-                X::TensorDataType::BFLOAT16, profileShapes[3],
-                sizeof(unsigned short), reusableKeyCache));
-            inputs->AddItem(ReuseOrMakeZeroGpuTensor(
-                X::TensorDataType::BFLOAT16, profileShapes[4],
-                sizeof(unsigned short), reusableValueCache));
-            inputs->AddItem(MakeGpuTensor(
+            if (cpuTensors) {
+                inputs->AddItem(MakeCpuTensor(
+                    X::TensorDataType::BFLOAT16, profileShapes[3], nullptr,
+                    static_cast<size_t>(
+                        profileShapes[3][0]) * profileShapes[3][1] *
+                        profileShapes[3][2] * profileShapes[3][3] *
+                        profileShapes[3][4] * sizeof(unsigned short)));
+                inputs->AddItem(MakeCpuTensor(
+                    X::TensorDataType::BFLOAT16, profileShapes[4], nullptr,
+                    static_cast<size_t>(
+                        profileShapes[4][0]) * profileShapes[4][1] *
+                        profileShapes[4][2] * profileShapes[4][3] *
+                        profileShapes[4][4] * sizeof(unsigned short)));
+            }
+            else {
+                inputs->AddItem(ReuseOrMakeZeroGpuTensor(
+                    X::TensorDataType::BFLOAT16, profileShapes[3],
+                    sizeof(unsigned short), reusableKeyCache));
+                inputs->AddItem(ReuseOrMakeZeroGpuTensor(
+                    X::TensorDataType::BFLOAT16, profileShapes[4],
+                    sizeof(unsigned short), reusableValueCache));
+            }
+            inputs->AddItem(makeTensor(
                 X::TensorDataType::INT, profileShapes[5],
                 pageTable.data(), pageTable.size() * sizeof(int)));
-            inputs->AddItem(MakeGpuTensor(
+            inputs->AddItem(makeTensor(
                 X::TensorDataType::INT, profileShapes[6],
                 &startPosition, sizeof(startPosition)));
             for (long long index = 0; index < inputs->Size(); ++index) {

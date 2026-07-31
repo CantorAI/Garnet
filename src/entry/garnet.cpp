@@ -2865,6 +2865,17 @@ namespace Garnet
             return;
         }
         std::memcpy(tensor->GetData(), bits->GetData(), static_cast<size_t>(bits->GetDataSize()));
+        const std::string device = GetStringArg(
+            params, kwParams, 1, "device", "cuda");
+        if (device == "cpu") {
+            retValue = X::Value(tensor);
+            return;
+        }
+        if (device != "cuda") {
+            std::cout << "[GarnetAPI] tensor_from_bfloat16_bits device must be cpu or cuda." << std::endl;
+            retValue = X::Value();
+            return;
+        }
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] BF16 tensor GPU upload failed." << std::endl;
             retValue = X::Value();
@@ -3404,6 +3415,7 @@ namespace Garnet
         std::string entryFunction;
         std::string compiledFrontend;
         std::string compiledBackend = "tensorrt";
+        std::string compiledPrecision;
         std::vector<std::vector<int>> compiledInputShapes;
         std::vector<std::string> compiledInputDataTypes;
         FusionPartitionOptions compiledPartitionOptions;
@@ -3415,6 +3427,7 @@ namespace Garnet
             else if (key == "entry_function") entryFunction = item.val.ToString();
             else if (key == "frontend") compiledFrontend = item.val.ToString();
             else if (key == "backend") compiledBackend = item.val.ToString();
+            else if (key == "precision") compiledPrecision = item.val.ToString();
             else if (key == "input_shapes" && item.val.IsList()) {
                 X::List shapes(item.val);
                 for (long long inputIndex = 0; inputIndex < shapes->Size(); ++inputIndex) {
@@ -3494,7 +3507,8 @@ namespace Garnet
                 compiledInputShapes,
                 compiledInputDataTypes,
                 compiledPartitionOptions,
-                compiledBackend);
+                compiledBackend,
+                compiledPrecision);
             retValue = varModel;
             return;
         }

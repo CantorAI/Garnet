@@ -4,6 +4,7 @@
 #include "safetensors_index.h"
 #include "trt_builder.h"
 
+#include <cstdint>
 #include <mutex>
 #include <memory>
 #include <string>
@@ -34,6 +35,7 @@ namespace Garnet
         std::string m_entryFunction;
         std::string m_frontend;
         std::string m_backend = "tensorrt";
+        std::string m_precision = "bf16";
         std::vector<std::vector<int>> m_inputShapes;
         FusionPartitionOptions m_partitionOptions;
         std::string m_state = "uninitialized";
@@ -65,7 +67,7 @@ namespace Garnet
         X::Value m_reusableExecutionOutput;
         X::Value m_reusablePrefillKeyCache;
         X::Value m_reusablePrefillValueCache;
-
+        std::uint64_t m_openVinoSessionId = 0;
     public:
         ~CompiledModelRuntime();
 
@@ -78,7 +80,8 @@ namespace Garnet
             const std::vector<std::vector<int>>& inputShapes,
             const std::vector<std::string>& inputDataTypes,
             const FusionPartitionOptions& partitionOptions = {},
-            const std::string& backend = "tensorrt");
+            const std::string& backend = "tensorrt",
+            const std::string& precision = "");
 
         X::Value Status() const;
         X::Value Forward(X::Value request);

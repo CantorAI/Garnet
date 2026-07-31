@@ -1,4 +1,5 @@
 #include "trt_builder.h"
+#include "weight_quantization.h"
 #include "paged_kv_plugin.h"
 #include "cuda_lib.h"
 #include "garnet_tensor.h"
@@ -3055,6 +3056,67 @@ namespace Garnet {
             loweringError = "safetensors range is unavailable for weight: " + weightName;
             return nullptr;
         }
+        if (capturedWeightProfile == "int4_fp16" &&
+            IsQwenLinearWeightForINT4(weightName, *metadata, 64)) {
+            auto quantized = std::make_shared<QuantizedWeight>();
+            if (!QuantizeSymmetricINT4(
+                    weightName, *metadata, data, 64, *quantized,
+                    loweringError)) {
+                return nullptr;
+            }
+            Weights packedWeights{
+                DataType::kINT4,
+                quantized->packedValues.data(),
+                static_cast<std::int64_t>(
+                    quantized->LogicalElementCount())};
+            auto* packedConstant =
+                network->addConstant(dimensions, packedWeights);
+            const auto scaleShape = quantized->ScaleShape();
+            Dims scaleDimensions{};
+            scaleDimensions.nbDims = 2;
+            scaleDimensions.d[0] = static_cast<int>(scaleShape[0]);
+            scaleDimensions.d[1] = static_cast<int>(scaleShape[1]);
+            Weights scaleWeights{
+                DataType::kHALF,
+                quantized->fp16Scales.data(),
+                static_cast<std::int64_t>(
+                    quantized->fp16Scales.size())};
+            auto* scaleConstant =
+                network->addConstant(scaleDimensions, scaleWeights);
+            if (!packedConstant || !scaleConstant) {
+                loweringError =
+                    "TensorRT INT4 constants failed for weight: " +
+                    weightName;
+                return nullptr;
+            }
+            auto* dequantize = network->addDequantize(
+                *packedConstant->getOutput(0),
+                *scaleConstant->getOutput(0),
+                DataType::kHALF);
+            Dims blockShape{};
+            blockShape.nbDims = 2;
+            blockShape.d[0] = 1;
+            blockShape.d[1] = quantized->blockSize;
+            if (!dequantize ||
+                !dequantize->setBlockShape(blockShape)) {
+                loweringError =
+                    "TensorRT INT4 block dequantization failed for weight: " +
+                    weightName;
+                return nullptr;
+            }
+            packedConstant->setName(
+                (weightName + ".int4").c_str());
+            scaleConstant->setName(
+                (weightName + ".scale").c_str());
+            dequantize->setName(
+                (weightName + ".dequantize").c_str());
+            ITensor* output = dequantize->getOutput(0);
+            output->setName(weightName.c_str());
+            capturedQuantizedWeights[weightName] =
+                std::move(quantized);
+            weightTensorMap[weightName] = output;
+            return output;
+        }
         Weights weights{dataType, data, elementCount};
         auto* constant = network->addConstant(dimensions, weights);
         if (!constant || !constant->getOutput(0)) {
@@ -5296,10 +5358,19 @@ namespace Garnet {
                 return X::Value();
             }
             ITensor* weight = GetOrCreateTRTWeight(weightNameItem->val.ToString());
-            weight = BroadcastMatrixWeight(weight, source->getDimensions().nbDims);
+            ITensor* projectionInput = source;
+            const DataType sourceType = source->getType();
+            if (weight && weight->getType() != sourceType) {
+                auto* cast = network->addCast(*source, weight->getType());
+                projectionInput = cast ? cast->getOutput(0) : nullptr;
+            }
+            weight = projectionInput
+                ? BroadcastMatrixWeight(
+                    weight, projectionInput->getDimensions().nbDims)
+                : nullptr;
             auto* projection = weight
                 ? network->addMatrixMultiply(
-                    *source,
+                    *projectionInput,
                     MatrixOperation::kNONE,
                     *weight,
                     MatrixOperation::kTRANSPOSE)
@@ -5309,6 +5380,15 @@ namespace Garnet {
                 return X::Value();
             }
             lastOutput = projection->getOutput(0);
+            if (lastOutput->getType() != sourceType) {
+                auto* cast = network->addCast(*lastOutput, sourceType);
+                lastOutput = cast ? cast->getOutput(0) : nullptr;
+                if (!lastOutput) {
+                    loweringError =
+                        opName + " output precision restoration failed";
+                    return X::Value();
+                }
+            }
             auto* biasNameItem = kwParams.find("bias_name");
             if (biasNameItem && !biasNameItem->val.IsNone()) {
                 const std::string biasName = biasNameItem->val.ToString();
@@ -5537,17 +5617,32 @@ namespace Garnet {
             auto* weightConcat = network->addConcatenation(projectionWeights, 3);
             if (weightConcat) weightConcat->setAxis(0);
             ITensor* packedWeight = weightConcat ? weightConcat->getOutput(0) : nullptr;
+            ITensor* projectionInput = source;
+            const DataType sourceType = source->getType();
+            if (packedWeight && packedWeight->getType() != sourceType) {
+                auto* cast =
+                    network->addCast(*source, packedWeight->getType());
+                projectionInput = cast ? cast->getOutput(0) : nullptr;
+            }
             packedWeight = BroadcastMatrixWeight(
                 packedWeight,
-                source->getDimensions().nbDims);
+                projectionInput
+                    ? projectionInput->getDimensions().nbDims
+                    : source->getDimensions().nbDims);
             auto* projection = packedWeight
                 ? network->addMatrixMultiply(
-                    *source,
+                    *projectionInput,
                     MatrixOperation::kNONE,
                     *packedWeight,
                     MatrixOperation::kTRANSPOSE)
                 : nullptr;
             ITensor* packedProjection = projection ? projection->getOutput(0) : nullptr;
+            if (packedProjection &&
+                packedProjection->getType() != sourceType) {
+                auto* cast =
+                    network->addCast(*packedProjection, sourceType);
+                packedProjection = cast ? cast->getOutput(0) : nullptr;
+            }
             ITensor* qProjection = sliceLast(packedProjection, 0, qWidth);
             ITensor* kProjection = sliceLast(packedProjection, qWidth, kvWidth);
             ITensor* v = sliceLast(packedProjection, qWidth + kvWidth, kvWidth);
@@ -5584,17 +5679,30 @@ namespace Garnet {
             auto* weightConcat = network->addConcatenation(weights, 2);
             if (weightConcat) weightConcat->setAxis(0);
             ITensor* packedWeight = weightConcat ? weightConcat->getOutput(0) : nullptr;
+            ITensor* projectionInput = source;
+            const DataType sourceType = source->getType();
+            if (packedWeight && packedWeight->getType() != sourceType) {
+                auto* cast =
+                    network->addCast(*source, packedWeight->getType());
+                projectionInput = cast ? cast->getOutput(0) : nullptr;
+            }
             packedWeight = BroadcastMatrixWeight(
                 packedWeight,
-                source->getDimensions().nbDims);
+                projectionInput
+                    ? projectionInput->getDimensions().nbDims
+                    : source->getDimensions().nbDims);
             auto* projection = packedWeight
                 ? network->addMatrixMultiply(
-                    *source,
+                    *projectionInput,
                     MatrixOperation::kNONE,
                     *packedWeight,
                     MatrixOperation::kTRANSPOSE)
                 : nullptr;
             ITensor* packed = projection ? projection->getOutput(0) : nullptr;
+            if (packed && packed->getType() != sourceType) {
+                auto* cast = network->addCast(*packed, sourceType);
+                packed = cast ? cast->getOutput(0) : nullptr;
+            }
             if (!packed) {
                 loweringError = "Qwen3 packed SwiGLU projection failed";
                 return X::Value();
