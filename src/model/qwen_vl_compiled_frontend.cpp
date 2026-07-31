@@ -106,6 +106,37 @@ namespace Garnet
             }
             return X::Value(tensor);
         }
+
+        X::Value ReuseOrMakeZeroGpuTensor(
+            X::TensorDataType dataType,
+            const std::vector<int>& dimensions,
+            size_t elementBytes,
+            X::Value reusable)
+        {
+            if (reusable.IsTensor()) {
+                X::Tensor tensor(reusable);
+                bool matching =
+                    tensor->GetDataType() == dataType &&
+                    tensor->GetDimCount() == static_cast<int>(dimensions.size());
+                for (int index = 0;
+                     matching && index < tensor->GetDimCount();
+                     ++index) {
+                    matching =
+                        tensor->GetDimSize(index) == dimensions[index];
+                }
+                void* deviceMemory =
+                    matching ? TensorHelper::GetGPUMemory(tensor) : nullptr;
+                if (deviceMemory &&
+                    cudaMemsetAsync(
+                        deviceMemory,
+                        0,
+                        static_cast<size_t>(tensor->GetDataSize()),
+                        cudaStreamPerThread) == cudaSuccess) {
+                    return reusable;
+                }
+            }
+            return MakeZeroGpuTensor(dataType, dimensions, elementBytes);
+        }
     }
 
     QwenVLCompiledInputs BuildQwenVLCompiledInputs(
@@ -114,7 +145,9 @@ namespace Garnet
         const std::string& prompt,
         int minPixels,
         int maxPixels,
-        const std::vector<std::vector<int>>& profileShapes)
+        const std::vector<std::vector<int>>& profileShapes,
+        X::Value reusableKeyCache,
+        X::Value reusableValueCache)
     {
         QwenVLCompiledInputs result;
         try {
@@ -201,10 +234,16 @@ namespace Garnet
                 throw std::invalid_argument("image patch grid does not match the compiled vision profile");
             }
 
+            X::Value convertedPixels = ConvertPixelsToBF16(image.pixelValues);
+            if (image.pixelValues.IsTensor()) {
+                X::Tensor sourcePixels(image.pixelValues);
+                TensorHelper::ReleaseGPUMemory(sourcePixels);
+            }
+
             X::V<X::XList> inputs;
             inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[0],
                 inputIds.data(), inputIds.size() * sizeof(int64_t)));
-            inputs->AddItem(ConvertPixelsToBF16(image.pixelValues));
+            inputs->AddItem(convertedPixels);
             inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[2],
                 grid, sizeof(grid)));
             inputs->AddItem(image.bilinearIndices);
@@ -225,10 +264,12 @@ namespace Garnet
                     profileShapes[13].size() != 1 || profileShapes[14] != std::vector<int>{1}) {
                     throw std::invalid_argument("Qwen-VL paged prefill cache profile is invalid");
                 }
-                inputs->AddItem(MakeZeroGpuTensor(
-                    X::TensorDataType::BFLOAT16, profileShapes[11], sizeof(bfloat16)));
-                inputs->AddItem(MakeZeroGpuTensor(
-                    X::TensorDataType::BFLOAT16, profileShapes[12], sizeof(bfloat16)));
+                inputs->AddItem(ReuseOrMakeZeroGpuTensor(
+                    X::TensorDataType::BFLOAT16, profileShapes[11],
+                    sizeof(bfloat16), reusableKeyCache));
+                inputs->AddItem(ReuseOrMakeZeroGpuTensor(
+                    X::TensorDataType::BFLOAT16, profileShapes[12],
+                    sizeof(bfloat16), reusableValueCache));
                 std::vector<int> pageTable(static_cast<size_t>(profileShapes[13][0]));
                 for (int index = 0; index < profileShapes[13][0]; ++index) pageTable[index] = index;
                 inputs->AddItem(MakeGpuTensor(

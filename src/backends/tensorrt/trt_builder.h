@@ -106,6 +106,7 @@ namespace Garnet {
             const std::vector<EnginePartitionSpec>& partitions,
             const SafeTensorsIndex* weightIndex,
             std::string& errorMessage);
+        static void ReleaseCachedExecutions(const std::string& cacheRoot);
         X::Value RunCapturedEngine(
             const std::string& enginePath,
             X::Value inputs,
@@ -117,6 +118,7 @@ namespace Garnet {
             const std::vector<EnginePartitionSpec>& partitions,
             X::Value inputs,
             const SafeTensorsIndex* weightIndex,
+            X::Value reusableOutput,
             std::string& errorMessage);
 
         X::Value HandleBinaryOp(const std::string& op_name, X::Value graph, X::ARGS& params, X::KWARGS& kwParams, X::Value input1, X::Value input2, X::Value output) override;

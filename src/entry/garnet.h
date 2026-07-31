@@ -129,6 +129,9 @@ namespace Garnet
 		X::Value m_compiledEngine;
 		X::Value m_servingModel;
 		std::string m_servingModelRoot;
+		std::string m_servingCacheRoot;
+		std::string m_servingModelId;
+		std::string m_servingInputCapability;
 		std::string m_servingError;
 		int m_servingMinPixels = 256 * 28 * 28;
 		int m_servingMaxPixels = 1280 * 28 * 28;

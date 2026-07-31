@@ -231,6 +231,26 @@ namespace Garnet
             return TensorOpStatus::Success;
         }
 
+        static void ReleaseGPUMemory(X::Tensor& tensor)
+        {
+            if (!tensor) return;
+            void* gpuMemory = GetGPUMemory(tensor);
+            if (!gpuMemory) return;
+            X::Value tensorDesc = tensor->GetDesc();
+            if (tensorDesc.IsObject())
+            {
+                X::XPackageValue<TensorDescriptor> varDesc(tensorDesc);
+                TensorDescriptor& desc = *varDesc;
+                desc.gpuMemory = nullptr;
+                tensor->SetDesc(X::Value(varDesc));
+            }
+            tensor->DirectSetData(nullptr, 0);
+            tensor->SetDeviceType(X::TensorDeviceType::CPU);
+            tensor->SetDeviceContext(X::Value());
+            tensor->SetDeviceOps(X::Value());
+            cudaFree(gpuMemory);
+        }
+
         // Get device name from tensor
         static std::string GetDeviceName(X::Tensor& tensor)
         {

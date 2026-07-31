@@ -510,8 +510,42 @@ namespace Garnet
 {
     CompiledModelRuntime::~CompiledModelRuntime()
     {
-        if (m_sampleTokenDevice) cudaFree(m_sampleTokenDevice);
-        if (m_sampleValueDevice) cudaFree(m_sampleValueDevice);
+        ReleaseDeviceMemory();
+    }
+
+    void CompiledModelRuntime::ReleaseDeviceMemory()
+    {
+        std::lock_guard<std::mutex> guard(m_mutex);
+        auto releaseTensor = [](X::Value& value) {
+            if (value.IsTensor()) {
+                X::Tensor tensor(value);
+                TensorHelper::ReleaseGPUMemory(tensor);
+            }
+            value = X::Value();
+        };
+        releaseTensor(m_reusableExecutionOutput);
+        releaseTensor(m_reusablePrefillKeyCache);
+        releaseTensor(m_reusablePrefillValueCache);
+        for (auto& weight : m_loadedWeights) {
+            releaseTensor(weight.second);
+        }
+        m_loadedWeights.clear();
+        m_loadedWeightBytes = 0;
+        if (m_sampleTokenDevice) {
+            cudaFree(m_sampleTokenDevice);
+            m_sampleTokenDevice = nullptr;
+        }
+        if (m_sampleValueDevice) {
+            cudaFree(m_sampleValueDevice);
+            m_sampleValueDevice = nullptr;
+        }
+        m_sampleCapacity = 0;
+        if (m_decodeRuntime) {
+            m_decodeRuntime->ReleaseDeviceMemory();
+            m_decodeRuntime.reset();
+        }
+        m_ready = false;
+        m_state = "released";
     }
 
     bool CompiledModelRuntime::Initialize(
@@ -1150,12 +1184,23 @@ namespace Garnet
                 ? static_cast<int>(requestDict["max_pixels"].ToLongLong())
                 : 65536;
             frontendInputs = BuildQwenVLCompiledInputs(
-                m_weightsLocation, imageSource, prompt, minPixels, maxPixels, m_inputShapes);
+                m_weightsLocation, imageSource, prompt, minPixels, maxPixels,
+                m_inputShapes, m_reusablePrefillKeyCache,
+                m_reusablePrefillValueCache);
             if (!frontendInputs.inputs.IsList()) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_frontend_failed"));
                 result->Set("error_message", X::Value(frontendInputs.error));
                 return result;
+            }
+            {
+                X::List frontendList(frontendInputs.inputs);
+                if (!m_reusablePrefillKeyCache.IsTensor()) {
+                    m_reusablePrefillKeyCache = frontendList->Get(11);
+                }
+                if (!m_reusablePrefillValueCache.IsTensor()) {
+                    m_reusablePrefillValueCache = frontendList->Get(12);
+                }
             }
             inputs = frontendInputs.inputs;
             frontendActive = true;
@@ -1169,13 +1214,23 @@ namespace Garnet
                 requestDict["enable_thinking"].IsValid() &&
                 requestDict["enable_thinking"].ToLongLong() != 0;
             textFrontendInputs = BuildQwenTextCompiledInputs(
-                m_weightsLocation, prompt, enableThinking, m_inputShapes);
+                m_weightsLocation, prompt, enableThinking, m_inputShapes,
+                m_reusablePrefillKeyCache, m_reusablePrefillValueCache);
             if (!textFrontendInputs.inputs.IsList()) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_frontend_failed"));
                 result->Set(
                     "error_message", X::Value(textFrontendInputs.error));
                 return result;
+            }
+            {
+                X::List frontendList(textFrontendInputs.inputs);
+                if (!m_reusablePrefillKeyCache.IsTensor()) {
+                    m_reusablePrefillKeyCache = frontendList->Get(3);
+                }
+                if (!m_reusablePrefillValueCache.IsTensor()) {
+                    m_reusablePrefillValueCache = frontendList->Get(4);
+                }
             }
             inputs = textFrontendInputs.inputs;
             frontendActive = true;
@@ -1189,6 +1244,10 @@ namespace Garnet
                 m_enginePartitions,
                 inputs,
                 &m_weightIndex,
+                requestDict["reuse_output"].IsValid() &&
+                    requestDict["reuse_output"].ToLongLong() != 0
+                    ? m_reusableExecutionOutput
+                    : X::Value(),
                 executionError)
             : builder.RunCapturedEngine(
                 m_enginePath,
@@ -1550,6 +1609,20 @@ namespace Garnet
         result->Set("total_ms", X::Value(
             std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - requestStart).count()));
+        if (frontendActive && inputs.IsList()) {
+            X::List requestInputs(inputs);
+            const int reusableKeyIndex = frontendIsVL ? 11 : 3;
+            const int reusableValueIndex = frontendIsVL ? 12 : 4;
+            for (long long index = 0; index < requestInputs->Size(); ++index) {
+                if (index == reusableKeyIndex || index == reusableValueIndex) {
+                    continue;
+                }
+                X::Value inputValue = requestInputs->Get(index);
+                if (!inputValue.IsTensor()) continue;
+                X::Tensor tensor(inputValue);
+                TensorHelper::ReleaseGPUMemory(tensor);
+            }
+        }
         return result;
     }
 

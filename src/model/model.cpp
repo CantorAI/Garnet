@@ -630,6 +630,16 @@ namespace Garnet
         retValue = mCompiledRuntime->Status();
     }
 
+    void Model::ReleaseRuntime(X::XRuntime*, X::XObj*,
+        X::ARGS&, X::KWARGS&, X::Value& retValue)
+    {
+        if (mCompiledRuntime) {
+            mCompiledRuntime->ReleaseDeviceMemory();
+            mCompiledRuntime.reset();
+        }
+        retValue = X::Value(true);
+    }
+
     void Model::Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
     {
         if (mCompiledRuntime) {

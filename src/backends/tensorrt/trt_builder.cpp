@@ -567,6 +567,68 @@ namespace Garnet {
     TRTBuilder::~TRTBuilder() {
     }
 
+    void TRTBuilder::ReleaseCachedExecutions(const std::string& cacheRoot) {
+        if (cacheRoot.empty()) return;
+        const std::filesystem::path normalizedRoot =
+            std::filesystem::absolute(cacheRoot).lexically_normal();
+        const auto belongsToCache = [&normalizedRoot](const std::string& candidate) {
+            const std::filesystem::path normalizedCandidate =
+                std::filesystem::absolute(candidate).lexically_normal();
+            auto root = normalizedRoot.begin();
+            auto path = normalizedCandidate.begin();
+            for (; root != normalizedRoot.end(); ++root, ++path) {
+                if (path == normalizedCandidate.end() || *path != *root) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        cudaDeviceSynchronize();
+        {
+            std::lock_guard<std::mutex> lock(g_decodeCudaGraphMutex);
+            for (auto graph = g_decodeCudaGraphs.begin();
+                 graph != g_decodeCudaGraphs.end();) {
+                if (!belongsToCache(graph->first)) {
+                    ++graph;
+                    continue;
+                }
+                if (graph->second.executable) {
+                    cudaGraphExecDestroy(graph->second.executable);
+                }
+                if (graph->second.graph) cudaGraphDestroy(graph->second.graph);
+                graph = g_decodeCudaGraphs.erase(graph);
+            }
+        }
+        {
+            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+            for (auto execution = g_trtExecutionCache.begin();
+                 execution != g_trtExecutionCache.end();) {
+                if (!belongsToCache(execution->first)) {
+                    ++execution;
+                    continue;
+                }
+                delete execution->second.context;
+                delete execution->second.engine;
+                delete execution->second.runtime;
+                g_trtEngineLoadMutexes.erase(execution->first);
+                execution = g_trtExecutionCache.erase(execution);
+            }
+        }
+        {
+            std::lock_guard<std::mutex> lock(g_trtLayerProfileMutex);
+            for (auto profiled = g_profiledTRTEngines.begin();
+                 profiled != g_profiledTRTEngines.end();) {
+                if (belongsToCache(*profiled)) {
+                    profiled = g_profiledTRTEngines.erase(profiled);
+                } else {
+                    ++profiled;
+                }
+            }
+        }
+        cudaDeviceSynchronize();
+    }
+
     X::Value TRTBuilder::ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape) {
         std::cout << "[TRTBuilder] ExportMatmulEngine -> " << enginePath << std::endl;
         if (inputShape.size() != 2 || weightShape.size() != 2) {
@@ -4526,6 +4588,7 @@ namespace Garnet {
         const std::vector<EnginePartitionSpec>& partitions,
         X::Value inputsValue,
         const SafeTensorsIndex* weightIndex,
+        X::Value reusableOutput,
         std::string& errorMessage)
     {
         if (!EnsurePagedKVDecodePluginRegistered()) {
@@ -4539,6 +4602,7 @@ namespace Garnet {
         X::List requestInputs(inputsValue);
         std::unordered_map<unsigned long long, X::Value> intermediates;
         X::Value terminalOutput;
+        unsigned long long terminalTensorId = 0;
         const char* profileEnvironment = std::getenv("GARNET_PROFILE_PARTITIONS");
         const bool profilePartitions =
             profileEnvironment && std::string(profileEnvironment) == "1";
@@ -4644,24 +4708,46 @@ namespace Garnet {
                 }
 
                 void* devicePointer = nullptr;
-                if (cudaMalloc(&devicePointer, elementCount * elementBytes) != cudaSuccess) {
-                    errorMessage = "failed to allocate partition output " + binding.name;
-                    return X::Value();
+                X::Value outputValue;
+                if (binding.terminalOutput && reusableOutput.IsTensor()) {
+                    X::Tensor reusable(reusableOutput);
+                    bool matching =
+                        reusable->GetDataType() == xlangDataType &&
+                        reusable->GetDimCount() == dimensions.nbDims;
+                    for (int index = 0; matching && index < dimensions.nbDims; ++index) {
+                        matching =
+                            reusable->GetDimSize(index) == dimensions.d[index];
+                    }
+                    if (matching) {
+                        devicePointer = TensorHelper::GetGPUMemory(reusable);
+                        if (devicePointer) outputValue = reusableOutput;
+                    }
                 }
-                X::Tensor output(X::g_pXHost->CreateTensor());
-                output->SetDataType(xlangDataType);
-                output->SetShape(outputShape);
-                if (TensorHelper::AttachGPUMemory(output, devicePointer) !=
-                    TensorOpStatus::Success) {
-                    cudaFree(devicePointer);
-                    errorMessage = "failed to attach partition output " + binding.name;
-                    return X::Value();
+                if (!devicePointer) {
+                    if (cudaMalloc(
+                            &devicePointer,
+                            elementCount * elementBytes) != cudaSuccess) {
+                        errorMessage =
+                            "failed to allocate partition output " + binding.name;
+                        return X::Value();
+                    }
+                    X::Tensor output(X::g_pXHost->CreateTensor());
+                    output->SetDataType(xlangDataType);
+                    output->SetShape(outputShape);
+                    if (TensorHelper::AttachGPUMemory(output, devicePointer) !=
+                        TensorOpStatus::Success) {
+                        cudaFree(devicePointer);
+                        errorMessage =
+                            "failed to attach partition output " + binding.name;
+                        return X::Value();
+                    }
+                    outputValue = X::Value(output);
                 }
                 if (!context->setTensorAddress(binding.name.c_str(), devicePointer)) {
                     errorMessage = "failed to bind partition output " + binding.name;
                     return X::Value();
                 }
-                outputs.emplace_back(binding, X::Value(output));
+                outputs.emplace_back(binding, outputValue);
             }
 
             if (!context->enqueueV3(cudaStreamPerThread)) {
@@ -4684,13 +4770,24 @@ namespace Garnet {
             }
             for (auto& output : outputs) {
                 intermediates[output.first.tensorId] = output.second;
-                if (output.first.terminalOutput) terminalOutput = output.second;
+                if (output.first.terminalOutput) {
+                    terminalOutput = output.second;
+                    terminalTensorId = output.first.tensorId;
+                }
             }
         }
 
         if (!terminalOutput.IsValid()) {
             errorMessage = "partitioned execution produced no terminal output";
             return X::Value();
+        }
+        for (auto& intermediate : intermediates) {
+            if (intermediate.first == terminalTensorId ||
+                !intermediate.second.IsTensor()) {
+                continue;
+            }
+            X::Tensor tensor(intermediate.second);
+            TensorHelper::ReleaseGPUMemory(tensor);
         }
         errorMessage.clear();
         return terminalOutput;

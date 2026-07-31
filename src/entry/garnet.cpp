@@ -36,6 +36,8 @@ namespace
 
     json GarnetServingStatus(X::Value modelValue,
         const std::string& modelRoot,
+        const std::string& modelId,
+        const std::string& inputCapability,
         const std::string& lastError,
         X::XRuntime* runtime,
         X::XObj* context)
@@ -45,6 +47,8 @@ namespace
                 (lastError.empty() ? "stopped" : "error")},
             {"ready", modelValue.IsValid()},
             {"model_root", modelRoot},
+            {"model_id", modelId},
+            {"input_capability", inputCapability},
             {"error", lastError}
         };
         if (!modelValue.IsValid()) return status;
@@ -1646,7 +1650,25 @@ namespace Garnet
         const fs::path xmodelRoot = params.size() > 1 && !params[1].ToString().empty()
             ? fs::path(params[1].ToString())
             : modelRoot / "xmodel";
-        const fs::path xmodelPath = xmodelRoot / "qwen_vl_prefill.x";
+        const std::string requestedModelId = params.size() > 4
+            ? params[4].ToString()
+            : std::string();
+        const bool textModel =
+            requestedModelId == "Qwen3-1.7B" ||
+            (requestedModelId.empty() &&
+                !fs::is_regular_file(xmodelRoot / "qwen_vl_prefill.x") &&
+                fs::is_regular_file(xmodelRoot / "prefill.x"));
+        const std::string modelId = textModel
+            ? "Qwen3-1.7B"
+            : "Qwen3-VL-2B-Instruct";
+        if (!requestedModelId.empty() && requestedModelId != modelId) {
+            retValue = GarnetJsonError(
+                "model_unsupported",
+                "The requested Garnet serving model is not supported");
+            return;
+        }
+        const fs::path xmodelPath =
+            xmodelRoot / (textModel ? "prefill.x" : "qwen_vl_prefill.x");
         const fs::path cacheRoot = params.size() > 2 && !params[2].ToString().empty()
             ? fs::path(params[2].ToString())
             : modelRoot / "compiled_cache";
@@ -1688,7 +1710,9 @@ namespace Garnet
         }
         if (!fs::is_regular_file(xmodelPath)) {
             retValue = GarnetJsonError("xmodel_missing",
-                "qwen_vl_prefill.x was not found under the model root");
+                textModel
+                    ? "prefill.x was not found under the text model root"
+                    : "qwen_vl_prefill.x was not found under the vision model root");
             return;
         }
         if (!fs::is_regular_file(modelRoot / "config.json") ||
@@ -1699,6 +1723,19 @@ namespace Garnet
         }
 
         std::lock_guard<std::mutex> guard(m_servingMutex);
+        const std::string previousCacheRoot = m_servingCacheRoot;
+        if (m_servingModel.IsValid()) {
+            X::Value releaseCallable = m_servingModel["release_runtime"];
+            if (releaseCallable.IsObject()) releaseCallable();
+        }
+        m_servingModel = X::Value();
+        m_servingModelRoot.clear();
+        m_servingCacheRoot.clear();
+        m_servingModelId.clear();
+        m_servingInputCapability.clear();
+        if (!previousCacheRoot.empty()) {
+            TRTBuilder::ReleaseCachedExecutions(previousCacheRoot);
+        }
         try {
             fs::create_directories(cacheRoot);
             X::XPackageValue<Model> modelValue;
@@ -1707,44 +1744,67 @@ namespace Garnet
             std::string modelDirectory = xmodelPath.parent_path().string();
             std::string emptyString;
             model.SetInfo(modelDirectory, emptyString, emptyString, emptyWeights);
-            const std::vector<std::vector<int>> inputShapes = {
-                {1, maxInputTokens}, {patchCount, 1536}, {1, 3},
-                {patchCount, 4}, {patchCount, 4}, {patchCount, 2}, {2},
-                {1, maxInputTokens}, {1, maxInputTokens},
-                {3, 1, maxInputTokens}, {1, 1},
-                {28, kvPages, 16, 8, 128}, {28, kvPages, 16, 8, 128},
-                {kvPages}, {1}
-            };
-            const std::vector<std::string> inputDataTypes = {
-                "int64", "bfloat16", "int64", "int64", "bfloat16", "int64",
-                "int32", "int64", "int64", "int64", "int64", "bfloat16",
-                "bfloat16", "int32", "int32"
-            };
+            const std::vector<std::vector<int>> inputShapes = textModel
+                ? std::vector<std::vector<int>>{
+                    {1, maxInputTokens}, {1, 1, maxInputTokens},
+                    {1, maxInputTokens},
+                    {28, kvPages, 16, 8, 128},
+                    {28, kvPages, 16, 8, 128},
+                    {kvPages}, {1}}
+                : std::vector<std::vector<int>>{
+                    {1, maxInputTokens}, {patchCount, 1536}, {1, 3},
+                    {patchCount, 4}, {patchCount, 4}, {patchCount, 2}, {2},
+                    {1, maxInputTokens}, {1, maxInputTokens},
+                    {3, 1, maxInputTokens}, {1, 1},
+                    {28, kvPages, 16, 8, 128}, {28, kvPages, 16, 8, 128},
+                    {kvPages}, {1}};
+            const std::vector<std::string> inputDataTypes = textModel
+                ? std::vector<std::string>{
+                    "int64", "int64", "int64", "bfloat16", "bfloat16",
+                    "int32", "int32"}
+                : std::vector<std::string>{
+                    "int64", "bfloat16", "int64", "int64", "bfloat16",
+                    "int64", "int32", "int64", "int64", "int64", "int64",
+                    "bfloat16", "bfloat16", "int32", "int32"};
             FusionPartitionOptions partitionOptions;
             partitionOptions.builderWorkspaceBytes = 4096ULL << 20;
             if (!model.InitializeCompiledRuntime(
                     xmodelPath.string(), cacheRoot.string(), modelRoot.string(),
-                    "Qwen3VLPrefill", "qwen3_vl", inputShapes, inputDataTypes,
+                    textModel ? "Qwen3Prefill" : "Qwen3VLPrefill",
+                    textModel ? "qwen3_text" : "qwen3_vl",
+                    inputShapes, inputDataTypes,
                     partitionOptions)) {
                 m_servingModel = X::Value();
                 m_servingModelRoot.clear();
+                TRTBuilder::ReleaseCachedExecutions(cacheRoot.string());
+                m_servingCacheRoot.clear();
+                m_servingModelId.clear();
+                m_servingInputCapability.clear();
                 m_servingError = "Garnet failed to initialize the compiled Qwen runtime";
                 retValue = GarnetJsonError("model_load_failed", m_servingError);
                 return;
             }
             m_servingModel = X::Value(modelValue);
             m_servingModelRoot = modelRoot.string();
+            m_servingCacheRoot = cacheRoot.string();
+            m_servingModelId = modelId;
+            m_servingInputCapability = textModel ? "text" : "vision";
             m_servingMinPixels = minPixels;
             m_servingMaxPixels = maxPixels;
             m_servingMaxOutputTokens = maxOutputTokens;
             m_servingError.clear();
             retValue = GarnetServingStatus(
-                m_servingModel, m_servingModelRoot, m_servingError, rt, pContext
+                m_servingModel, m_servingModelRoot, m_servingModelId,
+                m_servingInputCapability, m_servingError, rt, pContext
             ).dump();
         }
         catch (const std::exception& exception) {
             m_servingModel = X::Value();
             m_servingModelRoot.clear();
+            TRTBuilder::ReleaseCachedExecutions(cacheRoot.string());
+            m_servingCacheRoot.clear();
+            m_servingModelId.clear();
+            m_servingInputCapability.clear();
             m_servingError = exception.what();
             retValue = GarnetJsonError("model_load_failed", m_servingError);
         }
@@ -1755,20 +1815,21 @@ namespace Garnet
     {
         std::lock_guard<std::mutex> guard(m_servingMutex);
         retValue = GarnetServingStatus(
-            m_servingModel, m_servingModelRoot, m_servingError, rt, pContext
+            m_servingModel, m_servingModelRoot, m_servingModelId,
+            m_servingInputCapability, m_servingError, rt, pContext
         ).dump();
     }
 
     void GarnetAPI::InferJson(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS&, X::Value& retValue)
     {
-        if (params.size() < 2) {
+        if (params.size() == 0) {
             retValue = GarnetJsonError("request_invalid",
-                "infer_json requires prompt and image");
+                "infer_json requires a prompt");
             return;
         }
         const std::string prompt = params[0].ToString();
-        X::Value imageSource = params[1];
+        X::Value imageSource = params.size() > 1 ? params[1] : X::Value();
         const bool hasImageBinary =
             imageSource.IsObject() &&
             imageSource.GetObj()->GetType() == X::ObjType::Binary &&
@@ -1781,16 +1842,16 @@ namespace Garnet
             : 0;
         if (prompt.empty()) {
             retValue = GarnetJsonError("request_invalid",
-                "Garnet Qwen-VL inference requires a prompt");
+                "Garnet inference requires a prompt");
             return;
         }
-        if (!hasImageBinary && !hasImagePath) {
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        if (m_servingInputCapability == "vision" &&
+            !hasImageBinary && !hasImagePath) {
             retValue = GarnetJsonError("request_invalid",
                 "Garnet Qwen-VL inference requires JPEG binary data or an image path");
             return;
         }
-
-        std::lock_guard<std::mutex> guard(m_servingMutex);
         const int maxNewTokens = requestedMaxNewTokens > 0
             ? (std::max)(1, (std::min)(
                 m_servingMaxOutputTokens, requestedMaxNewTokens))
@@ -1807,11 +1868,17 @@ namespace Garnet
             return;
         }
         X::Dict request;
-        request->Set("image", imageSource);
+        if (m_servingInputCapability == "vision") {
+            request->Set("image", imageSource);
+            request->Set("min_pixels", X::Value(m_servingMinPixels));
+            request->Set("max_pixels", X::Value(m_servingMaxPixels));
+        }
+        else {
+            request->Set("enable_thinking", X::Value(0));
+        }
         request->Set("prompt", X::Value(prompt));
-        request->Set("min_pixels", X::Value(m_servingMinPixels));
-        request->Set("max_pixels", X::Value(m_servingMaxPixels));
         request->Set("max_new_tokens", X::Value(maxNewTokens));
+        request->Set("reuse_output", X::Value(1));
         X::Value resultValue = forwardCallable(X::Value(request));
         if (!resultValue.IsDict()) {
             retValue = GarnetJsonError("inference_failed",
@@ -1821,6 +1888,7 @@ namespace Garnet
         X::Dict result(resultValue);
         json response = {
             {"status", result["status"].ToString()},
+            {"model_id", m_servingModelId},
             {"text", result["text"].ToString()},
             {"error_code", result["error_code"].ToString()},
             {"error_message", result["error_message"].ToString()},
@@ -1832,6 +1900,8 @@ namespace Garnet
                 ? result["visual_token_count"].ToLongLong() : 0},
             {"duration_ms", result["total_ms"].IsValid()
                 ? result["total_ms"].ToDouble() : 0.0},
+            {"time_to_first_token_ms", result["time_to_first_token_ms"].IsValid()
+                ? result["time_to_first_token_ms"].ToDouble() : 0.0},
             {"tokens_per_second", result["decode_tokens_per_second"].IsValid()
                 ? result["decode_tokens_per_second"].ToDouble() : 0.0}
         };
@@ -1842,8 +1912,19 @@ namespace Garnet
         X::ARGS&, X::KWARGS&, X::Value& retValue)
     {
         std::lock_guard<std::mutex> guard(m_servingMutex);
+        const std::string cacheRoot = m_servingCacheRoot;
+        if (m_servingModel.IsValid()) {
+            X::Value releaseCallable = m_servingModel["release_runtime"];
+            if (releaseCallable.IsObject()) releaseCallable();
+        }
         m_servingModel = X::Value();
         m_servingModelRoot.clear();
+        m_servingCacheRoot.clear();
+        m_servingModelId.clear();
+        m_servingInputCapability.clear();
+        if (!cacheRoot.empty()) {
+            TRTBuilder::ReleaseCachedExecutions(cacheRoot);
+        }
         m_servingError.clear();
         m_servingMinPixels = 256 * 28 * 28;
         m_servingMaxPixels = 1280 * 28 * 28;

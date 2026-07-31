@@ -76,13 +76,46 @@ namespace Garnet
             }
             return X::Value(tensor);
         }
+
+        X::Value ReuseOrMakeZeroGpuTensor(
+            X::TensorDataType dataType,
+            const std::vector<int>& dimensions,
+            size_t elementBytes,
+            X::Value reusable)
+        {
+            if (reusable.IsTensor()) {
+                X::Tensor tensor(reusable);
+                bool matching =
+                    tensor->GetDataType() == dataType &&
+                    tensor->GetDimCount() == static_cast<int>(dimensions.size());
+                for (int index = 0;
+                     matching && index < tensor->GetDimCount();
+                     ++index) {
+                    matching =
+                        tensor->GetDimSize(index) == dimensions[index];
+                }
+                void* deviceMemory =
+                    matching ? TensorHelper::GetGPUMemory(tensor) : nullptr;
+                if (deviceMemory &&
+                    cudaMemsetAsync(
+                        deviceMemory,
+                        0,
+                        static_cast<size_t>(tensor->GetDataSize()),
+                        cudaStreamPerThread) == cudaSuccess) {
+                    return reusable;
+                }
+            }
+            return MakeZeroGpuTensor(dataType, dimensions, elementBytes);
+        }
     }
 
     QwenTextCompiledInputs BuildQwenTextCompiledInputs(
         const std::string& modelDirectory,
         const std::string& prompt,
         bool enableThinking,
-        const std::vector<std::vector<int>>& profileShapes)
+        const std::vector<std::vector<int>>& profileShapes,
+        X::Value reusableKeyCache,
+        X::Value reusableValueCache)
     {
         QwenTextCompiledInputs result;
         try {
@@ -158,12 +191,12 @@ namespace Garnet
             inputs->AddItem(MakeGpuTensor(
                 X::TensorDataType::LONGLONG, profileShapes[2],
                 attentionMask.data(), attentionMask.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeZeroGpuTensor(
+            inputs->AddItem(ReuseOrMakeZeroGpuTensor(
                 X::TensorDataType::BFLOAT16, profileShapes[3],
-                sizeof(unsigned short)));
-            inputs->AddItem(MakeZeroGpuTensor(
+                sizeof(unsigned short), reusableKeyCache));
+            inputs->AddItem(ReuseOrMakeZeroGpuTensor(
                 X::TensorDataType::BFLOAT16, profileShapes[4],
-                sizeof(unsigned short)));
+                sizeof(unsigned short), reusableValueCache));
             inputs->AddItem(MakeGpuTensor(
                 X::TensorDataType::INT, profileShapes[5],
                 pageTable.data(), pageTable.size() * sizeof(int)));

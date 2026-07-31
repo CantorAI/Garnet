@@ -63,6 +63,8 @@ namespace Garnet
         void* m_sampleValueDevice = nullptr;
         int m_sampleCapacity = 0;
         X::Value m_reusableExecutionOutput;
+        X::Value m_reusablePrefillKeyCache;
+        X::Value m_reusablePrefillValueCache;
 
     public:
         ~CompiledModelRuntime();
@@ -81,5 +83,6 @@ namespace Garnet
         X::Value Status() const;
         X::Value Forward(X::Value request);
         X::Value DebugProbe(const std::string& probe, X::Value argument);
+        void ReleaseDeviceMemory();
     };
 }

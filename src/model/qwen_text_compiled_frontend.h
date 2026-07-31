@@ -18,5 +18,7 @@ namespace Garnet
         const std::string& modelDirectory,
         const std::string& prompt,
         bool enableThinking,
-        const std::vector<std::vector<int>>& profileShapes);
+        const std::vector<std::vector<int>>& profileShapes,
+        X::Value reusableKeyCache = X::Value(),
+        X::Value reusableValueCache = X::Value());
 }

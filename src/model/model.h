@@ -30,6 +30,7 @@ namespace Garnet
             APISET().AddVarFunc("detokenizer", &Model::Detokenizer);
             APISET().AddVarFunc("debug_probe", &Model::DebugProbe);
             APISET().AddVarFunc("runtime_status", &Model::RuntimeStatus);
+            APISET().AddVarFunc("release_runtime", &Model::ReleaseRuntime);
             APISET().AddVarFunc("forward", &Model::Forward);
             APISET().AddVarFunc("forward_request", &Model::ForwardRequest);
             APISET().AddVarFunc("create_device_kv_cache", &Model::CreateDeviceKVCache);
@@ -72,6 +73,8 @@ namespace Garnet
             const FusionPartitionOptions& partitionOptions = {},
             const std::string& backend = "tensorrt");
         void RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
+            X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+        void ReleaseRuntime(X::XRuntime* rt, X::XObj* pContext,
             X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 
         void Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
