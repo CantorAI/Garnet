@@ -36,9 +36,11 @@ def qkv_with_rope(x, position_ids, config, layer_idx):
 
 def mlp(x, config, layer_idx):
     prefix = "model.layers." + str(layer_idx) + ".mlp"
-    gate = linear(x, prefix + ".gate_proj.weight", op="gate_proj")
-    up = linear(x, prefix + ".up_proj.weight", op="up_proj")
-    hidden = gate * T.unary_op(config.hidden_act) * up
+    hidden = x * T.unary_op(
+        "qwen3_mlp_gate_up_swiglu_packed",
+        gate_weight_name=prefix + ".gate_proj.weight",
+        up_weight_name=prefix + ".up_proj.weight"
+    )
     return linear(hidden, prefix + ".down_proj.weight", op="down_proj")
 
 

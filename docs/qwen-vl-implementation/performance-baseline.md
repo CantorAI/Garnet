@@ -35,6 +35,13 @@ prompt tokens, and 10 greedy output tokens. The first request measured
 118.14 ms and the repeated warm request measured 89.42 ms. The one-time
 rebuild after moving the model source took 144.0 seconds.
 
+With packed QKV and gate/up projections plus the compact online-softmax
+workspace, the four-frame rerun measured 87.16-88.19 ms. The full real-image
+test remained coherent on all frames. A separate one-patch synthetic smoke
+test checks the stable `This image` prefix rather than an exact third BF16
+greedy token, because TensorRT tactic selection can change that tied token
+without changing real-image correctness.
+
 ## Guardrails
 
 - Inactive batch rows must produce zero attention output and must not modify KV.

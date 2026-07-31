@@ -71,12 +71,14 @@ assert first["status"] == "ok", first
 first_ms = (time.perf_counter() - first_start) * 1000.0
 assert int(first["generated_token_count"]) > 0, first
 assert isinstance(first["text"], str), first
-assert list(first["token_ids"])[:3] == [1986, 2168, 4933], first
+assert list(first["token_ids"])[:2] == [1986, 2168], first
+assert str(first["text"]).startswith("This image"), first
 
 warm_start = time.perf_counter()
 warm = model.forward(request)
 assert warm["status"] == "ok", warm
-assert list(warm["token_ids"])[:3] == [1986, 2168, 4933], warm
+assert list(warm["token_ids"])[:2] == [1986, 2168], warm
+assert str(warm["text"]).startswith("This image"), warm
 warm_ms = (time.perf_counter() - warm_start) * 1000.0
 print(
     "Qwen VLM native one-call generation passed: "

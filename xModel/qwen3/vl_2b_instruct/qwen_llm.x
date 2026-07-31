@@ -85,9 +85,11 @@ def Qwen3TextAttention(x, position_ids, attention_mask, past_key_values, weights
 
 def Qwen3TextMLP(x, weights, config, layer_idx):
     prefix = "model.language_model.layers." + str(layer_idx) + ".mlp"
-    gate = linear(x, prefix + ".gate_proj.weight", None, op="gate_proj")
-    up = linear(x, prefix + ".up_proj.weight", None, op="up_proj")
-    hidden = gate * T.unary_op(config.text_config.hidden_act) * up
+    hidden = x * T.unary_op(
+        "qwen3_mlp_gate_up_swiglu_packed",
+        gate_weight_name=prefix + ".gate_proj.weight",
+        up_weight_name=prefix + ".up_proj.weight"
+    )
     return linear(hidden, prefix + ".down_proj.weight", None, op="down_proj")
 
 

@@ -5344,16 +5344,21 @@ namespace Garnet {
                 loweringError = "Qwen3 text packed QKV metadata or weights are incomplete";
                 return X::Value();
             }
-            auto project = [&](ITensor* projectionWeight) -> ITensor* {
-                projectionWeight = BroadcastMatrixWeight(
-                    projectionWeight,
-                    source->getDimensions().nbDims);
-                if (!projectionWeight) return nullptr;
-                auto* layer = network->addMatrixMultiply(
-                    *source,
-                    MatrixOperation::kNONE,
-                    *projectionWeight,
-                    MatrixOperation::kTRANSPOSE);
+            auto sliceLast = [&](ITensor* tensor, int startValue, int sizeValue) -> ITensor* {
+                if (!tensor) return nullptr;
+                const Dims dimensions = tensor->getDimensions();
+                if (dimensions.nbDims <= 0) return nullptr;
+                Dims start{};
+                Dims size = dimensions;
+                Dims stride{};
+                start.nbDims = dimensions.nbDims;
+                stride.nbDims = dimensions.nbDims;
+                for (int index = 0; index < dimensions.nbDims; ++index) {
+                    stride.d[index] = 1;
+                }
+                start.d[dimensions.nbDims - 1] = startValue;
+                size.d[dimensions.nbDims - 1] = sizeValue;
+                auto* layer = network->addSlice(*tensor, start, size, stride);
                 return layer ? layer->getOutput(0) : nullptr;
             };
             auto headRmsNorm = [&](ITensor* projected, ITensor* normWeight, int heads) -> ITensor* {
@@ -5429,13 +5434,106 @@ namespace Garnet {
                 if (flatten) flatten->setReshapeDimensions(projectedDimensions);
                 return flatten ? flatten->getOutput(0) : nullptr;
             };
-            ITensor* q = headRmsNorm(project(qWeight), qNormWeight, numHeads);
-            ITensor* k = headRmsNorm(project(kWeight), kNormWeight, numKvHeads);
-            ITensor* v = project(vWeight);
+            const int qWidth = numHeads * headDim;
+            const int kvWidth = numKvHeads * headDim;
+            ITensor* projectionWeights[] = {qWeight, kWeight, vWeight};
+            auto* weightConcat = network->addConcatenation(projectionWeights, 3);
+            if (weightConcat) weightConcat->setAxis(0);
+            ITensor* packedWeight = weightConcat ? weightConcat->getOutput(0) : nullptr;
+            packedWeight = BroadcastMatrixWeight(
+                packedWeight,
+                source->getDimensions().nbDims);
+            auto* projection = packedWeight
+                ? network->addMatrixMultiply(
+                    *source,
+                    MatrixOperation::kNONE,
+                    *packedWeight,
+                    MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* packedProjection = projection ? projection->getOutput(0) : nullptr;
+            ITensor* qProjection = sliceLast(packedProjection, 0, qWidth);
+            ITensor* kProjection = sliceLast(packedProjection, qWidth, kvWidth);
+            ITensor* v = sliceLast(packedProjection, qWidth + kvWidth, kvWidth);
+            ITensor* q = headRmsNorm(qProjection, qNormWeight, numHeads);
+            ITensor* k = headRmsNorm(kProjection, kNormWeight, numKvHeads);
             ITensor* packedInputs[] = {q, k, v};
             auto* packed = q && k && v ? network->addConcatenation(packedInputs, 3) : nullptr;
             if (packed) packed->setAxis(2);
             lastOutput = packed ? packed->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_mlp_gate_up_swiglu_packed") {
+            auto* gateNameItem = kwParams.find("gate_weight_name");
+            auto* upNameItem = kwParams.find("up_weight_name");
+            ITensor* gateWeight = gateNameItem
+                ? GetOrCreateTRTWeight(gateNameItem->val.ToString())
+                : nullptr;
+            ITensor* upWeight = upNameItem
+                ? GetOrCreateTRTWeight(upNameItem->val.ToString())
+                : nullptr;
+            const Dims gateDimensions = gateWeight
+                ? gateWeight->getDimensions()
+                : Dims{};
+            const Dims upDimensions = upWeight
+                ? upWeight->getDimensions()
+                : Dims{};
+            if (!gateWeight || !upWeight || gateDimensions.nbDims != 2 ||
+                upDimensions.nbDims != 2 ||
+                gateDimensions.d[0] != upDimensions.d[0] ||
+                gateDimensions.d[1] != upDimensions.d[1]) {
+                loweringError = "Qwen3 packed SwiGLU weights are missing or incompatible";
+                return X::Value();
+            }
+            ITensor* weights[] = {gateWeight, upWeight};
+            auto* weightConcat = network->addConcatenation(weights, 2);
+            if (weightConcat) weightConcat->setAxis(0);
+            ITensor* packedWeight = weightConcat ? weightConcat->getOutput(0) : nullptr;
+            packedWeight = BroadcastMatrixWeight(
+                packedWeight,
+                source->getDimensions().nbDims);
+            auto* projection = packedWeight
+                ? network->addMatrixMultiply(
+                    *source,
+                    MatrixOperation::kNONE,
+                    *packedWeight,
+                    MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* packed = projection ? projection->getOutput(0) : nullptr;
+            if (!packed) {
+                loweringError = "Qwen3 packed SwiGLU projection failed";
+                return X::Value();
+            }
+            const int intermediate = gateDimensions.d[0];
+            const Dims packedDimensions = packed->getDimensions();
+            Dims start{};
+            Dims size = packedDimensions;
+            Dims stride{};
+            start.nbDims = packedDimensions.nbDims;
+            stride.nbDims = packedDimensions.nbDims;
+            for (int index = 0; index < packedDimensions.nbDims; ++index) {
+                stride.d[index] = 1;
+            }
+            size.d[packedDimensions.nbDims - 1] = intermediate;
+            auto* gateSlice = network->addSlice(*packed, start, size, stride);
+            start.d[packedDimensions.nbDims - 1] = intermediate;
+            auto* upSlice = network->addSlice(*packed, start, size, stride);
+            ITensor* gate = gateSlice ? gateSlice->getOutput(0) : nullptr;
+            ITensor* up = upSlice ? upSlice->getOutput(0) : nullptr;
+            auto* sigmoid = gate
+                ? network->addActivation(*gate, ActivationType::kSIGMOID)
+                : nullptr;
+            auto* silu = sigmoid
+                ? network->addElementWise(
+                    *gate,
+                    *sigmoid->getOutput(0),
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* swiglu = silu && up
+                ? network->addElementWise(
+                    *silu->getOutput(0),
+                    *up,
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            lastOutput = swiglu ? swiglu->getOutput(0) : nullptr;
         }
         else if (opName == "paged_kv_update_packed") {
             auto* enabledItem = kwParams.find("enabled");

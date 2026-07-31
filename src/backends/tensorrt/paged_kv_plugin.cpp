@@ -118,10 +118,14 @@ namespace Garnet
         const int maxSequenceLength = logicalPages * m_pageSize;
         constexpr int positionsPerSplit = 128;
         const int splitCount = (maxSequenceLength + positionsPerSplit - 1) / positionsPerSplit;
+        const size_t stateCount = static_cast<size_t>(batchSize) * m_qHeads * splitCount;
+        const size_t partialBytes = stateCount * m_headDim * sizeof(float);
+        if (m_headDim == 128) {
+            const size_t statsBytes = stateCount * 2 * sizeof(float);
+            return statsBytes + partialBytes;
+        }
         const size_t scoreBytes = static_cast<size_t>(batchSize) * m_qHeads *
             maxSequenceLength * sizeof(float);
-        const size_t partialBytes = static_cast<size_t>(batchSize) * m_qHeads *
-            splitCount * m_headDim * sizeof(float);
         return scoreBytes + partialBytes;
     }
 
@@ -170,9 +174,14 @@ namespace Garnet
         const bool useSplitK = !(splitK && splitK[0] == '0' && splitK[1] == '\0');
         const char* splitValue = std::getenv("GARNET_PAGED_KV_SPLIT_VALUE");
         const bool useSplitValue = !(splitValue && splitValue[0] == '0' && splitValue[1] == '\0');
+        constexpr int positionsPerSplit = 128;
+        const int splitCount =
+            (maxSequenceLength + positionsPerSplit - 1) / positionsPerSplit;
         float* scoreWorkspace = static_cast<float*>(workspace);
         float* valuePartialWorkspace = scoreWorkspace +
-            static_cast<size_t>(batchSize) * m_qHeads * maxSequenceLength;
+            (m_headDim == 128
+                ? static_cast<size_t>(batchSize) * m_qHeads * splitCount * 2
+                : static_cast<size_t>(batchSize) * m_qHeads * maxSequenceLength);
         cudaError_t status = cudaSuccess;
         if (useFlash && m_useActiveMask) {
             status = runTextPagedKVDecodeFlashMaskedBF16DeviceMetadata(
@@ -193,6 +202,16 @@ namespace Garnet
         }
         else if (batchSize != 1) {
             return 1;
+        }
+        else if (m_headDim == 128) {
+            // The debug fallback is workspace-free. This keeps changing
+            // GARNET_PAGED_KV_FLASH after engine creation memory-safe while
+            // the normal head-128 path uses the compact flash workspace.
+            status = runTextPagedKVDecodeBF16DeviceMetadata(
+                static_cast<const bfloat16*>(inputs[0]), keyPages, valuePages,
+                static_cast<const int*>(inputs[3]), static_cast<const int*>(inputs[4]),
+                static_cast<const int*>(inputs[5]), static_cast<bfloat16*>(outputs[0]),
+                maxSequenceLength, m_pageSize, m_qHeads, m_kvHeads, m_headDim, stream);
         }
         else if (useSplitK) {
             status = runTextPagedKVDecodeSplitKBF16DeviceMetadata(
