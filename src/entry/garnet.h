@@ -168,6 +168,8 @@ namespace Garnet
 			APISET().AddVarFunc("tensor_update_from_host", &GarnetAPI::TensorUpdateFromHost);
 			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
 			APISET().AddVarFunc("serve_model", &GarnetAPI::ServeModel);
+			APISET().AddVarFunc("list_available_models_json", &GarnetAPI::ListAvailableModelsJson);
+			APISET().AddVarFunc("list_loaded_models_json", &GarnetAPI::ListLoadedModelsJson);
 			APISET().AddVarFunc("serve_status_json", &GarnetAPI::ServeStatusJson);
 			APISET().AddVarFunc("infer_json", &GarnetAPI::InferJson);
 			APISET().AddVarFunc("stop_serving", &GarnetAPI::StopServing);
@@ -253,6 +255,10 @@ namespace Garnet
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void ServeModel(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ListAvailableModelsJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ListLoadedModelsJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void ServeStatusJson(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void InferJson(X::XRuntime* rt, X::XObj* pContext,
@@ -261,5 +267,8 @@ namespace Garnet
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunTest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+
+		std::string AvailableModelsJson(const std::string& catalogRoot) const;
+		std::string LoadedModelsJson();
 	};
 }

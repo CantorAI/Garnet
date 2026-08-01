@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
 project("garnet" LANGUAGES CXX CUDA)
 
+include(GNUInstallDirs)
+
 # Find CUDA package
 find_package(CUDA REQUIRED)
 find_package(OpenMP QUIET COMPONENTS CXX)
@@ -131,6 +133,8 @@ add_library(${PROJECT_NAME}
     ${Backend_SRC}
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_SERVING_EXPORTS=1)
+
 if(OpenVINO_FOUND)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_WITH_OPENVINO=1)
     target_link_libraries(${PROJECT_NAME} openvino::runtime)
@@ -148,6 +152,10 @@ if(OpenVINO_FOUND)
                 "${GARNET_OPENVINO_DLL}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
         )
     endforeach()
+    install(FILES ${GARNET_OPENVINO_DLLS}
+        DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        COMPONENT garnet_runtime
+    )
 else()
     message(STATUS "Garnet OpenVINO backend disabled (OpenVINO SDK not found)")
 endif()
@@ -212,6 +220,16 @@ add_executable(garnet_qwen3_native_prepare_test
     "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/q4q8_linear.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/model/weight_quantization.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/model/safetensors_index.cpp"
+)
+
+add_executable(garnet_model_catalog_test
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/model_catalog_test.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model/model_catalog.cpp"
+)
+
+target_include_directories(garnet_model_catalog_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
 )
 
 target_include_directories(garnet_q4q8_linear_v2_benchmark PRIVATE
@@ -321,3 +339,37 @@ endif()
 # copy the src/cuda folder to Lib/Garnet/cuda.
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Lib/Garnet/cuda")
 file(COPY "${PROJECT_SOURCE_DIR}/src/cuda" DESTINATION "${CMAKE_BINARY_DIR}/bin/Lib/Garnet/")
+
+# Model programs are release assets, while checkpoint weights and compiled
+# engines remain separately installed and machine-specific. Mirror only the
+# production .x/.json contract into the build tree and install package.
+option(GARNET_INSTALL_XMODELS "Install production Garnet xModel packages" ON)
+set(GARNET_BUILD_MODEL_DIR "${CMAKE_BINARY_DIR}/models")
+file(REMOVE_RECURSE "${GARNET_BUILD_MODEL_DIR}")
+file(COPY "${PROJECT_SOURCE_DIR}/xModel/"
+    DESTINATION "${GARNET_BUILD_MODEL_DIR}"
+    FILES_MATCHING
+        PATTERN "debug_*.x" EXCLUDE
+        PATTERN "*.x"
+        PATTERN "*.json"
+)
+
+install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_runtime
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_runtime
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_development
+)
+install(FILES "${PROJECT_SOURCE_DIR}/src/include/garnet_serving.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/garnet"
+    COMPONENT garnet_development
+)
+if(GARNET_INSTALL_XMODELS)
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/xModel/"
+        DESTINATION "models"
+        COMPONENT garnet_xmodels
+        FILES_MATCHING
+            PATTERN "debug_*.x" EXCLUDE
+            PATTERN "*.x"
+            PATTERN "*.json"
+    )
+endif()

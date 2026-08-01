@@ -4,6 +4,8 @@
 #include "../tokenizer/qwen_tokenizer.h"
 #include "../cuda/cuda_lib.h"
 #include "../tensor/tensor_helper.h"
+#include "../model/model_catalog.h"
+#include "../include/garnet_serving.h"
 #include "nlohmann/json.hpp"
 #include "xpackage.h"
 #include "xlang.h"
@@ -14,6 +16,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <climits>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -32,6 +35,24 @@ namespace
             {"error_code", code},
             {"error_message", message}
         }).dump();
+    }
+
+    int CopyJsonResult(
+        const std::string& value,
+        char* output,
+        int outputCapacity,
+        int* requiredCapacity)
+    {
+        const size_t required = value.size() + 1;
+        if (requiredCapacity) {
+            *requiredCapacity = required > static_cast<size_t>(INT_MAX)
+                ? INT_MAX
+                : static_cast<int>(required);
+        }
+        if (required > static_cast<size_t>(INT_MAX)) return 1;
+        if (!output || outputCapacity < static_cast<int>(required)) return 2;
+        std::memcpy(output, value.c_str(), required);
+        return 0;
     }
 
     json GarnetServingStatus(X::Value modelValue,
@@ -67,6 +88,13 @@ namespace
             if (runtimeStatus["error_message"].IsValid()) {
                 status["error"] = runtimeStatus["error_message"].ToString();
             }
+            for (const char* key : {
+                     "backend", "precision", "frontend", "engine_path",
+                     "cache_directory"}) {
+                if (runtimeStatus[key].IsValid()) {
+                    status[key] = runtimeStatus[key].ToString();
+                }
+            }
         }
         return status;
     }
@@ -81,6 +109,50 @@ namespace
     cudaError_t DestroyEntryExecutionStream(cudaStream_t)
     {
         return cudaSuccess;
+    }
+}
+
+extern "C" GARNET_SERVING_API int GarnetListAvailableModelsJson(
+    const char* catalogRoot,
+    char* output,
+    int outputCapacity,
+    int* requiredCapacity)
+{
+    try {
+        return CopyJsonResult(
+            Garnet::GarnetAPI::I().AvailableModelsJson(
+                catalogRoot ? catalogRoot : ""),
+            output,
+            outputCapacity,
+            requiredCapacity);
+    }
+    catch (const std::exception& exception) {
+        return CopyJsonResult(
+            GarnetJsonError("catalog_enumeration_failed", exception.what()),
+            output,
+            outputCapacity,
+            requiredCapacity);
+    }
+}
+
+extern "C" GARNET_SERVING_API int GarnetListLoadedModelsJson(
+    char* output,
+    int outputCapacity,
+    int* requiredCapacity)
+{
+    try {
+        return CopyJsonResult(
+            Garnet::GarnetAPI::I().LoadedModelsJson(),
+            output,
+            outputCapacity,
+            requiredCapacity);
+    }
+    catch (const std::exception& exception) {
+        return CopyJsonResult(
+            GarnetJsonError("loaded_model_enumeration_failed", exception.what()),
+            output,
+            outputCapacity,
+            requiredCapacity);
     }
 }
 
@@ -1637,6 +1709,53 @@ extern "C" GARNET_ENTRY_EXPORT int GarnetDebugSampleLogitsTop1FP32(
 
 namespace Garnet
 {
+    std::string GarnetAPI::AvailableModelsJson(
+        const std::string& catalogRoot) const
+    {
+        return Garnet::EnumerateAvailableModelsJson(
+            ResolveModelCatalogRoot(catalogRoot, m_baseFolder));
+    }
+
+    std::string GarnetAPI::LoadedModelsJson()
+    {
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        json response = {
+            {"schema_version", 1},
+            {"serving_mode", "single_instance"},
+            {"models", json::array()}
+        };
+        if (m_servingModel.IsValid()) {
+            json model = GarnetServingStatus(
+                m_servingModel,
+                m_servingModelRoot,
+                m_servingModelId,
+                m_servingInputCapability,
+                m_servingError,
+                nullptr,
+                nullptr);
+            model["instance_id"] = m_servingModelId + "-0";
+            response["models"].push_back(std::move(model));
+        }
+        return response.dump();
+    }
+
+    void GarnetAPI::ListAvailableModelsJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&,
+        X::Value& retValue)
+    {
+        const std::string catalogRoot = params.size() == 0
+            ? std::string()
+            : params[0].ToString();
+        retValue = AvailableModelsJson(catalogRoot);
+    }
+
+    void GarnetAPI::ListLoadedModelsJson(
+        X::XRuntime*, X::XObj*, X::ARGS&, X::KWARGS&,
+        X::Value& retValue)
+    {
+        retValue = LoadedModelsJson();
+    }
+
     void GarnetAPI::ServeModel(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS&, X::Value& retValue)
     {
