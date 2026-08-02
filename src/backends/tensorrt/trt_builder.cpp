@@ -4229,6 +4229,18 @@ namespace Garnet {
             }
         }
         if (loweringError.empty()) {
+            // NonZero and other data-dependent layers can produce dynamic
+            // dimensions even when every public model input has a fixed
+            // shape. TensorRT still requires an optimization profile for
+            // such networks; an empty profile is sufficient when no input
+            // dimension itself is dynamic.
+            auto* optimizationProfile = builder->createOptimizationProfile();
+            if (!optimizationProfile ||
+                config->addOptimizationProfile(optimizationProfile) < 0) {
+                loweringError = "TensorRT optimization profile creation failed";
+            }
+        }
+        if (loweringError.empty()) {
             auto* serialized = builder->buildSerializedNetwork(*network, *config);
             if (!serialized) {
                 loweringError = "TensorRT buildSerializedNetwork failed";
@@ -4910,14 +4922,21 @@ namespace Garnet {
             opName == "v_proj" || opName == "o_proj" ||
             opName == "gate_proj" || opName == "up_proj" ||
             opName == "down_proj" || opName == "lm_head";
+
         const bool isElementwise =
             opName == "add" || opName == "minus" || opName == "mul";
+        const bool isSequenceConcat =
+            opName == "concat_sequence" || opName == "concat_tokens";
         const bool isMatrix = opName == "matmul" || isLinear;
         const bool isVisionPositionInterpolate =
             opName == "qwen3_vl_pos_embed_interpolate";
         const bool isVisionRope = opName == "qwen3_vl_apply_vision_rope_packed";
         const bool isVisionAttention = opName == "vision_varlen_attention_packed";
         const bool isVisualEmbeddingMerge = opName == "qwen3_vl_merge_visual_embeddings";
+        const bool isAudioEmbeddingMerge =
+            opName == "qwen3_asr_merge_audio_embeddings";
+        const bool isAudioTokenCompact =
+            opName == "qwen3_asr_compact_audio_tokens";
         const bool isMultimodalTextRope =
             opName == "qwen3_vl_apply_text_rope_packed";
         const bool isTextRope =
@@ -4931,8 +4950,9 @@ namespace Garnet {
             opName == "paged_kv_bind_context_length" ||
             opName == "paged_kv_bind_slot_position" ||
             opName == "paged_kv_bind_active_mask";
-        if (!isElementwise && !isMatrix && !isVisionPositionInterpolate &&
+        if (!isElementwise && !isSequenceConcat && !isMatrix && !isVisionPositionInterpolate &&
             !isVisionRope && !isVisionAttention && !isVisualEmbeddingMerge &&
+            !isAudioEmbeddingMerge && !isAudioTokenCompact &&
             !isTextRope && !isTextAttention && !isDeepstackAdd && !isPagedKVBinding) {
             loweringError = "unsupported binary operation: " + opName;
             return X::Value();
@@ -5026,6 +5046,105 @@ namespace Garnet {
         else if (isTextRope) {
             lastOutput = LowerTextRope(
                 left, right, kwParams, isMultimodalTextRope);
+        }
+        else if (isAudioTokenCompact) {
+            const Dims sourceDims = left->getDimensions();
+            const Dims cuDims = right->getDimensions();
+            const int tokensPerChunk = kwParams.find("tokens_per_chunk")
+                ? static_cast<int>(kwParams.find("tokens_per_chunk")->val.ToLongLong())
+                : 13;
+            const int chunks = cuDims.nbDims == 1 ? cuDims.d[0] - 1 : 0;
+            if (sourceDims.nbDims != 2 || cuDims.nbDims != 1 || chunks <= 0 ||
+                sourceDims.d[0] != chunks * tokensPerChunk) {
+                loweringError = "audio token compaction received invalid dimensions";
+                return X::Value();
+            }
+            auto* sourceShape = network->addShuffle(*left);
+            if (sourceShape) sourceShape->setReshapeDimensions(
+                Dims{3, {chunks, tokensPerChunk, sourceDims.d[1]}});
+            auto sliceCu = [&](int startValue) -> ITensor* {
+                Dims start{1, {startValue}};
+                Dims size{1, {chunks}};
+                Dims stride{1, {1}};
+                auto* layer = network->addSlice(*right, start, size, stride);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            ITensor* starts = sliceCu(0);
+            ITensor* ends = sliceCu(1);
+            auto* lengths = starts && ends ? network->addElementWise(
+                *ends, *starts, ElementWiseOperation::kSUB) : nullptr;
+            auto* lengthShape = lengths ? network->addShuffle(*lengths->getOutput(0)) : nullptr;
+            if (lengthShape) lengthShape->setReshapeDimensions(Dims{2, {chunks, 1}});
+            integerVectorWeights.emplace_back(static_cast<size_t>(tokensPerChunk));
+            for (int index = 0; index < tokensPerChunk; ++index) {
+                integerVectorWeights.back()[index] = index;
+            }
+            Dims rangeDims{2, {1, tokensPerChunk}};
+            Weights rangeWeights{DataType::kINT32,
+                integerVectorWeights.back().data(), tokensPerChunk};
+            auto* range = network->addConstant(rangeDims, rangeWeights);
+            auto* mask = lengthShape && range ? network->addElementWise(
+                *range->getOutput(0), *lengthShape->getOutput(0),
+                ElementWiseOperation::kLESS) : nullptr;
+            auto* nonzero = mask
+                ? network->addNonZero(*mask->getOutput(0), DataType::kINT32)
+                : nullptr;
+            auto* indices = nonzero ? network->addShuffle(*nonzero->getOutput(0)) : nullptr;
+            if (indices) {
+                Permutation transpose{};
+                transpose.order[0] = 1; transpose.order[1] = 0;
+                indices->setFirstTranspose(transpose);
+            }
+            auto* gather = sourceShape && indices ? network->addGatherV2(
+                *sourceShape->getOutput(0), *indices->getOutput(0), GatherMode::kND)
+                : nullptr;
+            lastOutput = gather ? gather->getOutput(0) : nullptr;
+        }
+        else if (isAudioEmbeddingMerge) {
+            auto* inputIdsItem = kwParams.find("input_ids");
+            auto* audioTokenItem = kwParams.find("audio_token_id");
+            if (!inputIdsItem || !audioTokenItem) {
+                loweringError =
+                    "audio embedding merge requires input_ids and audio_token_id";
+                return X::Value();
+            }
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->val);
+            if (!inputIds || inputIds->getDimensions().nbDims != 2 ||
+                left->getDimensions().nbDims != 3 ||
+                right->getDimensions().nbDims != 2) {
+                loweringError =
+                    "audio embedding merge requires [B,T,H] text, [A,H] audio, and [B,T] ids";
+                return X::Value();
+            }
+            integerWeights.push_back(audioTokenItem->val.ToLongLong());
+            Dims scalarDims{};
+            scalarDims.nbDims = 2;
+            scalarDims.d[0] = 1;
+            scalarDims.d[1] = 1;
+            Weights tokenWeights{
+                DataType::kINT64, &integerWeights.back(), 1};
+            auto* token = network->addConstant(scalarDims, tokenWeights);
+            auto* mask = token
+                ? network->addElementWise(
+                    *inputIds, *token->getOutput(0), ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* nonzero = mask
+                ? network->addNonZero(*mask->getOutput(0), DataType::kINT32)
+                : nullptr;
+            auto* indices = nonzero
+                ? network->addShuffle(*nonzero->getOutput(0))
+                : nullptr;
+            if (indices) {
+                Permutation transpose{};
+                transpose.order[0] = 1;
+                transpose.order[1] = 0;
+                indices->setFirstTranspose(transpose);
+            }
+            auto* scatter = indices
+                ? network->addScatter(
+                    *left, *indices->getOutput(0), *right, ScatterMode::kND)
+                : nullptr;
+            lastOutput = scatter ? scatter->getOutput(0) : nullptr;
         }
         else if (isVisualEmbeddingMerge) {
             auto* inputIdsItem = kwParams.find("input_ids");
@@ -5138,6 +5257,12 @@ namespace Garnet {
                 : nullptr;
             lastOutput = sum ? sum->getOutput(0) : nullptr;
         }
+        else if (isSequenceConcat) {
+            ITensor* values[] = {left, right};
+            auto* layer = network->addConcatenation(values, 2);
+            if (layer) layer->setAxis(1);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
         else if (opName == "matmul" || isLinear) {
             auto* layer = network->addMatrixMultiply(
                 *left,
@@ -5227,6 +5352,15 @@ namespace Garnet {
             opName == "v_proj" || opName == "o_proj" ||
             opName == "gate_proj" || opName == "up_proj" ||
             opName == "down_proj" || opName == "lm_head";
+
+        auto keywordText = [&](const char* name) -> std::string {
+            auto* item = kwParams.find(name);
+            return item ? item->val.ToString() : std::string();
+        };
+        auto keywordInt = [&](const char* name, int fallback) -> int {
+            auto* item = kwParams.find(name);
+            return item ? static_cast<int>(item->val.ToLongLong()) : fallback;
+        };
 
         if (opName == "paged_kv_select_layer") {
             auto* layerItem = kwParams.find("layer_idx");
@@ -5333,6 +5467,829 @@ namespace Garnet {
             pendingKVLayerIndex = -1;
         }
 
+        else if (opName == "qwen3_positions") {
+            const Dims sourceDims = source->getDimensions();
+            if (sourceDims.nbDims != 3) {
+                loweringError = "qwen3_positions requires [batch,tokens,hidden]";
+                return X::Value();
+            }
+            const int components = keywordInt("components", 1);
+            integer64VectorWeights.emplace_back(
+                static_cast<size_t>(components) * sourceDims.d[0] * sourceDims.d[1]);
+            auto& positions = integer64VectorWeights.back();
+            for (int component = 0; component < components; ++component) {
+                for (int batch = 0; batch < sourceDims.d[0]; ++batch) {
+                    for (int token = 0; token < sourceDims.d[1]; ++token) {
+                        positions[(component * sourceDims.d[0] + batch) *
+                            sourceDims.d[1] + token] = token;
+                    }
+                }
+            }
+            Dims dimensions{};
+            dimensions.nbDims = 3;
+            dimensions.d[0] = components;
+            dimensions.d[1] = sourceDims.d[0];
+            dimensions.d[2] = sourceDims.d[1];
+            Weights values{
+                DataType::kINT64, positions.data(),
+                static_cast<int64_t>(components) * sourceDims.d[0] * sourceDims.d[1]};
+            auto* layer = network->addConstant(dimensions, values);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_attention_mask") {
+            const Dims sourceDims = source->getDimensions();
+            if (sourceDims.nbDims != 3) {
+                loweringError = "qwen3_attention_mask requires [batch,tokens,hidden]";
+                return X::Value();
+            }
+            integer64VectorWeights.emplace_back(
+                static_cast<size_t>(sourceDims.d[0]) * sourceDims.d[1], 1);
+            Dims dimensions{};
+            dimensions.nbDims = 2;
+            dimensions.d[0] = sourceDims.d[0];
+            dimensions.d[1] = sourceDims.d[1];
+            Weights values{
+                DataType::kINT64, integer64VectorWeights.back().data(),
+                static_cast<int64_t>(sourceDims.d[0]) * sourceDims.d[1]};
+            auto* layer = network->addConstant(dimensions, values);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "last_token") {
+            const Dims sourceDims = source->getDimensions();
+            if (sourceDims.nbDims < 2 || sourceDims.d[1] <= 0) {
+                loweringError = "last_token requires a non-empty sequence dimension";
+                return X::Value();
+            }
+            Dims start{};
+            Dims size = sourceDims;
+            Dims stride{};
+            start.nbDims = sourceDims.nbDims;
+            stride.nbDims = sourceDims.nbDims;
+            for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
+            start.d[1] = sourceDims.d[1] - 1;
+            size.d[1] = 1;
+            auto* layer = network->addSlice(*source, start, size, stride);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "argmax_last_dim") {
+            const Dims sourceDims = source->getDimensions();
+            if (sourceDims.nbDims <= 0) {
+                loweringError = "argmax_last_dim requires a ranked tensor";
+                return X::Value();
+            }
+            auto* top = network->addTopK(
+                *source, TopKOperation::kMAX, 1,
+                1U << (sourceDims.nbDims - 1));
+            auto* cast = top
+                ? network->addCast(*top->getOutput(1), DataType::kINT64)
+                : nullptr;
+            auto* squeeze = cast ? network->addShuffle(*cast->getOutput(0)) : nullptr;
+            if (squeeze) {
+                Dims squeezed{};
+                squeezed.nbDims = sourceDims.nbDims - 1;
+                for (int index = 0; index < squeezed.nbDims; ++index) {
+                    squeezed.d[index] = sourceDims.d[index];
+                }
+                squeeze->setReshapeDimensions(squeezed);
+            }
+            lastOutput = squeeze ? squeeze->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_aligned_prompt_embedding") {
+            const Dims idsDims = source->getDimensions();
+            if (idsDims.nbDims != 3 || idsDims.d[2] != 2 ||
+                source->getType() != DataType::kINT64) {
+                loweringError =
+                    "Qwen3-TTS aligned ids must be INT64 [batch,tokens,2]";
+                return X::Value();
+            }
+            auto sliceIds = [&](int column) -> ITensor* {
+                Dims start{};
+                Dims size = idsDims;
+                Dims stride{};
+                start.nbDims = size.nbDims;
+                stride.nbDims = size.nbDims;
+                for (int i = 0; i < size.nbDims; ++i) stride.d[i] = 1;
+                start.d[2] = column;
+                size.d[2] = 1;
+                auto* slice = network->addSlice(*source, start, size, stride);
+                auto* flatten = slice ? network->addShuffle(*slice->getOutput(0)) : nullptr;
+                if (flatten) {
+                    Dims flat{};
+                    flat.nbDims = 2;
+                    flat.d[0] = idsDims.d[0];
+                    flat.d[1] = idsDims.d[1];
+                    flatten->setReshapeDimensions(flat);
+                }
+                return flatten ? flatten->getOutput(0) : nullptr;
+            };
+            auto zeroConstant = [&]() -> ITensor* {
+                integerWeights.push_back(0);
+                Dims dimensions{};
+                dimensions.nbDims = 2;
+                dimensions.d[0] = 1;
+                dimensions.d[1] = 1;
+                Weights values{DataType::kINT64, &integerWeights.back(), 1};
+                auto* layer = network->addConstant(dimensions, values);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            auto maskedEmbedding = [&](ITensor* ids, const char* weightKey)
+                -> ITensor* {
+                ITensor* zero = zeroConstant();
+                auto* valid = zero
+                    ? network->addElementWise(
+                        *ids, *zero, ElementWiseOperation::kGREATER)
+                    : nullptr;
+                auto* clamped = zero
+                    ? network->addElementWise(
+                        *ids, *zero, ElementWiseOperation::kMAX)
+                    : nullptr;
+                ITensor* weight = GetOrCreateTRTWeight(keywordText(weightKey));
+                auto* gathered = clamped && weight
+                    ? network->addGather(
+                        *weight, *clamped->getOutput(0), 0)
+                    : nullptr;
+                auto* validFloat = valid && gathered
+                    ? network->addCast(
+                        *valid->getOutput(0), gathered->getOutput(0)->getType())
+                    : nullptr;
+                auto* expand = validFloat
+                    ? network->addShuffle(*validFloat->getOutput(0))
+                    : nullptr;
+                if (expand) {
+                    Dims maskDims{};
+                    maskDims.nbDims = 3;
+                    maskDims.d[0] = idsDims.d[0];
+                    maskDims.d[1] = idsDims.d[1];
+                    maskDims.d[2] = 1;
+                    expand->setReshapeDimensions(maskDims);
+                }
+                auto* masked = gathered && expand
+                    ? network->addElementWise(
+                        *gathered->getOutput(0), *expand->getOutput(0),
+                        ElementWiseOperation::kPROD)
+                    : nullptr;
+                return masked ? masked->getOutput(0) : nullptr;
+            };
+            ITensor* text = maskedEmbedding(
+                sliceIds(0), "text_embedding_name");
+            ITensor* codec = maskedEmbedding(
+                sliceIds(1), "codec_embedding_name");
+            auto project = [&](ITensor* input, const char* weightKey,
+                               const char* biasKey) -> ITensor* {
+                ITensor* weight = GetOrCreateTRTWeight(keywordText(weightKey));
+                weight = BroadcastMatrixWeight(
+                    weight, input ? input->getDimensions().nbDims : 0);
+                auto* matrix = input && weight
+                    ? network->addMatrixMultiply(
+                        *input, MatrixOperation::kNONE,
+                        *weight, MatrixOperation::kTRANSPOSE)
+                    : nullptr;
+                ITensor* bias = GetOrCreateTRTWeight(keywordText(biasKey));
+                bias = matrix
+                    ? BroadcastLastDimension(
+                        bias, matrix->getOutput(0)->getDimensions().nbDims,
+                        weightKey)
+                    : nullptr;
+                auto* sum = matrix && bias
+                    ? network->addElementWise(
+                        *matrix->getOutput(0), *bias,
+                        ElementWiseOperation::kSUM)
+                    : nullptr;
+                return sum ? sum->getOutput(0) : nullptr;
+            };
+            text = project(text, "text_fc1_weight_name", "text_fc1_bias_name");
+            auto* gelu = text
+                ? network->addActivation(*text, ActivationType::kGELU_ERF)
+                : nullptr;
+            text = project(
+                gelu ? gelu->getOutput(0) : nullptr,
+                "text_fc2_weight_name", "text_fc2_bias_name");
+            auto* combined = text && codec
+                ? network->addElementWise(
+                    *text, *codec, ElementWiseOperation::kSUM)
+                : nullptr;
+            lastOutput = combined ? combined->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_pack_hidden_logits") {
+            ITensor* weight = GetOrCreateTRTWeight(keywordText("weight_name"));
+            weight = BroadcastMatrixWeight(weight, source->getDimensions().nbDims);
+            auto* logits = weight
+                ? network->addMatrixMultiply(
+                    *source, MatrixOperation::kNONE,
+                    *weight, MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* tensors[] = {source, logits ? logits->getOutput(0) : nullptr};
+            auto* packed = tensors[1]
+                ? network->addConcatenation(tensors, 2)
+                : nullptr;
+            if (packed) packed->setAxis(source->getDimensions().nbDims - 1);
+            lastOutput = packed ? packed->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_decode_embedding") {
+            const Dims idsDims = source->getDimensions();
+            const int groups = keywordInt("num_code_groups", 16);
+            if (idsDims.nbDims != 2 || idsDims.d[0] != 1 ||
+                idsDims.d[1] != groups || source->getType() != DataType::kINT64) {
+                loweringError = "Qwen3-TTS decode ids must be INT64 [1,code_groups]";
+                return X::Value();
+            }
+            ITensor* summed = nullptr;
+            for (int group = 0; group < groups; ++group) {
+                Dims start{2, {0, group}};
+                Dims size{2, {1, 1}};
+                Dims stride{2, {1, 1}};
+                auto* slice = network->addSlice(*source, start, size, stride);
+                const std::string weightName = group == 0
+                    ? keywordText("codec_embedding_name")
+                    : keywordText("predictor_embedding_prefix") +
+                        std::to_string(group - 1) + ".weight";
+                ITensor* weight = GetOrCreateTRTWeight(weightName);
+                auto* gather = slice && weight
+                    ? network->addGather(*weight, *slice->getOutput(0), 0)
+                    : nullptr;
+                if (!gather) {
+                    loweringError = "Qwen3-TTS codec embedding is unavailable: " + weightName;
+                    return X::Value();
+                }
+                if (!summed) summed = gather->getOutput(0);
+                else {
+                    auto* add = network->addElementWise(
+                        *summed, *gather->getOutput(0), ElementWiseOperation::kSUM);
+                    summed = add ? add->getOutput(0) : nullptr;
+                }
+            }
+            integerWeights.push_back(keywordInt("tts_pad_token_id", 151671));
+            Dims idDims{2, {1, 1}};
+            Weights idWeights{DataType::kINT64, &integerWeights.back(), 1};
+            auto* padId = network->addConstant(idDims, idWeights);
+            ITensor* textWeight = GetOrCreateTRTWeight(keywordText("text_embedding_name"));
+            auto* textGather = padId && textWeight
+                ? network->addGather(*textWeight, *padId->getOutput(0), 0)
+                : nullptr;
+            ITensor* text = textGather ? textGather->getOutput(0) : nullptr;
+            auto project = [&](ITensor* value, const char* weightKey,
+                               const char* biasKey) -> ITensor* {
+                ITensor* weight = GetOrCreateTRTWeight(keywordText(weightKey));
+                weight = BroadcastMatrixWeight(
+                    weight, value ? value->getDimensions().nbDims : 0);
+                auto* matrix = value && weight
+                    ? network->addMatrixMultiply(
+                        *value, MatrixOperation::kNONE,
+                        *weight, MatrixOperation::kTRANSPOSE)
+                    : nullptr;
+                ITensor* bias = GetOrCreateTRTWeight(keywordText(biasKey));
+                bias = matrix ? BroadcastLastDimension(
+                    bias, matrix->getOutput(0)->getDimensions().nbDims,
+                    weightKey) : nullptr;
+                auto* add = matrix && bias ? network->addElementWise(
+                    *matrix->getOutput(0), *bias, ElementWiseOperation::kSUM) : nullptr;
+                return add ? add->getOutput(0) : nullptr;
+            };
+            text = project(text, "text_fc1_weight_name", "text_fc1_bias_name");
+            auto* gelu = text
+                ? network->addActivation(*text, ActivationType::kGELU_ERF)
+                : nullptr;
+            text = project(gelu ? gelu->getOutput(0) : nullptr,
+                "text_fc2_weight_name", "text_fc2_bias_name");
+            auto* combined = summed && text ? network->addElementWise(
+                *summed, *text, ElementWiseOperation::kSUM) : nullptr;
+            lastOutput = combined ? combined->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_channel_scale") {
+            ITensor* scale = GetOrCreateTRTWeight(keywordText("weight_name"));
+            scale = BroadcastLastDimension(
+                scale, source->getDimensions().nbDims, "qwen3_tts_channel_scale");
+            auto* product = scale ? network->addElementWise(
+                *source, *scale, ElementWiseOperation::kPROD) : nullptr;
+            lastOutput = product ? product->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_dense_attention_packed") {
+            const Dims dims = source->getDimensions();
+            const int qHeads = keywordInt("num_heads", 0);
+            const int kvHeads = keywordInt("num_key_value_heads", 0);
+            const int headDim = keywordInt("head_dim", 0);
+            const int window = keywordInt("sliding_window", 0);
+            const int tokens = dims.nbDims == 3 ? dims.d[1] : 0;
+            const int qWidth = qHeads * headDim;
+            const int kvWidth = kvHeads * headDim;
+            if (dims.nbDims != 3 || tokens <= 0 || qHeads <= 0 || kvHeads <= 0 ||
+                qHeads % kvHeads != 0 || dims.d[2] != qWidth + 2 * kvWidth) {
+                loweringError = "Qwen3-TTS dense attention dimensions are invalid";
+                return X::Value();
+            }
+            auto sliceHeads = [&](int offset, int heads) -> ITensor* {
+                Dims start{3, {0, 0, offset}};
+                Dims size{3, {dims.d[0], tokens, heads * headDim}};
+                Dims stride{3, {1, 1, 1}};
+                auto* slice = network->addSlice(*source, start, size, stride);
+                auto* reshape = slice ? network->addShuffle(*slice->getOutput(0)) : nullptr;
+                if (reshape) {
+                    reshape->setReshapeDimensions(Dims{4, {dims.d[0], tokens, heads, headDim}});
+                    Permutation p{}; p.order[0] = 0; p.order[1] = 2;
+                    p.order[2] = 1; p.order[3] = 3;
+                    reshape->setSecondTranspose(p);
+                }
+                return reshape ? reshape->getOutput(0) : nullptr;
+            };
+            ITensor* q = sliceHeads(0, qHeads);
+            ITensor* k = sliceHeads(qWidth, kvHeads);
+            ITensor* v = sliceHeads(qWidth + kvWidth, kvHeads);
+            if (qHeads != kvHeads) {
+                std::vector<int> indices(static_cast<size_t>(qHeads));
+                const int repeats = qHeads / kvHeads;
+                for (int head = 0; head < qHeads; ++head) indices[head] = head / repeats;
+                integerVectorWeights.push_back(std::move(indices));
+                Dims indexDims{1, {qHeads}};
+                Weights indexWeights{DataType::kINT32,
+                    integerVectorWeights.back().data(), qHeads};
+                auto* index = network->addConstant(indexDims, indexWeights);
+                auto* kg = index ? network->addGather(*k, *index->getOutput(0), 1) : nullptr;
+                auto* vg = index ? network->addGather(*v, *index->getOutput(0), 1) : nullptr;
+                k = kg ? kg->getOutput(0) : nullptr;
+                v = vg ? vg->getOutput(0) : nullptr;
+            }
+            auto* scores = q && k ? network->addMatrixMultiply(
+                *q, MatrixOperation::kNONE, *k, MatrixOperation::kTRANSPOSE) : nullptr;
+            scalarWeights.push_back(1.0F / std::sqrt(static_cast<float>(headDim)));
+            Weights empty{DataType::kFLOAT, nullptr, 0};
+            Weights scale{DataType::kFLOAT, &scalarWeights.back(), 1};
+            auto* scaled = scores ? network->addScale(
+                *scores->getOutput(0), ScaleMode::kUNIFORM, empty, scale, empty) : nullptr;
+            vectorWeights.emplace_back(static_cast<size_t>(tokens) * tokens, 0.0F);
+            for (int row = 0; row < tokens; ++row) {
+                for (int col = 0; col < tokens; ++col) {
+                    if (col > row || (window > 0 && col <= row - window)) {
+                        vectorWeights.back()[static_cast<size_t>(row) * tokens + col] = -10000.0F;
+                    }
+                }
+            }
+            Dims maskDims{4, {1, 1, tokens, tokens}};
+            Weights maskWeights{DataType::kFLOAT, vectorWeights.back().data(),
+                static_cast<int64_t>(vectorWeights.back().size())};
+            auto* mask = network->addConstant(maskDims, maskWeights);
+            ITensor* maskTensor = mask ? mask->getOutput(0) : nullptr;
+            if (maskTensor && scaled && maskTensor->getType() != scaled->getOutput(0)->getType()) {
+                auto* cast = network->addCast(*maskTensor, scaled->getOutput(0)->getType());
+                maskTensor = cast ? cast->getOutput(0) : nullptr;
+            }
+            auto* masked = scaled && maskTensor ? network->addElementWise(
+                *scaled->getOutput(0), *maskTensor, ElementWiseOperation::kSUM) : nullptr;
+            auto* softmax = masked ? network->addSoftMax(*masked->getOutput(0)) : nullptr;
+            if (softmax) softmax->setAxes(1U << 3);
+            auto* attended = softmax && v ? network->addMatrixMultiply(
+                *softmax->getOutput(0), MatrixOperation::kNONE,
+                *v, MatrixOperation::kNONE) : nullptr;
+            auto* flatten = attended ? network->addShuffle(*attended->getOutput(0)) : nullptr;
+            if (flatten) {
+                Permutation p{}; p.order[0] = 0; p.order[1] = 2;
+                p.order[2] = 1; p.order[3] = 3;
+                flatten->setFirstTranspose(p);
+                flatten->setReshapeDimensions(Dims{3, {dims.d[0], tokens, qWidth}});
+            }
+            lastOutput = flatten ? flatten->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_rvq_decode") {
+            const Dims codeDims = source->getDimensions();
+            const int quantizers = keywordInt("num_quantizers", 16);
+            const int semantic = keywordInt("semantic_quantizers", 1);
+            const std::string prefix = keywordText("prefix");
+            if (codeDims.nbDims != 3 || codeDims.d[0] != 1 ||
+                codeDims.d[1] != quantizers || source->getType() != DataType::kINT64) {
+                loweringError = "Qwen3-TTS RVQ codes must be INT64 [1,quantizers,frames]";
+                return X::Value();
+            }
+            ITensor* quantized = nullptr;
+            for (int group = 0; group < quantizers; ++group) {
+                const bool first = group < semantic;
+                const int local = first ? group : group - semantic;
+                const std::string branch = first ? ".rvq_first" : ".rvq_rest";
+                const std::string layer = prefix + branch + ".vq.layers." +
+                    std::to_string(local);
+                Dims start{3, {0, group, 0}};
+                Dims size{3, {1, 1, codeDims.d[2]}};
+                Dims stride{3, {1, 1, 1}};
+                auto* slice = network->addSlice(*source, start, size, stride);
+                auto* flattenIds = slice ? network->addShuffle(*slice->getOutput(0)) : nullptr;
+                if (flattenIds) flattenIds->setReshapeDimensions(
+                    Dims{2, {1, codeDims.d[2]}});
+                ITensor* embeddingSum = GetOrCreateTRTWeight(
+                    layer + "._codebook.embedding_sum");
+                ITensor* usage = GetOrCreateTRTWeight(
+                    layer + "._codebook.cluster_usage");
+                scalarWeights.push_back(1.0e-5F);
+                Dims scalarDims{1, {1}};
+                Weights epsilonWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+                auto* epsilon = network->addConstant(scalarDims, epsilonWeights);
+                ITensor* epsilonTensor = epsilon ? epsilon->getOutput(0) : nullptr;
+                if (usage && epsilonTensor && usage->getType() != epsilonTensor->getType()) {
+                    auto* cast = network->addCast(*epsilonTensor, usage->getType());
+                    epsilonTensor = cast ? cast->getOutput(0) : nullptr;
+                }
+                auto* clamped = usage && epsilonTensor ? network->addElementWise(
+                    *usage, *epsilonTensor, ElementWiseOperation::kMAX) : nullptr;
+                auto* usageShape = clamped ? network->addShuffle(*clamped->getOutput(0)) : nullptr;
+                if (usageShape) {
+                    const Dims sumDims = embeddingSum->getDimensions();
+                    usageShape->setReshapeDimensions(Dims{2, {sumDims.d[0], 1}});
+                }
+                auto* table = embeddingSum && usageShape ? network->addElementWise(
+                    *embeddingSum, *usageShape->getOutput(0), ElementWiseOperation::kDIV) : nullptr;
+                auto* gather = table && flattenIds ? network->addGather(
+                    *table->getOutput(0), *flattenIds->getOutput(0), 0) : nullptr;
+                if (!gather) {
+                    loweringError = "Qwen3-TTS RVQ codebook weights are unavailable: " + layer;
+                    return X::Value();
+                }
+                ITensor* projectWeight = GetOrCreateTRTWeight(
+                    prefix + branch + ".output_proj.weight");
+                auto* projectShape = projectWeight
+                    ? network->addShuffle(*projectWeight) : nullptr;
+                if (projectShape) {
+                    const Dims w = projectWeight->getDimensions();
+                    projectShape->setReshapeDimensions(Dims{2, {w.d[0], w.d[1]}});
+                }
+                auto* projected = projectShape ? network->addMatrixMultiply(
+                    *gather->getOutput(0), MatrixOperation::kNONE,
+                    *projectShape->getOutput(0), MatrixOperation::kTRANSPOSE) : nullptr;
+                ITensor* value = projected ? projected->getOutput(0) : nullptr;
+                if (!value) {
+                    loweringError = "Qwen3-TTS RVQ output projection failed";
+                    return X::Value();
+                }
+                if (!quantized) quantized = value;
+                else {
+                    auto* add = network->addElementWise(
+                        *quantized, *value, ElementWiseOperation::kSUM);
+                    quantized = add ? add->getOutput(0) : nullptr;
+                }
+            }
+            lastOutput = quantized;
+        }
+        else if (opName == "qwen3_tts_causal_conv1d" ||
+                 opName == "qwen3_tts_causal_transconv1d") {
+            const Dims inputDims = source->getDimensions();
+            const bool transposed = opName == "qwen3_tts_causal_transconv1d";
+            const int kernelSize = keywordInt("kernel_size", 0);
+            const int strideValue = keywordInt("stride", 1);
+            const int dilation = keywordInt("dilation", 1);
+            const int groups = keywordInt("groups", 1);
+            ITensor* kernel = GetOrCreateTRTWeight(keywordText("weight_name"));
+            ITensor* bias = GetOrCreateTRTWeight(keywordText("bias_name"));
+            const SafeTensorMetadata* metadata = capturedWeightIndex
+                ? capturedWeightIndex->Find(keywordText("weight_name")) : nullptr;
+            if (inputDims.nbDims != 3 || !kernel || !bias || !metadata ||
+                metadata->shape.size() != 3 || kernelSize <= 0) {
+                loweringError = "Qwen3-TTS convolution metadata is invalid";
+                return X::Value();
+            }
+            auto* toChannels = network->addShuffle(*source);
+            if (toChannels) {
+                Permutation p{}; p.order[0] = 0; p.order[1] = 2; p.order[2] = 1;
+                toChannels->setFirstTranspose(p);
+            }
+            const int outputChannels = transposed
+                ? static_cast<int>(metadata->shape[1]) * groups
+                : static_cast<int>(metadata->shape[0]);
+            Weights empty{kernel->getType(), nullptr, 0};
+            Dims kernelDims{1, {kernelSize}};
+            Dims strideDims{1, {strideValue}};
+            ILayer* layer = nullptr;
+            if (transposed) {
+                auto* deconv = toChannels ? network->addDeconvolutionNd(
+                    *toChannels->getOutput(0), outputChannels,
+                    kernelDims, empty, empty) : nullptr;
+                if (deconv) {
+                    deconv->setInput(1, *kernel); deconv->setInput(2, *bias);
+                    deconv->setStrideNd(strideDims);
+                    deconv->setPostPadding(
+                        Dims{1, {kernelSize - strideValue}});
+                }
+                layer = deconv;
+            }
+            else {
+                auto* conv = toChannels ? network->addConvolutionNd(
+                    *toChannels->getOutput(0), outputChannels,
+                    kernelDims, empty, empty) : nullptr;
+                if (conv) {
+                    conv->setInput(1, *kernel); conv->setInput(2, *bias);
+                    conv->setDilationNd(Dims{1, {dilation}});
+                    conv->setNbGroups(groups);
+                    conv->setPrePadding(
+                        Dims{1, {(kernelSize - 1) * dilation}});
+                }
+                layer = conv;
+            }
+            auto* toTokens = layer ? network->addShuffle(*layer->getOutput(0)) : nullptr;
+            if (toTokens) {
+                Permutation p{}; p.order[0] = 0; p.order[1] = 2; p.order[2] = 1;
+                toTokens->setFirstTranspose(p);
+            }
+            lastOutput = toTokens ? toTokens->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_snake_beta") {
+            ITensor* alpha = GetOrCreateTRTWeight(keywordText("alpha_name"));
+            ITensor* beta = GetOrCreateTRTWeight(keywordText("beta_name"));
+            alpha = BroadcastLastDimension(alpha, source->getDimensions().nbDims,
+                "qwen3_tts_snake_alpha");
+            beta = BroadcastLastDimension(beta, source->getDimensions().nbDims,
+                "qwen3_tts_snake_beta");
+            auto* alphaExp = alpha ? network->addUnary(*alpha, UnaryOperation::kEXP) : nullptr;
+            auto* betaExp = beta ? network->addUnary(*beta, UnaryOperation::kEXP) : nullptr;
+            auto* angle = alphaExp ? network->addElementWise(
+                *source, *alphaExp->getOutput(0), ElementWiseOperation::kPROD) : nullptr;
+            auto* sine = angle ? network->addUnary(*angle->getOutput(0), UnaryOperation::kSIN) : nullptr;
+            auto* square = sine ? network->addElementWise(
+                *sine->getOutput(0), *sine->getOutput(0), ElementWiseOperation::kPROD) : nullptr;
+            auto* periodic = square && betaExp ? network->addElementWise(
+                *square->getOutput(0), *betaExp->getOutput(0), ElementWiseOperation::kDIV) : nullptr;
+            auto* add = periodic ? network->addElementWise(
+                *source, *periodic->getOutput(0), ElementWiseOperation::kSUM) : nullptr;
+            lastOutput = add ? add->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_waveform") {
+            const Dims dims = source->getDimensions();
+            if (dims.nbDims != 3 || dims.d[2] != 1) {
+                loweringError = "Qwen3-TTS waveform input must be [batch,samples,1]";
+                return X::Value();
+            }
+            auto* reshape = network->addShuffle(*source);
+            if (reshape) reshape->setReshapeDimensions(Dims{2, {dims.d[0], dims.d[1]}});
+            lastOutput = reshape ? reshape->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_asr_conv_subsample") {
+            const char* weightKeys[] = {
+                "conv1_weight_name", "conv2_weight_name", "conv3_weight_name"};
+            const char* biasKeys[] = {
+                "conv1_bias_name", "conv2_bias_name", "conv3_bias_name"};
+            ITensor* current = source;
+            for (int stage = 0; stage < 3; ++stage) {
+                ITensor* kernel = GetOrCreateTRTWeight(keywordText(weightKeys[stage]));
+                ITensor* bias = GetOrCreateTRTWeight(keywordText(biasKeys[stage]));
+                const SafeTensorMetadata* metadata = capturedWeightIndex
+                    ? capturedWeightIndex->Find(keywordText(weightKeys[stage]))
+                    : nullptr;
+                if (!kernel || !bias || !metadata || metadata->shape.size() != 4) {
+                    loweringError = "Qwen3-ASR convolution weights are missing or invalid";
+                    return X::Value();
+                }
+                if (current->getType() != kernel->getType()) {
+                    auto* cast = network->addCast(*current, kernel->getType());
+                    current = cast ? cast->getOutput(0) : nullptr;
+                }
+                DimsHW kernelSize{3, 3};
+                Weights empty{kernel->getType(), nullptr, 0};
+                auto* convolution = network->addConvolutionNd(
+                    *current, static_cast<int>(metadata->shape[0]),
+                    kernelSize, empty, empty);
+                if (convolution) {
+                    convolution->setInput(1, *kernel);
+                    convolution->setInput(2, *bias);
+                    convolution->setStrideNd(DimsHW{2, 2});
+                    convolution->setPaddingNd(DimsHW{1, 1});
+                }
+                auto* activation = convolution
+                    ? network->addActivation(
+                        *convolution->getOutput(0), ActivationType::kGELU_ERF)
+                    : nullptr;
+                current = activation ? activation->getOutput(0) : nullptr;
+                if (!current) {
+                    loweringError = "Qwen3-ASR convolution lowering failed";
+                    return X::Value();
+                }
+            }
+            const Dims convDims = current->getDimensions();
+            if (convDims.nbDims != 4) {
+                loweringError = "Qwen3-ASR convolution output must be NCHW";
+                return X::Value();
+            }
+            auto* flatten = network->addShuffle(*current);
+            if (flatten) {
+                Permutation permutation{};
+                permutation.order[0] = 0;
+                permutation.order[1] = 3;
+                permutation.order[2] = 1;
+                permutation.order[3] = 2;
+                flatten->setFirstTranspose(permutation);
+                Dims flatDims{};
+                flatDims.nbDims = 2;
+                flatDims.d[0] = convDims.d[0] * convDims.d[3];
+                flatDims.d[1] = convDims.d[1] * convDims.d[2];
+                flatten->setReshapeDimensions(flatDims);
+            }
+            ITensor* outWeight =
+                GetOrCreateTRTWeight(keywordText("out_weight_name"));
+            outWeight = flatten
+                ? BroadcastMatrixWeight(outWeight, 2)
+                : nullptr;
+            auto* projected = flatten && outWeight
+                ? network->addMatrixMultiply(
+                    *flatten->getOutput(0), MatrixOperation::kNONE,
+                    *outWeight, MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* projectedTensor = projected ? projected->getOutput(0) : nullptr;
+            const int channels = keywordInt("position_channels", 0);
+            const Dims projectedDims = projectedTensor
+                ? projectedTensor->getDimensions()
+                : Dims{};
+            if (!projectedTensor || projectedDims.nbDims != 2 ||
+                channels <= 0 || projectedDims.d[1] != channels) {
+                loweringError = "Qwen3-ASR convolution projection is invalid";
+                return X::Value();
+            }
+            vectorWeights.emplace_back(
+                static_cast<size_t>(projectedDims.d[0]) * channels);
+            const int half = channels / 2;
+            const int tokensPerChunk = convDims.d[3];
+            for (int tokenIndex = 0; tokenIndex < projectedDims.d[0]; ++tokenIndex) {
+                const int position = tokenIndex % tokensPerChunk;
+                for (int index = 0; index < half; ++index) {
+                    const float scale = std::exp(
+                        -std::log(10000.0F) * index / static_cast<float>(half - 1));
+                    vectorWeights.back()[
+                        static_cast<size_t>(tokenIndex) * channels + index] =
+                        std::sin(position * scale);
+                    vectorWeights.back()[
+                        static_cast<size_t>(tokenIndex) * channels + half + index] =
+                        std::cos(position * scale);
+                }
+            }
+            Dims positionDims{};
+            positionDims.nbDims = 2;
+            positionDims.d[0] = projectedDims.d[0];
+            positionDims.d[1] = channels;
+            Weights positionWeights{
+                DataType::kFLOAT, vectorWeights.back().data(),
+                static_cast<int64_t>(vectorWeights.back().size())};
+            auto* positions = network->addConstant(positionDims, positionWeights);
+            ITensor* positionTensor = positions ? positions->getOutput(0) : nullptr;
+            if (positionTensor && positionTensor->getType() != projectedTensor->getType()) {
+                auto* cast = network->addCast(*positionTensor, projectedTensor->getType());
+                positionTensor = cast ? cast->getOutput(0) : nullptr;
+            }
+            auto* added = positionTensor
+                ? network->addElementWise(
+                    *projectedTensor, *positionTensor, ElementWiseOperation::kSUM)
+                : nullptr;
+            lastOutput = added ? added->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_asr_audio_qkv_packed") {
+            ITensor* weights[3] = {
+                GetOrCreateTRTWeight(keywordText("q_weight_name")),
+                GetOrCreateTRTWeight(keywordText("k_weight_name")),
+                GetOrCreateTRTWeight(keywordText("v_weight_name"))};
+            ITensor* biases[3] = {
+                GetOrCreateTRTWeight(keywordText("q_bias_name")),
+                GetOrCreateTRTWeight(keywordText("k_bias_name")),
+                GetOrCreateTRTWeight(keywordText("v_bias_name"))};
+            auto* weightConcat = weights[0] && weights[1] && weights[2]
+                ? network->addConcatenation(weights, 3)
+                : nullptr;
+            if (weightConcat) weightConcat->setAxis(0);
+            auto* biasConcat = biases[0] && biases[1] && biases[2]
+                ? network->addConcatenation(biases, 3)
+                : nullptr;
+            if (biasConcat) biasConcat->setAxis(0);
+            ITensor* packedWeight = weightConcat ? weightConcat->getOutput(0) : nullptr;
+            packedWeight = BroadcastMatrixWeight(packedWeight, source->getDimensions().nbDims);
+            auto* projection = packedWeight
+                ? network->addMatrixMultiply(
+                    *source, MatrixOperation::kNONE,
+                    *packedWeight, MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* packedBias = biasConcat
+                ? BroadcastLastDimension(
+                    biasConcat->getOutput(0),
+                    projection->getOutput(0)->getDimensions().nbDims,
+                    "qwen3_asr_qkv_bias")
+                : nullptr;
+            auto* biased = projection && packedBias
+                ? network->addElementWise(
+                    *projection->getOutput(0), *packedBias,
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            lastOutput = biased ? biased->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_asr_audio_attention_packed") {
+            const Dims qkvDims = source->getDimensions();
+            const int heads = keywordInt("num_heads", 0);
+            const int tokensPerChunk = keywordInt("tokens_per_chunk", 13);
+            const int hidden = qkvDims.nbDims == 2 ? qkvDims.d[1] / 3 : 0;
+            const int headDim = heads > 0 ? hidden / heads : 0;
+            const int chunks = tokensPerChunk > 0 && qkvDims.nbDims == 2
+                ? qkvDims.d[0] / tokensPerChunk
+                : 0;
+            if (qkvDims.nbDims != 2 || chunks <= 0 || heads <= 0 ||
+                headDim <= 0 || qkvDims.d[0] % tokensPerChunk != 0 ||
+                qkvDims.d[1] != 3 * heads * headDim) {
+                loweringError = "Qwen3-ASR chunk attention received invalid dimensions";
+                return X::Value();
+            }
+            auto slice = [&](int offset) -> ITensor* {
+                Dims start{2, {0, offset}};
+                Dims size{2, {qkvDims.d[0], hidden}};
+                Dims stride{2, {1, 1}};
+                auto* layer = network->addSlice(*source, start, size, stride);
+                auto* reshape = layer ? network->addShuffle(*layer->getOutput(0)) : nullptr;
+                if (reshape) {
+                    Dims shape{4, {chunks, tokensPerChunk, heads, headDim}};
+                    reshape->setReshapeDimensions(shape);
+                    Permutation p{};
+                    p.order[0] = 0; p.order[1] = 2;
+                    p.order[2] = 1; p.order[3] = 3;
+                    reshape->setSecondTranspose(p);
+                }
+                return reshape ? reshape->getOutput(0) : nullptr;
+            };
+            ITensor* q = slice(0);
+            ITensor* k = slice(hidden);
+            ITensor* v = slice(2 * hidden);
+            ITensor* cu = nullptr;
+            if (auto* cuItem = kwParams.find("cu_seqlens")) {
+                cu = GetOrCreateTRTTensor(cuItem->val);
+            }
+            ITensor* attentionMask = nullptr;
+            if (cu && cu->getDimensions().nbDims == 1 &&
+                cu->getDimensions().d[0] == chunks + 1) {
+                auto sliceCu = [&](int offset) -> ITensor* {
+                    auto* layer = network->addSlice(
+                        *cu, Dims{1, {offset}}, Dims{1, {chunks}}, Dims{1, {1}});
+                    return layer ? layer->getOutput(0) : nullptr;
+                };
+                ITensor* starts = sliceCu(0);
+                ITensor* ends = sliceCu(1);
+                auto* lengths = starts && ends ? network->addElementWise(
+                    *ends, *starts, ElementWiseOperation::kSUB) : nullptr;
+                auto* lengthShape = lengths
+                    ? network->addShuffle(*lengths->getOutput(0)) : nullptr;
+                if (lengthShape) lengthShape->setReshapeDimensions(
+                    Dims{4, {chunks, 1, 1, 1}});
+                integerVectorWeights.emplace_back(
+                    static_cast<size_t>(tokensPerChunk));
+                for (int index = 0; index < tokensPerChunk; ++index) {
+                    integerVectorWeights.back()[index] = index;
+                }
+                Weights rangeWeights{DataType::kINT32,
+                    integerVectorWeights.back().data(), tokensPerChunk};
+                auto* queryRange = network->addConstant(
+                    Dims{4, {1, 1, tokensPerChunk, 1}}, rangeWeights);
+                auto* keyRange = network->addConstant(
+                    Dims{4, {1, 1, 1, tokensPerChunk}}, rangeWeights);
+                auto* validQueries = lengthShape && queryRange
+                    ? network->addElementWise(
+                        *queryRange->getOutput(0), *lengthShape->getOutput(0),
+                        ElementWiseOperation::kLESS) : nullptr;
+                auto* validKeys = lengthShape && keyRange
+                    ? network->addElementWise(
+                        *keyRange->getOutput(0), *lengthShape->getOutput(0),
+                        ElementWiseOperation::kLESS) : nullptr;
+                auto* valid = validQueries && validKeys
+                    ? network->addElementWise(
+                        *validQueries->getOutput(0), *validKeys->getOutput(0),
+                        ElementWiseOperation::kAND) : nullptr;
+                attentionMask = valid ? valid->getOutput(0) : nullptr;
+            }
+            const float queryScaleValue =
+                1.0F / std::sqrt(static_cast<float>(headDim));
+            const void* queryScalePointer = nullptr;
+            if (q && q->getType() == DataType::kBF16) {
+                uint32_t scaleBits = 0;
+                std::memcpy(&scaleBits, &queryScaleValue, sizeof(scaleBits));
+                scaleBits += 0x7FFFU + ((scaleBits >> 16U) & 1U);
+                bfloat16ScalarWeights.push_back(
+                    static_cast<unsigned short>(scaleBits >> 16U));
+                queryScalePointer = &bfloat16ScalarWeights.back();
+            }
+            else {
+                scalarWeights.push_back(queryScaleValue);
+                queryScalePointer = &scalarWeights.back();
+            }
+            const DataType scaleType = q ? q->getType() : DataType::kFLOAT;
+            Weights emptyScale{scaleType, nullptr, 0};
+            Weights scaleWeights{scaleType, queryScalePointer, 1};
+            auto* scaledQuery = q
+                ? network->addScale(
+                    *q, ScaleMode::kUNIFORM,
+                    emptyScale, scaleWeights, emptyScale)
+                : nullptr;
+            q = scaledQuery ? scaledQuery->getOutput(0) : nullptr;
+            auto* attention = q && k && v
+                ? network->addAttention(
+                    *q, *k, *v, AttentionNormalizationOp::kSOFTMAX, false)
+                : nullptr;
+            if (attention && attentionMask) attention->setMask(*attentionMask);
+            auto* outputLayer = attention
+                ? network->addShuffle(*attention->getOutput(0))
+                : nullptr;
+            if (outputLayer) {
+                Permutation p{};
+                p.order[0] = 0; p.order[1] = 2;
+                p.order[2] = 1; p.order[3] = 3;
+                outputLayer->setFirstTranspose(p);
+                Dims outputDims{2, {qkvDims.d[0], hidden}};
+                outputLayer->setReshapeDimensions(outputDims);
+            }
+            lastOutput = outputLayer ? outputLayer->getOutput(0) : nullptr;
+        }
         else if (opName == "embedding") {
             auto* weightNameItem = kwParams.find("weight_name");
             if (!weightNameItem) {
@@ -5516,7 +6473,7 @@ namespace Garnet {
             const int numHeads = numHeadsItem ? static_cast<int>(numHeadsItem->val.ToLongLong()) : 0;
             const int numKvHeads = numKvHeadsItem ? static_cast<int>(numKvHeadsItem->val.ToLongLong()) : 0;
             const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
-            if (!qWeight || !kWeight || !vWeight || !qNormWeight || !kNormWeight ||
+            if (!qWeight || !kWeight || !vWeight ||
                 numHeads <= 0 || numKvHeads <= 0 || headDim <= 0) {
                 loweringError = "Qwen3 text packed QKV metadata or weights are incomplete";
                 return X::Value();
@@ -5646,8 +6603,12 @@ namespace Garnet {
             ITensor* qProjection = sliceLast(packedProjection, 0, qWidth);
             ITensor* kProjection = sliceLast(packedProjection, qWidth, kvWidth);
             ITensor* v = sliceLast(packedProjection, qWidth + kvWidth, kvWidth);
-            ITensor* q = headRmsNorm(qProjection, qNormWeight, numHeads);
-            ITensor* k = headRmsNorm(kProjection, kNormWeight, numKvHeads);
+            ITensor* q = qNormWeight
+                ? headRmsNorm(qProjection, qNormWeight, numHeads)
+                : qProjection;
+            ITensor* k = kNormWeight
+                ? headRmsNorm(kProjection, kNormWeight, numKvHeads)
+                : kProjection;
             ITensor* packedInputs[] = {q, k, v};
             auto* packed = q && k && v ? network->addConcatenation(packedInputs, 3) : nullptr;
             if (packed) packed->setAxis(2);
@@ -5849,6 +6810,7 @@ namespace Garnet {
             if (opName == "relu") activation = ActivationType::kRELU;
             else if (opName == "sigmoid") activation = ActivationType::kSIGMOID;
             else if (opName == "tanh") activation = ActivationType::kTANH;
+            else if (opName == "gelu") activation = ActivationType::kGELU_ERF;
             else if (opName == "gelu_pytorch_tanh" || opName == "gelu_tanh") {
                 activation = ActivationType::kGELU_TANH;
             }

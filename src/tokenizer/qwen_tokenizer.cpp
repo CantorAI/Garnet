@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <stdexcept>
 #include <cstring>
 #include "nlohmann/json.hpp"
@@ -196,12 +197,44 @@ namespace Garnet::Tokenization
         if (!ReadTextFile(path, &jsonText, error)) {
             path = modelDir + "\\tokenizer.json";
             if (!ReadTextFile(path, &jsonText, error)) {
-                return false;
+                jsonText.clear();
             }
         }
 
+        std::string fallbackMergesText;
         try {
-            nlohmann::json root = nlohmann::json::parse(jsonText);
+            nlohmann::json root;
+            if (!jsonText.empty()) {
+                root = nlohmann::json::parse(jsonText);
+            }
+            else {
+                std::string vocabText;
+                std::string mergesText;
+                std::string fallbackError;
+                if (!ReadTextFile(
+                        modelDir + "/vocab.json", &vocabText, &fallbackError)) {
+                    fallbackError.clear();
+                    if (!ReadTextFile(
+                            modelDir + "\\vocab.json", &vocabText,
+                            &fallbackError)) {
+                        if (error) *error = fallbackError;
+                        return false;
+                    }
+                }
+                fallbackError.clear();
+                if (!ReadTextFile(
+                        modelDir + "/merges.txt", &mergesText, &fallbackError)) {
+                    fallbackError.clear();
+                    if (!ReadTextFile(
+                            modelDir + "\\merges.txt", &mergesText,
+                            &fallbackError)) {
+                        if (error) *error = fallbackError;
+                        return false;
+                    }
+                }
+                root["model"]["vocab"] = nlohmann::json::parse(vocabText);
+                fallbackMergesText = std::move(mergesText);
+            }
             if (!root.contains("model") || !root["model"].is_object()) {
                 if (error) *error = "tokenizer.json missing model object";
                 return false;
@@ -236,7 +269,21 @@ namespace Garnet::Tokenization
                 }
             }
 
-            if (model.contains("merges") && model["merges"].is_array()) {
+            if (!fallbackMergesText.empty()) {
+                int rank = 0;
+                std::istringstream lines(fallbackMergesText);
+                std::string merge;
+                while (std::getline(lines, merge)) {
+                    if (!merge.empty() && merge.back() == '\r') merge.pop_back();
+                    if (merge.empty() || merge[0] == '#') continue;
+                    const size_t split = merge.find(' ');
+                    if (split == std::string::npos) continue;
+                    m_mergeRanks.emplace(
+                        PairKey(merge.substr(0, split), merge.substr(split + 1)),
+                        rank++);
+                }
+            }
+            else if (model.contains("merges") && model["merges"].is_array()) {
                 int rank = 0;
                 for (const nlohmann::json& item : model["merges"]) {
                     std::string first;

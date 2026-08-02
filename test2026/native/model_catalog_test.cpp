@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     const auto catalog = nlohmann::json::parse(
         Garnet::EnumerateAvailableModelsJson(argv[1]));
     if (catalog.value("schema_version", 0) != 1 ||
-        !catalog["errors"].empty() || catalog["models"].size() != 2) {
+        !catalog["errors"].empty() || catalog["models"].size() != 4) {
         std::cerr << catalog.dump(2) << '\n';
         return 1;
     }
@@ -36,7 +36,9 @@ int main(int argc, char** argv)
         }
     }
     if (ids != std::set<std::string>{
-            "Qwen3-1.7B", "Qwen3-VL-2B-Instruct"}) {
+            "Qwen3-1.7B", "Qwen3-ASR-0.6B",
+            "Qwen3-TTS-12Hz-0.6B-CustomVoice",
+            "Qwen3-VL-2B-Instruct"}) {
         std::cerr << "unexpected model ids\n";
         return 1;
     }

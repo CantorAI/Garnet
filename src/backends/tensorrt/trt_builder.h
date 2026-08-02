@@ -144,6 +144,7 @@ namespace Garnet {
         std::deque<unsigned short> bfloat16ScalarWeights;
         std::deque<long long> integerWeights;
         std::deque<std::vector<float>> vectorWeights;
+        std::deque<std::vector<long long>> integer64VectorWeights;
         std::deque<std::vector<int>> integerVectorWeights;
         std::deque<std::vector<unsigned char>> booleanVectorWeights;
         const SafeTensorsIndex* capturedWeightIndex = nullptr;

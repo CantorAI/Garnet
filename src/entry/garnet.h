@@ -172,6 +172,7 @@ namespace Garnet
 			APISET().AddVarFunc("list_loaded_models_json", &GarnetAPI::ListLoadedModelsJson);
 			APISET().AddVarFunc("serve_status_json", &GarnetAPI::ServeStatusJson);
 			APISET().AddVarFunc("infer_json", &GarnetAPI::InferJson);
+			APISET().AddVarFunc("transcribe_json", &GarnetAPI::TranscribeJson);
 			APISET().AddVarFunc("stop_serving", &GarnetAPI::StopServing);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
@@ -262,6 +263,8 @@ namespace Garnet
 		void ServeStatusJson(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void InferJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void TranscribeJson(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void StopServing(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

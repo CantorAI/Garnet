@@ -61,6 +61,8 @@ namespace Garnet
         bool m_cudaGraphEnabled = false;
         Diagnostics m_diagnostics;
         std::shared_ptr<CompiledModelRuntime> m_decodeRuntime;
+        std::shared_ptr<CompiledModelRuntime> m_auxRuntime;
+        std::shared_ptr<CompiledModelRuntime> m_codecRuntime;
         void* m_sampleTokenDevice = nullptr;
         void* m_sampleValueDevice = nullptr;
         int m_sampleCapacity = 0;

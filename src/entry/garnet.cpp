@@ -1772,22 +1772,23 @@ namespace Garnet
         const std::string requestedModelId = params.size() > 4
             ? params[4].ToString()
             : std::string();
-        const bool textModel =
+        const bool asrModel = requestedModelId == "Qwen3-ASR-0.6B";
+        const bool textModel = !asrModel && (
             requestedModelId == "Qwen3-1.7B" ||
             (requestedModelId.empty() &&
                 !fs::is_regular_file(xmodelRoot / "qwen_vl_prefill.x") &&
-                fs::is_regular_file(xmodelRoot / "prefill.x"));
-        const std::string modelId = textModel
-            ? "Qwen3-1.7B"
-            : "Qwen3-VL-2B-Instruct";
+                fs::is_regular_file(xmodelRoot / "prefill.x")));
+        const std::string modelId = asrModel
+            ? "Qwen3-ASR-0.6B"
+            : (textModel ? "Qwen3-1.7B" : "Qwen3-VL-2B-Instruct");
         if (!requestedModelId.empty() && requestedModelId != modelId) {
             retValue = GarnetJsonError(
                 "model_unsupported",
                 "The requested Garnet serving model is not supported");
             return;
         }
-        const fs::path xmodelPath =
-            xmodelRoot / (textModel ? "prefill.x" : "qwen_vl_prefill.x");
+        const fs::path xmodelPath = xmodelRoot /
+            ((textModel || asrModel) ? "prefill.x" : "qwen_vl_prefill.x");
         const fs::path cacheRoot = params.size() > 2 && !params[2].ToString().empty()
             ? fs::path(params[2].ToString())
             : modelRoot / "compiled_cache";
@@ -1797,6 +1798,7 @@ namespace Garnet
         int minPixels = 256 * 28 * 28;
         int maxPixels = 1280 * 28 * 28;
         int maxOutputTokens = 256;
+        int audioChunks = 5;
         if (params.size() > 3 && !params[3].ToString().empty()) {
             try {
                 const json profile = json::parse(params[3].ToString());
@@ -1807,6 +1809,7 @@ namespace Garnet
                 maxPixels = profile.value("maxPixels", maxPixels);
                 maxOutputTokens = profile.value(
                     "maxOutputTokens", maxOutputTokens);
+                audioChunks = profile.value("audioChunks", audioChunks);
             }
             catch (const std::exception&) {
                 retValue = GarnetJsonError(
@@ -1820,7 +1823,11 @@ namespace Garnet
         const bool visionProfile =
             maxInputTokens == 1536 && patchCount == 3772 && kvPages == 128 &&
             minPixels == 256 * 28 * 28 && maxPixels == 1280 * 28 * 28;
-        if ((!fastProfile && !visionProfile) ||
+        const bool asrProfile = asrModel &&
+            maxInputTokens >= 128 && maxInputTokens <= 2048 &&
+            kvPages >= 16 && kvPages <= 256 &&
+            audioChunks >= 1 && audioChunks <= 30;
+        if ((!asrProfile && !fastProfile && !visionProfile) ||
             maxOutputTokens < 1 || maxOutputTokens > 512) {
             retValue = GarnetJsonError(
                 "profile_unsupported",
@@ -1829,13 +1836,16 @@ namespace Garnet
         }
         if (!fs::is_regular_file(xmodelPath)) {
             retValue = GarnetJsonError("xmodel_missing",
-                textModel
-                    ? "prefill.x was not found under the text model root"
+                (textModel || asrModel)
+                    ? "prefill.x was not found under the model root"
                     : "qwen_vl_prefill.x was not found under the vision model root");
             return;
         }
-        if (!fs::is_regular_file(modelRoot / "config.json") ||
-            !fs::is_regular_file(modelRoot / "tokenizer.json")) {
+        const bool hasTokenizer =
+            fs::is_regular_file(modelRoot / "tokenizer.json") ||
+            (fs::is_regular_file(modelRoot / "vocab.json") &&
+             fs::is_regular_file(modelRoot / "merges.txt"));
+        if (!fs::is_regular_file(modelRoot / "config.json") || !hasTokenizer) {
             retValue = GarnetJsonError("model_incomplete",
                 "The Qwen model configuration or tokenizer is missing");
             return;
@@ -1863,7 +1873,13 @@ namespace Garnet
             std::string modelDirectory = xmodelPath.parent_path().string();
             std::string emptyString;
             model.SetInfo(modelDirectory, emptyString, emptyString, emptyWeights);
-            const std::vector<std::vector<int>> inputShapes = textModel
+            const std::vector<std::vector<int>> inputShapes = asrModel
+                ? std::vector<std::vector<int>>{
+                    {1, maxInputTokens}, {audioChunks, 1, 128, 100},
+                    {audioChunks + 1}, {3, 1, maxInputTokens},
+                    {1, maxInputTokens}, {28, kvPages, 16, 8, 128},
+                    {28, kvPages, 16, 8, 128}, {kvPages}, {1}}
+                : textModel
                 ? std::vector<std::vector<int>>{
                     {1, maxInputTokens}, {1, 1, maxInputTokens},
                     {1, maxInputTokens},
@@ -1877,7 +1893,11 @@ namespace Garnet
                     {3, 1, maxInputTokens}, {1, 1},
                     {28, kvPages, 16, 8, 128}, {28, kvPages, 16, 8, 128},
                     {kvPages}, {1}};
-            const std::vector<std::string> inputDataTypes = textModel
+            const std::vector<std::string> inputDataTypes = asrModel
+                ? std::vector<std::string>{
+                    "int64", "float32", "int32", "int64", "int64",
+                    "bfloat16", "bfloat16", "int32", "int32"}
+                : textModel
                 ? std::vector<std::string>{
                     "int64", "int64", "int64", "bfloat16", "bfloat16",
                     "int32", "int32"}
@@ -1889,8 +1909,10 @@ namespace Garnet
             partitionOptions.builderWorkspaceBytes = 4096ULL << 20;
             if (!model.InitializeCompiledRuntime(
                     xmodelPath.string(), cacheRoot.string(), modelRoot.string(),
-                    textModel ? "Qwen3Prefill" : "Qwen3VLPrefill",
-                    textModel ? "qwen3_text" : "qwen3_vl",
+                    asrModel ? "Qwen3ASRPrefill" :
+                        (textModel ? "Qwen3Prefill" : "Qwen3VLPrefill"),
+                    asrModel ? "qwen3_asr" :
+                        (textModel ? "qwen3_text" : "qwen3_vl"),
                     inputShapes, inputDataTypes,
                     partitionOptions)) {
                 m_servingModel = X::Value();
@@ -1907,7 +1929,8 @@ namespace Garnet
             m_servingModelRoot = modelRoot.string();
             m_servingCacheRoot = cacheRoot.string();
             m_servingModelId = modelId;
-            m_servingInputCapability = textModel ? "text" : "vision";
+            m_servingInputCapability = asrModel
+                ? "audio" : (textModel ? "text" : "vision");
             m_servingMinPixels = minPixels;
             m_servingMaxPixels = maxPixels;
             m_servingMaxOutputTokens = maxOutputTokens;
@@ -2023,6 +2046,90 @@ namespace Garnet
                 ? result["time_to_first_token_ms"].ToDouble() : 0.0},
             {"tokens_per_second", result["decode_tokens_per_second"].IsValid()
                 ? result["decode_tokens_per_second"].ToDouble() : 0.0}
+        };
+        retValue = response.dump();
+    }
+
+    void GarnetAPI::TranscribeJson(X::XRuntime*, X::XObj*,
+        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("request_invalid",
+                "transcribe_json requires WAV audio");
+            return;
+        }
+        X::Value audioSource = params[0];
+        const bool hasAudioBinary =
+            audioSource.IsObject() &&
+            audioSource.GetObj()->GetType() == X::ObjType::Binary &&
+            dynamic_cast<X::XBin*>(audioSource.GetObj()) &&
+            dynamic_cast<X::XBin*>(audioSource.GetObj())->Size() > 0;
+        const bool hasAudioPath =
+            !hasAudioBinary && !audioSource.ToString().empty();
+        if (!hasAudioBinary && !hasAudioPath) {
+            retValue = GarnetJsonError("request_invalid",
+                "Garnet ASR requires WAV binary data or an audio path");
+            return;
+        }
+        const std::string context = params.size() > 1
+            ? params[1].ToString() : std::string();
+        const std::string language = params.size() > 2
+            ? params[2].ToString() : std::string("English");
+        const int requestedMaxNewTokens = params.size() > 3
+            ? static_cast<int>(params[3].ToLongLong()) : 0;
+
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        if (m_servingInputCapability != "audio") {
+            retValue = GarnetJsonError("serving_not_ready",
+                "The active Garnet model does not accept audio");
+            return;
+        }
+        if (!m_servingModel.IsValid()) {
+            retValue = GarnetJsonError("serving_not_ready",
+                m_servingError.empty() ? "Garnet serving is not started" : m_servingError);
+            return;
+        }
+        X::Value forwardCallable = m_servingModel["forward"];
+        if (!forwardCallable.IsObject()) {
+            retValue = GarnetJsonError("serving_not_ready",
+                "Garnet serving model handle is invalid");
+            return;
+        }
+        const int maxNewTokens = requestedMaxNewTokens > 0
+            ? (std::max)(1, (std::min)(
+                m_servingMaxOutputTokens, requestedMaxNewTokens))
+            : m_servingMaxOutputTokens;
+        X::Dict request;
+        request->Set("audio", audioSource);
+        request->Set("context", X::Value(context));
+        request->Set("language", X::Value(language));
+        request->Set("max_new_tokens", X::Value(maxNewTokens));
+        request->Set("reuse_output", X::Value(1));
+        X::Value resultValue = forwardCallable(X::Value(request));
+        if (!resultValue.IsDict()) {
+            retValue = GarnetJsonError("inference_failed",
+                "Garnet returned an invalid ASR result");
+            return;
+        }
+        X::Dict result(resultValue);
+        json response = {
+            {"status", result["status"].ToString()},
+            {"model_id", m_servingModelId},
+            {"text", result["text"].ToString()},
+            {"error_code", result["error_code"].ToString()},
+            {"error_message", result["error_message"].ToString()},
+            {"prompt_tokens", result["prompt_token_count"].IsValid()
+                ? result["prompt_token_count"].ToLongLong() : 0},
+            {"output_tokens", result["generated_token_count"].IsValid()
+                ? result["generated_token_count"].ToLongLong() : 0},
+            {"audio_tokens", result["audio_token_count"].IsValid()
+                ? result["audio_token_count"].ToLongLong() : 0},
+            {"audio_samples", result["audio_sample_count"].IsValid()
+                ? result["audio_sample_count"].ToLongLong() : 0},
+            {"audio_duration_seconds", result["audio_duration_seconds"].IsValid()
+                ? result["audio_duration_seconds"].ToDouble() : 0.0},
+            {"duration_ms", result["total_ms"].IsValid()
+                ? result["total_ms"].ToDouble() : 0.0}
         };
         retValue = response.dump();
     }

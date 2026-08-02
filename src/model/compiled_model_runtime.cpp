@@ -7,6 +7,8 @@
 #include "tensor_helper.h"
 #include "qwen_vl_compiled_frontend.h"
 #include "qwen_text_compiled_frontend.h"
+#include "qwen_asr_compiled_frontend.h"
+#include "qwen_tts_compiled_frontend.h"
 #include "cuda_lib.h"
 #include "qwen_tokenizer.h"
 #include "nlohmann/json.hpp"
@@ -22,6 +24,7 @@
 #include <fstream>
 #include <iterator>
 #include <regex>
+#include <random>
 #include <sstream>
 #include <set>
 
@@ -29,7 +32,7 @@ namespace
 {
     constexpr const char* kGraphCacheMagic = "GARNET_RUNTIME_GRAPH_CACHE_V2";
     constexpr const char* kRuntimeSchema =
-        "compiled_xmodel_runtime_v22_native_cpu_int4_decode";
+        "compiled_xmodel_runtime_v23_qwen3_audio";
 
     std::string ReadFile(const std::filesystem::path& path)
     {
@@ -618,6 +621,14 @@ namespace Garnet
             m_decodeRuntime->ReleaseDeviceMemory();
             m_decodeRuntime.reset();
         }
+        if (m_auxRuntime) {
+            m_auxRuntime->ReleaseDeviceMemory();
+            m_auxRuntime.reset();
+        }
+        if (m_codecRuntime) {
+            m_codecRuntime->ReleaseDeviceMemory();
+            m_codecRuntime.reset();
+        }
         OpenVINOBuilder::ReleaseCachedSession(
             m_enginePath, m_openVinoSessionId);
         m_ready = false;
@@ -662,6 +673,8 @@ namespace Garnet
         m_errorMessage.clear();
         m_diagnostics = {};
         m_decodeRuntime.reset();
+        m_auxRuntime.reset();
+        m_codecRuntime.reset();
         if (m_backend != "tensorrt" && m_backend != "openvino") {
             m_state = "failed";
             m_errorCode = "backend_not_available";
@@ -770,17 +783,23 @@ namespace Garnet
                 m_frontend == "qwen3_vl" && m_inputShapes.size() == 15;
             const bool qwenText =
                 m_frontend == "qwen3_text" && m_inputShapes.size() == 7;
-            if (!qwenVL && !qwenText) {
+            const bool qwenASR =
+                m_frontend == "qwen3_asr" && m_inputShapes.size() == 9;
+            const bool qwenTTS =
+                m_frontend == "qwen3_tts" && m_inputShapes.size() == 7;
+            if (!qwenVL && !qwenText && !qwenASR && !qwenTTS) {
                 return {nullptr, {}};
             }
             const std::filesystem::path decodeModel =
                 rootPath.parent_path() /
-                (qwenVL ? "qwen_text_decode.x" : "decode.x");
-            const int keyIndex = qwenVL ? 11 : 3;
-            const int valueIndex = qwenVL ? 12 : 4;
-            const int tableIndex = qwenVL ? 13 : 5;
+                (qwenVL ? "qwen_text_decode.x" :
+                    (qwenTTS ? "talker_decode.x" : "decode.x"));
+            const int keyIndex = qwenVL ? 11 : (qwenASR ? 5 : 3);
+            const int valueIndex = qwenVL ? 12 : (qwenASR ? 6 : 4);
+            const int tableIndex = qwenVL ? 13 : (qwenASR ? 7 : 5);
             std::vector<std::vector<int>> decodeShapes{
-                {1, 1}, {qwenVL ? 3 : 1, 1, 1},
+                {qwenTTS ? std::vector<int>{1, 16} : std::vector<int>{1, 1}},
+                {qwenVL || qwenASR || qwenTTS ? 3 : 1, 1, 1},
                 m_inputShapes[keyIndex], m_inputShapes[valueIndex],
                 m_inputShapes[tableIndex], {1}, {1}};
             std::vector<std::string> decodeTypes{
@@ -807,7 +826,8 @@ namespace Garnet
                     decodeModel.string(),
                     (std::filesystem::path(m_cacheDirectory) / "decode").string(),
                     m_weightsLocation,
-                    qwenVL ? "Qwen3TextDecode" : "Qwen3Decode",
+                    qwenVL ? "Qwen3TextDecode" : (qwenASR ? "Qwen3ASRDecode" :
+                        (qwenTTS ? "Qwen3TTSTalkerDecode" : "Qwen3Decode")),
                     "",
                     decodeShapes,
                     decodeTypes,
@@ -823,7 +843,10 @@ namespace Garnet
             const auto start = std::chrono::steady_clock::now();
             const bool needsDecodeRuntime =
                 (m_frontend == "qwen3_vl" && m_inputShapes.size() == 15) ||
-                (m_frontend == "qwen3_text" && m_inputShapes.size() == 7);
+                (m_frontend == "qwen3_text" && m_inputShapes.size() == 7) ||
+                (m_frontend == "qwen3_asr" && m_inputShapes.size() == 9);
+            const bool needsTTSRuntimes =
+                m_frontend == "qwen3_tts" && m_inputShapes.size() == 7;
             std::string preparationError;
             bool prepared = false;
             if (m_backend == "openvino") {
@@ -852,16 +875,51 @@ namespace Garnet
             }
             m_enginesPrepared = true;
             std::pair<std::shared_ptr<CompiledModelRuntime>, std::string> decodeResult;
-            if (needsDecodeRuntime) decodeResult = createDecodeRuntime();
-            if (needsDecodeRuntime && !decodeResult.first) {
+            if (needsDecodeRuntime || needsTTSRuntimes) decodeResult = createDecodeRuntime();
+            if ((needsDecodeRuntime || needsTTSRuntimes) && !decodeResult.first) {
                 m_errorCode = "decode_runtime_initialization_failed";
                 m_errorMessage = decodeResult.second;
                 return false;
             }
             m_decodeRuntime = std::move(decodeResult.first);
+            if (needsTTSRuntimes) {
+                auto auxiliary = std::make_shared<CompiledModelRuntime>();
+                if (!auxiliary->Initialize(
+                        (rootPath.parent_path() / "code_predictor.x").string(),
+                        (std::filesystem::path(m_cacheDirectory) / "code_predictor").string(),
+                        m_weightsLocation, "Qwen3TTSCodePredictor", "",
+                        {{1, 1, 1024}, {1, 1}}, {"bfloat16", "int64"},
+                        m_partitionOptions, m_backend, m_precision)) {
+                    X::Dict status(auxiliary->Status());
+                    m_errorCode = "tts_code_predictor_initialization_failed";
+                    m_errorMessage = status["error_message"].ToString();
+                    return false;
+                }
+                int codecFrames = 256;
+                if (const char* value = std::getenv("GARNET_TTS_MAX_FRAMES")) {
+                    codecFrames = std::max(1, std::atoi(value));
+                }
+                const std::filesystem::path codecWeights =
+                    std::filesystem::path(m_weightsLocation) / "speech_tokenizer";
+                auto codec = std::make_shared<CompiledModelRuntime>();
+                if (!codec->Initialize(
+                        (rootPath.parent_path() / "codec_decode.x").string(),
+                        (std::filesystem::path(m_cacheDirectory) / "codec_decode").string(),
+                        codecWeights.string(), "Qwen3TTSCodecDecode", "",
+                        {{1, 16, codecFrames}}, {"int64"}, m_partitionOptions,
+                        m_backend, m_precision)) {
+                    X::Dict status(codec->Status());
+                    m_errorCode = "tts_codec_initialization_failed";
+                    m_errorMessage = status["error_message"].ToString();
+                    return false;
+                }
+                m_auxRuntime = std::move(auxiliary);
+                m_codecRuntime = std::move(codec);
+            }
             m_enginePreparationMs = std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - start).count();
-            if (m_frontend == "qwen3_vl" || m_frontend == "qwen3_text") {
+            if (m_frontend == "qwen3_vl" || m_frontend == "qwen3_text" ||
+                m_frontend == "qwen3_asr" || m_frontend == "qwen3_tts") {
                 const auto frontendStart = std::chrono::steady_clock::now();
                 std::string tokenizerError;
                 if (!Tokenization::GetCachedQwenTokenizer(
@@ -1340,8 +1398,12 @@ namespace Garnet
         X::Value inputs = requestDict["inputs"];
         QwenVLCompiledInputs frontendInputs;
         QwenTextCompiledInputs textFrontendInputs;
+        QwenASRCompiledInputs asrFrontendInputs;
+        QwenTTSCompiledInputs ttsFrontendInputs;
         bool frontendActive = false;
         bool frontendIsVL = false;
+        bool frontendIsASR = false;
+        bool frontendIsTTS = false;
         int frontendPromptTokenCount = 0;
         long long frontendPositionDelta = 0;
         if (!inputs.IsList() && m_frontend == "qwen3_vl") {
@@ -1409,6 +1471,58 @@ namespace Garnet
             frontendPromptTokenCount =
                 textFrontendInputs.promptTokenCount;
         }
+        else if (!inputs.IsList() && m_frontend == "qwen3_asr") {
+            X::Value audioSource = requestDict["audio"];
+            if (!audioSource.IsValid()) audioSource = requestDict["audio_path"];
+            asrFrontendInputs = BuildQwenASRCompiledInputs(
+                m_weightsLocation, audioSource,
+                requestDict["context"].ToString(),
+                requestDict["language"].ToString(), m_inputShapes,
+                m_reusablePrefillKeyCache, m_reusablePrefillValueCache);
+            if (!asrFrontendInputs.inputs.IsList()) {
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_frontend_failed"));
+                result->Set("error_message", X::Value(asrFrontendInputs.error));
+                return result;
+            }
+            {
+                X::List frontendList(asrFrontendInputs.inputs);
+                if (!m_reusablePrefillKeyCache.IsTensor()) {
+                    m_reusablePrefillKeyCache = frontendList->Get(5);
+                }
+                if (!m_reusablePrefillValueCache.IsTensor()) {
+                    m_reusablePrefillValueCache = frontendList->Get(6);
+                }
+            }
+            inputs = asrFrontendInputs.inputs;
+            frontendActive = true;
+            frontendIsASR = true;
+            frontendPromptTokenCount = asrFrontendInputs.promptTokenCount;
+        }
+        else if (!inputs.IsList() && m_frontend == "qwen3_tts") {
+            ttsFrontendInputs = BuildQwenTTSCompiledInputs(
+                m_weightsLocation, requestDict["text"].ToString(),
+                requestDict["speaker"].ToString(),
+                requestDict["language"].ToString(), m_inputShapes,
+                m_reusablePrefillKeyCache, m_reusablePrefillValueCache);
+            if (!ttsFrontendInputs.inputs.IsList()) {
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_frontend_failed"));
+                result->Set("error_message", X::Value(ttsFrontendInputs.error));
+                return result;
+            }
+            {
+                X::List frontendList(ttsFrontendInputs.inputs);
+                if (!m_reusablePrefillKeyCache.IsTensor()) {
+                    m_reusablePrefillKeyCache = frontendList->Get(3);
+                    m_reusablePrefillValueCache = frontendList->Get(4);
+                }
+            }
+            inputs = ttsFrontendInputs.inputs;
+            frontendActive = true;
+            frontendIsTTS = true;
+            frontendPromptTokenCount = ttsFrontendInputs.promptTokenCount;
+        }
         std::string executionError;
         const X::Value reusableOutput =
             requestDict["reuse_output"].IsValid() &&
@@ -1456,6 +1570,285 @@ namespace Garnet
             m_reusableExecutionOutput = output;
         }
         result->Set("status", X::Value("ok"));
+        if (frontendIsTTS) {
+            if (!m_decodeRuntime || !m_auxRuntime || !m_codecRuntime ||
+                m_backend != "tensorrt") {
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_tts_runtime_unavailable"));
+                return result;
+            }
+            const int requestedFrames = requestDict["max_audio_frames"].IsValid()
+                ? std::max(1, static_cast<int>(
+                    requestDict["max_audio_frames"].ToLongLong()))
+                : 256;
+            int profileFrames = 256;
+            if (const char* value = std::getenv("GARNET_TTS_MAX_FRAMES")) {
+                profileFrames = std::max(1, std::atoi(value));
+            }
+            const int maxFrames = std::min(requestedFrames, profileFrames);
+            const int hiddenSize = 1024;
+            const int vocabSize = 3072;
+            const bool stochastic = !requestDict["do_sample"].IsValid() ||
+                requestDict["do_sample"].ToLongLong() != 0;
+            const int topK = requestDict["top_k"].IsValid()
+                ? std::clamp(static_cast<int>(requestDict["top_k"].ToLongLong()), 1, vocabSize)
+                : 50;
+            const float temperature = requestDict["temperature"].IsValid()
+                ? std::max(0.01F, static_cast<float>(requestDict["temperature"].ToDouble()))
+                : 0.9F;
+            const float repetitionPenalty = requestDict["repetition_penalty"].IsValid()
+                ? std::max(1.0F, static_cast<float>(requestDict["repetition_penalty"].ToDouble()))
+                : 1.05F;
+            const uint64_t seed = requestDict["seed"].IsValid()
+                ? static_cast<uint64_t>(requestDict["seed"].ToLongLong())
+                : static_cast<uint64_t>(std::chrono::high_resolution_clock::now()
+                    .time_since_epoch().count());
+            std::mt19937_64 random(seed);
+            std::vector<long long> firstCodeHistory;
+            auto samplePacked = [&](X::Value packedValue, int row,
+                                    long long& token, X::Value& hiddenValue,
+                                    std::string& errorText) -> bool {
+                if (!packedValue.IsTensor()) {
+                    errorText = "talker returned no packed hidden/logit tensor";
+                    return false;
+                }
+                X::Tensor packed(packedValue);
+                if (packed->GetDimCount() != 3 ||
+                    packed->GetDimSize(2) != hiddenSize + vocabSize ||
+                    row < 0 || row >= packed->GetDimSize(1)) {
+                    errorText = "talker packed output has incompatible dimensions";
+                    return false;
+                }
+                const size_t elementBytes = packed->GetDataType() ==
+                    X::TensorDataType::FLOAT32 ? sizeof(float) : sizeof(unsigned short);
+                const size_t rowElements = hiddenSize + vocabSize;
+                const char* rowMemory = static_cast<const char*>(
+                    TensorHelper::GetGPUMemory(packed)) +
+                    static_cast<size_t>(row) * rowElements * elementBytes;
+                X::Tensor hidden(X::g_pXHost->CreateTensor());
+                X::Port::vector<int> hiddenShape(3);
+                hiddenShape.push_back(1); hiddenShape.push_back(1);
+                hiddenShape.push_back(hiddenSize);
+                hidden->SetDataType(packed->GetDataType());
+                hidden->SetShape(hiddenShape);
+                void* hiddenMemory = nullptr;
+                if (cudaMalloc(&hiddenMemory, hiddenSize * elementBytes) != cudaSuccess ||
+                    cudaMemcpyAsync(hiddenMemory, rowMemory, hiddenSize * elementBytes,
+                        cudaMemcpyDeviceToDevice, cudaStreamPerThread) != cudaSuccess ||
+                    TensorHelper::AttachGPUMemory(hidden, hiddenMemory) !=
+                        TensorOpStatus::Success) {
+                    if (hiddenMemory) cudaFree(hiddenMemory);
+                    errorText = "talker hidden-state extraction failed";
+                    return false;
+                }
+                hiddenValue = X::Value(hidden);
+                std::vector<unsigned char> raw(
+                    static_cast<size_t>(vocabSize) * elementBytes);
+                cudaError_t status = cudaMemcpyAsync(
+                    raw.data(), rowMemory + hiddenSize * elementBytes,
+                    raw.size(), cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                if (status == cudaSuccess) status = cudaStreamSynchronize(cudaStreamPerThread);
+                if (status != cudaSuccess) {
+                    errorText = cudaGetErrorString(status);
+                    return false;
+                }
+                std::vector<float> logits(static_cast<size_t>(vocabSize));
+                if (packed->GetDataType() == X::TensorDataType::FLOAT32) {
+                    std::memcpy(logits.data(), raw.data(), raw.size());
+                }
+                else {
+                    const auto* bits = reinterpret_cast<const uint16_t*>(raw.data());
+                    for (int index = 0; index < vocabSize; ++index) {
+                        const uint32_t expanded = static_cast<uint32_t>(bits[index]) << 16;
+                        std::memcpy(&logits[index], &expanded, sizeof(float));
+                    }
+                }
+                for (long long previous : firstCodeHistory) {
+                    if (previous >= 0 && previous < vocabSize) {
+                        float& value = logits[static_cast<size_t>(previous)];
+                        value = value < 0.0F
+                            ? value * repetitionPenalty : value / repetitionPenalty;
+                    }
+                }
+                std::vector<int> order(static_cast<size_t>(vocabSize));
+                for (int index = 0; index < vocabSize; ++index) order[index] = index;
+                std::partial_sort(order.begin(), order.begin() + topK, order.end(),
+                    [&](int left, int right) { return logits[left] > logits[right]; });
+                if (!stochastic) token = order.front();
+                else {
+                    const float maximum = logits[order.front()] / temperature;
+                    std::vector<double> probabilities(static_cast<size_t>(topK));
+                    for (int index = 0; index < topK; ++index) {
+                        probabilities[index] = std::exp(
+                            logits[order[index]] / temperature - maximum);
+                    }
+                    std::discrete_distribution<int> distribution(
+                        probabilities.begin(), probabilities.end());
+                    token = order[distribution(random)];
+                }
+                return true;
+            };
+
+            X::List activeInputs(inputs);
+            X::Value packed = output;
+            std::vector<int64_t> codes;
+            codes.reserve(static_cast<size_t>(maxFrames) * 16);
+            const auto decodeStart = std::chrono::steady_clock::now();
+            for (int frame = 0; frame < maxFrames; ++frame) {
+                long long firstCode = -1;
+                X::Value hidden;
+                std::string ttsError;
+                const int packedRow = frame == 0
+                    ? frontendPromptTokenCount - 1 : 0;
+                if (!samplePacked(packed, packedRow, firstCode, hidden, ttsError)) {
+                    result->Set("status", X::Value("error"));
+                    result->Set("error_code", X::Value("compiled_tts_sampling_failed"));
+                    result->Set("error_message", X::Value(ttsError));
+                    return result;
+                }
+                if (firstCode == ttsFrontendInputs.codecEosTokenId) break;
+                firstCodeHistory.push_back(firstCode);
+                X::Value firstCodeTensor = MakeCudaTensorFromHost(
+                    X::TensorDataType::LONGLONG, {1, 1}, &firstCode,
+                    sizeof(firstCode));
+                X::V<X::XList> predictorInputs;
+                predictorInputs->AddItem(hidden);
+                predictorInputs->AddItem(firstCodeTensor);
+                X::Dict predictorRequest;
+                predictorRequest->Set("inputs", X::Value(predictorInputs));
+                X::Value predictorValue = m_auxRuntime->Forward(predictorRequest);
+                if (!predictorValue.IsDict()) {
+                    result->Set("status", X::Value("error"));
+                    result->Set("error_code", X::Value("compiled_tts_predictor_failed"));
+                    return result;
+                }
+                X::Dict predictorResult(predictorValue);
+                if (predictorResult["status"].ToString() != "ok") return predictorValue;
+                X::Value frameCodes = predictorResult["output"];
+                if (!frameCodes.IsTensor()) {
+                    result->Set("status", X::Value("error"));
+                    result->Set("error_code", X::Value("compiled_tts_predictor_output_invalid"));
+                    return result;
+                }
+                int64_t hostCodes[16]{};
+                X::Tensor frameCodeTensor(frameCodes);
+                cudaError_t copyStatus = cudaMemcpyAsync(
+                    hostCodes, TensorHelper::GetGPUMemory(frameCodeTensor),
+                    sizeof(hostCodes), cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                if (copyStatus == cudaSuccess) {
+                    copyStatus = cudaStreamSynchronize(cudaStreamPerThread);
+                }
+                if (copyStatus != cudaSuccess) {
+                    result->Set("status", X::Value("error"));
+                    result->Set("error_code", X::Value("compiled_tts_code_download_failed"));
+                    return result;
+                }
+                codes.insert(codes.end(), hostCodes, hostCodes + 16);
+                if (frame + 1 >= maxFrames) break;
+
+                const int slot = frontendPromptTokenCount + frame;
+                const int context = slot + 1;
+                const int64_t positions[3] = {slot, slot, slot};
+                X::Value positionTensor = MakeCudaTensorFromHost(
+                    X::TensorDataType::LONGLONG, {3, 1, 1}, positions,
+                    sizeof(positions));
+                X::Value contextTensor = MakeCudaTensorFromHost(
+                    X::TensorDataType::INT, {1}, &context, sizeof(context));
+                X::Value slotTensor = MakeCudaTensorFromHost(
+                    X::TensorDataType::INT, {1}, &slot, sizeof(slot));
+                X::V<X::XList> talkerInputs;
+                talkerInputs->AddItem(frameCodes);
+                talkerInputs->AddItem(positionTensor);
+                talkerInputs->AddItem(activeInputs->Get(3));
+                talkerInputs->AddItem(activeInputs->Get(4));
+                talkerInputs->AddItem(activeInputs->Get(5));
+                talkerInputs->AddItem(contextTensor);
+                talkerInputs->AddItem(slotTensor);
+                X::Dict talkerRequest;
+                talkerRequest->Set("inputs", X::Value(talkerInputs));
+                talkerRequest->Set("reuse_output", X::Value(1));
+                X::Value talkerValue = m_decodeRuntime->Forward(talkerRequest);
+                if (!talkerValue.IsDict()) {
+                    result->Set("status", X::Value("error"));
+                    result->Set("error_code", X::Value("compiled_tts_talker_decode_failed"));
+                    return result;
+                }
+                X::Dict talkerResult(talkerValue);
+                if (talkerResult["status"].ToString() != "ok") return talkerValue;
+                packed = talkerResult["output"];
+            }
+            if (codes.empty()) {
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_tts_generated_no_audio"));
+                return result;
+            }
+            const int frameCount = static_cast<int>(codes.size() / 16);
+            std::vector<int64_t> paddedCodes(
+                static_cast<size_t>(16 * profileFrames), 0);
+            for (int frame = 0; frame < frameCount; ++frame) {
+                for (int group = 0; group < 16; ++group) {
+                    paddedCodes[static_cast<size_t>(group * profileFrames + frame)] =
+                        codes[static_cast<size_t>(frame * 16 + group)];
+                }
+            }
+            X::Value codecInput = MakeCudaTensorFromHost(
+                X::TensorDataType::LONGLONG, {1, 16, profileFrames},
+                paddedCodes.data(), paddedCodes.size() * sizeof(int64_t));
+            X::V<X::XList> codecInputs;
+            codecInputs->AddItem(codecInput);
+            X::Dict codecRequest;
+            codecRequest->Set("inputs", X::Value(codecInputs));
+            X::Value codecValue = m_codecRuntime->Forward(codecRequest);
+            if (!codecValue.IsDict()) {
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_tts_codec_decode_failed"));
+                return result;
+            }
+            X::Dict codecResult(codecValue);
+            if (codecResult["status"].ToString() != "ok") return codecValue;
+            X::Value fullAudioValue = codecResult["output"];
+            if (!fullAudioValue.IsTensor()) {
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_tts_waveform_invalid"));
+                return result;
+            }
+            X::Tensor fullAudio(fullAudioValue);
+            const int validSamples = frameCount * 1920;
+            const size_t audioElementBytes = fullAudio->GetDataType() ==
+                X::TensorDataType::FLOAT32 ? sizeof(float) : sizeof(unsigned short);
+            X::Tensor audio(X::g_pXHost->CreateTensor());
+            X::Port::vector<int> audioShape(2);
+            audioShape.push_back(1); audioShape.push_back(validSamples);
+            audio->SetDataType(fullAudio->GetDataType());
+            audio->SetShape(audioShape);
+            void* audioMemory = nullptr;
+            cudaError_t audioStatus = cudaMalloc(
+                &audioMemory, static_cast<size_t>(validSamples) * audioElementBytes);
+            if (audioStatus == cudaSuccess) audioStatus = cudaMemcpyAsync(
+                audioMemory, TensorHelper::GetGPUMemory(fullAudio),
+                static_cast<size_t>(validSamples) * audioElementBytes,
+                cudaMemcpyDeviceToDevice, cudaStreamPerThread);
+            if (audioStatus != cudaSuccess ||
+                TensorHelper::AttachGPUMemory(audio, audioMemory) !=
+                    TensorOpStatus::Success) {
+                if (audioMemory) cudaFree(audioMemory);
+                result->Set("status", X::Value("error"));
+                result->Set("error_code", X::Value("compiled_tts_waveform_trim_failed"));
+                return result;
+            }
+            result->Set("audio", X::Value(audio));
+            result->Set("sample_rate", X::Value(24000));
+            result->Set("audio_frame_count", X::Value(frameCount));
+            result->Set("audio_sample_count", X::Value(validSamples));
+            result->Set("audio_duration_seconds", X::Value(frameCount / 12.5));
+            result->Set("codec_codes", X::Value(static_cast<long long>(codes.size())));
+            result->Set("prompt_token_count", X::Value(frontendPromptTokenCount));
+            result->Set("decode_ms", X::Value(std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - decodeStart).count()));
+            result->Set("total_ms", X::Value(std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - requestStart).count()));
+            return result;
+        }
         const int requestedNewTokens = requestDict["max_new_tokens"].IsValid()
             ? std::max(0, static_cast<int>(requestDict["max_new_tokens"].ToLongLong()))
             : 0;
@@ -1721,7 +2114,8 @@ namespace Garnet
                 return result;
             }
             X::List activeInputs(inputs);
-            const int expectedInputCount = frontendIsVL ? 15 : 7;
+            const int expectedInputCount = frontendIsVL ? 15 :
+                (frontendIsASR ? 9 : 7);
             if (activeInputs->Size() != expectedInputCount) {
                 result->Set("status", X::Value("error"));
                 result->Set("error_code", X::Value("compiled_generation_cache_bindings_missing"));
@@ -1742,7 +2136,8 @@ namespace Garnet
             const int64_t imEnd = tokenizer->TokenId("<|im_end|>");
             const bool ignoreEos = requestDict["ignore_eos"].IsValid() &&
                 requestDict["ignore_eos"].ToLongLong() != 0;
-            const int cacheInputIndex = frontendIsVL ? 11 : 3;
+            const int cacheInputIndex = frontendIsVL ? 11 :
+                (frontendIsASR ? 5 : 3);
             const int cacheCapacity =
                 m_inputShapes.size() > static_cast<size_t>(cacheInputIndex) &&
                 m_inputShapes[cacheInputIndex].size() >= 3
@@ -1758,7 +2153,8 @@ namespace Garnet
             }
             int64_t decodeTokenValue = sampledTokenId;
             int64_t decodeRopePositions[3] = {};
-            const int positionComponents = frontendIsVL ? 3 : 1;
+            const int positionComponents =
+                frontendIsVL || frontendIsASR ? 3 : 1;
             int decodeContextLength = 0;
             int decodeSlotPosition = 0;
             auto makeDecodeTensor = m_backend == "openvino"
@@ -1852,9 +2248,12 @@ namespace Garnet
                     return result;
                 }
                 X::V<X::XList> decodeInputs;
-                const int keyInputIndex = frontendIsVL ? 11 : 3;
-                const int valueInputIndex = frontendIsVL ? 12 : 4;
-                const int tableInputIndex = frontendIsVL ? 13 : 5;
+                const int keyInputIndex = frontendIsVL ? 11 :
+                    (frontendIsASR ? 5 : 3);
+                const int valueInputIndex = frontendIsVL ? 12 :
+                    (frontendIsASR ? 6 : 4);
+                const int tableInputIndex = frontendIsVL ? 13 :
+                    (frontendIsASR ? 7 : 5);
                 decodeInputs->AddItem(decodeTokenTensor);
                 decodeInputs->AddItem(decodePositionTensor);
                 decodeInputs->AddItem(activeInputs->Get(keyInputIndex));
@@ -1910,13 +2309,24 @@ namespace Garnet
             result->Set("height", X::Value(frontendInputs.resizedHeight));
             result->Set("width", X::Value(frontendInputs.resizedWidth));
         }
+        if (frontendIsASR) {
+            result->Set(
+                "audio_token_count", X::Value(asrFrontendInputs.audioTokenCount));
+            result->Set(
+                "audio_sample_count", X::Value(asrFrontendInputs.audioSampleCount));
+            result->Set(
+                "audio_duration_seconds",
+                X::Value(asrFrontendInputs.audioDurationSeconds));
+        }
         result->Set("total_ms", X::Value(
             std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - requestStart).count()));
         if (frontendActive && inputs.IsList()) {
             X::List requestInputs(inputs);
-            const int reusableKeyIndex = frontendIsVL ? 11 : 3;
-            const int reusableValueIndex = frontendIsVL ? 12 : 4;
+            const int reusableKeyIndex = frontendIsVL ? 11 :
+                (frontendIsASR ? 5 : 3);
+            const int reusableValueIndex = frontendIsVL ? 12 :
+                (frontendIsASR ? 6 : 4);
             for (long long index = 0; index < requestInputs->Size(); ++index) {
                 if (index == reusableKeyIndex || index == reusableValueIndex) {
                     continue;

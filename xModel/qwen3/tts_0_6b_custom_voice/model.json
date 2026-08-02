@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "Qwen3-TTS-12Hz-0.6B-CustomVoice",
+  "slug": "qwen3-tts-12hz-0.6b-customvoice",
+  "display_name": "Qwen3-TTS 12Hz 0.6B CustomVoice",
+  "family": "qwen3-tts",
+  "task": "text-to-speech",
+  "capabilities": {
+    "text": true,
+    "audio_output": true,
+    "speaker_selection": true,
+    "multi_codebook_audio": true,
+    "paged_kv_cache": true,
+    "streaming": false
+  },
+  "entrypoints": {
+    "prefill": {"file": "talker_prefill.x", "function": "Qwen3TTSTalkerPrefill", "frontend": "qwen3_tts"},
+    "decode": {"file": "talker_decode.x", "function": "Qwen3TTSTalkerDecode", "frontend": "qwen3_tts"},
+    "code_predictor": {"file": "code_predictor.x", "function": "Qwen3TTSCodePredictor", "frontend": "qwen3_tts"},
+    "codec_decode": {"file": "codec_decode.x", "function": "Qwen3TTSCodecDecode", "frontend": "qwen3_tts"}
+  },
+  "profile_files": ["profiles/tensorrt_bf16.json"],
+  "weights": {
+    "bundled": false,
+    "format": "safetensors",
+    "source": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+    "config_file": "config.json",
+    "tokenizer_file": "tokenizer.json",
+    "codec_subdirectory": "speech_tokenizer"
+  }
+}
