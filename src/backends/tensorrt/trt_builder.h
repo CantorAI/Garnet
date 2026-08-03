@@ -181,6 +181,7 @@ namespace Garnet {
 
         nvinfer1::ITensor* GetOrCreateTRTTensor(X::Value garnetTensorVal);
         nvinfer1::ITensor* GetOrCreateTRTWeight(const std::string& weightName);
+        nvinfer1::ITensor* GetOrCreateTRTWeightFP32(const std::string& weightName);
         nvinfer1::ITensor* BroadcastLastDimension(
             nvinfer1::ITensor* tensor,
             int targetRank,

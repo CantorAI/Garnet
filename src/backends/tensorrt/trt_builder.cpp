@@ -3135,6 +3135,73 @@ namespace Garnet {
         return output;
     }
 
+    nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTWeightFP32(
+        const std::string& weightName) {
+        const std::string cacheKey = weightName + ".fp32";
+        auto existing = weightTensorMap.find(cacheKey);
+        if (existing != weightTensorMap.end()) return existing->second;
+        if (!capturedWeightIndex) {
+            loweringError = "native safetensors mapping is unavailable for weight: " +
+                weightName;
+            return nullptr;
+        }
+        const SafeTensorMetadata* metadata = capturedWeightIndex->Find(weightName);
+        if (!metadata) {
+            loweringError = "weight is absent from safetensors index: " + weightName;
+            return nullptr;
+        }
+        if (metadata->dataType == "F32") return GetOrCreateTRTWeight(weightName);
+        if (metadata->dataType != "BF16" || metadata->shape.empty() ||
+            metadata->shape.size() > Dims::MAX_DIMS) {
+            loweringError = "FP32 projection requires BF16 or F32 weight: " + weightName;
+            return nullptr;
+        }
+        Dims dimensions{};
+        dimensions.nbDims = static_cast<int>(metadata->shape.size());
+        std::int64_t elementCount = 1;
+        for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+            const long long size = metadata->shape[dimension];
+            if (size <= 0 || size > std::numeric_limits<int>::max()) {
+                loweringError = "invalid FP32 projection weight shape: " + weightName;
+                return nullptr;
+            }
+            dimensions.d[dimension] = static_cast<int>(size);
+            elementCount *= size;
+        }
+        const std::string sourcePath = metadata->filePath.string();
+        auto& mappedFile = capturedWeightFiles[sourcePath];
+        if (!mappedFile) {
+            mappedFile = std::make_unique<SafeTensorsMappedFile>();
+            if (!mappedFile->Open(metadata->filePath, loweringError)) return nullptr;
+        }
+        const void* data = mappedFile->DataAt(
+            metadata->dataOffset, metadata->dataSize);
+        if (!data) {
+            loweringError = "safetensors range is unavailable for weight: " + weightName;
+            return nullptr;
+        }
+        vectorWeights.emplace_back(static_cast<size_t>(elementCount));
+        auto& converted = vectorWeights.back();
+        const auto* source = static_cast<const uint16_t*>(data);
+        for (std::int64_t index = 0; index < elementCount; ++index) {
+            const uint32_t expanded = static_cast<uint32_t>(source[index]) << 16U;
+            std::memcpy(&converted[static_cast<size_t>(index)],
+                &expanded, sizeof(float));
+        }
+        Weights weights{DataType::kFLOAT, converted.data(), elementCount};
+        auto* constant = network->addConstant(dimensions, weights);
+        if (!constant || !constant->getOutput(0)) {
+            loweringError = "TensorRT FP32 constant lowering failed for weight: " +
+                weightName;
+            return nullptr;
+        }
+        constant->setName(cacheKey.c_str());
+        ITensor* output = constant->getOutput(0);
+        output->setName(cacheKey.c_str());
+        weightTensorMap[cacheKey] = output;
+        return output;
+    }
+
     nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTTensor(X::Value value) {
         if (!value.IsObject()) {
             loweringError = "scalar operands are not implemented in generic TensorRT lowering";
@@ -3203,8 +3270,40 @@ namespace Garnet {
         if (!tensor) return nullptr;
         const Dims sourceDimensions = tensor->getDimensions();
         if (sourceDimensions.nbDims == targetRank) return tensor;
+        if (targetRank > 0 && sourceDimensions.nbDims > targetRank) {
+            const int leadingDimensions = sourceDimensions.nbDims - targetRank;
+            bool leadingSingletons = true;
+            for (int dimension = 0; dimension < leadingDimensions; ++dimension) {
+                leadingSingletons = leadingSingletons &&
+                    sourceDimensions.d[dimension] == 1;
+            }
+            if (leadingSingletons) {
+                Dims collapsedDimensions{};
+                collapsedDimensions.nbDims = targetRank;
+                for (int dimension = 0; dimension < targetRank; ++dimension) {
+                    collapsedDimensions.d[dimension] =
+                        sourceDimensions.d[leadingDimensions + dimension];
+                }
+                auto* collapse = network->addShuffle(*tensor);
+                if (!collapse) {
+                    loweringError = "TensorRT singleton collapse failed for " + layerName;
+                    return nullptr;
+                }
+                collapse->setReshapeDimensions(collapsedDimensions);
+                return collapse->getOutput(0);
+            }
+        }
         if (sourceDimensions.nbDims != 1 || targetRank <= 1 || targetRank > Dims::MAX_DIMS) {
-            loweringError = "cannot broadcast " + layerName + " to target rank";
+            std::string sourceShape = "[";
+            for (int dimension = 0; dimension < sourceDimensions.nbDims; ++dimension) {
+                if (dimension) sourceShape += ",";
+                sourceShape += std::to_string(sourceDimensions.d[dimension]);
+            }
+            sourceShape += "]";
+            loweringError = "cannot broadcast " + layerName +
+                " from rank " + std::to_string(sourceDimensions.nbDims) +
+                " shape " + sourceShape + " to target rank " +
+                std::to_string(targetRank);
             return nullptr;
         }
         Dims broadcastDimensions{};
@@ -4587,8 +4686,17 @@ namespace Garnet {
             xlangOutputDataType = X::TensorDataType::BFLOAT16;
             elementBytes = sizeof(unsigned short);
         }
+        else if (outputDataType == DataType::kINT32) {
+            xlangOutputDataType = X::TensorDataType::INT;
+            elementBytes = sizeof(int);
+        }
+        else if (outputDataType == DataType::kINT64) {
+            xlangOutputDataType = X::TensorDataType::LONGLONG;
+            elementBytes = sizeof(long long);
+        }
         else {
-            errorMessage = "unsupported TensorRT output dtype";
+            errorMessage = "unsupported TensorRT output dtype: " +
+                std::to_string(static_cast<int>(outputDataType));
             return X::Value();
         }
         const size_t outputBytes = outputCount * elementBytes;
@@ -5031,11 +5139,16 @@ namespace Garnet {
                     *right,
                     ElementWiseOperation::kSUM)
                 : nullptr;
-            auto* scatter = indices && updatedRows
+            ITensor* updates = updatedRows ? updatedRows->getOutput(0) : nullptr;
+            auto* updatesCast = updates && updates->getType() != left->getType()
+                ? network->addCast(*updates, left->getType())
+                : nullptr;
+            if (updatesCast) updates = updatesCast->getOutput(0);
+            auto* scatter = indices && updates
                 ? network->addScatter(
                     *left,
                     *indices->getOutput(0),
-                    *updatedRows->getOutput(0),
+                    *updates,
                     ScatterMode::kND)
                 : nullptr;
             lastOutput = scatter ? scatter->getOutput(0) : nullptr;
@@ -5140,9 +5253,14 @@ namespace Garnet {
                 transpose.order[1] = 0;
                 indices->setFirstTranspose(transpose);
             }
-            auto* scatter = indices
+            ITensor* updates = right;
+            auto* updatesCast = updates && updates->getType() != left->getType()
+                ? network->addCast(*updates, left->getType())
+                : nullptr;
+            if (updatesCast) updates = updatesCast->getOutput(0);
+            auto* scatter = indices && updates
                 ? network->addScatter(
-                    *left, *indices->getOutput(0), *right, ScatterMode::kND)
+                    *left, *indices->getOutput(0), *updates, ScatterMode::kND)
                 : nullptr;
             lastOutput = scatter ? scatter->getOutput(0) : nullptr;
         }
@@ -5203,11 +5321,16 @@ namespace Garnet {
                 transpose.order[1] = 0;
                 indices->setFirstTranspose(transpose);
             }
-            auto* scatter = indices
+            ITensor* updates = right;
+            auto* updatesCast = updates && updates->getType() != left->getType()
+                ? network->addCast(*updates, left->getType())
+                : nullptr;
+            if (updatesCast) updates = updatesCast->getOutput(0);
+            auto* scatter = indices && updates
                 ? network->addScatter(
                     *left,
                     *indices->getOutput(0),
-                    *right,
+                    *updates,
                     ScatterMode::kND)
                 : nullptr;
             lastOutput = scatter ? scatter->getOutput(0) : nullptr;
@@ -5280,7 +5403,13 @@ namespace Garnet {
                 opName == "add" ? ElementWiseOperation::kSUM :
                 opName == "minus" ? ElementWiseOperation::kSUB :
                 ElementWiseOperation::kPROD;
-            auto* layer = network->addElementWise(*left, *right, operation);
+            ITensor* compatibleRight = right;
+            auto* rightCast = right->getType() != left->getType()
+                ? network->addCast(*right, left->getType())
+                : nullptr;
+            if (rightCast) compatibleRight = rightCast->getOutput(0);
+            auto* layer = network->addElementWise(
+                *left, *compatibleRight, operation);
             if (!layer || !layer->getOutput(0)) {
                 loweringError = "TensorRT elementwise lowering failed for " + opName;
                 return X::Value();
@@ -5397,8 +5526,12 @@ namespace Garnet {
             auto* plugin = new PagedKVPrefillWritePlugin(
                 pageSize, qHeads, kvHeads, headDim, pendingKVLayerIndex);
             ownedPlugins.push_back(plugin);
+            auto* sourceCast = source->getType() != DataType::kBF16
+                ? network->addCast(*source, DataType::kBF16)
+                : nullptr;
+            ITensor* pluginSource = sourceCast ? sourceCast->getOutput(0) : source;
             ITensor* pluginInputs[] = {
-                source,
+                pluginSource,
                 pendingKVKeyPages,
                 pendingKVValuePages,
                 pendingKVPageTable,
@@ -5437,8 +5570,12 @@ namespace Garnet {
                 pageSize, qHeads, kvHeads, headDim, pendingKVLayerIndex,
                 useActiveMask);
             ownedPlugins.push_back(plugin);
+            auto* sourceCast = source->getType() != DataType::kBF16
+                ? network->addCast(*source, DataType::kBF16)
+                : nullptr;
+            ITensor* pluginSource = sourceCast ? sourceCast->getOutput(0) : source;
             ITensor* pluginInputs[] = {
-                source,
+                pluginSource,
                 pendingKVKeyPages,
                 pendingKVValuePages,
                 pendingKVPageTable,
@@ -5446,7 +5583,7 @@ namespace Garnet {
                 pendingKVSlotPosition,
             };
             ITensor* maskedPluginInputs[] = {
-                source,
+                pluginSource,
                 pendingKVKeyPages,
                 pendingKVValuePages,
                 pendingKVPageTable,
@@ -5671,14 +5808,19 @@ namespace Garnet {
             lastOutput = combined ? combined->getOutput(0) : nullptr;
         }
         else if (opName == "qwen3_tts_pack_hidden_logits") {
-            ITensor* weight = GetOrCreateTRTWeight(keywordText("weight_name"));
-            weight = BroadcastMatrixWeight(weight, source->getDimensions().nbDims);
+            ITensor* weight = GetOrCreateTRTWeightFP32(keywordText("weight_name"));
+            auto* sourceCast = source->getType() == DataType::kFLOAT
+                ? nullptr : network->addCast(*source, DataType::kFLOAT);
+            ITensor* sourceFloat = sourceCast ? sourceCast->getOutput(0) : source;
+            weight = BroadcastMatrixWeight(
+                weight, sourceFloat->getDimensions().nbDims);
             auto* logits = weight
                 ? network->addMatrixMultiply(
-                    *source, MatrixOperation::kNONE,
+                    *sourceFloat, MatrixOperation::kNONE,
                     *weight, MatrixOperation::kTRANSPOSE)
                 : nullptr;
-            ITensor* tensors[] = {source, logits ? logits->getOutput(0) : nullptr};
+            ITensor* tensors[] = {
+                sourceFloat, logits ? logits->getOutput(0) : nullptr};
             auto* packed = tensors[1]
                 ? network->addConcatenation(tensors, 2)
                 : nullptr;
@@ -5908,9 +6050,14 @@ namespace Garnet {
                     const Dims w = projectWeight->getDimensions();
                     projectShape->setReshapeDimensions(Dims{2, {w.d[0], w.d[1]}});
                 }
-                auto* projected = projectShape ? network->addMatrixMultiply(
+                ITensor* broadcastProject = projectShape
+                    ? BroadcastMatrixWeight(
+                        projectShape->getOutput(0),
+                        gather->getOutput(0)->getDimensions().nbDims)
+                    : nullptr;
+                auto* projected = broadcastProject ? network->addMatrixMultiply(
                     *gather->getOutput(0), MatrixOperation::kNONE,
-                    *projectShape->getOutput(0), MatrixOperation::kTRANSPOSE) : nullptr;
+                    *broadcastProject, MatrixOperation::kTRANSPOSE) : nullptr;
                 ITensor* value = projected ? projected->getOutput(0) : nullptr;
                 if (!value) {
                     loweringError = "Qwen3-TTS RVQ output projection failed";
@@ -5939,47 +6086,66 @@ namespace Garnet {
                 ? capturedWeightIndex->Find(keywordText("weight_name")) : nullptr;
             if (inputDims.nbDims != 3 || !kernel || !bias || !metadata ||
                 metadata->shape.size() != 3 || kernelSize <= 0) {
-                loweringError = "Qwen3-TTS convolution metadata is invalid";
+                loweringError = "Qwen3-TTS convolution metadata is invalid: " +
+                    keywordText("weight_name") + " input_rank=" +
+                    std::to_string(inputDims.nbDims) + " detail=" + loweringError;
                 return X::Value();
             }
             auto* toChannels = network->addShuffle(*source);
             if (toChannels) {
                 Permutation p{}; p.order[0] = 0; p.order[1] = 2; p.order[2] = 1;
                 toChannels->setFirstTranspose(p);
+                toChannels->setReshapeDimensions(Dims{4, {
+                    inputDims.d[0], inputDims.d[2], 1, inputDims.d[1]}});
+            }
+            auto* kernel2d = kernel ? network->addShuffle(*kernel) : nullptr;
+            if (kernel2d) {
+                kernel2d->setReshapeDimensions(Dims{4, {
+                    static_cast<int>(metadata->shape[0]),
+                    static_cast<int>(metadata->shape[1]), 1, kernelSize}});
             }
             const int outputChannels = transposed
                 ? static_cast<int>(metadata->shape[1]) * groups
                 : static_cast<int>(metadata->shape[0]);
             Weights empty{kernel->getType(), nullptr, 0};
-            Dims kernelDims{1, {kernelSize}};
-            Dims strideDims{1, {strideValue}};
+            DimsHW kernelDims{1, kernelSize};
+            DimsHW strideDims{1, strideValue};
             ILayer* layer = nullptr;
             if (transposed) {
-                auto* deconv = toChannels ? network->addDeconvolutionNd(
+                auto* deconv = toChannels && kernel2d ? network->addDeconvolutionNd(
                     *toChannels->getOutput(0), outputChannels,
                     kernelDims, empty, empty) : nullptr;
                 if (deconv) {
-                    deconv->setInput(1, *kernel); deconv->setInput(2, *bias);
+                    deconv->setInput(1, *kernel2d->getOutput(0));
+                    deconv->setInput(2, *bias);
                     deconv->setStrideNd(strideDims);
                     deconv->setPostPadding(
-                        Dims{1, {kernelSize - strideValue}});
+                        DimsHW{0, kernelSize - strideValue});
                 }
                 layer = deconv;
             }
             else {
-                auto* conv = toChannels ? network->addConvolutionNd(
+                auto* conv = toChannels && kernel2d ? network->addConvolutionNd(
                     *toChannels->getOutput(0), outputChannels,
                     kernelDims, empty, empty) : nullptr;
                 if (conv) {
-                    conv->setInput(1, *kernel); conv->setInput(2, *bias);
-                    conv->setDilationNd(Dims{1, {dilation}});
+                    conv->setInput(1, *kernel2d->getOutput(0));
+                    conv->setInput(2, *bias);
+                    conv->setDilationNd(DimsHW{1, dilation});
                     conv->setNbGroups(groups);
                     conv->setPrePadding(
-                        Dims{1, {(kernelSize - 1) * dilation}});
+                        DimsHW{0, (kernelSize - 1) * dilation});
                 }
                 layer = conv;
             }
-            auto* toTokens = layer ? network->addShuffle(*layer->getOutput(0)) : nullptr;
+            auto* squeeze = layer ? network->addShuffle(*layer->getOutput(0)) : nullptr;
+            if (squeeze) {
+                const Dims outputDims = layer->getOutput(0)->getDimensions();
+                squeeze->setReshapeDimensions(Dims{3, {
+                    outputDims.d[0], outputDims.d[1], outputDims.d[3]}});
+            }
+            auto* toTokens = squeeze
+                ? network->addShuffle(*squeeze->getOutput(0)) : nullptr;
             if (toTokens) {
                 Permutation p{}; p.order[0] = 0; p.order[1] = 2; p.order[2] = 1;
                 toTokens->setFirstTranspose(p);
@@ -6297,15 +6463,12 @@ namespace Garnet {
                 return X::Value();
             }
             const std::string weightName = weightNameItem->val.ToString();
-            ITensor* weight = GetOrCreateTRTWeight(weightName);
+            ITensor* weight = GetOrCreateTRTWeightFP32(weightName);
             if (!weight) {
                 loweringError = "embedding weight " + weightName + ": " + loweringError;
                 return X::Value();
             }
             auto* layer = network->addGather(*weight, *source, 0);
-            if (layer) {
-                layer->setName("embedding");
-            }
             lastOutput = layer ? layer->getOutput(0) : nullptr;
         }
         else if (isLinear) {
@@ -6314,11 +6477,24 @@ namespace Garnet {
                 loweringError = opName + " operation is missing weight_name";
                 return X::Value();
             }
-            ITensor* weight = GetOrCreateTRTWeight(weightNameItem->val.ToString());
+            const std::string projectionWeightName =
+                weightNameItem->val.ToString();
+            const bool predictorWeight = projectionWeightName.rfind(
+                "talker.code_predictor.", 0) == 0;
+            ITensor* weight = opName == "lm_head" || predictorWeight
+                ? GetOrCreateTRTWeightFP32(weightNameItem->val.ToString())
+                : GetOrCreateTRTWeight(weightNameItem->val.ToString());
             ITensor* projectionInput = source;
             const DataType sourceType = source->getType();
-            if (weight && weight->getType() != sourceType) {
-                auto* cast = network->addCast(*source, weight->getType());
+            const DataType projectionType = opName == "lm_head"
+                ? DataType::kFLOAT
+                : (weight ? weight->getType() : sourceType);
+            if (weight && weight->getType() != projectionType) {
+                auto* cast = network->addCast(*weight, projectionType);
+                weight = cast ? cast->getOutput(0) : nullptr;
+            }
+            if (weight && source->getType() != projectionType) {
+                auto* cast = network->addCast(*source, projectionType);
                 projectionInput = cast ? cast->getOutput(0) : nullptr;
             }
             weight = projectionInput
@@ -6337,7 +6513,7 @@ namespace Garnet {
                 return X::Value();
             }
             lastOutput = projection->getOutput(0);
-            if (lastOutput->getType() != sourceType) {
+            if (opName != "lm_head" && lastOutput->getType() != sourceType) {
                 auto* cast = network->addCast(*lastOutput, sourceType);
                 lastOutput = cast ? cast->getOutput(0) : nullptr;
                 if (!lastOutput) {
@@ -6351,6 +6527,11 @@ namespace Garnet {
                 const std::string biasName = biasNameItem->val.ToString();
                 if (!biasName.empty()) {
                     ITensor* bias = GetOrCreateTRTWeight(biasName);
+                    if (bias && bias->getType() != lastOutput->getType()) {
+                        auto* cast = network->addCast(
+                            *bias, lastOutput->getType());
+                        bias = cast ? cast->getOutput(0) : nullptr;
+                    }
                     bias = BroadcastLastDimension(
                         bias,
                         lastOutput->getDimensions().nbDims,
@@ -6373,7 +6554,10 @@ namespace Garnet {
                 loweringError = "layer_norm requires weight_name and bias_name";
                 return X::Value();
             }
-            ITensor* scale = GetOrCreateTRTWeight(weightNameItem->val.ToString());
+            const std::string scaleName = weightNameItem->val.ToString();
+            ITensor* scale = scaleName.rfind("talker.code_predictor.", 0) == 0
+                ? GetOrCreateTRTWeightFP32(scaleName)
+                : GetOrCreateTRTWeight(scaleName);
             ITensor* bias = GetOrCreateTRTWeight(biasNameItem->val.ToString());
             const Dims sourceDimensions = source->getDimensions();
             scale = BroadcastLastDimension(scale, sourceDimensions.nbDims, "layer_norm_scale_broadcast");
@@ -6399,7 +6583,10 @@ namespace Garnet {
                 loweringError = "rms_norm requires weight_name";
                 return X::Value();
             }
-            ITensor* scale = GetOrCreateTRTWeight(weightNameItem->val.ToString());
+            const std::string scaleName = weightNameItem->val.ToString();
+            ITensor* scale = scaleName.rfind("talker.code_predictor.", 0) == 0
+                ? GetOrCreateTRTWeightFP32(scaleName)
+                : GetOrCreateTRTWeight(scaleName);
             const Dims sourceDimensions = source->getDimensions();
             scale = BroadcastLastDimension(scale, sourceDimensions.nbDims, "rms_norm_scale_broadcast");
             if (!scale || sourceDimensions.nbDims <= 0) {
@@ -6460,7 +6647,12 @@ namespace Garnet {
         else if (opName == "qwen3_text_qkv_packed") {
             auto weight = [&](const char* name) -> ITensor* {
                 auto* item = kwParams.find(name);
-                return item ? GetOrCreateTRTWeight(item->val.ToString()) : nullptr;
+                if (!item || item->val.IsNone()) return nullptr;
+                const std::string weightName = item->val.ToString();
+                if (weightName.empty()) return nullptr;
+                return weightName.rfind("talker.code_predictor.", 0) == 0
+                    ? GetOrCreateTRTWeightFP32(weightName)
+                    : GetOrCreateTRTWeight(weightName);
             };
             ITensor* qWeight = weight("q_weight_name");
             ITensor* kWeight = weight("k_weight_name");
@@ -6617,12 +6809,18 @@ namespace Garnet {
         else if (opName == "qwen3_mlp_gate_up_swiglu_packed") {
             auto* gateNameItem = kwParams.find("gate_weight_name");
             auto* upNameItem = kwParams.find("up_weight_name");
-            ITensor* gateWeight = gateNameItem
-                ? GetOrCreateTRTWeight(gateNameItem->val.ToString())
-                : nullptr;
-            ITensor* upWeight = upNameItem
-                ? GetOrCreateTRTWeight(upNameItem->val.ToString())
-                : nullptr;
+            const std::string gateName = gateNameItem
+                ? gateNameItem->val.ToString() : std::string();
+            const std::string upName = upNameItem
+                ? upNameItem->val.ToString() : std::string();
+            ITensor* gateWeight = gateNameItem &&
+                gateName.rfind("talker.code_predictor.", 0) == 0
+                ? GetOrCreateTRTWeightFP32(gateName)
+                : (gateNameItem ? GetOrCreateTRTWeight(gateName) : nullptr);
+            ITensor* upWeight = upNameItem &&
+                upName.rfind("talker.code_predictor.", 0) == 0
+                ? GetOrCreateTRTWeightFP32(upName)
+                : (upNameItem ? GetOrCreateTRTWeight(upName) : nullptr);
             const Dims gateDimensions = gateWeight
                 ? gateWeight->getDimensions()
                 : Dims{};

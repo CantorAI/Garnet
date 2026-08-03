@@ -32,7 +32,7 @@ namespace
 {
     constexpr const char* kGraphCacheMagic = "GARNET_RUNTIME_GRAPH_CACHE_V2";
     constexpr const char* kRuntimeSchema =
-        "compiled_xmodel_runtime_v23_qwen3_audio";
+        "compiled_xmodel_runtime_v24_qwen3_tts_predictor_fp32";
 
     std::string ReadFile(const std::filesystem::path& path)
     {
@@ -883,13 +883,35 @@ namespace Garnet
             }
             m_decodeRuntime = std::move(decodeResult.first);
             if (needsTTSRuntimes) {
+                int talkerHiddenSize = 0;
+                try {
+                    const auto ttsConfig = nlohmann::json::parse(ReadFile(
+                        std::filesystem::path(m_weightsLocation) / "config.json"));
+                    talkerHiddenSize = ttsConfig.at("talker_config")
+                        .at("hidden_size").get<int>();
+                }
+                catch (const std::exception& exception) {
+                    m_errorCode = "tts_config_invalid";
+                    m_errorMessage = std::string(
+                        "Qwen3-TTS talker hidden size is unavailable: ") +
+                        exception.what();
+                    return false;
+                }
+                if (talkerHiddenSize <= 0) {
+                    m_errorCode = "tts_config_invalid";
+                    m_errorMessage = "Qwen3-TTS talker hidden size is invalid";
+                    return false;
+                }
                 auto auxiliary = std::make_shared<CompiledModelRuntime>();
+                FusionPartitionOptions predictorOptions = m_partitionOptions;
+                predictorOptions.builderOptimizationLevel = 0;
                 if (!auxiliary->Initialize(
                         (rootPath.parent_path() / "code_predictor.x").string(),
                         (std::filesystem::path(m_cacheDirectory) / "code_predictor").string(),
                         m_weightsLocation, "Qwen3TTSCodePredictor", "",
-                        {{1, 1, 1024}, {1, 1}}, {"bfloat16", "int64"},
-                        m_partitionOptions, m_backend, m_precision)) {
+                        {{1, 1, talkerHiddenSize}, {1, 1}},
+                        {"float32", "int64"},
+                        predictorOptions, m_backend, m_precision)) {
                     X::Dict status(auxiliary->Status());
                     m_errorCode = "tts_code_predictor_initialization_failed";
                     m_errorMessage = status["error_message"].ToString();
@@ -1503,7 +1525,8 @@ namespace Garnet
             ttsFrontendInputs = BuildQwenTTSCompiledInputs(
                 m_weightsLocation, requestDict["text"].ToString(),
                 requestDict["speaker"].ToString(),
-                requestDict["language"].ToString(), m_inputShapes,
+                requestDict["language"].ToString(),
+                requestDict["instruct"].ToString(), m_inputShapes,
                 m_reusablePrefillKeyCache, m_reusablePrefillValueCache);
             if (!ttsFrontendInputs.inputs.IsList()) {
                 result->Set("status", X::Value("error"));
@@ -1586,7 +1609,6 @@ namespace Garnet
                 profileFrames = std::max(1, std::atoi(value));
             }
             const int maxFrames = std::min(requestedFrames, profileFrames);
-            const int hiddenSize = 1024;
             const int vocabSize = 3072;
             const bool stochastic = !requestDict["do_sample"].IsValid() ||
                 requestDict["do_sample"].ToLongLong() != 0;
@@ -1613,8 +1635,10 @@ namespace Garnet
                     return false;
                 }
                 X::Tensor packed(packedValue);
+                const int hiddenSize = packed->GetDimCount() == 3
+                    ? packed->GetDimSize(2) - vocabSize : 0;
                 if (packed->GetDimCount() != 3 ||
-                    packed->GetDimSize(2) != hiddenSize + vocabSize ||
+                    hiddenSize <= 0 ||
                     row < 0 || row >= packed->GetDimSize(1)) {
                     errorText = "talker packed output has incompatible dimensions";
                     return false;

@@ -86,13 +86,15 @@ def Qwen3TTSCodePredictor(talker_hidden, first_code, weights, config):
         "embedding", weight_name="talker.model.codec_embedding.weight")
     sequence = talker_hidden * T.binary_op("concat_sequence") * first_embedding
     codes = first_code
-    for group in range(predictor.num_code_groups - 1):
+    for group in range(predictor.num_code_groups - 2):
         next_code = predict(sequence, predictor, group)
         codes = codes * T.binary_op("concat_tokens") * next_code
-        if group < predictor.num_code_groups - 2:
-            next_embedding = next_code * T.unary_op(
-                "embedding",
-                weight_name="talker.code_predictor.model.codec_embedding." +
-                    str(group) + ".weight")
-            sequence = sequence * T.binary_op("concat_sequence") * next_embedding
+        next_embedding = next_code * T.unary_op(
+            "embedding",
+            weight_name="talker.code_predictor.model.codec_embedding." +
+                str(group) + ".weight")
+        sequence = sequence * T.binary_op("concat_sequence") * next_embedding
+    final_group = predictor.num_code_groups - 2
+    next_code = predict(sequence, predictor, final_group)
+    codes = codes * T.binary_op("concat_tokens") * next_code
     return codes

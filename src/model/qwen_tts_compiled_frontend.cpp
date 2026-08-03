@@ -74,6 +74,7 @@ namespace Garnet
     QwenTTSCompiledInputs BuildQwenTTSCompiledInputs(
         const std::string& modelDirectory, const std::string& text,
         const std::string& speaker, const std::string& language,
+        const std::string& instruct,
         const std::vector<std::vector<int>>& profileShapes,
         X::Value reusableKeyCache, X::Value reusableValueCache)
     {
@@ -95,6 +96,11 @@ namespace Garnet
                 throw std::runtime_error("Qwen3-TTS config.json is unavailable");
             }
             const auto& talker = config.at("talker_config");
+            const std::string modelSize = config.value("tts_model_size", "");
+            if (!instruct.empty() && modelSize == "0b6") {
+                throw std::invalid_argument(
+                    "Qwen3-TTS 0.6B does not support instruction control");
+            }
             const int64_t ttsBos = config.value("tts_bos_token_id", 151672);
             const int64_t ttsEos = config.value("tts_eos_token_id", 151673);
             const int64_t ttsPad = config.value("tts_pad_token_id", 151671);
@@ -156,6 +162,13 @@ namespace Garnet
             codecPrefix.push_back(codecBos);
 
             std::vector<std::pair<int64_t, int64_t>> aligned;
+            if (!instruct.empty()) {
+                const auto instructIds = tokenizer->Encode(
+                    "<|im_start|>user\n" + instruct + "<|im_end|>\n", false);
+                for (int64_t token : instructIds) {
+                    aligned.emplace_back(token, -1);
+                }
+            }
             for (size_t index = 0; index < 3; ++index) {
                 aligned.emplace_back(textIds[index], -1);
             }

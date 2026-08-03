@@ -73,6 +73,10 @@ namespace Garnet
             const FusionPartitionOptions& partitionOptions = {},
             const std::string& backend = "tensorrt",
             const std::string& precision = "");
+        X::Value CompiledRuntimeStatus()
+        {
+            return mCompiledRuntime ? mCompiledRuntime->Status() : X::Value();
+        }
         void RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
             X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
         void ReleaseRuntime(X::XRuntime* rt, X::XObj* pContext,

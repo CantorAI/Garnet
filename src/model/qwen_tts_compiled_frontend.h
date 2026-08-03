@@ -20,6 +20,7 @@ namespace Garnet
         const std::string& text,
         const std::string& speaker,
         const std::string& language,
+        const std::string& instruct,
         const std::vector<std::vector<int>>& profileShapes,
         X::Value reusableKeyCache = X::Value(),
         X::Value reusableValueCache = X::Value());

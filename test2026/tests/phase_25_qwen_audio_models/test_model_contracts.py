@@ -34,37 +34,44 @@ require(asr / "decode.x", [
     "paged_kv_decode_bf16",
 ])
 
-tts = ROOT / "xModel" / "qwen3" / "tts_0_6b_custom_voice"
-tts_manifest = json.loads((tts / "model.json").read_text(encoding="utf-8"))
-assert tts_manifest["task"] == "text-to-speech"
-assert tts_manifest["entrypoints"]["prefill"]["frontend"] == "qwen3_tts"
-assert tts_manifest["weights"]["codec_subdirectory"] == "speech_tokenizer"
-require(tts / "talker_common.x", [
+tts_models = [
+    ROOT / "xModel" / "qwen3" / "tts_12hz_0_6b_custom_voice",
+    ROOT / "xModel" / "qwen3" / "tts_12hz_1_7b_custom_voice",
+]
+for tts in tts_models:
+    tts_manifest = json.loads((tts / "model.json").read_text(encoding="utf-8"))
+    assert tts_manifest["task"] == "text-to-speech"
+    assert tts_manifest["entrypoints"]["prefill"]["frontend"] == "qwen3_tts"
+    assert tts_manifest["weights"]["codec_subdirectory"] == "speech_tokenizer"
+    assert tts_manifest["capabilities"]["instruction_control"] == (
+        "1.7B" in tts_manifest["id"]
+    )
+    require(tts / "talker_common.x", [
     "qwen3_tts_aligned_prompt_embedding",
     "qwen3_tts_pack_hidden_logits",
     "qwen3_tts_decode_embedding",
     "talker.model.text_embedding.weight",
     "talker.codec_head.weight",
-])
-require(tts / "talker_prefill.x", [
+    ])
+    require(tts / "talker_prefill.x", [
     "Qwen3TTSTalkerPrefill",
     "paged_kv_prefill_write_bf16",
-])
-require(tts / "talker_decode.x", [
+    ])
+    require(tts / "talker_decode.x", [
     "Qwen3TTSTalkerDecode",
     "paged_kv_decode_bf16",
-])
-require(tts / "code_predictor.x", [
+    ])
+    require(tts / "code_predictor.x", [
     "Qwen3TTSCodePredictor",
     "qwen3_tts_dense_attention_packed",
     "num_code_groups",
-])
-require(tts / "codec_decode.x", [
+    ])
+    require(tts / "codec_decode.x", [
     "Qwen3TTSCodecDecode",
     "qwen3_tts_rvq_decode",
     "qwen3_tts_causal_transconv1d",
     "qwen3_tts_snake_beta",
     "qwen3_tts_waveform",
-])
+    ])
 
 print("Qwen3 ASR and TTS XLang model contracts passed")
