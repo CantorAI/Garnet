@@ -139,6 +139,7 @@ namespace Garnet
 		int m_servingMaxOutputTokens = 256;
 		mutable std::mutex m_servingMutex;
 		ModelManager m_modelManager;
+		ModelManager m_accelerationManager;
 		bool LoadModelFromFile(std::string modelPath, X::Dict& model);
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
@@ -187,6 +188,14 @@ namespace Garnet
 			APISET().AddVarFunc("remove_installed_model_json", &GarnetAPI::RemoveInstalledModelJson);
 			APISET().AddVarFunc("serve_installed_model_json", &GarnetAPI::ServeInstalledModelJson);
 			APISET().AddVarFunc("_run_model_install_job", &GarnetAPI::RunModelInstallJob);
+			APISET().AddVarFunc("detect_acceleration_json", &GarnetAPI::DetectAccelerationJson);
+			APISET().AddVarFunc("configure_acceleration_manager_json", &GarnetAPI::ConfigureAccelerationManagerJson);
+			APISET().AddVarFunc("list_acceleration_packages_json", &GarnetAPI::ListAccelerationPackagesJson);
+			APISET().AddVarFunc("prepare_acceleration_json", &GarnetAPI::PrepareAccelerationJson);
+			APISET().AddVarFunc("list_installed_accelerations_json", &GarnetAPI::ListInstalledAccelerationsJson);
+			APISET().AddVarFunc("activate_acceleration_json", &GarnetAPI::ActivateAccelerationJson);
+			APISET().AddVarFunc("acceleration_install_status_json", &GarnetAPI::AccelerationInstallStatusJson);
+			APISET().AddVarFunc("cancel_acceleration_install_json", &GarnetAPI::CancelAccelerationInstallJson);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
 			APISET().AddClass<0, QwenVLRequestContext>("QwenVLRequestContext");
@@ -304,6 +313,22 @@ namespace Garnet
 		void ServeInstalledModelJson(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunModelInstallJob(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void DetectAccelerationJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ConfigureAccelerationManagerJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ListAccelerationPackagesJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void PrepareAccelerationJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ListInstalledAccelerationsJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ActivateAccelerationJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void AccelerationInstallStatusJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void CancelAccelerationInstallJson(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunTest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

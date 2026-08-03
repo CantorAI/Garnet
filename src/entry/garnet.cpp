@@ -6,6 +6,7 @@
 #include "../cuda/cuda_lib.h"
 #include "../tensor/tensor_helper.h"
 #include "../model/model_catalog.h"
+#include "../runtime/acceleration_detector.h"
 #include "../include/garnet_serving.h"
 #include "nlohmann/json.hpp"
 #include "xpackage.h"
@@ -16,6 +17,7 @@
 #include <regex>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <climits>
@@ -37,6 +39,70 @@ namespace
             {"error_code", code},
             {"error_message", message}
         }).dump();
+    }
+
+    bool ContainsString(const json& values, const std::string& wanted)
+    {
+        if (!values.is_array()) return false;
+        for (const auto& value : values) {
+            if (value.is_string() && value.get<std::string>() == wanted) return true;
+        }
+        return false;
+    }
+
+    json DecorateAccelerationCatalog(json catalog, const json& detection)
+    {
+        if (!catalog.contains("models") || !catalog["models"].is_array()) {
+            return catalog;
+        }
+        const json& nvidia = detection.value("nvidia", json::object());
+        const bool detected = nvidia.value("detected", false);
+        const bool lazyLoadingReady = detection.value(
+            "lazy_loading", json::object()).value("enabled", false);
+        const int driver = nvidia.value("driver_api_version", 0);
+        const std::string platform = detection.value("platform", "unknown");
+        std::vector<std::string> capabilities;
+        for (const auto& device : nvidia.value("devices", json::array())) {
+            capabilities.push_back(device.value("compute_capability", ""));
+        }
+
+        std::string recommended;
+        int bestPriority = INT_MIN;
+        int bestDriverFloor = INT_MIN;
+        for (auto& package : catalog["models"]) {
+            const json requirements = package.value("acceleration", json::object());
+            bool compatible = package.value("capability", "") == "acceleration" &&
+                requirements.value("vendor", "") == "nvidia" && detected &&
+                lazyLoadingReady &&
+                ContainsString(requirements.value("platforms", json::array()), platform) &&
+                driver >= requirements.value("minimum_driver_api", 0);
+            const json supported = requirements.value(
+                "compute_capabilities", json::array());
+            if (compatible && !supported.empty()) {
+                compatible = std::any_of(
+                    capabilities.begin(), capabilities.end(),
+                    [&supported](const std::string& capability) {
+                        return ContainsString(supported, capability);
+                    });
+            }
+            package["compatible"] = compatible;
+            package["recommended"] = false;
+            const int priority = requirements.value("priority", 0);
+            const int driverFloor = requirements.value("minimum_driver_api", 0);
+            if (compatible && (priority > bestPriority ||
+                (priority == bestPriority && driverFloor > bestDriverFloor))) {
+                recommended = package.value("id", "");
+                bestPriority = priority;
+                bestDriverFloor = driverFloor;
+            }
+        }
+        for (auto& package : catalog["models"]) {
+            package["recommended"] = !recommended.empty() &&
+                package.value("id", "") == recommended;
+        }
+        catalog["hardware"] = detection;
+        catalog["recommended_package_id"] = recommended;
+        return catalog;
     }
 
     int CopyJsonResult(
@@ -117,7 +183,12 @@ namespace
 namespace Garnet
 {
     GarnetAPI::GarnetAPI()
-        : m_modelManager()
+        : m_modelManager(),
+          m_accelerationManager(
+              {},
+              "https://app.garnetmodel.ai/api/v1/garnet/accelerations/catalog",
+              "https://app.garnetmodel.ai/api/v1/garnet/accelerations/catalog.sig",
+              "accelerations")
     {
     }
 }
@@ -2490,6 +2561,173 @@ namespace Garnet
         m_modelManager.RunInstallJob(
             rt, params[0].ToString(), params[1].ToString(), params[2].ToString());
         retValue = true;
+    }
+
+    void GarnetAPI::DetectAccelerationJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        try {
+            const json options = params.size() == 0
+                ? json::object()
+                : json::parse(params[0].ToString());
+            retValue = AccelerationDetector::DetectJson(
+                options.value("enable_nvidia", true));
+        }
+        catch (const std::exception& exception) {
+            retValue = GarnetJsonError("acceleration_detection_failed", exception.what());
+        }
+    }
+
+    void GarnetAPI::ConfigureAccelerationManagerJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = m_accelerationManager.Configure(
+            params.size() == 0 ? std::string("{}") : params[0].ToString());
+    }
+
+    void GarnetAPI::ListAccelerationPackagesJson(
+        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        try {
+            const bool refresh = params.size() > 0 && params[0].ToBool();
+            json catalog = json::parse(m_accelerationManager.ListRemote(rt, refresh));
+            if (catalog.value("status", "") == "error") {
+                retValue = catalog.dump();
+                return;
+            }
+            retValue = DecorateAccelerationCatalog(
+                std::move(catalog),
+                json::parse(AccelerationDetector::DetectJson())).dump();
+        }
+        catch (const std::exception& exception) {
+            retValue = GarnetJsonError("acceleration_catalog_unavailable", exception.what());
+        }
+    }
+
+    void GarnetAPI::PrepareAccelerationJson(
+        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        try {
+            const json options = params.size() == 0
+                ? json::object()
+                : json::parse(params[0].ToString());
+            const bool allowDownload = options.value("allow_download", true);
+            const json hardware = json::parse(AccelerationDetector::DetectJson(
+                options.value("enable_nvidia", true)));
+            if (!hardware.value("nvidia", json::object()).value("detected", false) ||
+                !hardware.value("lazy_loading", json::object()).value("enabled", false)) {
+                retValue = json({
+                    {"schema_version", 1},
+                    {"status", "cpu_ready"},
+                    {"backend", "openvino"},
+                    {"message", "No NVIDIA acceleration package is required"},
+                    {"hardware", hardware}
+                }).dump();
+                return;
+            }
+            json catalog = json::parse(m_accelerationManager.ListRemote(
+                rt, options.value("refresh", false)));
+            if (catalog.value("status", "") == "error") {
+                retValue = catalog.dump();
+                return;
+            }
+            catalog = DecorateAccelerationCatalog(
+                std::move(catalog),
+                hardware);
+            const std::string packageId = catalog.value("recommended_package_id", "");
+            if (packageId.empty()) {
+                retValue = json({
+                    {"schema_version", 1},
+                    {"status", "cpu_ready"},
+                    {"backend", "openvino"},
+                    {"message", "No compatible optional acceleration package was found"},
+                    {"hardware", catalog.value("hardware", json::object())}
+                }).dump();
+                return;
+            }
+
+            const json installed = json::parse(m_accelerationManager.ListInstalled());
+            std::string recommendedVersion;
+            for (const auto& package : catalog.value("models", json::array())) {
+                if (package.value("id", "") == packageId) {
+                    recommendedVersion = package.value("version", "");
+                    break;
+                }
+            }
+            for (const auto& package : installed.value("models", json::array())) {
+                if (package.value("id", "") == packageId &&
+                    package.value("version", "") == recommendedVersion) {
+                    retValue = AccelerationDetector::ActivateJson(
+                        package.value("install_root", ""));
+                    return;
+                }
+            }
+            if (!allowDownload) {
+                retValue = json({
+                    {"schema_version", 1},
+                    {"status", "available"},
+                    {"backend", "nvidia"},
+                    {"package_id", packageId},
+                    {"download_required", true}
+                }).dump();
+                return;
+            }
+            retValue = m_accelerationManager.StartInstall(
+                rt, packageId,
+                params.size() == 0 ? std::string("{}") : params[0].ToString());
+        }
+        catch (const std::exception& exception) {
+            retValue = GarnetJsonError("acceleration_prepare_failed", exception.what());
+        }
+    }
+
+    void GarnetAPI::AccelerationInstallStatusJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError(
+                "job_id_required", "acceleration_install_status_json requires a job ID");
+            return;
+        }
+        json status = json::parse(
+            m_accelerationManager.InstallStatus(params[0].ToString()));
+        if (status.value("phase", "") == "complete") {
+            const std::string packageId = status.value("model_id", "");
+            json activation = json::parse(AccelerationDetector::ActivateJson(
+                m_accelerationManager.InstalledModelRoot(packageId)));
+            status["activation"] = activation;
+            if (activation.value("status", "") != "ready") {
+                status["phase"] = "activation_error";
+                status["error"] = activation.value("message", "activation failed");
+            }
+        }
+        retValue = status.dump();
+    }
+
+    void GarnetAPI::CancelAccelerationInstallJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = params.size() == 0
+            ? GarnetJsonError("job_id_required", "cancel_acceleration_install_json requires a job ID")
+            : m_accelerationManager.CancelInstall(params[0].ToString());
+    }
+
+    void GarnetAPI::ListInstalledAccelerationsJson(
+        X::XRuntime*, X::XObj*, X::ARGS&, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = m_accelerationManager.ListInstalled();
+    }
+
+    void GarnetAPI::ActivateAccelerationJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError(
+                "package_id_required", "activate_acceleration_json requires a package ID");
+            return;
+        }
+        retValue = AccelerationDetector::ActivateJson(
+            m_accelerationManager.InstalledModelRoot(params[0].ToString()));
     }
 
     namespace

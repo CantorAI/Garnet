@@ -439,14 +439,20 @@ namespace Garnet
         }
     };
 
-    ModelManager::ModelManager(ProgressSink progressSink)
+    ModelManager::ModelManager(
+        ProgressSink progressSink,
+        std::string catalogUrl,
+        std::string catalogSignatureUrl,
+        std::string storeName)
         : m_progressSink(std::move(progressSink)),
-          m_catalogUrl(DefaultCatalogUrl),
-          m_catalogSignatureUrl(DefaultCatalogSignatureUrl)
+          m_catalogUrl(catalogUrl.empty() ? DefaultCatalogUrl : std::move(catalogUrl)),
+          m_catalogSignatureUrl(catalogSignatureUrl.empty()
+              ? DefaultCatalogSignatureUrl
+              : std::move(catalogSignatureUrl))
     {
         const fs::path base = fs::temp_directory_path() / "cantorai-garnet";
-        m_installRoot = base / "models";
-        m_cacheRoot = base / "cache";
+        m_installRoot = base / storeName;
+        m_cacheRoot = base / "cache" / storeName;
     }
 
     void ModelManager::SetProgressSink(ProgressSink progressSink)
