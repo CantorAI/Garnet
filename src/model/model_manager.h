@@ -17,7 +17,11 @@ namespace Garnet
     public:
         using ProgressSink = std::function<void(const std::string&)>;
 
-        explicit ModelManager(ProgressSink progressSink = {});
+        explicit ModelManager(
+            ProgressSink progressSink = {},
+            std::string catalogUrl = {},
+            std::string catalogSignatureUrl = {},
+            std::string storeName = "models");
         void SetProgressSink(ProgressSink progressSink);
 
         std::string Configure(const std::string& optionsJson);
