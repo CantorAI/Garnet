@@ -4,6 +4,7 @@
 #include "safetensors_index.h"
 #include "trt_builder.h"
 
+#include <cstdint>
 #include <mutex>
 #include <memory>
 #include <string>
@@ -33,6 +34,8 @@ namespace Garnet
         std::string m_weightsLocation;
         std::string m_entryFunction;
         std::string m_frontend;
+        std::string m_backend = "tensorrt";
+        std::string m_precision = "bf16";
         std::vector<std::vector<int>> m_inputShapes;
         FusionPartitionOptions m_partitionOptions;
         std::string m_state = "uninitialized";
@@ -55,12 +58,18 @@ namespace Garnet
         double m_frontendPreparationMs = 0.0;
         bool m_enginesPrepared = false;
         bool m_frontendPrepared = false;
+        bool m_cudaGraphEnabled = false;
         Diagnostics m_diagnostics;
         std::shared_ptr<CompiledModelRuntime> m_decodeRuntime;
+        std::shared_ptr<CompiledModelRuntime> m_auxRuntime;
+        std::shared_ptr<CompiledModelRuntime> m_codecRuntime;
         void* m_sampleTokenDevice = nullptr;
         void* m_sampleValueDevice = nullptr;
+        int m_sampleCapacity = 0;
         X::Value m_reusableExecutionOutput;
-
+        X::Value m_reusablePrefillKeyCache;
+        X::Value m_reusablePrefillValueCache;
+        std::uint64_t m_openVinoSessionId = 0;
     public:
         ~CompiledModelRuntime();
 
@@ -72,10 +81,13 @@ namespace Garnet
             const std::string& frontend,
             const std::vector<std::vector<int>>& inputShapes,
             const std::vector<std::string>& inputDataTypes,
-            const FusionPartitionOptions& partitionOptions = {});
+            const FusionPartitionOptions& partitionOptions = {},
+            const std::string& backend = "tensorrt",
+            const std::string& precision = "");
 
         X::Value Status() const;
         X::Value Forward(X::Value request);
         X::Value DebugProbe(const std::string& probe, X::Value argument);
+        void ReleaseDeviceMemory();
     };
 }

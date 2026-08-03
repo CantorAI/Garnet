@@ -7,6 +7,8 @@ namespace Garnet::Image::Cuda
 {
     namespace
     {
+        thread_local NvJpegDecoder* g_threadDecoder = nullptr;
+
         cudaError_t NvJpegToCuda(nvjpegStatus_t status)
         {
             return status == NVJPEG_STATUS_SUCCESS ? cudaSuccess : cudaErrorUnknown;
@@ -175,8 +177,16 @@ namespace Garnet::Image::Cuda
         GpuImageRGB8* result,
         std::string* error)
     {
-        static thread_local NvJpegDecoder decoder;
-        return decoder.Decode(jpegData, jpegSize, stream, result, error);
+        if (!g_threadDecoder) {
+            g_threadDecoder = new NvJpegDecoder();
+        }
+        return g_threadDecoder->Decode(jpegData, jpegSize, stream, result, error);
+    }
+
+    void ShutdownThreadNvJpegDecoder()
+    {
+        delete g_threadDecoder;
+        g_threadDecoder = nullptr;
     }
 
     void FreeDecodedImage(GpuImageRGB8* result)

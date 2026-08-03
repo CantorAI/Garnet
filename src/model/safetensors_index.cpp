@@ -4,6 +4,8 @@
 
 #include <fstream>
 #include <limits>
+#include <unordered_map>
+#include <unordered_set>
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -134,85 +136,153 @@ namespace Garnet
         m_tensors.clear();
 
         std::error_code filesystemError;
-        const std::uint64_t fileSize = std::filesystem::file_size(filePath, filesystemError);
-        if (filesystemError || fileSize < sizeof(std::uint64_t)) {
-            errorMessage = "safetensors file is missing or too small";
-            return false;
-        }
-
-        std::ifstream stream(filePath, std::ios::binary);
-        std::uint64_t headerSize = 0;
-        stream.read(reinterpret_cast<char*>(&headerSize), sizeof(headerSize));
-        constexpr std::uint64_t kMaximumHeaderSize = 256ULL << 20;
-        if (!stream || headerSize == 0 || headerSize > kMaximumHeaderSize ||
-            headerSize > fileSize - sizeof(headerSize)) {
-            errorMessage = "invalid safetensors header length";
-            return false;
-        }
-
-        std::string header(static_cast<size_t>(headerSize), '\0');
-        stream.read(header.data(), static_cast<std::streamsize>(header.size()));
-        if (!stream) {
-            errorMessage = "failed to read safetensors header";
-            return false;
-        }
-
-        nlohmann::json root;
-        try {
-            root = nlohmann::json::parse(header);
-        }
-        catch (const std::exception& exception) {
-            errorMessage = std::string("invalid safetensors JSON header: ") + exception.what();
-            return false;
-        }
-        if (!root.is_object()) {
-            errorMessage = "safetensors header root must be an object";
-            return false;
-        }
-
-        m_dataStart = sizeof(headerSize) + headerSize;
-        for (auto iterator = root.begin(); iterator != root.end(); ++iterator) {
-            if (iterator.key() == "__metadata__") {
-                continue;
+        std::filesystem::path resolvedPath = filePath;
+        if (std::filesystem::is_directory(resolvedPath, filesystemError)) {
+            const auto singleFile = resolvedPath / "model.safetensors";
+            const auto indexFile = resolvedPath / "model.safetensors.index.json";
+            if (std::filesystem::is_regular_file(singleFile, filesystemError)) {
+                resolvedPath = singleFile;
             }
-            const auto& value = iterator.value();
-            if (!value.is_object() || !value.contains("dtype") ||
-                !value.contains("shape") || !value.contains("data_offsets") ||
-                !value["dtype"].is_string() || !value["shape"].is_array() ||
-                !value["data_offsets"].is_array() || value["data_offsets"].size() != 2) {
-                errorMessage = "invalid safetensors tensor metadata: " + iterator.key();
+            else {
+                filesystemError.clear();
+                resolvedPath = indexFile;
+            }
+        }
+        resolvedPath = std::filesystem::absolute(resolvedPath).lexically_normal();
+
+        std::unordered_map<std::string, std::unordered_set<std::string>> expectedByFile;
+        const bool isShardIndex = resolvedPath.extension() == ".json";
+        if (isShardIndex) {
+            std::ifstream indexStream(resolvedPath);
+            nlohmann::json indexRoot;
+            try {
+                indexStream >> indexRoot;
+            }
+            catch (const std::exception& exception) {
+                errorMessage = std::string("invalid safetensors index JSON: ") + exception.what();
                 return false;
             }
-
-            SafeTensorMetadata metadata;
-            metadata.dataType = value["dtype"].get<std::string>();
-            for (const auto& dimension : value["shape"]) {
-                if (!dimension.is_number_integer() || dimension.get<long long>() < 0) {
-                    errorMessage = "invalid safetensors shape: " + iterator.key();
+            if (!indexStream || !indexRoot.is_object() ||
+                !indexRoot.contains("weight_map") || !indexRoot["weight_map"].is_object()) {
+                errorMessage = "safetensors index must contain an object weight_map";
+                return false;
+            }
+            for (auto iterator = indexRoot["weight_map"].begin();
+                 iterator != indexRoot["weight_map"].end(); ++iterator) {
+                if (!iterator.value().is_string()) {
+                    errorMessage = "safetensors weight_map values must be filenames";
                     return false;
                 }
-                metadata.shape.push_back(dimension.get<long long>());
+                expectedByFile[iterator.value().get<std::string>()].insert(iterator.key());
             }
-            const std::uint64_t begin = value["data_offsets"][0].get<std::uint64_t>();
-            const std::uint64_t end = value["data_offsets"][1].get<std::uint64_t>();
-            if (end < begin || end > fileSize - m_dataStart) {
-                errorMessage = "safetensors data range exceeds file: " + iterator.key();
+        }
+        else {
+            expectedByFile[resolvedPath.filename().string()] = {};
+        }
+
+        auto parseTensorFile = [&](
+            const std::filesystem::path& tensorFile,
+            const std::unordered_set<std::string>& expected) -> bool {
+            std::error_code fileError;
+            const std::uint64_t fileSize =
+                std::filesystem::file_size(tensorFile, fileError);
+            if (fileError || fileSize < sizeof(std::uint64_t)) {
+                errorMessage = "safetensors file is missing or too small: " +
+                    tensorFile.string();
                 return false;
             }
-            metadata.dataOffset = m_dataStart + begin;
-            metadata.dataSize = end - begin;
-            if (metadata.dataSize > std::numeric_limits<std::uint64_t>::max() - m_tensorBytes) {
-                errorMessage = "safetensors tensor byte count overflow";
+            std::ifstream stream(tensorFile, std::ios::binary);
+            std::uint64_t headerSize = 0;
+            stream.read(reinterpret_cast<char*>(&headerSize), sizeof(headerSize));
+            constexpr std::uint64_t kMaximumHeaderSize = 256ULL << 20;
+            if (!stream || headerSize == 0 || headerSize > kMaximumHeaderSize ||
+                headerSize > fileSize - sizeof(headerSize)) {
+                errorMessage = "invalid safetensors header length: " + tensorFile.string();
                 return false;
             }
-            m_tensorBytes += metadata.dataSize;
-            m_tensors.emplace(iterator.key(), std::move(metadata));
+            std::string header(static_cast<size_t>(headerSize), '\0');
+            stream.read(header.data(), static_cast<std::streamsize>(header.size()));
+            if (!stream) {
+                errorMessage = "failed to read safetensors header: " + tensorFile.string();
+                return false;
+            }
+            nlohmann::json root;
+            try {
+                root = nlohmann::json::parse(header);
+            }
+            catch (const std::exception& exception) {
+                errorMessage = std::string("invalid safetensors JSON header: ") + exception.what();
+                return false;
+            }
+            if (!root.is_object()) {
+                errorMessage = "safetensors header root must be an object";
+                return false;
+            }
+            const std::uint64_t dataStart = sizeof(headerSize) + headerSize;
+            if (!isShardIndex) m_dataStart = dataStart;
+            size_t foundExpected = 0;
+            for (auto iterator = root.begin(); iterator != root.end(); ++iterator) {
+                if (iterator.key() == "__metadata__" ||
+                    (!expected.empty() && expected.count(iterator.key()) == 0)) {
+                    continue;
+                }
+                const auto& value = iterator.value();
+                if (!value.is_object() || !value.contains("dtype") ||
+                    !value.contains("shape") || !value.contains("data_offsets") ||
+                    !value["dtype"].is_string() || !value["shape"].is_array() ||
+                    !value["data_offsets"].is_array() || value["data_offsets"].size() != 2) {
+                    errorMessage = "invalid safetensors tensor metadata: " + iterator.key();
+                    return false;
+                }
+                SafeTensorMetadata metadata;
+                metadata.dataType = value["dtype"].get<std::string>();
+                metadata.filePath = tensorFile;
+                for (const auto& dimension : value["shape"]) {
+                    if (!dimension.is_number_integer() || dimension.get<long long>() < 0) {
+                        errorMessage = "invalid safetensors shape: " + iterator.key();
+                        return false;
+                    }
+                    metadata.shape.push_back(dimension.get<long long>());
+                }
+                const std::uint64_t begin = value["data_offsets"][0].get<std::uint64_t>();
+                const std::uint64_t end = value["data_offsets"][1].get<std::uint64_t>();
+                if (end < begin || end > fileSize - dataStart) {
+                    errorMessage = "safetensors data range exceeds file: " + iterator.key();
+                    return false;
+                }
+                metadata.dataOffset = dataStart + begin;
+                metadata.dataSize = end - begin;
+                if (metadata.dataSize >
+                    std::numeric_limits<std::uint64_t>::max() - m_tensorBytes) {
+                    errorMessage = "safetensors tensor byte count overflow";
+                    return false;
+                }
+                m_tensorBytes += metadata.dataSize;
+                if (!m_tensors.emplace(iterator.key(), std::move(metadata)).second) {
+                    errorMessage = "duplicate safetensors tensor: " + iterator.key();
+                    return false;
+                }
+                ++foundExpected;
+            }
+            if (!expected.empty() && foundExpected != expected.size()) {
+                errorMessage = "safetensors shard does not contain every indexed tensor: " +
+                    tensorFile.string();
+                return false;
+            }
+            return true;
+        };
+
+        for (const auto& shard : expectedByFile) {
+            const std::filesystem::path tensorFile = isShardIndex
+                ? (resolvedPath.parent_path() / shard.first).lexically_normal()
+                : resolvedPath;
+            if (!parseTensorFile(tensorFile, shard.second)) return false;
         }
         if (m_tensors.empty()) {
             errorMessage = "safetensors file contains no tensors";
             return false;
         }
-        m_filePath = std::filesystem::absolute(filePath).lexically_normal();
+        m_filePath = resolvedPath;
         errorMessage.clear();
         return true;
     }

@@ -1,9 +1,12 @@
 #include "garnet.h"
-#include "../trt/trt_builder.h"
+#include "trt_builder.h"
 #include "../image/qwen_vl/qwen_vl_image_preprocessor.h"
+#include "../image/cuda/jpeg_decode_nvjpeg.h"
 #include "../tokenizer/qwen_tokenizer.h"
 #include "../cuda/cuda_lib.h"
 #include "../tensor/tensor_helper.h"
+#include "../model/model_catalog.h"
+#include "../include/garnet_serving.h"
 #include "nlohmann/json.hpp"
 #include "xpackage.h"
 #include "xlang.h"
@@ -14,6 +17,8 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <cmath>
+#include <climits>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -34,8 +39,28 @@ namespace
         }).dump();
     }
 
+    int CopyJsonResult(
+        const std::string& value,
+        char* output,
+        int outputCapacity,
+        int* requiredCapacity)
+    {
+        const size_t required = value.size() + 1;
+        if (requiredCapacity) {
+            *requiredCapacity = required > static_cast<size_t>(INT_MAX)
+                ? INT_MAX
+                : static_cast<int>(required);
+        }
+        if (required > static_cast<size_t>(INT_MAX)) return 1;
+        if (!output || outputCapacity < static_cast<int>(required)) return 2;
+        std::memcpy(output, value.c_str(), required);
+        return 0;
+    }
+
     json GarnetServingStatus(X::Value modelValue,
         const std::string& modelRoot,
+        const std::string& modelId,
+        const std::string& inputCapability,
         const std::string& lastError,
         X::XRuntime* runtime,
         X::XObj* context)
@@ -45,6 +70,8 @@ namespace
                 (lastError.empty() ? "stopped" : "error")},
             {"ready", modelValue.IsValid()},
             {"model_root", modelRoot},
+            {"model_id", modelId},
+            {"input_capability", inputCapability},
             {"error", lastError}
         };
         if (!modelValue.IsValid()) return status;
@@ -63,6 +90,13 @@ namespace
             if (runtimeStatus["error_message"].IsValid()) {
                 status["error"] = runtimeStatus["error_message"].ToString();
             }
+            for (const char* key : {
+                     "backend", "precision", "frontend", "engine_path",
+                     "cache_directory"}) {
+                if (runtimeStatus[key].IsValid()) {
+                    status[key] = runtimeStatus[key].ToString();
+                }
+            }
         }
         return status;
     }
@@ -77,6 +111,58 @@ namespace
     cudaError_t DestroyEntryExecutionStream(cudaStream_t)
     {
         return cudaSuccess;
+    }
+}
+
+namespace Garnet
+{
+    GarnetAPI::GarnetAPI()
+        : m_modelManager()
+    {
+    }
+}
+
+extern "C" GARNET_SERVING_API int GarnetListAvailableModelsJson(
+    const char* catalogRoot,
+    char* output,
+    int outputCapacity,
+    int* requiredCapacity)
+{
+    try {
+        return CopyJsonResult(
+            Garnet::GarnetAPI::I().AvailableModelsJson(
+                catalogRoot ? catalogRoot : ""),
+            output,
+            outputCapacity,
+            requiredCapacity);
+    }
+    catch (const std::exception& exception) {
+        return CopyJsonResult(
+            GarnetJsonError("catalog_enumeration_failed", exception.what()),
+            output,
+            outputCapacity,
+            requiredCapacity);
+    }
+}
+
+extern "C" GARNET_SERVING_API int GarnetListLoadedModelsJson(
+    char* output,
+    int outputCapacity,
+    int* requiredCapacity)
+{
+    try {
+        return CopyJsonResult(
+            Garnet::GarnetAPI::I().LoadedModelsJson(),
+            output,
+            outputCapacity,
+            requiredCapacity);
+    }
+    catch (const std::exception& exception) {
+        return CopyJsonResult(
+            GarnetJsonError("loaded_model_enumeration_failed", exception.what()),
+            output,
+            outputCapacity,
+            requiredCapacity);
     }
 }
 
@@ -1633,6 +1719,53 @@ extern "C" GARNET_ENTRY_EXPORT int GarnetDebugSampleLogitsTop1FP32(
 
 namespace Garnet
 {
+    std::string GarnetAPI::AvailableModelsJson(
+        const std::string& catalogRoot) const
+    {
+        return Garnet::EnumerateAvailableModelsJson(
+            ResolveModelCatalogRoot(catalogRoot, m_baseFolder));
+    }
+
+    std::string GarnetAPI::LoadedModelsJson()
+    {
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        json response = {
+            {"schema_version", 1},
+            {"serving_mode", "single_instance"},
+            {"models", json::array()}
+        };
+        if (m_servingModel.IsValid()) {
+            json model = GarnetServingStatus(
+                m_servingModel,
+                m_servingModelRoot,
+                m_servingModelId,
+                m_servingInputCapability,
+                m_servingError,
+                nullptr,
+                nullptr);
+            model["instance_id"] = m_servingModelId + "-0";
+            response["models"].push_back(std::move(model));
+        }
+        return response.dump();
+    }
+
+    void GarnetAPI::ListAvailableModelsJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&,
+        X::Value& retValue)
+    {
+        const std::string catalogRoot = params.size() == 0
+            ? std::string()
+            : params[0].ToString();
+        retValue = AvailableModelsJson(catalogRoot);
+    }
+
+    void GarnetAPI::ListLoadedModelsJson(
+        X::XRuntime*, X::XObj*, X::ARGS&, X::KWARGS&,
+        X::Value& retValue)
+    {
+        retValue = LoadedModelsJson();
+    }
+
     void GarnetAPI::ServeModel(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS&, X::Value& retValue)
     {
@@ -1646,7 +1779,33 @@ namespace Garnet
         const fs::path xmodelRoot = params.size() > 1 && !params[1].ToString().empty()
             ? fs::path(params[1].ToString())
             : modelRoot / "xmodel";
-        const fs::path xmodelPath = xmodelRoot / "qwen_vl_prefill.x";
+        const std::string requestedModelId = params.size() > 4
+            ? params[4].ToString()
+            : std::string();
+        const bool asrModel = requestedModelId == "Qwen3-ASR-0.6B";
+        const bool tts06Model = requestedModelId ==
+            "Qwen3-TTS-12Hz-0.6B-CustomVoice";
+        const bool tts17Model = requestedModelId ==
+            "Qwen3-TTS-12Hz-1.7B-CustomVoice";
+        const bool ttsModel = tts06Model || tts17Model;
+        const bool textModel = !asrModel && !ttsModel && (
+            requestedModelId == "Qwen3-1.7B" ||
+            (requestedModelId.empty() &&
+                !fs::is_regular_file(xmodelRoot / "qwen_vl_prefill.x") &&
+                fs::is_regular_file(xmodelRoot / "prefill.x")));
+        const std::string modelId = asrModel
+            ? "Qwen3-ASR-0.6B"
+            : (ttsModel ? requestedModelId :
+                (textModel ? "Qwen3-1.7B" : "Qwen3-VL-2B-Instruct"));
+        if (!requestedModelId.empty() && requestedModelId != modelId) {
+            retValue = GarnetJsonError(
+                "model_unsupported",
+                "The requested Garnet serving model is not supported");
+            return;
+        }
+        const fs::path xmodelPath = xmodelRoot /
+            (ttsModel ? "talker_prefill.x" :
+                ((textModel || asrModel) ? "prefill.x" : "qwen_vl_prefill.x"));
         const fs::path cacheRoot = params.size() > 2 && !params[2].ToString().empty()
             ? fs::path(params[2].ToString())
             : modelRoot / "compiled_cache";
@@ -1656,6 +1815,7 @@ namespace Garnet
         int minPixels = 256 * 28 * 28;
         int maxPixels = 1280 * 28 * 28;
         int maxOutputTokens = 256;
+        int audioChunks = 5;
         if (params.size() > 3 && !params[3].ToString().empty()) {
             try {
                 const json profile = json::parse(params[3].ToString());
@@ -1666,6 +1826,7 @@ namespace Garnet
                 maxPixels = profile.value("maxPixels", maxPixels);
                 maxOutputTokens = profile.value(
                     "maxOutputTokens", maxOutputTokens);
+                audioChunks = profile.value("audioChunks", audioChunks);
             }
             catch (const std::exception&) {
                 retValue = GarnetJsonError(
@@ -1679,7 +1840,14 @@ namespace Garnet
         const bool visionProfile =
             maxInputTokens == 1536 && patchCount == 3772 && kvPages == 128 &&
             minPixels == 256 * 28 * 28 && maxPixels == 1280 * 28 * 28;
-        if ((!fastProfile && !visionProfile) ||
+        const bool asrProfile = asrModel &&
+            maxInputTokens >= 128 && maxInputTokens <= 2048 &&
+            kvPages >= 16 && kvPages <= 256 &&
+            audioChunks >= 1 && audioChunks <= 30;
+        const bool ttsProfile = ttsModel &&
+            maxInputTokens >= 128 && maxInputTokens <= 2048 &&
+            kvPages >= 16 && kvPages <= 256;
+        if ((!asrProfile && !ttsProfile && !fastProfile && !visionProfile) ||
             maxOutputTokens < 1 || maxOutputTokens > 512) {
             retValue = GarnetJsonError(
                 "profile_unsupported",
@@ -1688,17 +1856,35 @@ namespace Garnet
         }
         if (!fs::is_regular_file(xmodelPath)) {
             retValue = GarnetJsonError("xmodel_missing",
-                "qwen_vl_prefill.x was not found under the model root");
+                (textModel || asrModel || ttsModel)
+                    ? "prefill.x was not found under the model root"
+                    : "qwen_vl_prefill.x was not found under the vision model root");
             return;
         }
-        if (!fs::is_regular_file(modelRoot / "config.json") ||
-            !fs::is_regular_file(modelRoot / "tokenizer.json")) {
+        const bool hasTokenizer =
+            fs::is_regular_file(modelRoot / "tokenizer.json") ||
+            (fs::is_regular_file(modelRoot / "vocab.json") &&
+             fs::is_regular_file(modelRoot / "merges.txt"));
+        if (!fs::is_regular_file(modelRoot / "config.json") || !hasTokenizer) {
             retValue = GarnetJsonError("model_incomplete",
                 "The Qwen model configuration or tokenizer is missing");
             return;
         }
 
         std::lock_guard<std::mutex> guard(m_servingMutex);
+        const std::string previousCacheRoot = m_servingCacheRoot;
+        if (m_servingModel.IsValid()) {
+            X::Value releaseCallable = m_servingModel["release_runtime"];
+            if (releaseCallable.IsObject()) releaseCallable();
+        }
+        m_servingModel = X::Value();
+        m_servingModelRoot.clear();
+        m_servingCacheRoot.clear();
+        m_servingModelId.clear();
+        m_servingInputCapability.clear();
+        if (!previousCacheRoot.empty()) {
+            TRTBuilder::ReleaseCachedExecutions(previousCacheRoot);
+        }
         try {
             fs::create_directories(cacheRoot);
             X::XPackageValue<Model> modelValue;
@@ -1707,44 +1893,105 @@ namespace Garnet
             std::string modelDirectory = xmodelPath.parent_path().string();
             std::string emptyString;
             model.SetInfo(modelDirectory, emptyString, emptyString, emptyWeights);
-            const std::vector<std::vector<int>> inputShapes = {
-                {1, maxInputTokens}, {patchCount, 1536}, {1, 3},
-                {patchCount, 4}, {patchCount, 4}, {patchCount, 2}, {2},
-                {1, maxInputTokens}, {1, maxInputTokens},
-                {3, 1, maxInputTokens}, {1, 1},
-                {28, kvPages, 16, 8, 128}, {28, kvPages, 16, 8, 128},
-                {kvPages}, {1}
-            };
-            const std::vector<std::string> inputDataTypes = {
-                "int64", "bfloat16", "int64", "int64", "bfloat16", "int64",
-                "int32", "int64", "int64", "int64", "int64", "bfloat16",
-                "bfloat16", "int32", "int32"
-            };
+            const std::vector<std::vector<int>> inputShapes = asrModel
+                ? std::vector<std::vector<int>>{
+                    {1, maxInputTokens}, {audioChunks, 1, 128, 100},
+                    {audioChunks + 1}, {3, 1, maxInputTokens},
+                    {1, maxInputTokens}, {28, kvPages, 16, 8, 128},
+                    {28, kvPages, 16, 8, 128}, {kvPages}, {1}}
+                : ttsModel
+                ? std::vector<std::vector<int>>{
+                    {1, maxInputTokens, 2}, {3, 1, maxInputTokens},
+                    {1, maxInputTokens}, {28, kvPages, 16, 8, 128},
+                    {28, kvPages, 16, 8, 128}, {kvPages}, {1}}
+                : textModel
+                ? std::vector<std::vector<int>>{
+                    {1, maxInputTokens}, {1, 1, maxInputTokens},
+                    {1, maxInputTokens},
+                    {28, kvPages, 16, 8, 128},
+                    {28, kvPages, 16, 8, 128},
+                    {kvPages}, {1}}
+                : std::vector<std::vector<int>>{
+                    {1, maxInputTokens}, {patchCount, 1536}, {1, 3},
+                    {patchCount, 4}, {patchCount, 4}, {patchCount, 2}, {2},
+                    {1, maxInputTokens}, {1, maxInputTokens},
+                    {3, 1, maxInputTokens}, {1, 1},
+                    {28, kvPages, 16, 8, 128}, {28, kvPages, 16, 8, 128},
+                    {kvPages}, {1}};
+            const std::vector<std::string> inputDataTypes = asrModel
+                ? std::vector<std::string>{
+                    "int64", "float32", "int32", "int64", "int64",
+                    "bfloat16", "bfloat16", "int32", "int32"}
+                : ttsModel
+                ? std::vector<std::string>{
+                    "int64", "int64", "int64", "bfloat16", "bfloat16",
+                    "int32", "int32"}
+                : textModel
+                ? std::vector<std::string>{
+                    "int64", "int64", "int64", "bfloat16", "bfloat16",
+                    "int32", "int32"}
+                : std::vector<std::string>{
+                    "int64", "bfloat16", "int64", "int64", "bfloat16",
+                    "int64", "int32", "int64", "int64", "int64", "int64",
+                    "bfloat16", "bfloat16", "int32", "int32"};
             FusionPartitionOptions partitionOptions;
             partitionOptions.builderWorkspaceBytes = 4096ULL << 20;
             if (!model.InitializeCompiledRuntime(
                     xmodelPath.string(), cacheRoot.string(), modelRoot.string(),
-                    "Qwen3VLPrefill", "qwen3_vl", inputShapes, inputDataTypes,
+                    asrModel ? "Qwen3ASRPrefill" :
+                        (ttsModel ? "Qwen3TTSTalkerPrefill" :
+                            (textModel ? "Qwen3Prefill" : "Qwen3VLPrefill")),
+                    asrModel ? "qwen3_asr" :
+                        (ttsModel ? "qwen3_tts" :
+                            (textModel ? "qwen3_text" : "qwen3_vl")),
+                    inputShapes, inputDataTypes,
                     partitionOptions)) {
+                std::string initializationError =
+                    "Garnet failed to initialize the compiled Qwen runtime";
+                X::Value statusValue = model.CompiledRuntimeStatus();
+                if (statusValue.IsDict()) {
+                    X::Dict status(statusValue);
+                    const std::string detail = status["error_message"].ToString();
+                    const std::string code = status["error_code"].ToString();
+                    if (!detail.empty()) {
+                        initializationError += code.empty()
+                            ? ": " + detail
+                            : ": " + code + ": " + detail;
+                    }
+                }
                 m_servingModel = X::Value();
                 m_servingModelRoot.clear();
-                m_servingError = "Garnet failed to initialize the compiled Qwen runtime";
+                TRTBuilder::ReleaseCachedExecutions(cacheRoot.string());
+                m_servingCacheRoot.clear();
+                m_servingModelId.clear();
+                m_servingInputCapability.clear();
+                m_servingError = initializationError;
                 retValue = GarnetJsonError("model_load_failed", m_servingError);
                 return;
             }
             m_servingModel = X::Value(modelValue);
             m_servingModelRoot = modelRoot.string();
+            m_servingCacheRoot = cacheRoot.string();
+            m_servingModelId = modelId;
+            m_servingInputCapability = asrModel
+                ? "audio" : (ttsModel ? "speech" :
+                    (textModel ? "text" : "vision"));
             m_servingMinPixels = minPixels;
             m_servingMaxPixels = maxPixels;
             m_servingMaxOutputTokens = maxOutputTokens;
             m_servingError.clear();
             retValue = GarnetServingStatus(
-                m_servingModel, m_servingModelRoot, m_servingError, rt, pContext
+                m_servingModel, m_servingModelRoot, m_servingModelId,
+                m_servingInputCapability, m_servingError, rt, pContext
             ).dump();
         }
         catch (const std::exception& exception) {
             m_servingModel = X::Value();
             m_servingModelRoot.clear();
+            TRTBuilder::ReleaseCachedExecutions(cacheRoot.string());
+            m_servingCacheRoot.clear();
+            m_servingModelId.clear();
+            m_servingInputCapability.clear();
             m_servingError = exception.what();
             retValue = GarnetJsonError("model_load_failed", m_servingError);
         }
@@ -1755,20 +2002,21 @@ namespace Garnet
     {
         std::lock_guard<std::mutex> guard(m_servingMutex);
         retValue = GarnetServingStatus(
-            m_servingModel, m_servingModelRoot, m_servingError, rt, pContext
+            m_servingModel, m_servingModelRoot, m_servingModelId,
+            m_servingInputCapability, m_servingError, rt, pContext
         ).dump();
     }
 
     void GarnetAPI::InferJson(X::XRuntime* rt, X::XObj* pContext,
         X::ARGS& params, X::KWARGS&, X::Value& retValue)
     {
-        if (params.size() < 2) {
+        if (params.size() == 0) {
             retValue = GarnetJsonError("request_invalid",
-                "infer_json requires prompt and image");
+                "infer_json requires a prompt");
             return;
         }
         const std::string prompt = params[0].ToString();
-        X::Value imageSource = params[1];
+        X::Value imageSource = params.size() > 1 ? params[1] : X::Value();
         const bool hasImageBinary =
             imageSource.IsObject() &&
             imageSource.GetObj()->GetType() == X::ObjType::Binary &&
@@ -1781,16 +2029,16 @@ namespace Garnet
             : 0;
         if (prompt.empty()) {
             retValue = GarnetJsonError("request_invalid",
-                "Garnet Qwen-VL inference requires a prompt");
+                "Garnet inference requires a prompt");
             return;
         }
-        if (!hasImageBinary && !hasImagePath) {
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        if (m_servingInputCapability == "vision" &&
+            !hasImageBinary && !hasImagePath) {
             retValue = GarnetJsonError("request_invalid",
                 "Garnet Qwen-VL inference requires JPEG binary data or an image path");
             return;
         }
-
-        std::lock_guard<std::mutex> guard(m_servingMutex);
         const int maxNewTokens = requestedMaxNewTokens > 0
             ? (std::max)(1, (std::min)(
                 m_servingMaxOutputTokens, requestedMaxNewTokens))
@@ -1807,11 +2055,17 @@ namespace Garnet
             return;
         }
         X::Dict request;
-        request->Set("image", imageSource);
+        if (m_servingInputCapability == "vision") {
+            request->Set("image", imageSource);
+            request->Set("min_pixels", X::Value(m_servingMinPixels));
+            request->Set("max_pixels", X::Value(m_servingMaxPixels));
+        }
+        else {
+            request->Set("enable_thinking", X::Value(0));
+        }
         request->Set("prompt", X::Value(prompt));
-        request->Set("min_pixels", X::Value(m_servingMinPixels));
-        request->Set("max_pixels", X::Value(m_servingMaxPixels));
         request->Set("max_new_tokens", X::Value(maxNewTokens));
+        request->Set("reuse_output", X::Value(1));
         X::Value resultValue = forwardCallable(X::Value(request));
         if (!resultValue.IsDict()) {
             retValue = GarnetJsonError("inference_failed",
@@ -1821,6 +2075,7 @@ namespace Garnet
         X::Dict result(resultValue);
         json response = {
             {"status", result["status"].ToString()},
+            {"model_id", m_servingModelId},
             {"text", result["text"].ToString()},
             {"error_code", result["error_code"].ToString()},
             {"error_message", result["error_message"].ToString()},
@@ -1832,22 +2087,408 @@ namespace Garnet
                 ? result["visual_token_count"].ToLongLong() : 0},
             {"duration_ms", result["total_ms"].IsValid()
                 ? result["total_ms"].ToDouble() : 0.0},
+            {"time_to_first_token_ms", result["time_to_first_token_ms"].IsValid()
+                ? result["time_to_first_token_ms"].ToDouble() : 0.0},
             {"tokens_per_second", result["decode_tokens_per_second"].IsValid()
                 ? result["decode_tokens_per_second"].ToDouble() : 0.0}
         };
         retValue = response.dump();
     }
 
+    void GarnetAPI::TranscribeJson(X::XRuntime*, X::XObj*,
+        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("request_invalid",
+                "transcribe_json requires WAV audio");
+            return;
+        }
+        X::Value audioSource = params[0];
+        const bool hasAudioBinary =
+            audioSource.IsObject() &&
+            audioSource.GetObj()->GetType() == X::ObjType::Binary &&
+            dynamic_cast<X::XBin*>(audioSource.GetObj()) &&
+            dynamic_cast<X::XBin*>(audioSource.GetObj())->Size() > 0;
+        const bool hasAudioPath =
+            !hasAudioBinary && !audioSource.ToString().empty();
+        if (!hasAudioBinary && !hasAudioPath) {
+            retValue = GarnetJsonError("request_invalid",
+                "Garnet ASR requires WAV binary data or an audio path");
+            return;
+        }
+        const std::string context = params.size() > 1
+            ? params[1].ToString() : std::string();
+        const std::string language = params.size() > 2
+            ? params[2].ToString() : std::string("English");
+        const int requestedMaxNewTokens = params.size() > 3
+            ? static_cast<int>(params[3].ToLongLong()) : 0;
+
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        if (m_servingInputCapability != "audio") {
+            retValue = GarnetJsonError("serving_not_ready",
+                "The active Garnet model does not accept audio");
+            return;
+        }
+        if (!m_servingModel.IsValid()) {
+            retValue = GarnetJsonError("serving_not_ready",
+                m_servingError.empty() ? "Garnet serving is not started" : m_servingError);
+            return;
+        }
+        X::Value forwardCallable = m_servingModel["forward"];
+        if (!forwardCallable.IsObject()) {
+            retValue = GarnetJsonError("serving_not_ready",
+                "Garnet serving model handle is invalid");
+            return;
+        }
+        const int maxNewTokens = requestedMaxNewTokens > 0
+            ? (std::max)(1, (std::min)(
+                m_servingMaxOutputTokens, requestedMaxNewTokens))
+            : m_servingMaxOutputTokens;
+        X::Dict request;
+        request->Set("audio", audioSource);
+        request->Set("context", X::Value(context));
+        request->Set("language", X::Value(language));
+        request->Set("max_new_tokens", X::Value(maxNewTokens));
+        request->Set("reuse_output", X::Value(1));
+        X::Value resultValue = forwardCallable(X::Value(request));
+        if (!resultValue.IsDict()) {
+            retValue = GarnetJsonError("inference_failed",
+                "Garnet returned an invalid ASR result");
+            return;
+        }
+        X::Dict result(resultValue);
+        json response = {
+            {"status", result["status"].ToString()},
+            {"model_id", m_servingModelId},
+            {"text", result["text"].ToString()},
+            {"error_code", result["error_code"].ToString()},
+            {"error_message", result["error_message"].ToString()},
+            {"prompt_tokens", result["prompt_token_count"].IsValid()
+                ? result["prompt_token_count"].ToLongLong() : 0},
+            {"output_tokens", result["generated_token_count"].IsValid()
+                ? result["generated_token_count"].ToLongLong() : 0},
+            {"audio_tokens", result["audio_token_count"].IsValid()
+                ? result["audio_token_count"].ToLongLong() : 0},
+            {"audio_samples", result["audio_sample_count"].IsValid()
+                ? result["audio_sample_count"].ToLongLong() : 0},
+            {"audio_duration_seconds", result["audio_duration_seconds"].IsValid()
+                ? result["audio_duration_seconds"].ToDouble() : 0.0},
+            {"duration_ms", result["total_ms"].IsValid()
+                ? result["total_ms"].ToDouble() : 0.0}
+        };
+        retValue = response.dump();
+    }
+
+    void GarnetAPI::SynthesizeJson(X::XRuntime*, X::XObj*,
+        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() < 5 || params[0].ToString().empty() ||
+            params[4].ToString().empty()) {
+            retValue = GarnetJsonError("request_invalid",
+                "synthesize_json requires text, speaker, language, max frames, and output path");
+            return;
+        }
+        const std::string text = params[0].ToString();
+        const std::string speaker = params[1].ToString();
+        const std::string language = params[2].ToString().empty()
+            ? std::string("English") : params[2].ToString();
+        const int requestedFrames = (std::max)(1,
+            static_cast<int>(params[3].ToLongLong()));
+        const std::filesystem::path outputPath(params[4].ToString());
+
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        if (m_servingInputCapability != "speech") {
+            retValue = GarnetJsonError("serving_not_ready",
+                "The active Garnet model does not synthesize speech");
+            return;
+        }
+        if (!m_servingModel.IsValid()) {
+            retValue = GarnetJsonError("serving_not_ready",
+                m_servingError.empty() ? "Garnet serving is not started" : m_servingError);
+            return;
+        }
+        X::Value forwardCallable = m_servingModel["forward"];
+        if (!forwardCallable.IsObject()) {
+            retValue = GarnetJsonError("serving_not_ready",
+                "Garnet serving model handle is invalid");
+            return;
+        }
+        const int maxFrames = (std::min)(m_servingMaxOutputTokens,
+            requestedFrames);
+        X::Dict request;
+        request->Set("text", X::Value(text));
+        request->Set("speaker", X::Value(speaker));
+        request->Set("language", X::Value(language));
+        request->Set("max_audio_frames", X::Value(maxFrames));
+        request->Set("reuse_output", X::Value(1));
+        if (params.size() > 6 && !params[6].ToString().empty()) {
+            request->Set("instruct", X::Value(params[6].ToString()));
+        }
+        if (params.size() > 5 && !params[5].ToString().empty()) {
+            try {
+                const json sampling = json::parse(params[5].ToString());
+                if (sampling.contains("do_sample")) {
+                    request->Set("do_sample", X::Value(
+                        sampling.at("do_sample").get<bool>() ? 1 : 0));
+                }
+                if (sampling.contains("top_k")) {
+                    request->Set("top_k", X::Value(
+                        sampling.at("top_k").get<int>()));
+                }
+                if (sampling.contains("temperature")) {
+                    request->Set("temperature", X::Value(
+                        sampling.at("temperature").get<double>()));
+                }
+                if (sampling.contains("repetition_penalty")) {
+                    request->Set("repetition_penalty", X::Value(
+                        sampling.at("repetition_penalty").get<double>()));
+                }
+                if (sampling.contains("seed")) {
+                    request->Set("seed", X::Value(
+                        sampling.at("seed").get<long long>()));
+                }
+            }
+            catch (const std::exception& exception) {
+                retValue = GarnetJsonError("request_invalid",
+                    std::string("invalid TTS sampling options: ") + exception.what());
+                return;
+            }
+        }
+        X::Value resultValue = forwardCallable(X::Value(request));
+        if (!resultValue.IsDict()) {
+            retValue = GarnetJsonError("inference_failed",
+                "Garnet returned an invalid TTS result");
+            return;
+        }
+        X::Dict result(resultValue);
+        if (result["status"].ToString() != "ok") {
+            retValue = json({
+                {"status", "error"},
+                {"error_code", result["error_code"].ToString()},
+                {"error_message", result["error_message"].ToString()}
+            }).dump();
+            return;
+        }
+        X::Value audioValue = result["audio"];
+        if (!audioValue.IsTensor()) {
+            retValue = GarnetJsonError("waveform_invalid",
+                "Garnet TTS returned no waveform tensor");
+            return;
+        }
+        X::Tensor gpuAudio(audioValue);
+        X::Value cpuValue = TensorHelper::CopyToCPUTensor(gpuAudio);
+        if (!cpuValue.IsTensor()) {
+            retValue = GarnetJsonError("waveform_download_failed",
+                "Garnet could not copy the waveform from the GPU");
+            return;
+        }
+        X::Tensor cpuAudio(cpuValue);
+        const long long reportedSamples = result["audio_sample_count"].IsValid()
+            ? result["audio_sample_count"].ToLongLong() : 0;
+        const long long tensorSamples = cpuAudio->GetDataType() ==
+            X::TensorDataType::FLOAT32
+            ? cpuAudio->GetDataSize() / static_cast<long long>(sizeof(float))
+            : cpuAudio->GetDataSize() / static_cast<long long>(sizeof(uint16_t));
+        const size_t sampleCount = static_cast<size_t>((std::max)(
+            0LL, (std::min)(reportedSamples, tensorSamples)));
+        if (!cpuAudio->GetData() || sampleCount == 0 ||
+            (cpuAudio->GetDataType() != X::TensorDataType::FLOAT32 &&
+             cpuAudio->GetDataType() != X::TensorDataType::BFLOAT16)) {
+            retValue = GarnetJsonError("waveform_invalid",
+                "Garnet TTS returned an unsupported waveform tensor");
+            return;
+        }
+        std::vector<int16_t> pcm(sampleCount);
+        for (size_t index = 0; index < sampleCount; ++index) {
+            float value = 0.0F;
+            if (cpuAudio->GetDataType() == X::TensorDataType::FLOAT32) {
+                value = static_cast<const float*>(
+                    static_cast<const void*>(cpuAudio->GetData()))[index];
+            }
+            else {
+                const uint16_t bits = static_cast<const uint16_t*>(
+                    static_cast<const void*>(cpuAudio->GetData()))[index];
+                const uint32_t expanded = static_cast<uint32_t>(bits) << 16;
+                std::memcpy(&value, &expanded, sizeof(value));
+            }
+            value = (std::max)(-1.0F, (std::min)(1.0F, value));
+            pcm[index] = static_cast<int16_t>(std::lround(value * 32767.0F));
+        }
+        try {
+            if (!outputPath.parent_path().empty()) {
+                std::filesystem::create_directories(outputPath.parent_path());
+            }
+            std::ofstream wav(outputPath, std::ios::binary | std::ios::trunc);
+            if (!wav) throw std::runtime_error("cannot open output WAV");
+            const uint32_t dataBytes = static_cast<uint32_t>(pcm.size() * sizeof(int16_t));
+            const uint32_t riffBytes = 36U + dataBytes;
+            const uint32_t sampleRate = 24000U;
+            const uint32_t byteRate = sampleRate * sizeof(int16_t);
+            const uint16_t format = 1U;
+            const uint16_t channels = 1U;
+            const uint16_t blockAlign = sizeof(int16_t);
+            const uint16_t bitsPerSample = 16U;
+            const uint32_t fmtBytes = 16U;
+            wav.write("RIFF", 4); wav.write(reinterpret_cast<const char*>(&riffBytes), 4);
+            wav.write("WAVEfmt ", 8); wav.write(reinterpret_cast<const char*>(&fmtBytes), 4);
+            wav.write(reinterpret_cast<const char*>(&format), 2);
+            wav.write(reinterpret_cast<const char*>(&channels), 2);
+            wav.write(reinterpret_cast<const char*>(&sampleRate), 4);
+            wav.write(reinterpret_cast<const char*>(&byteRate), 4);
+            wav.write(reinterpret_cast<const char*>(&blockAlign), 2);
+            wav.write(reinterpret_cast<const char*>(&bitsPerSample), 2);
+            wav.write("data", 4); wav.write(reinterpret_cast<const char*>(&dataBytes), 4);
+            wav.write(reinterpret_cast<const char*>(pcm.data()), dataBytes);
+            if (!wav) throw std::runtime_error("cannot write output WAV");
+        }
+        catch (const std::exception& exception) {
+            retValue = GarnetJsonError("waveform_write_failed", exception.what());
+            return;
+        }
+        retValue = json({
+            {"status", "ok"},
+            {"model_id", m_servingModelId},
+            {"output_path", outputPath.string()},
+            {"sample_rate", 24000},
+            {"audio_frames", result["audio_frame_count"].ToLongLong()},
+            {"audio_samples", static_cast<long long>(sampleCount)},
+            {"audio_duration_seconds", result["audio_duration_seconds"].ToDouble()},
+            {"duration_ms", result["total_ms"].ToDouble()}
+        }).dump();
+    }
+
     void GarnetAPI::StopServing(X::XRuntime*, X::XObj*,
         X::ARGS&, X::KWARGS&, X::Value& retValue)
     {
         std::lock_guard<std::mutex> guard(m_servingMutex);
+        const std::string cacheRoot = m_servingCacheRoot;
+        if (m_servingModel.IsValid()) {
+            X::Value releaseCallable = m_servingModel["release_runtime"];
+            if (releaseCallable.IsObject()) releaseCallable();
+        }
         m_servingModel = X::Value();
         m_servingModelRoot.clear();
+        m_servingCacheRoot.clear();
+        m_servingModelId.clear();
+        m_servingInputCapability.clear();
+        if (!cacheRoot.empty()) {
+            TRTBuilder::ReleaseCachedExecutions(cacheRoot);
+        }
+        Garnet::Image::Cuda::ShutdownThreadNvJpegDecoder();
         m_servingError.clear();
         m_servingMinPixels = 256 * 28 * 28;
         m_servingMaxPixels = 1280 * 28 * 28;
         m_servingMaxOutputTokens = 256;
+        retValue = true;
+    }
+
+    void GarnetAPI::ConfigureModelManagerJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = m_modelManager.Configure(
+            params.size() == 0 ? std::string("{}") : params[0].ToString());
+    }
+
+    void GarnetAPI::ListRemoteModelsJson(
+        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        const bool refresh = params.size() > 0 && params[0].ToBool();
+        retValue = m_modelManager.ListRemote(rt, refresh);
+    }
+
+    void GarnetAPI::ListInstalledModelsJson(
+        X::XRuntime*, X::XObj*, X::ARGS&, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = m_modelManager.ListInstalled();
+    }
+
+    void GarnetAPI::InstallModelJson(
+        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("model_id_required", "install_model_json requires a model ID");
+            return;
+        }
+        retValue = m_modelManager.StartInstall(
+            rt, params[0].ToString(),
+            params.size() > 1 ? params[1].ToString() : std::string("{}"));
+    }
+
+    void GarnetAPI::ModelInstallStatusJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = params.size() == 0
+            ? GarnetJsonError("job_id_required", "model_install_status_json requires a job ID")
+            : m_modelManager.InstallStatus(params[0].ToString());
+    }
+
+    void GarnetAPI::CancelModelInstallJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = params.size() == 0
+            ? GarnetJsonError("job_id_required", "cancel_model_install_json requires a job ID")
+            : m_modelManager.CancelInstall(params[0].ToString());
+    }
+
+    void GarnetAPI::VerifyInstalledModelJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = params.size() == 0
+            ? GarnetJsonError("model_id_required", "verify_installed_model_json requires a model ID")
+            : m_modelManager.VerifyInstalled(params[0].ToString());
+    }
+
+    void GarnetAPI::RemoveInstalledModelJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("model_id_required", "remove_installed_model_json requires a model ID");
+            return;
+        }
+        const std::string modelId = params[0].ToString();
+        {
+            std::lock_guard<std::mutex> guard(m_servingMutex);
+            if (modelId == m_servingModelId && m_servingModel.IsValid()) {
+                retValue = GarnetJsonError("model_in_use", "stop the served model before removing it");
+                return;
+            }
+        }
+        retValue = m_modelManager.RemoveInstalled(modelId);
+    }
+
+    void GarnetAPI::ServeInstalledModelJson(
+        X::XRuntime* rt, X::XObj* context, X::ARGS& params, X::KWARGS&,
+        X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("model_id_required", "serve_installed_model_json requires a model ID");
+            return;
+        }
+        const std::string modelId = params[0].ToString();
+        const std::filesystem::path root = m_modelManager.InstalledModelRoot(modelId);
+        if (root.empty() || !std::filesystem::is_regular_file(root / ".garnet-model.json")) {
+            retValue = GarnetJsonError("model_not_installed", "the requested model is not installed");
+            return;
+        }
+        X::ARGS serveArgs(5);
+        serveArgs.push_back(root.string());
+        serveArgs.push_back((root / "xmodel").string());
+        serveArgs.push_back(m_modelManager.CacheRoot(modelId).string());
+        serveArgs.push_back(params.size() > 1 ? params[1].ToString() : std::string("{}"));
+        serveArgs.push_back(modelId);
+        X::KWARGS serveKwargs;
+        ServeModel(rt, context, serveArgs, serveKwargs, retValue);
+    }
+
+    void GarnetAPI::RunModelInstallJob(
+        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() < 3) {
+            retValue = GarnetJsonError("install_job_invalid", "the internal install job is incomplete");
+            return;
+        }
+        m_modelManager.RunInstallJob(
+            rt, params[0].ToString(), params[1].ToString(), params[2].ToString());
         retValue = true;
     }
 
@@ -2784,6 +3425,17 @@ namespace Garnet
             return;
         }
         std::memcpy(tensor->GetData(), bits->GetData(), static_cast<size_t>(bits->GetDataSize()));
+        const std::string device = GetStringArg(
+            params, kwParams, 1, "device", "cuda");
+        if (device == "cpu") {
+            retValue = X::Value(tensor);
+            return;
+        }
+        if (device != "cuda") {
+            std::cout << "[GarnetAPI] tensor_from_bfloat16_bits device must be cpu or cuda." << std::endl;
+            retValue = X::Value();
+            return;
+        }
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] BF16 tensor GPU upload failed." << std::endl;
             retValue = X::Value();
@@ -2876,6 +3528,68 @@ namespace Garnet
             return;
         }
         retValue = X::Value(tensor);
+    }
+
+    void GarnetAPI::TensorUpdateFromHost(
+        X::XRuntime*,
+        X::XObj*,
+        X::ARGS& params,
+        X::KWARGS&,
+        X::Value& retValue)
+    {
+        if (params.size() < 2 || !params[0].IsTensor() ||
+            !params[1].IsList()) {
+            retValue = X::Value(false);
+            return;
+        }
+        X::Tensor tensor(params[0]);
+        X::List values(params[1]);
+        const size_t count = static_cast<size_t>(tensor->GetCount());
+        if (count != static_cast<size_t>(values->Size()) ||
+            TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+            retValue = X::Value(false);
+            return;
+        }
+
+        size_t elementBytes = 0;
+        switch (tensor->GetDataType()) {
+        case X::TensorDataType::INT:
+            elementBytes = sizeof(int);
+            break;
+        case X::TensorDataType::LONGLONG:
+            elementBytes = sizeof(long long);
+            break;
+        case X::TensorDataType::FLOAT32:
+            elementBytes = sizeof(float);
+            break;
+        default:
+            retValue = X::Value(false);
+            return;
+        }
+
+        std::vector<char> bytes(count * elementBytes);
+        for (size_t index = 0; index < count; ++index) {
+            X::Value value = values->Get(static_cast<long long>(index));
+            if (tensor->GetDataType() == X::TensorDataType::INT) {
+                reinterpret_cast<int*>(bytes.data())[index] =
+                    static_cast<int>(value.ToLongLong());
+            }
+            else if (tensor->GetDataType() == X::TensorDataType::LONGLONG) {
+                reinterpret_cast<long long*>(bytes.data())[index] =
+                    value.ToLongLong();
+            }
+            else {
+                reinterpret_cast<float*>(bytes.data())[index] =
+                    static_cast<float>(value.ToDouble());
+            }
+        }
+        const cudaError_t status = cudaMemcpyAsync(
+            TensorHelper::GetGPUMemory(tensor),
+            bytes.data(),
+            bytes.size(),
+            cudaMemcpyHostToDevice,
+            cudaStreamPerThread);
+        retValue = X::Value(status == cudaSuccess);
     }
 
     void GarnetAPI::TensorAdd(X::XRuntime* rt, X::XObj* pContext,
@@ -3260,6 +3974,8 @@ namespace Garnet
         std::string compiledCacheDirectory;
         std::string entryFunction;
         std::string compiledFrontend;
+        std::string compiledBackend = "tensorrt";
+        std::string compiledPrecision;
         std::vector<std::vector<int>> compiledInputShapes;
         std::vector<std::string> compiledInputDataTypes;
         FusionPartitionOptions compiledPartitionOptions;
@@ -3270,6 +3986,8 @@ namespace Garnet
             else if (key == "cache_dir") compiledCacheDirectory = item.val.ToString();
             else if (key == "entry_function") entryFunction = item.val.ToString();
             else if (key == "frontend") compiledFrontend = item.val.ToString();
+            else if (key == "backend") compiledBackend = item.val.ToString();
+            else if (key == "precision") compiledPrecision = item.val.ToString();
             else if (key == "input_shapes" && item.val.IsList()) {
                 X::List shapes(item.val);
                 for (long long inputIndex = 0; inputIndex < shapes->Size(); ++inputIndex) {
@@ -3348,7 +4066,9 @@ namespace Garnet
                 compiledFrontend,
                 compiledInputShapes,
                 compiledInputDataTypes,
-                compiledPartitionOptions);
+                compiledPartitionOptions,
+                compiledBackend,
+                compiledPrecision);
             retValue = varModel;
             return;
         }

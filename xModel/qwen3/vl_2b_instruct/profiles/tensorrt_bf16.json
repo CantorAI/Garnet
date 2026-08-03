@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "tensorrt-bf16",
+  "backend": "tensorrt",
+  "device": "CUDA",
+  "precision": "bf16",
+  "entrypoint": "prefill",
+  "runtime_options": {},
+  "capabilities": {
+    "single_request_generation": true,
+    "continuous_batching": true
+  }
+}

@@ -211,6 +211,46 @@ namespace Garnet
             return TensorOpStatus::Success;
         }
 
+        // Bind memory owned by a longer-lived runtime object (for example the
+        // global paged KV pool). The empty device-ops dictionary tells XLang
+        // that this is device memory while deliberately providing no free
+        // callback; the owner remains responsible for its lifetime.
+        static TensorOpStatus AttachBorrowedGPUMemory(
+            X::Tensor& tensor,
+            void* gpuMemory)
+        {
+            if (!tensor || !gpuMemory) return TensorOpStatus::InvalidDescriptor;
+            const long long bytes = tensor->GetDataSize();
+            tensor->DirectSetData(static_cast<char*>(gpuMemory), bytes);
+            tensor->SetDeviceType(X::TensorDeviceType::GPU);
+            tensor->SetDeviceContext(X::Value(
+                static_cast<unsigned long long>(
+                    reinterpret_cast<uintptr_t>(gpuMemory))));
+            X::Dict borrowedDeviceOps;
+            tensor->SetDeviceOps(X::Value(borrowedDeviceOps));
+            return TensorOpStatus::Success;
+        }
+
+        static void ReleaseGPUMemory(X::Tensor& tensor)
+        {
+            if (!tensor) return;
+            void* gpuMemory = GetGPUMemory(tensor);
+            if (!gpuMemory) return;
+            X::Value tensorDesc = tensor->GetDesc();
+            if (tensorDesc.IsObject())
+            {
+                X::XPackageValue<TensorDescriptor> varDesc(tensorDesc);
+                TensorDescriptor& desc = *varDesc;
+                desc.gpuMemory = nullptr;
+                tensor->SetDesc(X::Value(varDesc));
+            }
+            tensor->DirectSetData(nullptr, 0);
+            tensor->SetDeviceType(X::TensorDeviceType::CPU);
+            tensor->SetDeviceContext(X::Value());
+            tensor->SetDeviceOps(X::Value());
+            cudaFree(gpuMemory);
+        }
+
         // Get device name from tensor
         static std::string GetDeviceName(X::Tensor& tensor)
         {

@@ -639,6 +639,7 @@ namespace
         __nv_bfloat16* valuePages,
         const int* pageTables,
         const int* slotPositions,
+        const int* activeMask,
         int batchSize,
         int maxLogicalPages,
         int pageSize,
@@ -650,6 +651,7 @@ namespace
         const int linear = blockIdx.x * blockDim.x + threadIdx.x;
         if (linear >= batchSize * kvWidth) return;
         const int batch = linear / kvWidth;
+        if (activeMask && activeMask[batch] == 0) return;
         const int within = linear - batch * kvWidth;
         const int kvHead = within / headDim;
         const int dimension = within - kvHead * headDim;
@@ -674,6 +676,7 @@ namespace
         const __nv_bfloat16* valuePages,
         const int* pageTables,
         const int* contextLengths,
+        const int* activeMask,
         float* partialStats,
         float* partialOutputs,
         int maxLogicalPages,
@@ -687,6 +690,17 @@ namespace
         const int split = blockIdx.y;
         const int warp = threadIdx.x >> 5;
         const int lane = threadIdx.x & 31;
+        if (activeMask && activeMask[batch] == 0) {
+            const int dimension = threadIdx.x;
+            const size_t stateIndex =
+                (static_cast<size_t>(batch) * qHeads + qHead) * splitCount + split;
+            if (dimension == 0) {
+                partialStats[stateIndex * 2] = 0.0f;
+                partialStats[stateIndex * 2 + 1] = 0.0f;
+            }
+            partialOutputs[stateIndex * kFlashDecodeHeadDim + dimension] = 0.0f;
+            return;
+        }
         const int contextLength = contextLengths[batch];
         const int start = split * kFlashDecodePositionsPerSplit;
         const int end = min(contextLength, start + kFlashDecodePositionsPerSplit);
@@ -770,20 +784,26 @@ namespace
         const float* partialOutputs,
         __nv_bfloat16* output,
         const int* contextLengths,
+        const int* activeMask,
         int splitCount,
         int qHeads)
     {
         const int batchHead = blockIdx.x;
         const int batch = batchHead / qHeads;
         const int qHead = batchHead - batch * qHeads;
+        if (activeMask && activeMask[batch] == 0) {
+            output[static_cast<size_t>(batchHead) * kFlashDecodeHeadDim +
+                threadIdx.x] = __float2bfloat16(0.0f);
+            return;
+        }
         const int activeSplits = min(
             splitCount,
             (contextLengths[batch] + kFlashDecodePositionsPerSplit - 1) /
                 kFlashDecodePositionsPerSplit);
-        __shared__ float mergeScales[32];
+        __shared__ float maximum;
         __shared__ float inverseSum;
         if (threadIdx.x == 0) {
-            float maximum = -FLT_MAX;
+            maximum = -FLT_MAX;
             for (int split = 0; split < activeSplits; ++split) {
                 const size_t stateIndex =
                     static_cast<size_t>(batchHead) * splitCount + split;
@@ -794,7 +814,6 @@ namespace
                 const size_t stateIndex =
                     static_cast<size_t>(batchHead) * splitCount + split;
                 const float scale = __expf(partialStats[stateIndex * 2] - maximum);
-                mergeScales[split] = scale;
                 sum += scale * partialStats[stateIndex * 2 + 1];
             }
             inverseSum = sum > 0.0f ? 1.0f / sum : 0.0f;
@@ -805,7 +824,7 @@ namespace
         for (int split = 0; split < activeSplits; ++split) {
             const size_t stateIndex =
                 static_cast<size_t>(batchHead) * splitCount + split;
-            value += mergeScales[split] *
+            value += __expf(partialStats[stateIndex * 2] - maximum) *
                 partialOutputs[stateIndex * kFlashDecodeHeadDim + dimension];
         }
         output[(static_cast<size_t>(batch) * qHeads + qHead) * kFlashDecodeHeadDim + dimension] =
@@ -1024,13 +1043,14 @@ extern "C" cudaError_t runTextPagedKVDecodeSplitKBF16DeviceMetadata(
     return cudaGetLastError();
 }
 
-extern "C" cudaError_t runTextPagedKVDecodeFlashBF16DeviceMetadata(
+static cudaError_t runTextPagedKVDecodeFlashBF16DeviceMetadataImpl(
     const bfloat16* qkv,
     bfloat16* keyPages,
     bfloat16* valuePages,
     const int* pageTables,
     const int* contextLengths,
     const int* slotPositions,
+    const int* activeMask,
     bfloat16* output,
     float* partialStats,
     float* partialOutputs,
@@ -1053,7 +1073,6 @@ extern "C" cudaError_t runTextPagedKVDecodeFlashBF16DeviceMetadata(
     const int splitCount =
         (maxSequenceLength + kFlashDecodePositionsPerSplit - 1) /
         kFlashDecodePositionsPerSplit;
-    if (splitCount > 32) return cudaErrorNotSupported;
 
     constexpr int writeThreads = 256;
     const int writeElements = batchSize * kvHeads * headDim;
@@ -1063,7 +1082,7 @@ extern "C" cudaError_t runTextPagedKVDecodeFlashBF16DeviceMetadata(
         reinterpret_cast<const __nv_bfloat16*>(qkv),
         reinterpret_cast<__nv_bfloat16*>(keyPages),
         reinterpret_cast<__nv_bfloat16*>(valuePages),
-        pageTables, slotPositions, batchSize, maxLogicalPages, pageSize,
+        pageTables, slotPositions, activeMask, batchSize, maxLogicalPages, pageSize,
         qHeads, kvHeads, headDim);
     cudaError_t status = cudaGetLastError();
     if (status != cudaSuccess) return status;
@@ -1073,7 +1092,7 @@ extern "C" cudaError_t runTextPagedKVDecodeFlashBF16DeviceMetadata(
         reinterpret_cast<const __nv_bfloat16*>(qkv),
         reinterpret_cast<const __nv_bfloat16*>(keyPages),
         reinterpret_cast<const __nv_bfloat16*>(valuePages),
-        pageTables, contextLengths, partialStats, partialOutputs,
+        pageTables, contextLengths, activeMask, partialStats, partialOutputs,
         maxLogicalPages, splitCount, pageSize, qHeads, kvHeads);
     status = cudaGetLastError();
     if (status != cudaSuccess) return status;
@@ -1081,7 +1100,57 @@ extern "C" cudaError_t runTextPagedKVDecodeFlashBF16DeviceMetadata(
     garnet_text_paged_kv_flash_reduce_bf16_kernel<<<
         batchSize * qHeads, kFlashDecodeHeadDim, 0, stream>>>(
         partialStats, partialOutputs,
-        reinterpret_cast<__nv_bfloat16*>(output), contextLengths,
+        reinterpret_cast<__nv_bfloat16*>(output), contextLengths, activeMask,
         splitCount, qHeads);
     return cudaGetLastError();
+}
+
+extern "C" cudaError_t runTextPagedKVDecodeFlashBF16DeviceMetadata(
+    const bfloat16* qkv,
+    bfloat16* keyPages,
+    bfloat16* valuePages,
+    const int* pageTables,
+    const int* contextLengths,
+    const int* slotPositions,
+    bfloat16* output,
+    float* partialStats,
+    float* partialOutputs,
+    int batchSize,
+    int maxSequenceLength,
+    int pageSize,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    cudaStream_t stream)
+{
+    return runTextPagedKVDecodeFlashBF16DeviceMetadataImpl(
+        qkv, keyPages, valuePages, pageTables, contextLengths, slotPositions,
+        nullptr, output, partialStats, partialOutputs, batchSize,
+        maxSequenceLength, pageSize, qHeads, kvHeads, headDim, stream);
+}
+
+extern "C" cudaError_t runTextPagedKVDecodeFlashMaskedBF16DeviceMetadata(
+    const bfloat16* qkv,
+    bfloat16* keyPages,
+    bfloat16* valuePages,
+    const int* pageTables,
+    const int* contextLengths,
+    const int* slotPositions,
+    const int* activeMask,
+    bfloat16* output,
+    float* partialStats,
+    float* partialOutputs,
+    int batchSize,
+    int maxSequenceLength,
+    int pageSize,
+    int qHeads,
+    int kvHeads,
+    int headDim,
+    cudaStream_t stream)
+{
+    if (!activeMask) return cudaErrorInvalidValue;
+    return runTextPagedKVDecodeFlashBF16DeviceMetadataImpl(
+        qkv, keyPages, valuePages, pageTables, contextLengths, slotPositions,
+        activeMask, output, partialStats, partialOutputs, batchSize,
+        maxSequenceLength, pageSize, qHeads, kvHeads, headDim, stream);
 }

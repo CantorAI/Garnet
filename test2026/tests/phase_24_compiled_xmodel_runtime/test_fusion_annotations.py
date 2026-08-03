@@ -214,7 +214,6 @@ invalid_model_path = cache_dir / "invalid_fusion_parameter.x"
 invalid_model_path.write_text(
     "from garnet import garnet\n"
     "T = garnet.tensor()\n"
-    "T.set_backend(\"TensorRT\")\n"
     "@T.fusion(stage=\"decode\")\n"
     "def Model(x):\n"
     "    return x + x\n",
@@ -236,7 +235,6 @@ conflict_model_path = cache_dir / "conflicting_fusion_regions.x"
 conflict_model_path.write_text(
     "from garnet import garnet\n"
     "T = garnet.tensor()\n"
-    "T.set_backend(\"TensorRT\")\n"
     "@T.fusion(name=\"inner\", boundary=\"required\")\n"
     "def Inner(x):\n"
     "    return x + x\n"

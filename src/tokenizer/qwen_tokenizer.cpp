@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <stdexcept>
 #include <cstring>
 #include "nlohmann/json.hpp"
@@ -185,22 +186,55 @@ namespace Garnet::Tokenization
         InitByteLevelMaps();
         m_tokenToId.clear();
         m_idToToken.clear();
+        m_addedTokens.clear();
         m_specialTokens.clear();
         m_specialIds.clear();
         m_mergeRanks.clear();
-        m_maxSpecialTokenLength = 0;
+        m_maxAddedTokenLength = 0;
 
         std::string jsonText;
         std::string path = modelDir + "/tokenizer.json";
         if (!ReadTextFile(path, &jsonText, error)) {
             path = modelDir + "\\tokenizer.json";
             if (!ReadTextFile(path, &jsonText, error)) {
-                return false;
+                jsonText.clear();
             }
         }
 
+        std::string fallbackMergesText;
         try {
-            nlohmann::json root = nlohmann::json::parse(jsonText);
+            nlohmann::json root;
+            if (!jsonText.empty()) {
+                root = nlohmann::json::parse(jsonText);
+            }
+            else {
+                std::string vocabText;
+                std::string mergesText;
+                std::string fallbackError;
+                if (!ReadTextFile(
+                        modelDir + "/vocab.json", &vocabText, &fallbackError)) {
+                    fallbackError.clear();
+                    if (!ReadTextFile(
+                            modelDir + "\\vocab.json", &vocabText,
+                            &fallbackError)) {
+                        if (error) *error = fallbackError;
+                        return false;
+                    }
+                }
+                fallbackError.clear();
+                if (!ReadTextFile(
+                        modelDir + "/merges.txt", &mergesText, &fallbackError)) {
+                    fallbackError.clear();
+                    if (!ReadTextFile(
+                            modelDir + "\\merges.txt", &mergesText,
+                            &fallbackError)) {
+                        if (error) *error = fallbackError;
+                        return false;
+                    }
+                }
+                root["model"]["vocab"] = nlohmann::json::parse(vocabText);
+                fallbackMergesText = std::move(mergesText);
+            }
             if (!root.contains("model") || !root["model"].is_object()) {
                 if (error) *error = "tokenizer.json missing model object";
                 return false;
@@ -225,24 +259,96 @@ namespace Garnet::Tokenization
                     std::string content = item["content"].get<std::string>();
                     m_tokenToId[content] = id;
                     m_idToToken[id] = content;
+                    m_addedTokens.insert(content);
+                    m_maxAddedTokenLength =
+                        std::max(m_maxAddedTokenLength, content.size());
                     if (item.value("special", false)) {
                         m_specialTokens.insert(content);
                         m_specialIds.insert(id);
-                        m_maxSpecialTokenLength = std::max(m_maxSpecialTokenLength, content.size());
                     }
                 }
             }
 
-            if (model.contains("merges") && model["merges"].is_array()) {
+            if (!fallbackMergesText.empty()) {
+                int rank = 0;
+                std::istringstream lines(fallbackMergesText);
+                std::string merge;
+                while (std::getline(lines, merge)) {
+                    if (!merge.empty() && merge.back() == '\r') merge.pop_back();
+                    if (merge.empty() || merge[0] == '#') continue;
+                    const size_t split = merge.find(' ');
+                    if (split == std::string::npos) continue;
+                    m_mergeRanks.emplace(
+                        PairKey(merge.substr(0, split), merge.substr(split + 1)),
+                        rank++);
+                }
+            }
+            else if (model.contains("merges") && model["merges"].is_array()) {
                 int rank = 0;
                 for (const nlohmann::json& item : model["merges"]) {
-                    if (!item.is_string()) continue;
-                    std::string merge = item.get<std::string>();
-                    size_t split = merge.find(' ');
-                    if (split == std::string::npos) continue;
-                    std::string first = merge.substr(0, split);
-                    std::string second = merge.substr(split + 1);
+                    std::string first;
+                    std::string second;
+                    if (item.is_string()) {
+                        const std::string merge = item.get<std::string>();
+                        const size_t split = merge.find(' ');
+                        if (split == std::string::npos) continue;
+                        first = merge.substr(0, split);
+                        second = merge.substr(split + 1);
+                    }
+                    else if (item.is_array() && item.size() == 2 &&
+                        item[0].is_string() && item[1].is_string()) {
+                        // tokenizer.json v0.20+ stores BPE merge pairs as
+                        // two-element arrays instead of space-delimited text.
+                        first = item[0].get<std::string>();
+                        second = item[1].get<std::string>();
+                    }
+                    else {
+                        continue;
+                    }
                     m_mergeRanks.emplace(PairKey(first, second), rank++);
+                }
+            }
+
+            std::string tokenizerConfigText;
+            std::string ignoredError;
+            std::string tokenizerConfigPath =
+                modelDir + "/tokenizer_config.json";
+            if (!ReadTextFile(
+                    tokenizerConfigPath, &tokenizerConfigText, &ignoredError)) {
+                tokenizerConfigPath = modelDir + "\\tokenizer_config.json";
+                ignoredError.clear();
+                ReadTextFile(
+                    tokenizerConfigPath, &tokenizerConfigText, &ignoredError);
+            }
+            if (!tokenizerConfigText.empty()) {
+                const nlohmann::json tokenizerConfig =
+                    nlohmann::json::parse(tokenizerConfigText);
+                if (tokenizerConfig.contains("added_tokens_decoder") &&
+                    tokenizerConfig["added_tokens_decoder"].is_object()) {
+                    for (auto iterator =
+                            tokenizerConfig["added_tokens_decoder"].begin();
+                         iterator !=
+                            tokenizerConfig["added_tokens_decoder"].end();
+                         ++iterator) {
+                        const auto& item = iterator.value();
+                        if (!item.is_object() ||
+                            !item.contains("content") ||
+                            !item["content"].is_string()) {
+                            continue;
+                        }
+                        const int64_t id = std::stoll(iterator.key());
+                        const std::string content =
+                            item["content"].get<std::string>();
+                        m_tokenToId[content] = id;
+                        m_idToToken[id] = content;
+                        m_addedTokens.insert(content);
+                        m_maxAddedTokenLength =
+                            std::max(m_maxAddedTokenLength, content.size());
+                        if (item.value("special", false)) {
+                            m_specialTokens.insert(content);
+                            m_specialIds.insert(id);
+                        }
+                    }
                 }
             }
         }
@@ -271,10 +377,10 @@ namespace Garnet::Tokenization
         size_t pos = 0;
         while (pos < text.size()) {
             std::string matched;
-            size_t maxLen = std::min(m_maxSpecialTokenLength, text.size() - pos);
+            size_t maxLen = std::min(m_maxAddedTokenLength, text.size() - pos);
             for (size_t len = maxLen; len > 0; --len) {
                 std::string candidate = text.substr(pos, len);
-                if (m_specialTokens.find(candidate) != m_specialTokens.end()) {
+                if (m_addedTokens.find(candidate) != m_addedTokens.end()) {
                     matched = candidate;
                     break;
                 }
@@ -288,9 +394,10 @@ namespace Garnet::Tokenization
             ++pos;
             while (pos < text.size()) {
                 bool atSpecial = false;
-                maxLen = std::min(m_maxSpecialTokenLength, text.size() - pos);
+                maxLen = std::min(m_maxAddedTokenLength, text.size() - pos);
                 for (size_t len = maxLen; len > 0; --len) {
-                    if (m_specialTokens.find(text.substr(pos, len)) != m_specialTokens.end()) {
+                    if (m_addedTokens.find(text.substr(pos, len)) !=
+                        m_addedTokens.end()) {
                         atSpecial = true;
                         break;
                     }
@@ -437,8 +544,8 @@ namespace Garnet::Tokenization
     {
         std::vector<int64_t> ids;
         for (const std::string& part : SplitSpecialAware(text)) {
-            auto specialIt = m_specialTokens.find(part);
-            if (specialIt != m_specialTokens.end()) {
+            auto addedIt = m_addedTokens.find(part);
+            if (addedIt != m_addedTokens.end()) {
                 int64_t id = TokenId(part);
                 if (id >= 0) ids.push_back(id);
                 continue;

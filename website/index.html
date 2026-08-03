@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Garnet Models — AI models optimized for your hardware</title>
+  <meta name="description" content="A curated catalog of production-ready LLM, VLM, ASR, and TTS models optimized for the hardware you ship.">
+  <meta name="theme-color" content="#130d12">
+  <meta property="og:title" content="Garnet Models by CantorAI">
+  <meta property="og:description" content="Selected AI models. Tuned for the hardware you ship.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://garnetmodel.ai/">
+  <link rel="canonical" href="https://garnetmodel.ai/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css?v=20260802-dark">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header" data-header>
+    <a class="brand" href="#top" aria-label="Garnet Models home">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M12.2 4.5h15.6l8.4 10.6-4.3 16.6L20 37.2 8.1 31.7 3.8 15.1z"/>
+        <path class="brand-mark-inner" d="m20 8.2 10.5 8.3-4 12.7H13.6l-4.1-12.7z"/>
+      </svg>
+      <span>Garnet <b>Models</b></span>
+    </a>
+    <nav class="desktop-nav" aria-label="Primary navigation">
+      <a href="#models">Models</a>
+      <a href="#runtime">Runtime</a>
+      <a href="#download">Download</a>
+      <a href="#benchmarks">Benchmarks</a>
+      <a href="#custom">Custom</a>
+    </nav>
+    <div class="header-actions">
+      <a class="text-action" href="https://cantorai.com" rel="noopener">CantorAI</a>
+      <a class="button button-small" href="https://app.garnetmodel.ai/login?next=/portal">Sign in</a>
+      <button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false" data-menu-button>
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+  <nav class="mobile-nav" aria-label="Mobile navigation" data-mobile-nav hidden>
+    <a href="#models">Models</a>
+    <a href="#runtime">Runtime</a>
+    <a href="#download">Download</a>
+    <a href="#benchmarks">Benchmarks</a>
+    <a href="#custom">Custom optimization</a>
+    <a href="https://app.garnetmodel.ai/login?next=/portal">Sign in</a>
+  </nav>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> Model engineering by CantorAI</p>
+        <h1>Selected AI models.<br><em>Tuned for the hardware you ship.</em></h1>
+        <p class="hero-lede">Garnet turns a focused set of capable open models into production packages for NVIDIA and Intel hardware—without a Python inference stack.</p>
+        <div class="hero-actions">
+          <a class="button" href="#download">Download CantorOne <span aria-hidden="true">↓</span></a>
+          <a class="button button-secondary" href="#custom">Optimize my model</a>
+        </div>
+        <div class="hero-proof" aria-label="Core capabilities">
+          <span>LLM</span><i></i><span>VLM</span><i></i><span>ASR</span><i></i><span>TTS</span>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-label="Garnet compilation pipeline illustration">
+        <div class="visual-topline"><span>GARNET RUNTIME</span><span class="live-dot">ENGINE READY</span></div>
+        <div class="gem-stage">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <svg class="hero-gem" viewBox="0 0 280 300" aria-hidden="true">
+            <defs>
+              <linearGradient id="gemA" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ff6f89"/><stop offset="1" stop-color="#7d0c31"/>
+              </linearGradient>
+              <linearGradient id="gemB" x1="1" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#c72853"/><stop offset="1" stop-color="#370916"/>
+              </linearGradient>
+            </defs>
+            <path d="M70 32h140l55 72-31 148-94 42-94-42-31-148z" fill="url(#gemB)"/>
+            <path d="m70 32 70 57 70-57-30 101H100z" fill="#e64168" opacity=".82"/>
+            <path d="m15 104 85 29 40 161-94-42z" fill="#650923"/>
+            <path d="m265 104-85 29-40 161 94-42z" fill="url(#gemA)" opacity=".68"/>
+            <path d="m100 133 40-44 40 44-40 161z" fill="#9d1238"/>
+            <path d="m70 32 30 101-85-29z" fill="#b51d46"/>
+            <path d="m210 32-30 101 85-29z" fill="#7a0b2b"/>
+            <path d="M70 32h140l55 72-31 148-94 42-94-42-31-148z" fill="none" stroke="#ff9caf" stroke-opacity=".45"/>
+          </svg>
+          <span class="node-label node-a">XMODEL IR</span>
+          <span class="node-label node-b">PAGED KV</span>
+          <span class="node-label node-c">NATIVE I/O</span>
+        </div>
+        <div class="visual-stats">
+          <div><span>Backend</span><strong>TensorRT</strong></div>
+          <div><span>Precision</span><strong>BF16 / INT4</strong></div>
+          <div><span>Execution</span><strong>Native</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="principles" aria-label="Garnet advantages">
+      <article><span>01</span><div><h2>Curated, not crowded</h2><p>We select models with clear application value, then engineer each path for production.</p></div></article>
+      <article><span>02</span><div><h2>Hardware-specific</h2><p>Profiles are built for the backend, precision, memory, and latency target you actually deploy.</p></div></article>
+      <article><span>03</span><div><h2>Application-ready</h2><p>Validated manifests, native preprocessing, engine caching, and a stable serving interface.</p></div></article>
+    </section>
+
+    <section class="catalog section-shell" id="models">
+      <div class="section-heading split-heading">
+        <div>
+          <p class="eyebrow dark"><span></span> Selected catalog</p>
+          <h2>Four model paths.<br>One native runtime.</h2>
+        </div>
+        <p>Choose an engineered package for your workload. Sign in to request access, review compatible profiles, or discuss a target we do not list yet.</p>
+      </div>
+      <div class="filter-row" role="group" aria-label="Filter models">
+        <button class="filter is-active" type="button" data-filter="all">All models <span>5</span></button>
+        <button class="filter" type="button" data-filter="llm">LLM <span>1</span></button>
+        <button class="filter" type="button" data-filter="vlm">VLM <span>1</span></button>
+        <button class="filter" type="button" data-filter="asr">ASR <span>1</span></button>
+        <button class="filter" type="button" data-filter="tts">TTS <span>2</span></button>
+      </div>
+      <div class="model-grid" data-model-grid>
+        <article class="model-card featured" data-category="llm">
+          <div class="card-top"><span class="model-type">LLM · TEXT GENERATION</span><span class="status"><i></i> VALIDATED</span></div>
+          <h3>Qwen3 <b>1.7B</b></h3>
+          <p>Compact language generation with native chat templating, paged KV cache, and optimized decode.</p>
+          <div class="model-specs"><span>TensorRT BF16</span><span>OpenVINO INT4</span><span>CPU · GPU</span></div>
+          <div class="card-metric"><strong>31.87</strong><span>decode tok/s<br>i9-14900K · INT4</span></div>
+          <a href="https://app.garnetmodel.ai/login?next=/portal">Request package <span>→</span></a>
+        </article>
+        <article class="model-card" data-category="vlm">
+          <div class="card-top"><span class="model-type">VLM · IMAGE + TEXT</span><span class="status preview"><i></i> ENGINEERING PREVIEW</span></div>
+          <h3>Qwen3-VL <b>2B</b></h3>
+          <p>Vision-language inference with native image preprocessing, MRoPE, continuous batching graphs, and paged KV.</p>
+          <div class="model-specs"><span>TensorRT BF16</span><span>NVIDIA GPU</span><span>JPEG input</span></div>
+          <div class="card-art vision-art" aria-hidden="true"><span></span><i></i><b></b></div>
+          <a href="https://app.garnetmodel.ai/login?next=/portal">Request access <span>→</span></a>
+        </article>
+        <article class="model-card" data-category="asr">
+          <div class="card-top"><span class="model-type">ASR · SPEECH TO TEXT</span><span class="status preview"><i></i> ENGINEERING PREVIEW</span></div>
+          <h3>Qwen3-ASR <b>0.6B</b></h3>
+          <p>Native WAV ingest, resampling, log-mel transform, audio encoding, and text decoding in one compiled path.</p>
+          <div class="model-specs"><span>TensorRT BF16</span><span>16 kHz input</span><span>Native frontend</span></div>
+          <div class="waveform" aria-hidden="true"></div>
+          <a href="https://app.garnetmodel.ai/login?next=/portal">Join preview <span>→</span></a>
+        </article>
+        <article class="model-card" data-category="tts">
+          <div class="card-top"><span class="model-type">TTS · TEXT TO SPEECH</span><span class="status preview"><i></i> ENGINEERING PREVIEW</span></div>
+          <h3>Qwen3-TTS <b>0.6B</b></h3>
+          <p>CustomVoice generation with native codec reconstruction and 24 kHz waveform output.</p>
+          <div class="model-specs"><span>TensorRT BF16</span><span>24 kHz output</span><span>Speaker selection</span></div>
+          <div class="voice-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+          <a href="https://app.garnetmodel.ai/login?next=/portal">Join preview <span>→</span></a>
+        </article>
+        <article class="model-card featured" data-category="tts">
+          <div class="card-top"><span class="model-type">TTS · TEXT TO SPEECH</span><span class="status preview"><i></i> ENGINEERING PREVIEW</span></div>
+          <h3>Qwen3-TTS <b>1.7B</b></h3>
+          <p>Higher-capacity CustomVoice generation with speaker selection, instruction control, and native 24 kHz codec reconstruction.</p>
+          <div class="model-specs"><span>TensorRT BF16</span><span>24 kHz output</span><span>Instruction control</span></div>
+          <div class="voice-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+          <a href="https://app.garnetmodel.ai/login?next=/portal">Join preview <span>→</span></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="runtime" id="runtime">
+      <div class="runtime-copy">
+        <p class="eyebrow"><span></span> Garnet Runtime</p>
+        <h2>Model code is not<br>a deployment plan.</h2>
+        <p>Garnet captures a backend-neutral XLang tensor graph, validates it, and lowers it into an executable designed for the selected hardware.</p>
+        <ul class="check-list">
+          <li><span>✓</span> Native C++ execution—no Python process at inference</li>
+          <li><span>✓</span> TensorRT and OpenVINO lowering from one model graph</li>
+          <li><span>✓</span> Paged KV memory, fixed decode buckets, and engine caching</li>
+          <li><span>✓</span> Validated model manifests and application-facing APIs</li>
+        </ul>
+        <a class="inline-link" href="mailto:support@cantorai.com?subject=Garnet%20technical%20briefing">Request a technical briefing <span>→</span></a>
+      </div>
+      <div class="pipeline" aria-label="Garnet model compilation pipeline">
+        <div class="pipeline-label">COMPILED MODEL PIPELINE</div>
+        <div class="pipeline-row"><span class="step-no">01</span><div><b>Selected model</b><small>Safetensors + configuration</small></div><code>Qwen3</code></div>
+        <div class="flow-line"><i></i></div>
+        <div class="pipeline-row active"><span class="step-no">02</span><div><b>XModel graph</b><small>Backend-neutral XLang IR</small></div><code>.x</code></div>
+        <div class="flow-line"><i></i></div>
+        <div class="pipeline-row"><span class="step-no">03</span><div><b>Target profile</b><small>Backend · precision · shape</small></div><code>JSON</code></div>
+        <div class="flow-split"><i></i><i></i></div>
+        <div class="backend-pair">
+          <div><span>NVIDIA</span><b>TensorRT</b><small>GPU engines</small></div>
+          <div><span>INTEL</span><b>OpenVINO</b><small>CPU / GPU</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section" id="download">
+      <div class="download-copy">
+        <p class="eyebrow"><span></span> Try Garnet locally</p>
+        <h2>One small starting point.<br><em>Only the models you choose.</em></h2>
+        <p>Download the shared CantorOne desktop app first. Garnet runtimes and model packages stay separate, so a trial does not install every model or consume storage you did not choose.</p>
+        <div class="download-actions">
+          <a class="button" href="/downloads/CantorOne-Windows-x64.zip" download>Download CantorOne for Windows <span>↓</span></a>
+          <a class="inline-link" href="/downloads/CantorOne-Windows-x64.zip.sha256">SHA-256 checksum <span>→</span></a>
+        </div>
+        <div class="download-meta"><span>Windows 10 / 11 · x64</span><i></i><span>Portable preview</span><i></i><span>~214 MB base app</span></div>
+      </div>
+      <div class="trial-flow" aria-label="Garnet evaluation steps">
+        <div class="trial-flow-heading"><span>EVALUATION FLOW</span><b>4 STEPS</b></div>
+        <ol>
+          <li><span>01</span><div><b>Open CantorOne</b><p>The shared desktop shell and Works experience start without a model bundle.</p></div></li>
+          <li><span>02</span><div><b>Sign in to Garnet</b><p>Your Garnet account connects evaluation access and trusted devices.</p></div></li>
+          <li><span>03</span><div><b>Check this PC</b><p>CantorOne identifies compatible hardware, backend, precision, and storage.</p></div></li>
+          <li><span>04</span><div><b>Install one model</b><p>Select a signed Garnet package, download it in the app, and run a local evaluation.</p></div></li>
+        </ol>
+        <a href="https://app.garnetmodel.ai/login?next=/portal">Already have CantorOne? Sign in <span>→</span></a>
+      </div>
+    </section>
+
+    <section class="benchmarks section-shell" id="benchmarks">
+      <div class="section-heading centered">
+        <p class="eyebrow dark"><span></span> Measured, not imagined</p>
+        <h2>Performance with context.</h2>
+        <p>Every number names the model, hardware, precision, and workload behind it.</p>
+      </div>
+      <div class="benchmark-grid">
+        <article>
+          <span class="bench-kicker">NVIDIA · THROUGHPUT</span>
+          <div class="big-number">527.9 <small>tok/s</small></div>
+          <h3>Qwen3-1.7B · batch 4</h3>
+          <p>Masked continuous decode on RTX 4080 using official BF16 weights and GPU-resident paged KV storage.</p>
+          <div class="bar"><i style="--value: 88%"></i></div>
+        </article>
+        <article>
+          <span class="bench-kicker">INTEL · CPU INFERENCE</span>
+          <div class="big-number">3.33×</div>
+          <h3>Garnet vs. Ollama</h3>
+          <p>31.87 vs. 9.56 decode tok/s on an i9-14900K, comparing Garnet INT4 with the tested Ollama package.</p>
+          <div class="compare-bars"><i style="--value: 92%"><span>Garnet</span></i><i style="--value: 28%"><span>Ollama</span></i></div>
+        </article>
+        <article class="benchmark-note">
+          <span class="bench-kicker">OUR STANDARD</span>
+          <h3>Speed is only useful when the output stays useful.</h3>
+          <p>Garnet validation records correctness, response quality, cold-load behavior, cache state, and unsupported hardware—not just the best token counter.</p>
+          <a href="mailto:support@cantorai.com?subject=Garnet%20benchmark%20details">Ask for benchmark details <span>→</span></a>
+        </article>
+      </div>
+      <p class="method-note">Internal engineering measurements. Results vary by model, prompt, driver, operating system, and engine cache state. Comparisons are not precision-equivalent unless explicitly stated.</p>
+    </section>
+
+    <section class="custom" id="custom">
+      <div class="custom-grid"></div>
+      <div class="custom-copy">
+        <p class="eyebrow"><span></span> Custom model engineering</p>
+        <h2>Your model.<br>Your hardware.<br><em>A measured path to production.</em></h2>
+        <p>Have a model or device target outside the catalog? CantorAI can evaluate the graph, memory budget, precision strategy, native I/O path, and application packaging.</p>
+        <a class="button button-light" href="mailto:support@cantorai.com?subject=Garnet%20custom%20model%20optimization">Start an optimization review <span>→</span></a>
+      </div>
+      <ol class="engagement-steps">
+        <li><span>01</span><div><b>Profile</b><p>Model, workload, hardware, latency, memory, and quality targets.</p></div></li>
+        <li><span>02</span><div><b>Engineer</b><p>Graph lowering, quantization, kernels, scheduling, and native I/O.</p></div></li>
+        <li><span>03</span><div><b>Validate</b><p>Correctness, quality, throughput, latency, startup, and recovery.</p></div></li>
+        <li><span>04</span><div><b>Package</b><p>A versioned model package ready for your application.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="final-cta">
+      <p>Ready to run closer to the hardware?</p>
+      <h2>Choose a Garnet model—or bring us yours.</h2>
+      <div><a class="button" href="#download">Download CantorOne</a><a class="button button-secondary light-border" href="https://app.garnetmodel.ai/login?next=/portal">Sign in to Garnet</a></div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand footer-brand" href="#top">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M12.2 4.5h15.6l8.4 10.6-4.3 16.6L20 37.2 8.1 31.7 3.8 15.1z"/><path class="brand-mark-inner" d="m20 8.2 10.5 8.3-4 12.7H13.6l-4.1-12.7z"/></svg>
+      <span>Garnet <b>Models</b></span>
+    </a>
+    <p>Curated, hardware-optimized AI models by <a href="https://cantorai.com">CantorAI</a>.</p>
+    <div class="footer-links"><a href="#models">Models</a><a href="#download">Download</a><a href="mailto:support@cantorai.com">Contact</a><a href="https://app.garnetmodel.ai/login?next=/portal">Sign in</a></div>
+    <small>© 2026 CantorAI. Garnet Models is a CantorAI product.</small>
+  </footer>
+</body>
+</html>

@@ -47,7 +47,7 @@ _dll_handles = add_windows_dll_dirs(garnet_dll)
 import xlang
 
 garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
-root_xmodel = REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_vl_model.x"
+root_xmodel = REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_vl_model.x"
 cache_dir = REPO_ROOT / "test2026" / "tests" / "phase_24_compiled_xmodel_runtime" / "cache"
 shutil.rmtree(cache_dir, ignore_errors=True)
 
@@ -484,6 +484,182 @@ np.testing.assert_allclose(
 )
 print("explicit .x BF16 prefill wrote five tokens across swapped pages and decode consumed them")
 
+masked_batch = 4
+masked_q_heads = 16
+masked_kv_heads = 8
+masked_head_dim = 128
+masked_q_width = masked_q_heads * masked_head_dim
+masked_kv_width = masked_kv_heads * masked_head_dim
+masked_qkv_width = masked_q_width + 2 * masked_kv_width
+masked_page_count = 16
+masked_page_size = 16
+masked_logical_pages = 4
+masked_model = garnet.load_model(
+    str(SCRIPT_DIR / "compiled_paged_kv_decode_masked_model.x"),
+    runtime_mode="compiled_xmodel",
+    entry_function="Model",
+    input_shapes=[
+        [masked_batch, 1, masked_qkv_width],
+        [masked_page_count, masked_page_size, masked_kv_heads, masked_head_dim],
+        [masked_page_count, masked_page_size, masked_kv_heads, masked_head_dim],
+        [masked_batch, masked_logical_pages],
+        [masked_batch],
+        [masked_batch],
+        [masked_batch],
+    ],
+    input_dtypes=[
+        "bfloat16", "bfloat16", "bfloat16", "int32",
+        "int32", "int32", "int32",
+    ],
+    cache_dir=str(cache_dir / "paged_kv_masked_batch_fixture"),
+)
+masked_status = masked_model.runtime_status()
+assert masked_status["state"] == "compiled_engine_ready", masked_status
+masked_source = rng.normal(
+    0.0, 0.1, size=(masked_batch, 1, masked_qkv_width)
+).astype(np.float32)
+masked_bits = (masked_source.view(np.uint32) >> 16).astype(np.uint16)
+masked_bf16 = (masked_bits.astype(np.uint32) << 16).view(np.float32)
+masked_page_shape = (
+    masked_page_count, masked_page_size, masked_kv_heads, masked_head_dim
+)
+masked_keys = garnet.tensor_from_bfloat16_bits(
+    np.zeros(masked_page_shape, dtype=np.uint16)
+)
+masked_values = garnet.tensor_from_bfloat16_bits(
+    np.zeros(masked_page_shape, dtype=np.uint16)
+)
+masked_page_table = np.arange(
+    masked_batch * masked_logical_pages, dtype=np.int32
+).reshape(masked_batch, masked_logical_pages)
+active_mask = np.array([1, 0, 1, 0], dtype=np.int32)
+masked_result = masked_model.forward({"inputs": [
+    garnet.tensor_from_bfloat16_bits(masked_bits),
+    masked_keys,
+    masked_values,
+    garnet.tensor_from_host(
+        masked_page_table.reshape(-1).tolist(),
+        dtype="int32",
+        shape=[masked_batch, masked_logical_pages],
+    ),
+    garnet.tensor_from_host(
+        np.ones(masked_batch, dtype=np.int32).tolist(),
+        dtype="int32",
+        shape=[masked_batch],
+    ),
+    garnet.tensor_from_host(
+        np.zeros(masked_batch, dtype=np.int32).tolist(),
+        dtype="int32",
+        shape=[masked_batch],
+    ),
+    garnet.tensor_from_host(
+        active_mask.tolist(), dtype="int32", shape=[masked_batch]
+    ),
+]})
+assert masked_result["status"] == "ok", masked_result
+masked_output = np.asarray(
+    garnet.tensor_to_cpu(masked_result["output"]).toarray()
+).reshape(masked_batch, masked_q_heads, masked_head_dim).astype(np.float32)
+for batch_index in range(masked_batch):
+    if active_mask[batch_index] == 0:
+        np.testing.assert_array_equal(masked_output[batch_index], 0.0)
+        continue
+    values = masked_bf16[
+        batch_index, 0, masked_q_width + masked_kv_width:
+    ].reshape(masked_kv_heads, masked_head_dim)
+    expected = np.repeat(values, masked_q_heads // masked_kv_heads, axis=0)
+    np.testing.assert_allclose(masked_output[batch_index], expected, rtol=0, atol=0)
+masked_keys_cpu = np.asarray(
+    garnet.tensor_to_cpu(masked_keys).toarray()
+).reshape(masked_page_shape)
+for inactive_index in [1, 3]:
+    np.testing.assert_array_equal(
+        masked_keys_cpu[masked_page_table[inactive_index, 0], 0],
+        0.0,
+    )
+masked_sample = masked_model.forward({
+    "inputs": [
+        garnet.tensor_from_bfloat16_bits(masked_bits),
+        masked_keys,
+        masked_values,
+        garnet.tensor_from_host(
+            masked_page_table.reshape(-1).tolist(),
+            dtype="int32",
+            shape=[masked_batch, masked_logical_pages],
+        ),
+        garnet.tensor_from_host(
+            np.ones(masked_batch, dtype=np.int32).tolist(),
+            dtype="int32",
+            shape=[masked_batch],
+        ),
+        garnet.tensor_from_host(
+            np.zeros(masked_batch, dtype=np.int32).tolist(),
+            dtype="int32",
+            shape=[masked_batch],
+        ),
+        garnet.tensor_from_host(
+            active_mask.tolist(), dtype="int32", shape=[masked_batch]
+        ),
+    ],
+    "sample": "greedy_batch",
+})
+assert masked_sample["status"] == "ok", masked_sample
+assert list(masked_sample["token_ids"]) == [
+    int(np.argmax(masked_output[index])) for index in range(masked_batch)
+]
+print("masked B4 paged decode skipped inactive rows and preserved their KV pages")
+
+long_logical_pages = 257
+long_page_count = long_logical_pages
+long_model = garnet.load_model(
+    str(SCRIPT_DIR / "compiled_paged_kv_decode_masked_model.x"),
+    runtime_mode="compiled_xmodel",
+    entry_function="Model",
+    input_shapes=[
+        [1, 1, masked_qkv_width],
+        [long_page_count, masked_page_size, masked_kv_heads, masked_head_dim],
+        [long_page_count, masked_page_size, masked_kv_heads, masked_head_dim],
+        [1, long_logical_pages],
+        [1],
+        [1],
+        [1],
+    ],
+    input_dtypes=[
+        "bfloat16", "bfloat16", "bfloat16", "int32",
+        "int32", "int32", "int32",
+    ],
+    cache_dir=str(cache_dir / "paged_kv_long_context_fixture"),
+)
+long_status = long_model.runtime_status()
+assert bool(long_status["ready"]), long_status
+long_page_shape = (
+    long_page_count, masked_page_size, masked_kv_heads, masked_head_dim
+)
+long_result = long_model.forward({"inputs": [
+    garnet.tensor_from_bfloat16_bits(masked_bits[:1]),
+    garnet.tensor_from_bfloat16_bits(
+        np.zeros(long_page_shape, dtype=np.uint16)
+    ),
+    garnet.tensor_from_bfloat16_bits(
+        np.zeros(long_page_shape, dtype=np.uint16)
+    ),
+    garnet.tensor_from_host(
+        list(range(long_logical_pages)),
+        dtype="int32",
+        shape=[1, long_logical_pages],
+    ),
+    garnet.tensor_from_host([4097], dtype="int32", shape=[1]),
+    garnet.tensor_from_host([4096], dtype="int32", shape=[1]),
+    garnet.tensor_from_host([1], dtype="int32", shape=[1]),
+]})
+assert long_result["status"] == "ok", long_result
+long_output = np.asarray(
+    garnet.tensor_to_cpu(long_result["output"]).toarray()
+).astype(np.float32)
+assert np.isfinite(long_output).all()
+assert np.any(long_output != 0.0)
+print("masked paged decode supports context lengths beyond the old 4096-token cap")
+
 unsupported_model = garnet.load_model(
     str(SCRIPT_DIR / "compiled_unsupported_model.x"),
     runtime_mode="compiled_xmodel",
@@ -558,7 +734,6 @@ dependency_root.write_text(
     "from garnet import garnet\n"
     "# garnet-dependency: compiled_dependency.x\n\n"
     "T = garnet.tensor()\n"
-    "T.set_backend(\"TensorRT\")\n\n"
     "@T.fusion()\n"
     "def Model(x):\n"
     "    return x + x\n",

@@ -3,7 +3,7 @@ let graphData = window.GARNET_DEFAULT_GRAPH || {
   model: {
     name: "Qwen3-VL-2B-Instruct",
     family: "qwen3_vl",
-    source: "qwen_vl/xmodel/qwen_vl_model.x",
+    source: "xModel/qwen3/vl_2b_instruct/qwen_vl_model.x",
     config: {
       text_layers: 28,
       text_hidden_size: 2048,
@@ -20,17 +20,17 @@ let graphData = window.GARNET_DEFAULT_GRAPH || {
     }
   },
   nodes: [
-    node("model.qwen3_vl", "model", "Qwen3VLModel", "", "", "planned", "qwen_vl/xmodel/qwen_vl_model.x", "Qwen3VLModel", 19),
-    node("vision.patch_embed", "op", "Vision PatchEmbed Conv3d", "qwen3_vl_patch_embed_conv3d", "trt", "planned", "qwen_vl/xmodel/vision_encoder.x", "Qwen3VisionEncoder", 154),
-    node("vision.blocks", "block", "Vision Blocks x24", "", "", "planned", "qwen_vl/xmodel/vision_encoder.x", "VisionBlock", 103),
-    node("vision.attention", "op", "Vision Varlen Attention", "vision_varlen_attention", "cuda", "missing", "qwen_vl/xmodel/vision_encoder.x", "VisionAttention", 87),
-    node("vision.deepstack", "block", "DeepStack Mergers", "", "", "planned", "qwen_vl/xmodel/vision_encoder.x", "Qwen3VisionEncoder", 179),
-    node("adapter.merge_visual", "op", "Visual Placeholder Merge", "qwen3_vl_merge_visual_embeddings", "cuda", "missing", "qwen_vl/xmodel/vl_adapter.x", "Qwen3MergeVisualEmbeddings", 36),
-    node("adapter.mrope_index", "op", "MRoPE Position Builder", "qwen3_vl_get_rope_index", "cuda", "missing", "qwen_vl/xmodel/vl_adapter.x", "Qwen3GetRopeIndex", 22),
-    node("text.layers", "block", "Text Decoder Layers x28", "", "", "planned", "qwen_vl/xmodel/qwen_llm.x", "Qwen3TextDecoderLayer", 86),
-    node("text.paged_kv_update", "op", "Paged KV Update", "paged_kv_update", "cuda", "missing", "qwen_vl/xmodel/qwen_llm.x", "Qwen3TextAttention", 57),
-    node("text.paged_attention", "op", "Paged Attention", "paged_attention", "cuda", "missing", "qwen_vl/xmodel/qwen_llm.x", "Qwen3TextAttention", 63),
-    node("text.lm_head", "op", "LM Head", "lm_head", "trt", "planned", "qwen_vl/xmodel/qwen_vl_model.x", "Qwen3VLModel", 71)
+    node("model.qwen3_vl", "model", "Qwen3VLModel", "", "", "planned", "xModel/qwen3/vl_2b_instruct/qwen_vl_model.x", "Qwen3VLModel", 19),
+    node("vision.patch_embed", "op", "Vision PatchEmbed Conv3d", "qwen3_vl_patch_embed_conv3d", "trt", "planned", "xModel/qwen3/vl_2b_instruct/vision_encoder.x", "Qwen3VisionEncoder", 154),
+    node("vision.blocks", "block", "Vision Blocks x24", "", "", "planned", "xModel/qwen3/vl_2b_instruct/vision_encoder.x", "VisionBlock", 103),
+    node("vision.attention", "op", "Vision Varlen Attention", "vision_varlen_attention", "cuda", "missing", "xModel/qwen3/vl_2b_instruct/vision_encoder.x", "VisionAttention", 87),
+    node("vision.deepstack", "block", "DeepStack Mergers", "", "", "planned", "xModel/qwen3/vl_2b_instruct/vision_encoder.x", "Qwen3VisionEncoder", 179),
+    node("adapter.merge_visual", "op", "Visual Placeholder Merge", "qwen3_vl_merge_visual_embeddings", "cuda", "missing", "xModel/qwen3/vl_2b_instruct/vl_adapter.x", "Qwen3MergeVisualEmbeddings", 36),
+    node("adapter.mrope_index", "op", "MRoPE Position Builder", "qwen3_vl_get_rope_index", "cuda", "missing", "xModel/qwen3/vl_2b_instruct/vl_adapter.x", "Qwen3GetRopeIndex", 22),
+    node("text.layers", "block", "Text Decoder Layers x28", "", "", "planned", "xModel/qwen3/vl_2b_instruct/qwen_llm.x", "Qwen3TextDecoderLayer", 86),
+    node("text.paged_kv_update", "op", "Paged KV Update", "paged_kv_update", "cuda", "missing", "xModel/qwen3/vl_2b_instruct/qwen_llm.x", "Qwen3TextAttention", 57),
+    node("text.paged_attention", "op", "Paged Attention", "paged_attention", "cuda", "missing", "xModel/qwen3/vl_2b_instruct/qwen_llm.x", "Qwen3TextAttention", 63),
+    node("text.lm_head", "op", "LM Head", "lm_head", "trt", "planned", "xModel/qwen3/vl_2b_instruct/qwen_vl_model.x", "Qwen3VLModel", 71)
   ],
   edges: [
     edge("model.qwen3_vl", "vision.patch_embed"),

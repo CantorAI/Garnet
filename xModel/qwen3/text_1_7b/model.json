@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "Qwen3-1.7B",
+  "slug": "qwen3-1.7b",
+  "display_name": "Qwen3-1.7B",
+  "family": "qwen3",
+  "task": "text-generation",
+  "capabilities": {
+    "text": true,
+    "vision": false,
+    "paged_kv_cache": true,
+    "continuous_batching_graph": true
+  },
+  "entrypoints": {
+    "prefill": {
+      "file": "prefill.x",
+      "function": "Qwen3Prefill",
+      "frontend": "qwen3_text"
+    },
+    "decode": {
+      "file": "decode.x",
+      "function": "Qwen3Decode",
+      "frontend": "qwen3_text"
+    },
+    "decode_batch": {
+      "file": "decode_batch.x",
+      "function": "Qwen3DecodeBatch",
+      "frontend": "qwen3_text"
+    }
+  },
+  "profile_files": [
+    "profiles/openvino_cpu_int4.json",
+    "profiles/tensorrt_bf16.json"
+  ],
+  "weights": {
+    "bundled": false,
+    "format": "safetensors",
+    "source": "Qwen/Qwen3-1.7B",
+    "config_file": "config.json",
+    "tokenizer_file": "tokenizer.json"
+  }
+}

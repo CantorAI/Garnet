@@ -20,7 +20,7 @@ Build a local web tool that answers these questions quickly:
 
 ## MVP Inputs
 
-- `qwen_vl/xmodel/*.x`
+- `xModel/qwen3/vl_2b_instruct/*.x`
 - Qwen3-VL `config.json`
 - optional weight manifest or safetensors index
 - optional backend capability registry

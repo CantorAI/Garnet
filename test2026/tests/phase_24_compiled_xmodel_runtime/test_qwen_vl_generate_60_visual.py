@@ -29,7 +29,13 @@ assert image_path.exists()
 garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
 load_start = time.perf_counter()
 model = garnet.load_model(
-    str(REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_vl_prefill.x"),
+    str(
+        REPO_ROOT
+        / "xModel"
+        / "qwen3"
+        / "vl_2b_instruct"
+        / "qwen_vl_prefill.x"
+    ),
     runtime_mode="compiled_xmodel",
     entry_function="Qwen3VLPrefill",
     frontend="qwen3_vl",

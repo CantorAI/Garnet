@@ -3,7 +3,7 @@
   "model": {
     "name": "Qwen3-VL-2B-Instruct",
     "family": "qwen3_vl",
-    "source": "qwen_vl/xmodel/qwen_vl_model.x",
+    "source": "xModel/qwen3/vl_2b_instruct/qwen_vl_model.x",
     "config": {
       "text_layers": 28,
       "text_hidden_size": 2048,
@@ -26,7 +26,7 @@
       "label": "Qwen3VLModel",
       "status": "planned",
       "source": {
-        "file": "qwen_vl/xmodel/qwen_vl_model.x",
+        "file": "xModel/qwen3/vl_2b_instruct/qwen_vl_model.x",
         "function": "Qwen3VLModel",
         "line": 19
       }
@@ -39,7 +39,7 @@
       "backend": "trt",
       "status": "planned",
       "source": {
-        "file": "qwen_vl/xmodel/vision_encoder.x",
+        "file": "xModel/qwen3/vl_2b_instruct/vision_encoder.x",
         "function": "Qwen3VisionEncoder",
         "line": 154
       }
@@ -50,7 +50,7 @@
       "label": "Vision Blocks x24",
       "status": "planned",
       "source": {
-        "file": "qwen_vl/xmodel/vision_encoder.x",
+        "file": "xModel/qwen3/vl_2b_instruct/vision_encoder.x",
         "function": "VisionBlock",
         "line": 103
       }
@@ -63,7 +63,7 @@
       "backend": "cuda",
       "status": "missing",
       "source": {
-        "file": "qwen_vl/xmodel/vision_encoder.x",
+        "file": "xModel/qwen3/vl_2b_instruct/vision_encoder.x",
         "function": "VisionAttention",
         "line": 87
       }
@@ -74,7 +74,7 @@
       "label": "DeepStack Mergers",
       "status": "planned",
       "source": {
-        "file": "qwen_vl/xmodel/vision_encoder.x",
+        "file": "xModel/qwen3/vl_2b_instruct/vision_encoder.x",
         "function": "Qwen3VisionEncoder",
         "line": 179
       }
@@ -87,7 +87,7 @@
       "backend": "cuda",
       "status": "missing",
       "source": {
-        "file": "qwen_vl/xmodel/vl_adapter.x",
+        "file": "xModel/qwen3/vl_2b_instruct/vl_adapter.x",
         "function": "Qwen3MergeVisualEmbeddings",
         "line": 36
       }
@@ -100,7 +100,7 @@
       "backend": "cuda",
       "status": "missing",
       "source": {
-        "file": "qwen_vl/xmodel/vl_adapter.x",
+        "file": "xModel/qwen3/vl_2b_instruct/vl_adapter.x",
         "function": "Qwen3GetRopeIndex",
         "line": 22
       }
@@ -111,7 +111,7 @@
       "label": "Text Decoder Layers x28",
       "status": "planned",
       "source": {
-        "file": "qwen_vl/xmodel/qwen_llm.x",
+        "file": "xModel/qwen3/vl_2b_instruct/qwen_llm.x",
         "function": "Qwen3TextDecoderLayer",
         "line": 86
       }
@@ -124,7 +124,7 @@
       "backend": "cuda",
       "status": "missing",
       "source": {
-        "file": "qwen_vl/xmodel/qwen_llm.x",
+        "file": "xModel/qwen3/vl_2b_instruct/qwen_llm.x",
         "function": "Qwen3TextAttention",
         "line": 57
       }
@@ -137,7 +137,7 @@
       "backend": "cuda",
       "status": "missing",
       "source": {
-        "file": "qwen_vl/xmodel/qwen_llm.x",
+        "file": "xModel/qwen3/vl_2b_instruct/qwen_llm.x",
         "function": "Qwen3TextAttention",
         "line": 63
       }
@@ -150,7 +150,7 @@
       "backend": "trt",
       "status": "planned",
       "source": {
-        "file": "qwen_vl/xmodel/qwen_vl_model.x",
+        "file": "xModel/qwen3/vl_2b_instruct/qwen_vl_model.x",
         "function": "Qwen3VLModel",
         "line": 71
       }

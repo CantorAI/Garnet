@@ -46,5 +46,10 @@ namespace Garnet::Image::Cuda
         GpuImageRGB8* result,
         std::string* error);
 
+    // Releases the decoder owned by the calling inference thread. Call this
+    // before unloading Garnet; nvJPEG teardown is not safe from a DLL/TLS
+    // destructor during Windows process shutdown.
+    void ShutdownThreadNvJpegDecoder();
+
     void FreeDecodedImage(GpuImageRGB8* result);
 }

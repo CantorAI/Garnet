@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "tensorrt-bf16",
+  "backend": "tensorrt",
+  "device": "CUDA",
+  "precision": "bf16",
+  "entrypoint": "prefill",
+  "runtime_options": {
+    "audio_sample_rate": 16000,
+    "audio_feature_bins": 128,
+    "audio_chunk_frames": 100
+  },
+  "capabilities": {
+    "single_request_generation": true,
+    "audio_input": true
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "Qwen3-ASR-0.6B",
+  "slug": "qwen3-asr-0.6b",
+  "display_name": "Qwen3-ASR-0.6B",
+  "family": "qwen3-asr",
+  "task": "automatic-speech-recognition",
+  "capabilities": {
+    "text": true,
+    "audio_input": true,
+    "streaming": false,
+    "paged_kv_cache": true
+  },
+  "entrypoints": {
+    "prefill": {
+      "file": "prefill.x",
+      "function": "Qwen3ASRPrefill",
+      "frontend": "qwen3_asr"
+    },
+    "decode": {
+      "file": "decode.x",
+      "function": "Qwen3ASRDecode",
+      "frontend": "qwen3_asr"
+    }
+  },
+  "profile_files": ["profiles/tensorrt_bf16.json"],
+  "weights": {
+    "bundled": false,
+    "format": "safetensors",
+    "source": "Qwen/Qwen3-ASR-0.6B",
+    "config_file": "config.json",
+    "tokenizer_file": "tokenizer.json",
+    "preprocessor_file": "preprocessor_config.json"
+  }
+}

@@ -1,5 +1,5 @@
 #include "model.h"
-#include "../trt/trt_builder.h"
+#include "trt_builder.h"
 #include "../tensor/garnet_tensor.h"
 #include "../tensor/tensor_helper.h"
 #include "../tokenizer/qwen_tokenizer.h"
@@ -607,12 +607,14 @@ namespace Garnet
         const std::string& frontend,
         const std::vector<std::vector<int>>& inputShapes,
         const std::vector<std::string>& inputDataTypes,
-        const FusionPartitionOptions& partitionOptions)
+        const FusionPartitionOptions& partitionOptions,
+        const std::string& backend,
+        const std::string& precision)
     {
         mCompiledRuntime = std::make_shared<CompiledModelRuntime>();
         return mCompiledRuntime->Initialize(
             rootXModel, cacheDirectory, weightsLocation, entryFunction, frontend,
-            inputShapes, inputDataTypes, partitionOptions);
+            inputShapes, inputDataTypes, partitionOptions, backend, precision);
     }
 
     void Model::RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
@@ -627,6 +629,16 @@ namespace Garnet
             return;
         }
         retValue = mCompiledRuntime->Status();
+    }
+
+    void Model::ReleaseRuntime(X::XRuntime*, X::XObj*,
+        X::ARGS&, X::KWARGS&, X::Value& retValue)
+    {
+        if (mCompiledRuntime) {
+            mCompiledRuntime->ReleaseDeviceMemory();
+            mCompiledRuntime.reset();
+        }
+        retValue = X::Value(true);
     }
 
     void Model::Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)

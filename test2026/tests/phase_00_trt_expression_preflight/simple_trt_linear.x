@@ -1,7 +1,6 @@
 from garnet import garnet
 
 T = garnet.tensor()
-T.set_backend("TensorRT")
 
 # Stage 0 preflight expression:
 # input [1, 4] * weight [4, 3] -> output [1, 3]

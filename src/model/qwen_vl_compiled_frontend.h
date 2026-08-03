@@ -26,5 +26,7 @@ namespace Garnet
         const std::string& prompt,
         int minPixels,
         int maxPixels,
-        const std::vector<std::vector<int>>& profileShapes);
+        const std::vector<std::vector<int>>& profileShapes,
+        X::Value reusableKeyCache = X::Value(),
+        X::Value reusableValueCache = X::Value());
 }
