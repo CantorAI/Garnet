@@ -1,6 +1,7 @@
 #include "garnet.h"
 #include "trt_builder.h"
 #include "../image/qwen_vl/qwen_vl_image_preprocessor.h"
+#include "../image/cuda/jpeg_decode_nvjpeg.h"
 #include "../tokenizer/qwen_tokenizer.h"
 #include "../cuda/cuda_lib.h"
 #include "../tensor/tensor_helper.h"
@@ -2373,6 +2374,7 @@ namespace Garnet
         if (!cacheRoot.empty()) {
             TRTBuilder::ReleaseCachedExecutions(cacheRoot);
         }
+        Garnet::Image::Cuda::ShutdownThreadNvJpegDecoder();
         m_servingError.clear();
         m_servingMinPixels = 256 * 28 * 28;
         m_servingMaxPixels = 1280 * 28 * 28;

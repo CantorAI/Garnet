@@ -5133,10 +5133,16 @@ namespace Garnet {
             auto* currentRows = indices
                 ? network->addGatherV2(*left, *indices->getOutput(0), GatherMode::kND)
                 : nullptr;
-            auto* updatedRows = currentRows
+            ITensor* compatibleRight = right;
+            auto* rightCast = currentRows &&
+                    right->getType() != currentRows->getOutput(0)->getType()
+                ? network->addCast(*right, currentRows->getOutput(0)->getType())
+                : nullptr;
+            if (rightCast) compatibleRight = rightCast->getOutput(0);
+            auto* updatedRows = currentRows && compatibleRight
                 ? network->addElementWise(
                     *currentRows->getOutput(0),
-                    *right,
+                    *compatibleRight,
                     ElementWiseOperation::kSUM)
                 : nullptr;
             ITensor* updates = updatedRows ? updatedRows->getOutput(0) : nullptr;
