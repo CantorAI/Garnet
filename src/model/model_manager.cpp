@@ -25,9 +25,9 @@ namespace Garnet
         namespace fs = std::filesystem;
 
         constexpr const char* DefaultCatalogUrl =
-            "https://garnetmodel.ai/api/v1/garnet/models/catalog";
+            "https://app.garnetmodel.ai/api/v1/garnet/models/catalog";
         constexpr const char* DefaultCatalogSignatureUrl =
-            "https://garnetmodel.ai/api/v1/garnet/models/catalog.sig";
+            "https://app.garnetmodel.ai/api/v1/garnet/models/catalog.sig";
 
         std::string JsonError(const std::string& code, const std::string& message)
         {
