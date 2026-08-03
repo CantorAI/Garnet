@@ -132,6 +132,114 @@ namespace Garnet
             return text.str();
         }
 
+        uint16_t ReadLe16(const unsigned char* value)
+        {
+            return static_cast<uint16_t>(value[0]) |
+                (static_cast<uint16_t>(value[1]) << 8);
+        }
+
+        uint32_t ReadLe32(const unsigned char* value)
+        {
+            return static_cast<uint32_t>(value[0]) |
+                (static_cast<uint32_t>(value[1]) << 8) |
+                (static_cast<uint32_t>(value[2]) << 16) |
+                (static_cast<uint32_t>(value[3]) << 24);
+        }
+
+        bool ExtractStoredZip(
+            const fs::path& archivePath,
+            const fs::path& destination,
+            std::string& error)
+        {
+            std::ifstream archive(archivePath, std::ios::binary);
+            if (!archive) {
+                error = "cannot open xmodel archive";
+                return false;
+            }
+            while (true) {
+                unsigned char header[30]{};
+                archive.read(reinterpret_cast<char*>(header), 4);
+                if (archive.gcount() == 0 && archive.eof()) return true;
+                if (archive.gcount() != 4) {
+                    error = "truncated xmodel ZIP header";
+                    return false;
+                }
+                const uint32_t signature = ReadLe32(header);
+                if (signature == 0x02014b50 || signature == 0x06054b50) {
+                    return true;
+                }
+                if (signature != 0x04034b50) {
+                    error = "invalid xmodel ZIP entry";
+                    return false;
+                }
+                archive.read(reinterpret_cast<char*>(header + 4), 26);
+                if (!archive) {
+                    error = "truncated xmodel ZIP entry";
+                    return false;
+                }
+                const uint16_t flags = ReadLe16(header + 6);
+                const uint16_t method = ReadLe16(header + 8);
+                const uint32_t compressedSize = ReadLe32(header + 18);
+                const uint32_t uncompressedSize = ReadLe32(header + 22);
+                const uint16_t nameLength = ReadLe16(header + 26);
+                const uint16_t extraLength = ReadLe16(header + 28);
+                if ((flags & 0x0009) != 0 || method != 0 ||
+                    compressedSize != uncompressedSize || nameLength == 0) {
+                    error = "xmodel ZIP must contain unencrypted stored entries";
+                    return false;
+                }
+                std::string name(nameLength, '\0');
+                archive.read(name.data(), nameLength);
+                archive.seekg(extraLength, std::ios::cur);
+                if (!archive) {
+                    error = "truncated xmodel ZIP path";
+                    return false;
+                }
+                std::replace(name.begin(), name.end(), '\\', '/');
+                const bool directoryEntry = !name.empty() && name.back() == '/';
+                const fs::path relative(name);
+                const fs::path output = destination / relative;
+                if (!IsSafeRelativePath(relative) || !IsWithin(destination, output)) {
+                    error = "unsafe path in xmodel ZIP";
+                    return false;
+                }
+                std::error_code fileError;
+                if (directoryEntry) {
+                    fs::create_directories(output, fileError);
+                } else {
+                    fs::create_directories(output.parent_path(), fileError);
+                    if (!fileError) {
+                        std::ofstream target(output, std::ios::binary | std::ios::trunc);
+                        if (!target) {
+                            error = "cannot create extracted xmodel file";
+                            return false;
+                        }
+                        std::vector<char> buffer(1024 * 1024);
+                        uint64_t remaining = uncompressedSize;
+                        while (remaining > 0) {
+                            const size_t count = static_cast<size_t>(
+                                std::min<uint64_t>(remaining, buffer.size()));
+                            archive.read(buffer.data(), static_cast<std::streamsize>(count));
+                            if (archive.gcount() != static_cast<std::streamsize>(count)) {
+                                error = "truncated xmodel ZIP data";
+                                return false;
+                            }
+                            target.write(buffer.data(), static_cast<std::streamsize>(count));
+                            if (!target) {
+                                error = "cannot write extracted xmodel file";
+                                return false;
+                            }
+                            remaining -= count;
+                        }
+                    }
+                }
+                if (fileError) {
+                    error = fileError.message();
+                    return false;
+                }
+            }
+        }
+
         std::vector<unsigned char> DecodeBase64Url(std::string value)
         {
             for (char& ch : value) {
@@ -588,18 +696,21 @@ namespace Garnet
             const json catalog = json::parse(FetchCatalog(runtime, false));
             const json* model = FindModel(catalog, modelId);
             if (!model) throw std::runtime_error("the selected model is not in the catalog");
-            if (!model->contains("files") || !(*model)["files"].is_array()) {
+            if (!model->contains("xmodel") || !(*model)["xmodel"].is_object() ||
+                !model->contains("weights") || !(*model)["weights"].is_array()) {
                 throw std::runtime_error("the model file manifest is invalid");
             }
 
-            uint64_t totalBytes = 0;
-            for (const json& file : (*model)["files"]) {
+            const json& xmodel = (*model)["xmodel"];
+            const json& weights = (*model)["weights"];
+            uint64_t totalBytes = xmodel.value("size_bytes", uint64_t{0});
+            for (const json& file : weights) {
                 totalBytes += file.value("size_bytes", uint64_t{0});
             }
             {
                 std::lock_guard<std::mutex> guard(job->mutex);
                 job->bytesTotal = totalBytes;
-                job->filesTotal = (*model)["files"].size();
+                job->filesTotal = weights.size() + 1;
             }
 
             const fs::path staging = m_installRoot /
@@ -618,9 +729,84 @@ namespace Garnet
             fs::create_directories(staging, error);
             if (error) throw std::runtime_error(error.message());
 
-            uint64_t completedBytes = 0;
+            auto downloadPart = [this, runtime, job, &error](
+                const json& part,
+                const fs::path& partPath,
+                uint64_t baseBytes,
+                const std::string& label) -> uint64_t {
+                fs::create_directories(partPath.parent_path());
+                const uint64_t expectedSize =
+                    part.value("size_bytes", uint64_t{0});
+                X::U_FUNC progress = [this, job, baseBytes](
+                    X::XRuntime*, X::XObj*, X::XObj*,
+                    X::ARGS& params, X::KWARGS&, X::Value& result) {
+                    const uint64_t received = params.size() == 0
+                        ? 0
+                        : static_cast<uint64_t>(params[0].ToLongLong());
+                    {
+                        std::lock_guard<std::mutex> guard(job->mutex);
+                        job->bytesReceived = baseBytes + received;
+                    }
+                    if (m_progressSink) m_progressSink(job->Snapshot().dump());
+                    result = !job->cancelled.load();
+                    return true;
+                };
+                X::Value callback(
+                    X::g_pXHost->CreateFunction(
+                        "garnet_download_progress", progress, nullptr),
+                    false);
+                bool ready = false;
+                if (fs::is_regular_file(partPath, error) && !error) {
+                    const uint64_t cachedSize = fs::file_size(partPath, error);
+                    if (!error && cachedSize == expectedSize &&
+                        Sha256(partPath) == part.value("sha256", "")) {
+                        ready = true;
+                    } else if (!error && cachedSize > expectedSize) {
+                        fs::remove(partPath, error);
+                        error.clear();
+                    }
+                }
+                if (!ready) {
+                    std::string downloadError;
+                    UpdateJob(job, "downloading", "Downloading " + label);
+                    if (!HttpDownload(
+                            runtime, part.value("url", ""), partPath,
+                            callback, downloadError)) {
+                        throw std::runtime_error(
+                            "download failed for " + label + ": " + downloadError);
+                    }
+                }
+                const uint64_t actualSize = fs::file_size(partPath);
+                if (actualSize != expectedSize ||
+                    Sha256(partPath) != part.value("sha256", "")) {
+                    throw std::runtime_error(
+                        "download verification failed for " + label);
+                }
+                return actualSize;
+            };
+
+            const fs::path archiveCache = downloadRoot / "xmodel.zip.partial";
+            const uint64_t archiveBytes = downloadPart(
+                xmodel, archiveCache, 0, "xmodel.zip");
+            const fs::path installedArchive = staging / "xmodel.zip";
+            fs::copy_file(
+                archiveCache, installedArchive,
+                fs::copy_options::overwrite_existing, error);
+            if (error) throw std::runtime_error(error.message());
+            UpdateJob(job, "extracting", "Extracting xmodel.zip");
+            std::string extractionError;
+            if (!ExtractStoredZip(installedArchive, staging, extractionError)) {
+                throw std::runtime_error(extractionError);
+            }
+
+            uint64_t completedBytes = archiveBytes;
             size_t fileIndex = 0;
-            for (const json& file : (*model)["files"]) {
+            {
+                std::lock_guard<std::mutex> guard(job->mutex);
+                job->bytesReceived = completedBytes;
+                job->filesCompleted = 1;
+            }
+            for (const json& file : weights) {
                 if (job->cancelled) throw std::runtime_error("installation cancelled");
                 const fs::path relative(file.value("path", ""));
                 if (!IsSafeRelativePath(relative)) {
@@ -638,62 +824,14 @@ namespace Garnet
 
                 for (const json& part : parts) {
                     if (job->cancelled) throw std::runtime_error("installation cancelled");
-                    const uint64_t expectedPartSize =
-                        part.value("size_bytes", uint64_t{0});
                     const fs::path partPath = downloadRoot /
-                        (std::to_string(fileIndex) + "-" +
+                        ("weight-" + std::to_string(fileIndex) + "-" +
                          std::to_string(partIndex) + ".partial");
-                    fs::create_directories(partPath.parent_path());
                     const uint64_t baseBytes = completedBytes + fileDownloaded;
-
-                    X::U_FUNC progress = [this, job, baseBytes](
-                        X::XRuntime*, X::XObj*, X::XObj*,
-                        X::ARGS& params, X::KWARGS&, X::Value& result) {
-                        const uint64_t received = params.size() == 0
-                            ? 0
-                            : static_cast<uint64_t>(params[0].ToLongLong());
-                        {
-                            std::lock_guard<std::mutex> guard(job->mutex);
-                            job->bytesReceived = baseBytes + received;
-                        }
-                        if (m_progressSink) {
-                            m_progressSink(job->Snapshot().dump());
-                        }
-                        result = !job->cancelled.load();
-                        return true;
-                    };
-                    X::Value callback(
-                        X::g_pXHost->CreateFunction(
-                            "garnet_download_progress", progress, nullptr),
-                        false);
-                    bool partReady = false;
-                    if (fs::is_regular_file(partPath, error) && !error) {
-                        const uint64_t cachedSize = fs::file_size(partPath, error);
-                        if (!error && cachedSize == expectedPartSize &&
-                            Sha256(partPath) == part.value("sha256", "")) {
-                            partReady = true;
-                        } else if (!error && cachedSize > expectedPartSize) {
-                            fs::remove(partPath, error);
-                            error.clear();
-                        }
-                    }
-                    if (!partReady) {
-                        std::string downloadError;
-                        UpdateJob(job, "downloading", "Downloading " + relative.string());
-                        if (!HttpDownload(
-                                runtime, part.value("url", ""), partPath,
-                                callback, downloadError)) {
-                            throw std::runtime_error(
-                                "download failed for " + relative.string() +
-                                " part " + std::to_string(partIndex + 1) + ": " +
-                                downloadError);
-                        }
-                    }
-                    const uint64_t actualSize = fs::file_size(partPath);
-                    if (actualSize != expectedPartSize ||
-                        Sha256(partPath) != part.value("sha256", "")) {
-                        throw std::runtime_error("downloaded part verification failed");
-                    }
+                    const uint64_t actualSize = downloadPart(
+                        part, partPath, baseBytes,
+                        relative.string() + " part " +
+                            std::to_string(partIndex + 1));
                     downloadedParts.push_back(partPath);
                     fileDownloaded += actualSize;
                     ++partIndex;
@@ -725,7 +863,8 @@ namespace Garnet
                 {
                     std::lock_guard<std::mutex> guard(job->mutex);
                     job->bytesReceived = completedBytes;
-                    job->filesCompleted = ++fileIndex;
+                    ++fileIndex;
+                    job->filesCompleted = fileIndex + 1;
                 }
             }
 
@@ -792,17 +931,36 @@ namespace Garnet
                 return JsonError("model_not_installed", "the model is not installed");
             }
             const json marker = json::parse(markerText);
-            for (const json& file : marker["files"]) {
+            auto verifyFile = [&root](const json& file) -> std::string {
                 const fs::path relative(file.value("path", ""));
                 const fs::path candidate = root / relative;
                 if (!IsSafeRelativePath(relative) || !IsWithin(root, candidate) ||
                     !fs::is_regular_file(candidate) ||
                     fs::file_size(candidate) != file.value("size_bytes", uint64_t{0}) ||
                     Sha256(candidate) != file.value("sha256", "")) {
-                    return JsonError(
-                        "model_verification_failed",
-                        "installed file verification failed: " + relative.string());
+                    return relative.string();
                 }
+                return {};
+            };
+            std::string failed;
+            if (marker.contains("files") && marker["files"].is_array()) {
+                for (const json& file : marker["files"]) {
+                    failed = verifyFile(file);
+                    if (!failed.empty()) break;
+                }
+            } else {
+                failed = verifyFile(marker["xmodel"]);
+                if (failed.empty()) {
+                    for (const json& file : marker["weights"]) {
+                        failed = verifyFile(file);
+                        if (!failed.empty()) break;
+                    }
+                }
+            }
+            if (!failed.empty()) {
+                return JsonError(
+                    "model_verification_failed",
+                    "installed file verification failed: " + failed);
             }
             return json({
                 {"schema_version", 1},
