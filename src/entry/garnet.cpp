@@ -2401,14 +2401,14 @@ namespace Garnet
     }
 
     void GarnetAPI::InstallModelJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
     {
         if (params.size() == 0) {
             retValue = GarnetJsonError("model_id_required", "install_model_json requires a model ID");
             return;
         }
         retValue = m_modelManager.StartInstall(
-            params[0].ToString(),
+            rt, params[0].ToString(),
             params.size() > 1 ? params[1].ToString() : std::string("{}"));
     }
 

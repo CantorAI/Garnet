@@ -24,6 +24,7 @@ namespace Garnet
         std::string ListRemote(X::XRuntime* runtime, bool refresh);
         std::string ListInstalled() const;
         std::string StartInstall(
+            X::XRuntime* runtime,
             const std::string& modelId,
             const std::string& optionsJson);
         std::string InstallStatus(const std::string& jobId) const;

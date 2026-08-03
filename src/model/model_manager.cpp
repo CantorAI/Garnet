@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <random>
 #include <sstream>
+#include <thread>
 #include <vector>
 
 namespace Garnet
@@ -256,12 +257,18 @@ namespace Garnet
                 return false;
             }
             X::Value client = http["Client"](parts.origin);
-            if (!client.IsObject() ||
-                !client["download"](parts.path, target.string(), callback).ToBool()) {
-                error = "artifact download failed";
+            if (!client.IsObject()) {
+                error = "HTTP client creation failed";
                 return false;
             }
+            const bool downloaded =
+                client["download"](parts.path, target.string(), callback).ToBool();
             const int status = client["status"]().ToInt();
+            if (!downloaded) {
+                error = "artifact download failed (HTTP " +
+                    std::to_string(status) + ")";
+                return false;
+            }
             if (status != 200 && status != 206) {
                 error = "artifact download returned status " + std::to_string(status);
                 return false;
@@ -471,6 +478,7 @@ namespace Garnet
     }
 
     std::string ModelManager::StartInstall(
+        X::XRuntime* runtime,
         const std::string& modelId,
         const std::string& optionsJson)
     {
@@ -493,22 +501,16 @@ namespace Garnet
             m_jobs[job->id] = job;
         }
 
-        const std::string code =
-            "args = get_args()\n"
-            "from garnet import garnet\n"
-            "garnet._run_model_install_job(args[0], args[1], args[2])\n";
-        X::ARGS arguments(3);
-        arguments.push_back(job->id);
-        arguments.push_back(modelId);
-        arguments.push_back(optionsJson);
-        X::KWARGS keywordArguments;
-        const unsigned long long context = X::g_pXHost->RunModuleInThread(
-            ("garnet-install-" + job->id + ".x").c_str(),
-            code.c_str(), static_cast<int>(code.size()),
-            arguments, keywordArguments);
-        if (context == 0) {
+        try {
+            std::thread([
+                this, runtime, jobId = job->id, modelId, optionsJson
+            ]() {
+                RunInstallJob(runtime, jobId, modelId, optionsJson);
+            }).detach();
+        }
+        catch (const std::exception& exception) {
             UpdateJob(job, "error", "Could not start install worker", true,
-                "the XLang install worker could not be started");
+                exception.what());
             return JsonError(
                 "worker_start_failed",
                 job->Snapshot().value("error", "worker start failed"));
@@ -602,8 +604,13 @@ namespace Garnet
 
             const fs::path staging = m_installRoot /
                 ("." + modelId + ".staging-" + jobId);
+            const fs::path downloadRoot = m_cacheRoot / "downloads" /
+                modelId / model->value("version", "unknown");
             if (!IsWithin(m_installRoot, staging)) {
                 throw std::runtime_error("unsafe staging path");
+            }
+            if (!IsWithin(m_cacheRoot, downloadRoot)) {
+                throw std::runtime_error("unsafe download cache path");
             }
             std::error_code error;
             fs::remove_all(staging, error);
@@ -633,8 +640,8 @@ namespace Garnet
                     if (job->cancelled) throw std::runtime_error("installation cancelled");
                     const uint64_t expectedPartSize =
                         part.value("size_bytes", uint64_t{0});
-                    const fs::path partPath = staging /
-                        (".parts/" + std::to_string(fileIndex) + "-" +
+                    const fs::path partPath = downloadRoot /
+                        (std::to_string(fileIndex) + "-" +
                          std::to_string(partIndex) + ".partial");
                     fs::create_directories(partPath.parent_path());
                     const uint64_t baseBytes = completedBytes + fileDownloaded;
@@ -659,12 +666,28 @@ namespace Garnet
                         X::g_pXHost->CreateFunction(
                             "garnet_download_progress", progress, nullptr),
                         false);
-                    std::string downloadError;
-                    UpdateJob(job, "downloading", "Downloading " + relative.string());
-                    if (!HttpDownload(
-                            runtime, part.value("url", ""), partPath,
-                            callback, downloadError)) {
-                        throw std::runtime_error(downloadError);
+                    bool partReady = false;
+                    if (fs::is_regular_file(partPath, error) && !error) {
+                        const uint64_t cachedSize = fs::file_size(partPath, error);
+                        if (!error && cachedSize == expectedPartSize &&
+                            Sha256(partPath) == part.value("sha256", "")) {
+                            partReady = true;
+                        } else if (!error && cachedSize > expectedPartSize) {
+                            fs::remove(partPath, error);
+                            error.clear();
+                        }
+                    }
+                    if (!partReady) {
+                        std::string downloadError;
+                        UpdateJob(job, "downloading", "Downloading " + relative.string());
+                        if (!HttpDownload(
+                                runtime, part.value("url", ""), partPath,
+                                callback, downloadError)) {
+                            throw std::runtime_error(
+                                "download failed for " + relative.string() +
+                                " part " + std::to_string(partIndex + 1) + ": " +
+                                downloadError);
+                        }
                     }
                     const uint64_t actualSize = fs::file_size(partPath);
                     if (actualSize != expectedPartSize ||
@@ -704,13 +727,8 @@ namespace Garnet
                     job->bytesReceived = completedBytes;
                     job->filesCompleted = ++fileIndex;
                 }
-                for (const fs::path& partPath : downloadedParts) {
-                    fs::remove(partPath, error);
-                    error.clear();
-                }
             }
 
-            fs::remove_all(staging / ".parts", error);
             std::ofstream marker(staging / ".garnet-model.json", std::ios::binary);
             marker << model->dump(2) << '\n';
             marker.close();
@@ -737,6 +755,8 @@ namespace Garnet
                 throw std::runtime_error(error.message());
             }
             fs::remove_all(backup, error);
+            error.clear();
+            fs::remove_all(downloadRoot, error);
             UpdateJob(job, "complete", "Model installed", true);
         }
         catch (const std::exception& exception) {
