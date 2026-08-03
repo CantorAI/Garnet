@@ -1,18 +1,18 @@
 # Garnet Model Packaging and Enumeration
 
-Garnet releases install production model programs below `models/`, next to
-the runtime `bin/` directory:
+CantorOne ships the Garnet runtime and its native dependencies as part of the
+application. Model programs and checkpoint weights are installed separately
+after the user selects a compatible model from the signed remote catalog:
 
 ```text
-Garnet/
-  bin/garnet.dll
-  models/qwen3/text_1_7b/
+CantorOne/resources/garnet/bin/garnet.dll
+UserData/garnet/models/qwen3/text_1_7b/
     model.json
     prefill.x
     decode.x
     decode_batch.x
     profiles/*.json
-  models/qwen3/vl_2b_instruct/
+UserData/garnet/models/qwen3/vl_2b_instruct/
     model.json
     *.x
     profiles/*.json
@@ -26,7 +26,7 @@ Weights remain external and are identified by the `weights` section of each
 
 ## Catalog discovery
 
-The available-model catalog is resolved in this order:
+The installed-model catalog is resolved in this order:
 
 1. An explicit catalog path passed by the application.
 2. `GARNET_MODEL_CATALOG`.
@@ -51,13 +51,29 @@ from installed packages. Garnet currently owns one serving instance, so the
 response declares `serving_mode: "single_instance"`; the array contract can
 remain unchanged when the model manager becomes multi-instance.
 
-Native applications can include `garnet/garnet_serving.h` and call:
+Native C++, Python, Electron/JavaScript, and `.x` callers all consume the same
+XLang `garnet` package. No Garnet-specific C header is part of the public
+integration contract.
 
-```c
-GarnetListAvailableModelsJson(catalog_root, output, capacity, &required);
-GarnetListLoadedModelsJson(output, capacity, &required);
+## Remote model repository
+
+The Manifold host stores only the signed catalog below `/data/garnetmodels`
+and exposes it from `https://garnetmodel.ai/api/v1/garnet/models/`:
+
+```text
+/data/garnetmodels/
+  catalog-v1.json
+  catalog-v1.sig
 ```
 
-The required byte count includes the trailing NUL. A null or undersized output
-buffer returns `2` after setting the required capacity, enabling the usual
-two-call allocation pattern.
+The catalog has four product categories: LLM (`text` in the wire contract),
+VLM, ASR, and TTS. Large immutable weight parts are GitHub Release assets in
+CantorAI/ModelZoo. Garnet verifies the catalog signature before showing remote
+entries, verifies every part and reconstructed file with SHA-256, and activates
+the model with an atomic directory rename.
+
+CantorOne never downloads the Garnet runtime. Community applications may get
+the same runtime binary from the public Garnet GitHub releases. The repository
+also carries public XModel source and examples for Python, C++, Electron, and
+`.x`; checkpoint weights are distributed through ModelZoo according to their
+upstream and Garnet license terms.

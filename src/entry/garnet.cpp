@@ -113,6 +113,14 @@ namespace
     }
 }
 
+namespace Garnet
+{
+    GarnetAPI::GarnetAPI()
+        : m_modelManager()
+    {
+    }
+}
+
 extern "C" GARNET_SERVING_API int GarnetListAvailableModelsJson(
     const char* catalogRoot,
     char* output,
@@ -2369,6 +2377,116 @@ namespace Garnet
         m_servingMinPixels = 256 * 28 * 28;
         m_servingMaxPixels = 1280 * 28 * 28;
         m_servingMaxOutputTokens = 256;
+        retValue = true;
+    }
+
+    void GarnetAPI::ConfigureModelManagerJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = m_modelManager.Configure(
+            params.size() == 0 ? std::string("{}") : params[0].ToString());
+    }
+
+    void GarnetAPI::ListRemoteModelsJson(
+        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        const bool refresh = params.size() > 0 && params[0].ToBool();
+        retValue = m_modelManager.ListRemote(rt, refresh);
+    }
+
+    void GarnetAPI::ListInstalledModelsJson(
+        X::XRuntime*, X::XObj*, X::ARGS&, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = m_modelManager.ListInstalled();
+    }
+
+    void GarnetAPI::InstallModelJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("model_id_required", "install_model_json requires a model ID");
+            return;
+        }
+        retValue = m_modelManager.StartInstall(
+            params[0].ToString(),
+            params.size() > 1 ? params[1].ToString() : std::string("{}"));
+    }
+
+    void GarnetAPI::ModelInstallStatusJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = params.size() == 0
+            ? GarnetJsonError("job_id_required", "model_install_status_json requires a job ID")
+            : m_modelManager.InstallStatus(params[0].ToString());
+    }
+
+    void GarnetAPI::CancelModelInstallJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = params.size() == 0
+            ? GarnetJsonError("job_id_required", "cancel_model_install_json requires a job ID")
+            : m_modelManager.CancelInstall(params[0].ToString());
+    }
+
+    void GarnetAPI::VerifyInstalledModelJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        retValue = params.size() == 0
+            ? GarnetJsonError("model_id_required", "verify_installed_model_json requires a model ID")
+            : m_modelManager.VerifyInstalled(params[0].ToString());
+    }
+
+    void GarnetAPI::RemoveInstalledModelJson(
+        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("model_id_required", "remove_installed_model_json requires a model ID");
+            return;
+        }
+        const std::string modelId = params[0].ToString();
+        {
+            std::lock_guard<std::mutex> guard(m_servingMutex);
+            if (modelId == m_servingModelId && m_servingModel.IsValid()) {
+                retValue = GarnetJsonError("model_in_use", "stop the served model before removing it");
+                return;
+            }
+        }
+        retValue = m_modelManager.RemoveInstalled(modelId);
+    }
+
+    void GarnetAPI::ServeInstalledModelJson(
+        X::XRuntime* rt, X::XObj* context, X::ARGS& params, X::KWARGS&,
+        X::Value& retValue)
+    {
+        if (params.size() == 0) {
+            retValue = GarnetJsonError("model_id_required", "serve_installed_model_json requires a model ID");
+            return;
+        }
+        const std::string modelId = params[0].ToString();
+        const std::filesystem::path root = m_modelManager.InstalledModelRoot(modelId);
+        if (root.empty() || !std::filesystem::is_regular_file(root / ".garnet-model.json")) {
+            retValue = GarnetJsonError("model_not_installed", "the requested model is not installed");
+            return;
+        }
+        X::ARGS serveArgs(5);
+        serveArgs.push_back(root.string());
+        serveArgs.push_back((root / "xmodel").string());
+        serveArgs.push_back(m_modelManager.CacheRoot(modelId).string());
+        serveArgs.push_back(params.size() > 1 ? params[1].ToString() : std::string("{}"));
+        serveArgs.push_back(modelId);
+        X::KWARGS serveKwargs;
+        ServeModel(rt, context, serveArgs, serveKwargs, retValue);
+    }
+
+    void GarnetAPI::RunModelInstallJob(
+        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    {
+        if (params.size() < 3) {
+            retValue = GarnetJsonError("install_job_invalid", "the internal install job is incomplete");
+            return;
+        }
+        m_modelManager.RunInstallJob(
+            rt, params[0].ToString(), params[1].ToString(), params[2].ToString());
         retValue = true;
     }
 

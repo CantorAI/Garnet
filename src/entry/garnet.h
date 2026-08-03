@@ -4,6 +4,7 @@
 #include "xlang.h"
 #include "garnet_tensor.h"
 #include "model.h"
+#include "model_manager.h"
 #include "log.h"
 #include <string>
 #include <deque>
@@ -137,6 +138,7 @@ namespace Garnet
 		int m_servingMaxPixels = 1280 * 28 * 28;
 		int m_servingMaxOutputTokens = 256;
 		mutable std::mutex m_servingMutex;
+		ModelManager m_modelManager;
 		bool LoadModelFromFile(std::string modelPath, X::Dict& model);
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
@@ -175,12 +177,24 @@ namespace Garnet
 			APISET().AddVarFunc("transcribe_json", &GarnetAPI::TranscribeJson);
 			APISET().AddVarFunc("synthesize_json", &GarnetAPI::SynthesizeJson);
 			APISET().AddVarFunc("stop_serving", &GarnetAPI::StopServing);
+			APISET().AddVarFunc("configure_model_manager_json", &GarnetAPI::ConfigureModelManagerJson);
+			APISET().AddVarFunc("list_remote_models_json", &GarnetAPI::ListRemoteModelsJson);
+			APISET().AddVarFunc("list_installed_models_json", &GarnetAPI::ListInstalledModelsJson);
+			APISET().AddVarFunc("install_model_json", &GarnetAPI::InstallModelJson);
+			APISET().AddVarFunc("model_install_status_json", &GarnetAPI::ModelInstallStatusJson);
+			APISET().AddVarFunc("cancel_model_install_json", &GarnetAPI::CancelModelInstallJson);
+			APISET().AddVarFunc("verify_installed_model_json", &GarnetAPI::VerifyInstalledModelJson);
+			APISET().AddVarFunc("remove_installed_model_json", &GarnetAPI::RemoveInstalledModelJson);
+			APISET().AddVarFunc("serve_installed_model_json", &GarnetAPI::ServeInstalledModelJson);
+			APISET().AddVarFunc("_run_model_install_job", &GarnetAPI::RunModelInstallJob);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
 			APISET().AddClass<0, QwenVLRequestContext>("QwenVLRequestContext");
 			APISET().AddClass<0, Model>("model");
 			APISET().AddClass<0, GarnetTensor>("tensor");
 		END_PACKAGE
+
+		GarnetAPI();
 
 		void SetBaseFolder(std::string folder)
 		{
@@ -270,6 +284,26 @@ namespace Garnet
 		void SynthesizeJson(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void StopServing(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ConfigureModelManagerJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ListRemoteModelsJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ListInstalledModelsJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void InstallModelJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ModelInstallStatusJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void CancelModelInstallJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void VerifyInstalledModelJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void RemoveInstalledModelJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void ServeInstalledModelJson(X::XRuntime* rt, X::XObj* pContext,
+			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		void RunModelInstallJob(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
 		void RunTest(X::XRuntime* rt, X::XObj* pContext,
 			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);

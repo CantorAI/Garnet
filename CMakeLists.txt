@@ -35,6 +35,14 @@ find_package(xlang REQUIRED)
 set(xlang_sdk_folder "${XLANG_INCLUDE_DIR}")
 include_directories(${xlang_sdk_folder})
 
+# Model catalog signatures and artifact hashes are verified in the runtime.
+if(WIN32)
+    set(GARNET_OPENSSL_ROOT "${xlang_sdk_folder}/../Http/depends/windows")
+    include_directories("${GARNET_OPENSSL_ROOT}/include")
+else()
+    find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+endif()
+
 # OpenVINO is an optional compiled backend. The Python wheel contains the
 # native C++ SDK as well as the Python API, so discover its CMake package when
 # a system/archive installation was not configured explicitly.
@@ -275,6 +283,13 @@ endif()
 
 # On Windows, link against cudart (the CUDA runtime) explicitly.
 if(WIN32)
+    if(CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64")
+        set(GARNET_OPENSSL_LIB_DIR "${GARNET_OPENSSL_ROOT}/lib/arm64")
+    else()
+        set(GARNET_OPENSSL_LIB_DIR "${GARNET_OPENSSL_ROOT}/lib/x64")
+    endif()
+    target_link_directories(${PROJECT_NAME} PRIVATE "${GARNET_OPENSSL_LIB_DIR}")
+    target_link_libraries(${PROJECT_NAME} libcrypto_static crypt32 bcrypt ws2_32)
     target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
             cublas.lib "D:/CantorAI/ThirdPartySDK/TensorRT/lib/nvinfer_10.lib"
             nppc.lib nppig.lib nvjpeg.lib
@@ -302,7 +317,7 @@ if(WIN32)
         target_link_libraries(${PROJECT_NAME} $<$<CONFIG:Release>:msvcrt>)
     endif()
 else()
-    target_link_libraries(${PROJECT_NAME} pthread dl m ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY})
+    target_link_libraries(${PROJECT_NAME} pthread dl m OpenSSL::Crypto ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY})
 endif()
 
 # Enable separable CUDA compilation and specify architectures.
@@ -358,10 +373,6 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_runtime
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_runtime
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_development
-)
-install(FILES "${PROJECT_SOURCE_DIR}/src/include/garnet_serving.h"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/garnet"
-    COMPONENT garnet_development
 )
 if(GARNET_INSTALL_XMODELS)
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/xModel/"
