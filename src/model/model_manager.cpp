@@ -312,9 +312,11 @@ namespace Garnet
 
         bool ImportHttp(X::XRuntime* runtime, X::Value& http)
         {
-            return X::g_pXHost &&
-                X::g_pXHost->Import(runtime, "http", nullptr, nullptr, http) &&
-                http.IsObject();
+            if (!X::g_pXHost || !runtime) return false;
+            X::Runtime xruntime(runtime);
+            X::Package package(xruntime, "http", "xlang_http");
+            http = package;
+            return http.IsObject();
         }
 
         bool HttpGet(
