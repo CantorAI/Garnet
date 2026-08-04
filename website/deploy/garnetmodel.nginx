@@ -39,10 +39,13 @@ server {
     }
 
     location / {
-        # HTML and SPA routes must revalidate so release/download changes are
-        # visible on the next navigation or refresh. Fingerprinted/versioned
-        # static assets retain their longer cache policy below.
-        expires -1;
+        # Never retain HTML so release/download changes are visible on the next
+        # navigation. Fingerprinted/versioned assets keep their longer policy.
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
         try_files $uri $uri/ /index.html;
     }
 
