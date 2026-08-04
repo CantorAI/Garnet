@@ -26,19 +26,23 @@ server {
     root /var/www/garnetmodel.ai;
     index index.html;
 
-    location /api/ {
-        proxy_pass http://127.0.0.1:8021;
-        proxy_http_version 1.1;
+    # Signed CantorOne bootstrap files are controlled by the private Manifold
+    # release service. Large immutable payloads remain on GitHub Releases.
+    location ^~ /api/v1/packages/ {
+        limit_req zone=manifold_api burst=30 nodelay;
+        proxy_pass http://manifold_backend;
+        include proxy_params;
         proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_request_buffering off;
         proxy_buffering off;
-        client_max_body_size 1m;
+        proxy_read_timeout 5m;
     }
 
     location / {
+        # HTML and SPA routes must revalidate so release/download changes are
+        # visible on the next navigation or refresh. Fingerprinted/versioned
+        # static assets retain their longer cache policy below.
+        expires -1;
         try_files $uri $uri/ /index.html;
     }
 
