@@ -17,6 +17,15 @@
 #include <thread>
 #include <vector>
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
 namespace Garnet
 {
     namespace
@@ -28,6 +37,84 @@ namespace Garnet
             "https://app.garnetmodel.ai/api/v1/garnet/models/catalog";
         constexpr const char* DefaultCatalogSignatureUrl =
             "https://app.garnetmodel.ai/api/v1/garnet/models/catalog.sig";
+        constexpr const char* DefaultAccelerationCatalogUrl =
+            "https://app.garnetmodel.ai/api/v1/garnet/accelerations/catalog";
+        constexpr const char* DefaultAccelerationCatalogSignatureUrl =
+            "https://app.garnetmodel.ai/api/v1/garnet/accelerations/catalog.sig";
+
+        fs::path CurrentModuleDirectory()
+        {
+#if defined(_WIN32)
+            HMODULE module = nullptr;
+            if (GetModuleHandleExW(
+                    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                    reinterpret_cast<LPCWSTR>(&CurrentModuleDirectory),
+                    &module)) {
+                std::vector<wchar_t> buffer(32768);
+                const DWORD length = GetModuleFileNameW(
+                    module, buffer.data(), static_cast<DWORD>(buffer.size()));
+                if (length > 0 && length < buffer.size()) {
+                    return fs::path(std::wstring(buffer.data(), length)).parent_path();
+                }
+            }
+#else
+            Dl_info info{};
+            if (dladdr(reinterpret_cast<void*>(&CurrentModuleDirectory), &info) != 0 &&
+                info.dli_fname) {
+                return fs::absolute(info.dli_fname).parent_path();
+            }
+#endif
+            return fs::current_path();
+        }
+
+        std::string PackagedCatalogEndpoint(
+            const std::string& storeName,
+            const std::string& configured,
+            const char* key,
+            const char* fallback)
+        {
+            if (!configured.empty()) return configured;
+            if (storeName != "accelerations") return fallback;
+            try {
+                std::ifstream input(
+                    CurrentModuleDirectory() / "garnet-runtime.json",
+                    std::ios::binary);
+                if (input) {
+                    const json runtime = json::parse(input);
+                    const std::string endpoint = runtime.value(key, "");
+                    if (endpoint.rfind("https://", 0) == 0) return endpoint;
+                }
+            }
+            catch (...) {
+                // A missing or malformed optional runtime file must never stop
+                // the CPU-only Garnet base library from loading.
+            }
+            return fallback;
+        }
+
+        fs::path PackagedAccelerationPublicKey()
+        {
+            std::string filename = "cantorai-acceleration-signing-public.pem";
+            try {
+                std::ifstream input(
+                    CurrentModuleDirectory() / "garnet-runtime.json",
+                    std::ios::binary);
+                if (input) {
+                    const json runtime = json::parse(input);
+                    filename = runtime.value(
+                        "acceleration_public_key_file", filename);
+                }
+            }
+            catch (...) {
+            }
+            const fs::path relative(filename);
+            if (!relative.is_absolute() && relative.parent_path().empty()) {
+                return CurrentModuleDirectory() / relative;
+            }
+            return CurrentModuleDirectory() /
+                "cantorai-acceleration-signing-public.pem";
+        }
 
         std::string JsonError(const std::string& code, const std::string& message)
         {
@@ -78,6 +165,26 @@ namespace Garnet
                 }
             }
             return true;
+        }
+
+        bool RenameWithRetry(
+            const fs::path& source,
+            const fs::path& destination,
+            std::error_code& error)
+        {
+            for (int attempt = 0; attempt < 20; ++attempt) {
+                error.clear();
+                fs::rename(source, destination, error);
+                if (!error) return true;
+                bool transient = error == std::errc::permission_denied;
+#if defined(_WIN32)
+                transient = transient || error.value() == ERROR_SHARING_VIOLATION ||
+                    error.value() == ERROR_LOCK_VIOLATION;
+#endif
+                if (!transient) return false;
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+            return false;
         }
 
         std::string RandomId()
@@ -153,7 +260,7 @@ namespace Garnet
         {
             std::ifstream archive(archivePath, std::ios::binary);
             if (!archive) {
-                error = "cannot open xmodel archive";
+                error = "cannot open package archive";
                 return false;
             }
             while (true) {
@@ -161,7 +268,7 @@ namespace Garnet
                 archive.read(reinterpret_cast<char*>(header), 4);
                 if (archive.gcount() == 0 && archive.eof()) return true;
                 if (archive.gcount() != 4) {
-                    error = "truncated xmodel ZIP header";
+                    error = "truncated package ZIP header";
                     return false;
                 }
                 const uint32_t signature = ReadLe32(header);
@@ -169,12 +276,12 @@ namespace Garnet
                     return true;
                 }
                 if (signature != 0x04034b50) {
-                    error = "invalid xmodel ZIP entry";
+                    error = "invalid package ZIP entry";
                     return false;
                 }
                 archive.read(reinterpret_cast<char*>(header + 4), 26);
                 if (!archive) {
-                    error = "truncated xmodel ZIP entry";
+                    error = "truncated package ZIP entry";
                     return false;
                 }
                 const uint16_t flags = ReadLe16(header + 6);
@@ -185,14 +292,14 @@ namespace Garnet
                 const uint16_t extraLength = ReadLe16(header + 28);
                 if ((flags & 0x0009) != 0 || method != 0 ||
                     compressedSize != uncompressedSize || nameLength == 0) {
-                    error = "xmodel ZIP must contain unencrypted stored entries";
+                    error = "package ZIP must contain unencrypted stored entries";
                     return false;
                 }
                 std::string name(nameLength, '\0');
                 archive.read(name.data(), nameLength);
                 archive.seekg(extraLength, std::ios::cur);
                 if (!archive) {
-                    error = "truncated xmodel ZIP path";
+                    error = "truncated package ZIP path";
                     return false;
                 }
                 std::replace(name.begin(), name.end(), '\\', '/');
@@ -200,7 +307,7 @@ namespace Garnet
                 const fs::path relative(name);
                 const fs::path output = destination / relative;
                 if (!IsSafeRelativePath(relative) || !IsWithin(destination, output)) {
-                    error = "unsafe path in xmodel ZIP";
+                    error = "unsafe path in package ZIP";
                     return false;
                 }
                 std::error_code fileError;
@@ -211,7 +318,7 @@ namespace Garnet
                     if (!fileError) {
                         std::ofstream target(output, std::ios::binary | std::ios::trunc);
                         if (!target) {
-                            error = "cannot create extracted xmodel file";
+                            error = "cannot create extracted package file";
                             return false;
                         }
                         std::vector<char> buffer(1024 * 1024);
@@ -221,12 +328,12 @@ namespace Garnet
                                 std::min<uint64_t>(remaining, buffer.size()));
                             archive.read(buffer.data(), static_cast<std::streamsize>(count));
                             if (archive.gcount() != static_cast<std::streamsize>(count)) {
-                                error = "truncated xmodel ZIP data";
+                                error = "truncated package ZIP data";
                                 return false;
                             }
                             target.write(buffer.data(), static_cast<std::streamsize>(count));
                             if (!target) {
-                                error = "cannot write extracted xmodel file";
+                                error = "cannot write extracted package file";
                                 return false;
                             }
                             remaining -= count;
@@ -336,7 +443,15 @@ namespace Garnet
                 return false;
             }
             X::Value client = http["Client"](parts.origin);
-            if (!client.IsObject() || !client["get"](parts.path).ToBool()) {
+            if (!client.IsObject()) {
+                error = "HTTP client creation failed";
+                return false;
+            }
+            X::Dict headers;
+            headers->Set("User-Agent", "CantorAI-Garnet/0.1");
+            headers->Set("Accept", "application/octet-stream, application/json");
+            client["setHeaders"](headers);
+            if (!client["get"](parts.path).ToBool()) {
                 error = "HTTP GET failed";
                 return false;
             }
@@ -345,7 +460,18 @@ namespace Garnet
                 error = "HTTP GET returned status " + std::to_string(status);
                 return false;
             }
-            content = client["body"]().ToString();
+            X::Value body = client["body"]();
+            if (body.IsBin()) {
+                auto* binary = dynamic_cast<X::XBin*>(body.GetObj());
+                if (!binary) {
+                    error = "HTTP response body is unavailable";
+                    return false;
+                }
+                content.assign(binary->Data(), binary->Size());
+            }
+            else {
+                content = body.ToString();
+            }
             return true;
         }
 
@@ -371,6 +497,10 @@ namespace Garnet
                 error = "HTTP client creation failed";
                 return false;
             }
+            X::Dict headers;
+            headers->Set("User-Agent", "CantorAI-Garnet/0.1");
+            headers->Set("Accept", "application/octet-stream");
+            client["setHeaders"](headers);
             const bool downloaded =
                 client["download"](parts.path, target.string(), callback).ToBool();
             const int status = client["status"]().ToInt();
@@ -412,6 +542,9 @@ namespace Garnet
         uint64_t bytesReceived = 0;
         uint64_t bytesTotal = 0;
         bool terminal = false;
+        bool archiveCacheHit = false;
+        std::string archiveCachePath;
+        bool reportArchiveCache = false;
         std::atomic<bool> cancelled{false};
         mutable std::mutex mutex;
 
@@ -422,7 +555,7 @@ namespace Garnet
                 ? 0.0
                 : (100.0 * static_cast<double>(bytesReceived) /
                     static_cast<double>(bytesTotal));
-            return {
+            json snapshot = {
                 {"schema_version", 1},
                 {"job_id", id},
                 {"model_id", modelId},
@@ -436,6 +569,11 @@ namespace Garnet
                 {"error", error},
                 {"terminal", terminal}
             };
+            if (reportArchiveCache) {
+                snapshot["archive_cache_hit"] = archiveCacheHit;
+                snapshot["archive_cache_path"] = archiveCachePath;
+            }
+            return snapshot;
         }
     };
 
@@ -443,16 +581,40 @@ namespace Garnet
         ProgressSink progressSink,
         std::string catalogUrl,
         std::string catalogSignatureUrl,
-        std::string storeName)
+        std::string storeName,
+        std::string archiveField,
+        bool retainArchive)
         : m_progressSink(std::move(progressSink)),
-          m_catalogUrl(catalogUrl.empty() ? DefaultCatalogUrl : std::move(catalogUrl)),
-          m_catalogSignatureUrl(catalogSignatureUrl.empty()
-              ? DefaultCatalogSignatureUrl
-              : std::move(catalogSignatureUrl))
+          m_catalogUrl(PackagedCatalogEndpoint(
+              storeName,
+              catalogUrl,
+              "acceleration_catalog_url",
+              storeName == "accelerations"
+                  ? DefaultAccelerationCatalogUrl
+                  : DefaultCatalogUrl)),
+          m_catalogSignatureUrl(PackagedCatalogEndpoint(
+              storeName,
+              catalogSignatureUrl,
+              "acceleration_catalog_signature_url",
+              storeName == "accelerations"
+                  ? DefaultAccelerationCatalogSignatureUrl
+                  : DefaultCatalogSignatureUrl)),
+          m_archiveField(std::move(archiveField)),
+          m_retainArchive(retainArchive)
     {
-        const fs::path base = fs::temp_directory_path() / "cantorai-garnet";
+        if (m_archiveField != "xmodel" && m_archiveField != "runtime") {
+            m_archiveField = "xmodel";
+            m_retainArchive = false;
+        }
+        const bool portableRuntimeStore = storeName == "accelerations";
+        const fs::path base = portableRuntimeStore
+            ? CurrentModuleDirectory()
+            : fs::temp_directory_path() / "cantorai-garnet";
         m_installRoot = base / storeName;
         m_cacheRoot = base / "cache" / storeName;
+        if (portableRuntimeStore) {
+            m_publicKeyPath = PackagedAccelerationPublicKey();
+        }
     }
 
     void ModelManager::SetProgressSink(ProgressSink progressSink)
@@ -604,6 +766,7 @@ namespace Garnet
         auto job = std::make_shared<Job>();
         job->id = RandomId();
         job->modelId = modelId;
+        job->reportArchiveCache = m_retainArchive;
         {
             std::lock_guard<std::mutex> guard(m_mutex);
             for (const auto& item : m_jobs) {
@@ -704,14 +867,16 @@ namespace Garnet
             const json catalog = json::parse(FetchCatalog(runtime, false));
             const json* model = FindModel(catalog, modelId);
             if (!model) throw std::runtime_error("the selected model is not in the catalog");
-            if (!model->contains("xmodel") || !(*model)["xmodel"].is_object() ||
-                !model->contains("weights") || !(*model)["weights"].is_array()) {
-                throw std::runtime_error("the model file manifest is invalid");
+            if (!model->contains(m_archiveField) ||
+                !(*model)[m_archiveField].is_object() ||
+                (m_archiveField == "xmodel" &&
+                    (!model->contains("weights") || !(*model)["weights"].is_array()))) {
+                throw std::runtime_error("the package file manifest is invalid");
             }
 
-            const json& xmodel = (*model)["xmodel"];
-            const json& weights = (*model)["weights"];
-            uint64_t totalBytes = xmodel.value("size_bytes", uint64_t{0});
+            const json& archive = (*model)[m_archiveField];
+            const json weights = model->value("weights", json::array());
+            uint64_t totalBytes = archive.value("size_bytes", uint64_t{0});
             for (const json& file : weights) {
                 totalBytes += file.value("size_bytes", uint64_t{0});
             }
@@ -725,11 +890,16 @@ namespace Garnet
                 ("." + modelId + ".staging-" + jobId);
             const fs::path downloadRoot = m_cacheRoot / "downloads" /
                 modelId / model->value("version", "unknown");
+            const fs::path packageCacheRoot = m_cacheRoot / "packages" /
+                modelId / model->value("version", "unknown");
             if (!IsWithin(m_installRoot, staging)) {
                 throw std::runtime_error("unsafe staging path");
             }
             if (!IsWithin(m_cacheRoot, downloadRoot)) {
                 throw std::runtime_error("unsafe download cache path");
+            }
+            if (!IsWithin(m_cacheRoot, packageCacheRoot)) {
+                throw std::runtime_error("unsafe package cache path");
             }
             std::error_code error;
             fs::remove_all(staging, error);
@@ -793,17 +963,82 @@ namespace Garnet
                 return actualSize;
             };
 
-            const fs::path archiveCache = downloadRoot / "xmodel.zip.partial";
-            const uint64_t archiveBytes = downloadPart(
-                xmodel, archiveCache, 0, "xmodel.zip");
-            const fs::path installedArchive = staging / "xmodel.zip";
-            fs::copy_file(
-                archiveCache, installedArchive,
-                fs::copy_options::overwrite_existing, error);
-            if (error) throw std::runtime_error(error.message());
-            UpdateJob(job, "extracting", "Extracting xmodel.zip");
+            const std::string archiveName = m_archiveField + ".zip";
+            const fs::path archivePartial = downloadRoot /
+                (archiveName + ".partial");
+            const uint64_t expectedArchiveBytes =
+                archive.value("size_bytes", uint64_t{0});
+            auto verifiedArchive = [&archive, expectedArchiveBytes](
+                const fs::path& candidate) {
+                std::error_code verifyError;
+                return fs::is_regular_file(candidate, verifyError) && !verifyError &&
+                    fs::file_size(candidate, verifyError) == expectedArchiveBytes &&
+                    !verifyError &&
+                    Sha256(candidate) == archive.value("sha256", "");
+            };
+            fs::path archiveSource = archivePartial;
+            uint64_t archiveBytes = 0;
+            if (!m_retainArchive) {
+                archiveBytes = downloadPart(
+                    archive, archivePartial, 0, archiveName);
+            } else {
+                fs::create_directories(packageCacheRoot, error);
+                if (error) throw std::runtime_error(error.message());
+                const fs::path archiveCache = packageCacheRoot / archiveName;
+                bool archiveReady = false;
+                if (fs::is_regular_file(archiveCache, error) && !error) {
+                    archiveReady = verifiedArchive(archiveCache);
+                    if (!archiveReady) {
+                        fs::remove(archiveCache, error);
+                        error.clear();
+                    }
+                }
+                error.clear();
+                archiveBytes = expectedArchiveBytes;
+                if (archiveReady) {
+                    {
+                        std::lock_guard<std::mutex> guard(job->mutex);
+                        job->archiveCacheHit = true;
+                        job->archiveCachePath = archiveCache.string();
+                        job->bytesReceived = archiveBytes;
+                    }
+                    UpdateJob(job, "cache", "Using verified cached " + archiveName);
+                } else {
+                    archiveBytes = downloadPart(
+                        archive, archivePartial, 0, archiveName);
+                    fs::rename(archivePartial, archiveCache, error);
+                    if (error) {
+                        error.clear();
+                        if (verifiedArchive(archiveCache)) {
+                            fs::remove(archivePartial, error);
+                            error.clear();
+                        } else {
+                            fs::remove(archiveCache, error);
+                            error.clear();
+                            fs::rename(archivePartial, archiveCache, error);
+                            if (error) throw std::runtime_error(error.message());
+                        }
+                    }
+                    {
+                        std::lock_guard<std::mutex> guard(job->mutex);
+                        job->archiveCachePath = archiveCache.string();
+                    }
+                }
+                archiveSource = archiveCache;
+            }
+            const fs::path installedArchive = staging / archiveName;
+            fs::path extractionArchive = archiveSource;
+            if (!m_retainArchive) {
+                error.clear();
+                fs::copy_file(
+                    archiveSource, installedArchive,
+                    fs::copy_options::overwrite_existing, error);
+                if (error) throw std::runtime_error(error.message());
+                extractionArchive = installedArchive;
+            }
+            UpdateJob(job, "extracting", "Extracting " + archiveName);
             std::string extractionError;
-            if (!ExtractStoredZip(installedArchive, staging, extractionError)) {
+            if (!ExtractStoredZip(extractionArchive, staging, extractionError)) {
                 throw std::runtime_error(extractionError);
             }
 
@@ -890,21 +1125,28 @@ namespace Garnet
             fs::remove_all(backup, error);
             error.clear();
             if (fs::exists(target)) {
-                fs::rename(target, backup, error);
-                if (error) throw std::runtime_error(error.message());
+                if (!RenameWithRetry(target, backup, error)) {
+                    throw std::runtime_error(
+                        "cannot replace installed package: " + error.message());
+                }
             }
-            fs::rename(staging, target, error);
-            if (error) {
+            if (!RenameWithRetry(staging, target, error)) {
                 if (fs::exists(backup)) {
                     std::error_code rollbackError;
-                    fs::rename(backup, target, rollbackError);
+                    RenameWithRetry(backup, target, rollbackError);
                 }
-                throw std::runtime_error(error.message());
+                throw std::runtime_error(
+                    "cannot activate installed package: " + error.message());
             }
             fs::remove_all(backup, error);
             error.clear();
             fs::remove_all(downloadRoot, error);
-            UpdateJob(job, "complete", "Model installed", true);
+            UpdateJob(
+                job, "complete",
+                m_retainArchive
+                    ? "Runtime dependencies installed; verified ZIP retained in cache"
+                    : "Model installed",
+                true);
         }
         catch (const std::exception& exception) {
             const bool cancelled = job->cancelled ||
@@ -957,8 +1199,10 @@ namespace Garnet
                     if (!failed.empty()) break;
                 }
             } else {
-                failed = verifyFile(marker["xmodel"]);
-                if (failed.empty()) {
+                failed = verifyFile(
+                    marker.contains("runtime") ? marker["runtime"] : marker["xmodel"]);
+                if (failed.empty() && marker.contains("weights") &&
+                    marker["weights"].is_array()) {
                     for (const json& file : marker["weights"]) {
                         failed = verifyFile(file);
                         if (!failed.empty()) break;

@@ -143,6 +143,21 @@ add_library(${PROJECT_NAME}
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_SERVING_EXPORTS=1)
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/data/garnet-runtime.json"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/garnet-runtime.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/data/cantorai-acceleration-signing-public.pem"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/cantorai-acceleration-signing-public.pem"
+)
+install(FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/garnet-runtime.json"
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/cantorai-acceleration-signing-public.pem"
+    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    COMPONENT garnet_runtime
+)
+
 if(OpenVINO_FOUND)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_WITH_OPENVINO=1)
     target_link_libraries(${PROJECT_NAME} openvino::runtime)

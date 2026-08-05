@@ -21,7 +21,9 @@ namespace Garnet
             ProgressSink progressSink = {},
             std::string catalogUrl = {},
             std::string catalogSignatureUrl = {},
-            std::string storeName = "models");
+            std::string storeName = "models",
+            std::string archiveField = "xmodel",
+            bool retainArchive = false);
         void SetProgressSink(ProgressSink progressSink);
 
         std::string Configure(const std::string& optionsJson);
@@ -55,6 +57,8 @@ namespace Garnet
         std::string m_catalogUrl;
         std::string m_catalogSignatureUrl;
         std::string m_cachedCatalog;
+        std::string m_archiveField;
+        bool m_retainArchive = false;
         bool m_requireSignature = true;
         std::unordered_map<std::string, std::shared_ptr<Job>> m_jobs;
 

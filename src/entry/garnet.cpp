@@ -186,9 +186,11 @@ namespace Garnet
         : m_modelManager(),
           m_accelerationManager(
               {},
-              "https://app.garnetmodel.ai/api/v1/garnet/accelerations/catalog",
-              "https://app.garnetmodel.ai/api/v1/garnet/accelerations/catalog.sig",
-              "accelerations")
+              {},
+              {},
+              "accelerations",
+              "runtime",
+              true)
     {
     }
 }
