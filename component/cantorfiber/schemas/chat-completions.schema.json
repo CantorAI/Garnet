@@ -1,0 +1,49 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Garnet Chat Completions",
+  "type": "object",
+  "required": ["messages"],
+  "properties": {
+    "model": { "type": "string" },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": { "type": "string" },
+          "content": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string", "enum": ["text", "image_url"] },
+                    "text": { "type": "string" },
+                    "image_url": {
+                      "oneOf": [
+                        { "type": "string" },
+                        {
+                          "type": "object",
+                          "properties": { "url": { "type": "string" } }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "max_tokens": { "type": "integer", "minimum": 1, "maximum": 32768, "default": 4096 },
+    "max_completion_tokens": { "type": "integer", "minimum": 1, "maximum": 32768 },
+    "profile": { "type": "object", "additionalProperties": true },
+    "garnet_profile": { "type": "object", "additionalProperties": true },
+    "serve_options": { "type": "object", "additionalProperties": true }
+  }
+}
+

@@ -111,6 +111,10 @@ include_directories(
 
 # Use absolute paths for source files.
 FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
+set(XLANG_HOST_SRC
+    "${xlang_sdk_folder}/value.cpp"
+    "${xlang_sdk_folder}/xload.cpp"
+)
 FILE(GLOB Common_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp")
 FILE(GLOB_RECURSE Core_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.cpp")
 FILE(GLOB Entry_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/entry/*.cpp")
@@ -248,6 +252,28 @@ add_executable(garnet_qwen3_native_prepare_test
 add_executable(garnet_model_catalog_test
     "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/model_catalog_test.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/model/model_catalog.cpp"
+)
+
+add_executable(garnet-serving
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/serving/garnet_serving_main.cpp"
+    ${XLANG_HOST_SRC}
+)
+
+target_include_directories(garnet-serving PRIVATE
+    ${XLANG_INCLUDE_DIR}
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
+)
+
+add_dependencies(garnet-serving ${PROJECT_NAME})
+
+if(UNIX AND NOT APPLE)
+    target_link_libraries(garnet-serving PRIVATE dl pthread)
+endif()
+
+add_custom_command(TARGET garnet-serving POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/component/cantorfiber"
+        "$<TARGET_FILE_DIR:garnet-serving>/component/cantorfiber"
 )
 
 target_include_directories(garnet_model_catalog_test PRIVATE
@@ -388,6 +414,13 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_runtime
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_runtime
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_development
+)
+install(TARGETS garnet-serving
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_serving
+)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/component/cantorfiber/"
+    DESTINATION "component/cantorfiber"
+    COMPONENT garnet_serving
 )
 if(GARNET_INSTALL_XMODELS)
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/xModel/"

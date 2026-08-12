@@ -36,6 +36,39 @@
   "profile_files": [
     "profiles/tensorrt_bf16.json"
   ],
+  "serving_profiles": [
+    {
+      "id": "vision-fast",
+      "usage": "chat",
+      "maxInputTokens": 512,
+      "maxOutputTokens": 128,
+      "kvPages": 128,
+      "vision": {
+        "imageResolution": "320x192"
+      }
+    },
+    {
+      "id": "vision-balanced",
+      "usage": "vision",
+      "default": true,
+      "maxInputTokens": 1536,
+      "maxOutputTokens": 256,
+      "kvPages": 128,
+      "vision": {
+        "imageResolution": "1920x1080"
+      }
+    },
+    {
+      "id": "vision-detailed",
+      "usages": ["vision", "agent"],
+      "maxInputTokens": 1536,
+      "maxOutputTokens": 512,
+      "kvPages": 160,
+      "vision": {
+        "imageResolution": "1920x1080"
+      }
+    }
+  ],
   "weights": {
     "bundled": false,
     "format": "safetensors",

@@ -1908,11 +1908,17 @@ namespace Garnet
             }
         }
         const bool fastProfile =
+            !textModel &&
             maxInputTokens == 512 && patchCount == 240 && kvPages == 48 &&
             minPixels == 65536 && maxPixels == 65536;
-        const bool visionProfile =
-            maxInputTokens == 1536 && patchCount == 3772 && kvPages == 128 &&
-            minPixels == 256 * 28 * 28 && maxPixels == 1280 * 28 * 28;
+        const bool textProfile = textModel &&
+            maxInputTokens >= 128 && maxInputTokens <= 32768 &&
+            kvPages >= 16 && kvPages <= 4096;
+        const bool visionProfile = !textModel &&
+            maxInputTokens >= 128 && maxInputTokens <= 32768 &&
+            patchCount >= 1 && patchCount <= 8192 &&
+            kvPages >= 16 && kvPages <= 4096 &&
+            minPixels >= 1 && maxPixels >= minPixels;
         const bool asrProfile = asrModel &&
             maxInputTokens >= 128 && maxInputTokens <= 2048 &&
             kvPages >= 16 && kvPages <= 256 &&
@@ -1920,8 +1926,8 @@ namespace Garnet
         const bool ttsProfile = ttsModel &&
             maxInputTokens >= 128 && maxInputTokens <= 2048 &&
             kvPages >= 16 && kvPages <= 256;
-        if ((!asrProfile && !ttsProfile && !fastProfile && !visionProfile) ||
-            maxOutputTokens < 1 || maxOutputTokens > 512) {
+        if ((!asrProfile && !ttsProfile && !textProfile && !fastProfile && !visionProfile) ||
+            maxOutputTokens < 1 || maxOutputTokens > 32768) {
             retValue = GarnetJsonError(
                 "profile_unsupported",
                 "The requested Garnet inference profile is not supported");

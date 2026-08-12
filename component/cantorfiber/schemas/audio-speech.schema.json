@@ -1,0 +1,15 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Garnet Audio Speech",
+  "type": "object",
+  "required": ["input"],
+  "properties": {
+    "model": { "type": "string" },
+    "input": { "type": "string" },
+    "voice": { "type": "string", "default": "Ryan" },
+    "language": { "type": "string", "default": "English" },
+    "max_audio_frames": { "type": "integer", "minimum": 1, "maximum": 2048, "default": 256 },
+    "output_path": { "type": "string" }
+  }
+}
+

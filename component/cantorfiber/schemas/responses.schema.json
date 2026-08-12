@@ -1,0 +1,16 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Garnet Responses",
+  "type": "object",
+  "required": ["input"],
+  "properties": {
+    "model": { "type": "string" },
+    "input": { "type": "string" },
+    "image_path": { "type": "string" },
+    "max_output_tokens": { "type": "integer", "minimum": 1, "maximum": 32768, "default": 4096 },
+    "profile": { "type": "object", "additionalProperties": true },
+    "garnet_profile": { "type": "object", "additionalProperties": true },
+    "serve_options": { "type": "object", "additionalProperties": true }
+  }
+}
+
