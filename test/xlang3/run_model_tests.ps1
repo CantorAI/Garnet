@@ -6,11 +6,18 @@ param(
     [string]$CudaDirectory
 )
 $ErrorActionPreference = 'Stop'
-if ($TensorRTDirectory) { $env:PATH = "$TensorRTDirectory;$env:PATH" }
-if ($CudaDirectory) { $env:PATH = "$CudaDirectory;$env:PATH" }
+$separator = [IO.Path]::PathSeparator
+if ($TensorRTDirectory) {
+    $env:PATH = "$TensorRTDirectory$separator$env:PATH"
+    if ($env:OS -ne 'Windows_NT') {
+        $env:LD_LIBRARY_PATH = "$TensorRTDirectory$separator$env:LD_LIBRARY_PATH"
+    }
+}
+if ($CudaDirectory) { $env:PATH = "$CudaDirectory$separator$env:PATH" }
 $work = Join-Path $WorkRoot ([Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $work -Force | Out-Null
 Set-Location (Split-Path -Parent $RuntimePath)
+[Environment]::CurrentDirectory = (Get-Location).Path
 $models = Join-Path $PSScriptRoot 'models'
 $cache = Join-Path $work 'engines'
 & $RuntimePath (Join-Path $models 'run_models.py') $Backend $cache build

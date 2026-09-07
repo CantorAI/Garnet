@@ -226,6 +226,13 @@ add_executable(garnet_qwen_vl_request_kv_native_smoke
     "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/qwen_vl_request_kv_native_smoke.cpp"
 )
 target_link_libraries(garnet_qwen_vl_request_kv_native_smoke ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY})
+if(CMAKE_DL_LIBS)
+    foreach(native_tool IN ITEMS garnet_qwen_vl_gpu_path_perf garnet_qwen_vl_prepare_prompt_perf
+            garnet_device_kv_native_smoke garnet_qwen_tokenizer_native_smoke
+            garnet_debug_logits_sampler_native_smoke garnet_qwen_vl_request_kv_native_smoke)
+        target_link_libraries(${native_tool} ${CMAKE_DL_LIBS})
+    endforeach()
+endif()
 
 add_executable(garnet_continuous_batch_scheduler_test
     "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/continuous_batch_scheduler_test.cpp"
@@ -322,6 +329,12 @@ if(MSVC)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/qwen3_native_decode_engine.cpp"
         PROPERTIES COMPILE_OPTIONS "/arch:AVX2"
     )
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+    set_source_files_properties(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/q4q8_linear.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/qwen3_native_decode_engine.cpp"
+        PROPERTIES COMPILE_OPTIONS "-mavx2;-mfma;-mf16c"
+    )
 endif()
 
 target_include_directories(garnet_weight_quantization_test PRIVATE
@@ -371,9 +384,14 @@ set_tests_properties(garnet_weight_quantization garnet_q4q8_linear
     garnet_model_catalog garnet_continuous_batch_scheduler
     garnet_device_kv_cabi garnet_logits_sampler_cabi PROPERTIES TIMEOUT 120)
 
+find_program(GARNET_POWERSHELL NAMES powershell pwsh REQUIRED)
 if(WIN32)
+    set(GARNET_TENSORRT_RUNTIME_DIR "${GARNET_TENSORRT_ROOT}/bin")
+else()
+    set(GARNET_TENSORRT_RUNTIME_DIR "${GARNET_TENSORRT_ROOT}/lib")
+endif()
     add_test(NAME garnet_serving_process
-        COMMAND powershell -NoProfile -ExecutionPolicy Bypass
+        COMMAND "${GARNET_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
             -File "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/run_serving_tests.ps1"
             -Executable "$<TARGET_FILE:garnet-serving>"
             -WorkRoot "${CMAKE_CURRENT_BINARY_DIR}/serving-tests")
@@ -383,13 +401,27 @@ if(WIN32)
             continue()
         endif()
         add_test(NAME garnet_models_${backend}
-            COMMAND powershell -NoProfile -ExecutionPolicy Bypass
+            COMMAND "${GARNET_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
                 -File "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/run_model_tests.ps1"
                 -RuntimePath "$<TARGET_FILE:xlang3>" -Backend "${backend}"
                 -WorkRoot "${CMAKE_CURRENT_BINARY_DIR}/model-tests/${backend}"
-                -TensorRTDirectory "${GARNET_TENSORRT_ROOT}/bin"
+                -TensorRTDirectory "${GARNET_TENSORRT_RUNTIME_DIR}"
                 -CudaDirectory "${CUDAToolkit_BIN_DIR}")
         set_tests_properties(garnet_models_${backend} PROPERTIES TIMEOUT 300)
+    endforeach()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(garnet_test_library_path "${GARNET_TENSORRT_ROOT}/lib")
+    if(NOT "$ENV{LD_LIBRARY_PATH}" STREQUAL "")
+        string(APPEND garnet_test_library_path ":$ENV{LD_LIBRARY_PATH}")
+    endif()
+    if(EXISTS "/usr/lib/wsl/lib/libcuda.so")
+        string(PREPEND garnet_test_library_path "/usr/lib/wsl/lib:")
+    endif()
+    get_property(garnet_tests DIRECTORY PROPERTY TESTS)
+    foreach(garnet_test IN LISTS garnet_tests)
+        set_property(TEST "${garnet_test}" APPEND PROPERTY
+            ENVIRONMENT "LD_LIBRARY_PATH=${garnet_test_library_path}")
     endforeach()
 endif()
 
@@ -432,7 +464,12 @@ if(WIN32)
         )
     endif()
 else()
-    target_link_libraries(${PROJECT_NAME} pthread dl m OpenSSL::Crypto CURL::libcurl ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY})
+    find_library(GARNET_TENSORRT_LIBRARY NAMES nvinfer
+        PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED NO_DEFAULT_PATH)
+    target_link_libraries(${PROJECT_NAME} pthread dl m OpenSSL::Crypto CURL::libcurl
+        "${GARNET_TENSORRT_LIBRARY}" CUDA::cudart CUDA::cuda_driver
+        CUDA::cublas CUDA::nppc CUDA::nppig CUDA::nvjpeg)
+    target_link_options(${PROJECT_NAME} PRIVATE "-Wl,--no-undefined")
 endif()
 
 # Enable separable CUDA compilation and specify architectures.

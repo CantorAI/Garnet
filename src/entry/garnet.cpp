@@ -2927,14 +2927,14 @@ namespace Garnet
             return defaultValue;
         }
 
-        X::Value MakeInt64Tensor(X3PackageHost* host, const std::vector<long long>& values, bool ensureGpu = false)
+        X::Value MakeInt64Tensor(X3PackageHost* host, const std::vector<int64_t>& values, bool ensureGpu = false)
         {
             const std::vector<int64_t> shape{static_cast<int64_t>(values.size())};
             return ensureGpu ? TensorHelper::CreateGPU(host, X3_TENSOR_INT64, shape, values.data()) :
                 X::Tensor::Create(host, X3_TENSOR_INT64, shape, values.data(), values.size() * sizeof(long long));
         }
 
-        X::Value MakeInt64List(X3PackageHost* host, const std::vector<long long>& values)
+        X::Value MakeInt64List(X3PackageHost* host, const std::vector<int64_t>& values)
         {
             auto list = X::Value::List(host);
             for (long long value : values) {
@@ -2946,7 +2946,7 @@ namespace Garnet
 
         X::Value MakeInt64Tensor2D(
             X3PackageHost* host,
-            const std::vector<long long>& values,
+            const std::vector<int64_t>& values,
             int rows,
             int cols,
             bool ensureGpu = false)
@@ -2960,7 +2960,7 @@ namespace Garnet
 
         X::Value MakeInt64Tensor3DGpu(
             X3PackageHost* host,
-            const std::vector<long long>& values,
+            const std::vector<int64_t>& values,
             int dimension0,
             int dimension1,
             int dimension2)
@@ -4791,8 +4791,8 @@ namespace Garnet
                 return retValue;
             }
 
-            std::vector<long long> inputIds;
-            std::vector<long long> mmTypes;
+            std::vector<int64_t> inputIds;
+            std::vector<int64_t> mmTypes;
             inputIds.reserve(promptIds.size());
             mmTypes.reserve(promptIds.size());
             int visualTokenCount = 0;
@@ -4917,8 +4917,8 @@ namespace Garnet
             }
             double tokenizeMs = MsSince(tokenStart);
 
-            std::vector<long long> inputIds;
-            std::vector<long long> mmTypes;
+            std::vector<int64_t> inputIds;
+            std::vector<int64_t> mmTypes;
             inputIds.reserve(promptIds.size());
             mmTypes.reserve(promptIds.size());
             int visualTokenCount = 0;
@@ -4939,7 +4939,7 @@ namespace Garnet
                 return retValue;
             }
 
-            std::vector<long long> gridVector = { grid[0], grid[1], grid[2] };
+            std::vector<int64_t> gridVector = { grid[0], grid[1], grid[2] };
             const auto mropeMetadata = Tokenization::QwenVLPromptBuilder::BuildSingleImageMRoPEMetadata(
                 mmTypes,
                 grid,

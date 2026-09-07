@@ -1,7 +1,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
+#include "native_library.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -51,18 +51,18 @@ int main(int argc, char** argv)
     std::string dllPath = argc > 2 ? argv[2] : DefaultDllPath();
     const char* text = "Describe visible objects.";
 
-    HMODULE dll = LoadLibraryA(dllPath.c_str());
+    NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {
-        std::cerr << "failed to load " << dllPath << ", error=" << GetLastError() << "\n";
+        std::cerr << "failed to load " << dllPath << ", error=" << NativeLibraryError() << "\n";
         return 1;
     }
 
-    auto encode = reinterpret_cast<EncodeFn>(GetProcAddress(dll, "GarnetQwenTokenizerEncode"));
-    auto decode = reinterpret_cast<DecodeFn>(GetProcAddress(dll, "GarnetQwenTokenizerDecode"));
-    auto tokenId = reinterpret_cast<TokenIdFn>(GetProcAddress(dll, "GarnetQwenTokenizerTokenId"));
+    auto encode = reinterpret_cast<EncodeFn>(NativeLibrarySymbol(dll, "GarnetQwenTokenizerEncode"));
+    auto decode = reinterpret_cast<DecodeFn>(NativeLibrarySymbol(dll, "GarnetQwenTokenizerDecode"));
+    auto tokenId = reinterpret_cast<TokenIdFn>(NativeLibrarySymbol(dll, "GarnetQwenTokenizerTokenId"));
     if (!encode || !decode || !tokenId) {
         std::cerr << "missing tokenizer exports\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 2;
     }
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     int rc = encode(modelDir.c_str(), text, ids.data(), static_cast<int>(ids.size()), &count, error, static_cast<int>(sizeof(error)));
     if (rc != 0 || count <= 0) {
         std::cerr << "encode failed rc=" << rc << " count=" << count << " error=" << error << "\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 3;
     }
     ids.resize(static_cast<size_t>(count));
@@ -91,14 +91,14 @@ int main(int argc, char** argv)
         static_cast<int>(sizeof(error)));
     if (rc != 0 || byteCount <= 0) {
         std::cerr << "decode failed rc=" << rc << " byte_count=" << byteCount << " error=" << error << "\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 4;
     }
 
     long long imagePadId = tokenId(modelDir.c_str(), "<|image_pad|>");
     if (imagePadId < 0) {
         std::cerr << "missing Qwen image pad token\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 5;
     }
 
@@ -108,6 +108,6 @@ int main(int argc, char** argv)
     std::cout << "decoded_text: " << decoded.data() << "\n";
     std::cout << "image_pad_id: " << imagePadId << "\n";
 
-    FreeLibrary(dll);
+    CloseNativeLibrary(dll);
     return 0;
 }

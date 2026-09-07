@@ -1,7 +1,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
+#include "native_library.h"
 #include <cuda_runtime.h>
 
 #include <cmath>
@@ -38,17 +38,17 @@ namespace
 int main(int argc, char** argv)
 {
     std::string dllPath = argc > 1 ? argv[1] : DefaultDllPath();
-    HMODULE dll = LoadLibraryA(dllPath.c_str());
+    NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {
-        std::cerr << "failed to load " << dllPath << ", error=" << GetLastError() << "\n";
+        std::cerr << "failed to load " << dllPath << ", error=" << NativeLibraryError() << "\n";
         return 1;
     }
 
     auto sample = reinterpret_cast<DebugSampleLogitsTop1Fn>(
-        GetProcAddress(dll, "GarnetDebugSampleLogitsTop1FP32"));
+        NativeLibrarySymbol(dll, "GarnetDebugSampleLogitsTop1FP32"));
     if (!sample) {
         std::cerr << "missing GarnetDebugSampleLogitsTop1FP32 export\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 2;
     }
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
         if (dLogits) cudaFree(dLogits);
         if (dTokenId) cudaFree(dTokenId);
         if (dTokenValue) cudaFree(dTokenValue);
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 3;
     }
 
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
         cudaFree(dLogits);
         cudaFree(dTokenId);
         cudaFree(dTokenValue);
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 4;
     }
 
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     cudaFree(dLogits);
     cudaFree(dTokenId);
     cudaFree(dTokenValue);
-    FreeLibrary(dll);
+    CloseNativeLibrary(dll);
     if (!cudaOk) {
         return 5;
     }

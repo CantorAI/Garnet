@@ -1,7 +1,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
+#include "native_library.h"
 
 #include <chrono>
 #include <cstddef>
@@ -58,19 +58,19 @@ int main(int argc, char** argv)
     std::string dllPath = argc > 5 ? argv[5] : DefaultDllPath();
     int warmup = argc > 6 ? std::max(0, std::atoi(argv[6])) : 3;
 
-    HMODULE dll = LoadLibraryA(dllPath.c_str());
+    NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {
-        std::cerr << "failed to load " << dllPath << ", error=" << GetLastError() << "\n";
+        std::cerr << "failed to load " << dllPath << ", error=" << NativeLibraryError() << "\n";
         return 1;
     }
 
     auto preprocess = reinterpret_cast<PreprocessJpegFileDeviceFn>(
-        GetProcAddress(dll, "GarnetQwenVLPreprocessJpegFileDevice"));
+        NativeLibrarySymbol(dll, "GarnetQwenVLPreprocessJpegFileDevice"));
     auto freeDeviceBuffer = reinterpret_cast<FreeDeviceBufferFn>(
-        GetProcAddress(dll, "GarnetFreeDeviceBuffer"));
+        NativeLibrarySymbol(dll, "GarnetFreeDeviceBuffer"));
     if (!preprocess || !freeDeviceBuffer) {
         std::cerr << "missing Garnet device preprocess exports\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 2;
     }
 
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
         auto end = std::chrono::steady_clock::now();
         if (rc != 0) {
             std::cerr << "preprocess failed rc=" << rc << " error=" << error << "\n";
-            FreeLibrary(dll);
+            CloseNativeLibrary(dll);
             return 3;
         }
         if (i >= warmup) {
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
         int freeRc = freeDeviceBuffer(devicePtr);
         if (freeRc != 0) {
             std::cerr << "failed to free device output\n";
-            FreeLibrary(dll);
+            CloseNativeLibrary(dll);
             return 4;
         }
     }
@@ -146,6 +146,6 @@ int main(int argc, char** argv)
     std::cout << "min_ms: " << minValue << "\n";
     std::cout << "max_ms: " << maxValue << "\n";
 
-    FreeLibrary(dll);
+    CloseNativeLibrary(dll);
     return 0;
 }

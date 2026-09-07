@@ -72,6 +72,23 @@ namespace Garnet::Tokenization
             const std::vector<int64_t>& mmTokenTypeIds,
             const int64_t imageGridTHW[3],
             int mergeSize = 2);
+
+        // C entry points use long long; int64_t is long on LP64 platforms.
+        template<typename Integer>
+        static std::vector<int64_t> BuildSingleImagePromptIds(
+            const QwenTokenizer& tokenizer, const std::string& userPrompt,
+            const Integer (&grid)[3], int mergeSize = 2) {
+            const int64_t normalized[3] = {grid[0], grid[1], grid[2]};
+            return BuildSingleImagePromptIds(tokenizer, userPrompt, normalized, mergeSize);
+        }
+
+        template<typename Integer>
+        static QwenVLMRoPEMetadata BuildSingleImageMRoPEMetadata(
+            const std::vector<int64_t>& mmTokenTypeIds,
+            const Integer (&grid)[3], int mergeSize = 2) {
+            const int64_t normalized[3] = {grid[0], grid[1], grid[2]};
+            return BuildSingleImageMRoPEMetadata(mmTokenTypeIds, normalized, mergeSize);
+        }
     };
 
     std::shared_ptr<const QwenTokenizer> GetCachedQwenTokenizer(

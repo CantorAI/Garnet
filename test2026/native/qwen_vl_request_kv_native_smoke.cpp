@@ -1,7 +1,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
+#include "native_library.h"
 #include <cuda_runtime.h>
 
 #include <algorithm>
@@ -164,23 +164,23 @@ int main(int argc, char** argv)
     int maxPixels = argc > 5 ? std::atoi(argv[5]) : 1003520;
     std::string dllPath = argc > 6 ? argv[6] : DefaultDllPath();
 
-    HMODULE dll = LoadLibraryA(dllPath.c_str());
+    NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {
-        std::cerr << "failed to load " << dllPath << ", error=" << GetLastError() << "\n";
+        std::cerr << "failed to load " << dllPath << ", error=" << NativeLibraryError() << "\n";
         return 1;
     }
 
-    auto createRequest = reinterpret_cast<CreateDeviceRequestFn>(GetProcAddress(dll, "GarnetCreateQwenVLDeviceRequest"));
-    auto destroyRequest = reinterpret_cast<DestroyDeviceRequestFn>(GetProcAddress(dll, "GarnetDestroyQwenVLDeviceRequest"));
-    auto getRequestInfo = reinterpret_cast<GetDeviceRequestInfoFn>(GetProcAddress(dll, "GarnetGetQwenVLDeviceRequestInfo"));
-    auto allocateRequestKV = reinterpret_cast<AllocateRequestKVFn>(GetProcAddress(dll, "GarnetAllocateQwenVLDeviceRequestKV"));
-    auto getRequestKVInfo = reinterpret_cast<GetRequestKVInfoFn>(GetProcAddress(dll, "GarnetGetQwenVLDeviceRequestKVInfo"));
-    auto getRequestKVState = reinterpret_cast<GetRequestKVStateFn>(GetProcAddress(dll, "GarnetGetQwenVLDeviceRequestKVState"));
-    auto writeKVDevice = reinterpret_cast<WriteDeviceKVDeviceFn>(GetProcAddress(dll, "GarnetQwenVLDeviceRequestKVWriteDevice"));
-    auto attentionKVDevice = reinterpret_cast<AttentionDeviceKVDeviceFn>(GetProcAddress(dll, "GarnetQwenVLDeviceRequestKVAttentionDevice"));
+    auto createRequest = reinterpret_cast<CreateDeviceRequestFn>(NativeLibrarySymbol(dll, "GarnetCreateQwenVLDeviceRequest"));
+    auto destroyRequest = reinterpret_cast<DestroyDeviceRequestFn>(NativeLibrarySymbol(dll, "GarnetDestroyQwenVLDeviceRequest"));
+    auto getRequestInfo = reinterpret_cast<GetDeviceRequestInfoFn>(NativeLibrarySymbol(dll, "GarnetGetQwenVLDeviceRequestInfo"));
+    auto allocateRequestKV = reinterpret_cast<AllocateRequestKVFn>(NativeLibrarySymbol(dll, "GarnetAllocateQwenVLDeviceRequestKV"));
+    auto getRequestKVInfo = reinterpret_cast<GetRequestKVInfoFn>(NativeLibrarySymbol(dll, "GarnetGetQwenVLDeviceRequestKVInfo"));
+    auto getRequestKVState = reinterpret_cast<GetRequestKVStateFn>(NativeLibrarySymbol(dll, "GarnetGetQwenVLDeviceRequestKVState"));
+    auto writeKVDevice = reinterpret_cast<WriteDeviceKVDeviceFn>(NativeLibrarySymbol(dll, "GarnetQwenVLDeviceRequestKVWriteDevice"));
+    auto attentionKVDevice = reinterpret_cast<AttentionDeviceKVDeviceFn>(NativeLibrarySymbol(dll, "GarnetQwenVLDeviceRequestKVAttentionDevice"));
     if (!createRequest || !destroyRequest || !getRequestInfo || !allocateRequestKV || !getRequestKVInfo || !getRequestKVState || !writeKVDevice || !attentionKVDevice) {
         std::cerr << "missing request/KV exports\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 2;
     }
 
@@ -197,7 +197,7 @@ int main(int argc, char** argv)
         static_cast<int>(sizeof(error)));
     if (rc != 0) {
         std::cerr << "create Qwen-VL GPU request failed rc=" << rc << " error=" << error << "\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 3;
     }
 
@@ -242,7 +242,7 @@ int main(int argc, char** argv)
     if (rc != 0 || !inputIdsDevice || !mmTypesDevice || !pixelValuesDevice || inputIdCount <= 0 || pixelValueCount <= 0) {
         std::cerr << "Qwen-VL GPU request info invalid rc=" << rc << " error=" << error << "\n";
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 4;
     }
 
@@ -277,7 +277,7 @@ int main(int argc, char** argv)
     if (rc != 0) {
         std::cerr << "allocate request-owned device KV failed rc=" << rc << " error=" << error << "\n";
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 5;
     }
     long long kvInfoHandle = 0;
@@ -304,7 +304,7 @@ int main(int argc, char** argv)
         kvInfoKVHeads != kvHeads || kvInfoHeadDim != headDim) {
         std::cerr << "request KV info mismatch rc=" << rc << " error=" << error << "\n";
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 5;
     }
 
@@ -323,7 +323,7 @@ int main(int argc, char** argv)
         std::cerr << "request KV initial logical length mismatch rc=" << rc
             << " logical_length=" << kvLogicalLengthBeforeWrite << " error=" << error << "\n";
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 5;
     }
 
@@ -352,7 +352,7 @@ int main(int argc, char** argv)
         if (dQ) cudaFree(dQ);
         if (dOutput) cudaFree(dOutput);
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 6;
     }
 
@@ -363,7 +363,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 7;
     }
 
@@ -385,7 +385,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 7;
     }
 
@@ -396,7 +396,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 8;
     }
 
@@ -407,7 +407,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 8;
     }
     if (!CheckCuda(cudaMemcpy(output.data(), dOutput, output.size() * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy output D2H")) {
@@ -415,7 +415,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 9;
     }
 
@@ -427,7 +427,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 10;
     }
 
@@ -437,7 +437,7 @@ int main(int argc, char** argv)
     int destroyReqRc = destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
     if (destroyReqRc != 0) {
         std::cerr << "destroy request failed request_rc=" << destroyReqRc << " error=" << error << "\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 11;
     }
 
@@ -461,6 +461,6 @@ int main(int argc, char** argv)
     std::cout << "tensor_upload_ms: " << static_cast<double>(uploadUs) / 1000.0 << "\n";
     std::cout << "request_total_ms: " << static_cast<double>(totalUs) / 1000.0 << "\n";
 
-    FreeLibrary(dll);
+    CloseNativeLibrary(dll);
     return 0;
 }

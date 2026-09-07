@@ -1,7 +1,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
+#include "native_library.h"
 #include <cuda_runtime.h>
 
 #include <algorithm>
@@ -100,21 +100,21 @@ namespace
 int main(int argc, char** argv)
 {
     std::string dllPath = argc > 1 ? argv[1] : DefaultDllPath();
-    HMODULE dll = LoadLibraryA(dllPath.c_str());
+    NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {
-        std::cerr << "failed to load " << dllPath << ", error=" << GetLastError() << "\n";
+        std::cerr << "failed to load " << dllPath << ", error=" << NativeLibraryError() << "\n";
         return 1;
     }
 
-    auto createKV = reinterpret_cast<CreateDeviceKVFn>(GetProcAddress(dll, "GarnetCreateDevicePagedKVFP32"));
-    auto destroyKV = reinterpret_cast<DestroyDeviceKVFn>(GetProcAddress(dll, "GarnetDestroyDevicePagedKVFP32"));
-    auto writeKV = reinterpret_cast<WriteDeviceKVFn>(GetProcAddress(dll, "GarnetDevicePagedKVWriteFP32"));
-    auto attentionKV = reinterpret_cast<AttentionDeviceKVFn>(GetProcAddress(dll, "GarnetDevicePagedKVAttentionFP32"));
-    auto writeKVDevice = reinterpret_cast<WriteDeviceKVDeviceFn>(GetProcAddress(dll, "GarnetDevicePagedKVWriteDeviceFP32"));
-    auto attentionKVDevice = reinterpret_cast<AttentionDeviceKVDeviceFn>(GetProcAddress(dll, "GarnetDevicePagedKVAttentionDeviceFP32"));
+    auto createKV = reinterpret_cast<CreateDeviceKVFn>(NativeLibrarySymbol(dll, "GarnetCreateDevicePagedKVFP32"));
+    auto destroyKV = reinterpret_cast<DestroyDeviceKVFn>(NativeLibrarySymbol(dll, "GarnetDestroyDevicePagedKVFP32"));
+    auto writeKV = reinterpret_cast<WriteDeviceKVFn>(NativeLibrarySymbol(dll, "GarnetDevicePagedKVWriteFP32"));
+    auto attentionKV = reinterpret_cast<AttentionDeviceKVFn>(NativeLibrarySymbol(dll, "GarnetDevicePagedKVAttentionFP32"));
+    auto writeKVDevice = reinterpret_cast<WriteDeviceKVDeviceFn>(NativeLibrarySymbol(dll, "GarnetDevicePagedKVWriteDeviceFP32"));
+    auto attentionKVDevice = reinterpret_cast<AttentionDeviceKVDeviceFn>(NativeLibrarySymbol(dll, "GarnetDevicePagedKVAttentionDeviceFP32"));
     if (!createKV || !destroyKV || !writeKV || !attentionKV || !writeKVDevice || !attentionKVDevice) {
         std::cerr << "missing device KV exports\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 2;
     }
 
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
         static_cast<int>(sizeof(error)));
     if (rc != 0) {
         std::cerr << "create device KV failed rc=" << rc << " error=" << error << "\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 3;
     }
 
@@ -162,7 +162,7 @@ int main(int argc, char** argv)
     if (rc != 0) {
         std::cerr << "write device KV failed rc=" << rc << " error=" << error << "\n";
         destroyKV(handle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 4;
     }
 
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
     if (rc != 0) {
         std::cerr << "attention device KV failed rc=" << rc << " error=" << error << "\n";
         destroyKV(handle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 5;
     }
 
@@ -184,14 +184,14 @@ int main(int argc, char** argv)
     if (!(absSum > 0.0) || !std::isfinite(absSum)) {
         std::cerr << "device KV attention output is invalid\n";
         destroyKV(handle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 6;
     }
 
     rc = destroyKV(handle, error, static_cast<int>(sizeof(error)));
     if (rc != 0) {
         std::cerr << "destroy device KV failed rc=" << rc << " error=" << error << "\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 7;
     }
 
@@ -209,7 +209,7 @@ int main(int argc, char** argv)
         static_cast<int>(sizeof(error)));
     if (rc != 0) {
         std::cerr << "create device-pointer KV failed rc=" << rc << " error=" << error << "\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 8;
     }
 
@@ -229,7 +229,7 @@ int main(int argc, char** argv)
         if (dQ) cudaFree(dQ);
         if (dOutput) cudaFree(dOutput);
         destroyKV(deviceHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 9;
     }
 
@@ -240,7 +240,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyKV(deviceHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 10;
     }
 
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyKV(deviceHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 11;
     }
     if (!CheckCuda(cudaMemcpy(deviceOutput.data(), dOutput, deviceOutput.size() * sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy device output D2H")) {
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyKV(deviceHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 12;
     }
 
@@ -275,7 +275,7 @@ int main(int argc, char** argv)
         cudaFree(dQ);
         cudaFree(dOutput);
         destroyKV(deviceHandle, error, static_cast<int>(sizeof(error)));
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 13;
     }
 
@@ -285,7 +285,7 @@ int main(int argc, char** argv)
     rc = destroyKV(deviceHandle, error, static_cast<int>(sizeof(error)));
     if (rc != 0) {
         std::cerr << "destroy device-pointer KV failed rc=" << rc << " error=" << error << "\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 14;
     }
 
@@ -302,6 +302,6 @@ int main(int argc, char** argv)
     std::cout << "device_pointer_output_max_abs: " << deviceMaxAbs << "\n";
     std::cout << "device_pointer_max_diff_vs_host_abi: " << maxDiff << "\n";
 
-    FreeLibrary(dll);
+    CloseNativeLibrary(dll);
     return 0;
 }

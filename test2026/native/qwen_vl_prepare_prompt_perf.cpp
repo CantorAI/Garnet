@@ -1,7 +1,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
+#include "native_library.h"
 
 #include <chrono>
 #include <algorithm>
@@ -90,21 +90,21 @@ int main(int argc, char** argv)
     std::string dllPath = argc > 7 ? argv[7] : DefaultDllPath();
     int warmup = argc > 8 ? std::max(0, std::atoi(argv[8])) : 3;
 
-    HMODULE dll = LoadLibraryA(dllPath.c_str());
+    NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {
-        std::cerr << "failed to load " << dllPath << ", error=" << GetLastError() << "\n";
+        std::cerr << "failed to load " << dllPath << ", error=" << NativeLibraryError() << "\n";
         return 1;
     }
 
     auto createRequest = reinterpret_cast<CreateDeviceRequestFn>(
-        GetProcAddress(dll, "GarnetCreateQwenVLDeviceRequest"));
+        NativeLibrarySymbol(dll, "GarnetCreateQwenVLDeviceRequest"));
     auto destroyRequest = reinterpret_cast<DestroyDeviceRequestFn>(
-        GetProcAddress(dll, "GarnetDestroyQwenVLDeviceRequest"));
+        NativeLibrarySymbol(dll, "GarnetDestroyQwenVLDeviceRequest"));
     auto getRequestInfo = reinterpret_cast<GetDeviceRequestInfoFn>(
-        GetProcAddress(dll, "GarnetGetQwenVLDeviceRequestInfo"));
+        NativeLibrarySymbol(dll, "GarnetGetQwenVLDeviceRequestInfo"));
     if (!createRequest || !destroyRequest || !getRequestInfo) {
         std::cerr << "missing Garnet prepare/request exports\n";
-        FreeLibrary(dll);
+        CloseNativeLibrary(dll);
         return 2;
     }
 
@@ -179,19 +179,19 @@ int main(int argc, char** argv)
                 destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
             }
             std::cerr << "request prepare failed rc=" << rc << " error=" << error << "\n";
-            FreeLibrary(dll);
+            CloseNativeLibrary(dll);
             return 3;
         }
         if (!inputIdsDevice || !mmTypesDevice || !pixelDevice) {
             destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
             std::cerr << "request returned a null device tensor pointer\n";
-            FreeLibrary(dll);
+            CloseNativeLibrary(dll);
             return 5;
         }
         int destroyRc = destroyRequest(requestHandle, error, static_cast<int>(sizeof(error)));
         if (destroyRc != 0) {
             std::cerr << "failed to destroy request handle: " << error << "\n";
-            FreeLibrary(dll);
+            CloseNativeLibrary(dll);
             return 4;
         }
 
@@ -241,6 +241,6 @@ int main(int argc, char** argv)
     std::cout << "tokenize_mean_ms: " << mean(tokenTimings) << "\n";
     std::cout << "tensor_upload_mean_ms: " << mean(uploadTimings) << "\n";
 
-    FreeLibrary(dll);
+    CloseNativeLibrary(dll);
     return 0;
 }
