@@ -25,7 +25,7 @@ if not env_flag("RUN_GARNET_VISION_MLP_PARITY"):
     skip("set RUN_GARNET_VISION_MLP_PARITY=1 to run Garnet VisionMLP parity")
 
 try:
-    import xlang
+    import xlang3
 except Exception as exc:
     skip(f"xlang Python module not available: {exc}")
 
@@ -55,7 +55,7 @@ if os.name == "nt" and hasattr(os, "add_dll_directory"):
             os.add_dll_directory(str(dll_dir))
 
 try:
-    garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+    garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
 except Exception as exc:
     skip(f"failed to import Garnet from {garnet_dll}: {exc}")
 

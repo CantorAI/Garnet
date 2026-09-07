@@ -159,13 +159,13 @@ def main():
     assert abs(float(pixel_values[0]) - (-1.0)) < 1e-6
 
     try:
-        import xlang
+        import xlang3
     except Exception as exc:
         print(f"SKIP xlang API check: xlang is not available: {exc}")
         print("Phase 14: one-call Qwen-VL JPEG+prompt request prepare passed.")
         return
 
-    garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+    garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
     prepared = garnet.qwen_vl_prepare_request(
         model_dir=str(model_dir),
         image_path=str(DEFAULT_IMAGE),

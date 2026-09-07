@@ -6,6 +6,7 @@
 #include <cuda_runtime.h>
 #include <cmath>
 #include <stdexcept>
+#include <limits>
 
 extern "C" cudaError_t runQwenVLVisionMetadata(
     long long* bilinearIndices,
@@ -24,27 +25,23 @@ namespace Garnet::Image::QwenVL
     namespace
     {
         X::Tensor MakeDeviceTensor(
-            X::TensorDataType dataType,
+            X3PackageHost* host,
+            X3TensorDType dataType,
             const std::initializer_list<int>& dimensions,
             size_t bytes,
             void** devicePointer)
         {
-            X::Tensor tensor(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
-            for (const int dimension : dimensions) shape.push_back(dimension);
-            tensor->SetDataType(dataType);
-            tensor->SetShape(shape);
-            if (cudaMalloc(devicePointer, bytes) != cudaSuccess ||
-                TensorHelper::AttachGPUMemory(tensor, *devicePointer) != TensorOpStatus::Success) {
-                if (*devicePointer) cudaFree(*devicePointer);
-                *devicePointer = nullptr;
-                throw std::runtime_error("failed to allocate Qwen vision metadata tensor");
-            }
+            auto tensor = TensorHelper::CreateGPU(host, dataType,
+                std::vector<int64_t>(dimensions.begin(), dimensions.end()));
+            auto info = tensor.Info();
+            if (info.byte_size != bytes) throw std::logic_error("vision tensor size mismatch");
+            *devicePointer = info.data;
             return tensor;
         }
     }
 
     VisionMetadataTensors BuildVisionMetadataTensors(
+        X3PackageHost* host,
         int gridT,
         int gridH,
         int gridW,
@@ -55,36 +52,46 @@ namespace Garnet::Image::QwenVL
             gridH % spatialMergeSize != 0 || gridW % spatialMergeSize != 0) {
             throw std::invalid_argument("invalid Qwen vision metadata grid");
         }
+        if (numPositionEmbeddings <= 0) throw std::invalid_argument("invalid position embedding count");
         const int positionGridSide = static_cast<int>(std::sqrt(numPositionEmbeddings));
         if (positionGridSide * positionGridSide != numPositionEmbeddings) {
             throw std::invalid_argument("Qwen position embedding count must be a square");
         }
-        const int patchCount = gridT * gridH * gridW;
+        int64_t patchCount64 = 1;
+        for (int dimension : {gridT, gridH, gridW}) {
+            if (patchCount64 > (std::numeric_limits<int>::max)() / 4 / dimension)
+                throw std::overflow_error("Qwen vision grid is too large");
+            patchCount64 *= dimension;
+        }
+        const int patchCount = static_cast<int>(patchCount64);
         void* indicesDevice = nullptr;
         void* weightsDevice = nullptr;
         void* positionsDevice = nullptr;
         void* cuSeqlensDevice = nullptr;
         X::Tensor indices = MakeDeviceTensor(
-            X::TensorDataType::LONGLONG,
+            host, X3_TENSOR_INT64,
             {patchCount, 4},
             static_cast<size_t>(4) * patchCount * sizeof(long long),
             &indicesDevice);
         X::Tensor weights = MakeDeviceTensor(
-            X::TensorDataType::BFLOAT16,
+            host, X3_TENSOR_BFLOAT16,
             {patchCount, 4},
             static_cast<size_t>(4) * patchCount * sizeof(__nv_bfloat16),
             &weightsDevice);
         X::Tensor positions = MakeDeviceTensor(
-            X::TensorDataType::LONGLONG,
+            host, X3_TENSOR_INT64,
             {patchCount, 2},
             static_cast<size_t>(patchCount) * 2 * sizeof(long long),
             &positionsDevice);
         X::Tensor cuSeqlens = MakeDeviceTensor(
-            X::TensorDataType::INT,
+            host, X3_TENSOR_INT32,
             {gridT + 1},
             static_cast<size_t>(gridT + 1) * sizeof(int),
             &cuSeqlensDevice);
 
+        auto use = TensorHelper::AcquireGPU({
+            {indices, X3_TENSOR_WRITE}, {weights, X3_TENSOR_WRITE},
+            {positions, X3_TENSOR_WRITE}, {cuSeqlens, X3_TENSOR_WRITE}}, cudaStreamPerThread);
         const cudaError_t status = runQwenVLVisionMetadata(
             static_cast<long long*>(indicesDevice),
             static_cast<__nv_bfloat16*>(weightsDevice),
@@ -96,6 +103,7 @@ namespace Garnet::Image::QwenVL
             spatialMergeSize,
             positionGridSide,
             cudaStreamPerThread);
+        use.Finish();
         if (status != cudaSuccess) {
             throw std::runtime_error(cudaGetErrorString(status));
         }

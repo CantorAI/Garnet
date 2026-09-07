@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Locker.h"
-#include "value.h"
-#include <sstream> 
+#include "xlang3/xlang3.h"
+#include <sstream>
 #include <string>
 
 namespace Garnet
@@ -17,8 +17,15 @@ namespace Garnet
 
 		void Init(X::Value& logger)
 		{
+			m_lock.Lock();
 			m_realLogger = logger;
+			m_lock.Unlock();
 		}
+        void ResetForHost(X3PackageHost* host) {
+            m_lock.Lock();
+            if (m_realLogger.host() == host) m_realLogger = X::Value();
+            m_lock.Unlock();
+        }
 		template<typename T>
 		inline Log& operator<<(const T& v)
 		{
@@ -27,7 +34,7 @@ namespace Garnet
 				std::ostringstream oss;
 				oss << v;
 				std::string message = oss.str();
-				m_realLogger(message);
+                Write(message);
 			}
 			return (Log&)*this;
 		}
@@ -35,7 +42,7 @@ namespace Garnet
 		{
 			if (m_level <= m_dumpLevel)
 			{
-				m_realLogger('\n');
+                Write("\n");
 			}
 			l->Unlock();
 		}
@@ -63,6 +70,7 @@ namespace Garnet
 			m_level = l;
 		}
 	private:
+        void Write(const std::string& message);
 
 		int m_level = 0;
 		int m_dumpLevel = 999999; //All level will dump out

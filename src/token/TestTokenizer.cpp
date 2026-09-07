@@ -115,17 +115,19 @@ int Test_Tokenizer(X::Runtime& rt) {
         std::cout << "\nDemonstrating X framework integration:" << std::endl;
 
         // Usually, you would load a tokenizer configuration like this
-        X::Package yaml(rt, "yaml", "xlang_yaml");
-        X::Value tokenizer_config = yaml["load"]("tokenizer_config.json");
+        X::Module yaml(rt, "yaml", "xlang_yaml");
+        X::Value tokenizer_config;
+        if (!yaml.Get("load").Call({X::Value::String(rt.host(), "tokenizer_config.json")}, tokenizer_config))
+            throw std::runtime_error(rt.LastError());
 
         // Then process that configuration
         if (tokenizer_config.IsDict()) {
-            X::Dict config_dict(tokenizer_config);
             std::cout << "Loaded tokenizer configuration with parameters:" << std::endl;
 
-            // Example of iterating through an X::Dict
-            for (auto& it : *config_dict) {
-                std::cout << "  " << it.first().ToString() << ": " << it.second().ToString() << std::endl;
+            for (long long i = 0; i < tokenizer_config.Size(); ++i) {
+                X::Value key, value;
+                if (!tokenizer_config.DictEntry(i, key, value)) throw std::runtime_error("invalid tokenizer config");
+                std::cout << "  " << key.ToString() << ": " << value.ToString() << std::endl;
             }
         }
 

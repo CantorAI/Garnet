@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <vector>
 #include <nppi_geometry_transforms.h>
@@ -88,18 +89,9 @@ namespace Garnet::Image::QwenVL
             return static_cast<int>(std::floor(value + 0.5));
         }
 
-        X::Tensor MakeTensor(X::TensorDataType dtype, const std::vector<int>& shape)
+        X::Tensor MakeTensor(X3PackageHost* host, X3TensorDType dtype, const std::vector<int64_t>& shape)
         {
-            X::Tensor tensor;
-            X::Port::vector<int> xshape(static_cast<int>(shape.size()));
-            for (int dim : shape) {
-                xshape.push_back(dim);
-            }
-            tensor->SetDataType(dtype);
-            tensor->SetShape(xshape);
-            X::Value initData;
-            tensor->Create(initData);
-            return tensor;
+            return X::Tensor::Create(host, dtype, shape);
         }
 
         int ChannelOrder(PixelFormat format)
@@ -287,57 +279,75 @@ namespace Garnet::Image::QwenVL
         int width,
         const QwenVLImagePreprocessConfig& config)
     {
-        if (!rawImageValue.IsTensor()) {
-            throw std::invalid_argument("raw image must be an X tensor");
+        if (height <= 0 || width <= 0 || config.patchSize <= 0 ||
+            config.temporalPatchSize <= 0 || config.mergeSize <= 0 ||
+            !std::isfinite(config.inputScale) || config.inputScale <= 0) {
+            throw std::invalid_argument("invalid raw image dimensions or preprocessing configuration");
         }
-        if (height <= 0 || width <= 0) {
-            throw std::invalid_argument("raw image height/width must be positive");
+        for (int channel = 0; channel < 3; ++channel) {
+            if (!std::isfinite(config.mean[channel]) || !std::isfinite(config.std[channel]) || config.std[channel] <= 0) {
+                throw std::invalid_argument("invalid image normalization parameters");
+            }
         }
         if (height % config.patchSize != 0 || width % config.patchSize != 0) {
             throw std::invalid_argument("raw image dimensions must be divisible by Qwen-VL patch_size");
         }
 
         X::Tensor rawImage(rawImageValue);
-        if (rawImage->GetDataType() != X::TensorDataType::FLOAT32) {
+        auto rawInfo = rawImage.Info();
+        if (rawInfo.dtype != X3_TENSOR_FLOAT32 || rawInfo.symbolic || !rawInfo.data) {
             throw std::invalid_argument("raw image tensor must be float32 HWC");
         }
 
         int inputChannels = ChannelCount(config.pixelFormat);
-        int expectedCount = height * width * inputChannels;
-        if (rawImage->GetCount() != expectedCount) {
+        const int64_t pixelCount = static_cast<int64_t>(height) * width;
+        if (pixelCount > (std::numeric_limits<int>::max)() / inputChannels) {
+            throw std::invalid_argument("raw image exceeds CUDA kernel indexing limits");
+        }
+        int64_t expectedCount = pixelCount * inputChannels;
+        int64_t count = 1;
+        int64_t stride = sizeof(float);
+        for (uint32_t axis = rawInfo.rank; axis-- > 0;) {
+            if (rawInfo.shape[axis] <= 0 || rawInfo.shape[axis] > expectedCount / count ||
+                (rawInfo.shape[axis] > 1 && rawInfo.strides[axis] != stride)) {
+                throw std::invalid_argument("raw image must have contiguous HWC storage");
+            }
+            count *= rawInfo.shape[axis];
+            stride *= rawInfo.shape[axis];
+        }
+        if (count != expectedCount) {
             throw std::invalid_argument("raw image tensor count does not match height * width * channels");
         }
 
         int gridH = height / config.patchSize;
         int gridW = width / config.patchSize;
-        int featureDim = 3 * config.temporalPatchSize * config.patchSize * config.patchSize;
+        if (gridH % config.mergeSize || gridW % config.mergeSize) {
+            throw std::invalid_argument("raw image grid must be divisible by merge size");
+        }
+        int64_t featureSize = 3;
+        const int64_t featureLimit = (std::numeric_limits<int>::max)() / (static_cast<int64_t>(gridH) * gridW);
+        for (int dimension : {config.temporalPatchSize, config.patchSize, config.patchSize}) {
+            if (featureSize > featureLimit / dimension) {
+                throw std::invalid_argument("image output exceeds CUDA kernel indexing limits");
+            }
+            featureSize *= dimension;
+        }
+        int featureDim = static_cast<int>(featureSize);
         int patchCount = gridH * gridW;
 
-        X::Tensor pixelValues = MakeTensor(X::TensorDataType::FLOAT32, { patchCount, featureDim });
-        X::Tensor imageGrid = MakeTensor(X::TensorDataType::INT64, { 1, 3 });
+        X::Tensor pixelValues = TensorHelper::CreateGPU(rawImage.host(), X3_TENSOR_FLOAT32, { patchCount, featureDim });
+        X::Tensor imageGrid = MakeTensor(rawImage.host(), X3_TENSOR_INT64, { 1, 3 });
 
-        float* dInput = nullptr;
-        float* dOutput = nullptr;
-        cudaStream_t stream = nullptr;
-        size_t inputBytes = static_cast<size_t>(expectedCount) * sizeof(float);
-        size_t outputBytes = static_cast<size_t>(patchCount) * static_cast<size_t>(featureDim) * sizeof(float);
-        cudaError_t cudaStatus = cudaStreamCreate(&stream);
-        if (cudaStatus != cudaSuccess ||
-            cudaMalloc(&dInput, inputBytes) != cudaSuccess ||
-            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
-            if (dInput) cudaFree(dInput);
-            if (dOutput) cudaFree(dOutput);
-            if (stream) cudaStreamDestroy(stream);
-            throw std::runtime_error("failed to allocate CUDA image preprocessing buffers");
+        X::Tensor input = TensorHelper::CopyToGPU(rawImage);
+        int currentDevice = 0;
+        if (cudaGetDevice(&currentDevice) != cudaSuccess || input.Info().device_id != currentDevice) {
+            throw std::invalid_argument("raw image GPU must match the current CUDA device");
         }
-
-        void* rawGpu = TensorHelper::GetGPUMemory(rawImage);
-        if (rawGpu) {
-            cudaStatus = cudaMemcpyAsync(dInput, rawGpu, inputBytes, cudaMemcpyDeviceToDevice, stream);
-        }
-        else {
-            cudaStatus = cudaMemcpyAsync(dInput, rawImage->GetData(), inputBytes, cudaMemcpyHostToDevice, stream);
-        }
+        const float* dInput = static_cast<const float*>(TensorHelper::GetGPUMemory(input));
+        float* dOutput = static_cast<float*>(TensorHelper::GetGPUMemory(pixelValues));
+        cudaStream_t stream = cudaStreamPerThread;
+        auto use = TensorHelper::AcquireGPU({{input, X3_TENSOR_READ}, {pixelValues, X3_TENSOR_WRITE}}, stream);
+        cudaError_t cudaStatus = cudaSuccess;
 
         if (cudaStatus == cudaSuccess) {
             cudaStatus = runQwenVLNormalizePatchLayoutFP32(
@@ -360,36 +370,18 @@ namespace Garnet::Image::QwenVL
                 stream);
         }
 
+        use.Finish();
         if (cudaStatus == cudaSuccess) {
             cudaStatus = cudaStreamSynchronize(stream);
         }
-        if (!rawGpu && cudaStatus == cudaSuccess) {
-            TensorHelper::AttachGPUMemory(rawImage, dInput);
-            dInput = nullptr;
-        }
-        cudaFree(dInput);
-        if (cudaStatus == cudaSuccess) {
-            cudaStatus = TensorHelper::AttachGPUMemory(pixelValues, dOutput) == TensorOpStatus::Success
-                ? cudaSuccess
-                : cudaErrorMemoryAllocation;
-        }
         const char* syncEnv = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
         bool syncCPU = !syncEnv || !(syncEnv[0] == '0' && syncEnv[1] == '\0');
-        if (cudaStatus == cudaSuccess && syncCPU) {
-            cudaStatus = cudaMemcpyAsync(pixelValues->GetData(), dOutput, outputBytes, cudaMemcpyDeviceToHost, stream);
-            if (cudaStatus == cudaSuccess) {
-                cudaStatus = cudaStreamSynchronize(stream);
-            }
-        }
-        if (cudaStatus != cudaSuccess) {
-            cudaFree(dOutput);
-        }
-        cudaStreamDestroy(stream);
         if (cudaStatus != cudaSuccess) {
             throw std::runtime_error(std::string("Qwen-VL CUDA image preprocessing failed: ") + cudaGetErrorString(cudaStatus));
         }
+        if (syncCPU) pixelValues = TensorHelper::CopyToCPU(pixelValues);
 
-        auto* gridData = reinterpret_cast<long long*>(imageGrid->GetData());
+        auto* gridData = static_cast<int64_t*>(imageGrid.Info().data);
         gridData[0] = 1;
         gridData[1] = gridH;
         gridData[2] = gridW;
@@ -397,7 +389,7 @@ namespace Garnet::Image::QwenVL
         PreprocessResult result;
         result.pixelValues = X::Value(pixelValues);
         result.imageGridTHW = X::Value(imageGrid);
-        auto metadata = BuildVisionMetadataTensors(1, gridH, gridW, config.mergeSize);
+        auto metadata = BuildVisionMetadataTensors(rawImage.host(), 1, gridH, gridW, config.mergeSize);
         result.bilinearIndices = metadata.bilinearIndices;
         result.bilinearWeights = metadata.bilinearWeights;
         result.visionPositionIds = metadata.positionIds;
@@ -413,34 +405,46 @@ namespace Garnet::Image::QwenVL
     }
 
     PreprocessResult PreprocessJpegDeviceBufferToTensor(
+        X3PackageHost* host,
         DevicePreprocessResult deviceResult)
     {
-        X::Tensor pixelValues = MakeTensor(X::TensorDataType::FLOAT32, { deviceResult.patchCount, deviceResult.featureDim });
-        if (TensorHelper::AttachGPUMemory(pixelValues, deviceResult.pixelValuesDevice) != TensorOpStatus::Success) {
+        // This function consumes the allocation even when wrapping fails.
+        X::Tensor pixelValues;
+        try {
+            int device = 0;
+            auto status = cudaGetDevice(&device);
+            if (status != cudaSuccess) throw std::runtime_error(cudaGetErrorString(status));
+            if (deviceResult.patchCount <= 0 || deviceResult.featureDim <= 0 ||
+                deviceResult.outputBytes != static_cast<uint64_t>(deviceResult.patchCount) * deviceResult.featureDim * sizeof(float)) {
+                throw std::invalid_argument("invalid JPEG device tensor dimensions");
+            }
+            int64_t shape[] = {deviceResult.patchCount, deviceResult.featureDim};
+            int64_t strides[] = {static_cast<int64_t>(deviceResult.featureDim) * sizeof(float), sizeof(float)};
+            X3TensorInfo info{};
+            info.size = sizeof(info);
+            info.dtype = X3_TENSOR_FLOAT32;
+            info.rank = 2;
+            info.shape = shape;
+            info.strides = strides;
+            info.data = deviceResult.pixelValuesDevice;
+            info.byte_size = deviceResult.outputBytes;
+            info.device_type = TensorHelper::CudaDevice;
+            info.device_id = device;
+            pixelValues = TensorHelper::WrapGPU(host, info, deviceResult.pixelValuesDevice, device);
+        }
+        catch (...) {
             cudaFree(deviceResult.pixelValuesDevice);
-            throw std::runtime_error("failed to attach GPU pixel buffer to X::Tensor");
+            throw;
         }
 
         const char* syncEnv = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
         bool syncCPU = !syncEnv || !(syncEnv[0] == '0' && syncEnv[1] == '\0');
         if (syncCPU) {
-            cudaStream_t stream = nullptr;
-            cudaError_t status = cudaStreamCreate(&stream);
-            if (status == cudaSuccess) {
-                status = cudaMemcpyAsync(pixelValues->GetData(), deviceResult.pixelValuesDevice, deviceResult.outputBytes, cudaMemcpyDeviceToHost, stream);
-            }
-            if (status == cudaSuccess) {
-                status = cudaStreamSynchronize(stream);
-            }
-            if (stream) cudaStreamDestroy(stream);
-            if (status != cudaSuccess) {
-                cudaFree(deviceResult.pixelValuesDevice);
-                throw std::runtime_error(cudaGetErrorString(status));
-            }
+            pixelValues = TensorHelper::CopyToCPU(pixelValues);
         }
 
-        X::Tensor imageGrid = MakeTensor(X::TensorDataType::INT64, { 1, 3 });
-        auto* gridData = reinterpret_cast<long long*>(imageGrid->GetData());
+        X::Tensor imageGrid = MakeTensor(host, X3_TENSOR_INT64, { 1, 3 });
+        auto* gridData = static_cast<int64_t*>(imageGrid.Info().data);
         gridData[0] = deviceResult.imageGridTHW[0];
         gridData[1] = deviceResult.imageGridTHW[1];
         gridData[2] = deviceResult.imageGridTHW[2];
@@ -449,6 +453,7 @@ namespace Garnet::Image::QwenVL
         result.pixelValues = X::Value(pixelValues);
         result.imageGridTHW = X::Value(imageGrid);
         auto metadata = BuildVisionMetadataTensors(
+            host,
             static_cast<int>(deviceResult.imageGridTHW[0]),
             static_cast<int>(deviceResult.imageGridTHW[1]),
             static_cast<int>(deviceResult.imageGridTHW[2]),
@@ -468,21 +473,25 @@ namespace Garnet::Image::QwenVL
     }
 
     PreprocessResult PreprocessJpegFileToTensor(
+        X3PackageHost* host,
         const std::string& jpegPath,
         int minPixels,
         int maxPixels)
     {
         return PreprocessJpegDeviceBufferToTensor(
+            host,
             PreprocessJpegFileToDeviceBuffer(jpegPath, minPixels, maxPixels));
     }
 
     PreprocessResult PreprocessJpegBytesToTensor(
+        X3PackageHost* host,
         const unsigned char* jpegData,
         size_t jpegSize,
         int minPixels,
         int maxPixels)
     {
         return PreprocessJpegDeviceBufferToTensor(
+            host,
             PreprocessJpegBytesToDeviceBuffer(
                 jpegData, jpegSize, minPixels, maxPixels));
     }

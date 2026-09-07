@@ -1,7 +1,6 @@
 #pragma once
 
-#include "xlang.h"
-#include "xpackage.h"
+#include "xlang3/xlang3.h"
 #include "lowering_context.h"
 #include "safetensors_index.h"
 #include "weight_quantization.h"
@@ -39,8 +38,11 @@ namespace Garnet {
     };
 
     class TRTBuilder : public ILoweringContext {
+        X3PackageHost* host_;
+        std::unordered_map<uint64_t, std::string> capturedTensorNames;
+        std::vector<X::Value> constantTensors;
     public:
-        TRTBuilder();
+        explicit TRTBuilder(X3PackageHost* host);
         ~TRTBuilder();
 
         void SetCapturedWorkspaceBytes(unsigned long long bytes) {
@@ -111,6 +113,10 @@ namespace Garnet {
             const SafeTensorsIndex* weightIndex,
             std::string& errorMessage);
         static void ReleaseCachedExecutions(const std::string& cacheRoot);
+        static std::shared_ptr<void> RetainCachedExecution(
+            const std::string& enginePath,
+            const SafeTensorsIndex* weightIndex,
+            std::string& errorMessage);
         X::Value RunCapturedEngine(
             const std::string& enginePath,
             X::Value inputs,

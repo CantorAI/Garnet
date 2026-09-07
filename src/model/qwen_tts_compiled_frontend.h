@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 
 #include <string>
 #include <vector>
@@ -15,7 +15,7 @@ namespace Garnet
         int codecEosTokenId = 2150;
     };
 
-    QwenTTSCompiledInputs BuildQwenTTSCompiledInputs(
+    QwenTTSCompiledInputs BuildQwenTTSCompiledInputs(X3PackageHost* host,
         const std::string& modelDirectory,
         const std::string& text,
         const std::string& speaker,

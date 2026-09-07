@@ -13,22 +13,22 @@
   },
   "entrypoints": {
     "model": {
-      "file": "qwen_vl_model.x",
+      "file": "qwen_vl_model.py",
       "function": "Qwen3VLModel",
       "frontend": "qwen3_vl"
     },
     "prefill": {
-      "file": "qwen_vl_prefill.x",
+      "file": "qwen_vl_prefill.py",
       "function": "Qwen3VLPrefill",
       "frontend": "qwen3_vl"
     },
     "decode": {
-      "file": "qwen_text_decode.x",
+      "file": "qwen_text_decode.py",
       "function": "Qwen3TextDecode",
       "frontend": "qwen3_vl"
     },
     "decode_batch": {
-      "file": "qwen_text_decode_batch.x",
+      "file": "qwen_text_decode_batch.py",
       "function": "Qwen3TextDecodeBatch",
       "frontend": "qwen3_vl"
     }

@@ -7,20 +7,20 @@ import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-GARNET_DLL = REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
+GARNET_DLL = REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
 CACHE_DIR = SCRIPT_DIR / "qwen_prefill_cache"
 
 handles = []
 for directory in [
     GARNET_DLL.parent,
-    REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
     REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
     Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
 ]:
     if directory.exists() and hasattr(os, "add_dll_directory"):
         handles.append(os.add_dll_directory(str(directory)))
 
-import xlang
+import xlang3
 
 snapshot_root = (
     Path.home() / ".cache" / "huggingface" / "hub" /
@@ -29,10 +29,10 @@ snapshot_root = (
 snapshots = sorted(snapshot_root.glob("*"))
 assert snapshots, "local Qwen3-VL-2B-Instruct snapshot is required"
 
-garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
+garnet = xlang3.importModule("garnet", fromPath=str(GARNET_DLL))
 start = time.perf_counter()
 model = garnet.load_model(
-    str(REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_text_prefill.x"),
+    str(REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_text_prefill.py"),
     runtime_mode="compiled_xmodel",
     entry_function="Qwen3TextPrefill",
     weights=str(snapshots[-1]),
@@ -71,7 +71,7 @@ request = {"inputs": [
 forward_start = time.perf_counter()
 result = model.forward(request)
 assert result["status"] == "ok", result
-logits = np.asarray(garnet.tensor_to_cpu(result["output"]).toarray()).reshape(1, 4, 151936)
+logits = np.asarray(garnet.tensor_to_cpu(result["output"]).tolist()).reshape(1, 4, 151936)
 cold_forward_ms = (time.perf_counter() - forward_start) * 1000.0
 assert np.isfinite(logits).all()
 
@@ -84,7 +84,7 @@ warm_sample_ms = (time.perf_counter() - sample_start) * 1000.0
 next_token = int(sample_result["token_id"])
 
 decode_model = garnet.load_model(
-    str(REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_text_decode.x"),
+    str(REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_text_decode.py"),
     runtime_mode="compiled_xmodel",
     entry_function="Qwen3TextDecode",
     weights=str(snapshots[-1]),

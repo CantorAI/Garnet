@@ -1,13 +1,10 @@
-#include "xhost.h"
-#include "xpackage.h"
+#include "xlang3/xlang3.h"
 
 
 #if (WIN32)
 #include <windows.h>
-#define X_EXPORT __declspec(dllexport) 
 #else
 #include <dlfcn.h>
-#define X_EXPORT
 #endif
 
 #include "garnet.h"
@@ -17,13 +14,13 @@ static bool GetCurLibInfo(void* EntryFuncName, std::string& strFullPath,
 {
 #if (WIN32)
 	HMODULE  hModule = NULL;
-	GetModuleHandleEx(
-		GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-		(LPCTSTR)EntryFuncName,
-		&hModule);
-	char path[MAX_PATH];
-	GetModuleFileName(hModule, path, MAX_PATH);
-	std::string strPath(path);
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+        reinterpret_cast<LPCSTR>(EntryFuncName), &hModule)) return false;
+    char path[32768]{};
+    const DWORD length = GetModuleFileNameA(hModule, path, sizeof(path));
+    if (!length || length >= sizeof(path)) return false;
+	std::string strPath(path, length);
 	strFullPath = strPath;
 	auto pos = strPath.rfind("\\");
 	if (pos != std::string::npos)
@@ -33,7 +30,7 @@ static bool GetCurLibInfo(void* EntryFuncName, std::string& strFullPath,
 	}
 #else
 	Dl_info dl_info;
-	dladdr((void*)EntryFuncName, &dl_info);
+	if (!dladdr((void*)EntryFuncName, &dl_info) || !dl_info.dli_fname) return false;
 	std::string strPath = dl_info.dli_fname;
 	strFullPath = strPath;
 	auto pos = strPath.rfind("/");
@@ -52,22 +49,23 @@ static bool GetCurLibInfo(void* EntryFuncName, std::string& strFullPath,
 	return true;
 }
 
-namespace X
+extern "C" XLANG3_PACKAGE_EXPORT const uint32_t xlang3_package_abi_version = X3_ABI_VERSION;
+
+extern "C" XLANG3_PACKAGE_EXPORT X3Status Load(void* pHost, X3Value curModule)
 {
-	XHost* g_pXHost = nullptr;
+    auto* host = static_cast<X3PackageHost*>(pHost);
+    if (!host || host->abi_version != X3_ABI_VERSION) return X3_STATUS_ERROR;
+    try {
+        Garnet::GarnetAPI::BuildAPI();
+        return Garnet::GarnetAPI::APISET().Create(host, "garnet", curModule);
+    } catch (...) { return X3_STATUS_ERROR; }
 }
-extern "C"  X_EXPORT void Load(void* pHost, X::Value curModule)
+
+void Garnet::GarnetAPI::OnPackageCreated(X::Package<GarnetAPI>* package)
 {
-	std::string strFullPath;
-	std::string strFolderPath;
-	std::string strLibName;
-	GetCurLibInfo((void*)Load, strFullPath, strFolderPath, strLibName);
-	X::g_pXHost = (X::XHost*)pHost;
-	Garnet::GarnetAPI::I().SetModule(curModule);
-	Garnet::GarnetAPI::I().SetBaseFolder(strFolderPath);
-	X::RegisterPackage<Garnet::GarnetAPI>(strFullPath.c_str(), "garnet", &Garnet::GarnetAPI::I());
-}
-extern "C"  X_EXPORT void Unload()
-{
-	X::g_pXHost = nullptr;
+    std::string fullPath, folder, name;
+    if (!GetCurLibInfo(reinterpret_cast<void*>(Load), fullPath, folder, name))
+        throw X::Error("cannot locate Garnet library");
+    SetModule(package->CurrentModule());
+    SetBaseFolder(folder);
 }

@@ -40,7 +40,7 @@ if not env_flag("RUN_GARNET_MODEL_DEVICE_KV_BRIDGE"):
     skip("set RUN_GARNET_MODEL_DEVICE_KV_BRIDGE=1 to verify model-owned device KV bridge")
 
 try:
-    import xlang
+    import xlang3
 except Exception as exc:
     skip(f"xlang Python module not available: {exc}")
 
@@ -52,7 +52,7 @@ if not garnet_dll.exists():
     skip(f"garnet.dll not found: {garnet_dll}")
 
 _dll_handles = add_windows_dll_dirs(garnet_dll)
-garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
 
 os.environ["GARNET_TRT_SYNC_CPU_OUTPUTS"] = "0"
 

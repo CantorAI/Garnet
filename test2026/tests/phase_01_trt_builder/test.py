@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 
-import xlang
+import xlang3
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.abspath(os.path.join(script_dir, "../../.."))
@@ -19,7 +19,7 @@ if hasattr(os, "add_dll_directory"):
             os.add_dll_directory(dll_dir)
 
 try:
-    garnet = xlang.importModule("garnet", fromPath=garnet_dll_path)
+    garnet = xlang3.importModule("garnet", fromPath=garnet_dll_path)
 except Exception as e:
     print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)

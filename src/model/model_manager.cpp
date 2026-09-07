@@ -1,10 +1,12 @@
 #include "model_manager.h"
 
 #include "nlohmann/json.hpp"
-#include "xhost.h"
+#include "xlang3/xlang3.h"
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
+#include <curl/curl.h>
+#include <limits>
 
 #include <chrono>
 #include <algorithm>
@@ -417,17 +419,110 @@ namespace Garnet
             return parts.origin.size() > 8;
         }
 
-        bool ImportHttp(X::XRuntime* runtime, X::Value& http)
+        using DownloadProgress = std::function<bool(uint64_t)>;
+
+        struct CurlTransfer
         {
-            if (!X::g_pXHost || !runtime) return false;
-            X::Runtime xruntime(runtime);
-            X::Package package(xruntime, "http", "xlang_http");
-            http = package;
-            return http.IsObject();
-        }
+            CURL* handle = nullptr;
+            std::ofstream file;
+            std::string* content = nullptr;
+            DownloadProgress progress;
+            uint64_t offset = 0;
+            uint64_t written = 0;
+            uint64_t limit = UINT64_MAX;
+            char error[CURL_ERROR_SIZE]{};
+
+            template<class T>
+            void Option(CURLoption option, T value)
+            {
+                const auto status = curl_easy_setopt(handle, option, value);
+                if (status != CURLE_OK) throw std::runtime_error(curl_easy_strerror(status));
+            }
+
+            CurlTransfer()
+            {
+                static const CURLcode initialized = curl_global_init(CURL_GLOBAL_DEFAULT);
+                if (initialized != CURLE_OK) throw std::runtime_error("libcurl initialization failed");
+                handle = curl_easy_init();
+                if (!handle) throw std::runtime_error("HTTP client allocation failed");
+                try {
+                    Option(CURLOPT_ERRORBUFFER, error);
+                    Option(CURLOPT_NOSIGNAL, 1L);
+                    Option(CURLOPT_CONNECTTIMEOUT, 30L);
+                    Option(CURLOPT_LOW_SPEED_LIMIT, 1L);
+                    Option(CURLOPT_LOW_SPEED_TIME, 120L);
+                    Option(CURLOPT_PROTOCOLS_STR, "https");
+                    Option(CURLOPT_REDIR_PROTOCOLS_STR, "https");
+                    Option(CURLOPT_FOLLOWLOCATION, 1L);
+                    Option(CURLOPT_MAXREDIRS, 8L);
+                    Option(CURLOPT_SSL_VERIFYPEER, 1L);
+                    Option(CURLOPT_SSL_VERIFYHOST, 2L);
+#if defined(_WIN32)
+                    Option(CURLOPT_SSL_OPTIONS, static_cast<long>(CURLSSLOPT_NATIVE_CA));
+#endif
+                    Option(CURLOPT_FAILONERROR, 1L);
+                    Option(CURLOPT_USERAGENT, "CantorAI-Garnet/0.1");
+                    Option(CURLOPT_WRITEFUNCTION, &Write);
+                    Option(CURLOPT_WRITEDATA, this);
+                    Option(CURLOPT_XFERINFOFUNCTION, &Progress);
+                    Option(CURLOPT_XFERINFODATA, this);
+                    Option(CURLOPT_NOPROGRESS, 0L);
+                } catch (...) { curl_easy_cleanup(handle); handle = nullptr; throw; }
+            }
+
+            ~CurlTransfer() { if (handle) curl_easy_cleanup(handle); }
+            CurlTransfer(const CurlTransfer&) = delete;
+            CurlTransfer& operator=(const CurlTransfer&) = delete;
+
+            static size_t Write(char* data, size_t size, size_t count, void* user) noexcept
+            {
+                auto& self = *static_cast<CurlTransfer*>(user);
+                if (size && count > (std::numeric_limits<size_t>::max)() / size) return 0;
+                const size_t bytes = size * count;
+                try {
+                    if (self.content) {
+                        constexpr size_t MaxCatalogBytes = 16 * 1024 * 1024;
+                        if (bytes > MaxCatalogBytes - self.content->size()) return 0;
+                        self.content->append(data, bytes);
+                    } else {
+                        if (bytes > self.limit - self.written) return 0;
+                        self.file.write(data, static_cast<std::streamsize>(bytes));
+                        if (!self.file) return 0;
+                        self.written += bytes;
+                    }
+                    return bytes;
+                } catch (...) { return 0; }
+            }
+
+            static int Progress(void* user, curl_off_t, curl_off_t received, curl_off_t, curl_off_t) noexcept
+            {
+                auto& self = *static_cast<CurlTransfer*>(user);
+                try {
+                    return self.progress && !self.progress(self.offset + static_cast<uint64_t>((std::max)(received, curl_off_t{0}))) ? 1 : 0;
+                } catch (...) { return 1; }
+            }
+
+            bool Perform(const std::string& url, std::string& failure)
+            {
+                Option(CURLOPT_URL, url.c_str());
+                const CURLcode result = curl_easy_perform(handle);
+                long status = 0;
+                curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
+                if (result != CURLE_OK || status < 200 || status >= 300) {
+                    failure = "HTTP " + std::to_string(status) + ": " +
+                        (error[0] ? error : curl_easy_strerror(result));
+                    return false;
+                }
+                if (file.is_open()) {
+                    file.flush();
+                    if (!file) { failure = "cannot flush artifact file"; return false; }
+                }
+                return true;
+            }
+        };
 
         bool HttpGet(
-            X::XRuntime* runtime,
+            X3Runtime* runtime,
             const std::string& url,
             std::string& content,
             std::string& error)
@@ -437,49 +532,19 @@ namespace Garnet
                 error = "only HTTPS catalog URLs are allowed";
                 return false;
             }
-            X::Value http;
-            if (!ImportHttp(runtime, http)) {
-                error = "the XLang HTTP package is unavailable";
-                return false;
-            }
-            X::Value client = http["Client"](parts.origin);
-            if (!client.IsObject()) {
-                error = "HTTP client creation failed";
-                return false;
-            }
-            X::Dict headers;
-            headers->Set("User-Agent", "CantorAI-Garnet/0.1");
-            headers->Set("Accept", "application/octet-stream, application/json");
-            client["setHeaders"](headers);
-            if (!client["get"](parts.path).ToBool()) {
-                error = "HTTP GET failed";
-                return false;
-            }
-            const int status = client["status"]().ToInt();
-            if (status < 200 || status >= 300) {
-                error = "HTTP GET returned status " + std::to_string(status);
-                return false;
-            }
-            X::Value body = client["body"]();
-            if (body.IsBin()) {
-                auto* binary = dynamic_cast<X::XBin*>(body.GetObj());
-                if (!binary) {
-                    error = "HTTP response body is unavailable";
-                    return false;
-                }
-                content.assign(binary->Data(), binary->Size());
-            }
-            else {
-                content = body.ToString();
-            }
-            return true;
+            (void)runtime;
+            content.clear();
+            CurlTransfer transfer;
+            transfer.content = &content;
+            return transfer.Perform(url, error);
         }
 
         bool HttpDownload(
-            X::XRuntime* runtime,
+            X3Runtime* runtime,
             const std::string& url,
             const fs::path& target,
-            X::Value callback,
+            uint64_t expectedBytes,
+            DownloadProgress callback,
             std::string& error)
         {
             UrlParts parts;
@@ -487,33 +552,25 @@ namespace Garnet
                 error = "only HTTPS artifact URLs are allowed";
                 return false;
             }
-            X::Value http;
-            if (!ImportHttp(runtime, http)) {
-                error = "the XLang HTTP package is unavailable";
+            (void)runtime;
+            CurlTransfer transfer;
+            transfer.progress = std::move(callback);
+            transfer.offset = fs::exists(target) ? fs::file_size(target) : 0;
+            if (transfer.offset > expectedBytes) { error = "partial artifact exceeds expected size"; return false; }
+            transfer.limit = expectedBytes - transfer.offset;
+            if (transfer.offset > static_cast<uint64_t>((std::numeric_limits<curl_off_t>::max)())) {
+                error = "artifact file exceeds HTTP range limits";
                 return false;
             }
-            X::Value client = http["Client"](parts.origin);
-            if (!client.IsObject()) {
-                error = "HTTP client creation failed";
+            if (transfer.progress && !transfer.progress(transfer.offset)) {
+                error = "artifact download cancelled";
                 return false;
             }
-            X::Dict headers;
-            headers->Set("User-Agent", "CantorAI-Garnet/0.1");
-            headers->Set("Accept", "application/octet-stream");
-            client["setHeaders"](headers);
-            const bool downloaded =
-                client["download"](parts.path, target.string(), callback).ToBool();
-            const int status = client["status"]().ToInt();
-            if (!downloaded) {
-                error = "artifact download failed (HTTP " +
-                    std::to_string(status) + ")";
-                return false;
-            }
-            if (status != 200 && status != 206) {
-                error = "artifact download returned status " + std::to_string(status);
-                return false;
-            }
-            return true;
+            transfer.file.open(target, std::ios::binary | std::ios::app);
+            if (!transfer.file) { error = "cannot open artifact file"; return false; }
+            if (transfer.offset) transfer.Option(CURLOPT_RESUME_FROM_LARGE,
+                static_cast<curl_off_t>(transfer.offset));
+            return transfer.Perform(url, error);
         }
 
         const json* FindModel(const json& catalog, const std::string& modelId)
@@ -617,6 +674,28 @@ namespace Garnet
         }
     }
 
+    ModelManager::~ModelManager()
+    {
+        std::vector<std::thread> workers;
+        {
+            std::lock_guard<std::mutex> guard(m_mutex);
+            m_stopping = true;
+            for (auto& entry : m_jobs) entry.second->cancelled = true;
+            workers.swap(m_workers);
+        }
+        for (auto& worker : workers) if (worker.joinable()) worker.join();
+    }
+
+    void ModelManager::NotifyProgress(const std::shared_ptr<Job>& job) const
+    {
+        ProgressSink sink;
+        {
+            std::lock_guard<std::mutex> guard(m_mutex);
+            sink = m_progressSink;
+        }
+        if (sink) sink(job->Snapshot().dump());
+    }
+
     void ModelManager::SetProgressSink(ProgressSink progressSink)
     {
         std::lock_guard<std::mutex> guard(m_mutex);
@@ -630,6 +709,10 @@ namespace Garnet
                 ? json::object()
                 : json::parse(optionsJson);
             std::lock_guard<std::mutex> guard(m_mutex);
+            for (const auto& item : m_jobs) {
+                if (!item.second->Snapshot().value("terminal", false))
+                    return JsonError("install_in_progress", "configuration cannot change during installation");
+            }
             if (options.contains("catalog_url")) {
                 m_catalogUrl = options["catalog_url"].get<std::string>();
             }
@@ -650,6 +733,7 @@ namespace Garnet
                     options["public_key_path"].get<std::string>());
             }
             m_requireSignature = options.value("require_signature", true);
+            m_cachedCatalog.clear();
             fs::create_directories(m_installRoot);
             fs::create_directories(m_cacheRoot);
             return json({
@@ -666,7 +750,7 @@ namespace Garnet
         }
     }
 
-    std::string ModelManager::FetchCatalog(X::XRuntime* runtime, bool refresh)
+    std::string ModelManager::FetchCatalog(X3Runtime* runtime, bool refresh)
     {
         std::string catalogUrl;
         std::string signatureUrl;
@@ -712,7 +796,7 @@ namespace Garnet
         return catalog;
     }
 
-    std::string ModelManager::ListRemote(X::XRuntime* runtime, bool refresh)
+    std::string ModelManager::ListRemote(X3Runtime* runtime, bool refresh)
     {
         try {
             json catalog = json::parse(FetchCatalog(runtime, refresh));
@@ -756,7 +840,7 @@ namespace Garnet
     }
 
     std::string ModelManager::StartInstall(
-        X::XRuntime* runtime,
+        X3Runtime* runtime,
         const std::string& modelId,
         const std::string& optionsJson)
     {
@@ -769,6 +853,7 @@ namespace Garnet
         job->reportArchiveCache = m_retainArchive;
         {
             std::lock_guard<std::mutex> guard(m_mutex);
+            if (m_stopping) return JsonError("manager_stopping", "model manager is shutting down");
             for (const auto& item : m_jobs) {
                 if (item.second->modelId == modelId &&
                     !item.second->Snapshot().value("terminal", false)) {
@@ -781,11 +866,13 @@ namespace Garnet
         }
 
         try {
-            std::thread([
+            std::lock_guard<std::mutex> guard(m_mutex);
+            if (m_stopping) return JsonError("manager_stopping", "model manager is shutting down");
+            m_workers.emplace_back([
                 this, runtime, jobId = job->id, modelId, optionsJson
             ]() {
                 RunInstallJob(runtime, jobId, modelId, optionsJson);
-            }).detach();
+            });
         }
         catch (const std::exception& exception) {
             UpdateJob(job, "error", "Could not start install worker", true,
@@ -845,11 +932,11 @@ namespace Garnet
             job->terminal = terminal;
             job->error = error;
         }
-        if (m_progressSink) m_progressSink(job->Snapshot().dump());
+        NotifyProgress(job);
     }
 
     void ModelManager::RunInstallJob(
-        X::XRuntime* runtime,
+        X3Runtime* runtime,
         const std::string& jobId,
         const std::string& modelId,
         const std::string&)
@@ -915,31 +1002,21 @@ namespace Garnet
                 fs::create_directories(partPath.parent_path());
                 const uint64_t expectedSize =
                     part.value("size_bytes", uint64_t{0});
-                X::U_FUNC progress = [this, job, baseBytes](
-                    X::XRuntime*, X::XObj*, X::XObj*,
-                    X::ARGS& params, X::KWARGS&, X::Value& result) {
-                    const uint64_t received = params.size() == 0
-                        ? 0
-                        : static_cast<uint64_t>(params[0].ToLongLong());
+                DownloadProgress progress = [this, job, baseBytes](uint64_t received) {
                     {
                         std::lock_guard<std::mutex> guard(job->mutex);
                         job->bytesReceived = baseBytes + received;
                     }
-                    if (m_progressSink) m_progressSink(job->Snapshot().dump());
-                    result = !job->cancelled.load();
-                    return true;
+                    NotifyProgress(job);
+                    return !job->cancelled.load();
                 };
-                X::Value callback(
-                    X::g_pXHost->CreateFunction(
-                        "garnet_download_progress", progress, nullptr),
-                    false);
                 bool ready = false;
                 if (fs::is_regular_file(partPath, error) && !error) {
                     const uint64_t cachedSize = fs::file_size(partPath, error);
                     if (!error && cachedSize == expectedSize &&
                         Sha256(partPath) == part.value("sha256", "")) {
                         ready = true;
-                    } else if (!error && cachedSize > expectedSize) {
+                    } else if (!error && cachedSize >= expectedSize) {
                         fs::remove(partPath, error);
                         error.clear();
                     }
@@ -948,8 +1025,8 @@ namespace Garnet
                     std::string downloadError;
                     UpdateJob(job, "downloading", "Downloading " + label);
                     if (!HttpDownload(
-                            runtime, part.value("url", ""), partPath,
-                            callback, downloadError)) {
+                            runtime, part.value("url", ""), partPath, expectedSize,
+                            progress, downloadError)) {
                         throw std::runtime_error(
                             "download failed for " + label + ": " + downloadError);
                     }
@@ -957,6 +1034,8 @@ namespace Garnet
                 const uint64_t actualSize = fs::file_size(partPath);
                 if (actualSize != expectedSize ||
                     Sha256(partPath) != part.value("sha256", "")) {
+                    fs::remove(partPath, error);
+                    error.clear();
                     throw std::runtime_error(
                         "download verification failed for " + label);
                 }
@@ -1087,6 +1166,7 @@ namespace Garnet
                 for (const fs::path& partPath : downloadedParts) {
                     std::ifstream input(partPath, std::ios::binary);
                     while (input) {
+                        if (job->cancelled) throw std::runtime_error("installation cancelled");
                         input.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
                         const std::streamsize count = input.gcount();
                         if (count > 0) output.write(buffer.data(), count);
@@ -1117,6 +1197,7 @@ namespace Garnet
             if (!marker) throw std::runtime_error("cannot write installed model marker");
 
             UpdateJob(job, "installing", "Activating verified model package");
+            if (job->cancelled) throw std::runtime_error("installation cancelled");
             const fs::path target = InstalledModelRoot(modelId);
             const fs::path backup = m_installRoot / ("." + modelId + ".previous");
             if (!IsWithin(m_installRoot, target) || !IsWithin(m_installRoot, backup)) {

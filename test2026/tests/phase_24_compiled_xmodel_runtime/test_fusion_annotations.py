@@ -14,8 +14,8 @@ def discover_garnet_dll():
     explicit = os.environ.get("GARNET_DLL_PATH", "").strip()
     candidates = [Path(explicit)] if explicit else []
     candidates.extend([
-        REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll",
-        REPO_ROOT / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll",
+        REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll",
+        REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll",
     ])
     for candidate in candidates:
         if candidate.exists():
@@ -29,7 +29,7 @@ def add_windows_dll_dirs(garnet_dll):
         return handles
     for path in [
         garnet_dll.parent,
-        REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+        REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
         REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
         Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
     ]:
@@ -41,9 +41,9 @@ def add_windows_dll_dirs(garnet_dll):
 garnet_dll = discover_garnet_dll()
 _dll_handles = add_windows_dll_dirs(garnet_dll)
 
-import xlang
+import xlang3
 
-garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
 model_path = SCRIPT_DIR / "compiled_fusion_regions_model.x"
 cache_dir = SCRIPT_DIR / "cache" / "fusion_annotations"
 shutil.rmtree(cache_dir, ignore_errors=True)
@@ -108,7 +108,7 @@ assert [operation["candidate_partition"] for operation in plan["operations"]] ==
 input_tensor = np.asarray([[1.0, 2.0, 3.0, 4.0]], dtype=np.float32)
 result = model.forward({"inputs": [input_tensor]})
 assert result["status"] == "ok", result
-actual = np.asarray(garnet.tensor_to_cpu(result["output"]).toarray(), dtype=np.float32)
+actual = np.asarray(garnet.tensor_to_cpu(result["output"]).tolist(), dtype=np.float32)
 np.testing.assert_allclose(actual, np.asarray([[128.0, 256.0, 384.0, 512.0]], dtype=np.float32))
 
 cached_model = load_fixture()
@@ -137,7 +137,7 @@ assert preferred_plan["operations"][0]["partition_reason"].startswith("preferred
 preferred_result = preferred_model.forward({"inputs": [input_tensor]})
 assert preferred_result["status"] == "ok", preferred_result
 preferred_actual = np.asarray(
-    garnet.tensor_to_cpu(preferred_result["output"]).toarray(), dtype=np.float32
+    garnet.tensor_to_cpu(preferred_result["output"]).tolist(), dtype=np.float32
 )
 np.testing.assert_allclose(preferred_actual, actual)
 
@@ -170,7 +170,7 @@ assert [operation["candidate_partition"] for operation in atomic_layer_operation
 atomic_result = atomic_model.forward({"inputs": [input_tensor]})
 assert atomic_result["status"] == "ok", atomic_result
 atomic_actual = np.asarray(
-    garnet.tensor_to_cpu(atomic_result["output"]).toarray(), dtype=np.float32
+    garnet.tensor_to_cpu(atomic_result["output"]).tolist(), dtype=np.float32
 )
 np.testing.assert_allclose(atomic_actual, actual)
 
@@ -203,7 +203,7 @@ keyword_result = keyword_model.forward({"inputs": [
 ]})
 assert keyword_result["status"] == "ok", keyword_result
 keyword_actual = np.asarray(
-    garnet.tensor_to_cpu(keyword_result["output"]).toarray(), dtype=np.float32
+    garnet.tensor_to_cpu(keyword_result["output"]).tolist(), dtype=np.float32
 )
 np.testing.assert_allclose(
     keyword_actual,

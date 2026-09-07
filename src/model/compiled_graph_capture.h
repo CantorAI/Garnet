@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "xlang.h"
+
 
 namespace Garnet
 {
@@ -52,7 +52,9 @@ namespace Garnet
     };
 
     bool IsCompiledGraphCaptureActive();
-    bool IsCompiledFusionCaptureRootActive();
+    class TensorGraphCapture;
+    bool CaptureFusionGraph(const TensorGraphCapture& graph,
+        const FusionPartitionOptions& options, std::string& errorMessage);
     const std::vector<CapturedFusionRegion>& GetCapturedFusionRegions();
     const std::vector<CapturedTensorOperation>& GetCapturedTensorOperations();
     const std::string& GetCompiledGraphCaptureError();
@@ -73,30 +75,4 @@ namespace Garnet
         ScopedCompiledGraphCapture& operator=(const ScopedCompiledGraphCapture&) = delete;
     };
 
-    class ScopedCompiledFusionCaptureRoot
-    {
-    public:
-        ScopedCompiledFusionCaptureRoot();
-        ~ScopedCompiledFusionCaptureRoot();
-
-        ScopedCompiledFusionCaptureRoot(const ScopedCompiledFusionCaptureRoot&) = delete;
-        ScopedCompiledFusionCaptureRoot& operator=(const ScopedCompiledFusionCaptureRoot&) = delete;
-    };
-
-    class ScopedCompiledFusionRegion
-    {
-        bool m_active = false;
-        int m_regionId = -1;
-
-    public:
-        explicit ScopedCompiledFusionRegion(const FusionAnnotation& annotation);
-        ~ScopedCompiledFusionRegion();
-
-        bool IsValid() const;
-        void CaptureInputs(X::ARGS& inputs);
-        void CaptureResult(const X::Value& result);
-
-        ScopedCompiledFusionRegion(const ScopedCompiledFusionRegion&) = delete;
-        ScopedCompiledFusionRegion& operator=(const ScopedCompiledFusionRegion&) = delete;
-    };
 }

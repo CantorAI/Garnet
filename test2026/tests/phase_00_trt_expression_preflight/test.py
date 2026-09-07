@@ -74,12 +74,12 @@ if garnet_dll is None:
 _dll_dir_handles = add_windows_dll_dirs(garnet_dll)
 
 try:
-    import xlang
+    import xlang3
 except Exception as exc:
     skip(f"xlang Python module not available: {exc}")
 
 try:
-    garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+    garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
 except Exception as exc:
     print(f"FAIL_STAGE=dll_import")
     print(f"garnet_dll={garnet_dll}")

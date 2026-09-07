@@ -2,7 +2,7 @@
 
 #include "../image_preprocessor.h"
 #include "../image_source.h"
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 #include <cstddef>
 #include <string>
 
@@ -55,11 +55,13 @@ namespace Garnet::Image::QwenVL
         const QwenVLImagePreprocessConfig& config);
 
     PreprocessResult PreprocessJpegFileToTensor(
+        X3PackageHost* host,
         const std::string& jpegPath,
         int minPixels,
         int maxPixels);
 
     PreprocessResult PreprocessJpegBytesToTensor(
+        X3PackageHost* host,
         const unsigned char* jpegData,
         size_t jpegSize,
         int minPixels,

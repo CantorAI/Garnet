@@ -1,6 +1,5 @@
 #include "nlohmann/json.hpp"
-#include "xlang.h"
-#include "xload.h"
+#include "xlang3/xlang3.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -11,20 +10,14 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <array>
+#include <type_traits>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 namespace
 {
-    char* CopyConfigString(const std::string& value)
-    {
-        char* result = new char[value.size() + 1];
-        std::copy(value.begin(), value.end(), result);
-        result[value.size()] = '\0';
-        return result;
-    }
-
     std::string Env(const char* name, const std::string& fallback = {})
     {
         const char* value = std::getenv(name);
@@ -104,35 +97,21 @@ namespace
             const fs::path xlangDir = Env("GARNET_XLANG_DIR").empty()
                 ? executableDir
                 : fs::path(Env("GARNET_XLANG_DIR"));
-            config_.appPath = CopyConfigString(xlangDir.string());
-            config_.appFullName = CopyConfigString((executableDir / "garnet-serving").string());
-            config_.dllSearchPath = CopyConfigString(xlangDir.string());
-            config_.enablePython = false;
-            config_.enterEventLoop = false;
-            config_.runEventLoopInThread = false;
-            if (loader_.Load(&config_) != 0 || loader_.Run() != 0) {
-                throw std::runtime_error("failed to initialize XLang host");
-            }
-            X::Runtime rt;
-            runtime_ = rt;
-            X::Package garnet(rt, "garnet", "garnet");
-            garnet_ = garnet;
-            if (!garnet_.IsObject()) {
-                throw std::runtime_error("failed to import Garnet XLang package");
-            }
+            runtime_.AddImportRoot(xlangDir.string());
+            runtime_.AddImportRoot((xlangDir / "modules").string());
+            runtime_.AddImportRoot(executableDir.string());
+            garnet_ = X::Module(runtime_, "garnet", "garnet");
             ConfigureManagers();
         }
 
         ~GarnetServingProcess()
         {
             try {
-                if (serving_) garnet_["stop_serving"]();
+                if (serving_) Call("stop_serving");
             }
             catch (...) {
             }
             garnet_ = X::Value();
-            runtime_ = X::Value();
-            loader_.Unload();
         }
 
         json Handle(const json& request)
@@ -144,14 +123,14 @@ namespace
                 return {{"status", "ok"}, {"ready", true}, {"model", activeModelId_}};
             }
             if (path == "component:/v1/models" || path == "/v1/models") {
-                return ParseGarnetJson(garnet_["list_installed_models_json"]());
+                return ParseGarnetJson(Call("list_installed_models_json"));
             }
             if (path == "component:/v1/chat/completions" || path == "/v1/chat/completions") {
                 EnsureModel(model);
                 const std::string prompt = FirstTextFromMessages(body);
                 const std::string image = FirstImageFromBody(body);
                 const int maxTokens = body.value("max_tokens", 256);
-                json result = ParseGarnetJson(garnet_["infer_json"](prompt, image, maxTokens));
+                json result = ParseGarnetJson(Call("infer_json", prompt, image, maxTokens));
                 if (result.value("status", "") != "ok") return result;
                 return {
                     {"id", request.value("id", "")},
@@ -170,7 +149,7 @@ namespace
                 const std::string prompt = body.value("input", FirstTextFromMessages(body));
                 const std::string image = FirstImageFromBody(body);
                 const int maxTokens = body.value("max_output_tokens", body.value("max_tokens", 256));
-                json result = ParseGarnetJson(garnet_["infer_json"](prompt, image, maxTokens));
+                json result = ParseGarnetJson(Call("infer_json", prompt, image, maxTokens));
                 if (result.value("status", "") != "ok") return result;
                 return {
                     {"id", request.value("id", "")},
@@ -197,7 +176,7 @@ namespace
                 const std::string voice = body.value("voice", Env("GARNET_TTS_SPEAKER", "Ryan"));
                 const std::string language = body.value("language", "English");
                 const int maxFrames = body.value("max_audio_frames", 256);
-                json result = ParseGarnetJson(garnet_["synthesize_json"](
+                json result = ParseGarnetJson(Call("synthesize_json",
                     text, voice, language, maxFrames, outputPath.string()));
                 result["output_path"] = outputPath.string();
                 return result;
@@ -212,7 +191,7 @@ namespace
                 const std::string prompt = body.value("prompt", "");
                 const std::string language = body.value("language", "English");
                 const int maxTokens = body.value("max_tokens", 256);
-                json result = ParseGarnetJson(garnet_["transcribe_json"](
+                json result = ParseGarnetJson(Call("transcribe_json",
                     audioPath, prompt, language, maxTokens));
                 if (result.value("status", "") != "ok") return result;
                 return {
@@ -229,7 +208,7 @@ namespace
                 const std::string prompt = body.value("prompt", "Describe this image.");
                 const std::string image = body.value("image_path", FirstImageFromBody(body));
                 const int maxTokens = body.value("max_tokens", 256);
-                return ParseGarnetJson(garnet_["infer_json"](prompt, image, maxTokens));
+                return ParseGarnetJson(Call("infer_json", prompt, image, maxTokens));
             }
             return {{"status", "error"}, {"error_code", "route_not_found"},
                 {"error_message", "Unsupported Garnet component route: " + path}};
@@ -255,8 +234,8 @@ namespace
             if (!Env("GARNET_CATALOG_SIGNATURE_URL").empty()) {
                 options["catalog_signature_url"] = Env("GARNET_CATALOG_SIGNATURE_URL");
             }
-            garnet_["configure_model_manager_json"](options.dump());
-            garnet_["configure_acceleration_manager_json"](json::object().dump());
+            Call("configure_model_manager_json", options.dump());
+            Call("configure_acceleration_manager_json", json::object().dump());
         }
 
         void EnsureModel(const std::string& modelId)
@@ -268,21 +247,21 @@ namespace
             }
             if (serving_ && activeModelId_ == wanted) return;
             if (serving_) {
-                garnet_["stop_serving"]();
+                Call("stop_serving");
                 serving_ = false;
                 activeModelId_.clear();
             }
-            const json installed = ParseGarnetJson(garnet_["list_installed_models_json"]());
+            const json installed = ParseGarnetJson(Call("list_installed_models_json"));
             const std::string installedText = installed.dump();
             if (installedText.find("\"" + wanted + "\"") == std::string::npos) {
                 if (Env("GARNET_AUTO_INSTALL", "1") != "1") {
                     throw std::runtime_error(wanted + " is not installed");
                 }
-                const json accepted = ParseGarnetJson(garnet_["install_model_json"](wanted, "{}"));
+                const json accepted = ParseGarnetJson(Call("install_model_json", wanted, "{}"));
                 const std::string job = accepted.value("job_id", "");
                 if (job.empty()) throw std::runtime_error(accepted.dump());
                 for (;;) {
-                    const json status = ParseGarnetJson(garnet_["model_install_status_json"](job));
+                    const json status = ParseGarnetJson(Call("model_install_status_json", job));
                     if (status.value("terminal", false)) {
                         if (status.value("phase", "") != "complete") {
                             throw std::runtime_error(status.dump());
@@ -293,7 +272,7 @@ namespace
                 }
             }
             const json loaded = ParseGarnetJson(
-                garnet_["serve_installed_model_json"](wanted, "{}"));
+                Call("serve_installed_model_json", wanted, "{}"));
             if (!loaded.value("ready", false)) throw std::runtime_error(loaded.dump());
             activeModelId_ = wanted;
             serving_ = true;
@@ -301,9 +280,22 @@ namespace
 
         std::string defaultModelId_;
         std::string activeModelId_;
-        X::Config config_{};
-        X::XLoad loader_;
-        X::Value runtime_;
+        template<class T> X::Value Argument(T&& value) {
+            if constexpr (std::is_arithmetic_v<std::decay_t<T>>)
+                return X::Value(value);
+            else
+                return X::Value::String(runtime_.host(), std::forward<T>(value));
+        }
+
+        template<class... Args> X::Value Call(const char* name, Args&&... args) {
+            std::array<X::Value, sizeof...(Args)> values{Argument(std::forward<Args>(args))...};
+            X::Value result;
+            if (!garnet_.Get(name).Call(values.data(), static_cast<uint32_t>(values.size()), result))
+                throw std::runtime_error(std::string("garnet.") + name + ": " + runtime_.LastError());
+            return result;
+        }
+
+        X::Runtime runtime_;
         X::Value garnet_;
         bool serving_ = false;
     };

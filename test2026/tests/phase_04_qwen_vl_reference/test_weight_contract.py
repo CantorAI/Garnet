@@ -1,5 +1,7 @@
+import ast
 import json
 import os
+import struct
 from pathlib import Path
 
 from common import REPO_ROOT, env_flag, skip
@@ -13,7 +15,7 @@ if not env_flag("RUN_QWEN_VL_WEIGHT_CONTRACT"):
 
 CONFIG_PATH = Path(os.environ.get("GARNET_QWEN_VL_CONFIG_JSON", "")).expanduser()
 WEIGHTS_PATH = Path(os.environ.get("GARNET_QWEN_VL_WEIGHT_INDEX_OR_DIR", "")).expanduser()
-XMODEL_DIR = Path(os.environ.get("GARNET_QWEN_VL_XMODEL_DIR", REPO_ROOT / "qwen_vl" / "xmodel"))
+XMODEL_DIR = Path(os.environ.get("GARNET_QWEN_VL_XMODEL_DIR", REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct"))
 REPORT_PATH = Path(os.environ.get(
     "GARNET_QWEN_VL_WEIGHT_CONTRACT_REPORT",
     REPO_ROOT / "test2026" / "artifacts" / "qwen_vl_reference" / "weight_contract_report.json",
@@ -94,23 +96,15 @@ def expected_weight_names(config):
 
 def xmodel_weight_literals():
     literals = set()
-    for path in sorted(XMODEL_DIR.glob("*.x")):
-        text = path.read_text(encoding="utf-8")
-        for marker in ('weights["', "weights['"):
-            start = 0
-            while True:
-                idx = text.find(marker, start)
-                if idx < 0:
-                    break
-                idx += len(marker)
-                quote = marker[-1]
-                end = text.find(quote, idx)
-                if end < 0:
-                    break
-                literal = text[idx:end]
-                if "prefix" not in literal and "+" not in literal:
-                    literals.add(literal)
-                start = end + 1
+    paths = sorted(path for path in XMODEL_DIR.glob("*.py") if path.name != "__init__.py")
+    assert paths, f"no Python model sources in {XMODEL_DIR}"
+    for path in paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name)
+                    and node.value.id == "weights" and isinstance(node.slice, ast.Constant)
+                    and isinstance(node.slice.value, str)):
+                literals.add(node.slice.value)
     return literals
 
 
@@ -136,15 +130,16 @@ def load_weight_names_and_shapes(path):
         safetensor_files = sorted(path.glob("*.safetensors"))
 
     if safetensor_files:
-        try:
-            from safetensors import safe_open
-        except Exception:
-            return names, shapes
         for file_path in safetensor_files:
-            with safe_open(str(file_path), framework="pt", device="cpu") as handle:
-                for key in handle.keys():
+            # Only parse metadata; a source contract must not materialize weights.
+            with file_path.open("rb") as handle:
+                header_size = struct.unpack("<Q", handle.read(8))[0]
+                assert 0 < header_size <= min(file_path.stat().st_size - 8, 100_000_000), file_path
+                header = json.loads(handle.read(header_size))
+            for key, entry in header.items():
+                if key != "__metadata__":
                     names.add(key)
-                    shapes[key] = list(handle.get_tensor(key).shape)
+                    shapes[key] = entry["shape"]
 
     return names, shapes
 

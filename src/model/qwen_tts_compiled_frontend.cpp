@@ -19,48 +19,53 @@ namespace Garnet
 {
     namespace
     {
-        X::Value MakeGpuTensor(X::TensorDataType type,
+        X::Value MakeGpuTensor(X3PackageHost* host, X3TensorDType type,
             const std::vector<int>& dimensions, const void* data, size_t bytes)
         {
-            X::Tensor tensor(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
-            for (int dimension : dimensions) shape.push_back(dimension);
-            tensor->SetDataType(type);
-            tensor->SetShape(shape);
-            void* memory = nullptr;
-            if (cudaMalloc(&memory, bytes) != cudaSuccess) return X::Value();
-            if (bytes && data && cudaMemcpy(
-                    memory, data, bytes, cudaMemcpyHostToDevice) != cudaSuccess) {
-                cudaFree(memory);
-                return X::Value();
+            std::vector<int64_t> shape(dimensions.begin(), dimensions.end());
+            uint64_t expected = TensorHelper::ItemSize(type);
+            for (auto dimension : shape) {
+                if (dimension < 0 || (dimension && expected > UINT64_MAX / dimension))
+                    throw std::invalid_argument("invalid frontend tensor shape");
+                expected *= dimension;
             }
-            if (TensorHelper::AttachGPUMemory(tensor, memory) !=
-                TensorOpStatus::Success) {
-                cudaFree(memory);
-                return X::Value();
-            }
-            return X::Value(tensor);
+            if (expected != bytes) throw std::invalid_argument("frontend tensor byte size mismatch");
+            return TensorHelper::CreateGPU(host, type, shape, data);
         }
 
-        X::Value MakeZeroGpuTensor(X::TensorDataType type,
-            const std::vector<int>& dimensions, size_t elementBytes,
-            X::Value reusable)
+        X::Value MakeZeroGpuTensor(X3PackageHost* host, X3TensorDType type,
+            const std::vector<int>& dimensions, size_t elementBytes, X::Value reusable)
         {
-            size_t count = 1;
-            for (int dimension : dimensions) count *= static_cast<size_t>(dimension);
-            const size_t bytes = count * elementBytes;
-            if (reusable.IsTensor()) {
+            if (elementBytes != TensorHelper::ItemSize(type))
+                throw std::invalid_argument("frontend tensor element size mismatch");
+            const std::vector<int64_t> shape(dimensions.begin(), dimensions.end());
+            if (X::Tensor::IsTensor(reusable)) {
                 X::Tensor tensor(reusable);
-                void* memory = TensorHelper::GetGPUMemory(tensor);
-                if (memory && static_cast<size_t>(tensor->GetDataSize()) == bytes &&
-                    cudaMemsetAsync(memory, 0, bytes, cudaStreamPerThread) == cudaSuccess) {
-                    return reusable;
+                const auto info = tensor.Info();
+                int device = -1;
+                bool matches = cudaGetDevice(&device) == cudaSuccess &&
+                    info.device_id == device && !info.readonly &&
+                    reusable.runtime() == host->runtime &&
+                    info.dtype == type && info.rank == shape.size();
+                for (uint32_t i = 0; matches && i < info.rank; ++i)
+                    matches = info.shape[i] == shape[i];
+                uint64_t span = elementBytes;
+                for (size_t i = shape.size(); matches && i-- > 0;) {
+                    matches = info.strides[i] == static_cast<int64_t>(span) &&
+                        shape[i] >= 0 && (!shape[i] || span <= UINT64_MAX / shape[i]);
+                    if (matches) span *= shape[i];
+                }
+                matches = matches && span == info.byte_size;
+                void* data = matches ? TensorHelper::GetGPUMemory(tensor) : nullptr;
+                if (data) {
+                    auto use = TensorHelper::AcquireGPU(tensor, X3_TENSOR_WRITE);
+                    if (cudaMemsetAsync(data, 0, info.byte_size, cudaStreamPerThread) == cudaSuccess) {
+                        use.Finish();
+                        return reusable;
+                    }
                 }
             }
-            X::Value value = MakeGpuTensor(type, dimensions, nullptr, bytes);
-            if (value.IsTensor()) cudaMemset(
-                TensorHelper::GetGPUMemory(X::Tensor(value)), 0, bytes);
-            return value;
+            return TensorHelper::CreateGPU(host, type, shape);
         }
 
         std::string Lower(std::string value)
@@ -71,7 +76,7 @@ namespace Garnet
         }
     }
 
-    QwenTTSCompiledInputs BuildQwenTTSCompiledInputs(
+    QwenTTSCompiledInputs BuildQwenTTSCompiledInputs(X3PackageHost* host,
         const std::string& modelDirectory, const std::string& text,
         const std::string& speaker, const std::string& language,
         const std::string& instruct,
@@ -208,23 +213,23 @@ namespace Garnet
             std::vector<int> pageTable(static_cast<size_t>(pages));
             for (int index = 0; index < pages; ++index) pageTable[index] = index;
             const int start = 0;
-            X::V<X::XList> inputs;
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG,
+            X::Value inputs = X::Value::List(host);
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64,
                 profileShapes[0], ids.data(), ids.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG,
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64,
                 profileShapes[1], positions.data(), positions.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG,
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64,
                 profileShapes[2], mask.data(), mask.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeZeroGpuTensor(X::TensorDataType::BFLOAT16,
+            inputs.Append(MakeZeroGpuTensor(host, X3_TENSOR_BFLOAT16,
                 profileShapes[3], sizeof(unsigned short), reusableKeyCache));
-            inputs->AddItem(MakeZeroGpuTensor(X::TensorDataType::BFLOAT16,
+            inputs.Append(MakeZeroGpuTensor(host, X3_TENSOR_BFLOAT16,
                 profileShapes[4], sizeof(unsigned short), reusableValueCache));
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::INT,
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT32,
                 profileShapes[5], pageTable.data(), pageTable.size() * sizeof(int)));
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::INT,
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT32,
                 profileShapes[6], &start, sizeof(start)));
-            for (long long index = 0; index < inputs->Size(); ++index) {
-                if (!inputs->Get(index).IsTensor()) {
+            for (long long index = 0; index < inputs.Size(); ++index) {
+                if (!X::Tensor::IsTensor(inputs.Get(index))) {
                     throw std::runtime_error("Qwen3-TTS GPU input allocation failed");
                 }
             }

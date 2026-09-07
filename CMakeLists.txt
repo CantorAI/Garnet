@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.18)
 project("garnet" LANGUAGES CXX CUDA)
 
 include(GNUInstallDirs)
+enable_testing()
 
 # Find CUDA package
 find_package(CUDA REQUIRED)
+find_package(CUDAToolkit REQUIRED)
 find_package(OpenMP QUIET COMPONENTS CXX)
 
 # Ensure that CUDA and CXX code uses C++17
@@ -14,33 +16,41 @@ set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
 
-# For MSVC, make sure all code uses the dynamic runtime
+# Match the bundled native crypto/network archives. Runtime-owned XLang3
+# objects cross the DLL boundary only through the SDK C ABI.
 if(MSVC)
-    # This affects all targets
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-
-    # Force all C/C++ code to use dynamic runtime
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd")
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    # Older parent projects can initialize compiler flags before CMP0091.
+    # Keep NVCC's host runtime consistent with the C++ translation units too.
+    foreach(language C CXX CUDA)
+        foreach(configuration DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+            set(flag CMAKE_${language}_FLAGS_${configuration})
+            string(REGEX REPLACE "([/-])MD" "\\1MT" ${flag} "${${flag}}")
+        endforeach()
+    endforeach()
 endif()
 
 # Append our cmake modules path.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 message("CMAKE_MODULE_PATH=" ${CMAKE_MODULE_PATH})
 
-# Find and include the xlang package.
-find_package(xlang REQUIRED)
-set(xlang_sdk_folder "${XLANG_INCLUDE_DIR}")
+# Build against the public XLang3 SDK, never old runtime implementation sources.
+set(XLANG3_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../xlang3" CACHE PATH "XLang3 repository")
+if(NOT TARGET xlang3_runtime)
+    add_subdirectory("${XLANG3_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/xlang3")
+endif()
+set(xlang_sdk_folder "${XLANG3_ROOT}/sdk")
+set(GARNET_TENSORRT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../ThirdPartySDK/TensorRT"
+    CACHE PATH "TensorRT SDK directory")
 include_directories(${xlang_sdk_folder})
 
 # Model catalog signatures and artifact hashes are verified in the runtime.
 if(WIN32)
-    set(GARNET_OPENSSL_ROOT "${xlang_sdk_folder}/../Http/depends/windows")
+    set(GARNET_OPENSSL_ROOT "${XLANG3_ROOT}/modules/net/depends/windows")
     include_directories("${GARNET_OPENSSL_ROOT}/include")
 else()
     find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+    find_package(CURL REQUIRED)
 endif()
 
 # OpenVINO is an optional compiled backend. The Python wheel contains the
@@ -81,15 +91,13 @@ include_directories("src/image")
 include_directories("src/image/qwen_vl")
 include_directories("src/tokenizer")
 include_directories("third_party")
-include_directories("${xlang_sdk_folder}/../Tensor")
-include_directories("${xlang_sdk_folder}/../Core")
 include_directories("src/backends/tensorrt")
 include_directories("src/backends/openvino")
 include_directories("src/backends/cpu")
 
 # Optionally include xlang and Garnet includes.
 include_directories(
-    ${XLANG_INCLUDE_DIR}
+    ${xlang_sdk_folder}
     ${PROJECT_SOURCE_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/src/common
     ${PROJECT_SOURCE_DIR}/src/core
@@ -106,15 +114,10 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src/backends/tensorrt
     ${PROJECT_SOURCE_DIR}/src/backends/openvino
     ${PROJECT_SOURCE_DIR}/src/backends/cpu
-    "D:/CantorAI/ThirdPartySDK/TensorRT/include"
+    "${GARNET_TENSORRT_ROOT}/include"
 )
 
 # Use absolute paths for source files.
-FILE(GLOB XLANG_API_SRC "${xlang_sdk_folder}/value.cpp")
-set(XLANG_HOST_SRC
-    "${xlang_sdk_folder}/value.cpp"
-    "${xlang_sdk_folder}/xload.cpp"
-)
 FILE(GLOB Common_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp")
 FILE(GLOB_RECURSE Core_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.cpp")
 FILE(GLOB Entry_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/entry/*.cpp")
@@ -131,7 +134,6 @@ FILE(GLOB_RECURSE Backend_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/*.cpp")
 # Create the shared library target.
 add_library(${PROJECT_NAME} 
     SHARED
-    ${XLANG_API_SRC}
     ${Entry_SRC}
     ${Tensor_SRC}
     ${Cuda_SRC}
@@ -146,6 +148,9 @@ add_library(${PROJECT_NAME}
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_SERVING_EXPORTS=1)
+target_compile_definitions(${PROJECT_NAME} PRIVATE XLANG3_USE_SHARED)
+target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
+target_link_libraries(${PROJECT_NAME} xlang3_runtime)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -209,6 +214,14 @@ add_executable(garnet_debug_logits_sampler_native_smoke
 )
 target_link_libraries(garnet_debug_logits_sampler_native_smoke ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY})
 
+add_executable(garnet_repetition_sampler_test
+    test2026/native/repetition_sampler_test.cpp
+    src/cuda/logits_sampler_kernel.cu)
+target_include_directories(garnet_repetition_sampler_test PRIVATE src/cuda)
+target_link_libraries(garnet_repetition_sampler_test PRIVATE CUDA::cudart)
+add_test(NAME garnet_repetition_sampler COMMAND garnet_repetition_sampler_test)
+set_tests_properties(garnet_repetition_sampler PROPERTIES TIMEOUT 120)
+
 add_executable(garnet_qwen_vl_request_kv_native_smoke
     "${CMAKE_CURRENT_SOURCE_DIR}/test2026/native/qwen_vl_request_kv_native_smoke.cpp"
 )
@@ -256,15 +269,16 @@ add_executable(garnet_model_catalog_test
 
 add_executable(garnet-serving
     "${CMAKE_CURRENT_SOURCE_DIR}/src/serving/garnet_serving_main.cpp"
-    ${XLANG_HOST_SRC}
 )
 
 target_include_directories(garnet-serving PRIVATE
-    ${XLANG_INCLUDE_DIR}
+    ${xlang_sdk_folder}
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
 )
 
 add_dependencies(garnet-serving ${PROJECT_NAME})
+target_compile_definitions(garnet-serving PRIVATE XLANG3_USE_SHARED)
+target_link_libraries(garnet-serving PRIVATE xlang3_runtime)
 
 if(UNIX AND NOT APPLE)
     target_link_libraries(garnet-serving PRIVATE dl pthread)
@@ -314,6 +328,71 @@ target_include_directories(garnet_weight_quantization_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
 )
 
+add_subdirectory(test/xlang3)
+add_executable(garnet_image_tests
+    test/xlang3/image_tests.cpp
+    src/image/qwen_vl/qwen_vl_image_preprocessor.cpp
+    src/image/qwen_vl/qwen_vl_vision_metadata.cpp
+    src/image/cuda/jpeg_decode_nvjpeg.cpp
+    src/cuda/qwen_vl_image_preprocess_kernel.cu
+    src/cuda/qwen_vl_vision_metadata_kernel.cu)
+target_link_libraries(garnet_image_tests PRIVATE garnet_tensor_capture
+    CUDA::cudart CUDA::nvjpeg CUDA::nppc CUDA::nppig)
+target_compile_definitions(garnet_image_tests PRIVATE NOMINMAX)
+set_target_properties(garnet_image_tests PROPERTIES CUDA_ARCHITECTURES "80;89")
+if(MSVC)
+    target_compile_options(garnet_image_tests PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
+        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor,/utf-8>)
+endif()
+add_test(NAME garnet_image_preprocessing COMMAND garnet_image_tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/Screenshot/Q1.jpg")
+set_tests_properties(garnet_image_preprocessing PROPERTIES TIMEOUT 120)
+add_test(NAME garnet_weight_quantization COMMAND garnet_weight_quantization_test)
+add_test(NAME garnet_q4q8_linear COMMAND garnet_q4q8_linear_test)
+add_test(NAME garnet_model_catalog COMMAND garnet_model_catalog_test
+    "${CMAKE_CURRENT_SOURCE_DIR}/xModel")
+add_test(NAME garnet_continuous_batch_scheduler COMMAND garnet_continuous_batch_scheduler_test)
+add_test(NAME garnet_device_kv_cabi COMMAND garnet_device_kv_native_smoke "$<TARGET_FILE:garnet>")
+add_test(NAME garnet_logits_sampler_cabi COMMAND garnet_debug_logits_sampler_native_smoke "$<TARGET_FILE:garnet>")
+add_test(NAME garnet_native_api COMMAND "$<TARGET_FILE:xlang3>"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/native_api.py")
+set_tests_properties(garnet_native_api PROPERTIES TIMEOUT 120
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:garnet>")
+add_test(NAME garnet_production_capture COMMAND "$<TARGET_FILE:xlang3>"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/models/run_production_capture.py")
+set_tests_properties(garnet_production_capture PROPERTIES TIMEOUT 120
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:garnet>")
+add_test(NAME garnet_serving_python_defaults COMMAND "$<TARGET_FILE:xlang3>"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/serving_defaults.py")
+set_tests_properties(garnet_serving_python_defaults PROPERTIES TIMEOUT 60
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:garnet>")
+set_tests_properties(garnet_weight_quantization garnet_q4q8_linear
+    garnet_model_catalog garnet_continuous_batch_scheduler
+    garnet_device_kv_cabi garnet_logits_sampler_cabi PROPERTIES TIMEOUT 120)
+
+if(WIN32)
+    add_test(NAME garnet_serving_process
+        COMMAND powershell -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/run_serving_tests.ps1"
+            -Executable "$<TARGET_FILE:garnet-serving>"
+            -WorkRoot "${CMAKE_CURRENT_BINARY_DIR}/serving-tests")
+    set_tests_properties(garnet_serving_process PROPERTIES TIMEOUT 60)
+    foreach(backend tensorrt openvino)
+        if(backend STREQUAL "openvino" AND NOT OpenVINO_FOUND)
+            continue()
+        endif()
+        add_test(NAME garnet_models_${backend}
+            COMMAND powershell -NoProfile -ExecutionPolicy Bypass
+                -File "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/run_model_tests.ps1"
+                -RuntimePath "$<TARGET_FILE:xlang3>" -Backend "${backend}"
+                -WorkRoot "${CMAKE_CURRENT_BINARY_DIR}/model-tests/${backend}"
+                -TensorRTDirectory "${GARNET_TENSORRT_ROOT}/bin"
+                -CudaDirectory "${CUDAToolkit_BIN_DIR}")
+        set_tests_properties(garnet_models_${backend} PROPERTIES TIMEOUT 300)
+    endforeach()
+endif()
+
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
@@ -330,9 +409,13 @@ if(WIN32)
         set(GARNET_OPENSSL_LIB_DIR "${GARNET_OPENSSL_ROOT}/lib/x64")
     endif()
     target_link_directories(${PROJECT_NAME} PRIVATE "${GARNET_OPENSSL_LIB_DIR}")
-    target_link_libraries(${PROJECT_NAME} libcrypto_static crypt32 bcrypt ws2_32)
+    set_property(SOURCE src/model/model_manager.cpp APPEND PROPERTY
+        COMPILE_DEFINITIONS CURL_STATICLIB)
+    target_link_libraries(${PROJECT_NAME}
+        libcurl_static libssl_static libcrypto_static zlib_static
+        crypt32 bcrypt ws2_32 wldap32 normaliz)
     target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
-            cublas.lib "D:/CantorAI/ThirdPartySDK/TensorRT/lib/nvinfer_10.lib"
+            cublas.lib "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib"
             nppc.lib nppig.lib nvjpeg.lib
             ${CUDA_CUDA_LIBRARY} # This specifically adds the cuda.lib driver library
     ) 
@@ -348,49 +431,18 @@ if(WIN32)
             "/DELAYLOAD:nvjpeg64_13.dll"
         )
     endif()
-    # Add debug-specific libraries for Windows Debug build
-    if(MSVC)
-        # Debug build
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /D_DEBUG")
-        
-        # Use the debug runtime for debug builds
-        target_link_libraries(${PROJECT_NAME} $<$<CONFIG:Debug>:msvcrtd>)
-        target_link_libraries(${PROJECT_NAME} $<$<CONFIG:Release>:msvcrt>)
-    endif()
 else()
-    target_link_libraries(${PROJECT_NAME} pthread dl m OpenSSL::Crypto ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY})
+    target_link_libraries(${PROJECT_NAME} pthread dl m OpenSSL::Crypto CURL::libcurl ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY})
 endif()
 
 # Enable separable CUDA compilation and specify architectures.
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_ARCHITECTURES "80;89"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>"
+    LIBRARY_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>"
+    ARCHIVE_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/lib>"
 )
-
-# For MSVC, ensure consistent runtime settings for all source files
-if(MSVC)
-    # Apply to all source files directly
-    foreach(src_file ${XLANG_API_SRC} ${Entry_SRC} ${Tensor_SRC})
-        if(CMAKE_BUILD_TYPE MATCHES Debug)
-            set_source_files_properties(${src_file} PROPERTIES COMPILE_FLAGS "/MDd")
-        else()
-            set_source_files_properties(${src_file} PROPERTIES COMPILE_FLAGS "/MD")
-        endif()
-    endforeach()
-    
-    # Set target properties for MSVC runtime
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
-    )
-    
-    # For debug builds, also link with the debug version of the C runtime
-    if(CMAKE_BUILD_TYPE MATCHES Debug)
-        target_link_libraries(${PROJECT_NAME} debug msvcrtd)
-    endif()
-endif()
 
 # copy the src/cuda folder to Lib/Garnet/cuda.
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Lib/Garnet/cuda")
@@ -398,15 +450,15 @@ file(COPY "${PROJECT_SOURCE_DIR}/src/cuda" DESTINATION "${CMAKE_BINARY_DIR}/bin/
 
 # Model programs are release assets, while checkpoint weights and compiled
 # engines remain separately installed and machine-specific. Mirror only the
-# production .x/.json contract into the build tree and install package.
+# production model programs into the build tree and install package.
 option(GARNET_INSTALL_XMODELS "Install production Garnet xModel packages" ON)
 set(GARNET_BUILD_MODEL_DIR "${CMAKE_BINARY_DIR}/models")
 file(REMOVE_RECURSE "${GARNET_BUILD_MODEL_DIR}")
 file(COPY "${PROJECT_SOURCE_DIR}/xModel/"
     DESTINATION "${GARNET_BUILD_MODEL_DIR}"
     FILES_MATCHING
-        PATTERN "debug_*.x" EXCLUDE
-        PATTERN "*.x"
+        PATTERN "debug_*.py" EXCLUDE
+        PATTERN "*.py"
         PATTERN "*.json"
 )
 
@@ -427,8 +479,8 @@ if(GARNET_INSTALL_XMODELS)
         DESTINATION "models"
         COMPONENT garnet_xmodels
         FILES_MATCHING
-            PATTERN "debug_*.x" EXCLUDE
-            PATTERN "*.x"
+            PATTERN "debug_*.py" EXCLUDE
+            PATTERN "*.py"
             PATTERN "*.json"
     )
 endif()

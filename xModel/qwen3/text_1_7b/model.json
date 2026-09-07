@@ -13,17 +13,17 @@
   },
   "entrypoints": {
     "prefill": {
-      "file": "prefill.x",
+      "file": "prefill.py",
       "function": "Qwen3Prefill",
       "frontend": "qwen3_text"
     },
     "decode": {
-      "file": "decode.x",
+      "file": "decode.py",
       "function": "Qwen3Decode",
       "frontend": "qwen3_text"
     },
     "decode_batch": {
-      "file": "decode_batch.x",
+      "file": "decode_batch.py",
       "function": "Qwen3DecodeBatch",
       "frontend": "qwen3_text"
     }
@@ -54,6 +54,20 @@
       "maxInputTokens": 8192,
       "maxOutputTokens": 1024,
       "kvPages": 576
+    },
+    {
+      "id": "agent-12k",
+      "usages": ["agent", "tool-calling", "workspace"],
+      "maxInputTokens": 12288,
+      "maxOutputTokens": 1536,
+      "kvPages": 864
+    },
+    {
+      "id": "agent-16k",
+      "usages": ["agent", "tool-calling", "workspace"],
+      "maxInputTokens": 16384,
+      "maxOutputTokens": 2048,
+      "kvPages": 1152
     }
   ],
   "weights": {

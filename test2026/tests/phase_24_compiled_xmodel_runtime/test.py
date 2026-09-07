@@ -15,8 +15,8 @@ def discover_garnet_dll():
     explicit = os.environ.get("GARNET_DLL_PATH", "").strip()
     candidates = [Path(explicit)] if explicit else []
     candidates.extend([
-        REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll",
-        REPO_ROOT / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll",
+        REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll",
+        REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll",
     ])
     for candidate in candidates:
         if candidate.exists():
@@ -30,7 +30,7 @@ def add_windows_dll_dirs(garnet_dll):
         return handles
     for path in [
         garnet_dll.parent,
-        REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+        REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
         REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
         Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
     ]:
@@ -44,10 +44,10 @@ print("Phase 24: compiled xmodel production-path guard")
 garnet_dll = discover_garnet_dll()
 _dll_handles = add_windows_dll_dirs(garnet_dll)
 
-import xlang
+import xlang3
 
-garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
-root_xmodel = REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_vl_model.x"
+garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
+root_xmodel = REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_vl_model.py"
 cache_dir = REPO_ROOT / "test2026" / "tests" / "phase_24_compiled_xmodel_runtime" / "cache"
 shutil.rmtree(cache_dir, ignore_errors=True)
 
@@ -133,7 +133,7 @@ assert weight_probe["status"] == "ok", weight_probe
 assert not bool(weight_probe["cache_hit"]), weight_probe
 weight_cpu = garnet.tensor_to_cpu(weight_probe["tensor"])
 np.testing.assert_allclose(
-    np.asarray(weight_cpu.toarray()).reshape(1, 4),
+    np.asarray(weight_cpu.tolist()).reshape(1, 4),
     np.arange(4, dtype=np.float32).reshape(1, 4),
     rtol=0.0,
     atol=0.0,
@@ -163,7 +163,7 @@ named_weight_result = named_weight_model.forward({"inputs": [named_weight_input]
 assert named_weight_result["status"] == "ok", named_weight_result
 named_weight_output = garnet.tensor_to_cpu(named_weight_result["output"])
 np.testing.assert_allclose(
-    np.asarray(named_weight_output.toarray()).reshape(1, 1),
+    np.asarray(named_weight_output.tolist()).reshape(1, 1),
     np.array([[20.0]], dtype=np.float32),
     rtol=1e-6,
     atol=1e-6,
@@ -193,7 +193,7 @@ fixture_result = fixture_model.forward({"inputs": [fixture_input]})
 assert fixture_result["status"] == "ok", fixture_result
 fixture_output = garnet.tensor_to_cpu(fixture_result["output"])
 np.testing.assert_allclose(
-    np.asarray(fixture_output.toarray()).reshape(fixture_input.shape),
+    np.asarray(fixture_output.tolist()).reshape(fixture_input.shape),
     (fixture_input + fixture_input) * fixture_input - fixture_input,
     rtol=1e-6,
     atol=1e-6,
@@ -215,7 +215,7 @@ repeat_result = repeat_model.forward({"inputs": [fixture_input]})
 assert repeat_result["status"] == "ok", repeat_result
 repeat_output = garnet.tensor_to_cpu(repeat_result["output"])
 np.testing.assert_allclose(
-    np.asarray(repeat_output.toarray()).reshape(fixture_input.shape),
+    np.asarray(repeat_output.tolist()).reshape(fixture_input.shape),
     fixture_input * 32.0,
     rtol=1e-6,
     atol=1e-6,
@@ -237,7 +237,7 @@ matmul_result = matmul_model.forward({"inputs": [left, right]})
 assert matmul_result["status"] == "ok", matmul_result
 matmul_output = garnet.tensor_to_cpu(matmul_result["output"])
 np.testing.assert_allclose(
-    np.asarray(matmul_output.toarray()).reshape(2, 2),
+    np.asarray(matmul_output.tolist()).reshape(2, 2),
     left @ right,
     rtol=1e-6,
     atol=1e-6,
@@ -257,7 +257,7 @@ branch_result = branch_model.forward({"inputs": [fixture_input]})
 assert branch_result["status"] == "ok", branch_result
 branch_output = garnet.tensor_to_cpu(branch_result["output"])
 np.testing.assert_allclose(
-    np.asarray(branch_output.toarray()).reshape(fixture_input.shape),
+    np.asarray(branch_output.tolist()).reshape(fixture_input.shape),
     fixture_input * 2.0,
     rtol=1e-6,
     atol=1e-6,
@@ -277,7 +277,7 @@ unary_result = unary_model.forward({"inputs": [fixture_input]})
 assert unary_result["status"] == "ok", unary_result
 unary_output = garnet.tensor_to_cpu(unary_result["output"])
 np.testing.assert_allclose(
-    np.asarray(unary_output.toarray()).reshape(fixture_input.shape),
+    np.asarray(unary_output.tolist()).reshape(fixture_input.shape),
     np.maximum(fixture_input, 0.0),
     rtol=1e-6,
     atol=1e-6,
@@ -299,7 +299,7 @@ linear_result = linear_model.forward({"inputs": [linear_input, linear_weight]})
 assert linear_result["status"] == "ok", linear_result
 linear_output = garnet.tensor_to_cpu(linear_result["output"])
 np.testing.assert_allclose(
-    np.asarray(linear_output.toarray()).reshape(2, 4),
+    np.asarray(linear_output.tolist()).reshape(2, 4),
     linear_input @ linear_weight.T,
     rtol=1e-6,
     atol=1e-6,
@@ -322,7 +322,7 @@ bf16_result = bf16_model.forward({"inputs": [bf16_input]})
 assert bf16_result["status"] == "ok", bf16_result
 bf16_output = garnet.tensor_to_cpu(bf16_result["output"])
 np.testing.assert_allclose(
-    np.asarray(bf16_output.toarray()).reshape(fixture_input.shape),
+    np.asarray(bf16_output.tolist()).reshape(fixture_input.shape),
     (fixture_input + fixture_input) * fixture_input - fixture_input,
     rtol=2e-2,
     atol=2e-2,
@@ -356,7 +356,7 @@ paged_result = paged_decode_model.forward({"inputs": [
 ]})
 assert paged_result["status"] == "ok", paged_result
 paged_output = garnet.tensor_to_cpu(paged_result["output"])
-paged_output_array = np.asarray(paged_output.toarray()).reshape(1, 32).astype(np.float32)
+paged_output_array = np.asarray(paged_output.tolist()).reshape(1, 32).astype(np.float32)
 paged_qkv_bf16 = (paged_qkv_bits.astype(np.uint32) << 16).view(np.float32)
 expected_value = paged_qkv_bf16[:, 48:64]
 expected = np.concatenate([
@@ -390,7 +390,7 @@ second_result = cached_paged_decode_model.forward({"inputs": [
 ]})
 assert second_result["status"] == "ok", second_result
 second_output = np.asarray(
-    garnet.tensor_to_cpu(second_result["output"]).toarray()
+    garnet.tensor_to_cpu(second_result["output"]).tolist()
 ).reshape(4, 8).astype(np.float32)
 second_qkv_bf16 = (second_qkv_bits.astype(np.uint32) << 16).view(np.float32)
 logical_keys = np.stack([
@@ -440,7 +440,7 @@ prefill_result = prefill_model.forward({"inputs": [
 ]})
 assert prefill_result["status"] == "ok", prefill_result
 prefill_passthrough = np.asarray(
-    garnet.tensor_to_cpu(prefill_result["output"]).toarray()
+    garnet.tensor_to_cpu(prefill_result["output"]).tolist()
 ).reshape(5, 64).astype(np.float32)
 np.testing.assert_array_equal(prefill_passthrough, prefill_bf16)
 
@@ -457,7 +457,7 @@ after_prefill_result = cached_paged_decode_model.forward({"inputs": [
 ]})
 assert after_prefill_result["status"] == "ok", after_prefill_result
 after_prefill_output = np.asarray(
-    garnet.tensor_to_cpu(after_prefill_result["output"]).toarray()
+    garnet.tensor_to_cpu(after_prefill_result["output"]).tolist()
 ).reshape(4, 8).astype(np.float32)
 all_keys = np.concatenate([
     prefill_bf16[:, 32:48].reshape(5, 2, 8),
@@ -558,7 +558,7 @@ masked_result = masked_model.forward({"inputs": [
 ]})
 assert masked_result["status"] == "ok", masked_result
 masked_output = np.asarray(
-    garnet.tensor_to_cpu(masked_result["output"]).toarray()
+    garnet.tensor_to_cpu(masked_result["output"]).tolist()
 ).reshape(masked_batch, masked_q_heads, masked_head_dim).astype(np.float32)
 for batch_index in range(masked_batch):
     if active_mask[batch_index] == 0:
@@ -570,7 +570,7 @@ for batch_index in range(masked_batch):
     expected = np.repeat(values, masked_q_heads // masked_kv_heads, axis=0)
     np.testing.assert_allclose(masked_output[batch_index], expected, rtol=0, atol=0)
 masked_keys_cpu = np.asarray(
-    garnet.tensor_to_cpu(masked_keys).toarray()
+    garnet.tensor_to_cpu(masked_keys).tolist()
 ).reshape(masked_page_shape)
 for inactive_index in [1, 3]:
     np.testing.assert_array_equal(
@@ -654,7 +654,7 @@ long_result = long_model.forward({"inputs": [
 ]})
 assert long_result["status"] == "ok", long_result
 long_output = np.asarray(
-    garnet.tensor_to_cpu(long_result["output"]).toarray()
+    garnet.tensor_to_cpu(long_result["output"]).tolist()
 ).astype(np.float32)
 assert np.isfinite(long_output).all()
 assert np.any(long_output != 0.0)
@@ -704,7 +704,7 @@ cached_fixture_result = cached_fixture_model.forward({"inputs": [fixture_input]}
 assert cached_fixture_result["status"] == "ok", cached_fixture_result
 cached_fixture_output = garnet.tensor_to_cpu(cached_fixture_result["output"])
 np.testing.assert_allclose(
-    np.asarray(cached_fixture_output.toarray()).reshape(fixture_input.shape),
+    np.asarray(cached_fixture_output.tolist()).reshape(fixture_input.shape),
     (fixture_input + fixture_input) * fixture_input - fixture_input,
     rtol=1e-6,
     atol=1e-6,

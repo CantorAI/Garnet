@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <cctype>
 #include <stdexcept>
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 
 
 namespace tokenizer {
@@ -28,7 +28,7 @@ namespace tokenizer {
         bool special_;
 
     public:
-		AddedToken() : content_(""), lstrip_(false), rstrip_(false), 
+		AddedToken() : content_(""), lstrip_(false), rstrip_(false),
             single_word_(false), normalized_(true), special_(false) {}
         AddedToken(const std::string& content, bool lstrip = false, bool rstrip = false,
             bool single_word = false, bool normalized = true, bool special = false)

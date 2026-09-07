@@ -30,18 +30,18 @@ if garnet_dll is None:
 _dll_dir_handles = add_windows_dll_dirs(garnet_dll)
 
 try:
-    import xlang
+    import xlang3
 except Exception as exc:
     skip(f"xlang Python module not available: {exc}")
 
 try:
-    garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+    garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
 except Exception as exc:
     skip(f"failed to import Garnet from {garnet_dll}: {exc}")
 
 image_path, metadata = first_dataset_sample()
 prompt = qwen_prompt(metadata)
-xmodel_path = REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_vl_model.x"
+xmodel_path = REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_vl_model.py"
 weights_path = os.environ.get("GARNET_QWEN_VL_WEIGHTS", "").strip()
 cache_dir = Path(os.environ.get("GARNET_QWEN_VL_CACHE_DIR", Path(__file__).with_name("engine_cache")))
 artifact_dir = REPO_ROOT / "test2026" / "artifacts" / "qwen_vl_reference"

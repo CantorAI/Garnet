@@ -7,7 +7,7 @@ import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-GARNET_DLL = REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
+GARNET_DLL = REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
 ENGINE_PATH = SCRIPT_DIR / "qwen_root_cache" / "model.engine"
 
 if not ENGINE_PATH.exists():
@@ -17,14 +17,14 @@ if not ENGINE_PATH.exists():
 _dll_handles = []
 for directory in [
     GARNET_DLL.parent,
-    REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
     REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
     Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
 ]:
     if directory.exists() and hasattr(os, "add_dll_directory"):
         _dll_handles.append(os.add_dll_directory(str(directory)))
 
-import xlang
+import xlang3
 
 
 def bfloat16_tensor(garnet, array):
@@ -34,7 +34,7 @@ def bfloat16_tensor(garnet, array):
 
 
 def tensor_array(garnet, tensor, shape):
-    return np.asarray(garnet.tensor_to_cpu(tensor).toarray()).reshape(shape)
+    return np.asarray(garnet.tensor_to_cpu(tensor).tolist()).reshape(shape)
 
 
 snapshot_root = (
@@ -48,9 +48,9 @@ snapshot_root = (
 snapshots = sorted(snapshot_root.glob("*"))
 assert snapshots, "local Qwen3-VL-2B-Instruct snapshot is required"
 
-garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
+garnet = xlang3.importModule("garnet", fromPath=str(GARNET_DLL))
 model = garnet.load_model(
-    str(REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_vl_model.x"),
+    str(REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_vl_model.py"),
     runtime_mode="compiled_xmodel",
     entry_function="Qwen3VLModel",
     frontend="qwen3_vl",
@@ -142,7 +142,7 @@ result = model.forward(request)
 assert result["status"] == "ok", result
 logits = garnet.tensor_to_cpu(result["output"])
 cold_ms = (time.perf_counter() - cold_start) * 1000.0
-logits_array = np.asarray(logits.toarray()).reshape(1, 16, 151936)
+logits_array = np.asarray(logits.tolist()).reshape(1, 16, 151936)
 assert np.isfinite(logits_array).all()
 
 warm_start = time.perf_counter()
@@ -150,7 +150,7 @@ warm_result = model.forward(request)
 assert warm_result["status"] == "ok", warm_result
 warm_logits = garnet.tensor_to_cpu(warm_result["output"])
 warm_ms = (time.perf_counter() - warm_start) * 1000.0
-warm_array = np.asarray(warm_logits.toarray()).reshape(1, 16, 151936)
+warm_array = np.asarray(warm_logits.tolist()).reshape(1, 16, 151936)
 assert np.isfinite(warm_array).all()
 print(
     f"Qwen stripped-plan forward passed: logits_shape={logits_array.shape}, "
@@ -254,7 +254,7 @@ if frame_path.exists():
     real_result = model.forward({"inputs": real_inputs})
     assert real_result["status"] == "ok", real_result
     real_logits = garnet.tensor_to_cpu(real_result["output"])
-    real_array = np.asarray(real_logits.toarray()).reshape(1, 16, 151936)
+    real_array = np.asarray(real_logits.tolist()).reshape(1, 16, 151936)
     assert np.isfinite(real_array).all()
     next_token_id = int(np.argmax(real_array[0, token_count - 1]))
     real_ms = (time.perf_counter() - real_start) * 1000.0
@@ -285,7 +285,7 @@ if frame_path.exists():
     steady_result = model.forward({"inputs": real_inputs})
     assert steady_result["status"] == "ok", steady_result
     steady_logits = garnet.tensor_to_cpu(steady_result["output"])
-    steady_array = np.asarray(steady_logits.toarray()).reshape(1, 16, 151936)
+    steady_array = np.asarray(steady_logits.tolist()).reshape(1, 16, 151936)
     assert np.isfinite(steady_array).all()
     steady_ms = (time.perf_counter() - steady_start) * 1000.0
     print(f"real JPEG steady frontend to logits: total_ms={steady_ms:.2f}")

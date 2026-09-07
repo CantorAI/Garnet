@@ -1,16 +1,18 @@
 #include "cuda_lib.h"
+#include "repetition_sampler.h"
 
 #include <cuda_bf16.h>
 #include <cuda_runtime.h>
 
 namespace
 {
+    template<bool Penalize = false>
     __global__ void logitsTop1LastRowKernel(
         const float* logits,
         long long* outputTokenId,
         float* outputTokenValue,
         int rows,
-        int vocabSize)
+        int vocabSize, const unsigned char* seen = nullptr, float penalty = 1.0f)
     {
         __shared__ float values[256];
         __shared__ int indices[256];
@@ -22,6 +24,9 @@ namespace
 
         for (int i = tid; i < vocabSize; i += blockDim.x) {
             float value = row[i];
+            if constexpr (Penalize) {
+                if (seen[i]) value = value < 0.0f ? value * penalty : value / penalty;
+            }
             if (value > bestValue || (value == bestValue && i < bestIndex)) {
                 bestValue = value;
                 bestIndex = i;
@@ -52,12 +57,13 @@ namespace
         }
     }
 
+    template<bool Penalize = false>
     __global__ void logitsTop1LastRowBF16Kernel(
         const __nv_bfloat16* logits,
         long long* outputTokenId,
         float* outputTokenValue,
         int rows,
-        int vocabSize)
+        int vocabSize, const unsigned char* seen = nullptr, float penalty = 1.0f)
     {
         __shared__ float values[256];
         __shared__ int indices[256];
@@ -67,7 +73,10 @@ namespace
         float bestValue = -3.4028234663852886e38f;
         int bestIndex = 0;
         for (int i = tid; i < vocabSize; i += blockDim.x) {
-            const float value = __bfloat162float(row[i]);
+            float value = __bfloat162float(row[i]);
+            if constexpr (Penalize) {
+                if (seen[i]) value = value < 0.0f ? value * penalty : value / penalty;
+            }
             if (value > bestValue || (value == bestValue && i < bestIndex)) {
                 bestValue = value;
                 bestIndex = i;
@@ -189,6 +198,26 @@ namespace
     }
 }
 
+cudaError_t sampleRepetitionFP32(const float* logits, const unsigned char* seen,
+    float penalty, long long* token, float* score, int vocab, cudaStream_t stream)
+{
+    if (!logits || !seen || !token || vocab <= 0 || !isfinite(penalty) || penalty < 1.0f)
+        return cudaErrorInvalidValue;
+    logitsTop1LastRowKernel<true><<<1, 256, 0, stream>>>(
+        logits, token, score, 1, vocab, seen, penalty);
+    return cudaGetLastError();
+}
+
+cudaError_t sampleRepetitionBF16(const __nv_bfloat16* logits, const unsigned char* seen,
+    float penalty, long long* token, float* score, int vocab, cudaStream_t stream)
+{
+    if (!logits || !seen || !token || vocab <= 0 || !isfinite(penalty) || penalty < 1.0f)
+        return cudaErrorInvalidValue;
+    logitsTop1LastRowBF16Kernel<true><<<1, 256, 0, stream>>>(
+        logits, token, score, 1, vocab, seen, penalty);
+    return cudaGetLastError();
+}
+
 extern "C" cudaError_t runLogitsTop1FP32(
     const float* logits,
     long long* outputTokenId,
@@ -200,7 +229,7 @@ extern "C" cudaError_t runLogitsTop1FP32(
     if (!logits || !outputTokenId || rows <= 0 || vocabSize <= 0) {
         return cudaErrorInvalidValue;
     }
-    logitsTop1LastRowKernel<<<1, 256, 0, stream>>>(
+    logitsTop1LastRowKernel<false><<<1, 256, 0, stream>>>(
         logits,
         outputTokenId,
         outputTokenValue,
@@ -220,7 +249,7 @@ extern "C" cudaError_t runLogitsTop1BF16(
     if (!logits || !outputTokenId || rows <= 0 || vocabSize <= 0) {
         return cudaErrorInvalidValue;
     }
-    logitsTop1LastRowBF16Kernel<<<1, 256, 0, stream>>>(
+    logitsTop1LastRowBF16Kernel<false><<<1, 256, 0, stream>>>(
         reinterpret_cast<const __nv_bfloat16*>(logits),
         outputTokenId,
         outputTokenValue,

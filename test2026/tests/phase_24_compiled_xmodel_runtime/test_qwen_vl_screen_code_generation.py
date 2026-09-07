@@ -7,21 +7,21 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-GARNET_DLL = REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
+GARNET_DLL = REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
 SCREENSHOT_DIR = REPO_ROOT / "data" / "Screenshot"
 ARTIFACT_DIR = REPO_ROOT / "test2026" / "artifacts" / "qwen_vl_screen_code_generation"
 
 dll_handles = []
 for directory in [
     GARNET_DLL.parent,
-    REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
     REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
     Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
 ]:
     if directory.exists() and hasattr(os, "add_dll_directory"):
         dll_handles.append(os.add_dll_directory(str(directory)))
 
-import xlang
+import xlang3
 
 
 snapshots = sorted((
@@ -55,10 +55,10 @@ prompt = os.environ.get(
     ),
 )
 
-garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
+garnet = xlang3.importModule("garnet", fromPath=str(GARNET_DLL))
 load_start = time.perf_counter()
 model = garnet.load_model(
-    str(REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_vl_prefill.x"),
+    str(REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_vl_prefill.py"),
     runtime_mode="compiled_xmodel",
     entry_function="Qwen3VLPrefill",
     frontend="qwen3_vl",

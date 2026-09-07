@@ -12,6 +12,7 @@ namespace Garnet::Image::Cuda
         int width = 0;
         int height = 0;
         int pitchBytes = 0;
+        int deviceId = 0;
     };
 
     class NvJpegDecoder
@@ -35,6 +36,8 @@ namespace Garnet::Image::Cuda
         void* m_handle = nullptr;
         void* m_state = nullptr;
         int m_cudaDevice = 0;
+        cudaEvent_t m_completion = nullptr;
+        bool m_pending = false;
     };
 
     bool ReadFileBytes(const char* path, unsigned char** data, size_t* size, std::string* error = nullptr);

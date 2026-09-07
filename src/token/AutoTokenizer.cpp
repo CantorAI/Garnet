@@ -5,6 +5,36 @@
 #include <algorithm>
 #include <regex>
 #include <cctype>
+#include <filesystem>
+
+namespace {
+    bool Has(const X::Value& dict, const char* key) {
+        for (long long i = 0; i < dict.Size(); ++i) {
+            X::Value name, value;
+            if (!dict.DictEntry(i, name, value)) throw std::runtime_error("invalid tokenizer dictionary");
+            if (name.ToString() == key) return true;
+        }
+        return false;
+    }
+
+    X::Value LoadJson(X::Runtime* runtime, const std::string& path) {
+        if (!runtime) throw std::invalid_argument("tokenizer requires a runtime");
+        X::Module yaml(*runtime, "yaml", "xlang_yaml");
+        X::Value result;
+        if (!yaml.Get("load").Call({X::Value::String(runtime->host(), path)}, result))
+            throw std::runtime_error(runtime->LastError());
+        return result;
+    }
+
+    X::Value ReadFile(X::Runtime* runtime, const std::string& path) {
+        if (!runtime) throw std::invalid_argument("tokenizer requires a runtime");
+        std::ifstream file(path, std::ios::binary);
+        if (!file) throw std::runtime_error("cannot read tokenizer file: " + path);
+        std::string text((std::istreambuf_iterator<char>(file)), {});
+        if (file.bad()) throw std::runtime_error("failed reading tokenizer file: " + path);
+        return X::Value::String(runtime->host(), text);
+    }
+}
 
 namespace tokenizer {
 
@@ -763,48 +793,47 @@ namespace tokenizer {
     // Load tokenizer config using X framework
     void AutoTokenizer::load_tokenizer_config(X::Runtime* rt, const std::string& config_path) {
         // Use X::Package to load the JSON file
-        X::Package yaml(*rt, "yaml", "xlang_yaml");
-        X::Value config = yaml["load"](config_path);
+        X::Value config = LoadJson(rt, config_path);
 
         // Process configuration if it's a dictionary
-        if (!config.IsInvalid() && config.IsDict()) {
-            X::Dict dict_config(config);
+        if (config.IsValid() && config.IsDict()) {
+            X::Value dict_config(config);
 
             // Extract configuration parameters
-            if (dict_config->Has("do_lower_case")) {
-                do_lower_case_ = (bool)dict_config["do_lower_case"];
+            if (Has(dict_config, "do_lower_case")) {
+                do_lower_case_ = (dict_config["do_lower_case"].ToLongLong() != 0);
             }
 
-            if (dict_config->Has("split_special_tokens")) {
-                split_special_tokens_ = (bool)dict_config["split_special_tokens"];
+            if (Has(dict_config, "split_special_tokens")) {
+                split_special_tokens_ = (dict_config["split_special_tokens"].ToLongLong() != 0);
             }
 
-            if (dict_config->Has("model_max_length")) {
-                model_max_length_ = (int)dict_config["model_max_length"];
+            if (Has(dict_config, "model_max_length")) {
+                model_max_length_ = static_cast<int>(dict_config["model_max_length"].ToLongLong());
             }
 
-            if (dict_config->Has("padding_side")) {
+            if (Has(dict_config, "padding_side")) {
                 padding_side_ = dict_config["padding_side"].ToString();
             }
 
-            if (dict_config->Has("truncation_side")) {
+            if (Has(dict_config, "truncation_side")) {
                 truncation_side_ = dict_config["truncation_side"].ToString();
             }
 
-            if (dict_config->Has("clean_up_tokenization_spaces")) {
-                clean_up_tokenization_spaces_ = (bool)dict_config["clean_up_tokenization_spaces"];
+            if (Has(dict_config, "clean_up_tokenization_spaces")) {
+                clean_up_tokenization_spaces_ = (dict_config["clean_up_tokenization_spaces"].ToLongLong() != 0);
             }
 
-            if (dict_config->Has("add_prefix_space")) {
-                add_prefix_space_ = (bool)dict_config["add_prefix_space"];
+            if (Has(dict_config, "add_prefix_space")) {
+                add_prefix_space_ = (dict_config["add_prefix_space"].ToLongLong() != 0);
             }
 
             // Handle special tokens
-            if (dict_config->Has("bos_token")) {
+            if (Has(dict_config, "bos_token")) {
                 X::Value bos_token = dict_config["bos_token"];
                 if (bos_token.IsDict()) {
-                    X::Dict bos_dict(bos_token);
-                    if (bos_dict->Has("content")) {
+                    X::Value bos_dict(bos_token);
+                    if (Has(bos_dict, "content")) {
                         bos_token_ = bos_dict["content"].ToString();
                     }
                 }
@@ -813,11 +842,11 @@ namespace tokenizer {
                 }
             }
 
-            if (dict_config->Has("eos_token")) {
+            if (Has(dict_config, "eos_token")) {
                 X::Value eos_token = dict_config["eos_token"];
                 if (eos_token.IsDict()) {
-                    X::Dict eos_dict(eos_token);
-                    if (eos_dict->Has("content")) {
+                    X::Value eos_dict(eos_token);
+                    if (Has(eos_dict, "content")) {
                         eos_token_ = eos_dict["content"].ToString();
                     }
                 }
@@ -826,11 +855,11 @@ namespace tokenizer {
                 }
             }
 
-            if (dict_config->Has("unk_token")) {
+            if (Has(dict_config, "unk_token")) {
                 X::Value unk_token = dict_config["unk_token"];
                 if (unk_token.IsDict()) {
-                    X::Dict unk_dict(unk_token);
-                    if (unk_dict->Has("content")) {
+                    X::Value unk_dict(unk_token);
+                    if (Has(unk_dict, "content")) {
                         unk_token_ = unk_dict["content"].ToString();
                     }
                 }
@@ -839,11 +868,11 @@ namespace tokenizer {
                 }
             }
 
-            if (dict_config->Has("pad_token")) {
+            if (Has(dict_config, "pad_token")) {
                 X::Value pad_token = dict_config["pad_token"];
                 if (pad_token.IsDict()) {
-                    X::Dict pad_dict(pad_token);
-                    if (pad_dict->Has("content")) {
+                    X::Value pad_dict(pad_token);
+                    if (Has(pad_dict, "content")) {
                         pad_token_ = pad_dict["content"].ToString();
                     }
                 }
@@ -852,11 +881,11 @@ namespace tokenizer {
                 }
             }
 
-            if (dict_config->Has("sep_token")) {
+            if (Has(dict_config, "sep_token")) {
                 X::Value sep_token = dict_config["sep_token"];
                 if (sep_token.IsDict()) {
-                    X::Dict sep_dict(sep_token);
-                    if (sep_dict->Has("content")) {
+                    X::Value sep_dict(sep_token);
+                    if (Has(sep_dict, "content")) {
                         sep_token_ = sep_dict["content"].ToString();
                     }
                 }
@@ -865,11 +894,11 @@ namespace tokenizer {
                 }
             }
 
-            if (dict_config->Has("cls_token")) {
+            if (Has(dict_config, "cls_token")) {
                 X::Value cls_token = dict_config["cls_token"];
                 if (cls_token.IsDict()) {
-                    X::Dict cls_dict(cls_token);
-                    if (cls_dict->Has("content")) {
+                    X::Value cls_dict(cls_token);
+                    if (Has(cls_dict, "content")) {
                         cls_token_ = cls_dict["content"].ToString();
                     }
                 }
@@ -878,11 +907,11 @@ namespace tokenizer {
                 }
             }
 
-            if (dict_config->Has("mask_token")) {
+            if (Has(dict_config, "mask_token")) {
                 X::Value mask_token = dict_config["mask_token"];
                 if (mask_token.IsDict()) {
-                    X::Dict mask_dict(mask_token);
-                    if (mask_dict->Has("content")) {
+                    X::Value mask_dict(mask_token);
+                    if (Has(mask_dict, "content")) {
                         mask_token_ = mask_dict["content"].ToString();
                     }
                 }
@@ -896,36 +925,35 @@ namespace tokenizer {
     // Load tokenizer JSON using X framework
     void AutoTokenizer::load_tokenizer_json(X::Runtime* rt, const std::string& tokenizer_path) {
         // Use X::Package to load the JSON file
-        X::Package yaml(*rt, "yaml", "xlang_yaml");
-        X::Value tokenizer_data = yaml["load"](tokenizer_path);
+        X::Value tokenizer_data = LoadJson(rt, tokenizer_path);
 
         // Process tokenizer data if it's a dictionary
-        if (!tokenizer_data.IsInvalid() && tokenizer_data.IsDict()) {
-            X::Dict dict_tokenizer(tokenizer_data);
+        if (tokenizer_data.IsValid() && tokenizer_data.IsDict()) {
+            X::Value dict_tokenizer(tokenizer_data);
 
             // Load added tokens
-            if (dict_tokenizer->Has("added_tokens") && dict_tokenizer["added_tokens"].IsList()) {
-                X::List added_tokens(dict_tokenizer["added_tokens"]);
+            if (Has(dict_tokenizer, "added_tokens") && dict_tokenizer["added_tokens"].IsList()) {
+                X::Value added_tokens(dict_tokenizer["added_tokens"]);
 
-                for (auto& token_value : *added_tokens) {
+                for (long long i = 0; i < added_tokens.Size(); ++i) { X::Value token_value = added_tokens[i];
                     if (token_value.IsDict()) {
-                        X::Dict token_dict(token_value);
-                        int id = (int)token_dict["id"];
+                        X::Value token_dict(token_value);
+                        int id = static_cast<int>(token_dict["id"].ToLongLong());
                         std::string content = token_dict["content"].ToString();
                         bool is_special = false;
 
-                        if (token_dict->Has("special")) {
-                            is_special = (bool)token_dict["special"];
+                        if (Has(token_dict, "special")) {
+                            is_special = (token_dict["special"].ToLongLong() != 0);
                         }
 
                         token_to_id_[content] = id;
                         id_to_token_[id] = content;
 
                         // Create an AddedToken
-                        bool lstrip = token_dict->Has("lstrip") ? (bool)token_dict["lstrip"] : false;
-                        bool rstrip = token_dict->Has("rstrip") ? (bool)token_dict["rstrip"] : false;
-                        bool single_word = token_dict->Has("single_word") ? (bool)token_dict["single_word"] : false;
-                        bool normalized = token_dict->Has("normalized") ? (bool)token_dict["normalized"] : true;
+                        bool lstrip = Has(token_dict, "lstrip") ? (token_dict["lstrip"].ToLongLong() != 0) : false;
+                        bool rstrip = Has(token_dict, "rstrip") ? (token_dict["rstrip"].ToLongLong() != 0) : false;
+                        bool single_word = Has(token_dict, "single_word") ? (token_dict["single_word"].ToLongLong() != 0) : false;
+                        bool normalized = Has(token_dict, "normalized") ? (token_dict["normalized"].ToLongLong() != 0) : true;
 
                         AddedToken added_token(content, lstrip, rstrip, single_word, normalized, is_special);
                         added_tokens_decoder_[id] = added_token;
@@ -940,15 +968,15 @@ namespace tokenizer {
             }
 
             // Load vocabulary
-            if (dict_tokenizer->Has("model") && dict_tokenizer["model"].IsDict()) {
-                X::Dict model_dict(dict_tokenizer["model"]);
+            if (Has(dict_tokenizer, "model") && dict_tokenizer["model"].IsDict()) {
+                X::Value model_dict(dict_tokenizer["model"]);
 
-                if (model_dict->Has("vocab") && model_dict["vocab"].IsDict()) {
-                    X::Dict vocab_dict(model_dict["vocab"]);
+                if (Has(model_dict, "vocab") && model_dict["vocab"].IsDict()) {
+                    X::Value vocab_dict(model_dict["vocab"]);
 
-                    for (auto& it : *vocab_dict) {
-                        std::string token = it.first().ToString();
-                        int id = (int)it.second();
+                    for (long long i = 0; i < vocab_dict.Size(); ++i) { X::Value tokenValue, idValue; if (!vocab_dict.DictEntry(i, tokenValue, idValue)) throw std::runtime_error("invalid tokenizer vocabulary");
+                        std::string token = tokenValue.ToString();
+                        int id = static_cast<int>(idValue.ToLongLong());
                         token_to_id_[token] = id;
                         id_to_token_[id] = token;
                     }
@@ -958,10 +986,10 @@ namespace tokenizer {
             }
 
             // Load merges for BPE
-            if (dict_tokenizer->Has("merges") && dict_tokenizer["merges"].IsList()) {
-                X::List merges_list(dict_tokenizer["merges"]);
+            if (Has(dict_tokenizer, "merges") && dict_tokenizer["merges"].IsList()) {
+                X::Value merges_list(dict_tokenizer["merges"]);
 
-                for (auto& merge_value : *merges_list) {
+                for (long long i = 0; i < merges_list.Size(); ++i) { X::Value merge_value = merges_list[i];
                     std::string merge_str = merge_value.ToString();
                     size_t space_pos = merge_str.find(' ');
 
@@ -1218,16 +1246,15 @@ namespace tokenizer {
     // Load vocabulary and merges for BPE using X framework
     void BPETokenizer::load_vocab_and_merges(X::Runtime* rt, const std::string& vocab_file, const std::string& merges_file) {
         // Load vocabulary using X framework
-        X::Package json(*rt, "json", "xlang_json");
-        X::Value vocab_data = json["load"](vocab_file);
+        X::Value vocab_data = LoadJson(rt, vocab_file);
 
         // Process vocabulary if it's a dictionary
-        if (!vocab_data.IsInvalid() && vocab_data.IsDict()) {
-            X::Dict vocab_dict(vocab_data);
+        if (vocab_data.IsValid() && vocab_data.IsDict()) {
+            X::Value vocab_dict(vocab_data);
 
-            for (auto& it : *vocab_dict) {
-                std::string token = it.first().ToString();
-                int id = (int)it.second();
+            for (long long i = 0; i < vocab_dict.Size(); ++i) { X::Value tokenValue, idValue; if (!vocab_dict.DictEntry(i, tokenValue, idValue)) throw std::runtime_error("invalid tokenizer vocabulary");
+                std::string token = tokenValue.ToString();
+                int id = static_cast<int>(idValue.ToLongLong());
                 token_to_id_[token] = id;
                 id_to_token_[id] = token;
             }
@@ -1236,10 +1263,9 @@ namespace tokenizer {
         }
 
         // Load merges file using X Framework
-        X::Package file_reader(*rt, "io", "xlang_io");
-        X::Value merges_content = file_reader["read"](merges_file);
+        X::Value merges_content = ReadFile(rt, merges_file);
 
-        if (!merges_content.IsInvalid()) {
+        if (merges_content.IsValid()) {
             std::string content = merges_content.ToString();
             std::istringstream iss(content);
             std::string line;
@@ -1286,9 +1312,9 @@ namespace tokenizer {
         std::string merges_file = path + "/merges.txt";
 
         // Check if files exist before trying to load them
-        X::Package os(*rt, "os", "xlang_os");
-        bool vocab_exists = (bool)os["exists"](vocab_file);
-        bool merges_exists = (bool)os["exists"](merges_file);
+
+        bool vocab_exists = std::filesystem::exists(vocab_file);
+        bool merges_exists = std::filesystem::exists(merges_file);
 
         if (vocab_exists && merges_exists) {
             tokenizer->load_vocab_and_merges(rt, vocab_file, merges_file);
@@ -1517,26 +1543,26 @@ namespace tokenizer {
         // Try different approaches to load the vocab file
 
         // First try loading as JSON
-        X::Package json(*rt, "json", "xlang_json");
-        X::Value vocab_data = json["load"](vocab_file);
+        X::Value vocab_data;
+        if (std::filesystem::path(vocab_file).extension() != ".txt")
+            vocab_data = LoadJson(rt, vocab_file);
 
-        if (!vocab_data.IsInvalid() && vocab_data.IsDict()) {
+        if (vocab_data.IsValid() && vocab_data.IsDict()) {
             // Process the vocab data as a dictionary
-            X::Dict vocab_dict(vocab_data);
+            X::Value vocab_dict(vocab_data);
 
-            for (auto& it : *vocab_dict) {
-                std::string token = it.first().ToString();
-                int id = (int)it.second();
+            for (long long i = 0; i < vocab_dict.Size(); ++i) { X::Value tokenValue, idValue; if (!vocab_dict.DictEntry(i, tokenValue, idValue)) throw std::runtime_error("invalid tokenizer vocabulary");
+                std::string token = tokenValue.ToString();
+                int id = static_cast<int>(idValue.ToLongLong());
                 token_to_id_[token] = id;
                 id_to_token_[id] = token;
             }
         }
         else {
             // Try loading as a text file with one token per line
-            X::Package file_reader(*rt, "io", "xlang_io");
-            X::Value content = file_reader["read"](vocab_file);
+            X::Value content = ReadFile(rt, vocab_file);
 
-            if (!content.IsInvalid()) {
+            if (content.IsValid()) {
                 std::string text = content.ToString();
                 std::istringstream iss(text);
                 std::string line;
@@ -1568,13 +1594,13 @@ namespace tokenizer {
         std::string vocab_file = path + "/vocab.txt";
 
         // Check if vocab.txt exists
-        X::Package os(*rt, "os", "xlang_os");
-        bool vocab_txt_exists = (bool)os["exists"](vocab_file);
+
+        bool vocab_txt_exists = std::filesystem::exists(vocab_file);
 
         if (!vocab_txt_exists) {
             // Try vocab.json
             vocab_file = path + "/vocab.json";
-            bool vocab_json_exists = (bool)os["exists"](vocab_file);
+            bool vocab_json_exists = std::filesystem::exists(vocab_file);
 
             if (!vocab_json_exists) {
                 // Fall back to tokenizer.json

@@ -17,129 +17,101 @@ namespace Garnet
 {
     namespace
     {
-        X::Value MakeGpuTensor(
-            X::TensorDataType dataType,
-            const std::vector<int>& dimensions,
-            const void* hostData,
-            size_t bytes)
+        X::Value MakeGpuTensor(X3PackageHost* host, X3TensorDType type,
+            const std::vector<int>& dimensions, const void* data, size_t bytes)
         {
-            X::Tensor tensor(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
-            for (const int dimension : dimensions) shape.push_back(dimension);
-            tensor->SetDataType(dataType);
-            tensor->SetShape(shape);
-
-            void* deviceMemory = nullptr;
-            if (cudaMalloc(&deviceMemory, bytes) != cudaSuccess) return X::Value();
-            if (bytes > 0 && hostData &&
-                cudaMemcpy(deviceMemory, hostData, bytes, cudaMemcpyHostToDevice) != cudaSuccess) {
-                cudaFree(deviceMemory);
-                return X::Value();
+            std::vector<int64_t> shape(dimensions.begin(), dimensions.end());
+            uint64_t expected = TensorHelper::ItemSize(type);
+            for (auto dimension : shape) {
+                if (dimension < 0 || (dimension && expected > UINT64_MAX / dimension))
+                    throw std::invalid_argument("invalid frontend tensor shape");
+                expected *= dimension;
             }
-            if (TensorHelper::AttachGPUMemory(tensor, deviceMemory) != TensorOpStatus::Success) {
-                cudaFree(deviceMemory);
-                return X::Value();
-            }
-            return X::Value(tensor);
+            if (expected != bytes) throw std::invalid_argument("frontend tensor byte size mismatch");
+            return TensorHelper::CreateGPU(host, type, shape, data);
         }
 
         X::Value ConvertPixelsToBF16(X::Value sourceValue)
         {
-            if (!sourceValue.IsTensor()) return X::Value();
+            if (!X::Tensor::IsTensor(sourceValue)) return {};
             X::Tensor source(sourceValue);
-            if (source->GetDataType() != X::TensorDataType::FLOAT32 ||
-                TensorHelper::EnsureGPUMemory(source) != TensorOpStatus::Success) {
-                return X::Value();
-            }
-            const long long elementCount = source->GetDataSize() / sizeof(float);
-            if (elementCount <= 0 || elementCount > std::numeric_limits<int>::max()) {
-                return X::Value();
-            }
-            X::Tensor output(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> shape(source->GetDimCount());
-            for (int dimension = 0; dimension < source->GetDimCount(); ++dimension) {
-                shape.push_back(static_cast<int>(source->GetDimSize(dimension)));
-            }
-            output->SetDataType(X::TensorDataType::BFLOAT16);
-            output->SetShape(shape);
-            void* deviceMemory = nullptr;
-            if (cudaMalloc(&deviceMemory, static_cast<size_t>(elementCount) * sizeof(unsigned short)) != cudaSuccess) {
-                return X::Value();
-            }
-            const cudaError_t status = runConvertFP32ToBF16Async(
+            if (source.Info().dtype != X3_TENSOR_FLOAT32 ||
+                TensorHelper::EnsureGPUMemory(source) != TensorOpStatus::Success) return {};
+            const auto info = source.Info();
+            const uint64_t count = info.byte_size / sizeof(float);
+            if (!count || count > INT_MAX) return {};
+            std::vector<int64_t> shape(info.shape, info.shape + info.rank);
+            auto output = TensorHelper::CreateGPU(source.host(), X3_TENSOR_BFLOAT16, shape);
+            auto use = TensorHelper::AcquireGPU({{source, X3_TENSOR_READ}, {output, X3_TENSOR_WRITE}});
+            const auto status = runConvertFP32ToBF16Async(
                 static_cast<const float*>(TensorHelper::GetGPUMemory(source)),
-                static_cast<bfloat16*>(deviceMemory),
-                static_cast<int>(elementCount),
-                cudaStreamPerThread);
-            if (status != cudaSuccess ||
-                TensorHelper::AttachGPUMemory(output, deviceMemory) != TensorOpStatus::Success) {
-                cudaFree(deviceMemory);
-                return X::Value();
-            }
-            return X::Value(output);
+                static_cast<bfloat16*>(TensorHelper::GetGPUMemory(output)),
+                static_cast<int>(count), cudaStreamPerThread);
+            if (status != cudaSuccess) throw std::runtime_error(cudaGetErrorString(status));
+            use.Finish();
+            // The temporary source may own an uploaded buffer. Finish before releasing it.
+            const auto sync = cudaStreamSynchronize(cudaStreamPerThread);
+            if (sync != cudaSuccess) throw std::runtime_error(cudaGetErrorString(sync));
+            return output;
         }
 
-        X::Value MakeZeroGpuTensor(
-            X::TensorDataType dataType,
-            const std::vector<int>& dimensions,
-            size_t elementBytes)
+        X::Value MakeZeroGpuTensor(X3PackageHost* host, X3TensorDType type,
+            const std::vector<int>& dimensions, size_t elementBytes)
         {
-            size_t elementCount = 1;
-            for (const int dimension : dimensions) {
-                if (dimension <= 0 || elementCount > std::numeric_limits<size_t>::max() /
-                    static_cast<size_t>(dimension)) return X::Value();
-                elementCount *= static_cast<size_t>(dimension);
-            }
-            if (elementCount > std::numeric_limits<size_t>::max() / elementBytes) return X::Value();
-            X::Tensor tensor(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
-            for (const int dimension : dimensions) shape.push_back(dimension);
-            tensor->SetDataType(dataType);
-            tensor->SetShape(shape);
-            void* deviceMemory = nullptr;
-            const size_t bytes = elementCount * elementBytes;
-            if (cudaMalloc(&deviceMemory, bytes) != cudaSuccess) return X::Value();
-            if (cudaMemsetAsync(deviceMemory, 0, bytes, cudaStreamPerThread) != cudaSuccess ||
-                TensorHelper::AttachGPUMemory(tensor, deviceMemory) != TensorOpStatus::Success) {
-                cudaFree(deviceMemory);
-                return X::Value();
-            }
-            return X::Value(tensor);
+            if (elementBytes != TensorHelper::ItemSize(type))
+                throw std::invalid_argument("frontend tensor element size mismatch");
+            const std::vector<int64_t> shape(dimensions.begin(), dimensions.end());
+            return TensorHelper::CreateGPU(host, type, shape);
         }
 
-        X::Value ReuseOrMakeZeroGpuTensor(
-            X::TensorDataType dataType,
+        X::Value ReuseOrMakeZeroGpuTensor(X3PackageHost* host,
+            X3TensorDType dataType,
             const std::vector<int>& dimensions,
             size_t elementBytes,
             X::Value reusable)
         {
-            if (reusable.IsTensor()) {
+            if ((X::Tensor::IsTensor(reusable))) {
                 X::Tensor tensor(reusable);
+                const auto info = tensor.Info();
+                int device = -1;
                 bool matching =
-                    tensor->GetDataType() == dataType &&
-                    tensor->GetDimCount() == static_cast<int>(dimensions.size());
+                    cudaGetDevice(&device) == cudaSuccess && info.device_id == device &&
+                    !info.readonly && reusable.runtime() == host->runtime &&
+                    tensor.Info().dtype == dataType &&
+                    tensor.Info().rank == static_cast<int>(dimensions.size());
                 for (int index = 0;
-                     matching && index < tensor->GetDimCount();
+                     matching && index < tensor.Info().rank;
                      ++index) {
                     matching =
-                        tensor->GetDimSize(index) == dimensions[index];
+                        tensor.Info().shape[index] == dimensions[index];
                 }
                 void* deviceMemory =
-                    matching ? TensorHelper::GetGPUMemory(tensor) : nullptr;
-                if (deviceMemory &&
+                    nullptr;
+                uint64_t span = elementBytes;
+                for (size_t i = dimensions.size(); matching && i-- > 0;) {
+                    matching = info.strides[i] == static_cast<int64_t>(span) &&
+                        dimensions[i] >= 0 && (!dimensions[i] || span <= UINT64_MAX / dimensions[i]);
+                    if (matching) span *= dimensions[i];
+                }
+                if (matching && span == info.byte_size) deviceMemory = TensorHelper::GetGPUMemory(tensor);
+                if (deviceMemory) {
+                    auto use = TensorHelper::AcquireGPU(tensor, X3_TENSOR_WRITE);
+                    if (
                     cudaMemsetAsync(
                         deviceMemory,
                         0,
-                        static_cast<size_t>(tensor->GetDataSize()),
+                        static_cast<size_t>(tensor.Info().byte_size),
                         cudaStreamPerThread) == cudaSuccess) {
+                    use.Finish();
                     return reusable;
+                    }
                 }
             }
-            return MakeZeroGpuTensor(dataType, dimensions, elementBytes);
+            return MakeZeroGpuTensor(host, dataType, dimensions, elementBytes);
         }
     }
 
-    QwenVLCompiledInputs BuildQwenVLCompiledInputs(
+    QwenVLCompiledInputs BuildQwenVLCompiledInputs(X3PackageHost* host,
         const std::string& modelDirectory,
         X::Value imageSource,
         const std::string& prompt,
@@ -164,15 +136,15 @@ namespace Garnet
             }
 
             Image::PreprocessResult image;
-            if (imageSource.IsObject() &&
-                imageSource.GetObj()->GetType() == X::ObjType::Binary) {
-                auto* binary = dynamic_cast<X::XBin*>(imageSource.GetObj());
-                if (!binary || binary->Size() <= 0) {
+            if (imageSource.IsBin()) {
+                uint64_t bytes = 0;
+                const void* binary = imageSource.BytesData(&bytes);
+                if (!binary || bytes == 0) {
                     throw std::invalid_argument("Qwen-VL image binary is empty");
                 }
                 image = Image::QwenVL::PreprocessJpegBytesToTensor(
-                    reinterpret_cast<const unsigned char*>(binary->Data()),
-                    static_cast<size_t>(binary->Size()),
+                    host, static_cast<const unsigned char*>(binary),
+                    static_cast<size_t>(bytes),
                     minPixels,
                     maxPixels);
             }
@@ -183,10 +155,11 @@ namespace Garnet
                         "Qwen-VL image must be a JPEG binary or file path");
                 }
                 image = Image::QwenVL::PreprocessJpegFileToTensor(
-                    imagePath, minPixels, maxPixels);
+                    host, imagePath, minPixels, maxPixels);
             }
-            X::Tensor gridTensor(image.imageGridTHW);
-            const auto* gridData = reinterpret_cast<const long long*>(gridTensor->GetData());
+            X::Tensor gridTensor = TensorHelper::CopyToCPU(X::Tensor(image.imageGridTHW));
+            auto gridUse = gridTensor.Acquire();
+            const auto* gridData = reinterpret_cast<const long long*>(gridTensor.Info().data);
             const int64_t grid[3] = {gridData[0], gridData[1], gridData[2]};
             constexpr int mergeSize = 2;
 
@@ -235,28 +208,25 @@ namespace Garnet
             }
 
             X::Value convertedPixels = ConvertPixelsToBF16(image.pixelValues);
-            if (image.pixelValues.IsTensor()) {
-                X::Tensor sourcePixels(image.pixelValues);
-                TensorHelper::ReleaseGPUMemory(sourcePixels);
-            }
+            image.pixelValues = X::Value();
 
-            X::V<X::XList> inputs;
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[0],
+            X::Value inputs = X::Value::List(host);
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64, profileShapes[0],
                 inputIds.data(), inputIds.size() * sizeof(int64_t)));
-            inputs->AddItem(convertedPixels);
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[2],
+            inputs.Append(convertedPixels);
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64, profileShapes[2],
                 grid, sizeof(grid)));
-            inputs->AddItem(image.bilinearIndices);
-            inputs->AddItem(image.bilinearWeights);
-            inputs->AddItem(image.visionPositionIds);
-            inputs->AddItem(image.visionCuSeqlens);
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[7],
+            inputs.Append(image.bilinearIndices);
+            inputs.Append(image.bilinearWeights);
+            inputs.Append(image.visionPositionIds);
+            inputs.Append(image.visionCuSeqlens);
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64, profileShapes[7],
                 mmTypes.data(), mmTypes.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[8],
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64, profileShapes[8],
                 attentionMask.data(), attentionMask.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[9],
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64, profileShapes[9],
                 paddedPositions.data(), paddedPositions.size() * sizeof(int64_t)));
-            inputs->AddItem(MakeGpuTensor(X::TensorDataType::LONGLONG, profileShapes[10],
+            inputs.Append(MakeGpuTensor(host, X3_TENSOR_INT64, profileShapes[10],
                 &mrope.positionDelta, sizeof(mrope.positionDelta)));
             result.mropePositionDelta = mrope.positionDelta;
             if (profileShapes.size() == 15) {
@@ -264,23 +234,23 @@ namespace Garnet
                     profileShapes[13].size() != 1 || profileShapes[14] != std::vector<int>{1}) {
                     throw std::invalid_argument("Qwen-VL paged prefill cache profile is invalid");
                 }
-                inputs->AddItem(ReuseOrMakeZeroGpuTensor(
-                    X::TensorDataType::BFLOAT16, profileShapes[11],
+                inputs.Append(ReuseOrMakeZeroGpuTensor(host,
+                    X3_TENSOR_BFLOAT16, profileShapes[11],
                     sizeof(bfloat16), reusableKeyCache));
-                inputs->AddItem(ReuseOrMakeZeroGpuTensor(
-                    X::TensorDataType::BFLOAT16, profileShapes[12],
+                inputs.Append(ReuseOrMakeZeroGpuTensor(host,
+                    X3_TENSOR_BFLOAT16, profileShapes[12],
                     sizeof(bfloat16), reusableValueCache));
                 std::vector<int> pageTable(static_cast<size_t>(profileShapes[13][0]));
                 for (int index = 0; index < profileShapes[13][0]; ++index) pageTable[index] = index;
-                inputs->AddItem(MakeGpuTensor(
-                    X::TensorDataType::INT, profileShapes[13], pageTable.data(),
+                inputs.Append(MakeGpuTensor(host,
+                    X3_TENSOR_INT32, profileShapes[13], pageTable.data(),
                     pageTable.size() * sizeof(int)));
                 const int startPosition = 0;
-                inputs->AddItem(MakeGpuTensor(
-                    X::TensorDataType::INT, profileShapes[14], &startPosition, sizeof(startPosition)));
+                inputs.Append(MakeGpuTensor(host,
+                    X3_TENSOR_INT32, profileShapes[14], &startPosition, sizeof(startPosition)));
             }
-            for (long long index = 0; index < inputs->Size(); ++index) {
-                if (!inputs->Get(index).IsTensor()) {
+            for (long long index = 0; index < inputs.Size(); ++index) {
+                if (!X::Tensor::IsTensor(inputs.Get(index))) {
                     throw std::runtime_error("failed to construct GPU input_" + std::to_string(index));
                 }
             }

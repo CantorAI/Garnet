@@ -1,10 +1,10 @@
 #pragma once
 
-#include "xpackage.h"
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 #include "compiled_model_runtime.h"
 
 #include <memory>
+#include <mutex>
 
 namespace Garnet
 {
@@ -19,13 +19,23 @@ namespace Garnet
 
 		X::Value mTokenizer;
         std::shared_ptr<CompiledModelRuntime> mCompiledRuntime;
+        bool mCompiledMode = false;
+        X::Value m_engine;
+        struct FixtureExecution {
+            std::string path;
+            std::shared_ptr<void> owner;
+        };
+        mutable std::mutex mFixtureMutex;
+        FixtureExecution mFixtureExecution;
+        FixtureExecution RetainFixtureExecution();
+        void ReleaseFixtureExecution();
 	public:
-		X::Value m_engine;
-		void SetEngine(X::Value engine) { m_engine = engine; }
+        void SetEngine(X::Value engine);
+        X::Value GetEngine() const;
 		void SetSubgraph(const std::string& subgraph) { mSubgraph = subgraph; }
 		void SetRMSNormWeight(X::Value weight) { mRmsNormWeight = weight; }
 		BEGIN_PACKAGE(Model)
-            APISET().SetAccessor(&Model::Access);
+            APISET().AddFunc<1>("__getitem__", &Model::Access);
             APISET().AddVarFunc("tokenizer", &Model::Tokenizer);
             APISET().AddVarFunc("detokenizer", &Model::Detokenizer);
             APISET().AddVarFunc("debug_probe", &Model::DebugProbe);
@@ -38,7 +48,9 @@ namespace Garnet
             APISET().AddVarFunc("write_device_kv_cache", &Model::WriteDeviceKVCache);
             APISET().AddVarFunc("attention_device_kv_cache", &Model::AttentionDeviceKVCache);
 			APISET().AddProp0("weights", &Model::mModel);
-			APISET().AddProp0("engine", &Model::m_engine);
+            APISET().AddPropL("engine",
+                [](auto* model, X::Value value) { model->SetEngine(std::move(value)); },
+                [](auto* model) { return model->GetEngine(); });
 			APISET().AddPropWithType<std::string>("modelPath", &Model::mModelPath);
 		END_PACKAGE
 
@@ -53,15 +65,11 @@ namespace Garnet
 			mTokenizerJsonPath = tokenizerJsonPath;
 			mTokenizerConfigJsonPath = tokenizerConfigJsonPath;
 		}
-		X::Value Access(X::Port::vector<X::Value>& IdxAry);
-		void Tokenizer(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void Detokenizer(X::XRuntime* rt, X::XObj* pContext,
-            X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void DebugProbe(X::XRuntime* rt, X::XObj* pContext,
-            X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void SampleLogits(X::XRuntime* rt, X::XObj* pContext,
-            X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		X::Value Access(X::Value index);
+		X::Value Tokenizer(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value Detokenizer(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value DebugProbe(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value SampleLogits(const X::ARGS& params, const X::KWARGS& kwParams);
         bool InitializeCompiledRuntime(
             const std::string& rootXModel,
             const std::string& cacheDirectory,
@@ -77,16 +85,14 @@ namespace Garnet
         {
             return mCompiledRuntime ? mCompiledRuntime->Status() : X::Value();
         }
-        void RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
-            X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void ReleaseRuntime(X::XRuntime* rt, X::XObj* pContext,
-            X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+        X::Value RuntimeStatus(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value ReleaseRuntime(const X::ARGS& params, const X::KWARGS& kwParams);
 
-        void Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void ForwardRequest(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void CreateDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void DestroyDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void WriteDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-        void AttentionDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+        X::Value Forward(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value ForwardRequest(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value CreateDeviceKVCache(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value DestroyDeviceKVCache(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value WriteDeviceKVCache(const X::ARGS& params, const X::KWARGS& kwParams);
+        X::Value AttentionDeviceKVCache(const X::ARGS& params, const X::KWARGS& kwParams);
 	};
 }

@@ -1,6 +1,8 @@
 #include "log.h"
 #include "port.h"
 #include "help_func.h"
+#include "../entry/native_values.h"
+#include <iostream>
 
 Garnet::Log Garnet::log;
 
@@ -33,7 +35,13 @@ Garnet::Log& Garnet::Log::SetCurInfo(const char* fileName,
 		const int buf_Len = 1000;
 		char szFilter[buf_Len];
 		SPRINTF(szFilter, buf_Len, "[%d-%d-%llu,%s:%d] ", pid, tid, ts, strFileName.c_str(), line);
-		m_realLogger(szFilter);
+        Write(szFilter);
 	}
 	return *this;
+}
+
+void Garnet::Log::Write(const std::string& message)
+{
+    if (m_realLogger.IsValid()) CallChecked(m_realLogger, message);
+    else std::clog << message;
 }

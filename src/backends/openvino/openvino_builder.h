@@ -3,7 +3,7 @@
 #include "compiled_graph_capture.h"
 #include "lowering_context.h"
 #include "safetensors_index.h"
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 
 #include <cstdint>
 #include <string>
@@ -12,7 +12,7 @@
 namespace Garnet
 {
     // Lowers the backend-neutral XLang TensorGraph directly to an OpenVINO
-    // model. Model .x files never import or select OpenVINO.
+    // model. Model Python (.py) files never import or select OpenVINO.
     class OpenVINOBuilder : public ILoweringContext
     {
     public:

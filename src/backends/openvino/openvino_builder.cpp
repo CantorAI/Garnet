@@ -4,6 +4,7 @@
 #include "q4q8_linear.h"
 #include "qwen3_native_decode_engine.h"
 #include "tensor_helper.h"
+#include "graph_capture.h"
 #include "weight_quantization.h"
 
 #include <algorithm>
@@ -155,32 +156,36 @@ namespace Garnet
             return properties;
         }
 
-        ov::element::Type ToOpenVINOType(X::TensorDataType type)
+        ov::element::Type ToOpenVINOType(X3TensorDType type)
         {
             switch (type) {
-            case X::TensorDataType::FLOAT32: return ov::element::f32;
-            case X::TensorDataType::BFLOAT16: return ov::element::bf16;
-            case X::TensorDataType::INT: return ov::element::i32;
-            case X::TensorDataType::LONGLONG: return ov::element::i64;
+            case X3_TENSOR_FLOAT32: return ov::element::f32;
+            case X3_TENSOR_FLOAT64: return ov::element::f64;
+            case X3_TENSOR_FLOAT16: return ov::element::f16;
+            case X3_TENSOR_BFLOAT16: return ov::element::bf16;
+            case X3_TENSOR_INT32: return ov::element::i32;
+            case X3_TENSOR_INT64: return ov::element::i64;
             default: return ov::element::dynamic;
             }
         }
 
-        X::TensorDataType ToXLangType(const ov::element::Type& type)
+        X3TensorDType ToXLangType(const ov::element::Type& type)
         {
-            if (type == ov::element::f32) return X::TensorDataType::FLOAT32;
-            if (type == ov::element::bf16) return X::TensorDataType::BFLOAT16;
-            if (type == ov::element::i32) return X::TensorDataType::INT;
-            if (type == ov::element::i64) return X::TensorDataType::LONGLONG;
-            return X::TensorDataType::UNKNOWN;
+            if (type == ov::element::f32) return X3_TENSOR_FLOAT32;
+            if (type == ov::element::f64) return X3_TENSOR_FLOAT64;
+            if (type == ov::element::f16) return X3_TENSOR_FLOAT16;
+            if (type == ov::element::bf16) return X3_TENSOR_BFLOAT16;
+            if (type == ov::element::i32) return X3_TENSOR_INT32;
+            if (type == ov::element::i64) return X3_TENSOR_INT64;
+            return static_cast<X3TensorDType>(0);
         }
 
         ov::Shape ToOpenVINOShape(X::Tensor tensor)
         {
             ov::Shape shape;
-            shape.reserve(static_cast<size_t>(tensor->GetDimCount()));
-            for (int index = 0; index < tensor->GetDimCount(); ++index) {
-                shape.push_back(static_cast<size_t>(tensor->GetDimSize(index)));
+            shape.reserve(static_cast<size_t>(tensor.Info().rank));
+            for (int index = 0; index < tensor.Info().rank; ++index) {
+                shape.push_back(static_cast<size_t>(TensorDimension(tensor, index)));
             }
             return shape;
         }
@@ -773,19 +778,15 @@ namespace Garnet
         std::string& errorMessage)
     {
         m_analyzedOperations.clear();
-        m_analysisActive = true;
-        X::TensorGraph tensorGraph(graph);
-        X::KWARGS runOptions;
-        runOptions.Add("Func", forwardFunction);
-        ScopedLoweringContext loweringScope(*this);
-        const bool ran = tensorGraph->Run(graphArguments, runOptions);
-        m_analysisActive = false;
-        if (!ran) {
-            errorMessage = "xlang TensorGraph OpenVINO analysis replay failed";
-            m_analyzedOperations.clear();
+        try {
+            TensorGraphCapture capture(graph);
+            if (!CaptureFusionGraph(capture, FusionPartitionOptions{}, errorMessage))
+                return false;
+            operations = GetCapturedTensorOperations();
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
             return false;
         }
-        operations = std::move(m_analyzedOperations);
         errorMessage.clear();
         return true;
     }
@@ -820,25 +821,25 @@ namespace Garnet
                 : 64;
         implementation.statefulDecode =
             symbolicInputs.size() == 7 &&
-            symbolicInputs[2].IsTensor() &&
-            symbolicInputs[3].IsTensor() &&
-            X::Tensor(symbolicInputs[2])->GetDimCount() == 5 &&
-            X::Tensor(symbolicInputs[3])->GetDimCount() == 5;
+            IsTensor(symbolicInputs[2]) &&
+            IsTensor(symbolicInputs[3]) &&
+            X::Tensor(symbolicInputs[2]).Info().rank == 5 &&
+            X::Tensor(symbolicInputs[3]).Info().rank == 5;
         m_implementation = &implementation;
         try {
             for (size_t index = 0; index < symbolicInputs.size(); ++index) {
                 X::Value value = symbolicInputs[index];
-                if (!value.IsTensor() || !value.IsObject()) {
+                if (!IsTensor(value) || !value.IsObject()) {
                     m_error = "OpenVINO graph inputs must be tensors";
                     break;
                 }
                 X::Tensor tensor(value);
-                const auto type = ToOpenVINOType(tensor->GetDataType());
+                const auto type = ToOpenVINOType(tensor.Info().dtype);
                 if (type == ov::element::dynamic) {
                     m_error = "unsupported symbolic OpenVINO input dtype";
                     break;
                 }
-                const auto tensorId = value.GetObj()->GetID();
+                const auto tensorId = TensorId(value);
                 implementation.parameterIndices[tensorId] =
                     static_cast<int>(index);
                 implementation.inputTypes[
@@ -898,13 +899,62 @@ namespace Garnet
                 implementation.tensors[tensorId] = internalParameter;
             }
             if (m_error.empty()) {
-                X::TensorGraph tensorGraph(graph);
-                X::KWARGS runOptions;
-                runOptions.Add("Func", forwardFunction);
-                ScopedLoweringContext loweringScope(*this);
-                if (!tensorGraph->Run(graphArguments, runOptions) && m_error.empty()) {
-                    m_error = "xlang TensorGraph OpenVINO lowering replay failed";
+                TensorGraphCapture capture(graph);
+                for (const auto& node : capture.Operations()) {
+                    if (!node.provider.empty() || implementation.tensors.count(node.id)) continue;
+                    if (node.name == "constant") {
+                        auto tensor = TensorHelper::CopyToCPU(X::Tensor(node.output));
+                        if (!IsContiguousTensor(tensor))
+                            throw std::runtime_error("OpenVINO constants must be contiguous");
+                        const auto type = ToOpenVINOType(tensor.Info().dtype);
+                        if (type == ov::element::dynamic)
+                            throw std::runtime_error("unsupported OpenVINO constant dtype");
+                        implementation.tensors[node.id] = std::make_shared<ov::opset13::Constant>(
+                            type, ToOpenVINOShape(tensor), tensor.Info().data);
+                    } else if (node.name == "input") {
+                        std::string name;
+                        for (uint64_t i = 0; i < node.attributes.Size(); ++i) {
+                            X::Value key, value;
+                            if (!node.attributes.DictEntry(i, key, value))
+                                throw std::runtime_error("invalid symbolic input attributes");
+                            if (key.ToString() == "name") name = value.ToString();
+                        }
+                        auto weight = implementation.GetWeight(name, m_error);
+                        if (!m_error.empty()) break;
+                        implementation.tensors[node.id] = weight;
+                    }
                 }
+            }
+            if (m_error.empty()) {
+                std::string replayError;
+                if (!ReplayTensorGraph(graph, *this, replayError) && m_error.empty())
+                    m_error = replayError;
+            }
+            if (m_error.empty()) {
+                TensorGraphCapture capture(graph);
+                uint64_t outputId = 0;
+                const auto collect = [&outputId](const auto& self, const X::Value& value) -> void {
+                    if (IsTensor(value)) {
+                        const auto id = TensorId(value);
+                        if (outputId && outputId != id)
+                            throw std::runtime_error("compiled OpenVINO graph requires one tensor output");
+                        outputId = id;
+                    } else if (value.IsDict()) {
+                        for (uint64_t i = 0; i < value.Size(); ++i) {
+                            X::Value key, child;
+                            if (!value.DictEntry(i, key, child))
+                                throw std::runtime_error("invalid graph output dictionary");
+                            self(self, child);
+                        }
+                    } else if (value.IsList() || x3_value_object_kind(value.raw()) == X3_OBJECT_KIND_TUPLE) {
+                        for (uint64_t i = 0; i < value.Size(); ++i) self(self, value.Get(i));
+                    }
+                };
+                collect(collect, capture.Outputs());
+                const auto output = implementation.tensors.find(outputId);
+                if (output == implementation.tensors.end())
+                    throw std::runtime_error("declared OpenVINO graph output was not lowered");
+                implementation.lastOutput = output->second;
             }
             if (m_error.empty() && !implementation.lastOutput.get_node_shared_ptr()) {
                 m_error = "captured graph produced no OpenVINO output";
@@ -1145,49 +1195,49 @@ namespace Garnet
                     "full native CPU decode was not prepared";
                 return X::Value();
             }
-            X::List inputs(inputsValue);
-            if (inputs->Size() != 7) {
+            X::Value inputs(inputsValue);
+            if (inputs.Size() != 7) {
                 errorMessage =
                     "full native CPU decode requires seven graph inputs";
                 return X::Value();
             }
             X::Tensor tensors[7];
             for (int index = 0; index < 7; ++index) {
-                X::Value value = inputs->Get(index);
-                if (!value.IsTensor()) {
+                X::Value value = inputs.Get(index);
+                if (!IsTensor(value)) {
                     errorMessage =
                         "full native CPU decode inputs must be tensors";
                     return X::Value();
                 }
                 tensors[index] = X::Tensor(value);
-                if (tensors[index]->GetDeviceType() !=
-                        X::TensorDeviceType::CPU ||
-                    !tensors[index]->GetData()) {
+                if (tensors[index].Info().device_type !=
+                        0 ||
+                    !static_cast<unsigned char*>(tensors[index].Info().data)) {
                     errorMessage =
                         "full native CPU decode requires CPU tensors";
                     return X::Value();
                 }
             }
-            if (tensors[0]->GetDataType() !=
-                    X::TensorDataType::LONGLONG ||
-                tensors[1]->GetDataType() !=
-                    X::TensorDataType::LONGLONG ||
-                tensors[2]->GetDataType() !=
-                    X::TensorDataType::BFLOAT16 ||
-                tensors[3]->GetDataType() !=
-                    X::TensorDataType::BFLOAT16 ||
-                tensors[4]->GetDataType() != X::TensorDataType::INT ||
-                tensors[5]->GetDataType() != X::TensorDataType::INT ||
-                tensors[6]->GetDataType() != X::TensorDataType::INT ||
-                tensors[2]->GetDimCount() != 5 ||
-                tensors[3]->GetDimCount() != 5) {
+            if (tensors[0].Info().dtype !=
+                    X3_TENSOR_INT64 ||
+                tensors[1].Info().dtype !=
+                    X3_TENSOR_INT64 ||
+                tensors[2].Info().dtype !=
+                    X3_TENSOR_BFLOAT16 ||
+                tensors[3].Info().dtype !=
+                    X3_TENSOR_BFLOAT16 ||
+                tensors[4].Info().dtype != X3_TENSOR_INT32 ||
+                tensors[5].Info().dtype != X3_TENSOR_INT32 ||
+                tensors[6].Info().dtype != X3_TENSOR_INT32 ||
+                tensors[2].Info().rank != 5 ||
+                tensors[3].Info().rank != 5) {
                 errorMessage =
                     "full native CPU decode input contract is invalid";
                 return X::Value();
             }
             for (int dimension = 0; dimension < 5; ++dimension) {
-                if (tensors[2]->GetDimSize(dimension) !=
-                    tensors[3]->GetDimSize(dimension)) {
+                if (TensorDimension(tensors[2], dimension) !=
+                    TensorDimension(tensors[3], dimension)) {
                     errorMessage =
                         "full native CPU key/value cache shapes differ";
                     return X::Value();
@@ -1195,9 +1245,9 @@ namespace Garnet
             }
             int pageTableSize = 1;
             for (int dimension = 0;
-                 dimension < tensors[4]->GetDimCount();
+                 dimension < tensors[4].Info().rank;
                  ++dimension) {
-                const int size = tensors[4]->GetDimSize(dimension);
+                const int size = TensorDimension(tensors[4], dimension);
                 if (size <= 0 || pageTableSize > INT_MAX / size) {
                     errorMessage =
                         "full native CPU page table shape is invalid";
@@ -1206,53 +1256,52 @@ namespace Garnet
                 pageTableSize *= size;
             }
             Qwen3NativeDecodeEngine::DecodeInput input;
+            std::vector<std::pair<X::Tensor, X3TensorAccess>> nativeAccess;
+            for (int i = 0; i < 7; ++i)
+                nativeAccess.emplace_back(tensors[i], (i == 2 || i == 3) ? X3_TENSOR_WRITE : X3_TENSOR_READ);
+            auto nativeUse = X::Tensor::AcquireMany(nativeAccess);
             input.tokenId = *reinterpret_cast<const long long*>(
-                tensors[0]->GetData());
+                static_cast<unsigned char*>(tensors[0].Info().data));
             input.position = *reinterpret_cast<const long long*>(
-                tensors[1]->GetData());
+                static_cast<unsigned char*>(tensors[1].Info().data));
             input.keyCache = reinterpret_cast<std::uint16_t*>(
-                tensors[2]->GetData());
+                static_cast<unsigned char*>(tensors[2].Info().data));
             input.valueCache = reinterpret_cast<std::uint16_t*>(
-                tensors[3]->GetData());
+                static_cast<unsigned char*>(tensors[3].Info().data));
             input.pageTable = reinterpret_cast<const int*>(
-                tensors[4]->GetData());
+                static_cast<unsigned char*>(tensors[4].Info().data));
             input.pageTableSize = pageTableSize;
-            input.pages = tensors[2]->GetDimSize(1);
-            input.pageSize = tensors[2]->GetDimSize(2);
+            input.pages = TensorDimension(tensors[2], 1);
+            input.pageSize = TensorDimension(tensors[2], 2);
             input.contextLength = *reinterpret_cast<const int*>(
-                tensors[5]->GetData());
+                static_cast<unsigned char*>(tensors[5].Info().data));
             input.slotPosition = *reinterpret_cast<const int*>(
-                tensors[6]->GetData());
+                static_cast<unsigned char*>(tensors[6].Info().data));
             long long token = -1;
             if (!engine->Decode(input, token, errorMessage)) {
                 return X::Value();
             }
-            X::Tensor output(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> shape(3);
-            shape.push_back(1);
-            shape.push_back(1);
-            shape.push_back(1);
-            output->SetDataType(X::TensorDataType::LONGLONG);
-            output->SetShape(shape);
-            X::Value initial;
-            output->Create(initial);
-            if (!output->GetData()) {
-                errorMessage =
-                    "failed to allocate full native CPU token output";
-                return X::Value();
-            }
-            *reinterpret_cast<long long*>(output->GetData()) = token;
             errorMessage.clear();
-            return X::Value(output);
+            return X::Tensor::Create(inputsValue.host(), X3_TENSOR_INT64,
+                {1, 1, 1}, &token, sizeof(token));
         }
         auto execution = LoadCompiledModel(enginePath, errorMessage);
         if (!execution) return X::Value();
         try {
             auto session = GetExecutionSession(execution, sessionId);
             std::lock_guard<std::mutex> sessionGuard(session->mutex);
-            X::List inputs(inputsValue);
+            X::Value inputs(inputsValue);
             ov::InferRequest& request = *session->request;
             std::vector<X::Value> cpuCopies;
+            std::vector<std::pair<X::Tensor, X3TensorAccess>> access;
+            for (uint64_t i = 0; i < inputs.Size(); ++i) {
+                const auto value = inputs.Get(i);
+                if (IsTensor(value)) {
+                    X::Tensor tensor(value);
+                    if (tensor.Info().device_type == 0)
+                        access.emplace_back(tensor, tensor.Info().readonly ? X3_TENSOR_READ : X3_TENSOR_WRITE);
+                }
+            }
             cpuCopies.reserve(execution->model.inputs().size());
             const std::regex inputName(R"(input_([0-9]+))");
             for (size_t modelInputIndex = 0;
@@ -1271,35 +1320,39 @@ namespace Garnet
                     return X::Value();
                 }
                 const int originalIndex = std::stoi(match[1].str());
-                if (originalIndex < 0 || originalIndex >= inputs->Size()) {
+                if (originalIndex < 0 || originalIndex >= inputs.Size()) {
                     errorMessage =
                         "OpenVINO execution input identity is out of range";
                     return X::Value();
                 }
-                X::Value inputValue = inputs->Get(originalIndex);
-                if (!inputValue.IsTensor()) {
+                X::Value inputValue = inputs.Get(originalIndex);
+                if (!IsTensor(inputValue)) {
                     errorMessage = "OpenVINO inputs must be X::Tensor values";
                     return X::Value();
                 }
                 X::Tensor input(inputValue);
-                if (input->GetDeviceType() != X::TensorDeviceType::CPU) {
+                if (input.Info().device_type != 0) {
                     inputValue = TensorHelper::CopyToCPUTensor(input);
-                    if (!inputValue.IsTensor()) {
+                    if (!IsTensor(inputValue)) {
                         errorMessage = "failed to copy OpenVINO input to CPU";
                         return X::Value();
                     }
                     input = X::Tensor(inputValue);
                 }
                 cpuCopies.push_back(inputValue);
-                const auto type = ToOpenVINOType(input->GetDataType());
-                if (type == ov::element::dynamic || !input->GetData()) {
+                access.emplace_back(input, input.Info().readonly ? X3_TENSOR_READ : X3_TENSOR_WRITE);
+                const auto type = ToOpenVINOType(input.Info().dtype);
+                if (type == ov::element::dynamic || !static_cast<unsigned char*>(input.Info().data)) {
                     errorMessage = "unsupported or empty OpenVINO input tensor";
                     return X::Value();
                 }
                 request.set_input_tensor(
                     modelInputIndex,
-                    ov::Tensor(type, ToOpenVINOShape(input), input->GetData()));
+                    ov::Tensor(type, ToOpenVINOShape(input), input.Info().data,
+                        ov::Strides(input.Info().strides,
+                            input.Info().strides + input.Info().rank)));
             }
+            auto inputUse = X::Tensor::AcquireMany(access);
             const auto variableStates = request.query_state();
             if (!variableStates.empty() &&
                 (resetState || !session->stateInitialized)) {
@@ -1317,22 +1370,22 @@ namespace Garnet
                     const int originalIndex = std::stoi(match[2].str());
                     const int layerIndex = std::stoi(match[3].str());
                     if (originalIndex < 0 ||
-                        originalIndex >= inputs->Size() ||
-                        !inputs->Get(originalIndex).IsTensor()) {
+                        originalIndex >= inputs.Size() ||
+                        !IsTensor(inputs.Get(originalIndex))) {
                         errorMessage =
                             "OpenVINO decode state input is unavailable";
                         return X::Value();
                     }
-                    X::Tensor cache(inputs->Get(originalIndex));
-                    if (cache->GetDeviceType() !=
-                            X::TensorDeviceType::CPU ||
-                        !cache->GetData()) {
+                    X::Tensor cache(inputs.Get(originalIndex));
+                    if (cache.Info().device_type !=
+                            0 ||
+                        !static_cast<unsigned char*>(cache.Info().data)) {
                         errorMessage =
                             "OpenVINO decode state requires a CPU cache seed";
                         return X::Value();
                     }
                     const auto type =
-                        ToOpenVINOType(cache->GetDataType());
+                        ToOpenVINOType(cache.Info().dtype);
                     const ov::Tensor currentState =
                         variableState.get_state();
                     const size_t layerBytes =
@@ -1340,7 +1393,7 @@ namespace Garnet
                     const size_t offset =
                         static_cast<size_t>(layerIndex) * layerBytes;
                     if (offset + layerBytes >
-                        static_cast<size_t>(cache->GetDataSize())) {
+                        static_cast<size_t>(cache.Info().byte_size)) {
                         errorMessage =
                             "OpenVINO decode state seed exceeds cache input";
                         return X::Value();
@@ -1349,7 +1402,7 @@ namespace Garnet
                         variableState.set_state(ov::Tensor(
                             type,
                             currentState.get_shape(),
-                            cache->GetData() + offset));
+                            static_cast<unsigned char*>(cache.Info().data) + offset));
                     }
                     else if (
                         type == ov::element::bf16 &&
@@ -1357,7 +1410,7 @@ namespace Garnet
                             ov::element::f16) {
                         const auto* source =
                             reinterpret_cast<const ov::bfloat16*>(
-                                cache->GetData() + offset);
+                                static_cast<unsigned char*>(cache.Info().data) + offset);
                         ov::Tensor converted(
                             ov::element::f16,
                             currentState.get_shape());
@@ -1418,13 +1471,13 @@ namespace Garnet
                 if (!std::regex_match(outputName, match, cacheName)) continue;
                 const int inputIndex = std::stoi(match[2].str());
                 const int layerIndex = std::stoi(match[3].str());
-                if (inputIndex < 0 || inputIndex >= inputs->Size()) {
+                if (inputIndex < 0 || inputIndex >= inputs.Size()) {
                     errorMessage = "OpenVINO cache output input index is invalid";
                     return X::Value();
                 }
-                X::Tensor cache(inputs->Get(inputIndex));
-                if (cache->GetDeviceType() != X::TensorDeviceType::CPU ||
-                    !cache->GetData() || cache->GetDimCount() < 1) {
+                X::Tensor cache(inputs.Get(inputIndex));
+                if (cache.Info().device_type != 0 ||
+                    !static_cast<unsigned char*>(cache.Info().data) || cache.Info().rank < 1) {
                     errorMessage =
                         "OpenVINO Qwen cache inputs must be CPU tensors";
                     return X::Value();
@@ -1435,12 +1488,12 @@ namespace Garnet
                 const size_t offset =
                     static_cast<size_t>(layerIndex) * layerBytes;
                 if (offset + layerBytes >
-                    static_cast<size_t>(cache->GetDataSize())) {
+                    static_cast<size_t>(cache.Info().byte_size)) {
                     errorMessage = "OpenVINO cache write exceeds input tensor";
                     return X::Value();
                 }
                 std::memcpy(
-                    cache->GetData() + offset,
+                    static_cast<unsigned char*>(cache.Info().data) + offset,
                     cacheOutput.data(),
                     layerBytes);
             }
@@ -1468,53 +1521,27 @@ namespace Garnet
                         logits.begin(), logits.end());
                     const int64_t token = static_cast<int64_t>(
                         std::distance(logits.begin(), maximum));
-                    X::Tensor output(X::g_pXHost->CreateTensor());
-                    X::Port::vector<int> shape(3);
-                    shape.push_back(1);
-                    shape.push_back(1);
-                    shape.push_back(1);
-                    output->SetDataType(X::TensorDataType::LONGLONG);
-                    output->SetShape(shape);
-                    X::Value initial;
-                    output->Create(initial);
-                    if (!output->GetData()) {
-                        errorMessage =
-                            "failed to allocate native Q4Q8 token output";
-                        return X::Value();
-                    }
-                    *reinterpret_cast<int64_t*>(output->GetData()) = token;
                     errorMessage.clear();
-                    return X::Value(output);
+                    return X::Tensor::Create(inputsValue.host(), X3_TENSOR_INT64,
+                        {1, 1, 1}, &token, sizeof(token));
                 }
             }
-            const X::TensorDataType outputType =
+            const X3TensorDType outputType =
                 ToXLangType(outputTensor.get_element_type());
-            if (outputType == X::TensorDataType::UNKNOWN) {
+            if (outputType == static_cast<X3TensorDType>(0)) {
                 errorMessage = "unsupported OpenVINO output dtype";
                 return X::Value();
             }
-            X::Tensor output(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> shape(
-                static_cast<int>(outputTensor.get_shape().size()));
+            std::vector<int64_t> shape;
+            shape.reserve(outputTensor.get_shape().size());
             for (const size_t dimension : outputTensor.get_shape()) {
-                shape.push_back(static_cast<int>(dimension));
+                if (dimension > static_cast<size_t>(INT64_MAX))
+                    throw std::runtime_error("OpenVINO output dimension overflow");
+                shape.push_back(static_cast<int64_t>(dimension));
             }
-            output->SetDataType(outputType);
-            output->SetShape(shape);
-            X::Value initial;
-            output->Create(initial);
-            if (!output->GetData() ||
-                static_cast<size_t>(output->GetDataSize()) !=
-                    outputTensor.get_byte_size()) {
-                errorMessage = "failed to allocate owned OpenVINO output tensor";
-                return X::Value();
-            }
-            std::memcpy(
-                output->GetData(),
-                outputTensor.data(),
-                outputTensor.get_byte_size());
             errorMessage.clear();
-            return X::Value(output);
+            return X::Tensor::Create(inputsValue.host(), outputType, shape,
+                outputTensor.data(), outputTensor.get_byte_size());
         }
         catch (const std::exception& exception) {
             errorMessage = std::string("OpenVINO inference failed: ") +
@@ -1592,12 +1619,12 @@ namespace Garnet
             operation.index = static_cast<int>(m_analyzedOperations.size());
             operation.name = opName;
             if (input1.IsObject()) {
-                operation.inputTensorIds.push_back(input1.GetObj()->GetID());
+                operation.inputTensorIds.push_back(TensorId(input1));
             }
             if (input2.IsObject()) {
-                operation.inputTensorIds.push_back(input2.GetObj()->GetID());
+                operation.inputTensorIds.push_back(TensorId(input2));
             }
-            if (output.IsObject()) operation.outputTensorId = output.GetObj()->GetID();
+            if (output.IsObject()) operation.outputTensorId = TensorId(output);
             m_analyzedOperations.push_back(std::move(operation));
             return X::Value(true);
         }
@@ -1605,31 +1632,53 @@ namespace Garnet
         return X::Value();
 #else
         if (!m_loweringActive || !m_implementation) return X::Value(true);
-        const auto left = m_implementation->tensors.find(input1.GetObj()->GetID());
-        const auto right = m_implementation->tensors.find(input2.GetObj()->GetID());
-        if (left == m_implementation->tensors.end() ||
-            right == m_implementation->tensors.end()) {
+        const uint64_t leftId = IsTensor(input1) ? TensorId(input1) : 0;
+        const uint64_t rightId = IsTensor(input2) ? TensorId(input2) : 0;
+        auto scalarType = ov::element::f32;
+        for (const auto id : {leftId, rightId}) {
+            const auto found = m_implementation->tensors.find(id);
+            if (found != m_implementation->tensors.end()) {
+                scalarType = found->second.get_element_type();
+                break;
+            }
+        }
+        auto operand = [&](const X::Value& value, uint64_t id) -> ov::Output<ov::Node> {
+            if (id) {
+                auto found = m_implementation->tensors.find(id);
+                return found == m_implementation->tensors.end() ? ov::Output<ov::Node>{} : found->second;
+            }
+            if (value.raw().tag == X3_TAG_INT64)
+                return ov::opset13::Constant::create(scalarType, ov::Shape{},
+                    std::vector<int64_t>{value.ToLongLong()});
+            if (value.raw().tag == X3_TAG_DOUBLE)
+                return ov::opset13::Constant::create(scalarType, ov::Shape{},
+                    std::vector<double>{value.ToDouble()});
+            return {};
+        };
+        const auto leftValue = operand(input1, leftId);
+        const auto rightValue = operand(input2, rightId);
+        if (!leftValue.get_node_shared_ptr() || !rightValue.get_node_shared_ptr()) {
             m_error = "OpenVINO binary input is not available: " + opName;
             return X::Value();
         }
-        const auto outputId = output.GetObj()->GetID();
+        const auto outputId = TensorId(output);
         const auto leftStateFound =
-            m_implementation->states.find(input1.GetObj()->GetID());
+            m_implementation->states.find(leftId);
         Implementation::TensorState state =
             leftStateFound != m_implementation->states.end()
                 ? leftStateFound->second
                 : Implementation::TensorState{};
         auto keywordInt = [&](const char* name, int fallback) {
-            auto* item = keywordParams.find(name);
-            return item ? static_cast<int>(item->val.ToLongLong()) : fallback;
+            auto* item = FindKeyword(keywordParams, name);
+            return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
         if (opName == "qwen3_apply_text_rope_packed") {
             const int heads = keywordInt("num_heads", 0);
             const int kvHeads = keywordInt("num_kv_heads", 0);
             const int headDim = keywordInt("head_dim", 0);
-            auto* thetaItem = keywordParams.find("rope_theta");
+            auto* thetaItem = FindKeyword(keywordParams, "rope_theta");
             const float theta = thetaItem
-                ? static_cast<float>(thetaItem->val.ToDouble())
+                ? static_cast<float>(thetaItem->second.ToDouble())
                 : 10000.0F;
             if (!state.query.get_node_shared_ptr() ||
                 !state.key.get_node_shared_ptr() ||
@@ -1639,9 +1688,9 @@ namespace Garnet
                 return X::Value();
             }
             state.query = ApplyRotary(
-                state.query, right->second, headDim, theta);
+                state.query, rightValue, headDim, theta);
             state.key = ApplyRotary(
-                state.key, right->second, headDim, theta);
+                state.key, rightValue, headDim, theta);
             auto packedHeads = std::make_shared<ov::opset13::Concat>(
                 ov::OutputVector{state.query, state.key, state.value}, 2);
             const auto packedShape = packedHeads->get_output_partial_shape(0);
@@ -1664,7 +1713,7 @@ namespace Garnet
             if (opName == "paged_kv_bind_key_pages" ||
                 opName == "paged_kv_bind_value_pages") {
                 const auto cache = m_implementation->cacheViews.find(
-                    input2.GetObj()->GetID());
+                    TensorId(input2));
                 if (cache == m_implementation->cacheViews.end()) {
                     m_error = "OpenVINO paged-KV binding is missing layer view";
                     return X::Value();
@@ -1677,17 +1726,17 @@ namespace Garnet
                 }
             }
             else if (opName == "paged_kv_bind_page_table") {
-                state.pageTable = right->second;
+                state.pageTable = rightValue;
             }
             else if (opName == "paged_kv_bind_context_length") {
-                state.contextLength = right->second;
+                state.contextLength = rightValue;
             }
             else {
-                state.slotPosition = right->second;
+                state.slotPosition = rightValue;
             }
-            m_implementation->tensors[outputId] = left->second;
+            m_implementation->tensors[outputId] = leftValue;
             m_implementation->states[outputId] = state;
-            m_implementation->lastOutput = left->second;
+            m_implementation->lastOutput = leftValue;
             return X::Value(true);
         }
         if (opName == "paged_attention_packed") {
@@ -1701,7 +1750,7 @@ namespace Garnet
                 return X::Value();
             }
             auto attended = GroupedAttention(
-                state.query, state.key, state.value, right->second,
+                state.query, state.key, state.value, rightValue,
                 heads, kvHeads, headDim, true);
             m_implementation->tensors[outputId] = attended;
             m_implementation->lastOutput = attended;
@@ -1709,24 +1758,24 @@ namespace Garnet
         }
         std::shared_ptr<ov::Node> node;
         if (opName == "add") {
-            node = std::make_shared<ov::opset13::Add>(left->second, right->second);
+            node = std::make_shared<ov::opset13::Add>(leftValue, rightValue);
         }
         else if (opName == "mul") {
-            node = std::make_shared<ov::opset13::Multiply>(left->second, right->second);
+            node = std::make_shared<ov::opset13::Multiply>(leftValue, rightValue);
         }
         else if (opName == "minus" || opName == "sub") {
-            node = std::make_shared<ov::opset13::Subtract>(left->second, right->second);
+            node = std::make_shared<ov::opset13::Subtract>(leftValue, rightValue);
         }
         else if (opName == "div") {
-            node = std::make_shared<ov::opset13::Divide>(left->second, right->second);
+            node = std::make_shared<ov::opset13::Divide>(leftValue, rightValue);
         }
         else if (opName == "matmul") {
             node = std::make_shared<ov::opset13::MatMul>(
-                left->second, right->second, false, false);
+                leftValue, rightValue, false, false);
         }
         else if (opName == "linear") {
             node = std::make_shared<ov::opset13::MatMul>(
-                left->second, right->second, false, true);
+                leftValue, rightValue, false, true);
         }
         else {
             m_error = "unsupported OpenVINO binary operation: " + opName;
@@ -1752,9 +1801,9 @@ namespace Garnet
             operation.index = static_cast<int>(m_analyzedOperations.size());
             operation.name = opName;
             if (input.IsObject()) {
-                operation.inputTensorIds.push_back(input.GetObj()->GetID());
+                operation.inputTensorIds.push_back(TensorId(input));
             }
-            if (output.IsObject()) operation.outputTensorId = output.GetObj()->GetID();
+            if (output.IsObject()) operation.outputTensorId = TensorId(output);
             m_analyzedOperations.push_back(std::move(operation));
             return X::Value(true);
         }
@@ -1762,31 +1811,31 @@ namespace Garnet
         return X::Value();
 #else
         if (!m_loweringActive || !m_implementation) return X::Value(true);
-        const auto source = m_implementation->tensors.find(input.GetObj()->GetID());
+        const auto source = m_implementation->tensors.find(TensorId(input));
         if (source == m_implementation->tensors.end()) {
             m_error = "OpenVINO unary input is not available: " + opName;
             return X::Value();
         }
-        const auto inputId = input.GetObj()->GetID();
-        const auto outputId = output.GetObj()->GetID();
+        const auto inputId = TensorId(input);
+        const auto outputId = TensorId(output);
         const auto sourceStateFound = m_implementation->states.find(inputId);
         Implementation::TensorState state =
             sourceStateFound != m_implementation->states.end()
                 ? sourceStateFound->second
                 : Implementation::TensorState{};
         auto keywordInt = [&](const char* name, int fallback) {
-            auto* item = keywordParams.find(name);
-            return item ? static_cast<int>(item->val.ToLongLong()) : fallback;
+            auto* item = FindKeyword(keywordParams, name);
+            return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
         if (opName == "qwen3_text_qkv_packed") {
             const int heads = keywordInt("num_heads", 0);
             const int kvHeads = keywordInt("num_kv_heads", 0);
             const int headDim = keywordInt("head_dim", 0);
-            auto* qName = keywordParams.find("q_weight_name");
-            auto* kName = keywordParams.find("k_weight_name");
-            auto* vName = keywordParams.find("v_weight_name");
-            auto* qNormName = keywordParams.find("q_norm_weight_name");
-            auto* kNormName = keywordParams.find("k_norm_weight_name");
+            auto* qName = FindKeyword(keywordParams, "q_weight_name");
+            auto* kName = FindKeyword(keywordParams, "k_weight_name");
+            auto* vName = FindKeyword(keywordParams, "v_weight_name");
+            auto* qNormName = FindKeyword(keywordParams, "q_norm_weight_name");
+            auto* kNormName = FindKeyword(keywordParams, "k_norm_weight_name");
             if (!qName || !kName || !vName || !qNormName || !kNormName ||
                 heads <= 0 || kvHeads <= 0 || headDim <= 0) {
                 m_error = "OpenVINO packed text QKV parameters are invalid";
@@ -1797,32 +1846,32 @@ namespace Garnet
             const auto qWeight = packedProjections
                 ? ov::Output<ov::Node>()
                 : m_implementation->GetWeight(
-                    qName->val.ToString(), m_error);
+                    qName->second.ToString(), m_error);
             const auto kWeight = packedProjections
                 ? ov::Output<ov::Node>()
                 : m_implementation->GetWeight(
-                    kName->val.ToString(), m_error);
+                    kName->second.ToString(), m_error);
             const auto vWeight = packedProjections
                 ? ov::Output<ov::Node>()
                 : m_implementation->GetWeight(
-                    vName->val.ToString(), m_error);
+                    vName->second.ToString(), m_error);
             const auto qkvWeight = packedProjections
                 ? m_implementation->GetCombinedWeight(
                     {
-                        qName->val.ToString(),
-                        kName->val.ToString(),
-                        vName->val.ToString(),
+                        qName->second.ToString(),
+                        kName->second.ToString(),
+                        vName->second.ToString(),
                     },
                     m_error)
                 : ov::Output<ov::Node>();
             const auto qNorm = m_implementation->GetWeight(
-                qNormName->val.ToString(), m_error);
+                qNormName->second.ToString(), m_error);
             const auto kNorm = m_implementation->GetWeight(
-                kNormName->val.ToString(), m_error);
+                kNormName->second.ToString(), m_error);
             if (!m_error.empty()) return X::Value();
-            auto* epsilonItem = keywordParams.find("norm_eps");
+            auto* epsilonItem = FindKeyword(keywordParams, "norm_eps");
             const float epsilon = epsilonItem
-                ? static_cast<float>(epsilonItem->val.ToDouble())
+                ? static_cast<float>(epsilonItem->second.ToDouble())
                 : 1.0e-6F;
             const auto shape = source->second.get_partial_shape();
             const int64_t batch = shape[0].get_length();
@@ -2079,7 +2128,38 @@ namespace Garnet
             return X::Value(true);
         }
         std::shared_ptr<ov::Node> node;
-        if (opName == "relu") {
+        if (opName == "neg") {
+            node = std::make_shared<ov::opset13::Negative>(source->second);
+        }
+        else if (opName == "exp") {
+            node = std::make_shared<ov::opset13::Exp>(source->second);
+        }
+        else if (opName == "reshape" || opName == "permute") {
+            const auto values = IntegerAttribute(keywordParams,
+                opName == "reshape" ? "shape" : "axes");
+            auto dimensions = ov::opset13::Constant::create(ov::element::i64,
+                ov::Shape{values.size()}, values);
+            if (opName == "reshape")
+                node = std::make_shared<ov::opset13::Reshape>(source->second, dimensions, false);
+            else
+                node = std::make_shared<ov::opset13::Transpose>(source->second, dimensions);
+        }
+        else if (opName == "sum") {
+            std::vector<int64_t> axes;
+            const auto* axis = FindKeyword(keywordParams, "axis");
+            if (axis && axis->second.raw().tag != X3_TAG_NONE) {
+                if (axis->second.raw().tag != X3_TAG_INT64)
+                    throw std::runtime_error("sum axis must be an integer");
+                axes.push_back(axis->second.ToLongLong());
+            } else {
+                const auto rank = source->second.get_partial_shape().rank().get_length();
+                for (int64_t i = 0; i < rank; ++i) axes.push_back(i);
+            }
+            auto dimensions = ov::opset13::Constant::create(ov::element::i64,
+                ov::Shape{axes.size()}, axes);
+            node = std::make_shared<ov::opset13::ReduceSum>(source->second, dimensions, false);
+        }
+        else if (opName == "relu") {
             node = std::make_shared<ov::opset13::Relu>(source->second);
         }
         else if (opName == "sigmoid") {
@@ -2099,13 +2179,13 @@ namespace Garnet
                     : ov::op::GeluApproximationMode::ERF);
         }
         else if (opName == "embedding") {
-            auto* weightName = keywordParams.find("weight_name");
+            auto* weightName = FindKeyword(keywordParams, "weight_name");
             if (!weightName) {
                 m_error = "OpenVINO embedding requires weight_name";
                 return X::Value();
             }
             const auto weight = m_implementation->GetWeight(
-                weightName->val.ToString(), m_error);
+                weightName->second.ToString(), m_error);
             if (!weight.get_node_shared_ptr()) return X::Value();
             const auto axis = ov::opset13::Constant::create(
                 ov::element::i64, ov::Shape{}, {0});
@@ -2118,7 +2198,7 @@ namespace Garnet
             opName == "v_proj" || opName == "o_proj" ||
             opName == "gate_proj" || opName == "up_proj" ||
             opName == "down_proj" || opName == "lm_head") {
-            auto* weightName = keywordParams.find("weight_name");
+            auto* weightName = FindKeyword(keywordParams, "weight_name");
             if (!weightName) {
                 m_error = "OpenVINO " + opName + " requires weight_name";
                 return X::Value();
@@ -2136,15 +2216,15 @@ namespace Garnet
                 return X::Value(true);
             }
             const auto weight = m_implementation->GetWeight(
-                weightName->val.ToString(), m_error);
+                weightName->second.ToString(), m_error);
             if (!weight.get_node_shared_ptr()) return X::Value();
             auto projected = std::make_shared<ov::opset13::MatMul>(
                 source->second, weight, false, true);
-            auto* biasName = keywordParams.find("bias_name");
-            if (biasName && !biasName->val.IsNone() &&
-                !biasName->val.ToString().empty()) {
+            auto* biasName = FindKeyword(keywordParams, "bias_name");
+            if (biasName && !biasName->second.IsNone() &&
+                !biasName->second.ToString().empty()) {
                 const auto bias = m_implementation->GetWeight(
-                    biasName->val.ToString(), m_error);
+                    biasName->second.ToString(), m_error);
                 if (!bias.get_node_shared_ptr()) return X::Value();
                 node = std::make_shared<ov::opset13::Add>(projected, bias);
             }
@@ -2153,13 +2233,13 @@ namespace Garnet
             }
         }
         else if (opName == "rms_norm") {
-            auto* weightName = keywordParams.find("weight_name");
+            auto* weightName = FindKeyword(keywordParams, "weight_name");
             if (!weightName) {
                 m_error = "OpenVINO rms_norm requires weight_name";
                 return X::Value();
             }
             const auto scale = m_implementation->GetWeight(
-                weightName->val.ToString(), m_error);
+                weightName->second.ToString(), m_error);
             if (!scale.get_node_shared_ptr()) return X::Value();
             const auto sourceType = source->second.get_element_type();
             auto sourceFloat = std::make_shared<ov::opset13::Convert>(
@@ -2172,9 +2252,9 @@ namespace Garnet
                 ov::element::i64, ov::Shape{1}, {lastAxis});
             auto mean = std::make_shared<ov::opset13::ReduceMean>(
                 square, axes, true);
-            auto* epsilonItem = keywordParams.find("eps");
+            auto* epsilonItem = FindKeyword(keywordParams, "eps");
             const float epsilon = epsilonItem
-                ? static_cast<float>(epsilonItem->val.ToDouble())
+                ? static_cast<float>(epsilonItem->second.ToDouble())
                 : 1.0e-6F;
             const auto epsilonNode = ov::opset13::Constant::create(
                 ov::element::f32, ov::Shape{}, {epsilon});
@@ -2191,8 +2271,8 @@ namespace Garnet
                 scaled, sourceType);
         }
         else if (opName == "qwen3_mlp_gate_up_swiglu_packed") {
-            auto* gateName = keywordParams.find("gate_weight_name");
-            auto* upName = keywordParams.find("up_weight_name");
+            auto* gateName = FindKeyword(keywordParams, "gate_weight_name");
+            auto* upName = FindKeyword(keywordParams, "up_weight_name");
             if (!gateName || !upName) {
                 m_error =
                     "OpenVINO packed SwiGLU requires gate/up weight names";
@@ -2203,16 +2283,16 @@ namespace Garnet
             const auto gateWeight = packedProjections
                 ? ov::Output<ov::Node>()
                 : m_implementation->GetWeight(
-                    gateName->val.ToString(), m_error);
+                    gateName->second.ToString(), m_error);
             const auto upWeight = packedProjections
                 ? ov::Output<ov::Node>()
                 : m_implementation->GetWeight(
-                    upName->val.ToString(), m_error);
+                    upName->second.ToString(), m_error);
             const auto gateUpWeight = packedProjections
                 ? m_implementation->GetCombinedWeight(
                     {
-                        gateName->val.ToString(),
-                        upName->val.ToString(),
+                        gateName->second.ToString(),
+                        upName->second.ToString(),
                     },
                     m_error)
                 : ov::Output<ov::Node>();

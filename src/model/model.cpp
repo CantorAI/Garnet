@@ -1,4 +1,5 @@
 #include "model.h"
+#include "../entry/native_values.h"
 #include "trt_builder.h"
 #include "../tensor/garnet_tensor.h"
 #include "../tensor/tensor_helper.h"
@@ -46,38 +47,38 @@ namespace Garnet
     {
         X::Value MakeShapeList(X::Tensor& tensor)
         {
-            X::V<X::XList> dims;
-            int dimCount = tensor->GetDimCount();
+            auto dims = X::Value::List(tensor.host());
+            int dimCount = tensor.Info().rank;
             for (int i = 0; i < dimCount; ++i) {
-                X::Value dimValue(static_cast<long long>(tensor->GetDimSize(i)));
-                dims->AddItem(dimValue);
+                X::Value dimValue(static_cast<long long>(tensor.Info().shape[i]));
+                if (!dims.Append(dimValue)) throw X::Error("cannot append tensor dimension");
             }
             return dims;
         }
 
-        X::Value TensorSummary(X::Value value)
+        X::Value TensorSummary(X3PackageHost* host, X::Value value)
         {
-            X::Dict summary;
-            bool isTensor = value.IsTensor();
-            summary->Set("is_tensor", X::Value(isTensor));
+            auto summary = X::Value::Dict(host);
+            bool isTensor = X::Tensor::IsTensor(value);
+            summary.SetItem("is_tensor", X::Value(isTensor));
             if (!isTensor) {
-                summary->Set("gpu", X::Value(false));
+                summary.SetItem("gpu", X::Value(false));
                 return summary;
             }
 
             X::Tensor tensor(value);
             void* gpuMemory = TensorHelper::GetGPUMemory(tensor);
-            summary->Set("gpu", X::Value(gpuMemory != nullptr));
-            summary->Set("shape", MakeShapeList(tensor));
-            summary->Set("dtype", X::Value(static_cast<int>(tensor->GetDataType())));
-            summary->Set("bytes", X::Value(static_cast<long long>(tensor->GetDataSize())));
-            summary->Set("count", X::Value(static_cast<long long>(tensor->GetCount())));
+            summary.SetItem("gpu", X::Value(gpuMemory != nullptr));
+            summary.SetItem("shape", MakeShapeList(tensor));
+            summary.SetItem("dtype", X::Value(static_cast<int>(tensor.Info().dtype)));
+            summary.SetItem("bytes", X::Value(static_cast<long long>(tensor.Info().byte_size)));
+            summary.SetItem("count", X::Value(static_cast<long long>(TensorCount(tensor))));
             return summary;
         }
 
         bool HasGPUTensor(X::Value value)
         {
-            if (!value.IsTensor()) {
+            if (!X::Tensor::IsTensor(value)) {
                 return false;
             }
             X::Tensor tensor(value);
@@ -89,50 +90,34 @@ namespace Garnet
             if (!value.IsValid()) {
                 return X::Value();
             }
-            return value[name];
+            return FindField(value, name);
         }
 
-        X::Value MakeInt64Tensor1D(const std::vector<long long>& values, bool ensureGpu)
+        X::Value MakeInt64Tensor1D(X3PackageHost* host, const std::vector<long long>& values, bool ensureGpu)
         {
-            X::Tensor tensor;
-            X::Port::vector<int> shape(1);
-            shape.push_back(static_cast<int>(values.size()));
-            tensor->SetDataType(X::TensorDataType::LONGLONG);
-            tensor->SetShape(shape);
-
-            X::Value init;
-            if (!tensor->Create(init) || tensor->GetData() == nullptr) {
-                std::cout << "[Model] failed to allocate INT64 tensor count=" << values.size() << std::endl;
-                return X::Value();
-            }
-            if (!values.empty()) {
-                std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
-            }
-            if (ensureGpu && TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-                std::cout << "[Model] failed to move INT64 tensor to GPU count=" << values.size() << std::endl;
-                return X::Value();
-            }
-            return X::Value(tensor);
+            const std::vector<int64_t> shape{static_cast<int64_t>(values.size())};
+            return ensureGpu ? TensorHelper::CreateGPU(host, X3_TENSOR_INT64, shape, values.data()) :
+                X::Tensor::Create(host, X3_TENSOR_INT64, shape, values.data(), values.size() * sizeof(long long));
         }
 
-        int GetIntArg(X::ARGS& params, X::KWARGS& kwParams, size_t pos, const char* name, int defaultValue)
+        int GetIntArg(const X::ARGS& params, const X::KWARGS& kwParams, size_t pos, const char* name, int defaultValue)
         {
             for (auto& item : kwParams) {
-                if (std::string(item.key) == name) {
-                    return static_cast<int>(item.val.ToLongLong());
+                if (std::string(item.first) == name) {
+                    return CheckedInt(item.second, "argument");
                 }
             }
             if (params.size() > pos) {
-                return static_cast<int>(params[pos].ToLongLong());
+                return CheckedInt(params[pos], "argument");
             }
             return defaultValue;
         }
 
-        long long GetLongLongArg(X::ARGS& params, X::KWARGS& kwParams, size_t pos, const char* name, long long defaultValue)
+        long long GetLongLongArg(const X::ARGS& params, const X::KWARGS& kwParams, size_t pos, const char* name, long long defaultValue)
         {
             for (auto& item : kwParams) {
-                if (std::string(item.key) == name) {
-                    return item.val.ToLongLong();
+                if (std::string(item.first) == name) {
+                    return item.second.ToLongLong();
                 }
             }
             if (params.size() > pos) {
@@ -141,24 +126,24 @@ namespace Garnet
             return defaultValue;
         }
 
-        bool GetBoolArg(X::ARGS& params, X::KWARGS& kwParams, size_t pos, const char* name, bool defaultValue)
+        bool GetBoolArg(const X::ARGS& params, const X::KWARGS& kwParams, size_t pos, const char* name, bool defaultValue)
         {
             for (auto& item : kwParams) {
-                if (std::string(item.key) == name) {
-                    return item.val.ToBool();
+                if (std::string(item.first) == name) {
+                    return (item.second.ToLongLong() != 0);
                 }
             }
             if (params.size() > pos) {
-                return params[pos].ToBool();
+                return params[pos].ToLongLong() != 0;
             }
             return defaultValue;
         }
 
-        X::Value GetValueArg(X::ARGS& params, X::KWARGS& kwParams, size_t pos, const char* name)
+        X::Value GetValueArg(const X::ARGS& params, const X::KWARGS& kwParams, size_t pos, const char* name)
         {
             for (auto& item : kwParams) {
-                if (std::string(item.key) == name) {
-                    return item.val;
+                if (std::string(item.first) == name) {
+                    return item.second;
                 }
             }
             if (params.size() > pos) {
@@ -172,15 +157,12 @@ namespace Garnet
             if (!value.IsObject()) {
                 return;
             }
-            if (value.GetObj()->GetType() == X::ObjType::Dict) {
-                X::Dict dict(value);
-                dict->Set(name, field);
-                return;
-            }
-            value.SetPropValue(name, field);
+            if (!(value.IsDict() ? value.SetItem(name, field) : value.SetAttr(name, field)))
+                throw X::Error("cannot update request field");
         }
 
         X::Value CreateDeviceKVCacheValue(
+            X3PackageHost* host,
             int maxTokens,
             int pageSize,
             int qHeads,
@@ -231,19 +213,19 @@ namespace Garnet
                 * static_cast<long long>(headDim)
                 * static_cast<long long>(sizeof(float));
 
-            X::Dict result;
-            result->Set("handle", X::Value(handle));
-            result->Set("max_tokens", X::Value(maxTokens));
-            result->Set("logical_length", X::Value(0));
-            result->Set("page_size", X::Value(pageSize));
-            result->Set("logical_pages", X::Value(logicalPageCount));
-            result->Set("physical_pages", X::Value(physicalPageCount));
-            result->Set("q_heads", X::Value(qHeads));
-            result->Set("kv_heads", X::Value(kvHeads));
-            result->Set("head_dim", X::Value(headDim));
-            result->Set("key_bytes", X::Value(bytesPerArena));
-            result->Set("value_bytes", X::Value(bytesPerArena));
-            result->Set("status", X::Value("ok"));
+            auto result = X::Value::Dict(host);
+            result.SetItem("handle", X::Value(handle));
+            result.SetItem("max_tokens", X::Value(maxTokens));
+            result.SetItem("logical_length", X::Value(0));
+            result.SetItem("page_size", X::Value(pageSize));
+            result.SetItem("logical_pages", X::Value(logicalPageCount));
+            result.SetItem("physical_pages", X::Value(physicalPageCount));
+            result.SetItem("q_heads", X::Value(qHeads));
+            result.SetItem("kv_heads", X::Value(kvHeads));
+            result.SetItem("head_dim", X::Value(headDim));
+            result.SetItem("key_bytes", X::Value(bytesPerArena));
+            result.SetItem("value_bytes", X::Value(bytesPerArena));
+            result.SetItem("status", "ok");
             return result;
         }
 
@@ -253,11 +235,11 @@ namespace Garnet
                 return 0;
             }
             if (value.IsObject()) {
-                X::Value handle = value["handle"];
+                X::Value handle = FindField(value, "handle");
                 if (handle.IsValid()) {
                     return handle.ToLongLong();
                 }
-                handle = value["kv_handle"];
+                handle = FindField(value, "kv_handle");
                 if (handle.IsValid()) {
                     return handle.ToLongLong();
                 }
@@ -270,15 +252,15 @@ namespace Garnet
             if (!value.IsValid() || !value.IsObject()) {
                 return 0;
             }
-            X::Value logicalLength = value["logical_length"];
+            X::Value logicalLength = FindField(value, "logical_length");
             if (logicalLength.IsValid()) {
                 return static_cast<int>(logicalLength.ToLongLong());
             }
-            logicalLength = value["kv_logical_length"];
+            logicalLength = FindField(value, "kv_logical_length");
             if (logicalLength.IsValid()) {
                 return static_cast<int>(logicalLength.ToLongLong());
             }
-            X::Value kvCache = value["kv_cache"];
+            X::Value kvCache = FindField(value, "kv_cache");
             if (kvCache.IsValid()) {
                 return GetKVLogicalLengthFromValue(kvCache);
             }
@@ -292,7 +274,7 @@ namespace Garnet
             }
             SetObjectField(value, "logical_length", X::Value(logicalLength));
             SetObjectField(value, "kv_logical_length", X::Value(logicalLength));
-            X::Value kvCache = value["kv_cache"];
+            X::Value kvCache = FindField(value, "kv_cache");
             if (kvCache.IsValid()) {
                 SetKVLogicalLengthOnValue(kvCache, logicalLength);
             }
@@ -305,9 +287,10 @@ namespace Garnet
             int qWidth,
             const char* caller)
         {
+            ValidateDenseTensor(q);
             if (handle <= 0 || sequenceLength <= 0 || qWidth <= 0 ||
-                q->GetDataType() != X::TensorDataType::FLOAT32 || q->GetDimCount() != 2 || q->GetDimSize(0) < 1 ||
-                q->GetDimSize(1) < qWidth) {
+                q.Info().dtype != X3_TENSOR_FLOAT32 || q.Info().rank != 2 || q.Info().shape[0] < 1 ||
+                q.Info().shape[1] < qWidth) {
                 std::cout << "[Model] " << caller << " invalid arguments." << std::endl;
                 return X::Value();
             }
@@ -316,14 +299,15 @@ namespace Garnet
                 std::cout << "[Model] " << caller << " failed to ensure q GPU memory." << std::endl;
                 return X::Value();
             }
+            auto qUse = q.Acquire();
             auto* qBase = static_cast<const float*>(TensorHelper::GetGPUMemory(q));
             if (!qBase) {
                 std::cout << "[Model] " << caller << " q tensor has no GPU memory." << std::endl;
                 return X::Value();
             }
 
-            int qStride = static_cast<int>(q->GetDimSize(1));
-            const float* deviceQ = qBase + static_cast<size_t>(q->GetDimSize(0) - 1) * static_cast<size_t>(qStride);
+            int qStride = static_cast<int>(q.Info().shape[1]);
+            const float* deviceQ = qBase + static_cast<size_t>(q.Info().shape[0] - 1) * static_cast<size_t>(qStride);
             size_t outputBytes = static_cast<size_t>(qWidth) * sizeof(float);
             float* deviceOutput = nullptr;
             cudaError_t err = cudaMalloc(&deviceOutput, outputBytes);
@@ -346,38 +330,39 @@ namespace Garnet
                 return X::Value();
             }
 
-            X::Tensor output;
-            output->SetDataType(X::TensorDataType::FLOAT32);
-            X::Port::vector<int> outputShape(2);
-            outputShape.push_back(1);
-            outputShape.push_back(qWidth);
-            output->SetShape(outputShape);
-            if (TensorHelper::AttachGPUMemory(output, deviceOutput) != TensorOpStatus::Success) {
-                cudaFree(deviceOutput);
-                std::cout << "[Model] " << caller << " failed to attach output GPU memory." << std::endl;
-                return X::Value();
-            }
-            return X::Value(output);
+            int device = 0;
+            cudaGetDevice(&device);
+            const int64_t shape[]{1, qWidth};
+            const int64_t strides[]{qWidth * static_cast<int64_t>(sizeof(float)), sizeof(float)};
+            X3TensorInfo info{};
+            info.size = sizeof(info); info.dtype = X3_TENSOR_FLOAT32; info.rank = 2;
+            info.shape = shape; info.strides = strides; info.data = deviceOutput;
+            info.byte_size = outputBytes; info.device_type = TensorHelper::CudaDevice; info.device_id = device;
+            try { return TensorHelper::WrapGPU(q.host(), info, deviceOutput, device); }
+            catch (...) { cudaFree(deviceOutput); throw; }
         }
     }
 
-    X::Value Model::Access(X::Port::vector<X::Value>& IdxAry)
+    X::Value Model::Access(X::Value index)
     {
-		return mModel.GetObjectValue(IdxAry);
+        auto value = mModel.GetItem(index);
+        if (!value.IsValid()) throw X::Error(Host()->runtime_last_error(Host()->runtime));
+        return value;
     }
-    void Model::Tokenizer(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::Tokenizer(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() < 1) {
             std::cout << "[Model] tokenizer requires input text." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         bool addSpecialTokens = false;
         for (auto& item : kwParams) {
-            if (std::string(item.key) == "add_special_tokens") {
-                addSpecialTokens = item.val.ToBool();
+            if (std::string(item.first) == "add_special_tokens") {
+                addSpecialTokens = (item.second.ToLongLong() != 0);
             }
         }
 
@@ -385,8 +370,8 @@ namespace Garnet
         auto tokenizer = Tokenization::GetCachedQwenTokenizer(mModelPath, &error);
         if (!tokenizer) {
             std::cout << "[Model] native tokenizer load failed: " << error << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         std::vector<int64_t> ids64 = tokenizer->Encode(params[0].ToString(), addSpecialTokens);
@@ -399,65 +384,69 @@ namespace Garnet
             attentionMask.push_back(1LL);
         }
 
-        X::Value tensorIds = MakeInt64Tensor1D(inputIds, true);
-        X::Value tensorAttentionMask = MakeInt64Tensor1D(attentionMask, true);
-        if (!tensorIds.IsTensor() || !tensorAttentionMask.IsTensor()) {
-            retValue = X::Value();
-            return;
+        X::Value tensorIds = MakeInt64Tensor1D(Host(), inputIds, true);
+        X::Value tensorAttentionMask = MakeInt64Tensor1D(Host(), attentionMask, true);
+        if (!X::Tensor::IsTensor(tensorIds) || !X::Tensor::IsTensor(tensorAttentionMask)) {
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
-        X::Dict dictInputs;
-        dictInputs->Set("input_ids", tensorIds);
-        dictInputs->Set("attention_mask", tensorAttentionMask);
-        dictInputs->Set("token_count", X::Value(static_cast<int>(inputIds.size())));
-        dictInputs->Set("tokenizer", X::Value("native_qwen"));
-        retValue = dictInputs;
+        auto dictInputs = X::Value::Dict(Host());
+        dictInputs.SetItem("input_ids", tensorIds);
+        dictInputs.SetItem("attention_mask", tensorAttentionMask);
+        dictInputs.SetItem("token_count", X::Value(static_cast<int>(inputIds.size())));
+        dictInputs.SetItem("tokenizer", X::Value::String(Host(), "native_qwen"));
+        retValue = NativeValue(Host(), dictInputs);
+        return retValue;
     }
 
-    void Model::Detokenizer(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::Detokenizer(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() < 1) {
             std::cout << "[Model] detokenizer requires token ids." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         bool skipSpecialTokens = true;
         for (auto& item : kwParams) {
-            if (std::string(item.key) == "skip_special_tokens") {
-                skipSpecialTokens = item.val.ToBool();
+            if (std::string(item.first) == "skip_special_tokens") {
+                skipSpecialTokens = (item.second.ToLongLong() != 0);
             }
         }
 
         std::vector<int64_t> ids;
         X::Value tokenValue = params[0];
-        if (tokenValue.IsTensor()) {
+        if (X::Tensor::IsTensor(tokenValue)) {
             X::Tensor tokenTensor(tokenValue);
-            if (tokenTensor->GetDataType() != X::TensorDataType::LONGLONG) {
+        ValidateDenseTensor(tokenTensor);
+            if (tokenTensor.Info().dtype != X3_TENSOR_INT64) {
                 std::cout << "[Model] detokenizer tensor must be INT64/LONGLONG." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
             if (TensorHelper::GetGPUMemory(tokenTensor) != nullptr &&
                 TensorHelper::CopyResultFromGPU(tokenTensor) != TensorOpStatus::Success) {
                 std::cout << "[Model] detokenizer failed to copy final token ids from GPU." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
-            auto* data = reinterpret_cast<long long*>(tokenTensor->GetData());
-            long long count = tokenTensor->GetCount();
+            auto tokenUse = tokenTensor.Acquire();
+            auto* data = reinterpret_cast<long long*>(tokenTensor.Info().data);
+            long long count = TensorCount(tokenTensor);
             ids.reserve(static_cast<size_t>(count));
             for (long long i = 0; i < count; ++i) {
                 ids.push_back(static_cast<int64_t>(data[i]));
             }
         }
         else if (tokenValue.IsList()) {
-            X::List list(tokenValue);
-            long long count = list->Size();
+            X::Value list(tokenValue);
+            long long count = list.Size();
             ids.reserve(static_cast<size_t>(count));
             for (long long i = 0; i < count; ++i) {
-                ids.push_back(static_cast<int64_t>(list->Get(i).ToLongLong()));
+                ids.push_back(static_cast<int64_t>(list.Get(i).ToLongLong()));
             }
         }
         else {
@@ -468,96 +457,103 @@ namespace Garnet
         auto tokenizer = Tokenization::GetCachedQwenTokenizer(mModelPath, &error);
         if (!tokenizer) {
             std::cout << "[Model] native tokenizer load failed: " << error << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         std::string text = tokenizer->Decode(ids, skipSpecialTokens);
-        X::Dict result;
-        result->Set("text", X::Value(text));
-        result->Set("token_count", X::Value(static_cast<int>(ids.size())));
-        result->Set("tokenizer", X::Value("native_qwen"));
-        retValue = result;
+        auto result = X::Value::Dict(Host());
+        result.SetItem("text", X::Value::String(Host(), text));
+        result.SetItem("token_count", X::Value(static_cast<int>(ids.size())));
+        result.SetItem("tokenizer", X::Value::String(Host(), "native_qwen"));
+        retValue = NativeValue(Host(), result);
+        return retValue;
     }
 
-    void Model::DebugProbe(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::DebugProbe(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() < 1) {
             std::cout << "[Model] debug_probe requires a probe key." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         std::string key = params[0].ToString();
         if (mCompiledRuntime) {
             X::Value argument = params.size() >= 2 ? params[1] : X::Value();
-            retValue = mCompiledRuntime->DebugProbe(key, argument);
-            return;
+            retValue = NativeValue(Host(), mCompiledRuntime->DebugProbe(key, argument));
+            return retValue;
         }
         if (key == "logits_top1") {
-            X::ARGS sampleParams(1);
+            X::ARGS sampleParams;
+            sampleParams.reserve(1);
             if (params.size() >= 2) {
                 sampleParams.push_back(params[1]);
             }
-            SampleLogits(rt, pContext, sampleParams, kwParams, retValue);
-            if (retValue.IsObject() && retValue.GetObj()->GetType() == X::ObjType::Dict) {
-                X::Dict sample(retValue);
-                X::Dict result;
-                result->Set("probe", X::Value(key));
-                result->Set("status", sample["status"]);
-                result->Set("token_id", sample["token_id"]);
-                result->Set("token_value", sample["token_value"]);
-                result->Set("rows", sample["rows"]);
-                result->Set("vocab_size", sample["vocab_size"]);
-                retValue = result;
+            retValue = SampleLogits(sampleParams, kwParams);
+            if (retValue.IsObject() && retValue.IsDict()) {
+                X::Value sample(retValue);
+                auto result = X::Value::Dict(Host());
+                result.SetItem("probe", X::Value::String(Host(), key));
+                result.SetItem("status", sample["status"]);
+                result.SetItem("token_id", sample["token_id"]);
+                result.SetItem("token_value", sample["token_value"]);
+                result.SetItem("rows", sample["rows"]);
+                result.SetItem("vocab_size", sample["vocab_size"]);
+                retValue = NativeValue(Host(), result);
             }
-            return;
+            return retValue;
         }
 
         std::cout << "[Model] unknown debug_probe key: " << key << std::endl;
-        retValue = X::Value();
+        retValue = NativeValue(Host(), X::Value());
+        return retValue;
     }
 
-    void Model::SampleLogits(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::SampleLogits(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 1 || !params[0].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 1 || !X::Tensor::IsTensor(params[0])) {
             std::cout << "[Model] sample_logits requires a logits tensor." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         X::Tensor logits(params[0]);
-        if (logits->GetDataType() != X::TensorDataType::FLOAT32 || logits->GetDimCount() < 1 || logits->GetDimCount() > 2) {
+        ValidateDenseTensor(logits);
+        if (logits.Info().dtype != X3_TENSOR_FLOAT32 || logits.Info().rank < 1 || logits.Info().rank > 2) {
             std::cout << "[Model] sample_logits expects FLOAT32 logits shaped [vocab] or [tokens, vocab]." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         int rows = 1;
         int vocabSize = 0;
-        if (logits->GetDimCount() == 1) {
-            vocabSize = static_cast<int>(logits->GetDimSize(0));
+        if (logits.Info().rank == 1) {
+            vocabSize = static_cast<int>(logits.Info().shape[0]);
         }
         else {
-            rows = static_cast<int>(logits->GetDimSize(0));
-            vocabSize = static_cast<int>(logits->GetDimSize(1));
+            rows = static_cast<int>(logits.Info().shape[0]);
+            vocabSize = static_cast<int>(logits.Info().shape[1]);
         }
         if (rows <= 0 || vocabSize <= 0) {
             std::cout << "[Model] sample_logits invalid logits shape." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         if (TensorHelper::EnsureGPUMemory(logits) != TensorOpStatus::Success) {
             std::cout << "[Model] sample_logits failed to ensure logits GPU memory." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
+        auto logitsUse = logits.Acquire();
         auto* deviceLogits = static_cast<const float*>(TensorHelper::GetGPUMemory(logits));
         if (!deviceLogits) {
             std::cout << "[Model] sample_logits logits tensor has no GPU memory." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         long long* deviceTokenId = nullptr;
@@ -579,8 +575,8 @@ namespace Garnet
             if (deviceTokenId) cudaFree(deviceTokenId);
             if (deviceTokenValue) cudaFree(deviceTokenValue);
             std::cout << "[Model] sample_logits failed: " << cudaGetErrorString(err) << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         if (deviceTokenValue) {
             cudaFree(deviceTokenValue);
@@ -590,13 +586,14 @@ namespace Garnet
             cudaFree(deviceTokenId);
         }
 
-        X::Dict result;
-        result->Set("status", X::Value("ok"));
-        result->Set("token_id", X::Value(hostTokenId));
-        result->Set("token_value", X::Value(hostTokenValue));
-        result->Set("rows", X::Value(rows));
-        result->Set("vocab_size", X::Value(vocabSize));
-        retValue = result;
+        auto result = X::Value::Dict(Host());
+        result.SetItem("status", X::Value::String(Host(), "ok"));
+        result.SetItem("token_id", X::Value(hostTokenId));
+        result.SetItem("token_value", X::Value(hostTokenValue));
+        result.SetItem("rows", X::Value(rows));
+        result.SetItem("vocab_size", X::Value(vocabSize));
+        retValue = NativeValue(Host(), result);
+        return retValue;
     }
 
     bool Model::InitializeCompiledRuntime(
@@ -611,76 +608,137 @@ namespace Garnet
         const std::string& backend,
         const std::string& precision)
     {
-        mCompiledRuntime = std::make_shared<CompiledModelRuntime>();
+        mCompiledRuntime = std::make_shared<CompiledModelRuntime>(Host());
+        mCompiledMode = true;
         return mCompiledRuntime->Initialize(
             rootXModel, cacheDirectory, weightsLocation, entryFunction, frontend,
             inputShapes, inputDataTypes, partitionOptions, backend, precision);
     }
 
-    void Model::RuntimeStatus(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::RuntimeStatus(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (!mCompiledRuntime) {
-            X::Dict status;
-            status->Set("mode", X::Value("legacy"));
-            status->Set("state", X::Value("legacy_runner"));
-            status->Set("ready", X::Value(m_engine.IsValid()));
-            retValue = status;
-            return;
+            auto status = X::Value::Dict(Host());
+            status.SetItem("mode", X::Value::String(Host(), mCompiledMode ? "compiled_xmodel" : "legacy"));
+            status.SetItem("state", X::Value::String(Host(), mCompiledMode ? "released" : "legacy_runner"));
+            status.SetItem("ready", X::Value(!mCompiledMode && GetEngine().IsValid()));
+            retValue = NativeValue(Host(), status);
+            return retValue;
         }
-        retValue = mCompiledRuntime->Status();
+        retValue = NativeValue(Host(), mCompiledRuntime->Status());
+        return retValue;
     }
 
-    void Model::ReleaseRuntime(X::XRuntime*, X::XObj*,
-        X::ARGS&, X::KWARGS&, X::Value& retValue)
+    void Model::SetEngine(X::Value engine)
     {
+        FixtureExecution retired;
+        {
+            std::lock_guard<std::mutex> guard(mFixtureMutex);
+            retired = std::move(mFixtureExecution);
+            mFixtureExecution = {};
+            m_engine = std::move(engine);
+        }
+    }
+
+    X::Value Model::GetEngine() const
+    {
+        std::lock_guard<std::mutex> guard(mFixtureMutex);
+        return m_engine;
+    }
+
+    void Model::ReleaseFixtureExecution()
+    {
+        FixtureExecution retired;
+        {
+            std::lock_guard<std::mutex> guard(mFixtureMutex);
+            retired = std::move(mFixtureExecution);
+            mFixtureExecution = {};
+        }
+    }
+
+    Model::FixtureExecution Model::RetainFixtureExecution()
+    {
+        std::lock_guard<std::mutex> guard(mFixtureMutex);
+        const std::string path = m_engine.ToString();
+        if (path.empty()) throw X::Error("fixture model has no engine");
+        if (path == "cuda_text_mlp" || path == "cuda_exact_vision_attention" ||
+            path == "cuda_linear_transpose" || path == "cuda_linear_bias_transpose")
+            return {path, {}};
+        if (mFixtureExecution.owner && mFixtureExecution.path == path)
+            return mFixtureExecution;
+        std::string error;
+        auto owner = TRTBuilder::RetainCachedExecution(path, nullptr, error);
+        if (!owner) throw X::Error(error.empty() ? "failed to retain fixture engine" : error);
+        mFixtureExecution = {path, std::move(owner)};
+        return mFixtureExecution;
+    }
+
+    X::Value Model::ReleaseRuntime(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (mCompiledRuntime) {
             mCompiledRuntime->ReleaseDeviceMemory();
             mCompiledRuntime.reset();
         }
-        retValue = X::Value(true);
+        ReleaseFixtureExecution();
+        retValue = NativeValue(Host(), X::Value(true));
+        return retValue;
     }
 
-    void Model::Forward(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::Forward(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (mCompiledRuntime) {
             X::Value request = params.size() == 0 ? X::Value() : params[0];
-            retValue = mCompiledRuntime->Forward(request);
-            return;
+            retValue = NativeValue(Host(), mCompiledRuntime->Forward(request));
+            return retValue;
+        }
+        if (mCompiledMode) {
+            auto result = X::Value::Dict(Host());
+            result.SetItem("status", X::Value::String(Host(), "error"));
+            result.SetItem("error_code", X::Value::String(Host(), "compiled_graph_not_ready"));
+            return result;
         }
         std::cout << "[Model] Executing forward pass..." << std::endl;
-        if (!m_engine.IsValid()) {
+        if (!GetEngine().IsValid()) {
             std::cout << "[Model] No compiled engine attached." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         if (params.size() < 1) {
             std::cout << "[Model] Forward requires an input tensor." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        if (!mModel.IsObject() || mModel.GetObj()->GetType() != X::ObjType::Dict) {
+        if (!mModel.IsObject() || !mModel.IsDict()) {
             std::cout << "[Model] Loaded weights are not a dictionary." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        X::Dict weights(mModel);
-        TRTBuilder builder;
-        X::Value gate = weights["language_model.layers.0.mlp.gate_proj.weight"];
-        X::Value up = weights["language_model.layers.0.mlp.up_proj.weight"];
-        X::Value down = weights["language_model.layers.0.mlp.down_proj.weight"];
+        X::Value weights(mModel);
+        // Keep a call-local owner even if release_runtime or engine replacement
+        // drops the model's persistent reference while this call is executing.
+        const auto fixture = RetainFixtureExecution();
+        TRTBuilder builder(Host());
+        X::Value gate = FindField(weights, "language_model.layers.0.mlp.gate_proj.weight");
+        X::Value up = FindField(weights, "language_model.layers.0.mlp.up_proj.weight");
+        X::Value down = FindField(weights, "language_model.layers.0.mlp.down_proj.weight");
         if ((mSubgraph == "qwen3_text_mlp" || mSubgraph.empty()) && gate.IsValid() && up.IsValid() && down.IsValid()) {
-            retValue = builder.RunTextMLPEngine(m_engine.ToString(), params[0], gate, up, down);
-            return;
+            retValue = NativeValue(Host(), builder.RunTextMLPEngine(fixture.path, params[0], gate, up, down));
+            return retValue;
         }
 
-        X::Value qProj = weights["language_model.layers.0.self_attn.q_proj.weight"];
-        X::Value kProj = weights["language_model.layers.0.self_attn.k_proj.weight"];
-        X::Value vProj = weights["language_model.layers.0.self_attn.v_proj.weight"];
-        X::Value qNorm = weights["language_model.layers.0.self_attn.q_norm.weight"];
-        X::Value kNorm = weights["language_model.layers.0.self_attn.k_norm.weight"];
+        X::Value qProj = FindField(weights, "language_model.layers.0.self_attn.q_proj.weight");
+        X::Value kProj = FindField(weights, "language_model.layers.0.self_attn.k_proj.weight");
+        X::Value vProj = FindField(weights, "language_model.layers.0.self_attn.v_proj.weight");
+        X::Value qNorm = FindField(weights, "language_model.layers.0.self_attn.q_norm.weight");
+        X::Value kNorm = FindField(weights, "language_model.layers.0.self_attn.k_norm.weight");
         if (mSubgraph == "text_rope_apply" && params.size() >= 3) {
-            X::Value ropeOutput = builder.RunTextRoPEEngine(m_engine.ToString(), params[0], params[1], params[2]);
+            X::Value ropeOutput = builder.RunTextRoPEEngine(fixture.path, params[0], params[1], params[2]);
             X::Value kvOwner = GetValueArg(params, kwParams, 3, "kv_cache");
             if (!kvOwner.IsValid()) {
                 kvOwner = GetValueArg(params, kwParams, 3, "request");
@@ -690,34 +748,36 @@ namespace Garnet
                 kvHandle = GetLongLongArg(params, kwParams, 3, "kv_handle", 0);
             }
             if (kvHandle <= 0) {
-                retValue = ropeOutput;
-                return;
+                retValue = NativeValue(Host(), ropeOutput);
+                return retValue;
             }
 
-            if (!ropeOutput.IsTensor()) {
+            if (!X::Tensor::IsTensor(ropeOutput)) {
                 std::cout << "[Model] text_rope_apply kv write expected TensorRT tensor output." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
             X::Tensor qkv(ropeOutput);
-            int tokenCount = GetIntArg(params, kwParams, 4, "token_count", qkv->GetDimCount() > 0 ? static_cast<int>(qkv->GetDimSize(0)) : 0);
+        ValidateDenseTensor(qkv);
+            int tokenCount = GetIntArg(params, kwParams, 4, "token_count", qkv.Info().rank > 0 ? static_cast<int>(qkv.Info().shape[0]) : 0);
             int startPosition = GetIntArg(params, kwParams, 5, "start_position", 0);
-            if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2 ||
-                tokenCount <= 0 || tokenCount > qkv->GetDimSize(0) || startPosition < 0) {
+            if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || qkv.Info().rank != 2 ||
+                tokenCount <= 0 || tokenCount > qkv.Info().shape[0] || startPosition < 0) {
                 std::cout << "[Model] text_rope_apply kv write invalid output tensor or range." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
             if (TensorHelper::EnsureGPUMemory(qkv) != TensorOpStatus::Success) {
                 std::cout << "[Model] text_rope_apply kv write failed to ensure GPU memory." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
+            auto qkvUse = qkv.Acquire();
             auto* deviceQKV = static_cast<const float*>(TensorHelper::GetGPUMemory(qkv));
             if (!deviceQKV) {
                 std::cout << "[Model] text_rope_apply kv write tensor has no GPU memory." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
             char error[1024] = {};
@@ -730,26 +790,26 @@ namespace Garnet
                 static_cast<int>(sizeof(error)));
             if (rc != 0) {
                 std::cout << "[Model] text_rope_apply kv write failed: " << error << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
-            X::Dict result;
+            auto result = X::Value::Dict(Host());
             int logicalLength = startPosition + tokenCount;
             if (GetKVLogicalLengthFromValue(kvOwner) > logicalLength) {
                 logicalLength = GetKVLogicalLengthFromValue(kvOwner);
             }
             SetKVLogicalLengthOnValue(kvOwner, logicalLength);
-            result->Set("status", X::Value("ok"));
-            result->Set("kv_written", X::Value(true));
-            result->Set("kv_handle", X::Value(kvHandle));
-            result->Set("kv_logical_length", X::Value(logicalLength));
-            result->Set("token_count", X::Value(tokenCount));
-            result->Set("start_position", X::Value(startPosition));
-            result->Set("output", TensorSummary(ropeOutput));
-            result->Set("output_tensor", ropeOutput);
-            retValue = result;
-            return;
+            result.SetItem("status", X::Value::String(Host(), "ok"));
+            result.SetItem("kv_written", X::Value(true));
+            result.SetItem("kv_handle", X::Value(kvHandle));
+            result.SetItem("kv_logical_length", X::Value(logicalLength));
+            result.SetItem("token_count", X::Value(tokenCount));
+            result.SetItem("start_position", X::Value(startPosition));
+            result.SetItem("output", TensorSummary(Host(), ropeOutput));
+            result.SetItem("output_tensor", ropeOutput);
+            retValue = NativeValue(Host(), result);
+            return retValue;
         }
         if (mSubgraph == "text_attention_core") {
             X::Value kvOwner = GetValueArg(params, kwParams, 1, "kv_cache");
@@ -762,116 +822,120 @@ namespace Garnet
             }
             if (kvHandle > 0) {
                 X::Tensor qkv(params[0]);
-                int sequenceLength = GetIntArg(params, kwParams, 2, "sequence_length", qkv->GetDimCount() == 2 ? static_cast<int>(qkv->GetDimSize(0)) : 0);
+        ValidateDenseTensor(qkv);
+                int sequenceLength = GetIntArg(params, kwParams, 2, "sequence_length", qkv.Info().rank == 2 ? static_cast<int>(qkv.Info().shape[0]) : 0);
                 int qWidth = GetIntArg(params, kwParams, 3, "q_width", 2048);
                 int logicalLength = GetKVLogicalLengthFromValue(kvOwner);
                 if (logicalLength > 0 && sequenceLength > logicalLength) {
                     std::cout << "[Model] text_attention_core sequence_length exceeds KV logical length." << std::endl;
-                    retValue = X::Value();
-                    return;
+                    retValue = NativeValue(Host(), X::Value());
+                    return retValue;
                 }
                 X::Value kvAttention = RunDeviceKVAttentionTensor(kvHandle, qkv, sequenceLength, qWidth, "text_attention_core kv attention");
-                if (!kvAttention.IsTensor()) {
-                    retValue = X::Value();
-                    return;
+                if (!X::Tensor::IsTensor(kvAttention)) {
+                    retValue = NativeValue(Host(), X::Value());
+                    return retValue;
                 }
-                X::Dict result;
-                result->Set("status", X::Value("ok"));
-                result->Set("kv_read", X::Value(true));
-                result->Set("kv_handle", X::Value(kvHandle));
-                result->Set("sequence_length", X::Value(sequenceLength));
-                result->Set("q_width", X::Value(qWidth));
-                result->Set("output", TensorSummary(kvAttention));
-                result->Set("output_tensor", kvAttention);
-                retValue = result;
-                return;
+                auto result = X::Value::Dict(Host());
+                result.SetItem("status", X::Value::String(Host(), "ok"));
+                result.SetItem("kv_read", X::Value(true));
+                result.SetItem("kv_handle", X::Value(kvHandle));
+                result.SetItem("sequence_length", X::Value(sequenceLength));
+                result.SetItem("q_width", X::Value(qWidth));
+                result.SetItem("output", TensorSummary(Host(), kvAttention));
+                result.SetItem("output_tensor", kvAttention);
+                retValue = NativeValue(Host(), result);
+                return retValue;
             }
-            retValue = builder.RunTextAttentionEngine(m_engine.ToString(), params[0]);
-            return;
+            retValue = NativeValue(Host(), builder.RunTextAttentionEngine(fixture.path, params[0]));
+            return retValue;
         }
         if (mSubgraph == "vision_attention_core") {
-            retValue = builder.RunVisionAttentionEngine(m_engine.ToString(), params[0]);
-            return;
+            retValue = NativeValue(Host(), builder.RunVisionAttentionEngine(fixture.path, params[0]));
+            return retValue;
         }
         if ((mSubgraph == "text_qkv_head_norm" || mSubgraph.empty()) && qProj.IsValid() && kProj.IsValid() && vProj.IsValid() && qNorm.IsValid() && kNorm.IsValid()) {
-            retValue = builder.RunTextQKVHeadNormEngine(m_engine.ToString(), params[0], qProj, kProj, vProj, qNorm, kNorm);
-            return;
+            retValue = NativeValue(Host(), builder.RunTextQKVHeadNormEngine(fixture.path, params[0], qProj, kProj, vProj, qNorm, kNorm));
+            return retValue;
         }
         if ((mSubgraph == "text_qkv_proj" || mSubgraph.empty()) && qProj.IsValid() && kProj.IsValid() && vProj.IsValid()) {
-            retValue = builder.RunTextQKVEngine(m_engine.ToString(), params[0], qProj, kProj, vProj);
-            return;
+            retValue = NativeValue(Host(), builder.RunTextQKVEngine(fixture.path, params[0], qProj, kProj, vProj));
+            return retValue;
         }
 
-        X::Value oProj = weights["language_model.layers.0.self_attn.o_proj.weight"];
+        X::Value oProj = FindField(weights, "language_model.layers.0.self_attn.o_proj.weight");
         if ((mSubgraph == "text_o_proj" || mSubgraph.empty()) && oProj.IsValid()) {
-            retValue = builder.RunLinearTransposeEngine(m_engine.ToString(), params[0], oProj);
-            return;
+            retValue = NativeValue(Host(), builder.RunLinearTransposeEngine(fixture.path, params[0], oProj));
+            return retValue;
         }
-        X::Value embedTokens = weights["language_model.embed_tokens.weight"];
+        X::Value embedTokens = FindField(weights, "language_model.embed_tokens.weight");
         if ((mSubgraph == "text_lm_head" || mSubgraph.empty()) && embedTokens.IsValid()) {
-            retValue = builder.RunLinearTransposeEngine(m_engine.ToString(), params[0], embedTokens);
-            return;
+            retValue = NativeValue(Host(), builder.RunLinearTransposeEngine(fixture.path, params[0], embedTokens));
+            return retValue;
         }
 
-        X::Value fc1 = weights["visual.blocks.0.mlp.linear_fc1.weight"];
-        X::Value fc1Bias = weights["visual.blocks.0.mlp.linear_fc1.bias"];
-        X::Value fc2 = weights["visual.blocks.0.mlp.linear_fc2.weight"];
-        X::Value fc2Bias = weights["visual.blocks.0.mlp.linear_fc2.bias"];
-        X::Value patchWeight = weights["visual.patch_embed.proj.weight"];
-        X::Value patchBias = weights["visual.patch_embed.proj.bias"];
+        X::Value fc1 = FindField(weights, "visual.blocks.0.mlp.linear_fc1.weight");
+        X::Value fc1Bias = FindField(weights, "visual.blocks.0.mlp.linear_fc1.bias");
+        X::Value fc2 = FindField(weights, "visual.blocks.0.mlp.linear_fc2.weight");
+        X::Value fc2Bias = FindField(weights, "visual.blocks.0.mlp.linear_fc2.bias");
+        X::Value patchWeight = FindField(weights, "visual.patch_embed.proj.weight");
+        X::Value patchBias = FindField(weights, "visual.patch_embed.proj.bias");
         if ((mSubgraph == "vision_patch_embed" || mSubgraph.empty()) && patchWeight.IsValid() && patchBias.IsValid()) {
-            retValue = builder.RunLinearBiasTransposeEngine(m_engine.ToString(), params[0], patchWeight, patchBias);
-            return;
+            retValue = NativeValue(Host(), builder.RunLinearBiasTransposeEngine(fixture.path, params[0], patchWeight, patchBias));
+            return retValue;
         }
-        X::Value genericWeight = weights["W"];
-        X::Value genericBias = weights["B"];
+        X::Value genericWeight = FindField(weights, "W");
+        X::Value genericBias = FindField(weights, "B");
         if ((mSubgraph == "linear_bias" || mSubgraph.empty()) && genericWeight.IsValid() && genericBias.IsValid()) {
-            retValue = builder.RunLinearBiasTransposeEngine(m_engine.ToString(), params[0], genericWeight, genericBias);
-            return;
+            retValue = NativeValue(Host(), builder.RunLinearBiasTransposeEngine(fixture.path, params[0], genericWeight, genericBias));
+            return retValue;
         }
         if ((mSubgraph == "vision_mlp" || mSubgraph.empty()) && fc1.IsValid() && fc1Bias.IsValid() && fc2.IsValid() && fc2Bias.IsValid()) {
-            retValue = builder.RunVisionMLPEngine(m_engine.ToString(), params[0], fc1, fc1Bias, fc2, fc2Bias);
-            return;
+            retValue = NativeValue(Host(), builder.RunVisionMLPEngine(fixture.path, params[0], fc1, fc1Bias, fc2, fc2Bias));
+            return retValue;
         }
 
         X::Value rmsWeight = mRmsNormWeight.IsValid()
             ? mRmsNormWeight
-            : weights["language_model.layers.0.input_layernorm.weight"];
+            : FindField(weights, "language_model.layers.0.input_layernorm.weight");
         if ((mSubgraph == "rms_norm" || mSubgraph.empty()) && rmsWeight.IsValid()) {
-            retValue = builder.RunRMSNormEngine(m_engine.ToString(), params[0], rmsWeight);
-            return;
+            retValue = NativeValue(Host(), builder.RunRMSNormEngine(fixture.path, params[0], rmsWeight));
+            return retValue;
         }
         X::Value postAttentionRmsWeight = mRmsNormWeight.IsValid()
             ? mRmsNormWeight
-            : weights["language_model.layers.0.post_attention_layernorm.weight"];
+            : FindField(weights, "language_model.layers.0.post_attention_layernorm.weight");
         if ((mSubgraph == "text_post_attention_rms_norm" || mSubgraph.empty()) && postAttentionRmsWeight.IsValid()) {
-            retValue = builder.RunRMSNormEngine(m_engine.ToString(), params[0], postAttentionRmsWeight);
-            return;
+            retValue = NativeValue(Host(), builder.RunRMSNormEngine(fixture.path, params[0], postAttentionRmsWeight));
+            return retValue;
         }
 
-        X::Value lnWeight = weights["visual.blocks.0.norm1.weight"];
-        X::Value lnBias = weights["visual.blocks.0.norm1.bias"];
+        X::Value lnWeight = FindField(weights, "visual.blocks.0.norm1.weight");
+        X::Value lnBias = FindField(weights, "visual.blocks.0.norm1.bias");
         if ((mSubgraph == "layer_norm" || mSubgraph.empty()) && lnWeight.IsValid() && lnBias.IsValid()) {
-            retValue = builder.RunLayerNormEngine(m_engine.ToString(), params[0], lnWeight, lnBias);
-            return;
+            retValue = NativeValue(Host(), builder.RunLayerNormEngine(fixture.path, params[0], lnWeight, lnBias));
+            return retValue;
         }
 
-        X::Value weight = weights["W"];
+        X::Value weight = FindField(weights, "W");
         if ((mSubgraph == "matmul" || mSubgraph.empty()) && weight.IsValid()) {
-            retValue = builder.RunMatmulEngine(m_engine.ToString(), params[0], weight);
-            return;
+            retValue = NativeValue(Host(), builder.RunMatmulEngine(fixture.path, params[0], weight));
+            return retValue;
         }
 
         std::cout << "[Model] Missing supported loaded weights for subgraph: " << mSubgraph << std::endl;
-        retValue = X::Value();
+        retValue = NativeValue(Host(), X::Value());
+        return retValue;
     }
 
-    void Model::ForwardRequest(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::ForwardRequest(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() < 1) {
             std::cout << "[Model] forward_request requires a QwenVLRequestContext or compatible request object." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         X::Value request = params[0];
@@ -880,32 +944,33 @@ namespace Garnet
         X::Value pixelValues = GetObjectField(request, "pixel_values");
         X::Value imageGridTHW = GetObjectField(request, "image_grid_thw");
 
-        X::Dict result;
-        result->Set("model_path", X::Value(mModelPath));
-        result->Set("subgraph", X::Value(mSubgraph));
-        result->Set("engine", m_engine);
-        result->Set("input_ids", TensorSummary(inputIds));
-        result->Set("mm_token_type_ids", TensorSummary(mmTokenTypeIds));
-        result->Set("pixel_values", TensorSummary(pixelValues));
-        result->Set("image_grid_thw", TensorSummary(imageGridTHW));
+        auto result = X::Value::Dict(Host());
+        result.SetItem("model_path", X::Value::String(Host(), mModelPath));
+        result.SetItem("subgraph", X::Value::String(Host(), mSubgraph));
+        result.SetItem("engine", GetEngine());
+        result.SetItem("input_ids", TensorSummary(Host(), inputIds));
+        result.SetItem("mm_token_type_ids", TensorSummary(Host(), mmTokenTypeIds));
+        result.SetItem("pixel_values", TensorSummary(Host(), pixelValues));
+        result.SetItem("image_grid_thw", TensorSummary(Host(), imageGridTHW));
 
         bool requestReady =
             HasGPUTensor(inputIds) &&
             HasGPUTensor(mmTokenTypeIds) &&
             HasGPUTensor(pixelValues) &&
-            imageGridTHW.IsTensor();
-        result->Set("request_gpu_ready", X::Value(requestReady));
+            X::Tensor::IsTensor(imageGridTHW);
+        result.SetItem("request_gpu_ready", X::Value(requestReady));
 
         if (!requestReady) {
-            result->Set("status", X::Value("request_not_gpu_ready"));
-            retValue = result;
-            return;
+            result.SetItem("status", X::Value::String(Host(), "request_not_gpu_ready"));
+            retValue = NativeValue(Host(), result);
+            return retValue;
         }
 
         bool allocateKV = GetBoolArg(params, kwParams, 1, "allocate_kv", false);
         if (allocateKV) {
             X::Tensor idsTensor(inputIds);
-            int promptTokens = static_cast<int>(idsTensor->GetDimSize(0));
+        ValidateDenseTensor(idsTensor);
+            int promptTokens = static_cast<int>(idsTensor.Info().shape[0]);
             int maxNewTokens = GetIntArg(params, kwParams, 2, "max_new_tokens", 64);
             int pageSize = GetIntArg(params, kwParams, 3, "page_size", 16);
             int qHeads = GetIntArg(params, kwParams, 4, "q_heads", 16);
@@ -913,136 +978,148 @@ namespace Garnet
             int headDim = GetIntArg(params, kwParams, 6, "head_dim", 128);
             int physicalPages = GetIntArg(params, kwParams, 7, "physical_pages", 0);
             int maxTokens = promptTokens + std::max(0, maxNewTokens);
-            X::Value kvCache = CreateDeviceKVCacheValue(maxTokens, pageSize, qHeads, kvHeads, headDim, physicalPages);
+            X::Value kvCache = CreateDeviceKVCacheValue(Host(), maxTokens, pageSize, qHeads, kvHeads, headDim, physicalPages);
             if (!kvCache.IsValid()) {
-                result->Set("status", X::Value("kv_allocation_failed"));
-                retValue = result;
-                return;
+                result.SetItem("status", X::Value::String(Host(), "kv_allocation_failed"));
+                retValue = NativeValue(Host(), result);
+                return retValue;
             }
             X::Value kvHandle = GetObjectField(kvCache, "handle");
             X::Value kvLogicalPages = GetObjectField(kvCache, "logical_pages");
             X::Value kvPhysicalPages = GetObjectField(kvCache, "physical_pages");
-            result->Set("kv_cache", kvCache);
-            result->Set("kv_allocated", X::Value(true));
-            result->Set("kv_handle", kvHandle);
-            result->Set("kv_logical_length", X::Value(0));
+            result.SetItem("kv_cache", kvCache);
+            result.SetItem("kv_allocated", X::Value(true));
+            result.SetItem("kv_handle", kvHandle);
+            result.SetItem("kv_logical_length", X::Value(0));
 
-            request.SetPropValue("kv_cache", kvCache);
-            request.SetPropValue("kv_handle", kvHandle);
-            request.SetPropValue("kv_max_tokens", X::Value(maxTokens));
-            request.SetPropValue("kv_logical_length", X::Value(0));
-            request.SetPropValue("kv_page_size", X::Value(pageSize));
-            request.SetPropValue("kv_logical_pages", kvLogicalPages);
-            request.SetPropValue("kv_physical_pages", kvPhysicalPages);
-            request.SetPropValue("kv_q_heads", X::Value(qHeads));
-            request.SetPropValue("kv_heads", X::Value(kvHeads));
-            request.SetPropValue("kv_head_dim", X::Value(headDim));
+            request.SetAttr("kv_cache", kvCache);
+            request.SetAttr("kv_handle", kvHandle);
+            request.SetAttr("kv_max_tokens", X::Value(maxTokens));
+            request.SetAttr("kv_logical_length", X::Value(0));
+            request.SetAttr("kv_page_size", X::Value(pageSize));
+            request.SetAttr("kv_logical_pages", kvLogicalPages);
+            request.SetAttr("kv_physical_pages", kvPhysicalPages);
+            request.SetAttr("kv_q_heads", X::Value(qHeads));
+            request.SetAttr("kv_heads", X::Value(kvHeads));
+            request.SetAttr("kv_head_dim", X::Value(headDim));
         }
         else {
-            result->Set("kv_allocated", X::Value(false));
+            result.SetItem("kv_allocated", X::Value(false));
         }
 
-        if (!m_engine.IsValid()) {
-            result->Set("status", X::Value("model_engine_not_ready"));
-            retValue = result;
-            return;
+        if (!GetEngine().IsValid()) {
+            result.SetItem("status", X::Value::String(Host(), "model_engine_not_ready"));
+            retValue = NativeValue(Host(), result);
+            return retValue;
         }
 
-        if (!mModel.IsObject() || mModel.GetObj()->GetType() != X::ObjType::Dict) {
-            result->Set("status", X::Value("model_weights_not_loaded"));
-            retValue = result;
-            return;
+        if (!mModel.IsObject() || !mModel.IsDict()) {
+            result.SetItem("status", X::Value::String(Host(), "model_weights_not_loaded"));
+            retValue = NativeValue(Host(), result);
+            return retValue;
         }
 
         if (mSubgraph == "vision_patch_embed") {
-            X::Dict weights(mModel);
-            X::Value patchWeight = weights["visual.patch_embed.proj.weight"];
-            X::Value patchBias = weights["visual.patch_embed.proj.bias"];
-            if (!patchWeight.IsTensor() || !patchBias.IsTensor()) {
-                result->Set("status", X::Value("vision_patch_embed_weights_missing"));
-                retValue = result;
-                return;
+            X::Value weights(mModel);
+            X::Value patchWeight = FindField(weights, "visual.patch_embed.proj.weight");
+            X::Value patchBias = FindField(weights, "visual.patch_embed.proj.bias");
+            if (!X::Tensor::IsTensor(patchWeight) || !X::Tensor::IsTensor(patchBias)) {
+                result.SetItem("status", X::Value::String(Host(), "vision_patch_embed_weights_missing"));
+                retValue = NativeValue(Host(), result);
+                return retValue;
             }
 
-            TRTBuilder builder;
+            TRTBuilder builder(Host());
+            const auto fixture = RetainFixtureExecution();
             X::Value patchOutput = builder.RunLinearBiasTransposeEngine(
-                m_engine.ToString(),
+                fixture.path,
                 pixelValues,
                 patchWeight,
                 patchBias);
-            result->Set("stage", X::Value("vision_patch_embed"));
-            result->Set("output", TensorSummary(patchOutput));
-            result->Set("output_tensor", patchOutput);
-            result->Set("status", X::Value(patchOutput.IsTensor() && HasGPUTensor(patchOutput)
+            result.SetItem("stage", X::Value::String(Host(), "vision_patch_embed"));
+            result.SetItem("output", TensorSummary(Host(), patchOutput));
+            result.SetItem("output_tensor", patchOutput);
+            result.SetItem("status", X::Value::String(Host(), X::Tensor::IsTensor(patchOutput) && HasGPUTensor(patchOutput)
                 ? "ok"
                 : "vision_patch_embed_failed"));
-            retValue = result;
-            return;
+            retValue = NativeValue(Host(), result);
+            return retValue;
         }
 
-        result->Set("status", X::Value("request_validated_no_runner_for_subgraph"));
-        retValue = result;
+        result.SetItem("status", X::Value::String(Host(), "request_validated_no_runner_for_subgraph"));
+        retValue = NativeValue(Host(), result);
+        return retValue;
     }
 
-    void Model::CreateDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::CreateDeviceKVCache(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         int maxTokens = GetIntArg(params, kwParams, 0, "max_tokens", 0);
         int pageSize = GetIntArg(params, kwParams, 1, "page_size", 16);
         int qHeads = GetIntArg(params, kwParams, 2, "q_heads", 16);
         int kvHeads = GetIntArg(params, kwParams, 3, "kv_heads", 8);
         int headDim = GetIntArg(params, kwParams, 4, "head_dim", 128);
         int physicalPageCount = GetIntArg(params, kwParams, 5, "physical_pages", 0);
-        retValue = CreateDeviceKVCacheValue(maxTokens, pageSize, qHeads, kvHeads, headDim, physicalPageCount);
+        retValue = NativeValue(Host(), CreateDeviceKVCacheValue(Host(), maxTokens, pageSize, qHeads, kvHeads, headDim, physicalPageCount));
+        return retValue;
     }
 
-    void Model::DestroyDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::DestroyDeviceKVCache(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         long long handle = GetLongLongArg(params, kwParams, 0, "handle", 0);
         if (handle <= 0) {
             std::cout << "[Model] destroy_device_kv_cache requires handle." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
 
         char error[1024] = {};
         int rc = GarnetDestroyDevicePagedKVFP32(handle, error, static_cast<int>(sizeof(error)));
         if (rc != 0) {
             std::cout << "[Model] destroy_device_kv_cache failed: " << error << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
-        retValue = X::Value(true);
+        retValue = NativeValue(Host(), X::Value(true));
+        return retValue;
     }
 
-    void Model::WriteDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::WriteDeviceKVCache(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 2 || !params[1].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 2 || !X::Tensor::IsTensor(params[1])) {
             std::cout << "[Model] write_device_kv_cache(handle_or_cache, qkv_tensor, token_count, start_position) expected." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
 
         long long handle = GetHandleFromValue(params[0]);
         X::Tensor qkv(params[1]);
-        int tokenCount = GetIntArg(params, kwParams, 2, "token_count", static_cast<int>(qkv->GetDimSize(0)));
+        ValidateDenseTensor(qkv);
+        int tokenCount = GetIntArg(params, kwParams, 2, "token_count", static_cast<int>(qkv.Info().shape[0]));
         int startPosition = GetIntArg(params, kwParams, 3, "start_position", 0);
-        if (handle <= 0 || qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2 ||
-            tokenCount <= 0 || tokenCount > qkv->GetDimSize(0) || startPosition < 0) {
+        if (handle <= 0 || qkv.Info().dtype != X3_TENSOR_FLOAT32 || qkv.Info().rank != 2 ||
+            tokenCount <= 0 || tokenCount > qkv.Info().shape[0] || startPosition < 0) {
             std::cout << "[Model] write_device_kv_cache invalid arguments." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
 
         if (TensorHelper::EnsureGPUMemory(qkv) != TensorOpStatus::Success) {
             std::cout << "[Model] write_device_kv_cache failed to ensure qkv GPU memory." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
+        auto qkvUse = qkv.Acquire();
         auto* deviceQKV = static_cast<const float*>(TensorHelper::GetGPUMemory(qkv));
         if (!deviceQKV) {
             std::cout << "[Model] write_device_kv_cache qkv tensor has no GPU memory." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
 
         char error[1024] = {};
@@ -1055,8 +1132,8 @@ namespace Garnet
             static_cast<int>(sizeof(error)));
         if (rc != 0) {
             std::cout << "[Model] write_device_kv_cache failed: " << error << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
         int logicalLength = startPosition + tokenCount;
         int previousLogicalLength = GetKVLogicalLengthFromValue(params[0]);
@@ -1064,27 +1141,31 @@ namespace Garnet
             logicalLength = previousLogicalLength;
         }
         SetKVLogicalLengthOnValue(params[0], logicalLength);
-        retValue = X::Value(true);
+        retValue = NativeValue(Host(), X::Value(true));
+        return retValue;
     }
 
-    void Model::AttentionDeviceKVCache(X::XRuntime* rt, X::XObj* pContext, X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value Model::AttentionDeviceKVCache(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 3 || !params[1].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 3 || !X::Tensor::IsTensor(params[1])) {
             std::cout << "[Model] attention_device_kv_cache(handle_or_cache, q_tensor, sequence_length, q_width=None) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         long long handle = GetHandleFromValue(params[0]);
         X::Tensor q(params[1]);
         int sequenceLength = GetIntArg(params, kwParams, 2, "sequence_length", 0);
-        int qWidth = GetIntArg(params, kwParams, 3, "q_width", q->GetDimCount() == 2 ? static_cast<int>(q->GetDimSize(1)) : 0);
+        int qWidth = GetIntArg(params, kwParams, 3, "q_width", q.Info().rank == 2 ? static_cast<int>(q.Info().shape[1]) : 0);
         int logicalLength = GetKVLogicalLengthFromValue(params[0]);
         if (logicalLength > 0 && sequenceLength > logicalLength) {
             std::cout << "[Model] attention_device_kv_cache sequence_length exceeds KV logical length." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        retValue = RunDeviceKVAttentionTensor(handle, q, sequenceLength, qWidth, "attention_device_kv_cache");
+        retValue = NativeValue(Host(), RunDeviceKVAttentionTensor(handle, q, sequenceLength, qWidth, "attention_device_kv_cache"));
+        return retValue;
     }
 }

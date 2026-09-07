@@ -1,9 +1,11 @@
 #include "trt_builder.h"
+#include "trt_context_pool.h"
 #include "weight_quantization.h"
 #include "paged_kv_plugin.h"
 #include "cuda_lib.h"
 #include "garnet_tensor.h"
 #include "tensor_helper.h"
+#include "graph_capture.h"
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -35,7 +37,7 @@ class Logger : public ILogger
             std::cout << "[TRT] " << msg << std::endl;
     }
 } gLogger;
-#include "xpackage.h"
+#include "xlang3/xlang3.h"
 
 namespace Garnet {
 
@@ -45,26 +47,26 @@ namespace Garnet {
             const X::Value& value,
             std::vector<unsigned long long>& tensorIds)
         {
-            if (value.IsList()) {
-                X::List list(value);
-                for (long long index = 0; index < list->Size(); ++index) {
-                    AppendTensorDependencies(list->Get(index), tensorIds);
+            if (value.IsList() || x3_value_object_kind(value.raw()) == X3_OBJECT_KIND_TUPLE) {
+                X::Value list(value);
+                for (long long index = 0; index < list.Size(); ++index) {
+                    AppendTensorDependencies(list.Get(index), tensorIds);
                 }
                 return;
             }
             if (value.IsDict()) {
-                X::Dict dictionary(value);
-                for (auto& entry : *dictionary) {
-                    AppendTensorDependencies(entry.second(), tensorIds);
+                for (uint64_t i = 0; i < value.Size(); ++i) {
+                    X::Value key, child;
+                    if (!value.DictEntry(i, key, child))
+                        throw std::runtime_error("invalid tensor dependency dictionary");
+                    AppendTensorDependencies(child, tensorIds);
                 }
                 return;
             }
-            if (!value.IsObject() ||
-                (value.GetObj()->GetType() != X::ObjType::TensorExpression &&
-                 value.GetObj()->GetType() != X::ObjType::Tensor)) {
+            if (!IsTensor(value)) {
                 return;
             }
-            const unsigned long long tensorId = value.GetObj()->GetID();
+            const unsigned long long tensorId = TensorId(value);
             if (std::find(tensorIds.begin(), tensorIds.end(), tensorId) ==
                 tensorIds.end()) {
                 tensorIds.push_back(tensorId);
@@ -76,7 +78,7 @@ namespace Garnet {
             std::vector<unsigned long long>& tensorIds)
         {
             for (auto& item : keywordArguments) {
-                AppendTensorDependencies(item.val, tensorIds);
+                AppendTensorDependencies(item.second, tensorIds);
             }
         }
 
@@ -139,32 +141,34 @@ namespace Garnet {
         };
 
         struct CachedTRTExecution {
+            int device = -1;
             nvinfer1::IRuntime* runtime = nullptr;
             nvinfer1::ICudaEngine* engine = nullptr;
-            nvinfer1::IExecutionContext* context = nullptr;
+            std::unique_ptr<TRTContextPool> contexts;
+            ~CachedTRTExecution() {
+                int previous = -1;
+                cudaGetDevice(&previous);
+                if (previous != device) cudaSetDevice(device);
+                contexts.reset();
+                delete engine;
+                delete runtime;
+                if (previous >= 0 && previous != device) cudaSetDevice(previous);
+            }
         };
 
         std::mutex g_trtExecutionCacheMutex;
-        std::unordered_map<std::string, CachedTRTExecution> g_trtExecutionCache;
+        // Models own engines; the process cache only discovers shared instances.
+        std::unordered_map<std::string, std::weak_ptr<CachedTRTExecution>> g_trtExecutionCache;
         std::unordered_map<std::string, std::shared_ptr<std::mutex>>
             g_trtEngineLoadMutexes;
         std::mutex g_trtProfileLogMutex;
         std::mutex g_trtLayerProfileMutex;
         std::unordered_set<std::string> g_profiledTRTEngines;
 
-        struct DecodeCudaGraphState {
-            cudaGraph_t graph = nullptr;
-            cudaGraphExec_t executable = nullptr;
-            std::vector<void*> bindingSignature;
-            bool warmed = false;
-        };
-
-        std::mutex g_decodeCudaGraphMutex;
-        std::unordered_map<std::string, DecodeCudaGraphState> g_decodeCudaGraphs;
-
         bool EnqueueTRTWithOptionalCudaGraph(
             const std::string& enginePath,
             nvinfer1::IExecutionContext* context,
+            TRTContextPool::Slot& state,
             const std::vector<void*>& bindingSignature,
             bool enableCudaGraph,
             cudaStream_t stream)
@@ -176,13 +180,9 @@ namespace Garnet {
                 context->getProfiler() == nullptr;
             if (!useCudaGraph) return context->enqueueV3(stream);
 
-            std::lock_guard<std::mutex> lock(g_decodeCudaGraphMutex);
-            DecodeCudaGraphState& state = g_decodeCudaGraphs[enginePath];
-            if (state.bindingSignature != bindingSignature) {
-                if (state.executable) cudaGraphExecDestroy(state.executable);
-                if (state.graph) cudaGraphDestroy(state.graph);
-                state = {};
-                state.bindingSignature = bindingSignature;
+            if (state.bindings != bindingSignature) {
+                state.ResetGraph();
+                state.bindings = bindingSignature;
             }
             if (state.executable) {
                 return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
@@ -237,15 +237,20 @@ namespace Garnet {
             profileLog << message << '\n';
         }
 
-        nvinfer1::IExecutionContext* GetCachedTRTExecutionContext(
+        std::shared_ptr<CachedTRTExecution> GetCachedTRTEngine(
             const std::string& enginePath,
             const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
+            int device = -1;
+            if (cudaGetDevice(&device) != cudaSuccess) return nullptr;
             std::shared_ptr<std::mutex> engineLoadMutex;
             {
                 std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
                 auto found = g_trtExecutionCache.find(enginePath);
                 if (found != g_trtExecutionCache.end()) {
-                    return found->second.context;
+                    if (auto owner = found->second.lock()) {
+                        if (owner->device != device) return nullptr;
+                        return owner;
+                    }
                 }
                 auto& mutexSlot = g_trtEngineLoadMutexes[enginePath];
                 if (!mutexSlot) mutexSlot = std::make_shared<std::mutex>();
@@ -257,7 +262,10 @@ namespace Garnet {
                 std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
                 auto found = g_trtExecutionCache.find(enginePath);
                 if (found != g_trtExecutionCache.end()) {
-                    return found->second.context;
+                    if (auto owner = found->second.lock()) {
+                        if (owner->device != device) return nullptr;
+                        return owner;
+                    }
                 }
             }
 
@@ -267,7 +275,9 @@ namespace Garnet {
                 return nullptr;
             }
 
-            CachedTRTExecution cached;
+            auto owner = std::make_shared<CachedTRTExecution>();
+            auto& cached = *owner;
+            cached.device = device;
             cached.runtime = createInferRuntime(gLogger);
             if (!cached.runtime) {
                 std::cout << "[TRTBuilder] createInferRuntime failed for cached engine: " << enginePath << std::endl;
@@ -344,38 +354,23 @@ namespace Garnet {
                     }
                 }
             }
-            cached.context = cached.engine->createExecutionContext();
-            if (!cached.context) {
-                std::cout << "[TRTBuilder] createExecutionContext failed for cached engine: " << enginePath << std::endl;
-                return nullptr;
-            }
+            cached.contexts = std::make_unique<TRTContextPool>(cached.engine);
 
             std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
-            auto inserted = g_trtExecutionCache.emplace(enginePath, cached);
-            return inserted.first->second.context;
+            g_trtExecutionCache[enginePath] = owner;
+            return owner;
         }
 
-        bool GetCachedTRTExecutionObjects(
-            const std::string& enginePath,
-            nvinfer1::ICudaEngine*& engine,
-            nvinfer1::IExecutionContext*& context,
-            const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
-            context = GetCachedTRTExecutionContext(enginePath, weightIndex);
-            if (!context) {
-                engine = nullptr;
-                return false;
-            }
-            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
-            auto found = g_trtExecutionCache.find(enginePath);
-            if (found == g_trtExecutionCache.end()) {
-                engine = nullptr;
-                context = nullptr;
-                return false;
-            }
-            engine = found->second.engine;
-            context = found->second.context;
-            return engine != nullptr && context != nullptr;
-        }
+        struct CachedExecutionUse {
+            std::shared_ptr<CachedTRTExecution> owner;
+            TRTContextPool::Lease slot;
+            explicit CachedExecutionUse(const std::string& path,
+                const SafeTensorsIndex* weights = nullptr, bool enabled = true)
+                : owner(enabled ? GetCachedTRTEngine(path, weights) : nullptr),
+                  slot(owner ? owner->contexts->Acquire(cudaStreamPerThread) : TRTContextPool::Lease{}) {}
+            nvinfer1::IExecutionContext* Context() const { return slot ? slot->context : nullptr; }
+            nvinfer1::ICudaEngine* Engine() const { return owner ? owner->engine : nullptr; }
+        };
 
         void InvalidateCachedTRTExecution(const std::string& enginePath) {
             std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
@@ -383,9 +378,6 @@ namespace Garnet {
             if (found == g_trtExecutionCache.end()) {
                 return;
             }
-            delete found->second.context;
-            delete found->second.engine;
-            delete found->second.runtime;
             g_trtExecutionCache.erase(found);
         }
 
@@ -438,9 +430,53 @@ namespace Garnet {
             bool owned = false;
         };
 
-        bool BindTensorInput(X::Tensor& tensor, size_t bytes, cudaStream_t stream, TensorDeviceBinding& binding) {
+        struct ExecutionInputs {
+            std::vector<std::pair<X::Tensor, X3TensorAccess>> tensors;
+            std::vector<CUDAUse> uses;
+            int device = -1;
+            ExecutionInputs() {
+                if (cudaGetDevice(&device) != cudaSuccess)
+                    throw std::runtime_error("cannot query execution device");
+            }
+            bool Retain(const X::Tensor& tensor, X3TensorAccess access = X3_TENSOR_READ) {
+                const auto info = tensor.Info();
+                if (info.device_type != TensorHelper::CudaDevice || info.device_id != device)
+                    return false;
+                tensors.emplace_back(tensor, access);
+                return true;
+            }
+            void Acquire() {
+                if (!tensors.empty()) {
+                    uses.push_back(TensorHelper::AcquireGPU(tensors));
+                    tensors.clear();
+                }
+            }
+            X::Value Finish(const X::Tensor& output, cudaStream_t stream, bool outputAcquired = false) {
+                try {
+                if (!outputAcquired) {
+                    // Fixture outputs are private allocations until this point;
+                    // publish their producer fence before exposing the tensor.
+                    uses.push_back(TensorHelper::AcquireGPU(output, X3_TENSOR_WRITE, stream));
+                }
+                for (auto& use : uses) use.Finish();
+                uses.clear();
+                return output;
+                } catch (...) {
+                    cudaStreamSynchronize(stream);
+                    uses.clear();
+                    tensors.clear();
+                    throw;
+                }
+            }
+        };
+
+        bool BindTensorInput(X::Tensor& tensor, size_t bytes, cudaStream_t stream,
+            TensorDeviceBinding& binding, ExecutionInputs& execution) {
+            if (!IsContiguousTensor(tensor) || tensor.Info().byte_size < bytes)
+                return false;
             void* gpuPtr = TensorHelper::GetGPUMemory(tensor);
             if (gpuPtr) {
+                if (!execution.Retain(tensor)) return false;
                 binding.ptr = gpuPtr;
                 binding.owned = false;
                 return true;
@@ -450,11 +486,12 @@ namespace Garnet {
                 return false;
             }
             gpuPtr = TensorHelper::GetGPUMemory(tensor);
-            if (!gpuPtr || static_cast<size_t>(tensor->GetDataSize()) < bytes) {
+            if (!gpuPtr || static_cast<size_t>(tensor.Info().byte_size) < bytes) {
                 return false;
             }
             binding.ptr = gpuPtr;
             binding.owned = false;
+            if (!execution.Retain(tensor)) return false;
             return true;
         }
 
@@ -466,10 +503,27 @@ namespace Garnet {
             binding.owned = false;
         }
 
+        X::Tensor WrapDeviceOutput(X3PackageHost* host, X3TensorDType dtype,
+            const std::vector<int64_t>& shape, void* data, size_t bytes) {
+            X3TensorInfo info{};
+            info.size = sizeof(info);
+            info.dtype = dtype;
+            info.rank = static_cast<uint32_t>(shape.size());
+            info.shape = shape.data();
+            info.data = data;
+            info.byte_size = bytes;
+            info.device_type = TensorHelper::CudaDevice;
+            if (cudaGetDevice(&info.device_id) != cudaSuccess)
+                throw std::runtime_error("cannot query CUDA output device");
+            return TensorHelper::WrapGPU(host, info, data, info.device_id);
+        }
+
         X::Value MakeGPUBackedTensor2D(
+            X3PackageHost* host,
+            ExecutionInputs& execution,
             int rows,
             int cols,
-            void* gpuOutput,
+            void*& gpuOutput,
             size_t outputBytes,
             cudaStream_t stream) {
             if (ShouldSyncTRTOutputToCPU()) {
@@ -486,86 +540,56 @@ namespace Garnet {
                     << cudaGetErrorString(lastErr) << std::endl;
                 return X::Value();
             }
-            X::Port::vector<int> outputShape(2);
-            outputShape.push_back(rows);
-            outputShape.push_back(cols);
-            X::Tensor output = X::g_pXHost->CreateTensor();
-            if (!output) {
-                std::cout << "[TRTBuilder] MakeGPUBackedTensor2D failed to create XTensor" << std::endl;
+            try {
+                if (ShouldSyncTRTOutputToCPU()) {
+                    auto output = X::Tensor::Create(host, X3_TENSOR_FLOAT32, {rows, cols});
+                    if (output.Info().byte_size != outputBytes ||
+                        cudaMemcpy(output.Info().data, gpuOutput, outputBytes,
+                            cudaMemcpyDeviceToHost) != cudaSuccess)
+                        return X::Value();
+                    cudaFree(gpuOutput);
+                    gpuOutput = nullptr;
+                    return output;
+                }
+                auto output = WrapDeviceOutput(host, X3_TENSOR_FLOAT32, {rows, cols},
+                    gpuOutput, outputBytes);
+                gpuOutput = nullptr;
+                return execution.Finish(output, stream);
+            } catch (const std::exception& error) {
+                std::cout << "[TRTBuilder] tensor output: " << error.what() << std::endl;
                 return X::Value();
             }
-            output->SetDataType(X::TensorDataType::FLOAT32);
-            output->SetShape(outputShape);
-            if (ShouldSyncTRTOutputToCPU()) {
-                std::vector<char> host(outputBytes);
-                cudaError_t err = cudaMemcpy(host.data(), gpuOutput, outputBytes, cudaMemcpyDeviceToHost);
-                if (err != cudaSuccess) {
-                    std::cout << "[TRTBuilder] MakeGPUBackedTensor2D failed to sync CPU output" << std::endl;
-                    return X::Value();
-                }
-                output->DirectSetData(nullptr, 0);
-                output->SetDeviceType(X::TensorDeviceType::CPU);
-                output->SetDeviceContext(X::Value());
-                output->SetDeviceOps(X::Value());
-                output->SetData(host.data(), outputBytes);
-                cudaFree(gpuOutput);
-            }
-            else {
-                if (TensorHelper::AttachGPUMemory(output, gpuOutput) != TensorOpStatus::Success) {
-                    std::cout << "[TRTBuilder] MakeGPUBackedTensor2D failed to attach GPU memory" << std::endl;
-                    return X::Value();
-                }
-            }
-            return X::Value(output);
-        }
-
-        X::Value RebindExistingTensor2D(
-            X::Tensor& tensor,
-            int rows,
-            int cols,
-            void* gpuOutput,
-            size_t outputBytes,
-            cudaStream_t stream) {
-            if (ShouldSyncTRTOutputToCPU()) {
-                cudaError_t syncErr = cudaStreamSynchronize(stream);
-                if (syncErr != cudaSuccess) {
-                    std::cout << "[TRTBuilder] RebindExistingTensor2D stream sync failed: "
-                        << cudaGetErrorString(syncErr) << std::endl;
-                    return X::Value();
-                }
-            }
-
-            X::Port::vector<int> outputShape(2);
-            outputShape.push_back(rows);
-            outputShape.push_back(cols);
-            tensor->SetShape(outputShape);
-            tensor->SetDataType(X::TensorDataType::FLOAT32);
-            if (TensorHelper::AttachGPUMemory(tensor, gpuOutput) != TensorOpStatus::Success) {
-                std::cout << "[TRTBuilder] RebindExistingTensor2D failed to attach GPU memory" << std::endl;
-                return X::Value();
-            }
-            if (ShouldSyncTRTOutputToCPU()) {
-                std::vector<char> host(outputBytes);
-                cudaError_t err = cudaMemcpy(host.data(), gpuOutput, outputBytes, cudaMemcpyDeviceToHost);
-                if (err != cudaSuccess) {
-                    std::cout << "[TRTBuilder] RebindExistingTensor2D failed to sync CPU output" << std::endl;
-                    return X::Value();
-                }
-                tensor->DirectSetData(nullptr, 0);
-                tensor->SetDeviceType(X::TensorDeviceType::CPU);
-                tensor->SetDeviceContext(X::Value());
-                tensor->SetDeviceOps(X::Value());
-                tensor->SetData(host.data(), outputBytes);
-                cudaFree(gpuOutput);
-            }
-            return X::Value(tensor);
         }
     }
 
-    TRTBuilder::TRTBuilder() {
+    TRTBuilder::TRTBuilder(X3PackageHost* host) : host_(host) {
+        if (!host || !host->runtime)
+            throw std::invalid_argument("TRTBuilder requires an XLang3 host");
     }
 
     TRTBuilder::~TRTBuilder() {
+    }
+
+    std::shared_ptr<void> TRTBuilder::RetainCachedExecution(
+        const std::string& enginePath,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage) {
+        try {
+            if (!EnsurePagedKVDecodePluginRegistered()) {
+                errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+                return {};
+            }
+            CachedExecutionUse execution(enginePath, weightIndex);
+            if (!execution.Context()) {
+                errorMessage = "failed to prepare captured engine " + enginePath;
+                return {};
+            }
+            errorMessage.clear();
+            return execution.owner;
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
+            return {};
+        }
     }
 
     void TRTBuilder::ReleaseCachedExecutions(const std::string& cacheRoot) {
@@ -585,22 +609,6 @@ namespace Garnet {
             return true;
         };
 
-        cudaDeviceSynchronize();
-        {
-            std::lock_guard<std::mutex> lock(g_decodeCudaGraphMutex);
-            for (auto graph = g_decodeCudaGraphs.begin();
-                 graph != g_decodeCudaGraphs.end();) {
-                if (!belongsToCache(graph->first)) {
-                    ++graph;
-                    continue;
-                }
-                if (graph->second.executable) {
-                    cudaGraphExecDestroy(graph->second.executable);
-                }
-                if (graph->second.graph) cudaGraphDestroy(graph->second.graph);
-                graph = g_decodeCudaGraphs.erase(graph);
-            }
-        }
         {
             std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
             for (auto execution = g_trtExecutionCache.begin();
@@ -609,9 +617,6 @@ namespace Garnet {
                     ++execution;
                     continue;
                 }
-                delete execution->second.context;
-                delete execution->second.engine;
-                delete execution->second.runtime;
                 g_trtEngineLoadMutexes.erase(execution->first);
                 execution = g_trtExecutionCache.erase(execution);
             }
@@ -627,7 +632,6 @@ namespace Garnet {
                 }
             }
         }
-        cudaDeviceSynchronize();
     }
 
     X::Value TRTBuilder::ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape) {
@@ -704,33 +708,34 @@ namespace Garnet {
         out.close();
 
         std::cout << "[TRTBuilder] Serialized TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunMatmulEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunMatmulEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !weightValue.IsTensor()) {
+        if (!IsTensor(inputValue) || !IsTensor(weightValue)) {
             std::cout << "[TRTBuilder] RunMatmulEngine requires tensor inputs." << std::endl;
             return X::Value();
         }
 
         X::Tensor input(inputValue);
         X::Tensor weight(weightValue);
-        std::cout << "[TRTBuilder] Input dims=" << input->GetDimCount()
-            << ", weight dims=" << weight->GetDimCount() << std::endl;
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || weight->GetDataType() != X::TensorDataType::FLOAT32) {
+        std::cout << "[TRTBuilder] Input dims=" << input.Info().rank
+            << ", weight dims=" << weight.Info().rank << std::endl;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || weight.Info().dtype != X3_TENSOR_FLOAT32) {
             std::cout << "[TRTBuilder] RunMatmulEngine currently supports float32 tensors only." << std::endl;
             return X::Value();
         }
-        if (input->GetDimCount() != 2 || weight->GetDimCount() != 2) {
+        if (input.Info().rank != 2 || weight.Info().rank != 2) {
             std::cout << "[TRTBuilder] RunMatmulEngine requires 2D tensors." << std::endl;
             return X::Value();
         }
 
-        int m = input->GetDimSize(0);
-        int k = input->GetDimSize(1);
-        int wK = weight->GetDimSize(0);
-        int n = weight->GetDimSize(1);
+        int m = TensorDimension(input, 0);
+        int k = TensorDimension(input, 1);
+        int wK = TensorDimension(weight, 0);
+        int n = TensorDimension(weight, 1);
         std::cout << "[TRTBuilder] Matmul shapes: [" << m << ", " << k
             << "] x [" << wK << ", " << n << "]" << std::endl;
         if (k != wK) {
@@ -738,36 +743,10 @@ namespace Garnet {
             return X::Value();
         }
 
-        std::ifstream in(enginePath, std::ios::binary | std::ios::ate);
-        if (!in.is_open()) {
-            std::cout << "[TRTBuilder] Failed to open engine for read: " << enginePath << std::endl;
-            return X::Value();
-        }
-        std::streamsize size = in.tellg();
-        std::cout << "[TRTBuilder] Engine bytes to load: " << size << std::endl;
-        in.seekg(0, std::ios::beg);
-        std::vector<char> engineBytes(static_cast<size_t>(size));
-        if (!in.read(engineBytes.data(), size)) {
-            std::cout << "[TRTBuilder] Failed to read engine bytes." << std::endl;
-            return X::Value();
-        }
-
-        auto runtime = createInferRuntime(gLogger);
-        std::cout << "[TRTBuilder] createInferRuntime returned " << (runtime ? "ok" : "null") << std::endl;
-        if (!runtime) {
-            std::cout << "[TRTBuilder] createInferRuntime failed." << std::endl;
-            return X::Value();
-        }
-        auto engine = runtime->deserializeCudaEngine(engineBytes.data(), engineBytes.size());
-        std::cout << "[TRTBuilder] deserializeCudaEngine returned " << (engine ? "ok" : "null") << std::endl;
-        if (!engine) {
-            std::cout << "[TRTBuilder] deserializeCudaEngine failed." << std::endl;
-            return X::Value();
-        }
-        auto context = engine->createExecutionContext();
-        std::cout << "[TRTBuilder] createExecutionContext returned " << (context ? "ok" : "null") << std::endl;
+        CachedExecutionUse cachedUse(enginePath);
+        auto* context = cachedUse.Context();
         if (!context) {
-            std::cout << "[TRTBuilder] createExecutionContext failed." << std::endl;
+            std::cout << "[TRTBuilder] Failed to acquire matmul execution context." << std::endl;
             return X::Value();
         }
 
@@ -783,8 +762,8 @@ namespace Garnet {
         TensorDeviceBinding inputBinding;
         TensorDeviceBinding weightBinding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            !BindTensorInput(input, inputBytes, stream, inputBinding) ||
-            !BindTensorInput(weight, weightBytes, stream, weightBinding) ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+            !BindTensorInput(weight, weightBytes, stream, weightBinding, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             std::cout << "[TRTBuilder] CUDA allocation failed." << std::endl;
             FreeOwnedBinding(inputBinding);
@@ -793,6 +772,7 @@ namespace Garnet {
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         dInput = inputBinding.ptr;
         dWeight = weightBinding.ptr;
         std::cout << "[TRTBuilder] CUDA buffers bound." << std::endl;
@@ -821,7 +801,7 @@ namespace Garnet {
             return X::Value();
         }
 
-        X::Value output = MakeGPUBackedTensor2D(m, n, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, m, n, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(inputBinding);
             FreeOwnedBinding(weightBinding);
@@ -931,12 +911,13 @@ namespace Garnet {
         outFile.close();
 
         std::cout << "[TRTBuilder] Serialized TextMLP TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunTextMLPEngine(const std::string& enginePath, X::Value inputValue, X::Value gateWeight, X::Value upWeight, X::Value downWeight) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunTextMLPEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !gateWeight.IsTensor() || !upWeight.IsTensor() || !downWeight.IsTensor()) {
+        if (!IsTensor(inputValue) || !IsTensor(gateWeight) || !IsTensor(upWeight) || !IsTensor(downWeight)) {
             std::cout << "[TRTBuilder] RunTextMLPEngine requires tensor inputs." << std::endl;
             return X::Value();
         }
@@ -945,27 +926,27 @@ namespace Garnet {
         X::Tensor gate(gateWeight);
         X::Tensor up(upWeight);
         X::Tensor down(downWeight);
-        bool bf16Weights = gate->GetDataType() == X::TensorDataType::BFLOAT16 &&
-            up->GetDataType() == X::TensorDataType::BFLOAT16 &&
-            down->GetDataType() == X::TensorDataType::BFLOAT16;
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 ||
-            (!bf16Weights && (gate->GetDataType() != X::TensorDataType::FLOAT32 ||
-                up->GetDataType() != X::TensorDataType::FLOAT32 ||
-                down->GetDataType() != X::TensorDataType::FLOAT32))) {
+        bool bf16Weights = gate.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            up.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            down.Info().dtype == X3_TENSOR_BFLOAT16;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 ||
+            (!bf16Weights && (gate.Info().dtype != X3_TENSOR_FLOAT32 ||
+                up.Info().dtype != X3_TENSOR_FLOAT32 ||
+                down.Info().dtype != X3_TENSOR_FLOAT32))) {
             std::cout << "[TRTBuilder] RunTextMLPEngine requires FP32 activations and uniform FP32/BF16 weights." << std::endl;
             return X::Value();
         }
-        if (input->GetDimCount() != 2 || gate->GetDimCount() != 2 || up->GetDimCount() != 2 || down->GetDimCount() != 2) {
+        if (input.Info().rank != 2 || gate.Info().rank != 2 || up.Info().rank != 2 || down.Info().rank != 2) {
             std::cout << "[TRTBuilder] RunTextMLPEngine requires 2D tensors." << std::endl;
             return X::Value();
         }
 
-        int tokens = input->GetDimSize(0);
-        int hidden = input->GetDimSize(1);
-        int intermediate = gate->GetDimSize(0);
-        if (gate->GetDimSize(1) != hidden || up->GetDimSize(0) != intermediate ||
-            up->GetDimSize(1) != hidden || down->GetDimSize(0) != hidden ||
-            down->GetDimSize(1) != intermediate) {
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+        int intermediate = TensorDimension(gate, 0);
+        if (TensorDimension(gate, 1) != hidden || TensorDimension(up, 0) != intermediate ||
+            TensorDimension(up, 1) != hidden || TensorDimension(down, 0) != hidden ||
+            TensorDimension(down, 1) != intermediate) {
             std::cout << "[TRTBuilder] RunTextMLPEngine shape mismatch." << std::endl;
             return X::Value();
         }
@@ -974,8 +955,8 @@ namespace Garnet {
             std::cout << "[TRTBuilder] Running CUDA TextMLP: tokens=" << tokens
                 << ", hidden=" << hidden << ", intermediate=" << intermediate << std::endl;
             size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
-            size_t projBytes = static_cast<size_t>(intermediate) * static_cast<size_t>(hidden) * gate->GetItemSize();
-            size_t downBytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * down->GetItemSize();
+            size_t projBytes = static_cast<size_t>(intermediate) * static_cast<size_t>(hidden) * TensorHelper::ItemSize(gate.Info().dtype);
+            size_t downBytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * TensorHelper::ItemSize(down.Info().dtype);
             size_t intermediateBytes = static_cast<size_t>(tokens) * static_cast<size_t>(intermediate) * sizeof(float);
             size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
 
@@ -993,10 +974,10 @@ namespace Garnet {
             TensorDeviceBinding upBinding;
             TensorDeviceBinding downBinding;
             if (cudaStreamCreate(&stream) != cudaSuccess ||
-                !BindTensorInput(input, inputBytes, stream, inputBinding) ||
-                !BindTensorInput(gate, projBytes, stream, gateBinding) ||
-                !BindTensorInput(up, projBytes, stream, upBinding) ||
-                !BindTensorInput(down, downBytes, stream, downBinding) ||
+                !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+                !BindTensorInput(gate, projBytes, stream, gateBinding, execution) ||
+                !BindTensorInput(up, projBytes, stream, upBinding, execution) ||
+                !BindTensorInput(down, downBytes, stream, downBinding, execution) ||
                 cudaMalloc(&dGate, intermediateBytes) != cudaSuccess ||
                 cudaMalloc(&dUp, intermediateBytes) != cudaSuccess ||
                 cudaMalloc(&dHidden, intermediateBytes) != cudaSuccess ||
@@ -1013,6 +994,7 @@ namespace Garnet {
                 if (stream) cudaStreamDestroy(stream);
                 return X::Value();
             }
+        execution.Acquire();
 
             dInput = inputBinding.ptr;
             dGateW = gateBinding.ptr;
@@ -1055,7 +1037,7 @@ namespace Garnet {
                 return X::Value();
             }
 
-            X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+            X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
             if (!output.IsValid()) {
                 FreeOwnedBinding(inputBinding); FreeOwnedBinding(gateBinding); FreeOwnedBinding(upBinding); FreeOwnedBinding(downBinding);
                 cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
@@ -1071,7 +1053,8 @@ namespace Garnet {
             return output;
         }
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -1088,10 +1071,10 @@ namespace Garnet {
         if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
-            !BindTensorInput(gate, projBytes, stream, dGate) ||
-            !BindTensorInput(up, projBytes, stream, dUp) ||
-            !BindTensorInput(down, downBytes, stream, dDown) ||
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(gate, projBytes, stream, dGate, execution) ||
+            !BindTensorInput(up, projBytes, stream, dUp, execution) ||
+            !BindTensorInput(down, downBytes, stream, dDown, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             std::cout << "[TRTBuilder] TextMLP CUDA allocation failed." << std::endl;
             FreeOwnedBinding(dInput);
@@ -1102,6 +1085,7 @@ namespace Garnet {
             cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
 
         bool bound = context->setTensorAddress("x", dInput.ptr)
             && context->setTensorAddress("W_gate", dGate.ptr)
@@ -1119,7 +1103,7 @@ namespace Garnet {
             return X::Value();
         }
 
-        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             std::cout << "[TRTBuilder] Failed to create TextMLP output tensor." << std::endl;
             FreeOwnedBinding(dInput);
@@ -1201,27 +1185,29 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized TextQKV TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunTextQKVEngine(const std::string& enginePath, X::Value inputValue, X::Value qWeight, X::Value kWeight, X::Value vWeight) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunTextQKVEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !qWeight.IsTensor() || !kWeight.IsTensor() || !vWeight.IsTensor()) return X::Value();
+        if (!IsTensor(inputValue) || !IsTensor(qWeight) || !IsTensor(kWeight) || !IsTensor(vWeight)) return X::Value();
         X::Tensor input(inputValue);
         X::Tensor q(qWeight);
         X::Tensor k(kWeight);
         X::Tensor v(vWeight);
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || q->GetDataType() != X::TensorDataType::FLOAT32 ||
-            k->GetDataType() != X::TensorDataType::FLOAT32 || v->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
-        if (input->GetDimCount() != 2 || q->GetDimCount() != 2 || k->GetDimCount() != 2 || v->GetDimCount() != 2) return X::Value();
-        int tokens = input->GetDimSize(0);
-        int hidden = input->GetDimSize(1);
-        int qOut = q->GetDimSize(0);
-        int kOut = k->GetDimSize(0);
-        int vOut = v->GetDimSize(0);
-        if (q->GetDimSize(1) != hidden || k->GetDimSize(1) != hidden || v->GetDimSize(1) != hidden) return X::Value();
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || q.Info().dtype != X3_TENSOR_FLOAT32 ||
+            k.Info().dtype != X3_TENSOR_FLOAT32 || v.Info().dtype != X3_TENSOR_FLOAT32) return X::Value();
+        if (input.Info().rank != 2 || q.Info().rank != 2 || k.Info().rank != 2 || v.Info().rank != 2) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+        int qOut = TensorDimension(q, 0);
+        int kOut = TensorDimension(k, 0);
+        int vOut = TensorDimension(v, 0);
+        if (TensorDimension(q, 1) != hidden || TensorDimension(k, 1) != hidden || TensorDimension(v, 1) != hidden) return X::Value();
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -1238,10 +1224,10 @@ namespace Garnet {
         if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
-            !BindTensorInput(q, qBytes, stream, dQ) ||
-            !BindTensorInput(k, kBytes, stream, dK) ||
-            !BindTensorInput(v, vBytes, stream, dV) ||
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(q, qBytes, stream, dQ, execution) ||
+            !BindTensorInput(k, kBytes, stream, dK, execution) ||
+            !BindTensorInput(v, vBytes, stream, dV, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dQ);
@@ -1251,6 +1237,7 @@ namespace Garnet {
             cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         bool bound = context->setTensorAddress("x", dInput.ptr)
             && context->setTensorAddress("W_q", dQ.ptr)
             && context->setTensorAddress("W_k", dK.ptr)
@@ -1264,7 +1251,7 @@ namespace Garnet {
             cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, qOut + kOut + vOut, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, qOut + kOut + vOut, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dQ);
@@ -1410,44 +1397,46 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized TextQKVHeadNorm TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunTextQKVHeadNormEngine(const std::string& enginePath, X::Value inputValue, X::Value qWeight, X::Value kWeight, X::Value vWeight, X::Value qNormWeight, X::Value kNormWeight) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunTextQKVHeadNormEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !qWeight.IsTensor() || !kWeight.IsTensor() || !vWeight.IsTensor() || !qNormWeight.IsTensor() || !kNormWeight.IsTensor()) return X::Value();
+        if (!IsTensor(inputValue) || !IsTensor(qWeight) || !IsTensor(kWeight) || !IsTensor(vWeight) || !IsTensor(qNormWeight) || !IsTensor(kNormWeight)) return X::Value();
         X::Tensor input(inputValue);
         X::Tensor q(qWeight);
         X::Tensor k(kWeight);
         X::Tensor v(vWeight);
         X::Tensor qNorm(qNormWeight);
         X::Tensor kNorm(kNormWeight);
-        bool bf16Weights = q->GetDataType() == X::TensorDataType::BFLOAT16 &&
-            k->GetDataType() == X::TensorDataType::BFLOAT16 && v->GetDataType() == X::TensorDataType::BFLOAT16 &&
-            qNorm->GetDataType() == X::TensorDataType::BFLOAT16 && kNorm->GetDataType() == X::TensorDataType::BFLOAT16;
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 ||
-            (!bf16Weights && (q->GetDataType() != X::TensorDataType::FLOAT32 ||
-                k->GetDataType() != X::TensorDataType::FLOAT32 || v->GetDataType() != X::TensorDataType::FLOAT32 ||
-                qNorm->GetDataType() != X::TensorDataType::FLOAT32 || kNorm->GetDataType() != X::TensorDataType::FLOAT32))) return X::Value();
-        if (input->GetDimCount() != 2 || q->GetDimCount() != 2 || k->GetDimCount() != 2 || v->GetDimCount() != 2 ||
-            qNorm->GetDimCount() != 1 || kNorm->GetDimCount() != 1) return X::Value();
-        int tokens = input->GetDimSize(0);
-        int hidden = input->GetDimSize(1);
-        int qOut = q->GetDimSize(0);
-        int kOut = k->GetDimSize(0);
-        int vOut = v->GetDimSize(0);
-        int headDim = qNorm->GetDimSize(0);
-        if (headDim <= 0 || kNorm->GetDimSize(0) != headDim || q->GetDimSize(1) != hidden || k->GetDimSize(1) != hidden ||
-            v->GetDimSize(1) != hidden || qOut % headDim != 0 || kOut % headDim != 0 || vOut != kOut) return X::Value();
+        bool bf16Weights = q.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            k.Info().dtype == X3_TENSOR_BFLOAT16 && v.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            qNorm.Info().dtype == X3_TENSOR_BFLOAT16 && kNorm.Info().dtype == X3_TENSOR_BFLOAT16;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 ||
+            (!bf16Weights && (q.Info().dtype != X3_TENSOR_FLOAT32 ||
+                k.Info().dtype != X3_TENSOR_FLOAT32 || v.Info().dtype != X3_TENSOR_FLOAT32 ||
+                qNorm.Info().dtype != X3_TENSOR_FLOAT32 || kNorm.Info().dtype != X3_TENSOR_FLOAT32))) return X::Value();
+        if (input.Info().rank != 2 || q.Info().rank != 2 || k.Info().rank != 2 || v.Info().rank != 2 ||
+            qNorm.Info().rank != 1 || kNorm.Info().rank != 1) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+        int qOut = TensorDimension(q, 0);
+        int kOut = TensorDimension(k, 0);
+        int vOut = TensorDimension(v, 0);
+        int headDim = TensorDimension(qNorm, 0);
+        if (headDim <= 0 || TensorDimension(kNorm, 0) != headDim || TensorDimension(q, 1) != hidden || TensorDimension(k, 1) != hidden ||
+            TensorDimension(v, 1) != hidden || qOut % headDim != 0 || kOut % headDim != 0 || vOut != kOut) return X::Value();
 
-        auto context = bf16Weights ? nullptr : GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath, nullptr, !bf16Weights);
+        auto context = cachedUse.Context();
         if (!bf16Weights && !context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
-        size_t qBytes = static_cast<size_t>(qOut) * static_cast<size_t>(hidden) * q->GetItemSize();
-        size_t kBytes = static_cast<size_t>(kOut) * static_cast<size_t>(hidden) * k->GetItemSize();
-        size_t vBytes = static_cast<size_t>(vOut) * static_cast<size_t>(hidden) * v->GetItemSize();
-        size_t normBytes = static_cast<size_t>(headDim) * qNorm->GetItemSize();
+        size_t qBytes = static_cast<size_t>(qOut) * static_cast<size_t>(hidden) * TensorHelper::ItemSize(q.Info().dtype);
+        size_t kBytes = static_cast<size_t>(kOut) * static_cast<size_t>(hidden) * TensorHelper::ItemSize(k.Info().dtype);
+        size_t vBytes = static_cast<size_t>(vOut) * static_cast<size_t>(hidden) * TensorHelper::ItemSize(v.Info().dtype);
+        size_t normBytes = static_cast<size_t>(headDim) * TensorHelper::ItemSize(qNorm.Info().dtype);
         size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(qOut + kOut + vOut) * sizeof(float);
         TensorDeviceBinding dInput;
         TensorDeviceBinding dQ;
@@ -1460,12 +1449,12 @@ namespace Garnet {
         if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
-            !BindTensorInput(q, qBytes, stream, dQ) ||
-            !BindTensorInput(k, kBytes, stream, dK) ||
-            !BindTensorInput(v, vBytes, stream, dV) ||
-            !BindTensorInput(qNorm, normBytes, stream, dQNorm) ||
-            !BindTensorInput(kNorm, normBytes, stream, dKNorm) ||
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(q, qBytes, stream, dQ, execution) ||
+            !BindTensorInput(k, kBytes, stream, dK, execution) ||
+            !BindTensorInput(v, vBytes, stream, dV, execution) ||
+            !BindTensorInput(qNorm, normBytes, stream, dQNorm, execution) ||
+            !BindTensorInput(kNorm, normBytes, stream, dKNorm, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dQ);
@@ -1477,6 +1466,7 @@ namespace Garnet {
             cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         bool executed = bf16Weights
             ? runQKVHeadNormBF16WeightFP32(
                 static_cast<const float*>(dInput.ptr),
@@ -1502,7 +1492,7 @@ namespace Garnet {
             cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, qOut + kOut + vOut, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, qOut + kOut + vOut, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dQ);
@@ -1685,23 +1675,25 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized TextRoPE TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunTextRoPEEngine(const std::string& enginePath, X::Value qkvValue, X::Value cosValue, X::Value sinValue) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunTextRoPEEngine <- " << enginePath << std::endl;
-        if (!qkvValue.IsTensor() || !cosValue.IsTensor() || !sinValue.IsTensor()) return X::Value();
+        if (!IsTensor(qkvValue) || !IsTensor(cosValue) || !IsTensor(sinValue)) return X::Value();
         X::Tensor qkv(qkvValue);
         X::Tensor cos(cosValue);
         X::Tensor sin(sinValue);
-        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || cos->GetDataType() != X::TensorDataType::FLOAT32 || sin->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
-        if (qkv->GetDimCount() != 2 || cos->GetDimCount() != 2 || sin->GetDimCount() != 2) return X::Value();
-        int tokens = qkv->GetDimSize(0);
-        int total = qkv->GetDimSize(1);
-        int headDim = cos->GetDimSize(1);
-        if (cos->GetDimSize(0) != tokens || sin->GetDimSize(0) != tokens || sin->GetDimSize(1) != headDim) return X::Value();
+        if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || cos.Info().dtype != X3_TENSOR_FLOAT32 || sin.Info().dtype != X3_TENSOR_FLOAT32) return X::Value();
+        if (qkv.Info().rank != 2 || cos.Info().rank != 2 || sin.Info().rank != 2) return X::Value();
+        int tokens = TensorDimension(qkv, 0);
+        int total = TensorDimension(qkv, 1);
+        int headDim = TensorDimension(cos, 1);
+        if (TensorDimension(cos, 0) != tokens || TensorDimension(sin, 0) != tokens || TensorDimension(sin, 1) != headDim) return X::Value();
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t qkvBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
@@ -1714,9 +1706,9 @@ namespace Garnet {
         if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        if (!BindTensorInput(qkv, qkvBytes, stream, dQKV) ||
-            !BindTensorInput(cos, posBytes, stream, dCos) ||
-            !BindTensorInput(sin, posBytes, stream, dSin) ||
+        if (!BindTensorInput(qkv, qkvBytes, stream, dQKV, execution) ||
+            !BindTensorInput(cos, posBytes, stream, dCos, execution) ||
+            !BindTensorInput(sin, posBytes, stream, dSin, execution) ||
             cudaMalloc(&dOutput, qkvBytes) != cudaSuccess) {
             FreeOwnedBinding(dQKV);
             FreeOwnedBinding(dCos);
@@ -1725,6 +1717,7 @@ namespace Garnet {
             cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         bool bound = context->setTensorAddress("qkv", dQKV.ptr)
             && context->setTensorAddress("cos", dCos.ptr)
             && context->setTensorAddress("sin", dSin.ptr)
@@ -1736,7 +1729,7 @@ namespace Garnet {
             cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, total, dOutput, qkvBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, total, dOutput, qkvBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(dQKV);
             FreeOwnedBinding(dCos);
@@ -1931,18 +1924,20 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized TextAttention TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunTextAttentionEngine(const std::string& enginePath, X::Value qkvValue) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunTextAttentionEngine <- " << enginePath << std::endl;
-        if (!qkvValue.IsTensor()) return X::Value();
+        if (!IsTensor(qkvValue)) return X::Value();
         X::Tensor qkv(qkvValue);
-        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2) return X::Value();
-        int tokens = qkv->GetDimSize(0);
-        int total = qkv->GetDimSize(1);
+        if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || qkv.Info().rank != 2) return X::Value();
+        int tokens = TensorDimension(qkv, 0);
+        int total = TensorDimension(qkv, 1);
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
@@ -1953,13 +1948,14 @@ namespace Garnet {
         if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        if (!BindTensorInput(qkv, inputBytes, stream, dInput) ||
+        if (!BindTensorInput(qkv, inputBytes, stream, dInput, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             FreeOwnedBinding(dInput);
             if (dOutput) cudaFree(dOutput);
             cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         bool bound = context->setTensorAddress("qkv", dInput.ptr)
             && context->setTensorAddress("output", dOutput);
         if (!bound || !context->enqueueV3(stream)) {
@@ -1967,7 +1963,7 @@ namespace Garnet {
             cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, 2048, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, 2048, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(dInput);
             cudaFree(dOutput);
@@ -1990,7 +1986,7 @@ namespace Garnet {
         if (tokens > 512) {
             std::cout << "[TRTBuilder] VisionAttention tokens=" << tokens
                 << " uses CUDA exact attention path; skipping TensorRT score-matrix engine." << std::endl;
-            return X::Value("cuda_exact_vision_attention");
+            return X::Value::String(host_, "cuda_exact_vision_attention");
         }
 
         auto builder = createInferBuilder(gLogger);
@@ -2109,16 +2105,17 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized VisionAttention TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunVisionAttentionEngine(const std::string& enginePath, X::Value qkvValue) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunVisionAttentionEngine <- " << enginePath << std::endl;
-        if (!qkvValue.IsTensor()) return X::Value();
+        if (!IsTensor(qkvValue)) return X::Value();
         X::Tensor qkv(qkvValue);
-        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2 || qkv->GetDimSize(1) % 3 != 0) return X::Value();
-        int tokens = qkv->GetDimSize(0);
-        int total = qkv->GetDimSize(1);
+        if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || qkv.Info().rank != 2 || TensorDimension(qkv, 1) % 3 != 0) return X::Value();
+        int tokens = TensorDimension(qkv, 0);
+        int total = TensorDimension(qkv, 1);
         int hidden = total / 3;
         int heads = 16;
         int headDim = hidden / heads;
@@ -2137,7 +2134,7 @@ namespace Garnet {
             cudaStream_t stream = nullptr;
             TensorDeviceBinding inputBinding;
             if (cudaStreamCreate(&stream) != cudaSuccess ||
-                !BindTensorInput(qkv, inputBytes, stream, inputBinding) ||
+                !BindTensorInput(qkv, inputBytes, stream, inputBinding, execution) ||
                 cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
                 FreeOwnedBinding(inputBinding);
                 if (dOutput) cudaFree(dOutput);
@@ -2145,6 +2142,7 @@ namespace Garnet {
                 std::cout << "[TRTBuilder] CUDA exact vision attention allocation failed." << std::endl;
                 return X::Value();
             }
+        execution.Acquire();
             dInput = inputBinding.ptr;
             cudaError_t launchErr = runVisionAttentionFP32(
                 static_cast<const float*>(dInput),
@@ -2159,7 +2157,7 @@ namespace Garnet {
                 FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
             }
-            X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+            X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
             if (!output.IsValid()) {
                 FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
@@ -2171,7 +2169,8 @@ namespace Garnet {
             return output;
         }
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
@@ -2181,13 +2180,14 @@ namespace Garnet {
         cudaStream_t stream = nullptr;
         TensorDeviceBinding inputBinding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            !BindTensorInput(qkv, inputBytes, stream, inputBinding) ||
+            !BindTensorInput(qkv, inputBytes, stream, inputBinding, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             FreeOwnedBinding(inputBinding);
             if (dOutput) cudaFree(dOutput);
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         dInput = inputBinding.ptr;
         bool bound = context->setTensorAddress("qkv", dInput)
             && context->setTensorAddress("output", dOutput);
@@ -2195,7 +2195,7 @@ namespace Garnet {
             FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
@@ -2249,29 +2249,30 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized LinearTranspose TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunLinearTransposeEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunLinearTransposeEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !weightValue.IsTensor()) return X::Value();
+        if (!IsTensor(inputValue) || !IsTensor(weightValue)) return X::Value();
         X::Tensor input(inputValue);
         X::Tensor weight(weightValue);
-        bool bf16Weight = weight->GetDataType() == X::TensorDataType::BFLOAT16;
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 ||
-            (!bf16Weight && weight->GetDataType() != X::TensorDataType::FLOAT32)) return X::Value();
-        if (input->GetDimCount() != 2 || weight->GetDimCount() != 2) return X::Value();
-        int tokens = input->GetDimSize(0);
-        int inFeatures = input->GetDimSize(1);
-        int outFeatures = weight->GetDimSize(0);
-        if (weight->GetDimSize(1) != inFeatures) return X::Value();
+        bool bf16Weight = weight.Info().dtype == X3_TENSOR_BFLOAT16;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 ||
+            (!bf16Weight && weight.Info().dtype != X3_TENSOR_FLOAT32)) return X::Value();
+        if (input.Info().rank != 2 || weight.Info().rank != 2) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int inFeatures = TensorDimension(input, 1);
+        int outFeatures = TensorDimension(weight, 0);
+        if (TensorDimension(weight, 1) != inFeatures) return X::Value();
 
         if (enginePath == "cuda_linear_transpose" || bf16Weight) {
             std::cout << "[TRTBuilder] Running CUDA linear transpose: ["
                 << tokens << ", " << inFeatures << "] x [" << outFeatures << ", "
                 << inFeatures << "]" << std::endl;
             size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
-            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * weight->GetItemSize();
+            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * TensorHelper::ItemSize(weight.Info().dtype);
             size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
             TensorDeviceBinding dInput;
             TensorDeviceBinding dWeight;
@@ -2281,8 +2282,8 @@ namespace Garnet {
                 std::cout << "[TRTBuilder] CUDA linear transpose stream create failed." << std::endl;
                 return X::Value();
             }
-            if (!BindTensorInput(input, inputBytes, stream, dInput) ||
-                !BindTensorInput(weight, weightBytes, stream, dWeight) ||
+            if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+                !BindTensorInput(weight, weightBytes, stream, dWeight, execution) ||
                 cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
                 size_t freeBytes = 0;
                 size_t totalBytes = 0;
@@ -2298,6 +2299,7 @@ namespace Garnet {
                 cudaStreamDestroy(stream);
                 return X::Value();
             }
+        execution.Acquire();
             cudaError_t status = bf16Weight
                 ? runLinearTransposeBF16WeightFP32(
                     static_cast<const float*>(dInput.ptr),
@@ -2315,7 +2317,7 @@ namespace Garnet {
                 cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
             }
-            X::Value output = MakeGPUBackedTensor2D(tokens, outFeatures, dOutput, outputBytes, stream);
+            X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, outFeatures, dOutput, outputBytes, stream);
             if (!output.IsValid()) {
                 std::cout << "[TRTBuilder] CUDA linear transpose output wrap failed." << std::endl;
                 FreeOwnedBinding(dInput);
@@ -2332,7 +2334,8 @@ namespace Garnet {
             return output;
         }
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
@@ -2345,8 +2348,8 @@ namespace Garnet {
         if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
-            !BindTensorInput(weight, weightBytes, stream, dWeight) ||
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(weight, weightBytes, stream, dWeight, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dWeight);
@@ -2354,6 +2357,7 @@ namespace Garnet {
             cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         bool bound = context->setTensorAddress("x", dInput.ptr)
             && context->setTensorAddress("W", dWeight.ptr)
             && context->setTensorAddress("output", dOutput);
@@ -2363,7 +2367,7 @@ namespace Garnet {
             cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, outFeatures, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, outFeatures, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dWeight);
@@ -2435,33 +2439,34 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized LinearBiasTranspose TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunLinearBiasTransposeEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue, X::Value biasValue) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunLinearBiasTransposeEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !weightValue.IsTensor() || !biasValue.IsTensor()) return X::Value();
+        if (!IsTensor(inputValue) || !IsTensor(weightValue) || !IsTensor(biasValue)) return X::Value();
         X::Tensor input(inputValue);
         X::Tensor weight(weightValue);
         X::Tensor bias(biasValue);
-        bool bf16Weights = weight->GetDataType() == X::TensorDataType::BFLOAT16 &&
-            bias->GetDataType() == X::TensorDataType::BFLOAT16;
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 ||
-            (!bf16Weights && (weight->GetDataType() != X::TensorDataType::FLOAT32 ||
-                bias->GetDataType() != X::TensorDataType::FLOAT32))) return X::Value();
-        if (input->GetDimCount() != 2 || weight->GetDimCount() != 2 || bias->GetDimCount() != 1) return X::Value();
-        int tokens = input->GetDimSize(0);
-        int inFeatures = input->GetDimSize(1);
-        int outFeatures = weight->GetDimSize(0);
-        if (weight->GetDimSize(1) != inFeatures || bias->GetDimSize(0) != outFeatures) return X::Value();
+        bool bf16Weights = weight.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            bias.Info().dtype == X3_TENSOR_BFLOAT16;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 ||
+            (!bf16Weights && (weight.Info().dtype != X3_TENSOR_FLOAT32 ||
+                bias.Info().dtype != X3_TENSOR_FLOAT32))) return X::Value();
+        if (input.Info().rank != 2 || weight.Info().rank != 2 || bias.Info().rank != 1) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int inFeatures = TensorDimension(input, 1);
+        int outFeatures = TensorDimension(weight, 0);
+        if (TensorDimension(weight, 1) != inFeatures || TensorDimension(bias, 0) != outFeatures) return X::Value();
 
         if (enginePath == "cuda_linear_bias_transpose" || bf16Weights) {
             std::cout << "[TRTBuilder] Running CUDA linear+bias transpose: ["
                 << tokens << ", " << inFeatures << "] x [" << outFeatures << ", "
                 << inFeatures << "]" << std::endl;
             size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
-            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * weight->GetItemSize();
-            size_t biasBytes = static_cast<size_t>(outFeatures) * bias->GetItemSize();
+            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * TensorHelper::ItemSize(weight.Info().dtype);
+            size_t biasBytes = static_cast<size_t>(outFeatures) * TensorHelper::ItemSize(bias.Info().dtype);
             size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
             void* dInput = nullptr;
             void* dWeight = nullptr;
@@ -2472,9 +2477,9 @@ namespace Garnet {
             TensorDeviceBinding weightBinding;
             TensorDeviceBinding biasBinding;
             if (cudaStreamCreate(&stream) != cudaSuccess ||
-                !BindTensorInput(input, inputBytes, stream, inputBinding) ||
-                !BindTensorInput(weight, weightBytes, stream, weightBinding) ||
-                !BindTensorInput(bias, biasBytes, stream, biasBinding) ||
+                !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+                !BindTensorInput(weight, weightBytes, stream, weightBinding, execution) ||
+                !BindTensorInput(bias, biasBytes, stream, biasBinding, execution) ||
                 cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
                 FreeOwnedBinding(inputBinding);
                 FreeOwnedBinding(weightBinding);
@@ -2484,6 +2489,7 @@ namespace Garnet {
                 std::cout << "[TRTBuilder] CUDA linear+bias allocation failed." << std::endl;
                 return X::Value();
             }
+        execution.Acquire();
             dInput = inputBinding.ptr;
             dWeight = weightBinding.ptr;
             dBias = biasBinding.ptr;
@@ -2504,7 +2510,7 @@ namespace Garnet {
                 FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
             }
-            X::Value output = MakeGPUBackedTensor2D(tokens, outFeatures, dOutput, outputBytes, stream);
+            X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, outFeatures, dOutput, outputBytes, stream);
             if (!output.IsValid()) {
                 FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
                 return X::Value();
@@ -2518,7 +2524,8 @@ namespace Garnet {
             return output;
         }
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
@@ -2534,9 +2541,9 @@ namespace Garnet {
         TensorDeviceBinding weightBinding;
         TensorDeviceBinding biasBinding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            !BindTensorInput(input, inputBytes, stream, inputBinding) ||
-            !BindTensorInput(weight, weightBytes, stream, weightBinding) ||
-            !BindTensorInput(bias, biasBytes, stream, biasBinding) ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+            !BindTensorInput(weight, weightBytes, stream, weightBinding, execution) ||
+            !BindTensorInput(bias, biasBytes, stream, biasBinding, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             FreeOwnedBinding(inputBinding);
             FreeOwnedBinding(weightBinding);
@@ -2545,6 +2552,7 @@ namespace Garnet {
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         dInput = inputBinding.ptr;
         dWeight = weightBinding.ptr;
         dBias = biasBinding.ptr;
@@ -2556,7 +2564,7 @@ namespace Garnet {
             FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, outFeatures, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, outFeatures, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
@@ -2647,12 +2655,13 @@ namespace Garnet {
         outFile.close();
 
         std::cout << "[TRTBuilder] Serialized VisionMLP TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunVisionMLPEngine(const std::string& enginePath, X::Value inputValue, X::Value fc1Weight, X::Value fc1Bias, X::Value fc2Weight, X::Value fc2Bias) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunVisionMLPEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !fc1Weight.IsTensor() || !fc1Bias.IsTensor() || !fc2Weight.IsTensor() || !fc2Bias.IsTensor()) {
+        if (!IsTensor(inputValue) || !IsTensor(fc1Weight) || !IsTensor(fc1Bias) || !IsTensor(fc2Weight) || !IsTensor(fc2Bias)) {
             std::cout << "[TRTBuilder] RunVisionMLPEngine requires tensor inputs." << std::endl;
             return X::Value();
         }
@@ -2662,23 +2671,24 @@ namespace Garnet {
         X::Tensor b1(fc1Bias);
         X::Tensor w2(fc2Weight);
         X::Tensor b2(fc2Bias);
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || w1->GetDataType() != X::TensorDataType::FLOAT32 ||
-            b1->GetDataType() != X::TensorDataType::FLOAT32 || w2->GetDataType() != X::TensorDataType::FLOAT32 ||
-            b2->GetDataType() != X::TensorDataType::FLOAT32) {
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || w1.Info().dtype != X3_TENSOR_FLOAT32 ||
+            b1.Info().dtype != X3_TENSOR_FLOAT32 || w2.Info().dtype != X3_TENSOR_FLOAT32 ||
+            b2.Info().dtype != X3_TENSOR_FLOAT32) {
             std::cout << "[TRTBuilder] RunVisionMLPEngine supports float32 only." << std::endl;
             return X::Value();
         }
 
-        int tokens = input->GetDimSize(0);
-        int hidden = input->GetDimSize(1);
-        int intermediate = w1->GetDimSize(0);
-        if (input->GetDimCount() != 2 || w1->GetDimCount() != 2 || w2->GetDimCount() != 2 ||
-            w1->GetDimSize(1) != hidden || w2->GetDimSize(0) != hidden || w2->GetDimSize(1) != intermediate) {
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+        int intermediate = TensorDimension(w1, 0);
+        if (input.Info().rank != 2 || w1.Info().rank != 2 || w2.Info().rank != 2 ||
+            TensorDimension(w1, 1) != hidden || TensorDimension(w2, 0) != hidden || TensorDimension(w2, 1) != intermediate) {
             std::cout << "[TRTBuilder] RunVisionMLPEngine shape mismatch." << std::endl;
             return X::Value();
         }
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -2701,11 +2711,11 @@ namespace Garnet {
         TensorDeviceBinding w2Binding;
         TensorDeviceBinding b2Binding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            !BindTensorInput(input, inputBytes, stream, inputBinding) ||
-            !BindTensorInput(w1, fc1Bytes, stream, w1Binding) ||
-            !BindTensorInput(b1, fc1BiasBytes, stream, b1Binding) ||
-            !BindTensorInput(w2, fc2Bytes, stream, w2Binding) ||
-            !BindTensorInput(b2, fc2BiasBytes, stream, b2Binding) ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+            !BindTensorInput(w1, fc1Bytes, stream, w1Binding, execution) ||
+            !BindTensorInput(b1, fc1BiasBytes, stream, b1Binding, execution) ||
+            !BindTensorInput(w2, fc2Bytes, stream, w2Binding, execution) ||
+            !BindTensorInput(b2, fc2BiasBytes, stream, b2Binding, execution) ||
             cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
             FreeOwnedBinding(inputBinding);
             FreeOwnedBinding(w1Binding);
@@ -2716,6 +2726,7 @@ namespace Garnet {
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
 
         dInput = inputBinding.ptr;
         dW1 = w1Binding.ptr;
@@ -2734,7 +2745,7 @@ namespace Garnet {
             return X::Value();
         }
 
-        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, outputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(inputBinding); FreeOwnedBinding(w1Binding); FreeOwnedBinding(b1Binding); FreeOwnedBinding(w2Binding); FreeOwnedBinding(b2Binding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
@@ -2816,18 +2827,19 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized RMSNorm TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunRMSNormEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunRMSNormEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !weightValue.IsTensor()) return X::Value();
+        if (!IsTensor(inputValue) || !IsTensor(weightValue)) return X::Value();
         X::Tensor input(inputValue);
         X::Tensor weight(weightValue);
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || weight->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
-        if (input->GetDimCount() != 2 || weight->GetDimCount() != 1 || input->GetDimSize(1) != weight->GetDimSize(0)) return X::Value();
-        int tokens = input->GetDimSize(0);
-        int hidden = input->GetDimSize(1);
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || weight.Info().dtype != X3_TENSOR_FLOAT32) return X::Value();
+        if (input.Info().rank != 2 || weight.Info().rank != 1 || TensorDimension(input, 1) != TensorDimension(weight, 0)) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
         size_t weightBytes = static_cast<size_t>(hidden) * sizeof(float);
@@ -2838,8 +2850,8 @@ namespace Garnet {
         if (cudaStreamCreate(&stream) != cudaSuccess) {
             return X::Value();
         }
-        if (!BindTensorInput(input, inputBytes, stream, dInput) ||
-            !BindTensorInput(weight, weightBytes, stream, dWeight) ||
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(weight, weightBytes, stream, dWeight, execution) ||
             cudaMalloc(&dOutput, inputBytes) != cudaSuccess) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dWeight);
@@ -2847,6 +2859,7 @@ namespace Garnet {
             cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         cudaError_t status = runRMSNormFP32(
             static_cast<const float*>(dInput.ptr),
             static_cast<const float*>(dWeight.ptr),
@@ -2860,7 +2873,7 @@ namespace Garnet {
             cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, inputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, inputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(dInput);
             FreeOwnedBinding(dWeight);
@@ -2946,21 +2959,23 @@ namespace Garnet {
         outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
         outFile.close();
         std::cout << "[TRTBuilder] Serialized LayerNorm TensorRT engine bytes: " << serialized->size() << std::endl;
-        return X::Value(enginePath);
+        return X::Value::String(host_, enginePath);
     }
 
     X::Value TRTBuilder::RunLayerNormEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue, X::Value biasValue) {
+        ExecutionInputs execution;
         std::cout << "[TRTBuilder] RunLayerNormEngine <- " << enginePath << std::endl;
-        if (!inputValue.IsTensor() || !weightValue.IsTensor() || !biasValue.IsTensor()) return X::Value();
+        if (!IsTensor(inputValue) || !IsTensor(weightValue) || !IsTensor(biasValue)) return X::Value();
         X::Tensor input(inputValue);
         X::Tensor weight(weightValue);
         X::Tensor bias(biasValue);
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || weight->GetDataType() != X::TensorDataType::FLOAT32 || bias->GetDataType() != X::TensorDataType::FLOAT32) return X::Value();
-        if (input->GetDimCount() != 2 || weight->GetDimCount() != 1 || bias->GetDimCount() != 1 || input->GetDimSize(1) != weight->GetDimSize(0) || weight->GetDimSize(0) != bias->GetDimSize(0)) return X::Value();
-        int tokens = input->GetDimSize(0);
-        int hidden = input->GetDimSize(1);
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || weight.Info().dtype != X3_TENSOR_FLOAT32 || bias.Info().dtype != X3_TENSOR_FLOAT32) return X::Value();
+        if (input.Info().rank != 2 || weight.Info().rank != 1 || bias.Info().rank != 1 || TensorDimension(input, 1) != TensorDimension(weight, 0) || TensorDimension(weight, 0) != TensorDimension(bias, 0)) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
 
-        auto context = GetCachedTRTExecutionContext(enginePath);
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
         if (!context) return X::Value();
 
         size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
@@ -2974,9 +2989,9 @@ namespace Garnet {
         TensorDeviceBinding weightBinding;
         TensorDeviceBinding biasBinding;
         if (cudaStreamCreate(&stream) != cudaSuccess ||
-            !BindTensorInput(input, inputBytes, stream, inputBinding) ||
-            !BindTensorInput(weight, affineBytes, stream, weightBinding) ||
-            !BindTensorInput(bias, affineBytes, stream, biasBinding) ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+            !BindTensorInput(weight, affineBytes, stream, weightBinding, execution) ||
+            !BindTensorInput(bias, affineBytes, stream, biasBinding, execution) ||
             cudaMalloc(&dOutput, inputBytes) != cudaSuccess) {
             FreeOwnedBinding(inputBinding);
             FreeOwnedBinding(weightBinding);
@@ -2985,6 +3000,7 @@ namespace Garnet {
             if (stream) cudaStreamDestroy(stream);
             return X::Value();
         }
+        execution.Acquire();
         dInput = inputBinding.ptr;
         dWeight = weightBinding.ptr;
         dBias = biasBinding.ptr;
@@ -2996,7 +3012,7 @@ namespace Garnet {
             FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
         }
-        X::Value output = MakeGPUBackedTensor2D(tokens, hidden, dOutput, inputBytes, stream);
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, inputBytes, stream);
         if (!output.IsValid()) {
             FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
             return X::Value();
@@ -3203,22 +3219,72 @@ namespace Garnet {
     }
 
     nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTTensor(X::Value value) {
-        if (!value.IsObject()) {
-            loweringError = "scalar operands are not implemented in generic TensorRT lowering";
-            return nullptr;
+        if (!IsTensor(value)) {
+            Dims dimensions{};
+            Weights weights{};
+            if (value.raw().tag == X3_TAG_INT64) {
+                integerWeights.push_back(value.ToLongLong());
+                weights = {DataType::kINT64, &integerWeights.back(), 1};
+            } else if (value.raw().tag == X3_TAG_DOUBLE) {
+                scalarWeights.push_back(static_cast<float>(value.ToDouble()));
+                weights = {DataType::kFLOAT, &scalarWeights.back(), 1};
+            } else {
+                loweringError = "TensorRT operands must be tensors or numeric scalars";
+                return nullptr;
+            }
+            auto* constant = network->addConstant(dimensions, weights);
+            return constant ? constant->getOutput(0) : nullptr;
         }
-        const unsigned long long id = value.GetObj()->GetID();
+        const unsigned long long id = TensorId(value);
         auto found = tensorMap.find(id);
         if (found != tensorMap.end()) {
             return found->second;
         }
-        if (value.IsTensor()) {
-            X::Tensor tensor(value);
-            const std::string weightName = tensor->GetName().ToString();
-            if (capturedWeightIndex && capturedWeightIndex->Find(weightName)) {
-                ITensor* weight = GetOrCreateTRTWeight(weightName);
+        if (IsTensor(value)) {
+            const auto named = capturedTensorNames.find(id);
+            if (named != capturedTensorNames.end() && capturedWeightIndex &&
+                capturedWeightIndex->Find(named->second)) {
+                ITensor* weight = GetOrCreateTRTWeight(named->second);
                 if (weight) tensorMap[id] = weight;
                 return weight;
+            }
+            X::Tensor tensor(value);
+            if (!tensor.Info().symbolic) {
+                if (!IsContiguousTensor(tensor)) {
+                    loweringError = "TensorRT constant must be contiguous";
+                    return nullptr;
+                }
+                auto cpu = TensorHelper::CopyToCPU(tensor);
+                const auto info = cpu.Info();
+                Dims dimensions{};
+                if (info.rank > Dims::MAX_DIMS) {
+                    loweringError = "TensorRT constant rank exceeds backend limit";
+                    return nullptr;
+                }
+                dimensions.nbDims = info.rank;
+                int64_t count = 1;
+                for (uint32_t i = 0; i < info.rank; ++i) {
+                    dimensions.d[i] = TensorDimension(cpu, i);
+                    if (dimensions.d[i] && count > INT64_MAX / dimensions.d[i]) {
+                        loweringError = "TensorRT constant shape overflows";
+                        return nullptr;
+                    }
+                    count *= dimensions.d[i];
+                }
+                DataType type;
+                switch (info.dtype) {
+                    case X3_TENSOR_FLOAT32: type = DataType::kFLOAT; break;
+                    case X3_TENSOR_FLOAT16: type = DataType::kHALF; break;
+                    case X3_TENSOR_BFLOAT16: type = DataType::kBF16; break;
+                    case X3_TENSOR_INT32: type = DataType::kINT32; break;
+                    case X3_TENSOR_INT64: type = DataType::kINT64; break;
+                    default: loweringError = "unsupported TensorRT constant dtype"; return nullptr;
+                }
+                constantTensors.push_back(cpu);
+                auto* layer = network->addConstant(dimensions, Weights{type, info.data, count});
+                if (!layer) return nullptr;
+                tensorMap[id] = layer->getOutput(0);
+                return layer->getOutput(0);
             }
         }
         const auto partitionInput = partitionInputNames.find(id);
@@ -3232,21 +3298,21 @@ namespace Garnet {
             }
             else {
                 X::Tensor tensor(value);
-                if (tensor->GetDataType() == X::TensorDataType::FLOAT32) dataType = DataType::kFLOAT;
-                else if (tensor->GetDataType() == X::TensorDataType::BFLOAT16) dataType = DataType::kBF16;
-                else if (tensor->GetDataType() == X::TensorDataType::LONGLONG) dataType = DataType::kINT64;
-                else if (tensor->GetDataType() == X::TensorDataType::INT) dataType = DataType::kINT32;
+                if (tensor.Info().dtype == X3_TENSOR_FLOAT32) dataType = DataType::kFLOAT;
+                else if (tensor.Info().dtype == X3_TENSOR_BFLOAT16) dataType = DataType::kBF16;
+                else if (tensor.Info().dtype == X3_TENSOR_INT64) dataType = DataType::kINT64;
+                else if (tensor.Info().dtype == X3_TENSOR_INT32) dataType = DataType::kINT32;
                 else {
                     loweringError = "unsupported partition boundary dtype";
                     return nullptr;
                 }
-                dimensions.nbDims = tensor->GetDimCount();
-                if (dimensions.nbDims <= 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+                dimensions.nbDims = tensor.Info().rank;
+                if (dimensions.nbDims < 0 || dimensions.nbDims > Dims::MAX_DIMS) {
                     loweringError = "invalid partition boundary rank";
                     return nullptr;
                 }
                 for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
-                    dimensions.d[dimension] = tensor->GetDimSize(dimension);
+                    dimensions.d[dimension] = TensorDimension(tensor, dimension);
                 }
             }
             ITensor* input = network->addInput(
@@ -3347,10 +3413,10 @@ namespace Garnet {
         X::KWARGS& options) {
         const Dims qkvDims = qkv->getDimensions();
         const Dims positionDims = positionIds->getDimensions();
-        auto* headsItem = options.find("num_heads");
-        auto* headDimItem = options.find("head_dim");
-        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
-        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
         if (qkvDims.nbDims != 2 || positionDims.nbDims != 2 || positionDims.d[1] != 2 ||
             heads <= 0 || headDim <= 0 || headDim % 4 != 0 ||
             qkvDims.d[1] != 3 * heads * headDim) {
@@ -3501,10 +3567,10 @@ namespace Garnet {
         X::KWARGS& options) {
         const Dims qkvDims = qkv->getDimensions();
         const Dims sequenceDims = cuSeqlens->getDimensions();
-        auto* headsItem = options.find("num_heads");
-        auto* headDimItem = options.find("head_dim");
-        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
-        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
         if (qkvDims.nbDims != 2 || sequenceDims.nbDims != 1 || sequenceDims.d[0] != 2 ||
             heads <= 0 || headDim <= 0 || qkvDims.d[1] != 3 * heads * headDim) {
             loweringError = "vision attention currently requires one packed vision sequence";
@@ -3603,12 +3669,12 @@ namespace Garnet {
         bool multimodal) {
         const Dims qkvDims = qkv->getDimensions();
         const Dims positionDims = positionIds->getDimensions();
-        auto* headsItem = options.find("num_heads");
-        auto* kvHeadsItem = options.find("num_kv_heads");
-        auto* headDimItem = options.find("head_dim");
-        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
-        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->val.ToLongLong()) : 0;
-        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* kvHeadsItem = FindKeyword(options, "num_kv_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
         const int positionComponents = multimodal ? 3 : 1;
         if (qkvDims.nbDims != 3 || positionDims.nbDims != 3 ||
             positionDims.d[0] != positionComponents ||
@@ -3644,10 +3710,10 @@ namespace Garnet {
 
         const int frequencyCount = headDim / 2;
         int sections[3] = {24, 20, 20};
-        auto* sectionsItem = options.find("mrope_section");
-        if (sectionsItem && sectionsItem->val.IsList()) {
-            X::List sectionValues(sectionsItem->val);
-            if (sectionValues->Size() == 3) {
+        auto* sectionsItem = FindKeyword(options, "mrope_section");
+        if (sectionsItem && sectionsItem->second.IsList()) {
+            X::Value sectionValues(sectionsItem->second);
+            if (sectionValues.Size() == 3) {
                 for (int i = 0; i < 3; ++i) {
                     sections[i] = static_cast<int>(sectionValues[i].ToLongLong());
                 }
@@ -3693,8 +3759,8 @@ namespace Garnet {
             : nullptr;
 
         vectorWeights.emplace_back(static_cast<size_t>(frequencyCount));
-        auto* thetaItem = options.find("rope_theta");
-        const float theta = thetaItem ? static_cast<float>(thetaItem->val.ToDouble()) : 10000.0F;
+        auto* thetaItem = FindKeyword(options, "rope_theta");
+        const float theta = thetaItem ? static_cast<float>(thetaItem->second.ToDouble()) : 10000.0F;
         for (int i = 0; i < frequencyCount; ++i) {
             vectorWeights.back()[i] = 1.0F / std::pow(
                 theta,
@@ -3807,12 +3873,12 @@ namespace Garnet {
         }
         const Dims qkvDims = qkv->getDimensions();
         const Dims maskDims = attentionMask->getDimensions();
-        auto* headsItem = options.find("num_heads");
-        auto* kvHeadsItem = options.find("num_key_value_heads");
-        auto* headDimItem = options.find("head_dim");
-        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
-        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->val.ToLongLong()) : 0;
-        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* kvHeadsItem = FindKeyword(options, "num_key_value_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
         if (qkvDims.nbDims != 3 || maskDims.nbDims != 2 || heads <= 0 || kvHeads <= 0 ||
             heads % kvHeads != 0 || headDim <= 0 ||
             qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
@@ -3998,12 +4064,12 @@ namespace Garnet {
         X::KWARGS& options) {
         const Dims qkvDims = qkv->getDimensions();
         const Dims maskDims = attentionMask->getDimensions();
-        auto* headsItem = options.find("num_heads");
-        auto* kvHeadsItem = options.find("num_key_value_heads");
-        auto* headDimItem = options.find("head_dim");
-        const int heads = headsItem ? static_cast<int>(headsItem->val.ToLongLong()) : 0;
-        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->val.ToLongLong()) : 0;
-        const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* kvHeadsItem = FindKeyword(options, "num_key_value_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
         if (qkvDims.nbDims != 3 || maskDims.nbDims != 2 || heads <= 0 || kvHeads <= 0 ||
             heads % kvHeads != 0 || headDim <= 0 ||
             qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
@@ -4184,7 +4250,31 @@ namespace Garnet {
         const SafeTensorsIndex* weightIndex,
         const std::string& enginePath,
         std::string& errorMessage) {
+        capturedTensorNames.clear();
+        unsigned long long graphOutputId = 0;
+        try {
+            TensorGraphCapture capture(graph);
+            std::vector<unsigned long long> outputIds;
+            AppendTensorDependencies(capture.Outputs(), outputIds);
+            if (outputIds.size() != 1)
+                throw std::runtime_error("compiled TensorRT graph requires one tensor output");
+            graphOutputId = outputIds.front();
+            for (const auto& operation : capture.Operations()) {
+                if (!operation.provider.empty() || operation.name != "input") continue;
+                for (uint64_t i = 0; i < operation.attributes.Size(); ++i) {
+                    X::Value key, value;
+                    if (!operation.attributes.DictEntry(i, key, value))
+                        throw std::runtime_error("invalid symbolic input attributes");
+                    if (key.ToString() == "name" && value.IsString())
+                        capturedTensorNames[operation.id] = value.ToString();
+                }
+            }
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
+            return false;
+        }
         tensorMap.clear();
+        constantTensors.clear();
         weightTensorMap.clear();
         scalarWeights.clear();
         bfloat16ScalarWeights.clear();
@@ -4243,26 +4333,26 @@ namespace Garnet {
         for (size_t index = 0; index < symbolicInputs.size(); ++index) {
             X::Value inputValue = symbolicInputs[index];
             if (partitionBuildActive &&
-                partitionInputNames.find(inputValue.GetObj()->GetID()) ==
+                partitionInputNames.find(TensorId(inputValue)) ==
                     partitionInputNames.end()) {
                 continue;
             }
-            if (!inputValue.IsTensor()) {
+            if (!IsTensor(inputValue)) {
                 loweringError = "compiled graph inputs must be tensors";
                 break;
             }
             X::Tensor input(inputValue);
             DataType trtDataType;
-            if (input->GetDataType() == X::TensorDataType::FLOAT32) {
+            if (input.Info().dtype == X3_TENSOR_FLOAT32) {
                 trtDataType = DataType::kFLOAT;
             }
-            else if (input->GetDataType() == X::TensorDataType::BFLOAT16) {
+            else if (input.Info().dtype == X3_TENSOR_BFLOAT16) {
                 trtDataType = DataType::kBF16;
             }
-            else if (input->GetDataType() == X::TensorDataType::LONGLONG) {
+            else if (input.Info().dtype == X3_TENSOR_INT64) {
                 trtDataType = DataType::kINT64;
             }
-            else if (input->GetDataType() == X::TensorDataType::INT) {
+            else if (input.Info().dtype == X3_TENSOR_INT32) {
                 trtDataType = DataType::kINT32;
             }
             else {
@@ -4270,35 +4360,30 @@ namespace Garnet {
                 break;
             }
             Dims dimensions{};
-            dimensions.nbDims = input->GetDimCount();
-            if (dimensions.nbDims <= 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+            dimensions.nbDims = input.Info().rank;
+            if (dimensions.nbDims < 0 || dimensions.nbDims > Dims::MAX_DIMS) {
                 loweringError = "invalid symbolic input rank";
                 break;
             }
             for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
-                dimensions.d[dimension] = input->GetDimSize(dimension);
+                dimensions.d[dimension] = TensorDimension(input, dimension);
             }
             const std::string name = partitionBuildActive
-                ? partitionInputNames.at(inputValue.GetObj()->GetID())
+                ? partitionInputNames.at(TensorId(inputValue))
                 : "input_" + std::to_string(index);
             ITensor* trtInput = network->addInput(name.c_str(), trtDataType, dimensions);
             if (!trtInput) {
                 loweringError = "TensorRT addInput failed for " + name;
                 break;
             }
-            tensorMap[inputValue.GetObj()->GetID()] = trtInput;
+            tensorMap[TensorId(inputValue)] = trtInput;
         }
 
         if (loweringError.empty()) {
-            X::TensorGraph tensorGraph(graph);
-            X::KWARGS runOptions;
-            runOptions.Add("Func", forwardFunction);
             replayOperationIndex = 0;
-            ScopedLoweringContext loweringScope(*this);
-            const bool ran = tensorGraph->Run(graphArguments, runOptions);
-            if (!ran && loweringError.empty()) {
-                loweringError = "xlang TensorGraph replay failed";
-            }
+            std::string replayError;
+            if (!ReplayTensorGraph(graph, *this, replayError) && loweringError.empty())
+                loweringError = replayError;
             if (partitionBuildActive && loweringError.empty() &&
                 replayOperationIndex != GetCapturedTensorOperations().size()) {
                 loweringError = "partition replay did not consume the analyzed operation DAG";
@@ -4307,6 +4392,11 @@ namespace Garnet {
 
         if (loweringError.empty() && !partitionBuildActive && !lastOutput) {
             loweringError = "captured graph produced no lowerable output";
+        }
+        if (loweringError.empty() && !partitionBuildActive) {
+            const auto output = tensorMap.find(graphOutputId);
+            if (output == tensorMap.end()) loweringError = "declared graph output was not lowered";
+            else lastOutput = output->second;
         }
         if (loweringError.empty()) {
             if (partitionBuildActive) {
@@ -4374,6 +4464,7 @@ namespace Garnet {
         for (auto* plugin : ownedPlugins) plugin->destroy();
         ownedPlugins.clear();
         tensorMap.clear();
+        constantTensors.clear();
         capturedWeightFiles.clear();
         capturedWeightIndex = nullptr;
         lastOutput = nullptr;
@@ -4389,19 +4480,15 @@ namespace Garnet {
         std::string& errorMessage)
     {
         analyzedOperations.clear();
-        analysisActive = true;
-        X::TensorGraph tensorGraph(graph);
-        X::KWARGS runOptions;
-        runOptions.Add("Func", forwardFunction);
-        ScopedLoweringContext loweringScope(*this);
-        const bool ran = tensorGraph->Run(graphArguments, runOptions);
-        analysisActive = false;
-        if (!ran) {
-            errorMessage = "xlang TensorGraph analysis replay failed";
-            analyzedOperations.clear();
+        try {
+            TensorGraphCapture capture(graph);
+            if (!CaptureFusionGraph(capture, FusionPartitionOptions{}, errorMessage))
+                return false;
+            operations = GetCapturedTensorOperations();
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
             return false;
         }
-        operations = std::move(analyzedOperations);
         errorMessage.clear();
         return true;
     }
@@ -4418,6 +4505,16 @@ namespace Garnet {
         std::string& errorMessage)
     {
         partitions.clear();
+        std::vector<unsigned long long> terminalIds;
+        try {
+            TensorGraphCapture capture(graph);
+            AppendTensorDependencies(capture.Outputs(), terminalIds);
+            if (terminalIds.size() != 1)
+                throw std::runtime_error("partitioned TensorRT graph requires one tensor output");
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
+            return false;
+        }
         if (operations.empty()) {
             errorMessage = "captured graph contains no partitionable operations";
             return false;
@@ -4445,7 +4542,7 @@ namespace Garnet {
         std::unordered_map<unsigned long long, int> requestInputIndices;
         for (size_t index = 0; index < symbolicInputs.size(); ++index) {
             if (symbolicInputs[index].IsObject()) {
-                requestInputIndices[symbolicInputs[index].GetObj()->GetID()] =
+                requestInputIndices[TensorId(symbolicInputs[index])] =
                     static_cast<int>(index);
             }
         }
@@ -4481,8 +4578,7 @@ namespace Garnet {
                         crossesPartition = crossesPartition || consumerPartition != partitionId;
                     }
                 }
-                const bool terminal = consumers == consumerPartitions.end() ||
-                    consumers->second.empty();
+                const bool terminal = operation.outputTensorId == terminalIds.front();
                 if (crossesPartition || terminal) outputIds.insert(operation.outputTensorId);
             }
 
@@ -4504,9 +4600,7 @@ namespace Garnet {
             }
             int terminalIndex = 0;
             for (const auto outputId : outputIds) {
-                const auto consumers = consumerPartitions.find(outputId);
-                const bool terminal = consumers == consumerPartitions.end() ||
-                    consumers->second.empty();
+                const bool terminal = outputId == terminalIds.front();
                 EnginePartitionBinding binding;
                 binding.tensorId = outputId;
                 binding.terminalOutput = terminal;
@@ -4554,7 +4648,7 @@ namespace Garnet {
             errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
             return false;
         }
-        if (!GetCachedTRTExecutionContext(enginePath, weightIndex)) {
+        if (!GetCachedTRTEngine(enginePath, weightIndex)) {
             errorMessage = "failed to prepare captured engine " + enginePath;
             return false;
         }
@@ -4585,8 +4679,8 @@ namespace Garnet {
         for (const auto& partition : partitions) {
             preparations.push_back(std::async(
                 std::launch::async,
-                [enginePath = partition.enginePath, weightIndex]() {
-                    TRTBuilder builder;
+                [enginePath = partition.enginePath, weightIndex, host = host_]() {
+                    TRTBuilder builder(host);
                     std::string localError;
                     const bool prepared = builder.PrepareCapturedEngine(
                         enginePath, weightIndex, localError);
@@ -4620,33 +4714,47 @@ namespace Garnet {
             return X::Value();
         }
 
-        ICudaEngine* cachedEngine = nullptr;
-        IExecutionContext* cachedContext = nullptr;
-        if (!GetCachedTRTExecutionObjects(enginePath, cachedEngine, cachedContext, weightIndex)) {
+        CachedExecutionUse cachedUse(enginePath, weightIndex);
+        ICudaEngine* cachedEngine = cachedUse.Engine();
+        IExecutionContext* cachedContext = cachedUse.Context();
+        if (!cachedContext) {
             errorMessage = "failed to load cached TensorRT engine";
             return X::Value();
         }
 
-        X::List inputs(inputsValue);
+        X::Value inputs(inputsValue);
+        ExecutionInputs execution;
         std::vector<void*> bindingSignature;
-        bindingSignature.reserve(static_cast<size_t>(inputs->Size()) + 1);
-        for (long long index = 0; index < inputs->Size(); ++index) {
-            X::Value inputValue = inputs->Get(index);
-            if (!inputValue.IsTensor()) {
+        bindingSignature.reserve(static_cast<size_t>(inputs.Size()) + 1);
+        for (long long index = 0; index < inputs.Size(); ++index) {
+            X::Value inputValue = inputs.Get(index);
+            if (!IsTensor(inputValue)) {
                 errorMessage = "compiled forward input_" + std::to_string(index) +
                     " must be an X::Tensor value";
                 return X::Value();
             }
             X::Tensor input(inputValue);
-            if (input->GetDataType() != X::TensorDataType::FLOAT32 &&
-                input->GetDataType() != X::TensorDataType::BFLOAT16 &&
-                input->GetDataType() != X::TensorDataType::INT &&
-                input->GetDataType() != X::TensorDataType::LONGLONG) {
+            if (!IsContiguousTensor(input)) {
+                errorMessage = "TensorRT compiled inputs must be contiguous";
+                return X::Value();
+            }
+            if (input.Info().dtype != X3_TENSOR_FLOAT32 &&
+                input.Info().dtype != X3_TENSOR_BFLOAT16 &&
+                input.Info().dtype != X3_TENSOR_INT32 &&
+                input.Info().dtype != X3_TENSOR_INT64) {
                 errorMessage = "compiled forward accepts FLOAT32, BFLOAT16, INT32, or INT64 inputs";
                 return X::Value();
             }
             if (TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
                 errorMessage = "failed to make compiled input GPU-resident";
+                return X::Value();
+            }
+            // TensorRT INPUT mode does not describe plugin side effects. Reloaded
+            // engines expose input_N bindings, not the capture's KV write-set.
+            // Until that write-set is persisted, mutable inputs require WRITE;
+            // readonly weights can still be shared by concurrent readers.
+            if (!execution.Retain(input, input.Info().readonly ? X3_TENSOR_READ : X3_TENSOR_WRITE)) {
+                errorMessage = "TensorRT input device does not match the execution device";
                 return X::Value();
             }
             void* devicePointer = TensorHelper::GetGPUMemory(input);
@@ -4659,12 +4767,12 @@ namespace Garnet {
         }
 
         const Dims outputDimensions = cachedEngine->getTensorShape("output_0");
-        if (outputDimensions.nbDims <= 0 || outputDimensions.nbDims > Dims::MAX_DIMS) {
+        if (outputDimensions.nbDims < 0 || outputDimensions.nbDims > Dims::MAX_DIMS) {
             errorMessage = "TensorRT engine returned an invalid output shape";
             return X::Value();
         }
         size_t outputCount = 1;
-        X::Port::vector<int> outputShape(outputDimensions.nbDims);
+        std::vector<int64_t> outputShape; outputShape.reserve(outputDimensions.nbDims);
         for (int dimension = 0; dimension < outputDimensions.nbDims; ++dimension) {
             if (outputDimensions.d[dimension] <= 0) {
                 errorMessage = "dynamic output shapes are not implemented in compiled fixture execution";
@@ -4676,22 +4784,22 @@ namespace Garnet {
 
         void* outputDevicePointer = nullptr;
         const DataType outputDataType = cachedEngine->getTensorDataType("output_0");
-        X::TensorDataType xlangOutputDataType;
+        X3TensorDType xlangOutputDataType;
         size_t elementBytes = 0;
         if (outputDataType == DataType::kFLOAT) {
-            xlangOutputDataType = X::TensorDataType::FLOAT32;
+            xlangOutputDataType = X3_TENSOR_FLOAT32;
             elementBytes = sizeof(float);
         }
         else if (outputDataType == DataType::kBF16) {
-            xlangOutputDataType = X::TensorDataType::BFLOAT16;
+            xlangOutputDataType = X3_TENSOR_BFLOAT16;
             elementBytes = sizeof(unsigned short);
         }
         else if (outputDataType == DataType::kINT32) {
-            xlangOutputDataType = X::TensorDataType::INT;
+            xlangOutputDataType = X3_TENSOR_INT32;
             elementBytes = sizeof(int);
         }
         else if (outputDataType == DataType::kINT64) {
-            xlangOutputDataType = X::TensorDataType::LONGLONG;
+            xlangOutputDataType = X3_TENSOR_INT64;
             elementBytes = sizeof(long long);
         }
         else {
@@ -4701,17 +4809,17 @@ namespace Garnet {
         }
         const size_t outputBytes = outputCount * elementBytes;
         X::Value outputValue;
-        bool allocatedOutput = false;
-        if (reusableOutput.IsTensor()) {
+        if (IsTensor(reusableOutput)) {
             X::Tensor candidate(reusableOutput);
-            bool shapeMatches = candidate->GetDimCount() == outputDimensions.nbDims;
+            bool shapeMatches = candidate.Info().rank == outputDimensions.nbDims;
             for (int dimension = 0; shapeMatches && dimension < outputDimensions.nbDims; ++dimension) {
-                shapeMatches = candidate->GetDimSize(dimension) == outputDimensions.d[dimension];
+                shapeMatches = TensorDimension(candidate, dimension) == outputDimensions.d[dimension];
             }
-            if (shapeMatches && candidate->GetDataType() == xlangOutputDataType &&
+            if (shapeMatches && IsContiguousTensor(candidate) && !candidate.Info().readonly &&
+                candidate.Info().dtype == xlangOutputDataType &&
                 TensorHelper::EnsureGPUMemory(candidate) == TensorOpStatus::Success) {
                 outputDevicePointer = TensorHelper::GetGPUMemory(candidate);
-                outputValue = reusableOutput;
+                outputValue = candidate;
             }
         }
         if (!outputDevicePointer) {
@@ -4719,8 +4827,19 @@ namespace Garnet {
                 errorMessage = "failed to allocate TensorRT output on GPU";
                 return X::Value();
             }
-            allocatedOutput = true;
+            try {
+                outputValue = WrapDeviceOutput(inputsValue.host(), xlangOutputDataType,
+                    outputShape, outputDevicePointer, outputBytes);
+            } catch (...) {
+                cudaFree(outputDevicePointer);
+                throw;
+            }
         }
+        if (!execution.Retain(X::Tensor(outputValue), X3_TENSOR_WRITE)) {
+            errorMessage = "TensorRT output device does not match the execution device";
+            return X::Value();
+        }
+        execution.Acquire();
         const char* layerProfilePath = std::getenv("GARNET_PROFILE_DECODE_LAYERS");
         bool profileDecodeLayers = false;
         if (layerProfilePath && *layerProfilePath && enableCudaGraph) {
@@ -4735,13 +4854,12 @@ namespace Garnet {
         bindingSignature.push_back(outputDevicePointer);
         if (!cachedContext->setTensorAddress("output_0", outputDevicePointer) ||
             !EnqueueTRTWithOptionalCudaGraph(
-                enginePath, cachedContext, bindingSignature, enableCudaGraph,
+                enginePath, cachedContext, *cachedUse.slot.operator->(), bindingSignature, enableCudaGraph,
                 cudaStreamPerThread)) {
             if (profileDecodeLayers) {
                 cachedContext->setProfiler(nullptr);
                 cachedContext->setEnqueueEmitsProfile(false);
             }
-            if (allocatedOutput) cudaFree(outputDevicePointer);
             errorMessage = "TensorRT enqueueV3 failed";
             return X::Value();
         }
@@ -4751,19 +4869,8 @@ namespace Garnet {
             layerProfiler.Write(layerProfilePath, enginePath);
         }
 
-        if (!outputValue.IsTensor()) {
-            X::Tensor output(X::g_pXHost->CreateTensor());
-            output->SetDataType(xlangOutputDataType);
-            output->SetShape(outputShape);
-            if (TensorHelper::AttachGPUMemory(output, outputDevicePointer) != TensorOpStatus::Success) {
-                cudaFree(outputDevicePointer);
-                errorMessage = "failed to attach TensorRT output to X::Tensor";
-                return X::Value();
-            }
-            outputValue = X::Value(output);
-        }
         errorMessage.clear();
-        return outputValue;
+        return execution.Finish(X::Tensor(outputValue), cudaStreamPerThread, true);
     }
 
     X::Value TRTBuilder::RunCapturedPartitions(
@@ -4781,7 +4888,7 @@ namespace Garnet {
             errorMessage = "partitioned execution requires partitions and an inputs list";
             return X::Value();
         }
-        X::List requestInputs(inputsValue);
+        X::Value requestInputs(inputsValue);
         std::unordered_map<unsigned long long, X::Value> intermediates;
         X::Value terminalOutput;
         unsigned long long terminalTensorId = 0;
@@ -4805,22 +4912,23 @@ namespace Garnet {
                     "partition " + std::to_string(partition.id) +
                     " begin: " + partition.enginePath);
             }
-            ICudaEngine* engine = nullptr;
-            IExecutionContext* context = nullptr;
-            if (!GetCachedTRTExecutionObjects(
-                    partition.enginePath, engine, context, weightIndex)) {
+            CachedExecutionUse cachedUse(partition.enginePath, weightIndex);
+            ICudaEngine* engine = cachedUse.Engine();
+            IExecutionContext* context = cachedUse.Context();
+            if (!context) {
                 errorMessage = "failed to load partition engine " + partition.enginePath;
                 return X::Value();
             }
 
+            ExecutionInputs execution;
             for (const auto& binding : partition.inputs) {
                 X::Value inputValue;
                 if (binding.requestInputIndex >= 0) {
-                    if (binding.requestInputIndex >= requestInputs->Size()) {
+                    if (binding.requestInputIndex >= requestInputs.Size()) {
                         errorMessage = "partition request input index is out of range";
                         return X::Value();
                     }
-                    inputValue = requestInputs->Get(binding.requestInputIndex);
+                    inputValue = requestInputs.Get(binding.requestInputIndex);
                 }
                 else {
                     const auto found = intermediates.find(binding.tensorId);
@@ -4830,13 +4938,23 @@ namespace Garnet {
                     }
                     inputValue = found->second;
                 }
-                if (!inputValue.IsTensor()) {
+                if (!IsTensor(inputValue)) {
                     errorMessage = "partition binding " + binding.name + " is not an X::Tensor";
                     return X::Value();
                 }
                 X::Tensor input(inputValue);
+                if (!IsContiguousTensor(input)) {
+                    errorMessage = "TensorRT partition inputs must be contiguous";
+                    return X::Value();
+                }
                 if (TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
                     errorMessage = "partition input is not GPU resident: " + binding.name;
+                    return X::Value();
+                }
+                // Partition bindings likewise lack persisted plugin mutation
+                // metadata; input/output direction alone cannot imply READ.
+                if (!execution.Retain(input, input.Info().readonly ? X3_TENSOR_READ : X3_TENSOR_WRITE)) {
+                    errorMessage = "partition input device does not match the execution device";
                     return X::Value();
                 }
                 void* devicePointer = TensorHelper::GetGPUMemory(input);
@@ -4850,12 +4968,12 @@ namespace Garnet {
             std::vector<std::pair<EnginePartitionBinding, X::Value>> outputs;
             for (const auto& binding : partition.outputs) {
                 const Dims dimensions = engine->getTensorShape(binding.name.c_str());
-                if (dimensions.nbDims <= 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+                if (dimensions.nbDims < 0 || dimensions.nbDims > Dims::MAX_DIMS) {
                     errorMessage = "invalid partition output shape for " + binding.name;
                     return X::Value();
                 }
                 size_t elementCount = 1;
-                X::Port::vector<int> outputShape(dimensions.nbDims);
+                std::vector<int64_t> outputShape; outputShape.reserve(dimensions.nbDims);
                 for (int index = 0; index < dimensions.nbDims; ++index) {
                     if (dimensions.d[index] <= 0) {
                         errorMessage = "dynamic partition outputs are not implemented";
@@ -4866,22 +4984,22 @@ namespace Garnet {
                 }
 
                 const DataType dataType = engine->getTensorDataType(binding.name.c_str());
-                X::TensorDataType xlangDataType;
+                X3TensorDType xlangDataType;
                 size_t elementBytes = 0;
                 if (dataType == DataType::kFLOAT) {
-                    xlangDataType = X::TensorDataType::FLOAT32;
+                    xlangDataType = X3_TENSOR_FLOAT32;
                     elementBytes = sizeof(float);
                 }
                 else if (dataType == DataType::kBF16) {
-                    xlangDataType = X::TensorDataType::BFLOAT16;
+                    xlangDataType = X3_TENSOR_BFLOAT16;
                     elementBytes = sizeof(unsigned short);
                 }
                 else if (dataType == DataType::kINT32) {
-                    xlangDataType = X::TensorDataType::INT;
+                    xlangDataType = X3_TENSOR_INT32;
                     elementBytes = sizeof(int);
                 }
                 else if (dataType == DataType::kINT64) {
-                    xlangDataType = X::TensorDataType::LONGLONG;
+                    xlangDataType = X3_TENSOR_INT64;
                     elementBytes = sizeof(long long);
                 }
                 else {
@@ -4891,14 +5009,15 @@ namespace Garnet {
 
                 void* devicePointer = nullptr;
                 X::Value outputValue;
-                if (binding.terminalOutput && reusableOutput.IsTensor()) {
+                if (binding.terminalOutput && IsTensor(reusableOutput)) {
                     X::Tensor reusable(reusableOutput);
                     bool matching =
-                        reusable->GetDataType() == xlangDataType &&
-                        reusable->GetDimCount() == dimensions.nbDims;
+                        IsContiguousTensor(reusable) && !reusable.Info().readonly &&
+                        reusable.Info().dtype == xlangDataType &&
+                        reusable.Info().rank == dimensions.nbDims;
                     for (int index = 0; matching && index < dimensions.nbDims; ++index) {
                         matching =
-                            reusable->GetDimSize(index) == dimensions.d[index];
+                            TensorDimension(reusable, index) == dimensions.d[index];
                     }
                     if (matching) {
                         devicePointer = TensorHelper::GetGPUMemory(reusable);
@@ -4913,25 +5032,27 @@ namespace Garnet {
                             "failed to allocate partition output " + binding.name;
                         return X::Value();
                     }
-                    X::Tensor output(X::g_pXHost->CreateTensor());
-                    output->SetDataType(xlangDataType);
-                    output->SetShape(outputShape);
-                    if (TensorHelper::AttachGPUMemory(output, devicePointer) !=
-                        TensorOpStatus::Success) {
+                    try {
+                        outputValue = WrapDeviceOutput(inputsValue.host(), xlangDataType,
+                            outputShape, devicePointer, elementCount * elementBytes);
+                    } catch (const std::exception& error) {
                         cudaFree(devicePointer);
-                        errorMessage =
-                            "failed to attach partition output " + binding.name;
+                        errorMessage = error.what();
                         return X::Value();
                     }
-                    outputValue = X::Value(output);
                 }
                 if (!context->setTensorAddress(binding.name.c_str(), devicePointer)) {
                     errorMessage = "failed to bind partition output " + binding.name;
                     return X::Value();
                 }
+                if (!execution.Retain(X::Tensor(outputValue), X3_TENSOR_WRITE)) {
+                    errorMessage = "partition output device does not match the execution device";
+                    return X::Value();
+                }
                 outputs.emplace_back(binding, outputValue);
             }
 
+            execution.Acquire();
             if (!context->enqueueV3(cudaStreamPerThread)) {
                 errorMessage = "TensorRT enqueue failed for partition " +
                     std::to_string(partition.id);
@@ -4951,6 +5072,7 @@ namespace Garnet {
                     " complete_ms=" + std::to_string(elapsedMs));
             }
             for (auto& output : outputs) {
+                output.second = execution.Finish(X::Tensor(output.second), cudaStreamPerThread, true);
                 intermediates[output.first.tensorId] = output.second;
                 if (output.first.terminalOutput) {
                     terminalOutput = output.second;
@@ -4965,7 +5087,7 @@ namespace Garnet {
         }
         for (auto& intermediate : intermediates) {
             if (intermediate.first == terminalTensorId ||
-                !intermediate.second.IsTensor()) {
+                !IsTensor(intermediate.second)) {
                 continue;
             }
             X::Tensor tensor(intermediate.second);
@@ -4984,27 +5106,21 @@ namespace Garnet {
         X::Value input2,
         X::Value output) {
         if (analysisActive) {
-            if (opName == "mul" && (!input1.IsObject() || !input2.IsObject())) {
-                return X::Value(true);
-            }
             CapturedTensorOperation operation;
             operation.index = static_cast<int>(analyzedOperations.size());
             operation.name = opName;
             if (input1.IsObject()) {
-                operation.inputTensorIds.push_back(input1.GetObj()->GetID());
+                operation.inputTensorIds.push_back(TensorId(input1));
             }
             if (input2.IsObject()) {
-                operation.inputTensorIds.push_back(input2.GetObj()->GetID());
+                operation.inputTensorIds.push_back(TensorId(input2));
             }
             AppendTensorKeywordDependencies(kwParams, operation.inputTensorIds);
-            if (output.IsObject()) operation.outputTensorId = output.GetObj()->GetID();
+            if (output.IsObject()) operation.outputTensorId = TensorId(output);
             analyzedOperations.push_back(std::move(operation));
             return X::Value(true);
         }
         if (partitionBuildActive) {
-            if (opName == "mul" && (!input1.IsObject() || !input2.IsObject())) {
-                return X::Value(true);
-            }
             const auto& operations = GetCapturedTensorOperations();
             if (replayOperationIndex >= operations.size()) {
                 loweringError = "partition replay produced more binary operations than analysis";
@@ -5031,8 +5147,8 @@ namespace Garnet {
             opName == "gate_proj" || opName == "up_proj" ||
             opName == "down_proj" || opName == "lm_head";
 
-        const bool isElementwise =
-            opName == "add" || opName == "minus" || opName == "mul";
+        const bool isElementwise = opName == "add" || opName == "minus" ||
+            opName == "sub" || opName == "mul" || opName == "div";
         const bool isSequenceConcat =
             opName == "concat_sequence" || opName == "concat_tokens";
         const bool isMatrix = opName == "matmul" || isLinear;
@@ -5065,12 +5181,6 @@ namespace Garnet {
             loweringError = "unsupported binary operation: " + opName;
             return X::Value();
         }
-        if (opName == "mul" && (!input1.IsObject() || !input2.IsObject())) {
-            // xlang represents `x * T.binary_op(name) * y` with an empty
-            // structural mul followed by the named binary operation. The
-            // named item owns the output identity and performs the lowering.
-            return X::Value(true);
-        }
         ITensor* left = GetOrCreateTRTTensor(input1);
         ITensor* right = GetOrCreateTRTTensor(input2);
         if (!left || !right) {
@@ -5088,14 +5198,14 @@ namespace Garnet {
         }
 
         else if (isDeepstackAdd) {
-            auto* inputIdsItem = kwParams.find("input_ids");
-            auto* imageTokenItem = kwParams.find("image_token_id");
-            auto* videoTokenItem = kwParams.find("video_token_id");
+            auto* inputIdsItem = FindKeyword(kwParams, "input_ids");
+            auto* imageTokenItem = FindKeyword(kwParams, "image_token_id");
+            auto* videoTokenItem = FindKeyword(kwParams, "video_token_id");
             if (!inputIdsItem || !imageTokenItem || !videoTokenItem) {
                 loweringError = "DeepStack add requires input_ids and visual token ids";
                 return X::Value();
             }
-            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->val);
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->second);
             auto makeTokenConstant = [&](long long tokenId) -> ITensor* {
                 integerWeights.push_back(tokenId);
                 Dims dimensions{};
@@ -5106,8 +5216,8 @@ namespace Garnet {
                 auto* constant = network->addConstant(dimensions, weights);
                 return constant ? constant->getOutput(0) : nullptr;
             };
-            ITensor* imageToken = makeTokenConstant(imageTokenItem->val.ToLongLong());
-            ITensor* videoToken = makeTokenConstant(videoTokenItem->val.ToLongLong());
+            ITensor* imageToken = makeTokenConstant(imageTokenItem->second.ToLongLong());
+            ITensor* videoToken = makeTokenConstant(videoTokenItem->second.ToLongLong());
             auto* imageMask = inputIds && imageToken
                 ? network->addElementWise(*inputIds, *imageToken, ElementWiseOperation::kEQUAL)
                 : nullptr;
@@ -5169,8 +5279,8 @@ namespace Garnet {
         else if (isAudioTokenCompact) {
             const Dims sourceDims = left->getDimensions();
             const Dims cuDims = right->getDimensions();
-            const int tokensPerChunk = kwParams.find("tokens_per_chunk")
-                ? static_cast<int>(kwParams.find("tokens_per_chunk")->val.ToLongLong())
+            const int tokensPerChunk = FindKeyword(kwParams, "tokens_per_chunk")
+                ? static_cast<int>(FindKeyword(kwParams, "tokens_per_chunk")->second.ToLongLong())
                 : 13;
             const int chunks = cuDims.nbDims == 1 ? cuDims.d[0] - 1 : 0;
             if (sourceDims.nbDims != 2 || cuDims.nbDims != 1 || chunks <= 0 ||
@@ -5220,14 +5330,14 @@ namespace Garnet {
             lastOutput = gather ? gather->getOutput(0) : nullptr;
         }
         else if (isAudioEmbeddingMerge) {
-            auto* inputIdsItem = kwParams.find("input_ids");
-            auto* audioTokenItem = kwParams.find("audio_token_id");
+            auto* inputIdsItem = FindKeyword(kwParams, "input_ids");
+            auto* audioTokenItem = FindKeyword(kwParams, "audio_token_id");
             if (!inputIdsItem || !audioTokenItem) {
                 loweringError =
                     "audio embedding merge requires input_ids and audio_token_id";
                 return X::Value();
             }
-            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->val);
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->second);
             if (!inputIds || inputIds->getDimensions().nbDims != 2 ||
                 left->getDimensions().nbDims != 3 ||
                 right->getDimensions().nbDims != 2) {
@@ -5235,7 +5345,7 @@ namespace Garnet {
                     "audio embedding merge requires [B,T,H] text, [A,H] audio, and [B,T] ids";
                 return X::Value();
             }
-            integerWeights.push_back(audioTokenItem->val.ToLongLong());
+            integerWeights.push_back(audioTokenItem->second.ToLongLong());
             Dims scalarDims{};
             scalarDims.nbDims = 2;
             scalarDims.d[0] = 1;
@@ -5271,14 +5381,14 @@ namespace Garnet {
             lastOutput = scatter ? scatter->getOutput(0) : nullptr;
         }
         else if (isVisualEmbeddingMerge) {
-            auto* inputIdsItem = kwParams.find("input_ids");
-            auto* imageTokenItem = kwParams.find("image_token_id");
-            auto* videoTokenItem = kwParams.find("video_token_id");
+            auto* inputIdsItem = FindKeyword(kwParams, "input_ids");
+            auto* imageTokenItem = FindKeyword(kwParams, "image_token_id");
+            auto* videoTokenItem = FindKeyword(kwParams, "video_token_id");
             if (!inputIdsItem || !imageTokenItem || !videoTokenItem) {
                 loweringError = "visual embedding merge requires input_ids and visual token ids";
                 return X::Value();
             }
-            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->val);
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->second);
             if (!inputIds || inputIds->getDimensions().nbDims != 2 ||
                 left->getDimensions().nbDims != 3 || right->getDimensions().nbDims != 2) {
                 const int inputIdsRank = inputIds
@@ -5303,8 +5413,8 @@ namespace Garnet {
                 auto* constant = network->addConstant(dimensions, weights);
                 return constant ? constant->getOutput(0) : nullptr;
             };
-            ITensor* imageToken = makeTokenConstant(imageTokenItem->val.ToLongLong());
-            ITensor* videoToken = makeTokenConstant(videoTokenItem->val.ToLongLong());
+            ITensor* imageToken = makeTokenConstant(imageTokenItem->second.ToLongLong());
+            ITensor* videoToken = makeTokenConstant(videoTokenItem->second.ToLongLong());
             auto* imageMask = imageToken
                 ? network->addElementWise(*inputIds, *imageToken, ElementWiseOperation::kEQUAL)
                 : nullptr;
@@ -5348,12 +5458,12 @@ namespace Garnet {
             lastOutput = LowerVisionAttention(left, right, kwParams);
         }
         else if (isVisionPositionInterpolate) {
-            auto* weightNameItem = kwParams.find("weight_name");
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
             if (!weightNameItem) {
                 loweringError = "vision position interpolation requires weight_name";
                 return X::Value();
             }
-            ITensor* positionTable = GetOrCreateTRTWeight(weightNameItem->val.ToString());
+            ITensor* positionTable = GetOrCreateTRTWeight(weightNameItem->second.ToString());
             auto* gather = positionTable
                 ? network->addGather(*positionTable, *left, 0)
                 : nullptr;
@@ -5404,14 +5514,23 @@ namespace Garnet {
             }
             lastOutput = layer->getOutput(0);
         }
-        else if (opName == "add" || opName == "minus" || opName == "mul") {
+        else if (isElementwise) {
             const ElementWiseOperation operation =
                 opName == "add" ? ElementWiseOperation::kSUM :
-                opName == "minus" ? ElementWiseOperation::kSUB :
+                (opName == "minus" || opName == "sub") ? ElementWiseOperation::kSUB :
+                opName == "div" ? ElementWiseOperation::kDIV :
                 ElementWiseOperation::kPROD;
+            const int rank = std::max(left->getDimensions().nbDims, right->getDimensions().nbDims);
+            left = BroadcastLastDimension(left, rank, "left_broadcast");
+            right = BroadcastLastDimension(right, rank, "right_broadcast");
+            if (!left || !right) return X::Value();
+            const auto computeType = IsTensor(input1) ? left->getType() : right->getType();
+            auto* leftCast = left->getType() != computeType
+                ? network->addCast(*left, computeType) : nullptr;
+            if (leftCast) left = leftCast->getOutput(0);
             ITensor* compatibleRight = right;
-            auto* rightCast = right->getType() != left->getType()
-                ? network->addCast(*right, left->getType())
+            auto* rightCast = right->getType() != computeType
+                ? network->addCast(*right, computeType)
                 : nullptr;
             if (rightCast) compatibleRight = rightCast->getOutput(0);
             auto* layer = network->addElementWise(
@@ -5432,7 +5551,7 @@ namespace Garnet {
             loweringError = "binary operation has no graph output identity";
             return X::Value();
         }
-        tensorMap[output.GetObj()->GetID()] = lastOutput;
+        tensorMap[TensorId(output)] = lastOutput;
         return X::Value(true);
     }
 
@@ -5448,10 +5567,10 @@ namespace Garnet {
             operation.index = static_cast<int>(analyzedOperations.size());
             operation.name = opName;
             if (input.IsObject()) {
-                operation.inputTensorIds.push_back(input.GetObj()->GetID());
+                operation.inputTensorIds.push_back(TensorId(input));
             }
             AppendTensorKeywordDependencies(kwParams, operation.inputTensorIds);
-            if (output.IsObject()) operation.outputTensorId = output.GetObj()->GetID();
+            if (output.IsObject()) operation.outputTensorId = TensorId(output);
             analyzedOperations.push_back(std::move(operation));
             return X::Value(true);
         }
@@ -5489,21 +5608,81 @@ namespace Garnet {
             opName == "down_proj" || opName == "lm_head";
 
         auto keywordText = [&](const char* name) -> std::string {
-            auto* item = kwParams.find(name);
-            return item ? item->val.ToString() : std::string();
+            auto* item = FindKeyword(kwParams, name);
+            return item ? item->second.ToString() : std::string();
         };
         auto keywordInt = [&](const char* name, int fallback) -> int {
-            auto* item = kwParams.find(name);
-            return item ? static_cast<int>(item->val.ToLongLong()) : fallback;
+            auto* item = FindKeyword(kwParams, name);
+            return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
 
-        if (opName == "paged_kv_select_layer") {
-            auto* layerItem = kwParams.find("layer_idx");
+        if (opName == "neg" || opName == "exp") {
+            auto* layer = network->addUnary(*source,
+                opName == "neg" ? UnaryOperation::kNEG : UnaryOperation::kEXP);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "reshape" || opName == "permute") {
+            auto values = IntegerAttribute(kwParams, opName == "reshape" ? "shape" : "axes");
+            if (values.size() > Dims::MAX_DIMS) {
+                loweringError = "tensor view rank exceeds TensorRT limit";
+                return X::Value();
+            }
+            auto* layer = network->addShuffle(*source);
+            if (!layer) return X::Value();
+            if (opName == "reshape") {
+                Dims shape{};
+                shape.nbDims = static_cast<int>(values.size());
+                for (int i = 0; i < shape.nbDims; ++i) {
+                    if (values[i] < 0 || values[i] > INT_MAX) {
+                        loweringError = "invalid reshape dimension";
+                        return X::Value();
+                    }
+                    shape.d[i] = static_cast<int>(values[i]);
+                }
+                layer->setZeroIsPlaceholder(false);
+                layer->setReshapeDimensions(shape);
+            } else {
+                if (values.size() != static_cast<size_t>(source->getDimensions().nbDims)) {
+                    loweringError = "permute must include every axis";
+                    return X::Value();
+                }
+                Permutation axes{};
+                std::vector<bool> used(values.size());
+                for (size_t i = 0; i < values.size(); ++i) {
+                    if (values[i] < 0 || values[i] >= static_cast<int64_t>(values.size()) || used[values[i]]) {
+                        loweringError = "invalid tensor permutation";
+                        return X::Value();
+                    }
+                    used[values[i]] = true;
+                    axes.order[i] = static_cast<int>(values[i]);
+                }
+                layer->setFirstTranspose(axes);
+            }
+            lastOutput = layer->getOutput(0);
+        }
+        else if (opName == "sum") {
+            const int rank = source->getDimensions().nbDims;
+            uint32_t axes = (1u << rank) - 1;
+            const auto* axis = FindKeyword(kwParams, "axis");
+            if (axis && axis->second.raw().tag != X3_TAG_NONE) {
+                int64_t index = axis->second.ToLongLong();
+                if (index < 0) index += rank;
+                if (axis->second.raw().tag != X3_TAG_INT64 || index < 0 || index >= rank) {
+                    loweringError = "sum axis is out of range";
+                    return X::Value();
+                }
+                axes = 1u << static_cast<uint32_t>(index);
+            }
+            auto* layer = network->addReduce(*source, ReduceOperation::kSUM, axes, false);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "paged_kv_select_layer") {
+            auto* layerItem = FindKeyword(kwParams, "layer_idx");
             if (!layerItem) {
                 loweringError = "paged_kv_select_layer requires layer_idx";
                 return X::Value();
             }
-            const int layerIndex = static_cast<int>(layerItem->val.ToLongLong());
+            const int layerIndex = static_cast<int>(layerItem->second.ToLongLong());
             const Dims sourceDimensions = source->getDimensions();
             if (sourceDimensions.nbDims < 2 || layerIndex < 0 ||
                 layerIndex >= sourceDimensions.d[0]) {
@@ -5516,8 +5695,8 @@ namespace Garnet {
 
         else if (opName == "paged_kv_prefill_write_bf16") {
             auto getIntOption = [&](const char* name, int defaultValue) {
-                auto* item = kwParams.find(name);
-                return item ? static_cast<int>(item->val.ToLongLong()) : defaultValue;
+                auto* item = FindKeyword(kwParams, name);
+                return item ? static_cast<int>(item->second.ToLongLong()) : defaultValue;
             };
             const int pageSize = getIntOption("page_size", 16);
             const int qHeads = getIntOption("q_heads", 0);
@@ -5556,8 +5735,8 @@ namespace Garnet {
         else if (opName == "paged_kv_decode_bf16" ||
                  opName == "paged_kv_decode_masked_bf16") {
             auto getIntOption = [&](const char* name, int defaultValue) {
-                auto* item = kwParams.find(name);
-                return item ? static_cast<int>(item->val.ToLongLong()) : defaultValue;
+                auto* item = FindKeyword(kwParams, name);
+                return item ? static_cast<int>(item->second.ToLongLong()) : defaultValue;
             };
             const int pageSize = getIntOption("page_size", 16);
             const int qHeads = getIntOption("q_heads", 0);
@@ -6376,8 +6555,8 @@ namespace Garnet {
             ITensor* k = slice(hidden);
             ITensor* v = slice(2 * hidden);
             ITensor* cu = nullptr;
-            if (auto* cuItem = kwParams.find("cu_seqlens")) {
-                cu = GetOrCreateTRTTensor(cuItem->val);
+            if (auto* cuItem = FindKeyword(kwParams, "cu_seqlens")) {
+                cu = GetOrCreateTRTTensor(cuItem->second);
             }
             ITensor* attentionMask = nullptr;
             if (cu && cu->getDimensions().nbDims == 1 &&
@@ -6463,12 +6642,12 @@ namespace Garnet {
             lastOutput = outputLayer ? outputLayer->getOutput(0) : nullptr;
         }
         else if (opName == "embedding") {
-            auto* weightNameItem = kwParams.find("weight_name");
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
             if (!weightNameItem) {
                 loweringError = "embedding operation is missing weight_name";
                 return X::Value();
             }
-            const std::string weightName = weightNameItem->val.ToString();
+            const std::string weightName = weightNameItem->second.ToString();
             ITensor* weight = GetOrCreateTRTWeightFP32(weightName);
             if (!weight) {
                 loweringError = "embedding weight " + weightName + ": " + loweringError;
@@ -6478,18 +6657,18 @@ namespace Garnet {
             lastOutput = layer ? layer->getOutput(0) : nullptr;
         }
         else if (isLinear) {
-            auto* weightNameItem = kwParams.find("weight_name");
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
             if (!weightNameItem) {
                 loweringError = opName + " operation is missing weight_name";
                 return X::Value();
             }
             const std::string projectionWeightName =
-                weightNameItem->val.ToString();
+                weightNameItem->second.ToString();
             const bool predictorWeight = projectionWeightName.rfind(
                 "talker.code_predictor.", 0) == 0;
             ITensor* weight = opName == "lm_head" || predictorWeight
-                ? GetOrCreateTRTWeightFP32(weightNameItem->val.ToString())
-                : GetOrCreateTRTWeight(weightNameItem->val.ToString());
+                ? GetOrCreateTRTWeightFP32(weightNameItem->second.ToString())
+                : GetOrCreateTRTWeight(weightNameItem->second.ToString());
             ITensor* projectionInput = source;
             const DataType sourceType = source->getType();
             const DataType projectionType = opName == "lm_head"
@@ -6528,9 +6707,9 @@ namespace Garnet {
                     return X::Value();
                 }
             }
-            auto* biasNameItem = kwParams.find("bias_name");
-            if (biasNameItem && !biasNameItem->val.IsNone()) {
-                const std::string biasName = biasNameItem->val.ToString();
+            auto* biasNameItem = FindKeyword(kwParams, "bias_name");
+            if (biasNameItem && !biasNameItem->second.IsNone()) {
+                const std::string biasName = biasNameItem->second.ToString();
                 if (!biasName.empty()) {
                     ITensor* bias = GetOrCreateTRTWeight(biasName);
                     if (bias && bias->getType() != lastOutput->getType()) {
@@ -6554,17 +6733,17 @@ namespace Garnet {
             }
         }
         else if (opName == "layer_norm") {
-            auto* weightNameItem = kwParams.find("weight_name");
-            auto* biasNameItem = kwParams.find("bias_name");
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
+            auto* biasNameItem = FindKeyword(kwParams, "bias_name");
             if (!weightNameItem || !biasNameItem) {
                 loweringError = "layer_norm requires weight_name and bias_name";
                 return X::Value();
             }
-            const std::string scaleName = weightNameItem->val.ToString();
+            const std::string scaleName = weightNameItem->second.ToString();
             ITensor* scale = scaleName.rfind("talker.code_predictor.", 0) == 0
                 ? GetOrCreateTRTWeightFP32(scaleName)
                 : GetOrCreateTRTWeight(scaleName);
-            ITensor* bias = GetOrCreateTRTWeight(biasNameItem->val.ToString());
+            ITensor* bias = GetOrCreateTRTWeight(biasNameItem->second.ToString());
             const Dims sourceDimensions = source->getDimensions();
             scale = BroadcastLastDimension(scale, sourceDimensions.nbDims, "layer_norm_scale_broadcast");
             bias = BroadcastLastDimension(bias, sourceDimensions.nbDims, "layer_norm_bias_broadcast");
@@ -6577,19 +6756,19 @@ namespace Garnet {
                 *scale,
                 *bias,
                 1U << (sourceDimensions.nbDims - 1));
-            auto* epsilonItem = kwParams.find("eps");
+            auto* epsilonItem = FindKeyword(kwParams, "eps");
             if (layer && epsilonItem) {
-                layer->setEpsilon(static_cast<float>(epsilonItem->val.ToDouble()));
+                layer->setEpsilon(static_cast<float>(epsilonItem->second.ToDouble()));
             }
             lastOutput = layer ? layer->getOutput(0) : nullptr;
         }
         else if (opName == "rms_norm") {
-            auto* weightNameItem = kwParams.find("weight_name");
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
             if (!weightNameItem) {
                 loweringError = "rms_norm requires weight_name";
                 return X::Value();
             }
-            const std::string scaleName = weightNameItem->val.ToString();
+            const std::string scaleName = weightNameItem->second.ToString();
             ITensor* scale = scaleName.rfind("talker.code_predictor.", 0) == 0
                 ? GetOrCreateTRTWeightFP32(scaleName)
                 : GetOrCreateTRTWeight(scaleName);
@@ -6613,9 +6792,9 @@ namespace Garnet {
                     1U << (sourceDimensions.nbDims - 1),
                     true)
                 : nullptr;
-            auto* epsilonItem = kwParams.find("eps");
+            auto* epsilonItem = FindKeyword(kwParams, "eps");
             scalarWeights.push_back(epsilonItem
-                ? static_cast<float>(epsilonItem->val.ToDouble())
+                ? static_cast<float>(epsilonItem->second.ToDouble())
                 : 1.0e-6F);
             Dims scalarDimensions{};
             scalarDimensions.nbDims = sourceDimensions.nbDims;
@@ -6652,9 +6831,9 @@ namespace Garnet {
         }
         else if (opName == "qwen3_text_qkv_packed") {
             auto weight = [&](const char* name) -> ITensor* {
-                auto* item = kwParams.find(name);
-                if (!item || item->val.IsNone()) return nullptr;
-                const std::string weightName = item->val.ToString();
+                auto* item = FindKeyword(kwParams, name);
+                if (!item || item->second.IsNone()) return nullptr;
+                const std::string weightName = item->second.ToString();
                 if (weightName.empty()) return nullptr;
                 return weightName.rfind("talker.code_predictor.", 0) == 0
                     ? GetOrCreateTRTWeightFP32(weightName)
@@ -6665,12 +6844,12 @@ namespace Garnet {
             ITensor* vWeight = weight("v_weight_name");
             ITensor* qNormWeight = weight("q_norm_weight_name");
             ITensor* kNormWeight = weight("k_norm_weight_name");
-            auto* numHeadsItem = kwParams.find("num_heads");
-            auto* numKvHeadsItem = kwParams.find("num_kv_heads");
-            auto* headDimItem = kwParams.find("head_dim");
-            const int numHeads = numHeadsItem ? static_cast<int>(numHeadsItem->val.ToLongLong()) : 0;
-            const int numKvHeads = numKvHeadsItem ? static_cast<int>(numKvHeadsItem->val.ToLongLong()) : 0;
-            const int headDim = headDimItem ? static_cast<int>(headDimItem->val.ToLongLong()) : 0;
+            auto* numHeadsItem = FindKeyword(kwParams, "num_heads");
+            auto* numKvHeadsItem = FindKeyword(kwParams, "num_kv_heads");
+            auto* headDimItem = FindKeyword(kwParams, "head_dim");
+            const int numHeads = numHeadsItem ? static_cast<int>(numHeadsItem->second.ToLongLong()) : 0;
+            const int numKvHeads = numKvHeadsItem ? static_cast<int>(numKvHeadsItem->second.ToLongLong()) : 0;
+            const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
             if (!qWeight || !kWeight || !vWeight ||
                 numHeads <= 0 || numKvHeads <= 0 || headDim <= 0) {
                 loweringError = "Qwen3 text packed QKV metadata or weights are incomplete";
@@ -6726,9 +6905,9 @@ namespace Garnet {
                         1U << 3,
                         true)
                     : nullptr;
-                auto* epsilonItem = kwParams.find("norm_eps");
+                auto* epsilonItem = FindKeyword(kwParams, "norm_eps");
                 scalarWeights.push_back(epsilonItem
-                    ? static_cast<float>(epsilonItem->val.ToDouble())
+                    ? static_cast<float>(epsilonItem->second.ToDouble())
                     : 1.0e-6F);
                 Dims scalarDimensions{};
                 scalarDimensions.nbDims = 4;
@@ -6813,12 +6992,12 @@ namespace Garnet {
             lastOutput = packed ? packed->getOutput(0) : nullptr;
         }
         else if (opName == "qwen3_mlp_gate_up_swiglu_packed") {
-            auto* gateNameItem = kwParams.find("gate_weight_name");
-            auto* upNameItem = kwParams.find("up_weight_name");
+            auto* gateNameItem = FindKeyword(kwParams, "gate_weight_name");
+            auto* upNameItem = FindKeyword(kwParams, "up_weight_name");
             const std::string gateName = gateNameItem
-                ? gateNameItem->val.ToString() : std::string();
+                ? gateNameItem->second.ToString() : std::string();
             const std::string upName = upNameItem
-                ? upNameItem->val.ToString() : std::string();
+                ? upNameItem->second.ToString() : std::string();
             ITensor* gateWeight = gateNameItem &&
                 gateName.rfind("talker.code_predictor.", 0) == 0
                 ? GetOrCreateTRTWeightFP32(gateName)
@@ -6906,8 +7085,8 @@ namespace Garnet {
             lastOutput = swiglu ? swiglu->getOutput(0) : nullptr;
         }
         else if (opName == "paged_kv_update_packed") {
-            auto* enabledItem = kwParams.find("enabled");
-            const bool enabled = enabledItem && enabledItem->val.ToLongLong() != 0;
+            auto* enabledItem = FindKeyword(kwParams, "enabled");
+            const bool enabled = enabledItem && enabledItem->second.ToLongLong() != 0;
             if (enabled) {
                 loweringError = "paged KV update requires the decode engine profile and cache bindings";
                 return X::Value();
@@ -6919,14 +7098,14 @@ namespace Garnet {
             lastOutput = source;
         }
         else if (opName == "qwen3_vl_patch_embed_conv3d") {
-            auto* weightNameItem = kwParams.find("weight_name");
-            auto* biasNameItem = kwParams.find("bias_name");
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
+            auto* biasNameItem = FindKeyword(kwParams, "bias_name");
             if (!weightNameItem || !biasNameItem) {
                 loweringError = "Qwen3-VL patch embedding requires weight_name and bias_name";
                 return X::Value();
             }
-            const std::string weightName = weightNameItem->val.ToString();
-            const std::string biasName = biasNameItem->val.ToString();
+            const std::string weightName = weightNameItem->second.ToString();
+            const std::string biasName = biasNameItem->second.ToString();
             const SafeTensorMetadata* weightMetadata = capturedWeightIndex
                 ? capturedWeightIndex->Find(weightName)
                 : nullptr;
@@ -6982,9 +7161,9 @@ namespace Garnet {
         }
         else if (opName == "qwen3_vl_patch_merger_shuffle") {
             const Dims sourceDimensions = source->getDimensions();
-            auto* mergeSizeItem = kwParams.find("spatial_merge_size");
+            auto* mergeSizeItem = FindKeyword(kwParams, "spatial_merge_size");
             const int mergeSize = mergeSizeItem
-                ? static_cast<int>(mergeSizeItem->val.ToLongLong())
+                ? static_cast<int>(mergeSizeItem->second.ToLongLong())
                 : 0;
             const int mergeUnit = mergeSize * mergeSize;
             if (sourceDimensions.nbDims != 2 || mergeUnit <= 0 ||
@@ -7029,7 +7208,7 @@ namespace Garnet {
             loweringError = "TensorRT unary lowering failed for " + opName;
             return X::Value();
         }
-        tensorMap[output.GetObj()->GetID()] = lastOutput;
+        tensorMap[TensorId(output)] = lastOutput;
         return X::Value(true);
     }
 

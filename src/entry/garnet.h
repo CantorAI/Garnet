@@ -1,7 +1,5 @@
 #pragma once
-#include "singleton.h"
-#include "xpackage.h"
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 #include "garnet_tensor.h"
 #include "model.h"
 #include "model_manager.h"
@@ -70,8 +68,7 @@ namespace Garnet
 			APISET().AddVarFunc("stats", &QwenVLRequestContext::Stats);
 		END_PACKAGE
 
-		void Stats(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		X::Value Stats(const X::ARGS& params, const X::KWARGS& kwParams);
 	};
 
 	class KVCacheManager
@@ -109,18 +106,13 @@ namespace Garnet
 
 		void Configure(int maxNumPages, int pageSize, int headDim, int numKVHeads,
 			int numLayers = 1, int dtypeBytes = 2, int deviceId = 0);
-		void Allocate(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void Append(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void Free(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void Stats(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		X::Value Allocate(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value Append(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value Free(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value Stats(const X::ARGS& params, const X::KWARGS& kwParams);
 	};
 
-	class GarnetAPI :
-		public Singleton<GarnetAPI>
+	class GarnetAPI
 	{
 		X::Value m_cantor;
 		X::Value m_log;
@@ -140,7 +132,7 @@ namespace Garnet
 		mutable std::mutex m_servingMutex;
 		ModelManager m_modelManager;
 		ModelManager m_accelerationManager;
-		bool LoadModelFromFile(std::string modelPath, X::Dict& model);
+		bool LoadModelFromFile(std::string modelPath, X::Value& model);
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
 			APISET().AddPropL("cantor",
@@ -204,6 +196,8 @@ namespace Garnet
 		END_PACKAGE
 
 		GarnetAPI();
+        ~GarnetAPI();
+        void OnPackageCreated(X::Package<GarnetAPI>* package);
 
 		void SetBaseFolder(std::string folder)
 		{
@@ -236,102 +230,54 @@ namespace Garnet
 			return true;
 		}
 		X::Value LoadModel(std::string modelPath);
-		void CreateKVCacheManager(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void QwenVLSmartResize(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void QwenVLCreateRequest(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void QwenVLPrepareRequest(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void QwenVLPreprocessImage(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void QwenVLPreprocessJpegFile(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void DevicePagedKVWriteTensor(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void DevicePagedKVAttentionTensor(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TensorAdd(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void Embedding(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ReplaceRowsByMask(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TensorLastRow(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void GeluTanh(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void VisionRoPE(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TensorToGPU(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TensorToBFloat16(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TensorFromBFloat16Bits(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TensorFromHost(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TensorUpdateFromHost(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TensorToCPU(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ServeModel(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ListAvailableModelsJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ListLoadedModelsJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ServeStatusJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void InferJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void TranscribeJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void SynthesizeJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void StopServing(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ConfigureModelManagerJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ListRemoteModelsJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ListInstalledModelsJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void InstallModelJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ModelInstallStatusJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void CancelModelInstallJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void VerifyInstalledModelJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void RemoveInstalledModelJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ServeInstalledModelJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void RunModelInstallJob(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void DetectAccelerationJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ConfigureAccelerationManagerJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ListAccelerationPackagesJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void PrepareAccelerationJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ListInstalledAccelerationsJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void ActivateAccelerationJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void AccelerationInstallStatusJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void CancelAccelerationInstallJson(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
-		void RunTest(X::XRuntime* rt, X::XObj* pContext,
-			X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue);
+		X::Value CreateKVCacheManager(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value LoadModelEx(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value QwenVLSmartResize(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value QwenVLCreateRequest(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value QwenVLPrepareRequest(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value QwenVLPreprocessImage(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value QwenVLPreprocessJpegFile(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value DevicePagedKVWriteTensor(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value DevicePagedKVAttentionTensor(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorAdd(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value Embedding(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ReplaceRowsByMask(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorLastRow(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value GeluTanh(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value VisionRoPE(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorToGPU(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorToBFloat16(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorFromBFloat16Bits(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorFromHost(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorUpdateFromHost(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorToCPU(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ServeModel(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ListAvailableModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ListLoadedModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ServeStatusJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value InferJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TranscribeJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value SynthesizeJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value StopServing(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ConfigureModelManagerJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ListRemoteModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ListInstalledModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value InstallModelJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ModelInstallStatusJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value CancelModelInstallJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value VerifyInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value RemoveInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ServeInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value RunModelInstallJob(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value DetectAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ConfigureAccelerationManagerJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ListAccelerationPackagesJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value PrepareAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ListInstalledAccelerationsJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ActivateAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value AccelerationInstallStatusJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value CancelAccelerationInstallJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value RunTest(const X::ARGS& params, const X::KWARGS& kwParams);
 
 		std::string AvailableModelsJson(const std::string& catalogRoot) const;
 		std::string LoadedModelsJson();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 
 #include <string>
 #include <vector>
@@ -20,7 +20,7 @@ namespace Garnet
         std::string error;
     };
 
-    QwenVLCompiledInputs BuildQwenVLCompiledInputs(
+    QwenVLCompiledInputs BuildQwenVLCompiledInputs(X3PackageHost* host,
         const std::string& modelDirectory,
         X::Value imageSource,
         const std::string& prompt,

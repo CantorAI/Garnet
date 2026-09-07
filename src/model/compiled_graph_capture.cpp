@@ -1,4 +1,5 @@
 #include "compiled_graph_capture.h"
+#include "../tensor/graph_capture.h"
 
 #include <unordered_set>
 #include <unordered_map>
@@ -10,46 +11,10 @@ namespace Garnet
     namespace
     {
         thread_local bool g_compiledGraphCaptureActive = false;
-        thread_local int g_compiledFusionCaptureDepth = 0;
         thread_local std::vector<CapturedFusionRegion> g_capturedFusionRegions;
-        thread_local std::vector<int> g_fusionRegionStack;
-        thread_local std::unordered_map<std::string, int> g_fusionInvocationCounts;
         thread_local std::vector<CapturedTensorOperation> g_capturedTensorOperations;
         thread_local std::string g_compiledGraphCaptureError;
 
-        void CollectTensorIds(
-            const X::Value& value,
-            std::vector<unsigned long long>& tensorIds,
-            std::unordered_set<unsigned long long>& visited)
-        {
-            if (value.IsList()) {
-                X::List list(value);
-                for (long long index = 0; index < list->Size(); ++index) {
-                    CollectTensorIds(list->Get(index), tensorIds, visited);
-                }
-                return;
-            }
-            if (value.IsDict()) {
-                X::Dict dictionary(value);
-                for (auto& entry : *dictionary) {
-                    CollectTensorIds(entry.second(), tensorIds, visited);
-                }
-                return;
-            }
-            if (!value.IsObject() ||
-                (value.GetObj()->GetType() != X::ObjType::TensorExpression &&
-                 value.GetObj()->GetType() != X::ObjType::Tensor)) {
-                return;
-            }
-
-            const unsigned long long tensorId = value.GetObj()->GetID();
-            if (visited.insert(tensorId).second) tensorIds.push_back(tensorId);
-        }
-    }
-
-    bool IsCompiledFusionCaptureRootActive()
-    {
-        return g_compiledFusionCaptureDepth > 0;
     }
 
     bool IsCompiledGraphCaptureActive()
@@ -118,9 +83,6 @@ namespace Garnet
         }
 
         for (auto& operation : operations) {
-            if (operation.regionId < 0 && !g_capturedFusionRegions.empty()) {
-                operation.regionId = 0;
-            }
             if (operation.regionId >= 0) {
                 ++g_capturedFusionRegions[
                     static_cast<size_t>(operation.regionId)].operationCount;
@@ -207,13 +169,150 @@ namespace Garnet
         return g_compiledGraphCaptureError;
     }
 
+    bool CaptureFusionGraph(const TensorGraphCapture& graph,
+        const FusionPartitionOptions& options, std::string& errorMessage)
+    {
+        g_capturedFusionRegions.clear();
+        g_capturedTensorOperations.clear();
+        g_compiledGraphCaptureError.clear();
+        try {
+            std::unordered_map<uint64_t, int> regionIds;
+            std::unordered_map<std::string, int> invocations;
+            std::vector<CapturedTensorOperation> operations;
+            std::vector<std::vector<int>> regionStacks;
+            auto tensorId = [](const X::Value& value) -> uint64_t {
+                if (!value.IsObject()) return 0;
+                X3TensorInfo info{};
+                info.size = sizeof(info);
+                return x3_tensor_info(value.runtime(), value.raw(), &info) == X3_STATUS_OK ? info.id : 0;
+            };
+            for (const auto& node : graph.Operations()) {
+                if (node.provider.empty()) continue;
+                std::vector<int> stack;
+                int parent = -1;
+                for (uint64_t index = 0; index < node.regions.Size(); ++index) {
+                    auto attributes = node.regions.Get(index);
+                    auto lookup = [&](const char* name) {
+                        for (uint64_t item = 0; item < attributes.Size(); ++item) {
+                            X::Value key, value;
+                            if (!attributes.DictEntry(item, key, value))
+                                throw std::runtime_error("invalid fusion attributes");
+                            if (key.ToString() == name) return value;
+                        }
+                        return X::Value();
+                    };
+                    const auto externalId = lookup("id").ToUInt64();
+                    if (!externalId) throw std::runtime_error("fusion invocation has no identity");
+                    auto found = regionIds.find(externalId);
+                    int id = -1;
+                    if (found == regionIds.end()) {
+                        CapturedFusionRegion region;
+                        region.id = static_cast<int>(g_capturedFusionRegions.size());
+                        region.parentId = parent;
+                        region.depth = static_cast<int>(index);
+                        auto text = [&](const char* key, const char* fallback) {
+                            auto value = lookup(key);
+                            return value.IsString() ? value.ToString() : std::string(fallback);
+                        };
+                        region.annotation.name = text("name", "fusion");
+                        region.annotation.functionName = text("function", region.annotation.name.c_str());
+                        region.annotation.role = text("role", "generic");
+                        region.annotation.boundary = text("boundary", "none");
+                        region.annotation.atomic = lookup("atomic").ToLongLong() != 0;
+                        region.annotation.cudaGraph = lookup("cuda_graph").ToLongLong() != 0;
+                        if (region.annotation.boundary == "required") {
+                            for (int ancestor : stack)
+                                if (g_capturedFusionRegions[ancestor].annotation.atomic)
+                                    throw std::runtime_error("required fusion boundary inside an atomic region");
+                        }
+                        region.invocation = invocations[region.annotation.functionName]++;
+                        id = region.id;
+                        regionIds.emplace(externalId, id);
+                        g_capturedFusionRegions.push_back(std::move(region));
+                    } else {
+                        id = found->second;
+                        if (g_capturedFusionRegions[id].parentId != parent)
+                            throw std::runtime_error("fusion invocation has inconsistent ancestry");
+                    }
+                    stack.push_back(id);
+                    parent = id;
+                }
+                CapturedTensorOperation operation;
+                operation.name = node.name;
+                operation.outputTensorId = node.id;
+                operation.regionId = parent;
+                for (const auto& input : node.inputs)
+                    if (auto id = tensorId(input)) operation.inputTensorIds.push_back(id);
+                operations.push_back(std::move(operation));
+                regionStacks.push_back(std::move(stack));
+            }
+            std::unordered_map<uint64_t, size_t> producers;
+            producers.reserve(operations.size());
+            for (size_t index = 0; index < operations.size(); ++index)
+                producers.emplace(operations[index].outputTensorId, index);
+            std::unordered_set<uint64_t> graphOutputs;
+            std::function<void(const X::Value&, unsigned)> collectOutputs =
+                [&](const X::Value& value, unsigned depth) {
+                    if (depth > 64) throw std::runtime_error("graph output nesting exceeds 64");
+                    if (value.IsDict()) {
+                        for (uint64_t index = 0; index < value.Size(); ++index) {
+                            X::Value key, item;
+                            if (!value.DictEntry(index, key, item)) throw std::runtime_error("invalid graph outputs");
+                            collectOutputs(item, depth + 1);
+                        }
+                    } else if (value.IsList() || x3_value_object_kind(value.raw()) == X3_OBJECT_KIND_TUPLE) {
+                        for (uint64_t index = 0; index < value.Size(); ++index)
+                            collectOutputs(value.Get(index), depth + 1);
+                    } else if (auto id = tensorId(value)) graphOutputs.insert(id);
+                };
+            collectOutputs(graph.Outputs(), 0);
+            std::vector<std::unordered_set<uint64_t>> seenInputs(g_capturedFusionRegions.size());
+            std::vector<std::unordered_set<uint64_t>> seenOutputs(g_capturedFusionRegions.size());
+            auto addOutput = [&](int region, uint64_t id) {
+                if (seenOutputs[region].insert(id).second)
+                    g_capturedFusionRegions[region].outputTensorIds.push_back(id);
+            };
+            for (auto id : graphOutputs) {
+                auto producer = producers.find(id);
+                if (producer != producers.end())
+                    for (int region : regionStacks[producer->second]) addOutput(region, id);
+            }
+            // Walk each dependency across its region boundary once. Scanning
+            // every operation separately for every decoder layer is quadratic.
+            const std::vector<int> external;
+            for (size_t index = 0; index < operations.size(); ++index) {
+                const auto& consumerStack = regionStacks[index];
+                for (auto id : operations[index].inputTensorIds) {
+                    auto producer = producers.find(id);
+                    const auto& producerStack = producer == producers.end()
+                        ? external : regionStacks[producer->second];
+                    size_t common = 0;
+                    while (common < consumerStack.size() && common < producerStack.size() &&
+                        consumerStack[common] == producerStack[common]) ++common;
+                    for (size_t depth = common; depth < consumerStack.size(); ++depth) {
+                        const int region = consumerStack[depth];
+                        if (seenInputs[region].insert(id).second)
+                            g_capturedFusionRegions[region].inputTensorIds.push_back(id);
+                    }
+                    for (size_t depth = common; depth < producerStack.size(); ++depth)
+                        addOutput(producerStack[depth], id);
+                }
+            }
+            return AssignCapturedFusionOperations(std::move(operations), options, errorMessage);
+        } catch (const std::exception& error) {
+            g_capturedFusionRegions.clear();
+            g_capturedTensorOperations.clear();
+            errorMessage = error.what();
+            g_compiledGraphCaptureError = errorMessage;
+            return false;
+        }
+    }
+
     ScopedCompiledGraphCapture::ScopedCompiledGraphCapture()
         : m_previous(g_compiledGraphCaptureActive)
     {
         if (!m_previous) {
             g_capturedFusionRegions.clear();
-            g_fusionRegionStack.clear();
-            g_fusionInvocationCounts.clear();
             g_capturedTensorOperations.clear();
             g_compiledGraphCaptureError.clear();
         }
@@ -225,81 +324,4 @@ namespace Garnet
         g_compiledGraphCaptureActive = m_previous;
     }
 
-    ScopedCompiledFusionCaptureRoot::ScopedCompiledFusionCaptureRoot()
-    {
-        ++g_compiledFusionCaptureDepth;
-    }
-
-    ScopedCompiledFusionCaptureRoot::~ScopedCompiledFusionCaptureRoot()
-    {
-        --g_compiledFusionCaptureDepth;
-    }
-
-    ScopedCompiledFusionRegion::ScopedCompiledFusionRegion(
-        const FusionAnnotation& annotation)
-    {
-        if (!g_compiledGraphCaptureActive) return;
-        if (!annotation.validationError.empty()) {
-            g_compiledGraphCaptureError = annotation.validationError;
-            return;
-        }
-
-        const int parentId = g_fusionRegionStack.empty()
-            ? -1
-            : g_fusionRegionStack.back();
-        if (parentId >= 0 &&
-            g_capturedFusionRegions[static_cast<size_t>(parentId)].annotation.atomic &&
-            annotation.boundary == "required") {
-            g_compiledGraphCaptureError =
-                "fusion region '" + annotation.name +
-                "' declares boundary='required' inside atomic region '" +
-                g_capturedFusionRegions[static_cast<size_t>(parentId)].annotation.name + "'";
-            return;
-        }
-
-        CapturedFusionRegion region;
-        region.id = static_cast<int>(g_capturedFusionRegions.size());
-        region.parentId = parentId;
-        region.depth = static_cast<int>(g_fusionRegionStack.size());
-        region.invocation = g_fusionInvocationCounts[annotation.name]++;
-        region.annotation = annotation;
-        g_capturedFusionRegions.push_back(region);
-        g_fusionRegionStack.push_back(region.id);
-        m_regionId = region.id;
-        m_active = true;
-    }
-
-    ScopedCompiledFusionRegion::~ScopedCompiledFusionRegion()
-    {
-        if (m_active && !g_fusionRegionStack.empty()) {
-            g_fusionRegionStack.pop_back();
-        }
-    }
-
-    bool ScopedCompiledFusionRegion::IsValid() const
-    {
-        return !g_compiledGraphCaptureActive ||
-            (m_active && g_compiledGraphCaptureError.empty());
-    }
-
-    void ScopedCompiledFusionRegion::CaptureInputs(X::ARGS& inputs)
-    {
-        if (!m_active || m_regionId < 0) return;
-        std::unordered_set<unsigned long long> visited;
-        auto& tensorIds = g_capturedFusionRegions[
-            static_cast<size_t>(m_regionId)].inputTensorIds;
-        for (size_t index = 0; index < inputs.size(); ++index) {
-            CollectTensorIds(inputs[index], tensorIds, visited);
-        }
-    }
-
-    void ScopedCompiledFusionRegion::CaptureResult(const X::Value& result)
-    {
-        if (!m_active || m_regionId < 0) return;
-        std::unordered_set<unsigned long long> visited;
-        CollectTensorIds(
-            result,
-            g_capturedFusionRegions[static_cast<size_t>(m_regionId)].outputTensorIds,
-            visited);
-    }
 }

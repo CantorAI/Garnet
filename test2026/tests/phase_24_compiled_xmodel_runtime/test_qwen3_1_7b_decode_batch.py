@@ -8,20 +8,20 @@ import numpy as np
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
 GARNET_DLL = (
-    REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
 )
 
 handles = []
 for directory in [
     GARNET_DLL.parent,
-    REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
     REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
     Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
 ]:
     if directory.exists() and hasattr(os, "add_dll_directory"):
         handles.append(os.add_dll_directory(str(directory)))
 
-import xlang
+import xlang3
 
 
 snapshot_root = (
@@ -41,7 +41,7 @@ page_size = 16
 kv_heads = 8
 head_dim = 128
 
-garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
+garnet = xlang3.importModule("garnet", fromPath=str(GARNET_DLL))
 load_start = time.perf_counter()
 model = garnet.load_model(
     str(
@@ -49,7 +49,7 @@ model = garnet.load_model(
         / "xModel"
         / "qwen3"
         / "text_1_7b"
-        / "decode_batch.x"
+        / "decode_batch.py"
     ),
     runtime_mode="compiled_xmodel",
     backend="tensorrt",

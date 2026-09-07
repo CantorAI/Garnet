@@ -16,7 +16,7 @@ REPO_ROOT = Path(
 GARNET_DLL = Path(
     os.environ.get(
         "GARNET_DLL",
-        str(REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"),
+        str(REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"),
     )
 ).resolve()
 
@@ -24,13 +24,13 @@ handles = []
 openvino_libs = Path(ov.__file__).resolve().parent / "libs"
 for directory in [
     GARNET_DLL.parent,
-    REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
     openvino_libs,
 ]:
     if directory.exists() and hasattr(os, "add_dll_directory"):
         handles.append(os.add_dll_directory(str(directory)))
 
-import xlang
+import xlang3
 
 
 snapshot_root = (
@@ -61,13 +61,13 @@ cache_device = "".join(
     for character in device
 )
 
-garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
+garnet = xlang3.importModule("garnet", fromPath=str(GARNET_DLL))
 assert callable(garnet.load_model), (
-    f"Garnet load_model is unavailable; xlang={xlang.__file__}"
+    f"Garnet load_model is unavailable; xlang={xlang3.__file__}"
 )
 load_start = time.perf_counter()
 model = garnet.load_model(
-    str(REPO_ROOT / "xModel" / "qwen3" / "text_1_7b" / "prefill.x"),
+    str(REPO_ROOT / "xModel" / "qwen3" / "text_1_7b" / "prefill.py"),
     runtime_mode="compiled_xmodel",
     backend="openvino",
     precision=precision,

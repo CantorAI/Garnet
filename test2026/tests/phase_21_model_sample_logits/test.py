@@ -39,7 +39,7 @@ if not env_flag("RUN_GARNET_MODEL_SAMPLE_LOGITS"):
     skip("set RUN_GARNET_MODEL_SAMPLE_LOGITS=1 to verify xlang-facing Model.debug_probe logits_top1")
 
 try:
-    import xlang
+    import xlang3
 except Exception as exc:
     skip(f"xlang Python module not available: {exc}")
 
@@ -51,7 +51,7 @@ if not garnet_dll.exists():
     skip(f"garnet.dll not found: {garnet_dll}")
 
 _dll_handles = add_windows_dll_dirs(garnet_dll)
-garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
 
 xmodel_path = REPO_ROOT / "test2026" / "tests" / "phase_00_trt_expression_preflight" / "simple_trt_linear.x"
 weights = {"W": np.zeros((4, 11), dtype=np.float32)}
@@ -81,7 +81,7 @@ if logits is None:
 cpu_logits = garnet.tensor_to_cpu(logits)
 if cpu_logits is None:
     raise AssertionError("garnet.tensor_to_cpu returned None")
-cpu_logits_np = cpu_logits.toarray()
+cpu_logits_np = cpu_logits.tolist()
 np.testing.assert_allclose(cpu_logits_np, probe_input @ weights["W"], rtol=1e-6, atol=1e-6)
 
 sample = model.debug_probe("logits_top1", logits)

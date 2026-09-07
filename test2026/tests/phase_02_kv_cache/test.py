@@ -2,22 +2,22 @@ import sys
 import os
 from pathlib import Path
 
-import xlang
+import xlang3
 
 try:
     repo_root = Path(__file__).resolve().parents[3]
     garnet_dll = Path(os.environ.get(
         "GARNET_DLL_PATH",
-        repo_root / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll",
+        repo_root.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll",
     ))
     if os.name == "nt" and hasattr(os, "add_dll_directory"):
         for dll_dir in [
             garnet_dll.parent,
-            repo_root.parent / "xlang" / "out" / "build" / "x64-Debug" / "bin",
+            garnet_dll.parent / "cpython_bridge",
         ]:
             if dll_dir.exists():
                 os.add_dll_directory(str(dll_dir))
-    garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+    garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
 except Exception as e:
     print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)

@@ -27,7 +27,7 @@ def add_dll_dirs():
 def main():
     add_dll_dirs()
     try:
-        import xlang
+        import xlang3
     except Exception as exc:
         print(f"SKIP: xlang is not available: {exc}")
         raise SystemExit(0)
@@ -37,7 +37,7 @@ def main():
         print(f"SKIP: garnet.dll not found: {garnet_dll}")
         raise SystemExit(0)
 
-    garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+    garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
     kv = garnet.KVCacheManager(
         max_num_pages=16,
         page_size=8,

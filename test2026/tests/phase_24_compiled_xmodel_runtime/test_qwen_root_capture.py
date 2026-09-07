@@ -5,19 +5,19 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-GARNET_DLL = REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
+GARNET_DLL = REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
 
 _dll_handles = []
 for directory in [
     GARNET_DLL.parent,
-    REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
     REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
     Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
 ]:
     if directory.exists() and hasattr(os, "add_dll_directory"):
         _dll_handles.append(os.add_dll_directory(str(directory)))
 
-import xlang
+import xlang3
 
 snapshot_root = (
     Path.home()
@@ -39,9 +39,9 @@ elif not (cache_dir / "model.engine").exists():
     print("Qwen root compile skipped; set GARNET_REBUILD_QWEN_ROOT=1 for the large integration build")
     raise SystemExit(0)
 
-garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
+garnet = xlang3.importModule("garnet", fromPath=str(GARNET_DLL))
 model = garnet.load_model(
-    str(REPO_ROOT / "qwen_vl" / "xmodel" / "qwen_vl_model.x"),
+    str(REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "qwen_vl_model.py"),
     runtime_mode="compiled_xmodel",
     entry_function="Qwen3VLModel",
     weights=str(snapshots[-1]),
@@ -73,6 +73,6 @@ assert status["graph_summary"], status
 assert Path(cache_dir / "runtime_graph.cache").exists(), status
 assert Path(status["engine_path"]).exists(), status
 
-print("Qwen root .x compiled without native assertions or fallback runners")
+print("Qwen root .py compiled without native assertions or fallback runners")
 print(f"state: {status['state']}")
 print(f"engine bytes: {Path(status['engine_path']).stat().st_size}")

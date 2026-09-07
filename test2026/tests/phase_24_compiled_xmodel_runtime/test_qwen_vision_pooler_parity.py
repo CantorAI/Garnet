@@ -18,19 +18,19 @@ SNAPSHOTS = sorted((
 
 
 def run_garnet():
-    dll = REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
+    dll = REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
     handles = []
     for directory in [
         dll.parent,
-        REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+        REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
         REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
         Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
     ]:
         if directory.exists() and hasattr(os, "add_dll_directory"):
             handles.append(os.add_dll_directory(str(directory)))
-    import xlang
+    import xlang3
 
-    garnet = xlang.importModule("garnet", fromPath=str(dll))
+    garnet = xlang3.importModule("garnet", fromPath=str(dll))
     prepared = garnet.qwen_vl_prepare_request(
         model_dir=str(SNAPSHOTS[-1]),
         image_path=str(IMAGE_PATH),
@@ -39,11 +39,11 @@ def run_garnet():
         max_pixels=1280 * 28 * 28,
     )
     pixel_values = np.asarray(
-        garnet.tensor_to_cpu(prepared["pixel_values"]).toarray(), dtype=np.float32
+        garnet.tensor_to_cpu(prepared["pixel_values"]).tolist(), dtype=np.float32
     ).reshape(3772, 1536)
     np.save(ARTIFACT_DIR / "pixel_values.npy", pixel_values)
     model = garnet.load_model(
-        str(REPO_ROOT / "qwen_vl" / "xmodel" / "debug_vision_pooler.x"),
+        str(REPO_ROOT / "xModel" / "qwen3" / "vl_2b_instruct" / "debug_vision_pooler.py"),
         runtime_mode="compiled_xmodel",
         entry_function="Qwen3VisionPoolerProbe",
         weights=str(SNAPSHOTS[-1]),
@@ -64,7 +64,7 @@ def run_garnet():
         prepared["vision_cu_seqlens"],
     ]})
     assert result["status"] == "ok", result
-    output = np.asarray(garnet.tensor_to_cpu(result["output"]).toarray())
+    output = np.asarray(garnet.tensor_to_cpu(result["output"]).tolist())
     if output.dtype == np.uint16:
         output = (output.astype(np.uint32) << 16).view(np.float32)
     output = output.astype(np.float32).reshape(943, 2048)

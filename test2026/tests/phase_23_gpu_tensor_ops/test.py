@@ -16,7 +16,6 @@ def add_windows_dll_dirs(garnet_dll):
         garnet_dll.parent,
         REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
         Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
-        Path("C:/Program Files/Microsoft Visual Studio/18/Community/VC/Redist/MSVC/14.51.36231/debug_nonredist/x64/Microsoft.VC145.DebugCRT"),
     ]:
         if path.exists():
             handles.append(os.add_dll_directory(str(path)))
@@ -27,22 +26,22 @@ def cpu_array(garnet, tensor):
     cpu = garnet.tensor_to_cpu(tensor)
     if cpu is None:
         raise AssertionError("tensor_to_cpu failed")
-    return np.asarray(cpu.toarray())
+    return np.asarray(cpu.tolist())
 
 
 print("Phase 23: GPU X::Tensor model orchestration operations")
 
-import xlang
+import xlang3
 
 garnet_dll = Path(os.environ.get(
     "GARNET_DLL_PATH",
-    REPO_ROOT / "out" / "build" / "x64-Debug" / "bin" / "garnet.dll",
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll",
 ))
 if not garnet_dll.exists():
     raise AssertionError(f"garnet.dll not found: {garnet_dll}")
 
 _dll_handles = add_windows_dll_dirs(garnet_dll)
-garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
 
 lhs = np.arange(12, dtype=np.float32).reshape(3, 4)
 rhs = np.full((3, 4), 0.25, dtype=np.float32)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 
 namespace Garnet::Image
 {

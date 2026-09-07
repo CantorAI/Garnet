@@ -42,6 +42,7 @@ namespace Garnet
 
     public:
         bool Initialize(
+            X3PackageHost* host,
             std::shared_ptr<CompiledModelRuntime> runtime,
             std::shared_ptr<PagedKVPool> kvPool,
             int bucketSize,

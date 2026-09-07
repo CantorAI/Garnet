@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 #include "safetensors_index.h"
 #include "trt_builder.h"
 
@@ -28,6 +28,7 @@ namespace Garnet
         };
 
     private:
+        X3PackageHost* m_host;
         mutable std::mutex m_mutex;
         std::string m_rootXModel;
         std::string m_cacheDirectory;
@@ -43,6 +44,7 @@ namespace Garnet
         std::string m_errorMessage;
         bool m_ready = false;
         X::Value m_module;
+        std::string m_importNamespace;
         std::vector<X::Value> m_dependencyModules;
         X::Value m_rootFunction;
         X::Value m_graph;
@@ -50,6 +52,7 @@ namespace Garnet
         std::string m_executionPlanJson;
         std::string m_enginePath;
         std::vector<EnginePartitionSpec> m_enginePartitions;
+        std::vector<std::shared_ptr<void>> m_trtExecutions;
         SafeTensorsIndex m_weightIndex;
         std::string m_weightIndexError;
         std::unordered_map<std::string, X::Value> m_loadedWeights;
@@ -71,6 +74,9 @@ namespace Garnet
         X::Value m_reusablePrefillValueCache;
         std::uint64_t m_openVinoSessionId = 0;
     public:
+        explicit CompiledModelRuntime(X3PackageHost* host) : m_host(host) {
+            if (!host || !host->runtime) throw std::invalid_argument("compiled model requires a host");
+        }
         ~CompiledModelRuntime();
 
         bool Initialize(

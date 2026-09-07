@@ -2,10 +2,10 @@ import os
 import sys
 import numpy as np
 
-import xlang
+import xlang3
 
 try:
-    garnet = xlang.importModule("garnet", fromPath="garnet")
+    garnet = xlang3.importModule("garnet", fromPath="garnet")
 except Exception as e:
     print(f"Failed to import Garnet via xlang: {e}")
     sys.exit(1)
@@ -26,8 +26,8 @@ try:
 
     weights = garnet.load_weights(weights_path)
 
-    # Initialize execution engine using the .x graph
-    xmodel_path = os.path.abspath(os.path.join(__file__, "../../../../../xModel/qwen3/vl_2b_instruct/qwen_vl_model.x"))
+    # Initialize execution engine using the Python model graph.
+    xmodel_path = os.path.abspath(os.path.join(__file__, "../../../../../xModel/qwen3/vl_2b_instruct/qwen_vl_model.py"))
     
     engine = garnet.load_model(
         xmodel_path, 

@@ -340,7 +340,7 @@ def logits_to_numpy_or_cpu_copy(garnet, value, rows, vocab_size):
 
 def import_garnet():
     try:
-        import xlang
+        import xlang3
     except Exception as exc:
         skip(f"xlang Python module not available: {exc}")
 
@@ -361,7 +361,7 @@ def import_garnet():
 
     try:
         global GARNET_FOR_TENSOR_COPY
-        garnet = xlang.importModule("garnet", fromPath=str(garnet_dll))
+        garnet = xlang3.importModule("garnet", fromPath=str(garnet_dll))
         GARNET_FOR_TENSOR_COPY = garnet
         return garnet, garnet_dll
     except Exception as exc:

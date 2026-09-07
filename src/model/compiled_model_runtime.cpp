@@ -1,5 +1,6 @@
 #include "compiled_model_runtime.h"
 #include "compiled_graph_capture.h"
+#include "graph_capture.h"
 #include "md5.h"
 #include "trt_builder.h"
 #include "openvino_builder.h"
@@ -10,6 +11,7 @@
 #include "qwen_asr_compiled_frontend.h"
 #include "qwen_tts_compiled_frontend.h"
 #include "cuda_lib.h"
+#include "repetition_sampler.h"
 #include "qwen_tokenizer.h"
 #include "nlohmann/json.hpp"
 
@@ -19,6 +21,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -30,9 +33,73 @@
 
 namespace
 {
+    X::Value NativeValue(X3PackageHost*) { return {}; }
+    X::Value NativeValue(X3PackageHost*, std::nullptr_t) { return X::Value(nullptr); }
+    X::Value NativeValue(X3PackageHost* host, const std::string& value) { return X::Value::String(host, value); }
+    X::Value NativeValue(X3PackageHost* host, const char* value) { return X::Value::String(host, value); }
+    template<class T> X::Value NativeValue(X3PackageHost* host, T&& value) {
+        if constexpr (std::is_convertible_v<T, std::string>) return X::Value::String(host, value);
+        else return X::Value(std::forward<T>(value));
+    }
+    X::Value Lookup(const X::Value& dictionary, const char* name) {
+        for (uint64_t i = 0; i < dictionary.Size(); ++i) {
+            X::Value key, value;
+            if (!dictionary.DictEntry(i, key, value)) throw std::runtime_error("invalid model dictionary");
+            if (key.IsString() && key.ToString() == name) return value;
+        }
+        return {};
+    }
+    void ClearImportNamespace(X3PackageHost* host, std::string& name) {
+        if (name.empty()) return;
+        X::Module sys(host, "sys");
+        auto registry = sys["modules"];
+        std::vector<X::Value> keys;
+        for (uint64_t i = 0; i < registry.Size(); ++i) {
+            X::Value key, value;
+            if (!registry.DictEntry(i, key, value)) break;
+            if (!key.IsString()) continue;
+            const auto text = key.ToString();
+            if (text == name || text.compare(0, name.size() + 1, name + ".") == 0)
+                keys.push_back(key);
+        }
+        for (const auto& key : keys) {
+            if (x3_delete_item(host->runtime, registry.raw(), key.raw()) != X3_STATUS_OK)
+                throw std::runtime_error(x3_runtime_last_error(host->runtime));
+        }
+        name.clear();
+    }
+    X::Tensor AdoptCudaTensor(X3PackageHost* host, X3TensorDType dtype,
+        const std::vector<int64_t>& shape, void* allocation) {
+        try {
+            std::vector<int64_t> strides(shape.size());
+            uint64_t bytes = Garnet::TensorHelper::ItemSize(dtype);
+            for (size_t i = shape.size(); i-- > 0;) {
+                if (shape[i] < 0 || bytes > INT64_MAX ||
+                    (shape[i] && bytes > UINT64_MAX / shape[i]))
+                    throw std::invalid_argument("invalid CUDA tensor shape");
+                strides[i] = static_cast<int64_t>(bytes);
+                bytes *= shape[i];
+            }
+            int device = 0;
+            const auto status = cudaGetDevice(&device);
+            if (status != cudaSuccess) throw std::runtime_error(cudaGetErrorString(status));
+            X3TensorInfo info{};
+            info.size = sizeof(info); info.dtype = dtype;
+            info.rank = static_cast<uint32_t>(shape.size());
+            info.shape = shape.data(); info.strides = strides.data();
+            info.data = allocation; info.byte_size = bytes;
+            info.device_type = Garnet::TensorHelper::CudaDevice; info.device_id = device;
+            return Garnet::TensorHelper::WrapGPU(host, info, allocation, device);
+        }
+        catch (...) {
+            if (allocation) cudaFree(allocation);
+            throw;
+        }
+    }
+
     constexpr const char* kGraphCacheMagic = "GARNET_RUNTIME_GRAPH_CACHE_V2";
     constexpr const char* kRuntimeSchema =
-        "compiled_xmodel_runtime_v24_qwen3_tts_predictor_fp32";
+        "compiled_xmodel_runtime_v25_xlang3_python_graph";
 
     std::string ReadFile(const std::filesystem::path& path)
     {
@@ -42,29 +109,29 @@ namespace
             std::istreambuf_iterator<char>());
     }
 
-    X::Value JsonToXValue(const nlohmann::json& value)
+    X::Value JsonToXValue(X3PackageHost* host, const nlohmann::json& value)
     {
-        if (value.is_null()) return X::Value(X::ValueType::None);
-        if (value.is_boolean()) return X::Value(value.get<bool>());
-        if (value.is_number_integer()) return X::Value(value.get<long long>());
-        if (value.is_number_unsigned()) return X::Value(value.get<unsigned long long>());
-        if (value.is_number_float()) return X::Value(value.get<double>());
-        if (value.is_string()) return X::Value(value.get<std::string>());
+        if (value.is_null()) return NativeValue(host, nullptr);
+        if (value.is_boolean()) return NativeValue(host, value.get<bool>());
+        if (value.is_number_integer()) return NativeValue(host, value.get<long long>());
+        if (value.is_number_unsigned()) return NativeValue(host, value.get<unsigned long long>());
+        if (value.is_number_float()) return NativeValue(host, value.get<double>());
+        if (value.is_string()) return NativeValue(host, value.get<std::string>());
         if (value.is_array()) {
-            X::V<X::XList> list;
+            X::Value list = X::Value::List(host);
             for (const auto& item : value) {
-                list->AddItem(JsonToXValue(item));
+                list.Append(JsonToXValue(host, item));
             }
-            return X::Value(list);
+            return NativeValue(host, list);
         }
         if (value.is_object()) {
-            X::Dict dictionary;
+            X::Value dictionary = X::Value::Dict(host);
             for (auto iterator = value.begin(); iterator != value.end(); ++iterator) {
-                dictionary->Set(iterator.key(), JsonToXValue(iterator.value()));
+                dictionary.SetItem(iterator.key(), JsonToXValue(host, iterator.value()));
             }
-            return X::Value(dictionary);
+            return NativeValue(host, dictionary);
         }
-        return X::Value();
+        return NativeValue(host);
     }
 
     std::string BuildExecutionPlanJson(
@@ -227,79 +294,51 @@ namespace
         return false;
     }
 
-    X::Value MakeCudaTensorFromHost(
-        X::TensorDataType dataType,
-        const std::vector<int>& dimensions,
-        const void* source,
-        size_t bytes)
+    X::Value MakeCudaTensorFromHost(X3PackageHost* host, X3TensorDType dataType,
+        const std::vector<int>& dimensions, const void* source, size_t bytes)
     {
-        X::Tensor tensor(X::g_pXHost->CreateTensor());
-        X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
-        for (const int dimension : dimensions) shape.push_back(dimension);
-        tensor->SetDataType(dataType);
-        tensor->SetShape(shape);
-        void* deviceMemory = nullptr;
-        if (cudaMalloc(&deviceMemory, bytes) != cudaSuccess) return X::Value();
-        if (cudaMemcpy(deviceMemory, source, bytes, cudaMemcpyHostToDevice) != cudaSuccess ||
-            Garnet::TensorHelper::AttachGPUMemory(tensor, deviceMemory) !=
-                Garnet::TensorOpStatus::Success) {
-            cudaFree(deviceMemory);
-            return X::Value();
+        const std::vector<int64_t> shape(dimensions.begin(), dimensions.end());
+        uint64_t expected = Garnet::TensorHelper::ItemSize(dataType);
+        for (auto dimension : shape) {
+            if (dimension < 0 || (dimension && expected > UINT64_MAX / dimension))
+                throw std::invalid_argument("invalid tensor shape");
+            expected *= dimension;
         }
-        return X::Value(tensor);
+        if (expected != bytes) throw std::invalid_argument("tensor byte size mismatch");
+        return Garnet::TensorHelper::CreateGPU(host, dataType, shape, source);
     }
 
-    X::Value MakeCpuTensorFromHost(
-        X::TensorDataType dataType,
-        const std::vector<int>& dimensions,
-        const void* source,
-        size_t bytes)
+    X::Value MakeCpuTensorFromHost(X3PackageHost* host, X3TensorDType dataType,
+        const std::vector<int>& dimensions, const void* source, size_t bytes)
     {
-        X::Tensor tensor(X::g_pXHost->CreateTensor());
-        X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
-        for (const int dimension : dimensions) shape.push_back(dimension);
-        tensor->SetDataType(dataType);
-        tensor->SetShape(shape);
-        X::Value initial;
-        tensor->Create(initial);
-        if (!tensor->GetData() ||
-            static_cast<size_t>(tensor->GetDataSize()) != bytes) {
-            return X::Value();
+        const std::vector<int64_t> shape(dimensions.begin(), dimensions.end());
+        uint64_t expected = Garnet::TensorHelper::ItemSize(dataType);
+        for (auto dimension : shape) {
+            if (dimension < 0 || (dimension && expected > UINT64_MAX / dimension))
+                throw std::invalid_argument("invalid tensor shape");
+            expected *= dimension;
         }
-        std::memcpy(tensor->GetData(), source, bytes);
-        return X::Value(tensor);
+        if (expected != bytes) throw std::invalid_argument("tensor byte size mismatch");
+        return X::Tensor::Create(host, dataType, shape, source, source ? bytes : 0);
     }
 
-    X::Value BuildSymbolicWeights(const Garnet::SafeTensorsIndex& index)
+    X::Value BuildSymbolicWeights(X3PackageHost* host, const Garnet::SafeTensorsIndex& index)
     {
-        X::Dict weights;
+        auto weights = X::Value::Dict(host);
         for (const auto& entry : index.Entries()) {
             const auto& name = entry.first;
             const auto& metadata = entry.second;
-            X::TensorDataType dataType;
-            if (metadata.dataType == "BF16") dataType = X::TensorDataType::BFLOAT16;
-            else if (metadata.dataType == "F16") dataType = X::TensorDataType::FLOAT16;
-            else if (metadata.dataType == "F32") dataType = X::TensorDataType::FLOAT32;
+            X3TensorDType dtype;
+            if (metadata.dataType == "BF16") dtype = X3_TENSOR_BFLOAT16;
+            else if (metadata.dataType == "F16") dtype = X3_TENSOR_FLOAT16;
+            else if (metadata.dataType == "F32") dtype = X3_TENSOR_FLOAT32;
             else continue;
-
-            X::Port::vector<int> shape(static_cast<int>(metadata.shape.size()));
-            bool valid = true;
-            for (const long long dimension : metadata.shape) {
-                if (dimension < 0 || dimension > std::numeric_limits<int>::max()) {
-                    valid = false;
-                    break;
-                }
-                shape.push_back(static_cast<int>(dimension));
-            }
-            if (!valid) continue;
-            X::Tensor tensor(X::g_pXHost->CreateTensor());
-            tensor->SetDataType(dataType);
-            tensor->SetShape(shape);
-            X::Value tensorName(name);
-            tensor->SetName(tensorName);
-            weights->Set(name, X::Value(tensor));
+            std::vector<int64_t> shape(metadata.shape.begin(), metadata.shape.end());
+            if (std::any_of(shape.begin(), shape.end(), [](int64_t d) { return d < 0 || d > INT_MAX; }))
+                throw std::invalid_argument("weight shape exceeds backend limits: " + name);
+            weights.SetItem(name, X::Tensor::Input(host, name.c_str(), dtype, shape));
         }
-        return X::Value(weights);
+        return weights;
     }
 
     void CollectXModelDependencies(
@@ -311,6 +350,15 @@ namespace
             return;
         }
 
+        for (auto parent = normalized.parent_path(); !parent.empty();) {
+            const auto initializer = parent / "__init__.py";
+            if (!std::filesystem::is_regular_file(initializer)) break;
+            if (initializer != normalized) CollectXModelDependencies(initializer, dependencies);
+            const auto next = parent.parent_path();
+            if (next == parent) break;
+            parent = next;
+        }
+
         const std::string source = ReadFile(normalized);
         static const std::regex fromImport(
             R"(^\s*from\s+([A-Za-z0-9_.]+)\s+import\s+)",
@@ -319,10 +367,10 @@ namespace
             R"(^\s*import\s+([A-Za-z0-9_.]+))",
             std::regex::ECMAScript);
         static const std::regex localImport(
-            "^\\s*from\\s+\"([^\"]*)\"\\s+import\\s+([A-Za-z0-9_]+)",
+            R"(^\s*from\s+\.\s+import\s+([A-Za-z0-9_]+))",
             std::regex::ECMAScript);
         static const std::regex explicitDependency(
-            R"(^\s*#\s*garnet-dependency:\s*([^\s]+\.x)\s*$)",
+            R"(^\s*#\s*garnet-dependency:\s*([^\s]+\.py)\s*$)",
             std::regex::ECMAScript);
         std::istringstream lines(source);
         std::string line;
@@ -337,7 +385,7 @@ namespace
             }
             if (std::regex_search(line, match, localImport)) {
                 const auto candidate = normalized.parent_path() /
-                    match[1].str() / (match[2].str() + ".x");
+                    (match[1].str() + ".py");
                 if (std::filesystem::is_regular_file(candidate)) {
                     CollectXModelDependencies(candidate, dependencies);
                 }
@@ -349,7 +397,7 @@ namespace
             }
             std::string module = match[1].str();
             std::replace(module.begin(), module.end(), '.', '/');
-            const auto candidate = normalized.parent_path() / (module + ".x");
+            const auto candidate = normalized.parent_path() / (module + ".py");
             if (std::filesystem::is_regular_file(candidate)) {
                 CollectXModelDependencies(candidate, dependencies);
             }
@@ -587,17 +635,21 @@ namespace Garnet
 
     CompiledModelRuntime::~CompiledModelRuntime()
     {
-        ReleaseDeviceMemory();
+        try { ReleaseDeviceMemory(); }
+        catch (...) { }
     }
 
     void CompiledModelRuntime::ReleaseDeviceMemory()
     {
         std::lock_guard<std::mutex> guard(m_mutex);
+        m_trtExecutions.clear();
+        m_enginesPrepared = false;
+        ClearImportNamespace(m_host, m_importNamespace);
+        m_module = X::Value();
+        m_rootFunction = X::Value();
+        m_graph = X::Value();
+        m_dependencyModules.clear();
         auto releaseTensor = [](X::Value& value) {
-            if (value.IsTensor()) {
-                X::Tensor tensor(value);
-                TensorHelper::ReleaseGPUMemory(tensor);
-            }
             value = X::Value();
         };
         releaseTensor(m_reusableExecutionOutput);
@@ -647,8 +699,24 @@ namespace Garnet
         const std::string& backend,
         const std::string& precision)
     {
+        auto* host = m_host;
         std::lock_guard<std::mutex> guard(m_mutex);
+        m_trtExecutions.clear();
+        // Failed initialization must not keep engines alive until DLL teardown.
+        auto cleanupEngines = [](CompiledModelRuntime* runtime) noexcept {
+            runtime->m_trtExecutions.clear();
+            runtime->m_decodeRuntime.reset();
+            runtime->m_auxRuntime.reset();
+            runtime->m_codecRuntime.reset();
+            runtime->m_enginesPrepared = false;
+        };
+        std::unique_ptr<CompiledModelRuntime, decltype(cleanupEngines)> engineGuard(this, cleanupEngines);
+        ClearImportNamespace(host, m_importNamespace);
         m_rootXModel = std::filesystem::absolute(rootXModel).lexically_normal().string();
+        if (std::filesystem::path(m_rootXModel).extension() == ".x") {
+            auto pythonPath = std::filesystem::path(m_rootXModel).replace_extension(".py");
+            if (std::filesystem::is_regular_file(pythonPath)) m_rootXModel = pythonPath.string();
+        }
         m_cacheDirectory = std::filesystem::absolute(cacheDirectory).lexically_normal().string();
         m_weightsLocation = weightsLocation;
         m_entryFunction = entryFunction.empty() ? "Qwen3VLModel" : entryFunction;
@@ -729,10 +797,10 @@ namespace Garnet
 
         std::error_code error;
         const std::filesystem::path rootPath(m_rootXModel);
-        if (!std::filesystem::is_regular_file(rootPath, error) || rootPath.extension() != ".x") {
+        if (!std::filesystem::is_regular_file(rootPath, error) || rootPath.extension() != ".py") {
             m_state = "failed";
             m_errorCode = "invalid_root_xmodel";
-            m_errorMessage = "compiled_xmodel mode requires an existing root .x file";
+            m_errorMessage = "compiled_xmodel mode requires an existing Python model file";
             return false;
         }
 
@@ -762,7 +830,7 @@ namespace Garnet
         if (!sourceFile.good() && source.empty()) {
             m_state = "failed";
             m_errorCode = "root_xmodel_read_failed";
-            m_errorMessage = "failed to read root .x source";
+            m_errorMessage = "failed to read model Python source";
             return false;
         }
         if (!inputDataTypes.empty() && inputDataTypes.size() != inputShapes.size()) {
@@ -772,10 +840,13 @@ namespace Garnet
             return false;
         }
 
+        const std::string graphFingerprint = MakeGraphFingerprint(
+            rootPath, m_weightsLocation, m_entryFunction, m_backend, m_precision,
+            inputShapes, inputDataTypes, m_partitionOptions);
         const std::filesystem::path graphCachePath =
             std::filesystem::path(m_cacheDirectory) / "runtime_graph.cache";
         const std::filesystem::path enginePath =
-            std::filesystem::path(m_cacheDirectory) / "model.engine";
+            std::filesystem::path(m_cacheDirectory) / ("model_" + graphFingerprint + ".engine");
         m_enginePath = enginePath.string();
         auto createDecodeRuntime = [&]()
             -> std::pair<std::shared_ptr<CompiledModelRuntime>, std::string> {
@@ -792,8 +863,8 @@ namespace Garnet
             }
             const std::filesystem::path decodeModel =
                 rootPath.parent_path() /
-                (qwenVL ? "qwen_text_decode.x" :
-                    (qwenTTS ? "talker_decode.x" : "decode.x"));
+                (qwenVL ? "qwen_text_decode.py" :
+                    (qwenTTS ? "talker_decode.py" : "decode.py"));
             const int keyIndex = qwenVL ? 11 : (qwenASR ? 5 : 3);
             const int valueIndex = qwenVL ? 12 : (qwenASR ? 6 : 4);
             const int tableIndex = qwenVL ? 13 : (qwenASR ? 7 : 5);
@@ -821,7 +892,7 @@ namespace Garnet
                     decodePartitionOptions.builderOptimizationLevel = static_cast<int>(parsed);
                 }
             }
-            auto decodeRuntime = std::make_shared<CompiledModelRuntime>();
+            auto decodeRuntime = std::make_shared<CompiledModelRuntime>(m_host);
             if (!decodeRuntime->Initialize(
                     decodeModel.string(),
                     (std::filesystem::path(m_cacheDirectory) / "decode").string(),
@@ -834,8 +905,8 @@ namespace Garnet
                     decodePartitionOptions,
                     m_backend,
                     m_precision)) {
-                X::Dict decodeStatus(decodeRuntime->Status());
-                return {nullptr, decodeStatus["error_message"].ToString()};
+                X::Value decodeStatus(decodeRuntime->Status());
+                return {nullptr, Lookup(decodeStatus, "error_message").ToString()};
             }
             return {std::move(decodeRuntime), {}};
         };
@@ -861,12 +932,24 @@ namespace Garnet
                 }
             }
             else {
-                TRTBuilder builder;
-                prepared = m_enginePartitions.size() > 1
-                    ? builder.PrepareCapturedPartitions(
-                        m_enginePartitions, &m_weightIndex, preparationError)
-                    : builder.PrepareCapturedEngine(
-                        m_enginePath, &m_weightIndex, preparationError);
+                std::vector<std::shared_ptr<void>> owners;
+                auto retain = [&](const std::string& path) {
+                    auto owner = TRTBuilder::RetainCachedExecution(path, &m_weightIndex, preparationError);
+                    if (!owner) return false;
+                    owners.push_back(std::move(owner));
+                    return true;
+                };
+                prepared = true;
+                if (m_enginePartitions.size() > 1) {
+                    for (const auto& partition : m_enginePartitions) {
+                        if (!retain(partition.enginePath)) {
+                            prepared = false;
+                            break;
+                        }
+                    }
+                }
+                else prepared = retain(m_enginePath);
+                if (prepared) m_trtExecutions = std::move(owners);
             }
             if (!prepared) {
                 m_errorCode = "engine_preparation_failed";
@@ -902,19 +985,19 @@ namespace Garnet
                     m_errorMessage = "Qwen3-TTS talker hidden size is invalid";
                     return false;
                 }
-                auto auxiliary = std::make_shared<CompiledModelRuntime>();
+                auto auxiliary = std::make_shared<CompiledModelRuntime>(m_host);
                 FusionPartitionOptions predictorOptions = m_partitionOptions;
                 predictorOptions.builderOptimizationLevel = 0;
                 if (!auxiliary->Initialize(
-                        (rootPath.parent_path() / "code_predictor.x").string(),
+                        (rootPath.parent_path() / "code_predictor.py").string(),
                         (std::filesystem::path(m_cacheDirectory) / "code_predictor").string(),
                         m_weightsLocation, "Qwen3TTSCodePredictor", "",
                         {{1, 1, talkerHiddenSize}, {1, 1}},
                         {"float32", "int64"},
                         predictorOptions, m_backend, m_precision)) {
-                    X::Dict status(auxiliary->Status());
+                    X::Value status(auxiliary->Status());
                     m_errorCode = "tts_code_predictor_initialization_failed";
-                    m_errorMessage = status["error_message"].ToString();
+                    m_errorMessage = Lookup(status, "error_message").ToString();
                     return false;
                 }
                 int codecFrames = 256;
@@ -923,16 +1006,16 @@ namespace Garnet
                 }
                 const std::filesystem::path codecWeights =
                     std::filesystem::path(m_weightsLocation) / "speech_tokenizer";
-                auto codec = std::make_shared<CompiledModelRuntime>();
+                auto codec = std::make_shared<CompiledModelRuntime>(m_host);
                 if (!codec->Initialize(
-                        (rootPath.parent_path() / "codec_decode.x").string(),
+                        (rootPath.parent_path() / "codec_decode.py").string(),
                         (std::filesystem::path(m_cacheDirectory) / "codec_decode").string(),
                         codecWeights.string(), "Qwen3TTSCodecDecode", "",
                         {{1, 16, codecFrames}}, {"int64"}, m_partitionOptions,
                         m_backend, m_precision)) {
-                    X::Dict status(codec->Status());
+                    X::Value status(codec->Status());
                     m_errorCode = "tts_codec_initialization_failed";
-                    m_errorMessage = status["error_message"].ToString();
+                    m_errorMessage = Lookup(status, "error_message").ToString();
                     return false;
                 }
                 m_auxRuntime = std::move(auxiliary);
@@ -956,10 +1039,6 @@ namespace Garnet
             }
             return true;
         };
-        const std::string graphFingerprint = MakeGraphFingerprint(
-            rootPath, m_weightsLocation, m_entryFunction, m_backend, m_precision,
-            inputShapes,
-            inputDataTypes, m_partitionOptions);
         if (!inputShapes.empty() &&
             LoadGraphCache(
                 graphCachePath,
@@ -983,75 +1062,57 @@ namespace Garnet
                     m_state = "failed";
                     return false;
                 }
+                engineGuard.release();
                 return true;
             }
         }
         ++m_diagnostics.graphCacheMisses;
 
-        m_dependencyModules.clear();
-        std::set<std::filesystem::path> dependencies;
-        CollectXModelDependencies(rootPath, dependencies);
-        for (const auto& dependency : dependencies) {
-            if (dependency == std::filesystem::absolute(rootPath).lexically_normal()) {
-                continue;
+        try {
+            // Keep each model's sibling modules in its own Python package.
+            auto importRoot = rootPath.parent_path();
+            std::string moduleName = rootPath.stem().string();
+            while (std::filesystem::is_regular_file(importRoot / "__init__.py")) {
+                moduleName = importRoot.filename().string() + "." + moduleName;
+                importRoot = importRoot.parent_path();
             }
-            const std::string dependencySource = ReadFile(dependency);
-            X::Value dependencyModule;
-            if (!X::g_pXHost->LoadModule(
-                    dependency.string().c_str(),
-                    dependencySource.c_str(),
-                    static_cast<int>(dependencySource.size()),
-                    dependencyModule)) {
-                m_state = "failed";
-                m_errorCode = "xmodel_dependency_load_failed";
-                m_errorMessage = dependency.string();
-                return false;
-            }
-            X::Value dependencyResult;
-            if (!X::g_pXHost->RunModule(dependencyModule, dependencyResult, true)) {
-                m_state = "failed";
-                m_errorCode = "xmodel_dependency_execution_failed";
-                m_errorMessage = dependency.string();
-                return false;
-            }
-            m_dependencyModules.push_back(dependencyModule);
+            static std::atomic<uint64_t> nextImportNamespace{1};
+            m_importNamespace = "_garnet_model_" + graphFingerprint + "_" +
+                std::to_string(nextImportNamespace.fetch_add(1, std::memory_order_relaxed));
+            X::Module types(host, "types");
+            X::Value package;
+            if (!types["ModuleType"].Call({X::Value::String(host, m_importNamespace)}, package))
+                throw std::runtime_error(x3_runtime_last_error(host->runtime));
+            auto searchPaths = X::Value::List(host);
+            if (!searchPaths.Append(X::Value::String(host, importRoot.string())) ||
+                !package.SetAttr("__path__", searchPaths) ||
+                !package.SetAttr("__package__", X::Value::String(host, m_importNamespace)))
+                throw std::runtime_error(x3_runtime_last_error(host->runtime));
+            X::Module sys(host, "sys");
+            if (!sys["modules"].SetItem(m_importNamespace, package))
+                throw std::runtime_error(x3_runtime_last_error(host->runtime));
+            m_module = X::Module(host, (m_importNamespace + "." + moduleName).c_str());
+            ++m_diagnostics.rootXExecutions;
+            m_rootFunction = m_module[m_entryFunction.c_str()];
         }
-
-        if (!X::g_pXHost->LoadModule(
-                m_rootXModel.c_str(),
-                source.c_str(),
-                static_cast<int>(source.size()),
-                m_module)) {
+        catch (const std::exception& exception) {
             m_state = "failed";
-            m_errorCode = "root_xmodel_load_failed";
-            m_errorMessage = "xlang failed to parse the root .x module";
+            m_errorCode = "root_model_import_failed";
+            m_errorMessage = exception.what();
             return false;
         }
-
-        X::Value moduleResult;
-        ++m_diagnostics.rootXExecutions;
-        if (!X::g_pXHost->RunModule(m_module, moduleResult, true)) {
-            m_state = "failed";
-            m_errorCode = "root_xmodel_execution_failed";
-            m_errorMessage = "xlang failed while executing root .x module declarations";
-            return false;
-        }
-
-        m_rootFunction = X::g_pXHost->QueryMember(
-            X::g_pXHost->GetCurrentRuntime(),
-            m_module.GetObj(),
-            m_entryFunction.c_str());
         if (!m_rootFunction.IsValid()) {
             m_state = "failed";
             m_errorCode = "root_forward_missing";
-            m_errorMessage = "root .x module does not export " + m_entryFunction;
+            m_errorMessage = "root Python module does not export " + m_entryFunction;
             return false;
         }
 
         if (!inputShapes.empty()) {
-            X::ARGS symbolicInputs(static_cast<int>(inputShapes.size()));
+            X::ARGS symbolicInputs; symbolicInputs.reserve(inputShapes.size());
             for (size_t inputIndex = 0; inputIndex < inputShapes.size(); ++inputIndex) {
-                X::Port::vector<int> shape(static_cast<int>(inputShapes[inputIndex].size()));
+                std::vector<int64_t> shape;
+                shape.reserve(inputShapes[inputIndex].size());
                 for (const int size : inputShapes[inputIndex]) {
                     if (size <= 0) {
                         m_state = "failed";
@@ -1061,21 +1122,21 @@ namespace Garnet
                     }
                     shape.push_back(size);
                 }
-                X::Tensor tensor;
+                X3TensorDType dtype;
                 const std::string dataType = inputDataTypes.empty()
                     ? "float32"
                     : inputDataTypes[inputIndex];
                 if (dataType == "float32" || dataType == "fp32") {
-                    tensor->SetDataType(X::TensorDataType::FLOAT32);
+                    dtype = X3_TENSOR_FLOAT32;
                 }
                 else if (dataType == "bfloat16" || dataType == "bf16") {
-                    tensor->SetDataType(X::TensorDataType::BFLOAT16);
+                    dtype = X3_TENSOR_BFLOAT16;
                 }
                 else if (dataType == "int64") {
-                    tensor->SetDataType(X::TensorDataType::LONGLONG);
+                    dtype = X3_TENSOR_INT64;
                 }
                 else if (dataType == "int32") {
-                    tensor->SetDataType(X::TensorDataType::INT);
+                    dtype = X3_TENSOR_INT32;
                 }
                 else {
                     m_state = "failed";
@@ -1083,41 +1144,46 @@ namespace Garnet
                     m_errorMessage = "unsupported symbolic input dtype: " + dataType;
                     return false;
                 }
-                tensor->SetShape(shape);
-                symbolicInputs.push_back(X::Value(tensor));
+                auto tensor = X::Tensor::Input(host, ("input" + std::to_string(inputIndex)).c_str(), dtype, shape);
+                symbolicInputs.push_back(NativeValue(host, tensor));
             }
-            symbolicInputs.Close();
+
 
             if (symbolicInputs.size() > 0) {
                 X::ARGS rootArguments;
-                X::Value modelSpec = X::g_pXHost->QueryMember(
-                    X::g_pXHost->GetCurrentRuntime(),
-                    m_module.GetObj(),
-                    "GARNET_MODEL_SPEC");
+                X::Value modelSpec;
+                X::Module builtins(host, "builtins");
+                if (!builtins["getattr"].Call(
+                        {m_module, X::Value::String(host, "GARNET_MODEL_SPEC"), X::Value(nullptr)}, modelSpec)) {
+                    m_state = "failed";
+                    m_errorCode = "invalid_model_spec";
+                    m_errorMessage = x3_runtime_last_error(host->runtime);
+                    return false;
+                }
                 if (modelSpec.IsDict()) {
-                    X::Dict spec(modelSpec);
-                    X::Value argumentSpecsValue = spec["arguments"];
+                    X::Value spec(modelSpec);
+                    X::Value argumentSpecsValue = Lookup(spec, "arguments");
                     if (!argumentSpecsValue.IsList()) {
                         m_state = "failed";
                         m_errorCode = "invalid_model_spec";
                         m_errorMessage = "GARNET_MODEL_SPEC.arguments must be a list";
                         return false;
                     }
-                    X::List argumentSpecs(argumentSpecsValue);
+                    X::Value argumentSpecs(argumentSpecsValue);
                     bool needsWeights = false;
                     bool needsConfig = false;
-                    for (long long index = 0; index < argumentSpecs->Size(); ++index) {
-                        X::Value itemValue = argumentSpecs->Get(index);
+                    for (long long index = 0; index < argumentSpecs.Size(); ++index) {
+                        X::Value itemValue = argumentSpecs.Get(index);
                         if (!itemValue.IsDict()) continue;
-                        X::Dict item(itemValue);
-                        const std::string kind = item["kind"].ToString();
+                        X::Value item(itemValue);
+                        const std::string kind = Lookup(item, "kind").ToString();
                         needsWeights = needsWeights || kind == "weights";
                         needsConfig = needsConfig || kind == "config";
                     }
 
                     X::Value symbolicWeights;
                     if (needsWeights) {
-                        symbolicWeights = BuildSymbolicWeights(m_weightIndex);
+                        symbolicWeights = BuildSymbolicWeights(host, m_weightIndex);
                         if (!symbolicWeights.IsDict() || m_weightIndex.TensorCount() == 0) {
                             m_state = "failed";
                             m_errorCode = "model_spec_weights_unavailable";
@@ -1135,7 +1201,7 @@ namespace Garnet
                         }
                         configPath /= "config.json";
                         try {
-                            configValue = JsonToXValue(nlohmann::json::parse(ReadFile(configPath)));
+                            configValue = JsonToXValue(host, nlohmann::json::parse(ReadFile(configPath)));
                         }
                         catch (const std::exception& exception) {
                             m_state = "failed";
@@ -1145,18 +1211,18 @@ namespace Garnet
                         }
                     }
 
-                    rootArguments.resize(static_cast<int>(argumentSpecs->Size()));
+                    rootArguments.reserve(static_cast<int>(argumentSpecs.Size()));
                     size_t tensorIndex = 0;
-                    for (long long argumentIndex = 0; argumentIndex < argumentSpecs->Size(); ++argumentIndex) {
-                        X::Value argumentSpecValue = argumentSpecs->Get(argumentIndex);
+                    for (long long argumentIndex = 0; argumentIndex < argumentSpecs.Size(); ++argumentIndex) {
+                        X::Value argumentSpecValue = argumentSpecs.Get(argumentIndex);
                         if (!argumentSpecValue.IsDict()) {
                             m_state = "failed";
                             m_errorCode = "invalid_model_spec";
                             m_errorMessage = "each model argument spec must be a dictionary";
                             return false;
                         }
-                        X::Dict argumentSpec(argumentSpecValue);
-                        const std::string kind = argumentSpec["kind"].ToString();
+                        X::Value argumentSpec(argumentSpecValue);
+                        const std::string kind = Lookup(argumentSpec, "kind").ToString();
                         if (kind == "tensor") {
                             if (tensorIndex >= symbolicInputs.size()) {
                                 m_state = "failed";
@@ -1168,8 +1234,8 @@ namespace Garnet
                         }
                         else if (kind == "weights") rootArguments.push_back(symbolicWeights);
                         else if (kind == "config") rootArguments.push_back(configValue);
-                        else if (kind == "none") rootArguments.push_back(X::Value(X::ValueType::None));
-                        else if (kind == "bool") rootArguments.push_back(argumentSpec["value"]);
+                        else if (kind == "none") rootArguments.push_back(NativeValue(host, nullptr));
+                        else if (kind == "bool") rootArguments.push_back(Lookup(argumentSpec, "value"));
                         else {
                             m_state = "failed";
                             m_errorCode = "invalid_model_spec";
@@ -1177,7 +1243,7 @@ namespace Garnet
                             return false;
                         }
                     }
-                    rootArguments.Close();
+
                     if (tensorIndex != symbolicInputs.size()) {
                         m_state = "failed";
                         m_errorCode = "model_input_count_mismatch";
@@ -1191,7 +1257,15 @@ namespace Garnet
                 {
                     ScopedCompiledGraphCapture capture;
                     X::KWARGS captureKwargs;
-                    m_graph = m_rootFunction.ObjCall(rootArguments, captureKwargs);
+                    X::Value outputs;
+                    if (!m_rootFunction.Call(rootArguments, captureKwargs, outputs)) {
+                        m_state = "failed";
+                        m_errorCode = "symbolic_graph_capture_failed";
+                        m_errorMessage = x3_runtime_last_error(host->runtime);
+                        return false;
+                    }
+                    m_graph = X::TensorGraph::IsGraph(outputs)
+                        ? outputs : X::Value(X::TensorGraph(outputs));
                     if (!GetCompiledGraphCaptureError().empty()) {
                         m_state = "failed";
                         m_errorCode = "invalid_fusion_annotation";
@@ -1199,37 +1273,15 @@ namespace Garnet
                         return false;
                     }
                 }
-                if (!m_graph.IsObject() || m_graph.GetObj()->GetType() != X::ObjType::TensorGraph) {
+                if (!m_graph.IsValid()) {
                     m_state = "failed";
                     m_errorCode = "symbolic_graph_capture_failed";
                     m_errorMessage = "root fusion call did not return an xlang TensorGraph";
                     return false;
                 }
                 m_graphSummary = m_graph.ToString();
-                std::vector<CapturedTensorOperation> analyzedOperations;
-                bool analyzed = false;
-                if (m_backend == "openvino") {
-                    OpenVINOBuilder builder;
-                    analyzed = builder.AnalyzeCapturedGraph(
-                        m_graph, m_rootFunction, rootArguments,
-                        analyzedOperations, m_errorMessage);
-                }
-                else {
-                    TRTBuilder builder;
-                    builder.SetCapturedWeightProfile(m_precision);
-                    builder.SetCapturedWorkspaceBytes(
-                        m_partitionOptions.builderWorkspaceBytes);
-                    builder.SetCapturedOptimizationLevel(
-                        m_partitionOptions.builderOptimizationLevel);
-                    analyzed = builder.AnalyzeCapturedGraph(
-                        m_graph, m_rootFunction, rootArguments,
-                        analyzedOperations, m_errorMessage);
-                }
-                if (!analyzed ||
-                    !AssignCapturedFusionOperations(
-                        std::move(analyzedOperations),
-                        m_partitionOptions,
-                        m_errorMessage)) {
+                TensorGraphCapture graphCapture(m_graph);
+                if (!CaptureFusionGraph(graphCapture, m_partitionOptions, m_errorMessage)) {
                     m_state = "failed";
                     m_errorCode = "graph_partition_analysis_failed";
                     return false;
@@ -1260,7 +1312,7 @@ namespace Garnet
                     }
                 }
                 else {
-                    TRTBuilder builder;
+                    TRTBuilder builder(host);
                     builder.SetCapturedWeightProfile(m_precision);
                     builder.SetCapturedWorkspaceBytes(
                         m_partitionOptions.builderWorkspaceBytes);
@@ -1317,6 +1369,7 @@ namespace Garnet
                     m_state = "failed";
                     return false;
                 }
+                engineGuard.release();
                 return true;
             }
         }
@@ -1329,95 +1382,106 @@ namespace Garnet
 
     X::Value CompiledModelRuntime::Status() const
     {
+        auto* host = m_host;
         std::lock_guard<std::mutex> guard(m_mutex);
-        X::Dict status;
-        status->Set("mode", X::Value("compiled_xmodel"));
-        status->Set("state", X::Value(m_state));
-        status->Set("ready", X::Value(m_ready));
-        status->Set("root_xmodel", X::Value(m_rootXModel));
-        status->Set("cache_directory", X::Value(m_cacheDirectory));
-        status->Set("weights_location", X::Value(m_weightsLocation));
-        status->Set("entry_function", X::Value(m_entryFunction));
-        status->Set("frontend", X::Value(m_frontend));
-        status->Set("backend", X::Value(m_backend));
-        status->Set("precision", X::Value(m_precision));
-        status->Set("graph_summary", X::Value(m_graphSummary));
-        status->Set("scheduler", X::Value("cpu_control_gpu_execution"));
-        status->Set("execution_plan_json", X::Value(m_executionPlanJson));
+        X::Value status = X::Value::Dict(host);
+        status.SetItem("mode", NativeValue(host, "compiled_xmodel"));
+        status.SetItem("state", NativeValue(host, m_state));
+        status.SetItem("ready", NativeValue(host, m_ready));
+        status.SetItem("root_xmodel", NativeValue(host, m_rootXModel));
+        status.SetItem("cache_directory", NativeValue(host, m_cacheDirectory));
+        status.SetItem("weights_location", NativeValue(host, m_weightsLocation));
+        status.SetItem("entry_function", NativeValue(host, m_entryFunction));
+        status.SetItem("frontend", NativeValue(host, m_frontend));
+        status.SetItem("backend", NativeValue(host, m_backend));
+        status.SetItem("precision", NativeValue(host, m_precision));
+        status.SetItem("graph_summary", NativeValue(host, m_graphSummary));
+        status.SetItem("scheduler", NativeValue(host, "cpu_control_gpu_execution"));
+        status.SetItem("execution_plan_json", NativeValue(host, m_executionPlanJson));
         try {
-            status->Set(
+            status.SetItem(
                 "execution_plan",
-                JsonToXValue(nlohmann::json::parse(m_executionPlanJson)));
+                JsonToXValue(host, nlohmann::json::parse(m_executionPlanJson)));
         }
         catch (const std::exception&) {
-            status->Set("execution_plan", X::Value(X::ValueType::None));
+            status.SetItem("execution_plan", NativeValue(host, nullptr));
         }
-        status->Set("engine_path", X::Value(m_enginePath));
-        status->Set(
+        status.SetItem("engine_path", NativeValue(host, m_enginePath));
+        status.SetItem(
             "engine_partition_count",
-            X::Value(static_cast<long long>(
+            NativeValue(host, static_cast<long long>(
                 m_enginePartitions.empty() ? 1 : m_enginePartitions.size())));
-        X::Dict partitionOptions;
-        partitionOptions->Set(
+        X::Value partitionOptions = X::Value::Dict(host);
+        partitionOptions.SetItem(
             "enable_preferred_boundaries",
-            X::Value(m_partitionOptions.enablePreferredBoundaries));
-        partitionOptions->Set(
+            NativeValue(host, m_partitionOptions.enablePreferredBoundaries));
+        partitionOptions.SetItem(
             "preferred_min_operations",
-            X::Value(m_partitionOptions.preferredMinOperations));
-        partitionOptions->Set(
+            NativeValue(host, m_partitionOptions.preferredMinOperations));
+        partitionOptions.SetItem(
             "max_atomic_regions_per_partition",
-            X::Value(m_partitionOptions.maxAtomicRegionsPerPartition));
-        partitionOptions->Set(
+            NativeValue(host, m_partitionOptions.maxAtomicRegionsPerPartition));
+        partitionOptions.SetItem(
             "builder_workspace_bytes",
-            X::Value(m_partitionOptions.builderWorkspaceBytes));
-        partitionOptions->Set(
+            NativeValue(host, m_partitionOptions.builderWorkspaceBytes));
+        partitionOptions.SetItem(
             "builder_optimization_level",
-            X::Value(m_partitionOptions.builderOptimizationLevel));
-        status->Set("partition_options", partitionOptions);
-        status->Set("weight_tensor_count", X::Value(static_cast<long long>(m_weightIndex.TensorCount())));
-        status->Set("weight_tensor_bytes", X::Value(static_cast<long long>(m_weightIndex.TensorBytes())));
-        status->Set("weight_index_error", X::Value(m_weightIndexError));
-        status->Set("loaded_weight_count", X::Value(static_cast<long long>(m_loadedWeights.size())));
-        status->Set("loaded_weight_bytes", X::Value(m_loadedWeightBytes));
-        status->Set("engines_prepared", X::Value(m_enginesPrepared));
-        status->Set("engine_prepare_ms", X::Value(m_enginePreparationMs));
-        status->Set("frontend_prepared", X::Value(m_frontendPrepared));
-        status->Set("frontend_prepare_ms", X::Value(m_frontendPreparationMs));
-        status->Set("error_code", X::Value(m_errorCode));
-        status->Set("error_message", X::Value(m_errorMessage));
+            NativeValue(host, m_partitionOptions.builderOptimizationLevel));
+        status.SetItem("partition_options", partitionOptions);
+        status.SetItem("weight_tensor_count", NativeValue(host, static_cast<long long>(m_weightIndex.TensorCount())));
+        status.SetItem("weight_tensor_bytes", NativeValue(host, static_cast<long long>(m_weightIndex.TensorBytes())));
+        status.SetItem("weight_index_error", NativeValue(host, m_weightIndexError));
+        status.SetItem("loaded_weight_count", NativeValue(host, static_cast<long long>(m_loadedWeights.size())));
+        status.SetItem("loaded_weight_bytes", NativeValue(host, m_loadedWeightBytes));
+        status.SetItem("engines_prepared", NativeValue(host, m_enginesPrepared));
+        status.SetItem("engine_prepare_ms", NativeValue(host, m_enginePreparationMs));
+        status.SetItem("frontend_prepared", NativeValue(host, m_frontendPrepared));
+        status.SetItem("frontend_prepare_ms", NativeValue(host, m_frontendPreparationMs));
+        status.SetItem("error_code", NativeValue(host, m_errorCode));
+        status.SetItem("error_message", NativeValue(host, m_errorMessage));
 
-        X::Dict counters;
-        counters->Set("root_x_executions", X::Value(m_diagnostics.rootXExecutions));
-        counters->Set("hardcoded_qwen_runner_calls", X::Value(m_diagnostics.hardcodedQwenRunnerCalls));
-        counters->Set("python_subgraph_calls", X::Value(m_diagnostics.pythonSubgraphCalls));
-        counters->Set("direct_internal_export_calls", X::Value(m_diagnostics.directInternalExportCalls));
-        counters->Set("cpu_tensor_intermediates", X::Value(m_diagnostics.cpuTensorIntermediates));
-        counters->Set("graph_cache_hits", X::Value(m_diagnostics.graphCacheHits));
-        counters->Set("graph_cache_misses", X::Value(m_diagnostics.graphCacheMisses));
-        status->Set("forbidden_path_counters", counters);
+        X::Value counters = X::Value::Dict(host);
+        counters.SetItem("root_x_executions", NativeValue(host, m_diagnostics.rootXExecutions));
+        counters.SetItem("hardcoded_qwen_runner_calls", NativeValue(host, m_diagnostics.hardcodedQwenRunnerCalls));
+        counters.SetItem("python_subgraph_calls", NativeValue(host, m_diagnostics.pythonSubgraphCalls));
+        counters.SetItem("direct_internal_export_calls", NativeValue(host, m_diagnostics.directInternalExportCalls));
+        counters.SetItem("cpu_tensor_intermediates", NativeValue(host, m_diagnostics.cpuTensorIntermediates));
+        counters.SetItem("graph_cache_hits", NativeValue(host, m_diagnostics.graphCacheHits));
+        counters.SetItem("graph_cache_misses", NativeValue(host, m_diagnostics.graphCacheMisses));
+        status.SetItem("forbidden_path_counters", counters);
         return status;
     }
 
     X::Value CompiledModelRuntime::Forward(X::Value request)
     {
+        auto* host = m_host;
         std::lock_guard<std::mutex> guard(m_mutex);
         const auto requestStart = std::chrono::steady_clock::now();
-        X::Dict result;
+        X::Value result = X::Value::Dict(host);
         if (!m_ready) {
-            result->Set("status", X::Value("error"));
-            result->Set("error_code", X::Value("compiled_graph_not_ready"));
-            result->Set("error_message", X::Value(m_errorMessage));
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "compiled_graph_not_ready"));
+            result.SetItem("error_message", NativeValue(host, m_errorMessage));
             return result;
         }
 
         if (!request.IsDict()) {
-            result->Set("status", X::Value("error"));
-            result->Set("error_code", X::Value("invalid_compiled_request"));
-            result->Set("error_message", X::Value("compiled forward requires a request dictionary"));
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "invalid_compiled_request"));
+            result.SetItem("error_message", NativeValue(host, "compiled forward requires a request dictionary"));
             return result;
         }
-        X::Dict requestDict(request);
-        X::Value inputs = requestDict["inputs"];
+        X::Value requestDict(request);
+        const X::Value penaltyOption = Lookup(requestDict, "repetition_penalty");
+        const float generationPenalty = penaltyOption.IsValid()
+            ? static_cast<float>(penaltyOption.ToDouble()) : 1.0f;
+        if (!std::isfinite(generationPenalty) || generationPenalty < 1.0f ||
+            (generationPenalty != 1.0f && m_backend != "tensorrt")) {
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "invalid_repetition_penalty"));
+            return result;
+        }
+        X::Value inputs = Lookup(requestDict, "inputs");
         QwenVLCompiledInputs frontendInputs;
         QwenTextCompiledInputs textFrontendInputs;
         QwenASRCompiledInputs asrFrontendInputs;
@@ -1429,32 +1493,32 @@ namespace Garnet
         int frontendPromptTokenCount = 0;
         long long frontendPositionDelta = 0;
         if (!inputs.IsList() && m_frontend == "qwen3_vl") {
-            X::Value imageSource = requestDict["image"];
-            if (!imageSource.IsValid()) imageSource = requestDict["image_path"];
-            const std::string prompt = requestDict["prompt"].ToString();
-            const int minPixels = requestDict["min_pixels"].IsValid()
-                ? static_cast<int>(requestDict["min_pixels"].ToLongLong())
+            X::Value imageSource = Lookup(requestDict, "image");
+            if (!imageSource.IsValid()) imageSource = Lookup(requestDict, "image_path");
+            const std::string prompt = Lookup(requestDict, "prompt").ToString();
+            const int minPixels = Lookup(requestDict, "min_pixels").IsValid()
+                ? static_cast<int>(Lookup(requestDict, "min_pixels").ToLongLong())
                 : 65536;
-            const int maxPixels = requestDict["max_pixels"].IsValid()
-                ? static_cast<int>(requestDict["max_pixels"].ToLongLong())
+            const int maxPixels = Lookup(requestDict, "max_pixels").IsValid()
+                ? static_cast<int>(Lookup(requestDict, "max_pixels").ToLongLong())
                 : 65536;
-            frontendInputs = BuildQwenVLCompiledInputs(
+            frontendInputs = BuildQwenVLCompiledInputs(host,
                 m_weightsLocation, imageSource, prompt, minPixels, maxPixels,
                 m_inputShapes, m_reusablePrefillKeyCache,
                 m_reusablePrefillValueCache);
             if (!frontendInputs.inputs.IsList()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_frontend_failed"));
-                result->Set("error_message", X::Value(frontendInputs.error));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_frontend_failed"));
+                result.SetItem("error_message", NativeValue(host, frontendInputs.error));
                 return result;
             }
             {
-                X::List frontendList(frontendInputs.inputs);
-                if (!m_reusablePrefillKeyCache.IsTensor()) {
-                    m_reusablePrefillKeyCache = frontendList->Get(11);
+                X::Value frontendList(frontendInputs.inputs);
+                if (!(X::Tensor::IsTensor(m_reusablePrefillKeyCache))) {
+                    m_reusablePrefillKeyCache = frontendList.Get(11);
                 }
-                if (!m_reusablePrefillValueCache.IsTensor()) {
-                    m_reusablePrefillValueCache = frontendList->Get(12);
+                if (!(X::Tensor::IsTensor(m_reusablePrefillValueCache))) {
+                    m_reusablePrefillValueCache = frontendList.Get(12);
                 }
             }
             inputs = frontendInputs.inputs;
@@ -1464,28 +1528,28 @@ namespace Garnet
             frontendPositionDelta = frontendInputs.mropePositionDelta;
         }
         else if (!inputs.IsList() && m_frontend == "qwen3_text") {
-            const std::string prompt = requestDict["prompt"].ToString();
+            const std::string prompt = Lookup(requestDict, "prompt").ToString();
             const bool enableThinking =
-                requestDict["enable_thinking"].IsValid() &&
-                requestDict["enable_thinking"].ToLongLong() != 0;
-            textFrontendInputs = BuildQwenTextCompiledInputs(
+                Lookup(requestDict, "enable_thinking").IsValid() &&
+                Lookup(requestDict, "enable_thinking").ToLongLong() != 0;
+            textFrontendInputs = BuildQwenTextCompiledInputs(host,
                 m_weightsLocation, prompt, enableThinking, m_inputShapes,
                 m_reusablePrefillKeyCache, m_reusablePrefillValueCache,
                 m_backend == "openvino");
             if (!textFrontendInputs.inputs.IsList()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_frontend_failed"));
-                result->Set(
-                    "error_message", X::Value(textFrontendInputs.error));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_frontend_failed"));
+                result.SetItem(
+                    "error_message", NativeValue(host, textFrontendInputs.error));
                 return result;
             }
             {
-                X::List frontendList(textFrontendInputs.inputs);
-                if (!m_reusablePrefillKeyCache.IsTensor()) {
-                    m_reusablePrefillKeyCache = frontendList->Get(3);
+                X::Value frontendList(textFrontendInputs.inputs);
+                if (!(X::Tensor::IsTensor(m_reusablePrefillKeyCache))) {
+                    m_reusablePrefillKeyCache = frontendList.Get(3);
                 }
-                if (!m_reusablePrefillValueCache.IsTensor()) {
-                    m_reusablePrefillValueCache = frontendList->Get(4);
+                if (!(X::Tensor::IsTensor(m_reusablePrefillValueCache))) {
+                    m_reusablePrefillValueCache = frontendList.Get(4);
                 }
             }
             inputs = textFrontendInputs.inputs;
@@ -1494,26 +1558,26 @@ namespace Garnet
                 textFrontendInputs.promptTokenCount;
         }
         else if (!inputs.IsList() && m_frontend == "qwen3_asr") {
-            X::Value audioSource = requestDict["audio"];
-            if (!audioSource.IsValid()) audioSource = requestDict["audio_path"];
-            asrFrontendInputs = BuildQwenASRCompiledInputs(
+            X::Value audioSource = Lookup(requestDict, "audio");
+            if (!audioSource.IsValid()) audioSource = Lookup(requestDict, "audio_path");
+            asrFrontendInputs = BuildQwenASRCompiledInputs(host,
                 m_weightsLocation, audioSource,
-                requestDict["context"].ToString(),
-                requestDict["language"].ToString(), m_inputShapes,
+                Lookup(requestDict, "context").ToString(),
+                Lookup(requestDict, "language").ToString(), m_inputShapes,
                 m_reusablePrefillKeyCache, m_reusablePrefillValueCache);
             if (!asrFrontendInputs.inputs.IsList()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_frontend_failed"));
-                result->Set("error_message", X::Value(asrFrontendInputs.error));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_frontend_failed"));
+                result.SetItem("error_message", NativeValue(host, asrFrontendInputs.error));
                 return result;
             }
             {
-                X::List frontendList(asrFrontendInputs.inputs);
-                if (!m_reusablePrefillKeyCache.IsTensor()) {
-                    m_reusablePrefillKeyCache = frontendList->Get(5);
+                X::Value frontendList(asrFrontendInputs.inputs);
+                if (!(X::Tensor::IsTensor(m_reusablePrefillKeyCache))) {
+                    m_reusablePrefillKeyCache = frontendList.Get(5);
                 }
-                if (!m_reusablePrefillValueCache.IsTensor()) {
-                    m_reusablePrefillValueCache = frontendList->Get(6);
+                if (!(X::Tensor::IsTensor(m_reusablePrefillValueCache))) {
+                    m_reusablePrefillValueCache = frontendList.Get(6);
                 }
             }
             inputs = asrFrontendInputs.inputs;
@@ -1522,23 +1586,23 @@ namespace Garnet
             frontendPromptTokenCount = asrFrontendInputs.promptTokenCount;
         }
         else if (!inputs.IsList() && m_frontend == "qwen3_tts") {
-            ttsFrontendInputs = BuildQwenTTSCompiledInputs(
-                m_weightsLocation, requestDict["text"].ToString(),
-                requestDict["speaker"].ToString(),
-                requestDict["language"].ToString(),
-                requestDict["instruct"].ToString(), m_inputShapes,
+            ttsFrontendInputs = BuildQwenTTSCompiledInputs(host,
+                m_weightsLocation, Lookup(requestDict, "text").ToString(),
+                Lookup(requestDict, "speaker").ToString(),
+                Lookup(requestDict, "language").ToString(),
+                Lookup(requestDict, "instruct").ToString(), m_inputShapes,
                 m_reusablePrefillKeyCache, m_reusablePrefillValueCache);
             if (!ttsFrontendInputs.inputs.IsList()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_frontend_failed"));
-                result->Set("error_message", X::Value(ttsFrontendInputs.error));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_frontend_failed"));
+                result.SetItem("error_message", NativeValue(host, ttsFrontendInputs.error));
                 return result;
             }
             {
-                X::List frontendList(ttsFrontendInputs.inputs);
-                if (!m_reusablePrefillKeyCache.IsTensor()) {
-                    m_reusablePrefillKeyCache = frontendList->Get(3);
-                    m_reusablePrefillValueCache = frontendList->Get(4);
+                X::Value frontendList(ttsFrontendInputs.inputs);
+                if (!(X::Tensor::IsTensor(m_reusablePrefillKeyCache))) {
+                    m_reusablePrefillKeyCache = frontendList.Get(3);
+                    m_reusablePrefillValueCache = frontendList.Get(4);
                 }
             }
             inputs = ttsFrontendInputs.inputs;
@@ -1546,18 +1610,44 @@ namespace Garnet
             frontendIsTTS = true;
             frontendPromptTokenCount = ttsFrontendInputs.promptTokenCount;
         }
+        if (!inputs.IsList() || inputs.Size() != static_cast<long long>(m_inputShapes.size())) {
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "compiled_input_count_mismatch"));
+            result.SetItem("error_message", NativeValue(host,
+                "inputs must contain exactly " + std::to_string(m_inputShapes.size()) + " tensors"));
+            return result;
+        }
         std::string executionError;
+        for (size_t index = 0; index < m_inputShapes.size(); ++index) {
+            const auto input = inputs.Get(static_cast<long long>(index));
+            if (!X::Tensor::IsTensor(input)) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_input_not_tensor"));
+                return result;
+            }
+            const X::Tensor tensor(input);
+            const auto& info = tensor.Info();
+            const auto& shape = m_inputShapes[index];
+            bool matches = static_cast<size_t>(info.rank) == shape.size();
+            for (size_t dimension = 0; matches && dimension < shape.size(); ++dimension)
+                matches = info.shape[dimension] == shape[dimension];
+            if (!matches) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_input_shape_mismatch"));
+                return result;
+            }
+        }
         const X::Value reusableOutput =
-            requestDict["reuse_output"].IsValid() &&
-            requestDict["reuse_output"].ToLongLong() != 0
+            Lookup(requestDict, "reuse_output").IsValid() &&
+            Lookup(requestDict, "reuse_output").ToLongLong() != 0
                 ? m_reusableExecutionOutput
-                : X::Value();
+                : NativeValue(host);
         X::Value output;
         if (m_backend == "openvino") {
             OpenVINOBuilder builder;
             const bool resetOpenVINOState =
-                requestDict["reset_openvino_state"].IsValid() &&
-                requestDict["reset_openvino_state"].ToLongLong() != 0;
+                Lookup(requestDict, "reset_openvino_state").IsValid() &&
+                Lookup(requestDict, "reset_openvino_state").ToLongLong() != 0;
             output = builder.RunCapturedEngine(
                 m_enginePath, inputs, &m_weightIndex, reusableOutput,
                 resetOpenVINOState,
@@ -1565,7 +1655,7 @@ namespace Garnet
                 executionError);
         }
         else {
-            TRTBuilder builder;
+            TRTBuilder builder(host);
             output = m_enginePartitions.size() > 1
                 ? builder.RunCapturedPartitions(
                     m_enginePartitions,
@@ -1581,28 +1671,28 @@ namespace Garnet
                     m_cudaGraphEnabled,
                     executionError);
         }
-        if (!output.IsTensor()) {
-            result->Set("status", X::Value("error"));
-            result->Set("error_code", X::Value("compiled_engine_execution_failed"));
-            result->Set("error_message", X::Value(executionError));
+        if (!(X::Tensor::IsTensor(output))) {
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "compiled_engine_execution_failed"));
+            result.SetItem("error_message", NativeValue(host, executionError));
             return result;
         }
-        if (requestDict["reuse_output"].IsValid() &&
-            requestDict["reuse_output"].ToLongLong() != 0 &&
-            !m_reusableExecutionOutput.IsTensor()) {
+        if (Lookup(requestDict, "reuse_output").IsValid() &&
+            Lookup(requestDict, "reuse_output").ToLongLong() != 0 &&
+            !(X::Tensor::IsTensor(m_reusableExecutionOutput))) {
             m_reusableExecutionOutput = output;
         }
-        result->Set("status", X::Value("ok"));
+        result.SetItem("status", NativeValue(host, "ok"));
         if (frontendIsTTS) {
             if (!m_decodeRuntime || !m_auxRuntime || !m_codecRuntime ||
                 m_backend != "tensorrt") {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_tts_runtime_unavailable"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_tts_runtime_unavailable"));
                 return result;
             }
-            const int requestedFrames = requestDict["max_audio_frames"].IsValid()
+            const int requestedFrames = Lookup(requestDict, "max_audio_frames").IsValid()
                 ? std::max(1, static_cast<int>(
-                    requestDict["max_audio_frames"].ToLongLong()))
+                    Lookup(requestDict, "max_audio_frames").ToLongLong()))
                 : 256;
             int profileFrames = 256;
             if (const char* value = std::getenv("GARNET_TTS_MAX_FRAMES")) {
@@ -1610,19 +1700,19 @@ namespace Garnet
             }
             const int maxFrames = std::min(requestedFrames, profileFrames);
             const int vocabSize = 3072;
-            const bool stochastic = !requestDict["do_sample"].IsValid() ||
-                requestDict["do_sample"].ToLongLong() != 0;
-            const int topK = requestDict["top_k"].IsValid()
-                ? std::clamp(static_cast<int>(requestDict["top_k"].ToLongLong()), 1, vocabSize)
+            const bool stochastic = !Lookup(requestDict, "do_sample").IsValid() ||
+                Lookup(requestDict, "do_sample").ToLongLong() != 0;
+            const int topK = Lookup(requestDict, "top_k").IsValid()
+                ? std::clamp(static_cast<int>(Lookup(requestDict, "top_k").ToLongLong()), 1, vocabSize)
                 : 50;
-            const float temperature = requestDict["temperature"].IsValid()
-                ? std::max(0.01F, static_cast<float>(requestDict["temperature"].ToDouble()))
+            const float temperature = Lookup(requestDict, "temperature").IsValid()
+                ? std::max(0.01F, static_cast<float>(Lookup(requestDict, "temperature").ToDouble()))
                 : 0.9F;
-            const float repetitionPenalty = requestDict["repetition_penalty"].IsValid()
-                ? std::max(1.0F, static_cast<float>(requestDict["repetition_penalty"].ToDouble()))
+            const float repetitionPenalty = Lookup(requestDict, "repetition_penalty").IsValid()
+                ? std::max(1.0F, static_cast<float>(Lookup(requestDict, "repetition_penalty").ToDouble()))
                 : 1.05F;
-            const uint64_t seed = requestDict["seed"].IsValid()
-                ? static_cast<uint64_t>(requestDict["seed"].ToLongLong())
+            const uint64_t seed = Lookup(requestDict, "seed").IsValid()
+                ? static_cast<uint64_t>(Lookup(requestDict, "seed").ToLongLong())
                 : static_cast<uint64_t>(std::chrono::high_resolution_clock::now()
                     .time_since_epoch().count());
             std::mt19937_64 random(seed);
@@ -1630,54 +1720,48 @@ namespace Garnet
             auto samplePacked = [&](X::Value packedValue, int row,
                                     long long& token, X::Value& hiddenValue,
                                     std::string& errorText) -> bool {
-                if (!packedValue.IsTensor()) {
+                if (!(X::Tensor::IsTensor(packedValue))) {
                     errorText = "talker returned no packed hidden/logit tensor";
                     return false;
                 }
                 X::Tensor packed(packedValue);
-                const int hiddenSize = packed->GetDimCount() == 3
-                    ? packed->GetDimSize(2) - vocabSize : 0;
-                if (packed->GetDimCount() != 3 ||
-                    hiddenSize <= 0 ||
-                    row < 0 || row >= packed->GetDimSize(1)) {
+                if (packed.Info().rank != 3 ||
+                    packed.Info().shape[2] <= vocabSize ||
+                    packed.Info().shape[2] > std::numeric_limits<int>::max() ||
+                    row < 0 || row >= packed.Info().shape[1]) {
                     errorText = "talker packed output has incompatible dimensions";
                     return false;
                 }
-                const size_t elementBytes = packed->GetDataType() ==
-                    X::TensorDataType::FLOAT32 ? sizeof(float) : sizeof(unsigned short);
+                const int hiddenSize = static_cast<int>(packed.Info().shape[2]) - vocabSize;
+                const size_t elementBytes = packed.Info().dtype ==
+                    X3_TENSOR_FLOAT32 ? sizeof(float) : sizeof(unsigned short);
                 const size_t rowElements = hiddenSize + vocabSize;
                 const char* rowMemory = static_cast<const char*>(
                     TensorHelper::GetGPUMemory(packed)) +
                     static_cast<size_t>(row) * rowElements * elementBytes;
-                X::Tensor hidden(X::g_pXHost->CreateTensor());
-                X::Port::vector<int> hiddenShape(3);
-                hiddenShape.push_back(1); hiddenShape.push_back(1);
-                hiddenShape.push_back(hiddenSize);
-                hidden->SetDataType(packed->GetDataType());
-                hidden->SetShape(hiddenShape);
-                void* hiddenMemory = nullptr;
-                if (cudaMalloc(&hiddenMemory, hiddenSize * elementBytes) != cudaSuccess ||
-                    cudaMemcpyAsync(hiddenMemory, rowMemory, hiddenSize * elementBytes,
-                        cudaMemcpyDeviceToDevice, cudaStreamPerThread) != cudaSuccess ||
-                    TensorHelper::AttachGPUMemory(hidden, hiddenMemory) !=
-                        TensorOpStatus::Success) {
-                    if (hiddenMemory) cudaFree(hiddenMemory);
+                auto hidden = TensorHelper::CreateGPU(host, packed.Info().dtype, {1, 1, hiddenSize});
+                auto packedUse = TensorHelper::AcquireGPU({{packed, X3_TENSOR_READ}, {hidden, X3_TENSOR_WRITE}});
+                void* hiddenMemory = TensorHelper::GetGPUMemory(hidden);
+                if (cudaMemcpyAsync(hiddenMemory, rowMemory, hiddenSize * elementBytes,
+                        cudaMemcpyDeviceToDevice, cudaStreamPerThread) != cudaSuccess) {
                     errorText = "talker hidden-state extraction failed";
                     return false;
                 }
-                hiddenValue = X::Value(hidden);
+                hiddenValue = NativeValue(host, hidden);
                 std::vector<unsigned char> raw(
                     static_cast<size_t>(vocabSize) * elementBytes);
                 cudaError_t status = cudaMemcpyAsync(
                     raw.data(), rowMemory + hiddenSize * elementBytes,
                     raw.size(), cudaMemcpyDeviceToHost, cudaStreamPerThread);
-                if (status == cudaSuccess) status = cudaStreamSynchronize(cudaStreamPerThread);
+                const cudaError_t copyCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                if (status == cudaSuccess) status = copyCompletion;
+                packedUse.Finish();
                 if (status != cudaSuccess) {
                     errorText = cudaGetErrorString(status);
                     return false;
                 }
                 std::vector<float> logits(static_cast<size_t>(vocabSize));
-                if (packed->GetDataType() == X::TensorDataType::FLOAT32) {
+                if (packed.Info().dtype == X3_TENSOR_FLOAT32) {
                     std::memcpy(logits.data(), raw.data(), raw.size());
                 }
                 else {
@@ -1713,7 +1797,7 @@ namespace Garnet
                 return true;
             };
 
-            X::List activeInputs(inputs);
+            X::Value activeInputs(inputs);
             X::Value packed = output;
             std::vector<int64_t> codes;
             codes.reserve(static_cast<size_t>(maxFrames) * 16);
@@ -1725,46 +1809,47 @@ namespace Garnet
                 const int packedRow = frame == 0
                     ? frontendPromptTokenCount - 1 : 0;
                 if (!samplePacked(packed, packedRow, firstCode, hidden, ttsError)) {
-                    result->Set("status", X::Value("error"));
-                    result->Set("error_code", X::Value("compiled_tts_sampling_failed"));
-                    result->Set("error_message", X::Value(ttsError));
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "compiled_tts_sampling_failed"));
+                    result.SetItem("error_message", NativeValue(host, ttsError));
                     return result;
                 }
                 if (firstCode == ttsFrontendInputs.codecEosTokenId) break;
                 firstCodeHistory.push_back(firstCode);
-                X::Value firstCodeTensor = MakeCudaTensorFromHost(
-                    X::TensorDataType::LONGLONG, {1, 1}, &firstCode,
+                X::Value firstCodeTensor = MakeCudaTensorFromHost(host,
+                    X3_TENSOR_INT64, {1, 1}, &firstCode,
                     sizeof(firstCode));
-                X::V<X::XList> predictorInputs;
-                predictorInputs->AddItem(hidden);
-                predictorInputs->AddItem(firstCodeTensor);
-                X::Dict predictorRequest;
-                predictorRequest->Set("inputs", X::Value(predictorInputs));
+                X::Value predictorInputs = X::Value::List(host);
+                predictorInputs.Append(hidden);
+                predictorInputs.Append(firstCodeTensor);
+                X::Value predictorRequest = X::Value::Dict(host);
+                predictorRequest.SetItem("inputs", NativeValue(host, predictorInputs));
                 X::Value predictorValue = m_auxRuntime->Forward(predictorRequest);
                 if (!predictorValue.IsDict()) {
-                    result->Set("status", X::Value("error"));
-                    result->Set("error_code", X::Value("compiled_tts_predictor_failed"));
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "compiled_tts_predictor_failed"));
                     return result;
                 }
-                X::Dict predictorResult(predictorValue);
-                if (predictorResult["status"].ToString() != "ok") return predictorValue;
-                X::Value frameCodes = predictorResult["output"];
-                if (!frameCodes.IsTensor()) {
-                    result->Set("status", X::Value("error"));
-                    result->Set("error_code", X::Value("compiled_tts_predictor_output_invalid"));
+                X::Value predictorResult(predictorValue);
+                if (Lookup(predictorResult, "status").ToString() != "ok") return predictorValue;
+                X::Value frameCodes = Lookup(predictorResult, "output");
+                if (!(X::Tensor::IsTensor(frameCodes))) {
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "compiled_tts_predictor_output_invalid"));
                     return result;
                 }
                 int64_t hostCodes[16]{};
                 X::Tensor frameCodeTensor(frameCodes);
+                auto frameUse = TensorHelper::AcquireGPU(frameCodeTensor);
                 cudaError_t copyStatus = cudaMemcpyAsync(
                     hostCodes, TensorHelper::GetGPUMemory(frameCodeTensor),
                     sizeof(hostCodes), cudaMemcpyDeviceToHost, cudaStreamPerThread);
-                if (copyStatus == cudaSuccess) {
-                    copyStatus = cudaStreamSynchronize(cudaStreamPerThread);
-                }
+                const cudaError_t copyCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                if (copyStatus == cudaSuccess) copyStatus = copyCompletion;
+                frameUse.Finish();
                 if (copyStatus != cudaSuccess) {
-                    result->Set("status", X::Value("error"));
-                    result->Set("error_code", X::Value("compiled_tts_code_download_failed"));
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "compiled_tts_code_download_failed"));
                     return result;
                 }
                 codes.insert(codes.end(), hostCodes, hostCodes + 16);
@@ -1773,37 +1858,37 @@ namespace Garnet
                 const int slot = frontendPromptTokenCount + frame;
                 const int context = slot + 1;
                 const int64_t positions[3] = {slot, slot, slot};
-                X::Value positionTensor = MakeCudaTensorFromHost(
-                    X::TensorDataType::LONGLONG, {3, 1, 1}, positions,
+                X::Value positionTensor = MakeCudaTensorFromHost(host,
+                    X3_TENSOR_INT64, {3, 1, 1}, positions,
                     sizeof(positions));
-                X::Value contextTensor = MakeCudaTensorFromHost(
-                    X::TensorDataType::INT, {1}, &context, sizeof(context));
-                X::Value slotTensor = MakeCudaTensorFromHost(
-                    X::TensorDataType::INT, {1}, &slot, sizeof(slot));
-                X::V<X::XList> talkerInputs;
-                talkerInputs->AddItem(frameCodes);
-                talkerInputs->AddItem(positionTensor);
-                talkerInputs->AddItem(activeInputs->Get(3));
-                talkerInputs->AddItem(activeInputs->Get(4));
-                talkerInputs->AddItem(activeInputs->Get(5));
-                talkerInputs->AddItem(contextTensor);
-                talkerInputs->AddItem(slotTensor);
-                X::Dict talkerRequest;
-                talkerRequest->Set("inputs", X::Value(talkerInputs));
-                talkerRequest->Set("reuse_output", X::Value(1));
+                X::Value contextTensor = MakeCudaTensorFromHost(host,
+                    X3_TENSOR_INT32, {1}, &context, sizeof(context));
+                X::Value slotTensor = MakeCudaTensorFromHost(host,
+                    X3_TENSOR_INT32, {1}, &slot, sizeof(slot));
+                X::Value talkerInputs = X::Value::List(host);
+                talkerInputs.Append(frameCodes);
+                talkerInputs.Append(positionTensor);
+                talkerInputs.Append(activeInputs.Get(3));
+                talkerInputs.Append(activeInputs.Get(4));
+                talkerInputs.Append(activeInputs.Get(5));
+                talkerInputs.Append(contextTensor);
+                talkerInputs.Append(slotTensor);
+                X::Value talkerRequest = X::Value::Dict(host);
+                talkerRequest.SetItem("inputs", NativeValue(host, talkerInputs));
+                talkerRequest.SetItem("reuse_output", NativeValue(host, 1));
                 X::Value talkerValue = m_decodeRuntime->Forward(talkerRequest);
                 if (!talkerValue.IsDict()) {
-                    result->Set("status", X::Value("error"));
-                    result->Set("error_code", X::Value("compiled_tts_talker_decode_failed"));
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "compiled_tts_talker_decode_failed"));
                     return result;
                 }
-                X::Dict talkerResult(talkerValue);
-                if (talkerResult["status"].ToString() != "ok") return talkerValue;
-                packed = talkerResult["output"];
+                X::Value talkerResult(talkerValue);
+                if (Lookup(talkerResult, "status").ToString() != "ok") return talkerValue;
+                packed = Lookup(talkerResult, "output");
             }
             if (codes.empty()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_tts_generated_no_audio"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_tts_generated_no_audio"));
                 return result;
             }
             const int frameCount = static_cast<int>(codes.size() / 16);
@@ -1815,91 +1900,86 @@ namespace Garnet
                         codes[static_cast<size_t>(frame * 16 + group)];
                 }
             }
-            X::Value codecInput = MakeCudaTensorFromHost(
-                X::TensorDataType::LONGLONG, {1, 16, profileFrames},
+            X::Value codecInput = MakeCudaTensorFromHost(host,
+                X3_TENSOR_INT64, {1, 16, profileFrames},
                 paddedCodes.data(), paddedCodes.size() * sizeof(int64_t));
-            X::V<X::XList> codecInputs;
-            codecInputs->AddItem(codecInput);
-            X::Dict codecRequest;
-            codecRequest->Set("inputs", X::Value(codecInputs));
+            X::Value codecInputs = X::Value::List(host);
+            codecInputs.Append(codecInput);
+            X::Value codecRequest = X::Value::Dict(host);
+            codecRequest.SetItem("inputs", NativeValue(host, codecInputs));
             X::Value codecValue = m_codecRuntime->Forward(codecRequest);
             if (!codecValue.IsDict()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_tts_codec_decode_failed"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_tts_codec_decode_failed"));
                 return result;
             }
-            X::Dict codecResult(codecValue);
-            if (codecResult["status"].ToString() != "ok") return codecValue;
-            X::Value fullAudioValue = codecResult["output"];
-            if (!fullAudioValue.IsTensor()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_tts_waveform_invalid"));
+            X::Value codecResult(codecValue);
+            if (Lookup(codecResult, "status").ToString() != "ok") return codecValue;
+            X::Value fullAudioValue = Lookup(codecResult, "output");
+            if (!(X::Tensor::IsTensor(fullAudioValue))) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_tts_waveform_invalid"));
                 return result;
             }
             X::Tensor fullAudio(fullAudioValue);
             const int validSamples = frameCount * 1920;
-            const size_t audioElementBytes = fullAudio->GetDataType() ==
-                X::TensorDataType::FLOAT32 ? sizeof(float) : sizeof(unsigned short);
-            X::Tensor audio(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> audioShape(2);
-            audioShape.push_back(1); audioShape.push_back(validSamples);
-            audio->SetDataType(fullAudio->GetDataType());
-            audio->SetShape(audioShape);
-            void* audioMemory = nullptr;
-            cudaError_t audioStatus = cudaMalloc(
-                &audioMemory, static_cast<size_t>(validSamples) * audioElementBytes);
-            if (audioStatus == cudaSuccess) audioStatus = cudaMemcpyAsync(
+            const size_t audioElementBytes = fullAudio.Info().dtype ==
+                X3_TENSOR_FLOAT32 ? sizeof(float) : sizeof(unsigned short);
+            auto audio = TensorHelper::CreateGPU(host, fullAudio.Info().dtype, {1, validSamples});
+            auto audioUse = TensorHelper::AcquireGPU({{fullAudio, X3_TENSOR_READ}, {audio, X3_TENSOR_WRITE}});
+            void* audioMemory = TensorHelper::GetGPUMemory(audio);
+            cudaError_t audioStatus = cudaMemcpyAsync(
                 audioMemory, TensorHelper::GetGPUMemory(fullAudio),
                 static_cast<size_t>(validSamples) * audioElementBytes,
                 cudaMemcpyDeviceToDevice, cudaStreamPerThread);
-            if (audioStatus != cudaSuccess ||
-                TensorHelper::AttachGPUMemory(audio, audioMemory) !=
-                    TensorOpStatus::Success) {
-                if (audioMemory) cudaFree(audioMemory);
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_tts_waveform_trim_failed"));
+            audioUse.Finish();
+            if (audioStatus != cudaSuccess) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_tts_waveform_trim_failed"));
                 return result;
             }
-            result->Set("audio", X::Value(audio));
-            result->Set("sample_rate", X::Value(24000));
-            result->Set("audio_frame_count", X::Value(frameCount));
-            result->Set("audio_sample_count", X::Value(validSamples));
-            result->Set("audio_duration_seconds", X::Value(frameCount / 12.5));
-            result->Set("codec_codes", X::Value(static_cast<long long>(codes.size())));
-            result->Set("prompt_token_count", X::Value(frontendPromptTokenCount));
-            result->Set("decode_ms", X::Value(std::chrono::duration<double, std::milli>(
+            result.SetItem("audio", NativeValue(host, audio));
+            result.SetItem("sample_rate", NativeValue(host, 24000));
+            result.SetItem("audio_frame_count", NativeValue(host, frameCount));
+            result.SetItem("audio_sample_count", NativeValue(host, validSamples));
+            result.SetItem("audio_duration_seconds", NativeValue(host, frameCount / 12.5));
+            result.SetItem("codec_codes", NativeValue(host, static_cast<long long>(codes.size())));
+            result.SetItem("prompt_token_count", NativeValue(host, frontendPromptTokenCount));
+            result.SetItem("decode_ms", NativeValue(host, std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - decodeStart).count()));
-            result->Set("total_ms", X::Value(std::chrono::duration<double, std::milli>(
+            result.SetItem("total_ms", NativeValue(host, std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - requestStart).count()));
             return result;
         }
-        const int requestedNewTokens = requestDict["max_new_tokens"].IsValid()
-            ? std::max(0, static_cast<int>(requestDict["max_new_tokens"].ToLongLong()))
+        const int requestedNewTokens = Lookup(requestDict, "max_new_tokens").IsValid()
+            ? std::max(0, static_cast<int>(Lookup(requestDict, "max_new_tokens").ToLongLong()))
             : 0;
-        const std::string sampleMode = requestDict["sample"].IsValid()
-            ? requestDict["sample"].ToString()
+        const std::string sampleMode = Lookup(requestDict, "sample").IsValid()
+            ? Lookup(requestDict, "sample").ToString()
             : std::string();
         const bool sampleBatch = sampleMode == "greedy_batch";
         const bool sampleGreedy = requestedNewTokens > 0 ||
             sampleMode == "greedy" || sampleBatch;
         long long sampledTokenId = -1;
+        int generationVocabSize = 0;
         if (sampleGreedy) {
             X::Tensor logits(output);
-            if (logits->GetDimCount() != 3) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_sampling_shape_invalid"));
+            if (logits.Info().rank != 3) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_sampling_shape_invalid"));
                 return result;
             }
-            const int tokenRows = static_cast<int>(logits->GetDimSize(1));
-            const int vocabSize = static_cast<int>(logits->GetDimSize(2));
-            const int batchSize = static_cast<int>(logits->GetDimSize(0));
+            const int tokenRows = static_cast<int>(logits.Info().shape[1]);
+            const int vocabSize = static_cast<int>(logits.Info().shape[2]);
+            generationVocabSize = vocabSize;
+            const int batchSize = static_cast<int>(logits.Info().shape[0]);
             if (sampleBatch) {
                 const int sampleRows = batchSize * tokenRows;
                 if (sampleRows <= 0) {
-                    result->Set("status", X::Value("error"));
-                    result->Set(
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem(
                         "error_code",
-                        X::Value("compiled_sampling_shape_invalid"));
+                        NativeValue(host, "compiled_sampling_shape_invalid"));
                     return result;
                 }
                 cudaError_t sampleStatus = cudaSuccess;
@@ -1921,8 +2001,9 @@ namespace Garnet
                     }
                 }
                 const void* logitsDevice = TensorHelper::GetGPUMemory(logits);
+                auto logitsUse = TensorHelper::AcquireGPU(logits);
                 if (sampleStatus == cudaSuccess &&
-                    logits->GetDataType() == X::TensorDataType::FLOAT32) {
+                    logits.Info().dtype == X3_TENSOR_FLOAT32) {
                     sampleStatus = runLogitsTop1BatchFP32(
                         static_cast<const float*>(logitsDevice),
                         static_cast<long long*>(m_sampleTokenDevice),
@@ -1930,7 +2011,7 @@ namespace Garnet
                         sampleRows, vocabSize, cudaStreamPerThread);
                 }
                 else if (sampleStatus == cudaSuccess &&
-                    logits->GetDataType() == X::TensorDataType::BFLOAT16) {
+                    logits.Info().dtype == X3_TENSOR_BFLOAT16) {
                     sampleStatus = runLogitsTop1BatchBF16(
                         static_cast<const bfloat16*>(logitsDevice),
                         static_cast<long long*>(m_sampleTokenDevice),
@@ -1956,30 +2037,30 @@ namespace Garnet
                         tokenValues.size() * sizeof(float),
                         cudaMemcpyDeviceToHost, cudaStreamPerThread);
                 }
-                if (sampleStatus == cudaSuccess) {
-                    sampleStatus = cudaStreamSynchronize(cudaStreamPerThread);
-                }
+                const cudaError_t sampleCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                if (sampleStatus == cudaSuccess) sampleStatus = sampleCompletion;
+                logitsUse.Finish();
                 if (sampleStatus != cudaSuccess) {
-                    result->Set("status", X::Value("error"));
-                    result->Set(
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem(
                         "error_code",
-                        X::Value("compiled_gpu_batch_sampling_failed"));
-                    result->Set(
+                        NativeValue(host, "compiled_gpu_batch_sampling_failed"));
+                    result.SetItem(
                         "error_message",
-                        X::Value(cudaGetErrorString(sampleStatus)));
+                        NativeValue(host, cudaGetErrorString(sampleStatus)));
                     return result;
                 }
-                X::V<X::XList> tokenList;
-                X::V<X::XList> valueList;
+                X::Value tokenList = X::Value::List(host);
+                X::Value valueList = X::Value::List(host);
                 for (int row = 0; row < sampleRows; ++row) {
-                    tokenList->AddItem(X::Value(tokenIds[row]));
-                    valueList->AddItem(X::Value(tokenValues[row]));
+                    tokenList.Append(NativeValue(host, tokenIds[row]));
+                    valueList.Append(NativeValue(host, tokenValues[row]));
                 }
-                result->Set("token_ids", X::Value(tokenList));
-                result->Set("token_values", X::Value(valueList));
+                result.SetItem("token_ids", NativeValue(host, tokenList));
+                result.SetItem("token_values", NativeValue(host, valueList));
                 sampledTokenId = tokenIds.front();
                 const auto firstTokenReady = std::chrono::steady_clock::now();
-                result->Set("time_to_first_token_ms", X::Value(
+                result.SetItem("time_to_first_token_ms", NativeValue(host,
                     std::chrono::duration<double, std::milli>(
                         firstTokenReady - requestStart).count()));
             }
@@ -1989,30 +2070,31 @@ namespace Garnet
                 selectedRow =
                     std::min(frontendPromptTokenCount, tokenRows) - 1;
             }
-            else if (requestDict["sample_row"].IsValid()) {
-                selectedRow = static_cast<int>(requestDict["sample_row"].ToLongLong());
+            else if (Lookup(requestDict, "sample_row").IsValid()) {
+                selectedRow = static_cast<int>(Lookup(requestDict, "sample_row").ToLongLong());
             }
             if (selectedRow < 0 || selectedRow >= tokenRows) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_sampling_row_invalid"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_sampling_row_invalid"));
                 return result;
             }
             long long tokenId = -1;
             float tokenValue = 0.0f;
             if (m_backend == "openvino") {
-                if (logits->GetDeviceType() != X::TensorDeviceType::CPU ||
-                    !logits->GetData()) {
-                    result->Set("status", X::Value("error"));
-                    result->Set(
+                auto logitsUse = logits.Acquire();
+                if (logits.Info().device_type != 0 ||
+                    !logits.Info().data) {
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem(
                         "error_code",
-                        X::Value("compiled_cpu_sampling_failed"));
+                        NativeValue(host, "compiled_cpu_sampling_failed"));
                     return result;
                 }
                 if (vocabSize == 1 &&
-                    logits->GetDataType() ==
-                        X::TensorDataType::LONGLONG) {
+                    logits.Info().dtype ==
+                        X3_TENSOR_INT64) {
                     tokenId = reinterpret_cast<const int64_t*>(
-                        logits->GetData())[selectedRow];
+                        logits.Info().data)[selectedRow];
                     tokenValue = 0.0F;
                 }
                 else {
@@ -2022,25 +2104,25 @@ namespace Garnet
                         const size_t offset =
                             static_cast<size_t>(selectedRow) * vocabSize +
                             token;
-                        if (logits->GetDataType() ==
-                            X::TensorDataType::FLOAT32) {
+                        if (logits.Info().dtype ==
+                            X3_TENSOR_FLOAT32) {
                             value = reinterpret_cast<const float*>(
-                                logits->GetData())[offset];
+                                logits.Info().data)[offset];
                         }
-                        else if (logits->GetDataType() ==
-                            X::TensorDataType::BFLOAT16) {
+                        else if (logits.Info().dtype ==
+                            X3_TENSOR_BFLOAT16) {
                             const uint16_t bits =
                                 reinterpret_cast<const uint16_t*>(
-                                    logits->GetData())[offset];
+                                    logits.Info().data)[offset];
                             const uint32_t expanded =
                                 static_cast<uint32_t>(bits) << 16;
                             std::memcpy(&value, &expanded, sizeof(value));
                         }
                         else {
-                            result->Set("status", X::Value("error"));
-                            result->Set(
+                            result.SetItem("status", NativeValue(host, "error"));
+                            result.SetItem(
                                 "error_code",
-                                X::Value(
+                                NativeValue(host,
                                     "compiled_cpu_sampling_dtype_invalid"));
                             return result;
                         }
@@ -2066,17 +2148,46 @@ namespace Garnet
                 auto* deviceTokenValue =
                     static_cast<float*>(m_sampleValueDevice);
                 const void* logitsDevice = TensorHelper::GetGPUMemory(logits);
+                X::Value seenValue = Lookup(requestDict, "_sampling_seen");
+                const bool penalize = seenValue.IsValid() && generationPenalty != 1.0f;
+                X::Tensor seen;
+                if (penalize && !X::Tensor::IsTensor(seenValue)) {
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "invalid_repetition_history"));
+                    return result;
+                }
+                if (penalize) seen = X::Tensor(seenValue);
+                if (penalize && (seen.Info().dtype != X3_TENSOR_UINT8 ||
+                    seen.Info().rank != 1 || seen.Info().shape[0] != vocabSize)) {
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "invalid_repetition_history"));
+                    return result;
+                }
+                auto logitsUse = penalize
+                    ? TensorHelper::AcquireGPU(std::vector<std::pair<X::Tensor, X3TensorAccess>>{
+                        {logits, X3_TENSOR_READ}, {seen, X3_TENSOR_READ}})
+                    : TensorHelper::AcquireGPU(logits);
+                const auto* seenDevice = penalize
+                    ? static_cast<const unsigned char*>(TensorHelper::GetGPUMemory(seen)) : nullptr;
                 if (sampleStatus == cudaSuccess &&
-                    logits->GetDataType() == X::TensorDataType::FLOAT32) {
-                    sampleStatus = runLogitsTop1FP32(
+                    logits.Info().dtype == X3_TENSOR_FLOAT32) {
+                    sampleStatus = penalize ? sampleRepetitionFP32(
+                        static_cast<const float*>(logitsDevice) +
+                            static_cast<size_t>(selectedRow) * vocabSize,
+                        seenDevice, generationPenalty, deviceTokenId, deviceTokenValue,
+                        vocabSize, cudaStreamPerThread) : runLogitsTop1FP32(
                         static_cast<const float*>(logitsDevice) +
                             static_cast<size_t>(selectedRow) * vocabSize,
                         deviceTokenId, deviceTokenValue, 1, vocabSize,
                         cudaStreamPerThread);
                 }
                 else if (sampleStatus == cudaSuccess &&
-                    logits->GetDataType() == X::TensorDataType::BFLOAT16) {
-                    sampleStatus = runLogitsTop1BF16(
+                    logits.Info().dtype == X3_TENSOR_BFLOAT16) {
+                    sampleStatus = penalize ? sampleRepetitionBF16(
+                        reinterpret_cast<const __nv_bfloat16*>(logitsDevice) +
+                            static_cast<size_t>(selectedRow) * vocabSize,
+                        seenDevice, generationPenalty, deviceTokenId, deviceTokenValue,
+                        vocabSize, cudaStreamPerThread) : runLogitsTop1BF16(
                         static_cast<const bfloat16*>(logitsDevice) +
                             static_cast<size_t>(selectedRow) * vocabSize,
                         deviceTokenId, deviceTokenValue, 1, vocabSize,
@@ -2095,71 +2206,82 @@ namespace Garnet
                         &tokenValue, deviceTokenValue, sizeof(tokenValue),
                         cudaMemcpyDeviceToHost, cudaStreamPerThread);
                 }
-                if (sampleStatus == cudaSuccess) {
-                    sampleStatus = cudaStreamSynchronize(cudaStreamPerThread);
-                }
+                const cudaError_t sampleCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                if (sampleStatus == cudaSuccess) sampleStatus = sampleCompletion;
+                logitsUse.Finish();
                 if (sampleStatus != cudaSuccess) {
-                    result->Set("status", X::Value("error"));
-                    result->Set(
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem(
                         "error_code",
-                        X::Value("compiled_gpu_sampling_failed"));
-                    result->Set(
+                        NativeValue(host, "compiled_gpu_sampling_failed"));
+                    result.SetItem(
                         "error_message",
-                        X::Value(cudaGetErrorString(sampleStatus)));
+                        NativeValue(host, cudaGetErrorString(sampleStatus)));
                     return result;
                 }
             }
             if (m_backend == "openvino" && tokenId < 0) {
-                result->Set("status", X::Value("error"));
-                result->Set(
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem(
                     "error_code",
-                    X::Value("compiled_logits_non_finite"));
-                result->Set(
+                    NativeValue(host, "compiled_logits_non_finite"));
+                result.SetItem(
                     "error_message",
-                    X::Value(
+                    NativeValue(host,
                         "OpenVINO produced no finite logits; this device or "
                         "driver does not safely execute the selected "
                         "precision profile"));
                 return result;
             }
-            result->Set("token_id", X::Value(tokenId));
-            result->Set("token_value", X::Value(tokenValue));
+            result.SetItem("token_id", NativeValue(host, tokenId));
+            result.SetItem("token_value", NativeValue(host, tokenValue));
             sampledTokenId = tokenId;
             const auto firstTokenReady = std::chrono::steady_clock::now();
-            result->Set("time_to_first_token_ms", X::Value(
+            result.SetItem("time_to_first_token_ms", NativeValue(host,
                 std::chrono::duration<double, std::milli>(firstTokenReady - requestStart).count()));
             }
         }
 
         if (requestedNewTokens > 0) {
             if (!frontendActive || !m_decodeRuntime || sampledTokenId < 0) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_generation_runtime_unavailable"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_generation_runtime_unavailable"));
                 return result;
             }
-            X::List activeInputs(inputs);
+            X::Value activeInputs(inputs);
             const int expectedInputCount = frontendIsVL ? 15 :
                 (frontendIsASR ? 9 : 7);
-            if (activeInputs->Size() != expectedInputCount) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_generation_cache_bindings_missing"));
+            if (activeInputs.Size() != expectedInputCount) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_generation_cache_bindings_missing"));
                 return result;
             }
             std::vector<int64_t> generatedTokens;
+            X::Value repetitionSeenValue;
+            if (generationPenalty != 1.0f) {
+                std::vector<unsigned char> emptyHistory(static_cast<size_t>(generationVocabSize), 0);
+                repetitionSeenValue = MakeCudaTensorFromHost(host, X3_TENSOR_UINT8,
+                    {generationVocabSize}, emptyHistory.data(), emptyHistory.size());
+                if (!X::Tensor::IsTensor(repetitionSeenValue)) {
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "repetition_history_allocation_failed"));
+                    return result;
+                }
+            }
             generatedTokens.reserve(static_cast<size_t>(requestedNewTokens));
             generatedTokens.push_back(sampledTokenId);
             std::string tokenizerError;
             const auto tokenizer = Tokenization::GetCachedQwenTokenizer(m_weightsLocation, &tokenizerError);
             if (!tokenizer) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_generation_tokenizer_unavailable"));
-                result->Set("error_message", X::Value(tokenizerError));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_generation_tokenizer_unavailable"));
+                result.SetItem("error_message", NativeValue(host, tokenizerError));
                 return result;
             }
             const int64_t endOfText = tokenizer->TokenId("<|endoftext|>");
             const int64_t imEnd = tokenizer->TokenId("<|im_end|>");
-            const bool ignoreEos = requestDict["ignore_eos"].IsValid() &&
-                requestDict["ignore_eos"].ToLongLong() != 0;
+            const bool ignoreEos = Lookup(requestDict, "ignore_eos").IsValid() &&
+                Lookup(requestDict, "ignore_eos").ToLongLong() != 0;
             const int cacheInputIndex = frontendIsVL ? 11 :
                 (frontendIsASR ? 5 : 3);
             const int cacheCapacity =
@@ -2171,8 +2293,8 @@ namespace Garnet
             if (cacheCapacity <= 0 ||
                 frontendPromptTokenCount + requestedNewTokens - 1 >
                     cacheCapacity) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_generation_exceeds_kv_profile"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_generation_exceeds_kv_profile"));
                 return result;
             }
             int64_t decodeTokenValue = sampledTokenId;
@@ -2184,21 +2306,21 @@ namespace Garnet
             auto makeDecodeTensor = m_backend == "openvino"
                 ? MakeCpuTensorFromHost
                 : MakeCudaTensorFromHost;
-            X::Value decodeTokenTensor = makeDecodeTensor(
-                X::TensorDataType::LONGLONG, {1, 1}, &decodeTokenValue, sizeof(decodeTokenValue));
-            X::Value decodePositionTensor = makeDecodeTensor(
-                X::TensorDataType::LONGLONG,
+            X::Value decodeTokenTensor = makeDecodeTensor(host,
+                X3_TENSOR_INT64, {1, 1}, &decodeTokenValue, sizeof(decodeTokenValue));
+            X::Value decodePositionTensor = makeDecodeTensor(host,
+                X3_TENSOR_INT64,
                 {positionComponents, 1, 1},
                 decodeRopePositions,
                 static_cast<size_t>(positionComponents) * sizeof(int64_t));
-            X::Value decodeContextTensor = makeDecodeTensor(
-                X::TensorDataType::INT, {1}, &decodeContextLength, sizeof(decodeContextLength));
-            X::Value decodeSlotTensor = makeDecodeTensor(
-                X::TensorDataType::INT, {1}, &decodeSlotPosition, sizeof(decodeSlotPosition));
-            if (!decodeTokenTensor.IsTensor() || !decodePositionTensor.IsTensor() ||
-                !decodeContextTensor.IsTensor() || !decodeSlotTensor.IsTensor()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("compiled_decode_metadata_allocation_failed"));
+            X::Value decodeContextTensor = makeDecodeTensor(host,
+                X3_TENSOR_INT32, {1}, &decodeContextLength, sizeof(decodeContextLength));
+            X::Value decodeSlotTensor = makeDecodeTensor(host,
+                X3_TENSOR_INT32, {1}, &decodeSlotPosition, sizeof(decodeSlotPosition));
+            if (!(X::Tensor::IsTensor(decodeTokenTensor)) || !(X::Tensor::IsTensor(decodePositionTensor)) ||
+                !(X::Tensor::IsTensor(decodeContextTensor)) || !(X::Tensor::IsTensor(decodeSlotTensor))) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "compiled_decode_metadata_allocation_failed"));
                 return result;
             }
             X::Tensor decodeTokenStorage(decodeTokenTensor);
@@ -2206,16 +2328,16 @@ namespace Garnet
             X::Tensor decodeContextStorage(decodeContextTensor);
             X::Tensor decodeSlotStorage(decodeSlotTensor);
             void* decodeTokenDevice = m_backend == "openvino"
-                ? decodeTokenStorage->GetData()
+                ? decodeTokenStorage.Info().data
                 : TensorHelper::GetGPUMemory(decodeTokenStorage);
             void* decodePositionDevice = m_backend == "openvino"
-                ? decodePositionStorage->GetData()
+                ? decodePositionStorage.Info().data
                 : TensorHelper::GetGPUMemory(decodePositionStorage);
             void* decodeContextDevice = m_backend == "openvino"
-                ? decodeContextStorage->GetData()
+                ? decodeContextStorage.Info().data
                 : TensorHelper::GetGPUMemory(decodeContextStorage);
             void* decodeSlotDevice = m_backend == "openvino"
-                ? decodeSlotStorage->GetData()
+                ? decodeSlotStorage.Info().data
                 : TensorHelper::GetGPUMemory(decodeSlotStorage);
             const auto decodeStart = std::chrono::steady_clock::now();
             for (int generatedIndex = 1; generatedIndex < requestedNewTokens; ++generatedIndex) {
@@ -2234,6 +2356,9 @@ namespace Garnet
                 decodeSlotPosition = slotPosition;
                 cudaError_t metadataStatus = cudaSuccess;
                 if (m_backend == "openvino") {
+                    auto metadataUse = X::Tensor::AcquireMany({
+                        {decodeTokenStorage, X3_TENSOR_WRITE}, {decodePositionStorage, X3_TENSOR_WRITE},
+                        {decodeContextStorage, X3_TENSOR_WRITE}, {decodeSlotStorage, X3_TENSOR_WRITE}});
                     std::memcpy(
                         decodeTokenDevice, &decodeTokenValue,
                         sizeof(decodeTokenValue));
@@ -2249,6 +2374,9 @@ namespace Garnet
                         sizeof(decodeSlotPosition));
                 }
                 else {
+                    auto metadataUse = TensorHelper::AcquireGPU({
+                        {decodeTokenStorage, X3_TENSOR_WRITE}, {decodePositionStorage, X3_TENSOR_WRITE},
+                        {decodeContextStorage, X3_TENSOR_WRITE}, {decodeSlotStorage, X3_TENSOR_WRITE}});
                     metadataStatus = cudaMemcpyAsync(
                         decodeTokenDevice, &decodeTokenValue,
                         sizeof(decodeTokenValue),
@@ -2264,103 +2392,111 @@ namespace Garnet
                     if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
                         decodeSlotDevice, &decodeSlotPosition, sizeof(decodeSlotPosition),
                         cudaMemcpyHostToDevice, cudaStreamPerThread);
+                    // The upload sources are mutable host locals, not retained tensor storage.
+                    const cudaError_t uploadCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                    if (metadataStatus == cudaSuccess) metadataStatus = uploadCompletion;
+                    metadataUse.Finish();
                 }
                 if (metadataStatus != cudaSuccess) {
-                    result->Set("status", X::Value("error"));
-                    result->Set("error_code", X::Value("compiled_decode_metadata_upload_failed"));
-                    result->Set("error_message", X::Value(cudaGetErrorString(metadataStatus)));
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "compiled_decode_metadata_upload_failed"));
+                    result.SetItem("error_message", NativeValue(host, cudaGetErrorString(metadataStatus)));
                     return result;
                 }
-                X::V<X::XList> decodeInputs;
+                X::Value decodeInputs = X::Value::List(host);
                 const int keyInputIndex = frontendIsVL ? 11 :
                     (frontendIsASR ? 5 : 3);
                 const int valueInputIndex = frontendIsVL ? 12 :
                     (frontendIsASR ? 6 : 4);
                 const int tableInputIndex = frontendIsVL ? 13 :
                     (frontendIsASR ? 7 : 5);
-                decodeInputs->AddItem(decodeTokenTensor);
-                decodeInputs->AddItem(decodePositionTensor);
-                decodeInputs->AddItem(activeInputs->Get(keyInputIndex));
-                decodeInputs->AddItem(activeInputs->Get(valueInputIndex));
-                decodeInputs->AddItem(activeInputs->Get(tableInputIndex));
-                decodeInputs->AddItem(decodeContextTensor);
-                decodeInputs->AddItem(decodeSlotTensor);
-                X::Dict decodeRequest;
-                decodeRequest->Set("inputs", X::Value(decodeInputs));
-                decodeRequest->Set("sample", X::Value("greedy"));
-                decodeRequest->Set("reuse_output", X::Value(1));
+                decodeInputs.Append(decodeTokenTensor);
+                decodeInputs.Append(decodePositionTensor);
+                decodeInputs.Append(activeInputs.Get(keyInputIndex));
+                decodeInputs.Append(activeInputs.Get(valueInputIndex));
+                decodeInputs.Append(activeInputs.Get(tableInputIndex));
+                decodeInputs.Append(decodeContextTensor);
+                decodeInputs.Append(decodeSlotTensor);
+                X::Value decodeRequest = X::Value::Dict(host);
+                if (generationPenalty != 1.0f) {
+                    if (sampledTokenId < 0 || sampledTokenId >= generationVocabSize) {
+                        result.SetItem("status", NativeValue(host, "error"));
+                        result.SetItem("error_code", NativeValue(host, "invalid_generated_token"));
+                        return result;
+                    }
+                    X::Tensor seen(repetitionSeenValue);
+                    auto seenUse = TensorHelper::AcquireGPU(seen, X3_TENSOR_WRITE);
+                    const auto markStatus = cudaMemsetAsync(
+                        static_cast<unsigned char*>(TensorHelper::GetGPUMemory(seen)) + sampledTokenId,
+                        1, 1, cudaStreamPerThread);
+                    seenUse.Finish();
+                    if (markStatus != cudaSuccess) {
+                        result.SetItem("status", NativeValue(host, "error"));
+                        result.SetItem("error_code", NativeValue(host, "repetition_history_update_failed"));
+                        return result;
+                    }
+                    decodeRequest.SetItem("_sampling_seen", repetitionSeenValue);
+                    decodeRequest.SetItem("repetition_penalty", NativeValue(host, generationPenalty));
+                }
+                decodeRequest.SetItem("inputs", NativeValue(host, decodeInputs));
+                decodeRequest.SetItem("sample", NativeValue(host, "greedy"));
+                decodeRequest.SetItem("reuse_output", NativeValue(host, 1));
                 if (m_backend == "openvino" && generatedIndex == 1) {
-                    decodeRequest->Set(
-                        "reset_openvino_state", X::Value(1));
+                    decodeRequest.SetItem(
+                        "reset_openvino_state", NativeValue(host, 1));
                 }
                 X::Value decodeValue = m_decodeRuntime->Forward(decodeRequest);
                 if (!decodeValue.IsDict()) {
-                    result->Set("status", X::Value("error"));
-                    result->Set("error_code", X::Value("compiled_decode_failed"));
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "compiled_decode_failed"));
                     return result;
                 }
-                X::Dict decodeResult(decodeValue);
-                if (decodeResult["status"].ToString() != "ok") return decodeValue;
-                sampledTokenId = decodeResult["token_id"].ToLongLong();
+                X::Value decodeResult(decodeValue);
+                if (Lookup(decodeResult, "status").ToString() != "ok") return decodeValue;
+                sampledTokenId = Lookup(decodeResult, "token_id").ToLongLong();
                 generatedTokens.push_back(sampledTokenId);
             }
             const auto decodeEnd = std::chrono::steady_clock::now();
             const double decodeMs =
                 std::chrono::duration<double, std::milli>(decodeEnd - decodeStart).count();
-            X::V<X::XList> tokenList;
-            for (const int64_t token : generatedTokens) tokenList->AddItem(X::Value(token));
-            result->Set("token_ids", X::Value(tokenList));
-            result->Set("text", X::Value(tokenizer->Decode(generatedTokens, true)));
-            result->Set("generated_token_count", X::Value(static_cast<long long>(generatedTokens.size())));
-            result->Set("decode_ms", X::Value(decodeMs));
-            result->Set("decode_tokens_per_second", X::Value(
+            X::Value tokenList = X::Value::List(host);
+            for (const int64_t token : generatedTokens) tokenList.Append(NativeValue(host, token));
+            result.SetItem("token_ids", NativeValue(host, tokenList));
+            result.SetItem("text", NativeValue(host, tokenizer->Decode(generatedTokens, true)));
+            result.SetItem("generated_token_count", NativeValue(host, static_cast<long long>(generatedTokens.size())));
+            result.SetItem("decode_ms", NativeValue(host, decodeMs));
+            result.SetItem("decode_tokens_per_second", NativeValue(host,
                 generatedTokens.size() > 1 && decodeMs > 0.0
                     ? static_cast<double>(generatedTokens.size() - 1) * 1000.0 / decodeMs
                     : 0.0));
-            result->Set("token_id", X::Value(sampledTokenId));
+            result.SetItem("token_id", NativeValue(host, sampledTokenId));
         }
         const bool returnLogits = !sampleGreedy ||
-            (requestDict["return_logits"].IsValid() && requestDict["return_logits"].ToLongLong() != 0);
-        if (returnLogits) result->Set("output", output);
+            (Lookup(requestDict, "return_logits").IsValid() && Lookup(requestDict, "return_logits").ToLongLong() != 0);
+        if (returnLogits) result.SetItem("output", output);
         if (frontendActive) {
-            result->Set(
-                "prompt_token_count", X::Value(frontendPromptTokenCount));
+            result.SetItem(
+                "prompt_token_count", NativeValue(host, frontendPromptTokenCount));
         }
         if (frontendIsVL) {
-            result->Set("visual_token_count", X::Value(frontendInputs.visualTokenCount));
-            result->Set("source_height", X::Value(frontendInputs.sourceHeight));
-            result->Set("source_width", X::Value(frontendInputs.sourceWidth));
-            result->Set("height", X::Value(frontendInputs.resizedHeight));
-            result->Set("width", X::Value(frontendInputs.resizedWidth));
+            result.SetItem("visual_token_count", NativeValue(host, frontendInputs.visualTokenCount));
+            result.SetItem("source_height", NativeValue(host, frontendInputs.sourceHeight));
+            result.SetItem("source_width", NativeValue(host, frontendInputs.sourceWidth));
+            result.SetItem("height", NativeValue(host, frontendInputs.resizedHeight));
+            result.SetItem("width", NativeValue(host, frontendInputs.resizedWidth));
         }
         if (frontendIsASR) {
-            result->Set(
-                "audio_token_count", X::Value(asrFrontendInputs.audioTokenCount));
-            result->Set(
-                "audio_sample_count", X::Value(asrFrontendInputs.audioSampleCount));
-            result->Set(
+            result.SetItem(
+                "audio_token_count", NativeValue(host, asrFrontendInputs.audioTokenCount));
+            result.SetItem(
+                "audio_sample_count", NativeValue(host, asrFrontendInputs.audioSampleCount));
+            result.SetItem(
                 "audio_duration_seconds",
-                X::Value(asrFrontendInputs.audioDurationSeconds));
+                NativeValue(host, asrFrontendInputs.audioDurationSeconds));
         }
-        result->Set("total_ms", X::Value(
+        result.SetItem("total_ms", NativeValue(host,
             std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - requestStart).count()));
-        if (frontendActive && inputs.IsList()) {
-            X::List requestInputs(inputs);
-            const int reusableKeyIndex = frontendIsVL ? 11 :
-                (frontendIsASR ? 5 : 3);
-            const int reusableValueIndex = frontendIsVL ? 12 :
-                (frontendIsASR ? 6 : 4);
-            for (long long index = 0; index < requestInputs->Size(); ++index) {
-                if (index == reusableKeyIndex || index == reusableValueIndex) {
-                    continue;
-                }
-                X::Value inputValue = requestInputs->Get(index);
-                if (!inputValue.IsTensor()) continue;
-                X::Tensor tensor(inputValue);
-                TensorHelper::ReleaseGPUMemory(tensor);
-            }
-        }
         return result;
     }
 
@@ -2368,76 +2504,90 @@ namespace Garnet
         const std::string& probe,
         X::Value argument)
     {
+        auto* host = m_host;
         std::lock_guard<std::mutex> guard(m_mutex);
-        X::Dict result;
-        result->Set("probe", X::Value(probe));
+        X::Value result = X::Value::Dict(host);
+        result.SetItem("probe", NativeValue(host, probe));
         if (probe == "paged_kv_bf16") {
             if (!argument.IsDict()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("paged_kv_probe_requires_dict"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "paged_kv_probe_requires_dict"));
                 return result;
             }
-            X::Dict options(argument);
-            X::Value qkvValue = options["qkv"];
-            X::Value keyPagesValue = options["key_pages"];
-            X::Value valuePagesValue = options["value_pages"];
-            X::Value pageTableValue = options["page_table"];
+            X::Value options(argument);
+            X::Value qkvValue = Lookup(options, "qkv");
+            X::Value keyPagesValue = Lookup(options, "key_pages");
+            X::Value valuePagesValue = Lookup(options, "value_pages");
+            X::Value pageTableValue = Lookup(options, "page_table");
             if (pageTableValue.IsList()) {
-                X::List pageList(pageTableValue);
-                X::Tensor pageTensor(X::g_pXHost->CreateTensor());
-                X::Port::vector<int> pageShape(1);
-                pageShape.push_back(static_cast<int>(pageList->Size()));
-                pageTensor->SetDataType(X::TensorDataType::INT);
-                pageTensor->SetShape(pageShape);
-                X::Value init;
-                if (pageTensor->Create(init) && pageTensor->GetData()) {
-                    auto* pageData = reinterpret_cast<int*>(pageTensor->GetData());
-                    for (long long index = 0; index < pageList->Size(); ++index) {
-                        pageData[index] = static_cast<int>(pageList->Get(index).ToLongLong());
+                X::Value pageList(pageTableValue);
+                auto pageTensor = X::Tensor::Create(host, X3_TENSOR_INT32, {static_cast<int64_t>(pageList.Size())});
+                if (pageTensor.Info().data) {
+                    auto pageUse = pageTensor.Acquire(X3_TENSOR_WRITE);
+                    auto* pageData = reinterpret_cast<int*>(pageTensor.Info().data);
+                    for (long long index = 0; index < pageList.Size(); ++index) {
+                        pageData[index] = static_cast<int>(pageList.Get(index).ToLongLong());
                     }
+                    pageUse.Finish();
                     if (TensorHelper::EnsureGPUMemory(pageTensor) == TensorOpStatus::Success) {
-                        pageTableValue = X::Value(pageTensor);
+                        pageTableValue = NativeValue(host, pageTensor);
                     }
                 }
             }
-            if (!qkvValue.IsTensor() || !keyPagesValue.IsTensor() ||
-                !valuePagesValue.IsTensor() || !pageTableValue.IsTensor()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("paged_kv_probe_tensor_missing"));
+            if (!(X::Tensor::IsTensor(qkvValue)) || !(X::Tensor::IsTensor(keyPagesValue)) ||
+                !(X::Tensor::IsTensor(valuePagesValue)) || !(X::Tensor::IsTensor(pageTableValue))) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "paged_kv_probe_tensor_missing"));
                 return result;
             }
             X::Tensor qkv(qkvValue);
             X::Tensor keyPages(keyPagesValue);
             X::Tensor valuePages(valuePagesValue);
             X::Tensor pageTable(pageTableValue);
-            const int tokenCount = static_cast<int>(options["token_count"].ToLongLong());
-            const int startPosition = static_cast<int>(options["start_position"].ToLongLong());
-            const int sequenceLength = static_cast<int>(options["sequence_length"].ToLongLong());
-            const int pageSize = static_cast<int>(options["page_size"].ToLongLong());
-            const int qHeads = static_cast<int>(options["q_heads"].ToLongLong());
-            const int kvHeads = static_cast<int>(options["kv_heads"].ToLongLong());
-            const int headDim = static_cast<int>(options["head_dim"].ToLongLong());
+            const int tokenCount = static_cast<int>(Lookup(options, "token_count").ToLongLong());
+            const int startPosition = static_cast<int>(Lookup(options, "start_position").ToLongLong());
+            const int sequenceLength = static_cast<int>(Lookup(options, "sequence_length").ToLongLong());
+            const int pageSize = static_cast<int>(Lookup(options, "page_size").ToLongLong());
+            const int qHeads = static_cast<int>(Lookup(options, "q_heads").ToLongLong());
+            const int kvHeads = static_cast<int>(Lookup(options, "kv_heads").ToLongLong());
+            const int headDim = static_cast<int>(Lookup(options, "head_dim").ToLongLong());
             const int qWidth = qHeads * headDim;
             const int kvWidth = kvHeads * headDim;
             const int qkvWidth = qWidth + 2 * kvWidth;
-            if (qkv->GetDataType() != X::TensorDataType::BFLOAT16 ||
-                keyPages->GetDataType() != X::TensorDataType::BFLOAT16 ||
-                valuePages->GetDataType() != X::TensorDataType::BFLOAT16 ||
-                pageTable->GetDataType() != X::TensorDataType::INT ||
-                qkv->GetDimCount() != 2 || qkv->GetDimSize(0) < tokenCount ||
-                qkv->GetDimSize(1) != qkvWidth || tokenCount <= 0 ||
+            if (qkv.Info().dtype != X3_TENSOR_BFLOAT16 ||
+                keyPages.Info().dtype != X3_TENSOR_BFLOAT16 ||
+                valuePages.Info().dtype != X3_TENSOR_BFLOAT16 ||
+                pageTable.Info().dtype != X3_TENSOR_INT32 ||
+                qkv.Info().rank != 2 || qkv.Info().shape[0] < tokenCount ||
+                qkv.Info().shape[1] != qkvWidth || tokenCount <= 0 ||
                 sequenceLength <= 0 || startPosition < 0 || pageSize <= 0 ||
                 qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || qHeads % kvHeads != 0) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("paged_kv_probe_shape_or_dtype_invalid"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "paged_kv_probe_shape_or_dtype_invalid"));
                 return result;
             }
+            int pageTableElements = 1;
+            for (int dimension = 0; dimension < pageTable.Info().rank; ++dimension) {
+                const int64_t size = pageTable.Info().shape[dimension];
+                if (size <= 0 || size > std::numeric_limits<int>::max() / pageTableElements) {
+                    result.SetItem("status", NativeValue(host, "error"));
+                    result.SetItem("error_code", NativeValue(host, "paged_kv_probe_capacity_out_of_range"));
+                    return result;
+                }
+                pageTableElements *= static_cast<int>(size);
+            }
+            if (pageTableElements > std::numeric_limits<int>::max() / pageSize) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "paged_kv_probe_capacity_out_of_range"));
+                return result;
+            }
+            const int maxSequenceLength = pageTableElements * pageSize;
             if (TensorHelper::EnsureGPUMemory(qkv) != TensorOpStatus::Success ||
                 TensorHelper::EnsureGPUMemory(keyPages) != TensorOpStatus::Success ||
                 TensorHelper::EnsureGPUMemory(valuePages) != TensorOpStatus::Success ||
                 TensorHelper::EnsureGPUMemory(pageTable) != TensorOpStatus::Success) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("paged_kv_probe_gpu_residency_failed"));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "paged_kv_probe_gpu_residency_failed"));
                 return result;
             }
 
@@ -2445,17 +2595,19 @@ namespace Garnet
             auto* keyDevice = static_cast<bfloat16*>(TensorHelper::GetGPUMemory(keyPages));
             auto* valueDevice = static_cast<bfloat16*>(TensorHelper::GetGPUMemory(valuePages));
             auto* tableDevice = static_cast<int*>(TensorHelper::GetGPUMemory(pageTable));
+            auto output = TensorHelper::CreateGPU(host, X3_TENSOR_BFLOAT16, {qHeads, headDim});
+            auto probeUse = TensorHelper::AcquireGPU({
+                {qkv, X3_TENSOR_READ}, {keyPages, X3_TENSOR_WRITE},
+                {valuePages, X3_TENSOR_WRITE}, {pageTable, X3_TENSOR_READ},
+                {output, X3_TENSOR_WRITE}});
+            void* outputDevice = TensorHelper::GetGPUMemory(output);
             cudaError_t status = runTextPagedKVWriteBF16(
                 qkvDevice, keyDevice, valueDevice, tableDevice,
                 tokenCount, startPosition, pageSize, qHeads, kvHeads, headDim,
                 cudaStreamPerThread);
-            void* outputDevice = nullptr;
-            if (status == cudaSuccess) {
-                status = cudaMalloc(&outputDevice, static_cast<size_t>(qWidth) * sizeof(unsigned short));
-            }
             const bfloat16* lastQ = qkvDevice + static_cast<size_t>(tokenCount - 1) * qkvWidth;
-            const std::string implementation = options["implementation"].IsValid()
-                ? options["implementation"].ToString()
+            const std::string implementation = Lookup(options, "implementation").IsValid()
+                ? Lookup(options, "implementation").ToString()
                 : "reference";
             void* workspaceDevice = nullptr;
             int* metadataDevice = nullptr;
@@ -2467,12 +2619,7 @@ namespace Garnet
             }
             else if (status == cudaSuccess &&
                      (implementation == "split" || implementation == "flash")) {
-                int pageTableElements = 1;
-                for (int dimension = 0; dimension < pageTable->GetDimCount(); ++dimension) {
-                    pageTableElements *= pageTable->GetDimSize(dimension);
-                }
-                const int maxSequenceLength = pageTableElements * pageSize;
-                const int splitCount = (maxSequenceLength + 127) / 128;
+                const int splitCount = maxSequenceLength / 128 + (maxSequenceLength % 128 != 0);
                 const size_t scoreFloats = static_cast<size_t>(qHeads) * maxSequenceLength;
                 const size_t partialFloats = static_cast<size_t>(qHeads) * splitCount * headDim;
                 status = cudaMalloc(&workspaceDevice,
@@ -2504,80 +2651,70 @@ namespace Garnet
                         maxSequenceLength, pageSize, qHeads, kvHeads, headDim, 1,
                         cudaStreamPerThread);
                 }
-                if (status == cudaSuccess) status = cudaStreamSynchronize(cudaStreamPerThread);
+                const cudaError_t completion = cudaStreamSynchronize(cudaStreamPerThread);
+                if (status == cudaSuccess) status = completion;
             }
             else if (status == cudaSuccess) {
                 status = cudaErrorInvalidValue;
             }
             if (metadataDevice) cudaFree(metadataDevice);
             if (workspaceDevice) cudaFree(workspaceDevice);
+            probeUse.Finish();
             if (status != cudaSuccess) {
-                if (outputDevice) cudaFree(outputDevice);
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("paged_kv_probe_kernel_failed"));
-                result->Set("error_message", X::Value(cudaGetErrorString(status)));
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "paged_kv_probe_kernel_failed"));
+                result.SetItem("error_message", NativeValue(host, cudaGetErrorString(status)));
                 return result;
             }
-            X::Tensor output(X::g_pXHost->CreateTensor());
-            X::Port::vector<int> outputShape(2);
-            outputShape.push_back(qHeads);
-            outputShape.push_back(headDim);
-            output->SetDataType(X::TensorDataType::BFLOAT16);
-            output->SetShape(outputShape);
-            if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
-                cudaFree(outputDevice);
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("paged_kv_probe_output_attach_failed"));
-                return result;
-            }
-            result->Set("status", X::Value("ok"));
-            result->Set("output", X::Value(output));
-            result->Set("key_pages", keyPagesValue);
-            result->Set("value_pages", valuePagesValue);
-            result->Set("sequence_length", X::Value(sequenceLength));
-            result->Set("implementation", X::Value(implementation));
+            result.SetItem("status", NativeValue(host, "ok"));
+            result.SetItem("output", NativeValue(host, output));
+            result.SetItem("key_pages", keyPages);
+            result.SetItem("value_pages", valuePages);
+            result.SetItem("sequence_length", NativeValue(host, sequenceLength));
+            result.SetItem("implementation", NativeValue(host, implementation));
             return result;
         }
         if (probe != "weight") {
-            result->Set("status", X::Value("error"));
-            result->Set("error_code", X::Value("unknown_compiled_probe"));
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "unknown_compiled_probe"));
             return result;
         }
 
         const std::string name = argument.ToString();
         auto cached = m_loadedWeights.find(name);
         if (cached != m_loadedWeights.end()) {
-            result->Set("status", X::Value("ok"));
-            result->Set("name", X::Value(name));
-            result->Set("cache_hit", X::Value(true));
-            result->Set("tensor", cached->second);
+            result.SetItem("status", NativeValue(host, "ok"));
+            result.SetItem("name", NativeValue(host, name));
+            result.SetItem("cache_hit", NativeValue(host, true));
+            result.SetItem("tensor", cached->second);
             return result;
         }
 
         const SafeTensorMetadata* metadata = m_weightIndex.Find(name);
         if (!metadata) {
-            result->Set("status", X::Value("error"));
-            result->Set("error_code", X::Value("weight_not_found"));
-            result->Set("name", X::Value(name));
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "weight_not_found"));
+            result.SetItem("name", NativeValue(host, name));
             return result;
         }
 
-        X::TensorDataType dataType;
-        if (metadata->dataType == "F32") dataType = X::TensorDataType::FLOAT32;
-        else if (metadata->dataType == "BF16") dataType = X::TensorDataType::BFLOAT16;
-        else if (metadata->dataType == "F16") dataType = X::TensorDataType::FLOAT16;
+        X3TensorDType dataType;
+        if (metadata->dataType == "F32") dataType = X3_TENSOR_FLOAT32;
+        else if (metadata->dataType == "BF16") dataType = X3_TENSOR_BFLOAT16;
+        else if (metadata->dataType == "F16") dataType = X3_TENSOR_FLOAT16;
         else {
-            result->Set("status", X::Value("error"));
-            result->Set("error_code", X::Value("weight_dtype_unsupported"));
-            result->Set("dtype", X::Value(metadata->dataType));
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "weight_dtype_unsupported"));
+            result.SetItem("dtype", NativeValue(host, metadata->dataType));
             return result;
         }
 
-        X::Port::vector<int> shape(static_cast<int>(metadata->shape.size()));
+        std::vector<int64_t> shape;
+        shape.reserve(metadata->shape.size());
         for (const long long dimension : metadata->shape) {
-            if (dimension > std::numeric_limits<int>::max()) {
-                result->Set("status", X::Value("error"));
-                result->Set("error_code", X::Value("weight_shape_unsupported"));
+            if (dimension < 0 || dimension > std::numeric_limits<int>::max()) {
+                result.SetItem("status", NativeValue(host, "error"));
+                result.SetItem("error_code", NativeValue(host, "weight_shape_unsupported"));
                 return result;
             }
             shape.push_back(static_cast<int>(dimension));
@@ -2601,30 +2738,22 @@ namespace Garnet
         if (pinnedMemory) cudaFreeHost(pinnedMemory);
         if (cudaError != cudaSuccess) {
             if (deviceMemory) cudaFree(deviceMemory);
-            result->Set("status", X::Value("error"));
-            result->Set("error_code", X::Value("weight_gpu_load_failed"));
-            result->Set("error_message", X::Value(cudaGetErrorString(cudaError)));
+            result.SetItem("status", NativeValue(host, "error"));
+            result.SetItem("error_code", NativeValue(host, "weight_gpu_load_failed"));
+            result.SetItem("error_message", NativeValue(host, cudaGetErrorString(cudaError)));
             return result;
         }
 
-        X::Tensor tensor(X::g_pXHost->CreateTensor());
-        tensor->SetDataType(dataType);
-        tensor->SetShape(shape);
-        if (TensorHelper::AttachGPUMemory(tensor, deviceMemory) != TensorOpStatus::Success) {
-            cudaFree(deviceMemory);
-            result->Set("status", X::Value("error"));
-            result->Set("error_code", X::Value("weight_tensor_attach_failed"));
-            return result;
-        }
+        auto tensor = AdoptCudaTensor(host, dataType, shape, deviceMemory);
 
         X::Value tensorValue(tensor);
         m_loadedWeightBytes += static_cast<long long>(metadata->dataSize);
         m_loadedWeights.emplace(name, tensorValue);
-        result->Set("status", X::Value("ok"));
-        result->Set("name", X::Value(name));
-        result->Set("cache_hit", X::Value(false));
-        result->Set("bytes", X::Value(static_cast<long long>(metadata->dataSize)));
-        result->Set("tensor", tensorValue);
+        result.SetItem("status", NativeValue(host, "ok"));
+        result.SetItem("name", NativeValue(host, name));
+        result.SetItem("cache_hit", NativeValue(host, false));
+        result.SetItem("bytes", NativeValue(host, static_cast<long long>(metadata->dataSize)));
+        result.SetItem("tensor", tensorValue);
         return result;
     }
 }

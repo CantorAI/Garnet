@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 
 namespace Garnet::Image::QwenVL
 {
@@ -13,6 +13,7 @@ namespace Garnet::Image::QwenVL
     };
 
     VisionMetadataTensors BuildVisionMetadataTensors(
+        X3PackageHost* host,
         int gridT,
         int gridH,
         int gridW,

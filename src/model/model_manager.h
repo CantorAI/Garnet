@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xlang.h"
+#include "xlang3/xlang3.h"
 
 #include <atomic>
 #include <filesystem>
@@ -9,6 +9,8 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <thread>
+#include <vector>
 
 namespace Garnet
 {
@@ -24,13 +26,14 @@ namespace Garnet
             std::string storeName = "models",
             std::string archiveField = "xmodel",
             bool retainArchive = false);
+        ~ModelManager();
         void SetProgressSink(ProgressSink progressSink);
 
         std::string Configure(const std::string& optionsJson);
-        std::string ListRemote(X::XRuntime* runtime, bool refresh);
+        std::string ListRemote(X3Runtime* runtime, bool refresh);
         std::string ListInstalled() const;
         std::string StartInstall(
-            X::XRuntime* runtime,
+            X3Runtime* runtime,
             const std::string& modelId,
             const std::string& optionsJson);
         std::string InstallStatus(const std::string& jobId) const;
@@ -41,7 +44,7 @@ namespace Garnet
         std::filesystem::path CacheRoot(const std::string& modelId) const;
 
         void RunInstallJob(
-            X::XRuntime* runtime,
+            X3Runtime* runtime,
             const std::string& jobId,
             const std::string& modelId,
             const std::string& optionsJson);
@@ -61,8 +64,12 @@ namespace Garnet
         bool m_retainArchive = false;
         bool m_requireSignature = true;
         std::unordered_map<std::string, std::shared_ptr<Job>> m_jobs;
+        std::vector<std::thread> m_workers;
+        bool m_stopping = false;
 
-        std::string FetchCatalog(X::XRuntime* runtime, bool refresh);
+        void NotifyProgress(const std::shared_ptr<Job>& job) const;
+
+        std::string FetchCatalog(X3Runtime* runtime, bool refresh);
         void UpdateJob(
             const std::shared_ptr<Job>& job,
             const std::string& phase,

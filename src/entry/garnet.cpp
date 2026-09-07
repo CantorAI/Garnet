@@ -1,4 +1,5 @@
 #include "garnet.h"
+#include "native_values.h"
 #include "trt_builder.h"
 #include "../image/qwen_vl/qwen_vl_image_preprocessor.h"
 #include "../image/cuda/jpeg_decode_nvjpeg.h"
@@ -9,10 +10,9 @@
 #include "../runtime/acceleration_detector.h"
 #include "../include/garnet_serving.h"
 #include "nlohmann/json.hpp"
-#include "xpackage.h"
-#include "xlang.h"
-#include <fstream> 
-#include <numeric> 
+#include "xlang3/xlang3.h"
+#include <fstream>
+#include <numeric>
 #include <filesystem>
 #include <regex>
 #include <iostream>
@@ -31,6 +31,9 @@
 namespace
 {
     using json = nlohmann::json;
+    using Garnet::FindField;
+    using Garnet::CallChecked;
+    using Garnet::TensorCount;
 
     std::string GarnetJsonError(const std::string& code, const std::string& message)
     {
@@ -128,8 +131,7 @@ namespace
         const std::string& modelId,
         const std::string& inputCapability,
         const std::string& lastError,
-        X::XRuntime* runtime,
-        X::XObj* context)
+        X3Runtime* runtime = nullptr)
     {
         json status = {
             {"state", modelValue.IsValid() ? "ready" :
@@ -148,19 +150,19 @@ namespace
             status["error"] = "Garnet serving model handle is invalid";
             return status;
         }
-        X::Value runtimeStatusValue = runtimeStatusCallable();
+        X::Value runtimeStatusValue = CallChecked(runtimeStatusCallable);
         if (runtimeStatusValue.IsDict()) {
-            X::Dict runtimeStatus(runtimeStatusValue);
-            status["state"] = runtimeStatus["state"].ToString();
-            status["ready"] = runtimeStatus["ready"].ToLongLong() != 0;
-            if (runtimeStatus["error_message"].IsValid()) {
-                status["error"] = runtimeStatus["error_message"].ToString();
+            X::Value runtimeStatus(runtimeStatusValue);
+            status["state"] = FindField(runtimeStatus, "state").ToString();
+            status["ready"] = FindField(runtimeStatus, "ready").ToLongLong() != 0;
+            if (FindField(runtimeStatus, "error_message").IsValid()) {
+                status["error"] = FindField(runtimeStatus, "error_message").ToString();
             }
             for (const char* key : {
                      "backend", "precision", "frontend", "engine_path",
                      "cache_directory"}) {
-                if (runtimeStatus[key].IsValid()) {
-                    status[key] = runtimeStatus[key].ToString();
+                if (FindField(runtimeStatus, key).IsValid()) {
+                    status[key] = FindField(runtimeStatus, key).ToString();
                 }
             }
         }
@@ -182,6 +184,66 @@ namespace
 
 namespace Garnet
 {
+    namespace {
+        std::mutex nativePackagesMutex;
+        std::vector<GarnetAPI*> nativePackages;
+    }
+
+        void ValidateDenseTensor(const X::Tensor& tensor, bool writing)
+        {
+            const auto info = tensor.Info();
+            if (info.symbolic || info.rank == UINT32_MAX) throw X::Error("native kernel requires a concrete tensor");
+            if (writing && info.readonly) throw X::Error("tensor is readonly");
+            uint64_t count = 1;
+            for (uint32_t i = 0; i < info.rank; ++i) {
+                if (info.shape[i] < 0 || info.shape[i] > INT32_MAX ||
+                    (info.shape[i] && count > INT32_MAX / static_cast<uint64_t>(info.shape[i])))
+                    throw X::Error("native tensor dimensions exceed int32 kernel limits");
+                count *= info.shape[i];
+            }
+            if (count > INT32_MAX - 1024) throw X::Error("native tensor exceeds kernel indexing limits");
+            uint64_t stride = TensorHelper::ItemSize(info.dtype);
+            if (count) {
+                for (uint32_t i = info.rank; i-- > 0;) {
+                    if (info.shape[i] > 1 && info.strides[i] != static_cast<int64_t>(stride))
+                        throw X::Error("native kernel requires a contiguous tensor");
+                    stride *= info.shape[i];
+                }
+                if (!info.data || info.byte_size < stride) throw X::Error("tensor storage is too small");
+                if (reinterpret_cast<uintptr_t>(info.data) % TensorHelper::ItemSize(info.dtype))
+                    throw X::Error("native kernel requires aligned tensor storage");
+            }
+            if (info.device_type != 0) {
+                int device = -1;
+                if (info.device_type != TensorHelper::CudaDevice || cudaGetDevice(&device) != cudaSuccess || device != info.device_id)
+                    throw X::Error("tensor must be on the active CUDA device");
+            }
+        }
+
+    namespace {
+        X::Tensor AdoptGpuOutput(X3PackageHost* host, X3TensorDType dtype,
+            const std::vector<int64_t>& shape, void* allocation)
+        {
+            try {
+                int device = 0;
+                if (cudaGetDevice(&device) != cudaSuccess) throw X::Error("cannot query CUDA device");
+                uint64_t bytes = TensorHelper::ItemSize(dtype);
+                std::vector<int64_t> strides(shape.size());
+                for (size_t i = shape.size(); i-- > 0;) {
+                    if (shape[i] < 0 || bytes > INT64_MAX ||
+                        (shape[i] && bytes > UINT64_MAX / shape[i])) throw X::Error("invalid GPU tensor shape");
+                    strides[i] = static_cast<int64_t>(bytes);
+                    bytes *= shape[i];
+                }
+                X3TensorInfo info{};
+                info.size = sizeof(info); info.dtype = dtype; info.rank = static_cast<uint32_t>(shape.size());
+                info.shape = shape.data(); info.strides = strides.data(); info.data = allocation;
+                info.byte_size = bytes; info.device_type = TensorHelper::CudaDevice; info.device_id = device;
+                return TensorHelper::WrapGPU(host, info, allocation, device);
+            } catch (...) { if (allocation) cudaFree(allocation); throw; }
+        }
+    }
+
     GarnetAPI::GarnetAPI()
         : m_modelManager(),
           m_accelerationManager(
@@ -192,6 +254,15 @@ namespace Garnet
               "runtime",
               true)
     {
+        std::lock_guard<std::mutex> guard(nativePackagesMutex);
+        nativePackages.push_back(this);
+    }
+
+    GarnetAPI::~GarnetAPI()
+    {
+        std::lock_guard<std::mutex> guard(nativePackagesMutex);
+        nativePackages.erase(std::remove(nativePackages.begin(), nativePackages.end(), this), nativePackages.end());
+        log.ResetForHost(Host());
     }
 }
 
@@ -202,9 +273,13 @@ extern "C" GARNET_SERVING_API int GarnetListAvailableModelsJson(
     int* requiredCapacity)
 {
     try {
+        std::lock_guard<std::mutex> guard(Garnet::nativePackagesMutex);
+        if (Garnet::nativePackages.size() > 1)
+            throw std::runtime_error("C serving API is ambiguous with multiple Garnet runtimes");
         return CopyJsonResult(
-            Garnet::GarnetAPI::I().AvailableModelsJson(
-                catalogRoot ? catalogRoot : ""),
+            Garnet::nativePackages.empty() ? Garnet::EnumerateAvailableModelsJson(
+                Garnet::ResolveModelCatalogRoot(catalogRoot ? catalogRoot : "", "")) :
+                Garnet::nativePackages.front()->AvailableModelsJson(catalogRoot ? catalogRoot : ""),
             output,
             outputCapacity,
             requiredCapacity);
@@ -224,8 +299,12 @@ extern "C" GARNET_SERVING_API int GarnetListLoadedModelsJson(
     int* requiredCapacity)
 {
     try {
+        std::lock_guard<std::mutex> guard(Garnet::nativePackagesMutex);
+        if (Garnet::nativePackages.size() > 1)
+            throw std::runtime_error("C serving API is ambiguous with multiple Garnet runtimes");
         return CopyJsonResult(
-            Garnet::GarnetAPI::I().LoadedModelsJson(),
+            Garnet::nativePackages.empty() ? json({{"schema_version", 1}, {"serving_mode", "single_instance"},
+                {"models", json::array()}}).dump() : Garnet::nativePackages.front()->LoadedModelsJson(),
             output,
             outputCapacity,
             requiredCapacity);
@@ -1813,39 +1892,40 @@ namespace Garnet
                 m_servingModelRoot,
                 m_servingModelId,
                 m_servingInputCapability,
-                m_servingError,
-                nullptr,
-                nullptr);
+                m_servingError);
             model["instance_id"] = m_servingModelId + "-0";
             response["models"].push_back(std::move(model));
         }
         return response.dump();
     }
 
-    void GarnetAPI::ListAvailableModelsJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&,
-        X::Value& retValue)
+    X::Value GarnetAPI::ListAvailableModelsJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         const std::string catalogRoot = params.size() == 0
             ? std::string()
             : params[0].ToString();
-        retValue = AvailableModelsJson(catalogRoot);
+        retValue = NativeValue(Host(), AvailableModelsJson(catalogRoot));
+        return retValue;
     }
 
-    void GarnetAPI::ListLoadedModelsJson(
-        X::XRuntime*, X::XObj*, X::ARGS&, X::KWARGS&,
-        X::Value& retValue)
+    X::Value GarnetAPI::ListLoadedModelsJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = LoadedModelsJson();
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), LoadedModelsJson());
+        return retValue;
     }
 
-    void GarnetAPI::ServeModel(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ServeModel(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0) {
-            retValue = GarnetJsonError("model_root_required",
-                "serve_model requires a Qwen model root");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("model_root_required",
+                "serve_model requires a Qwen model root"));
+            return retValue;
         }
         namespace fs = std::filesystem;
         const fs::path modelRoot = fs::path(params[0].ToString());
@@ -1864,21 +1944,21 @@ namespace Garnet
         const bool textModel = !asrModel && !ttsModel && (
             requestedModelId == "Qwen3-1.7B" ||
             (requestedModelId.empty() &&
-                !fs::is_regular_file(xmodelRoot / "qwen_vl_prefill.x") &&
-                fs::is_regular_file(xmodelRoot / "prefill.x")));
+                !fs::is_regular_file(xmodelRoot / "qwen_vl_prefill.py") &&
+                fs::is_regular_file(xmodelRoot / "prefill.py")));
         const std::string modelId = asrModel
             ? "Qwen3-ASR-0.6B"
             : (ttsModel ? requestedModelId :
                 (textModel ? "Qwen3-1.7B" : "Qwen3-VL-2B-Instruct"));
         if (!requestedModelId.empty() && requestedModelId != modelId) {
-            retValue = GarnetJsonError(
+            retValue = NativeValue(Host(), GarnetJsonError(
                 "model_unsupported",
-                "The requested Garnet serving model is not supported");
-            return;
+                "The requested Garnet serving model is not supported"));
+            return retValue;
         }
         const fs::path xmodelPath = xmodelRoot /
-            (ttsModel ? "talker_prefill.x" :
-                ((textModel || asrModel) ? "prefill.x" : "qwen_vl_prefill.x"));
+            (ttsModel ? "talker_prefill.py" :
+                ((textModel || asrModel) ? "prefill.py" : "qwen_vl_prefill.py"));
         const fs::path cacheRoot = params.size() > 2 && !params[2].ToString().empty()
             ? fs::path(params[2].ToString())
             : modelRoot / "compiled_cache";
@@ -1902,9 +1982,9 @@ namespace Garnet
                 audioChunks = profile.value("audioChunks", audioChunks);
             }
             catch (const std::exception&) {
-                retValue = GarnetJsonError(
-                    "profile_invalid", "The Garnet inference profile is invalid");
-                return;
+                retValue = NativeValue(Host(), GarnetJsonError(
+                    "profile_invalid", "The Garnet inference profile is invalid"));
+                return retValue;
             }
         }
         const bool fastProfile =
@@ -1928,33 +2008,31 @@ namespace Garnet
             kvPages >= 16 && kvPages <= 256;
         if ((!asrProfile && !ttsProfile && !textProfile && !fastProfile && !visionProfile) ||
             maxOutputTokens < 1 || maxOutputTokens > 32768) {
-            retValue = GarnetJsonError(
+            retValue = NativeValue(Host(), GarnetJsonError(
                 "profile_unsupported",
-                "The requested Garnet inference profile is not supported");
-            return;
+                "The requested Garnet inference profile is not supported"));
+            return retValue;
         }
         if (!fs::is_regular_file(xmodelPath)) {
-            retValue = GarnetJsonError("xmodel_missing",
-                (textModel || asrModel || ttsModel)
-                    ? "prefill.x was not found under the model root"
-                    : "qwen_vl_prefill.x was not found under the vision model root");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("xmodel_missing",
+                "The Python model entry was not found: " + xmodelPath.string()));
+            return retValue;
         }
         const bool hasTokenizer =
             fs::is_regular_file(modelRoot / "tokenizer.json") ||
             (fs::is_regular_file(modelRoot / "vocab.json") &&
              fs::is_regular_file(modelRoot / "merges.txt"));
         if (!fs::is_regular_file(modelRoot / "config.json") || !hasTokenizer) {
-            retValue = GarnetJsonError("model_incomplete",
-                "The Qwen model configuration or tokenizer is missing");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("model_incomplete",
+                "The Qwen model configuration or tokenizer is missing"));
+            return retValue;
         }
 
         std::lock_guard<std::mutex> guard(m_servingMutex);
         const std::string previousCacheRoot = m_servingCacheRoot;
         if (m_servingModel.IsValid()) {
             X::Value releaseCallable = m_servingModel["release_runtime"];
-            if (releaseCallable.IsObject()) releaseCallable();
+            if (releaseCallable.IsObject()) CallChecked(releaseCallable);
         }
         m_servingModel = X::Value();
         m_servingModelRoot.clear();
@@ -1966,9 +2044,9 @@ namespace Garnet
         }
         try {
             fs::create_directories(cacheRoot);
-            X::XPackageValue<Model> modelValue;
-            Model& model = *modelValue;
-            X::Dict emptyWeights;
+            auto modelValue = CallChecked(__xlang3_package_->GetValue("model"));
+            Model& model = *modelValue.NativeData<Model>();
+            auto emptyWeights = X::Value::Dict(Host());
             std::string modelDirectory = xmodelPath.parent_path().string();
             std::string emptyString;
             model.SetInfo(modelDirectory, emptyString, emptyString, emptyWeights);
@@ -2029,9 +2107,9 @@ namespace Garnet
                     "Garnet failed to initialize the compiled Qwen runtime";
                 X::Value statusValue = model.CompiledRuntimeStatus();
                 if (statusValue.IsDict()) {
-                    X::Dict status(statusValue);
-                    const std::string detail = status["error_message"].ToString();
-                    const std::string code = status["error_code"].ToString();
+                    X::Value status(statusValue);
+                    const std::string detail = FindField(status, "error_message").ToString();
+                    const std::string code = FindField(status, "error_code").ToString();
                     if (!detail.empty()) {
                         initializationError += code.empty()
                             ? ": " + detail
@@ -2045,8 +2123,8 @@ namespace Garnet
                 m_servingModelId.clear();
                 m_servingInputCapability.clear();
                 m_servingError = initializationError;
-                retValue = GarnetJsonError("model_load_failed", m_servingError);
-                return;
+                retValue = NativeValue(Host(), GarnetJsonError("model_load_failed", m_servingError));
+                return retValue;
             }
             m_servingModel = X::Value(modelValue);
             m_servingModelRoot = modelRoot.string();
@@ -2059,10 +2137,10 @@ namespace Garnet
             m_servingMaxPixels = maxPixels;
             m_servingMaxOutputTokens = maxOutputTokens;
             m_servingError.clear();
-            retValue = GarnetServingStatus(
+            retValue = NativeValue(Host(), GarnetServingStatus(
                 m_servingModel, m_servingModelRoot, m_servingModelId,
-                m_servingInputCapability, m_servingError, rt, pContext
-            ).dump();
+                m_servingInputCapability, m_servingError, rt
+            ).dump());
         }
         catch (const std::exception& exception) {
             m_servingModel = X::Value();
@@ -2072,321 +2150,324 @@ namespace Garnet
             m_servingModelId.clear();
             m_servingInputCapability.clear();
             m_servingError = exception.what();
-            retValue = GarnetJsonError("model_load_failed", m_servingError);
+            retValue = NativeValue(Host(), GarnetJsonError("model_load_failed", m_servingError));
         }
+        return retValue;
     }
 
-    void GarnetAPI::ServeStatusJson(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS&, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ServeStatusJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         std::lock_guard<std::mutex> guard(m_servingMutex);
-        retValue = GarnetServingStatus(
+        retValue = NativeValue(Host(), GarnetServingStatus(
             m_servingModel, m_servingModelRoot, m_servingModelId,
-            m_servingInputCapability, m_servingError, rt, pContext
-        ).dump();
+            m_servingInputCapability, m_servingError, rt
+        ).dump());
+        return retValue;
     }
 
-    void GarnetAPI::InferJson(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::InferJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0) {
-            retValue = GarnetJsonError("request_invalid",
-                "infer_json requires a prompt");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
+                "infer_json requires a prompt"));
+            return retValue;
         }
         const std::string prompt = params[0].ToString();
         X::Value imageSource = params.size() > 1 ? params[1] : X::Value();
         const bool hasImageBinary =
-            imageSource.IsObject() &&
-            imageSource.GetObj()->GetType() == X::ObjType::Binary &&
-            dynamic_cast<X::XBin*>(imageSource.GetObj()) &&
-            dynamic_cast<X::XBin*>(imageSource.GetObj())->Size() > 0;
+            x3_value_object_kind(imageSource.raw()) == X3_OBJECT_KIND_BYTES && imageSource.Size() > 0;
         const bool hasImagePath =
             !hasImageBinary && !imageSource.ToString().empty();
         const int requestedMaxNewTokens = params.size() > 2
-            ? static_cast<int>(params[2].ToLongLong())
+            ? CheckedInt(params[2], "argument")
             : 0;
         if (prompt.empty()) {
-            retValue = GarnetJsonError("request_invalid",
-                "Garnet inference requires a prompt");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
+                "Garnet inference requires a prompt"));
+            return retValue;
         }
         std::lock_guard<std::mutex> guard(m_servingMutex);
         if (m_servingInputCapability == "vision" &&
             !hasImageBinary && !hasImagePath) {
-            retValue = GarnetJsonError("request_invalid",
-                "Garnet Qwen-VL inference requires JPEG binary data or an image path");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
+                "Garnet Qwen-VL inference requires JPEG binary data or an image path"));
+            return retValue;
         }
         const int maxNewTokens = requestedMaxNewTokens > 0
             ? (std::max)(1, (std::min)(
                 m_servingMaxOutputTokens, requestedMaxNewTokens))
             : m_servingMaxOutputTokens;
         if (!m_servingModel.IsValid()) {
-            retValue = GarnetJsonError("serving_not_ready",
-                m_servingError.empty() ? "Garnet serving is not started" : m_servingError);
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                m_servingError.empty() ? "Garnet serving is not started" : m_servingError));
+            return retValue;
         }
         X::Value forwardCallable = m_servingModel["forward"];
         if (!forwardCallable.IsObject()) {
-            retValue = GarnetJsonError("serving_not_ready",
-                "Garnet serving model handle is invalid");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                "Garnet serving model handle is invalid"));
+            return retValue;
         }
-        X::Dict request;
+        auto request = X::Value::Dict(Host());
         if (m_servingInputCapability == "vision") {
-            request->Set("image", imageSource);
-            request->Set("min_pixels", X::Value(m_servingMinPixels));
-            request->Set("max_pixels", X::Value(m_servingMaxPixels));
+            request.SetItem("image", imageSource);
+            request.SetItem("min_pixels", X::Value(m_servingMinPixels));
+            request.SetItem("max_pixels", X::Value(m_servingMaxPixels));
         }
         else {
-            request->Set("enable_thinking", X::Value(0));
+            request.SetItem("enable_thinking", X::Value(0));
         }
-        request->Set("prompt", X::Value(prompt));
-        request->Set("max_new_tokens", X::Value(maxNewTokens));
-        request->Set("reuse_output", X::Value(1));
-        X::Value resultValue = forwardCallable(X::Value(request));
+        request.SetItem("prompt", X::Value::String(Host(), prompt));
+        request.SetItem("max_new_tokens", X::Value(maxNewTokens));
+        request.SetItem("reuse_output", X::Value(1));
+        X::Value resultValue = CallChecked(forwardCallable, request);
         if (!resultValue.IsDict()) {
-            retValue = GarnetJsonError("inference_failed",
-                "Garnet returned an invalid inference result");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("inference_failed",
+                "Garnet returned an invalid inference result"));
+            return retValue;
         }
-        X::Dict result(resultValue);
+        X::Value result(resultValue);
         json response = {
-            {"status", result["status"].ToString()},
+            {"status", FindField(result, "status").ToString()},
             {"model_id", m_servingModelId},
-            {"text", result["text"].ToString()},
-            {"error_code", result["error_code"].ToString()},
-            {"error_message", result["error_message"].ToString()},
-            {"prompt_tokens", result["prompt_token_count"].IsValid()
-                ? result["prompt_token_count"].ToLongLong() : 0},
-            {"output_tokens", result["generated_token_count"].IsValid()
-                ? result["generated_token_count"].ToLongLong() : 0},
-            {"visual_tokens", result["visual_token_count"].IsValid()
-                ? result["visual_token_count"].ToLongLong() : 0},
-            {"duration_ms", result["total_ms"].IsValid()
-                ? result["total_ms"].ToDouble() : 0.0},
-            {"time_to_first_token_ms", result["time_to_first_token_ms"].IsValid()
-                ? result["time_to_first_token_ms"].ToDouble() : 0.0},
-            {"tokens_per_second", result["decode_tokens_per_second"].IsValid()
-                ? result["decode_tokens_per_second"].ToDouble() : 0.0}
+            {"text", FindField(result, "text").ToString()},
+            {"error_code", FindField(result, "error_code").ToString()},
+            {"error_message", FindField(result, "error_message").ToString()},
+            {"prompt_tokens", FindField(result, "prompt_token_count").IsValid()
+                ? FindField(result, "prompt_token_count").ToLongLong() : 0},
+            {"output_tokens", FindField(result, "generated_token_count").IsValid()
+                ? FindField(result, "generated_token_count").ToLongLong() : 0},
+            {"visual_tokens", FindField(result, "visual_token_count").IsValid()
+                ? FindField(result, "visual_token_count").ToLongLong() : 0},
+            {"duration_ms", FindField(result, "total_ms").IsValid()
+                ? FindField(result, "total_ms").ToDouble() : 0.0},
+            {"time_to_first_token_ms", FindField(result, "time_to_first_token_ms").IsValid()
+                ? FindField(result, "time_to_first_token_ms").ToDouble() : 0.0},
+            {"tokens_per_second", FindField(result, "decode_tokens_per_second").IsValid()
+                ? FindField(result, "decode_tokens_per_second").ToDouble() : 0.0}
         };
-        retValue = response.dump();
+        retValue = NativeValue(Host(), response.dump());
+        return retValue;
     }
 
-    void GarnetAPI::TranscribeJson(X::XRuntime*, X::XObj*,
-        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::TranscribeJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0) {
-            retValue = GarnetJsonError("request_invalid",
-                "transcribe_json requires WAV audio");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
+                "transcribe_json requires WAV audio"));
+            return retValue;
         }
         X::Value audioSource = params[0];
         const bool hasAudioBinary =
-            audioSource.IsObject() &&
-            audioSource.GetObj()->GetType() == X::ObjType::Binary &&
-            dynamic_cast<X::XBin*>(audioSource.GetObj()) &&
-            dynamic_cast<X::XBin*>(audioSource.GetObj())->Size() > 0;
+            x3_value_object_kind(audioSource.raw()) == X3_OBJECT_KIND_BYTES && audioSource.Size() > 0;
         const bool hasAudioPath =
             !hasAudioBinary && !audioSource.ToString().empty();
         if (!hasAudioBinary && !hasAudioPath) {
-            retValue = GarnetJsonError("request_invalid",
-                "Garnet ASR requires WAV binary data or an audio path");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
+                "Garnet ASR requires WAV binary data or an audio path"));
+            return retValue;
         }
         const std::string context = params.size() > 1
             ? params[1].ToString() : std::string();
         const std::string language = params.size() > 2
             ? params[2].ToString() : std::string("English");
         const int requestedMaxNewTokens = params.size() > 3
-            ? static_cast<int>(params[3].ToLongLong()) : 0;
+            ? CheckedInt(params[3], "argument") : 0;
 
         std::lock_guard<std::mutex> guard(m_servingMutex);
         if (m_servingInputCapability != "audio") {
-            retValue = GarnetJsonError("serving_not_ready",
-                "The active Garnet model does not accept audio");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                "The active Garnet model does not accept audio"));
+            return retValue;
         }
         if (!m_servingModel.IsValid()) {
-            retValue = GarnetJsonError("serving_not_ready",
-                m_servingError.empty() ? "Garnet serving is not started" : m_servingError);
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                m_servingError.empty() ? "Garnet serving is not started" : m_servingError));
+            return retValue;
         }
         X::Value forwardCallable = m_servingModel["forward"];
         if (!forwardCallable.IsObject()) {
-            retValue = GarnetJsonError("serving_not_ready",
-                "Garnet serving model handle is invalid");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                "Garnet serving model handle is invalid"));
+            return retValue;
         }
         const int maxNewTokens = requestedMaxNewTokens > 0
             ? (std::max)(1, (std::min)(
                 m_servingMaxOutputTokens, requestedMaxNewTokens))
             : m_servingMaxOutputTokens;
-        X::Dict request;
-        request->Set("audio", audioSource);
-        request->Set("context", X::Value(context));
-        request->Set("language", X::Value(language));
-        request->Set("max_new_tokens", X::Value(maxNewTokens));
-        request->Set("reuse_output", X::Value(1));
-        X::Value resultValue = forwardCallable(X::Value(request));
+        auto request = X::Value::Dict(Host());
+        request.SetItem("audio", audioSource);
+        request.SetItem("context", X::Value::String(Host(), context));
+        request.SetItem("language", X::Value::String(Host(), language));
+        request.SetItem("max_new_tokens", X::Value(maxNewTokens));
+        request.SetItem("reuse_output", X::Value(1));
+        X::Value resultValue = CallChecked(forwardCallable, request);
         if (!resultValue.IsDict()) {
-            retValue = GarnetJsonError("inference_failed",
-                "Garnet returned an invalid ASR result");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("inference_failed",
+                "Garnet returned an invalid ASR result"));
+            return retValue;
         }
-        X::Dict result(resultValue);
+        X::Value result(resultValue);
         json response = {
-            {"status", result["status"].ToString()},
+            {"status", FindField(result, "status").ToString()},
             {"model_id", m_servingModelId},
-            {"text", result["text"].ToString()},
-            {"error_code", result["error_code"].ToString()},
-            {"error_message", result["error_message"].ToString()},
-            {"prompt_tokens", result["prompt_token_count"].IsValid()
-                ? result["prompt_token_count"].ToLongLong() : 0},
-            {"output_tokens", result["generated_token_count"].IsValid()
-                ? result["generated_token_count"].ToLongLong() : 0},
-            {"audio_tokens", result["audio_token_count"].IsValid()
-                ? result["audio_token_count"].ToLongLong() : 0},
-            {"audio_samples", result["audio_sample_count"].IsValid()
-                ? result["audio_sample_count"].ToLongLong() : 0},
-            {"audio_duration_seconds", result["audio_duration_seconds"].IsValid()
-                ? result["audio_duration_seconds"].ToDouble() : 0.0},
-            {"duration_ms", result["total_ms"].IsValid()
-                ? result["total_ms"].ToDouble() : 0.0}
+            {"text", FindField(result, "text").ToString()},
+            {"error_code", FindField(result, "error_code").ToString()},
+            {"error_message", FindField(result, "error_message").ToString()},
+            {"prompt_tokens", FindField(result, "prompt_token_count").IsValid()
+                ? FindField(result, "prompt_token_count").ToLongLong() : 0},
+            {"output_tokens", FindField(result, "generated_token_count").IsValid()
+                ? FindField(result, "generated_token_count").ToLongLong() : 0},
+            {"audio_tokens", FindField(result, "audio_token_count").IsValid()
+                ? FindField(result, "audio_token_count").ToLongLong() : 0},
+            {"audio_samples", FindField(result, "audio_sample_count").IsValid()
+                ? FindField(result, "audio_sample_count").ToLongLong() : 0},
+            {"audio_duration_seconds", FindField(result, "audio_duration_seconds").IsValid()
+                ? FindField(result, "audio_duration_seconds").ToDouble() : 0.0},
+            {"duration_ms", FindField(result, "total_ms").IsValid()
+                ? FindField(result, "total_ms").ToDouble() : 0.0}
         };
-        retValue = response.dump();
+        retValue = NativeValue(Host(), response.dump());
+        return retValue;
     }
 
-    void GarnetAPI::SynthesizeJson(X::XRuntime*, X::XObj*,
-        X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::SynthesizeJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() < 5 || params[0].ToString().empty() ||
             params[4].ToString().empty()) {
-            retValue = GarnetJsonError("request_invalid",
-                "synthesize_json requires text, speaker, language, max frames, and output path");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
+                "synthesize_json requires text, speaker, language, max frames, and output path"));
+            return retValue;
         }
         const std::string text = params[0].ToString();
         const std::string speaker = params[1].ToString();
         const std::string language = params[2].ToString().empty()
             ? std::string("English") : params[2].ToString();
         const int requestedFrames = (std::max)(1,
-            static_cast<int>(params[3].ToLongLong()));
+            CheckedInt(params[3], "argument"));
         const std::filesystem::path outputPath(params[4].ToString());
 
         std::lock_guard<std::mutex> guard(m_servingMutex);
         if (m_servingInputCapability != "speech") {
-            retValue = GarnetJsonError("serving_not_ready",
-                "The active Garnet model does not synthesize speech");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                "The active Garnet model does not synthesize speech"));
+            return retValue;
         }
         if (!m_servingModel.IsValid()) {
-            retValue = GarnetJsonError("serving_not_ready",
-                m_servingError.empty() ? "Garnet serving is not started" : m_servingError);
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                m_servingError.empty() ? "Garnet serving is not started" : m_servingError));
+            return retValue;
         }
         X::Value forwardCallable = m_servingModel["forward"];
         if (!forwardCallable.IsObject()) {
-            retValue = GarnetJsonError("serving_not_ready",
-                "Garnet serving model handle is invalid");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                "Garnet serving model handle is invalid"));
+            return retValue;
         }
         const int maxFrames = (std::min)(m_servingMaxOutputTokens,
             requestedFrames);
-        X::Dict request;
-        request->Set("text", X::Value(text));
-        request->Set("speaker", X::Value(speaker));
-        request->Set("language", X::Value(language));
-        request->Set("max_audio_frames", X::Value(maxFrames));
-        request->Set("reuse_output", X::Value(1));
+        auto request = X::Value::Dict(Host());
+        request.SetItem("text", X::Value::String(Host(), text));
+        request.SetItem("speaker", X::Value::String(Host(), speaker));
+        request.SetItem("language", X::Value::String(Host(), language));
+        request.SetItem("max_audio_frames", X::Value(maxFrames));
+        request.SetItem("reuse_output", X::Value(1));
         if (params.size() > 6 && !params[6].ToString().empty()) {
-            request->Set("instruct", X::Value(params[6].ToString()));
+            request.SetItem("instruct", X::Value::String(Host(), params[6].ToString()));
         }
         if (params.size() > 5 && !params[5].ToString().empty()) {
             try {
                 const json sampling = json::parse(params[5].ToString());
                 if (sampling.contains("do_sample")) {
-                    request->Set("do_sample", X::Value(
+                    request.SetItem("do_sample", X::Value(
                         sampling.at("do_sample").get<bool>() ? 1 : 0));
                 }
                 if (sampling.contains("top_k")) {
-                    request->Set("top_k", X::Value(
+                    request.SetItem("top_k", X::Value(
                         sampling.at("top_k").get<int>()));
                 }
                 if (sampling.contains("temperature")) {
-                    request->Set("temperature", X::Value(
+                    request.SetItem("temperature", X::Value(
                         sampling.at("temperature").get<double>()));
                 }
                 if (sampling.contains("repetition_penalty")) {
-                    request->Set("repetition_penalty", X::Value(
+                    request.SetItem("repetition_penalty", X::Value(
                         sampling.at("repetition_penalty").get<double>()));
                 }
                 if (sampling.contains("seed")) {
-                    request->Set("seed", X::Value(
+                    request.SetItem("seed", X::Value(
                         sampling.at("seed").get<long long>()));
                 }
             }
             catch (const std::exception& exception) {
-                retValue = GarnetJsonError("request_invalid",
-                    std::string("invalid TTS sampling options: ") + exception.what());
-                return;
+                retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
+                    std::string("invalid TTS sampling options: ") + exception.what()));
+                return retValue;
             }
         }
-        X::Value resultValue = forwardCallable(X::Value(request));
+        X::Value resultValue = CallChecked(forwardCallable, request);
         if (!resultValue.IsDict()) {
-            retValue = GarnetJsonError("inference_failed",
-                "Garnet returned an invalid TTS result");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("inference_failed",
+                "Garnet returned an invalid TTS result"));
+            return retValue;
         }
-        X::Dict result(resultValue);
-        if (result["status"].ToString() != "ok") {
-            retValue = json({
+        X::Value result(resultValue);
+        if (FindField(result, "status").ToString() != "ok") {
+            retValue = NativeValue(Host(), json({
                 {"status", "error"},
-                {"error_code", result["error_code"].ToString()},
-                {"error_message", result["error_message"].ToString()}
-            }).dump();
-            return;
+                {"error_code", FindField(result, "error_code").ToString()},
+                {"error_message", FindField(result, "error_message").ToString()}
+            }).dump());
+            return retValue;
         }
-        X::Value audioValue = result["audio"];
-        if (!audioValue.IsTensor()) {
-            retValue = GarnetJsonError("waveform_invalid",
-                "Garnet TTS returned no waveform tensor");
-            return;
+        X::Value audioValue = FindField(result, "audio");
+        if (!X::Tensor::IsTensor(audioValue)) {
+            retValue = NativeValue(Host(), GarnetJsonError("waveform_invalid",
+                "Garnet TTS returned no waveform tensor"));
+            return retValue;
         }
         X::Tensor gpuAudio(audioValue);
         X::Value cpuValue = TensorHelper::CopyToCPUTensor(gpuAudio);
-        if (!cpuValue.IsTensor()) {
-            retValue = GarnetJsonError("waveform_download_failed",
-                "Garnet could not copy the waveform from the GPU");
-            return;
+        if (!X::Tensor::IsTensor(cpuValue)) {
+            retValue = NativeValue(Host(), GarnetJsonError("waveform_download_failed",
+                "Garnet could not copy the waveform from the GPU"));
+            return retValue;
         }
         X::Tensor cpuAudio(cpuValue);
-        const long long reportedSamples = result["audio_sample_count"].IsValid()
-            ? result["audio_sample_count"].ToLongLong() : 0;
-        const long long tensorSamples = cpuAudio->GetDataType() ==
-            X::TensorDataType::FLOAT32
-            ? cpuAudio->GetDataSize() / static_cast<long long>(sizeof(float))
-            : cpuAudio->GetDataSize() / static_cast<long long>(sizeof(uint16_t));
+        auto audioUse = cpuAudio.Acquire();
+        const long long reportedSamples = FindField(result, "audio_sample_count").IsValid()
+            ? FindField(result, "audio_sample_count").ToLongLong() : 0;
+        const long long tensorSamples = cpuAudio.Info().dtype ==
+            X3_TENSOR_FLOAT32
+            ? cpuAudio.Info().byte_size / static_cast<long long>(sizeof(float))
+            : cpuAudio.Info().byte_size / static_cast<long long>(sizeof(uint16_t));
         const size_t sampleCount = static_cast<size_t>((std::max)(
             0LL, (std::min)(reportedSamples, tensorSamples)));
-        if (!cpuAudio->GetData() || sampleCount == 0 ||
-            (cpuAudio->GetDataType() != X::TensorDataType::FLOAT32 &&
-             cpuAudio->GetDataType() != X::TensorDataType::BFLOAT16)) {
-            retValue = GarnetJsonError("waveform_invalid",
-                "Garnet TTS returned an unsupported waveform tensor");
-            return;
+        if (!cpuAudio.Info().data || sampleCount == 0 ||
+            (cpuAudio.Info().dtype != X3_TENSOR_FLOAT32 &&
+             cpuAudio.Info().dtype != X3_TENSOR_BFLOAT16)) {
+            retValue = NativeValue(Host(), GarnetJsonError("waveform_invalid",
+                "Garnet TTS returned an unsupported waveform tensor"));
+            return retValue;
         }
         std::vector<int16_t> pcm(sampleCount);
         for (size_t index = 0; index < sampleCount; ++index) {
             float value = 0.0F;
-            if (cpuAudio->GetDataType() == X::TensorDataType::FLOAT32) {
+            if (cpuAudio.Info().dtype == X3_TENSOR_FLOAT32) {
                 value = static_cast<const float*>(
-                    static_cast<const void*>(cpuAudio->GetData()))[index];
+                    static_cast<const void*>(cpuAudio.Info().data))[index];
             }
             else {
                 const uint16_t bits = static_cast<const uint16_t*>(
-                    static_cast<const void*>(cpuAudio->GetData()))[index];
+                    static_cast<const void*>(cpuAudio.Info().data))[index];
                 const uint32_t expanded = static_cast<uint32_t>(bits) << 16;
                 std::memcpy(&value, &expanded, sizeof(value));
             }
@@ -2421,29 +2502,31 @@ namespace Garnet
             if (!wav) throw std::runtime_error("cannot write output WAV");
         }
         catch (const std::exception& exception) {
-            retValue = GarnetJsonError("waveform_write_failed", exception.what());
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("waveform_write_failed", exception.what()));
+            return retValue;
         }
-        retValue = json({
+        retValue = NativeValue(Host(), json({
             {"status", "ok"},
             {"model_id", m_servingModelId},
             {"output_path", outputPath.string()},
             {"sample_rate", 24000},
-            {"audio_frames", result["audio_frame_count"].ToLongLong()},
+            {"audio_frames", FindField(result, "audio_frame_count").ToLongLong()},
             {"audio_samples", static_cast<long long>(sampleCount)},
-            {"audio_duration_seconds", result["audio_duration_seconds"].ToDouble()},
-            {"duration_ms", result["total_ms"].ToDouble()}
-        }).dump();
+            {"audio_duration_seconds", FindField(result, "audio_duration_seconds").ToDouble()},
+            {"duration_ms", FindField(result, "total_ms").ToDouble()}
+        }).dump());
+        return retValue;
     }
 
-    void GarnetAPI::StopServing(X::XRuntime*, X::XObj*,
-        X::ARGS&, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::StopServing(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         std::lock_guard<std::mutex> guard(m_servingMutex);
         const std::string cacheRoot = m_servingCacheRoot;
         if (m_servingModel.IsValid()) {
             X::Value releaseCallable = m_servingModel["release_runtime"];
-            if (releaseCallable.IsObject()) releaseCallable();
+            if (releaseCallable.IsObject()) CallChecked(releaseCallable);
         }
         m_servingModel = X::Value();
         m_servingModelRoot.clear();
@@ -2458,163 +2541,190 @@ namespace Garnet
         m_servingMinPixels = 256 * 28 * 28;
         m_servingMaxPixels = 1280 * 28 * 28;
         m_servingMaxOutputTokens = 256;
-        retValue = true;
+        retValue = NativeValue(Host(), true);
+        return retValue;
     }
 
-    void GarnetAPI::ConfigureModelManagerJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ConfigureModelManagerJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = m_modelManager.Configure(
-            params.size() == 0 ? std::string("{}") : params[0].ToString());
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), m_modelManager.Configure(
+            params.size() == 0 ? std::string("{}") : params[0].ToString()));
+        return retValue;
     }
 
-    void GarnetAPI::ListRemoteModelsJson(
-        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ListRemoteModelsJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        const bool refresh = params.size() > 0 && params[0].ToBool();
-        retValue = m_modelManager.ListRemote(rt, refresh);
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        const bool refresh = params.size() > 0 && (params[0].ToLongLong() != 0);
+        retValue = NativeValue(Host(), m_modelManager.ListRemote(rt, refresh));
+        return retValue;
     }
 
-    void GarnetAPI::ListInstalledModelsJson(
-        X::XRuntime*, X::XObj*, X::ARGS&, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ListInstalledModelsJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = m_modelManager.ListInstalled();
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), m_modelManager.ListInstalled());
+        return retValue;
     }
 
-    void GarnetAPI::InstallModelJson(
-        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::InstallModelJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0) {
-            retValue = GarnetJsonError("model_id_required", "install_model_json requires a model ID");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("model_id_required", "install_model_json requires a model ID"));
+            return retValue;
         }
-        retValue = m_modelManager.StartInstall(
+        retValue = NativeValue(Host(), m_modelManager.StartInstall(
             rt, params[0].ToString(),
-            params.size() > 1 ? params[1].ToString() : std::string("{}"));
+            params.size() > 1 ? params[1].ToString() : std::string("{}")));
+        return retValue;
     }
 
-    void GarnetAPI::ModelInstallStatusJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ModelInstallStatusJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = params.size() == 0
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), params.size() == 0
             ? GarnetJsonError("job_id_required", "model_install_status_json requires a job ID")
-            : m_modelManager.InstallStatus(params[0].ToString());
+            : m_modelManager.InstallStatus(params[0].ToString()));
+        return retValue;
     }
 
-    void GarnetAPI::CancelModelInstallJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::CancelModelInstallJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = params.size() == 0
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), params.size() == 0
             ? GarnetJsonError("job_id_required", "cancel_model_install_json requires a job ID")
-            : m_modelManager.CancelInstall(params[0].ToString());
+            : m_modelManager.CancelInstall(params[0].ToString()));
+        return retValue;
     }
 
-    void GarnetAPI::VerifyInstalledModelJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::VerifyInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = params.size() == 0
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), params.size() == 0
             ? GarnetJsonError("model_id_required", "verify_installed_model_json requires a model ID")
-            : m_modelManager.VerifyInstalled(params[0].ToString());
+            : m_modelManager.VerifyInstalled(params[0].ToString()));
+        return retValue;
     }
 
-    void GarnetAPI::RemoveInstalledModelJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::RemoveInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0) {
-            retValue = GarnetJsonError("model_id_required", "remove_installed_model_json requires a model ID");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("model_id_required", "remove_installed_model_json requires a model ID"));
+            return retValue;
         }
         const std::string modelId = params[0].ToString();
         {
             std::lock_guard<std::mutex> guard(m_servingMutex);
             if (modelId == m_servingModelId && m_servingModel.IsValid()) {
-                retValue = GarnetJsonError("model_in_use", "stop the served model before removing it");
-                return;
+                retValue = NativeValue(Host(), GarnetJsonError("model_in_use", "stop the served model before removing it"));
+                return retValue;
             }
         }
-        retValue = m_modelManager.RemoveInstalled(modelId);
+        retValue = NativeValue(Host(), m_modelManager.RemoveInstalled(modelId));
+        return retValue;
     }
 
-    void GarnetAPI::ServeInstalledModelJson(
-        X::XRuntime* rt, X::XObj* context, X::ARGS& params, X::KWARGS&,
-        X::Value& retValue)
+    X::Value GarnetAPI::ServeInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0) {
-            retValue = GarnetJsonError("model_id_required", "serve_installed_model_json requires a model ID");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("model_id_required", "serve_installed_model_json requires a model ID"));
+            return retValue;
         }
         const std::string modelId = params[0].ToString();
         const std::filesystem::path root = m_modelManager.InstalledModelRoot(modelId);
         if (root.empty() || !std::filesystem::is_regular_file(root / ".garnet-model.json")) {
-            retValue = GarnetJsonError("model_not_installed", "the requested model is not installed");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("model_not_installed", "the requested model is not installed"));
+            return retValue;
         }
-        X::ARGS serveArgs(5);
-        serveArgs.push_back(root.string());
-        serveArgs.push_back((root / "xmodel").string());
-        serveArgs.push_back(m_modelManager.CacheRoot(modelId).string());
-        serveArgs.push_back(params.size() > 1 ? params[1].ToString() : std::string("{}"));
-        serveArgs.push_back(modelId);
+        X::ARGS serveArgs; serveArgs.reserve(5);
+        serveArgs.push_back(X::Value::String(Host(), root.string()));
+        serveArgs.push_back(X::Value::String(Host(), (root / "xmodel").string()));
+        serveArgs.push_back(X::Value::String(Host(), m_modelManager.CacheRoot(modelId).string()));
+        serveArgs.push_back(X::Value::String(Host(), params.size() > 1 ? params[1].ToString() : std::string("{}")));
+        serveArgs.push_back(X::Value::String(Host(), modelId));
         X::KWARGS serveKwargs;
-        ServeModel(rt, context, serveArgs, serveKwargs, retValue);
+        retValue = ServeModel(serveArgs, serveKwargs);
+        return retValue;
     }
 
-    void GarnetAPI::RunModelInstallJob(
-        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::RunModelInstallJob(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() < 3) {
-            retValue = GarnetJsonError("install_job_invalid", "the internal install job is incomplete");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError("install_job_invalid", "the internal install job is incomplete"));
+            return retValue;
         }
         m_modelManager.RunInstallJob(
             rt, params[0].ToString(), params[1].ToString(), params[2].ToString());
-        retValue = true;
+        retValue = NativeValue(Host(), true);
+        return retValue;
     }
 
-    void GarnetAPI::DetectAccelerationJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::DetectAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         try {
             const json options = params.size() == 0
                 ? json::object()
                 : json::parse(params[0].ToString());
-            retValue = AccelerationDetector::DetectJson(
-                options.value("enable_nvidia", true));
+            retValue = NativeValue(Host(), AccelerationDetector::DetectJson(
+                options.value("enable_nvidia", true)));
         }
         catch (const std::exception& exception) {
-            retValue = GarnetJsonError("acceleration_detection_failed", exception.what());
+            retValue = NativeValue(Host(), GarnetJsonError("acceleration_detection_failed", exception.what()));
         }
+        return retValue;
     }
 
-    void GarnetAPI::ConfigureAccelerationManagerJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ConfigureAccelerationManagerJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = m_accelerationManager.Configure(
-            params.size() == 0 ? std::string("{}") : params[0].ToString());
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), m_accelerationManager.Configure(
+            params.size() == 0 ? std::string("{}") : params[0].ToString()));
+        return retValue;
     }
 
-    void GarnetAPI::ListAccelerationPackagesJson(
-        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ListAccelerationPackagesJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         try {
-            const bool refresh = params.size() > 0 && params[0].ToBool();
+            const bool refresh = params.size() > 0 && (params[0].ToLongLong() != 0);
             json catalog = json::parse(m_accelerationManager.ListRemote(rt, refresh));
             if (catalog.value("status", "") == "error") {
-                retValue = catalog.dump();
-                return;
+                retValue = NativeValue(Host(), catalog.dump());
+                return retValue;
             }
-            retValue = DecorateAccelerationCatalog(
+            retValue = NativeValue(Host(), DecorateAccelerationCatalog(
                 std::move(catalog),
-                json::parse(AccelerationDetector::DetectJson())).dump();
+                json::parse(AccelerationDetector::DetectJson())).dump());
         }
         catch (const std::exception& exception) {
-            retValue = GarnetJsonError("acceleration_catalog_unavailable", exception.what());
+            retValue = NativeValue(Host(), GarnetJsonError("acceleration_catalog_unavailable", exception.what()));
         }
+        return retValue;
     }
 
-    void GarnetAPI::PrepareAccelerationJson(
-        X::XRuntime* rt, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::PrepareAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         try {
             const json options = params.size() == 0
                 ? json::object()
@@ -2624,34 +2734,34 @@ namespace Garnet
                 options.value("enable_nvidia", true)));
             if (!hardware.value("nvidia", json::object()).value("detected", false) ||
                 !hardware.value("lazy_loading", json::object()).value("enabled", false)) {
-                retValue = json({
+                retValue = NativeValue(Host(), json({
                     {"schema_version", 1},
                     {"status", "cpu_ready"},
                     {"backend", "openvino"},
                     {"message", "No NVIDIA acceleration package is required"},
                     {"hardware", hardware}
-                }).dump();
-                return;
+                }).dump());
+                return retValue;
             }
             json catalog = json::parse(m_accelerationManager.ListRemote(
                 rt, options.value("refresh", false)));
             if (catalog.value("status", "") == "error") {
-                retValue = catalog.dump();
-                return;
+                retValue = NativeValue(Host(), catalog.dump());
+                return retValue;
             }
             catalog = DecorateAccelerationCatalog(
                 std::move(catalog),
                 hardware);
             const std::string packageId = catalog.value("recommended_package_id", "");
             if (packageId.empty()) {
-                retValue = json({
+                retValue = NativeValue(Host(), json({
                     {"schema_version", 1},
                     {"status", "cpu_ready"},
                     {"backend", "openvino"},
                     {"message", "No compatible optional acceleration package was found"},
                     {"hardware", catalog.value("hardware", json::object())}
-                }).dump();
-                return;
+                }).dump());
+                return retValue;
             }
 
             const json installed = json::parse(m_accelerationManager.ListInstalled());
@@ -2665,37 +2775,39 @@ namespace Garnet
             for (const auto& package : installed.value("models", json::array())) {
                 if (package.value("id", "") == packageId &&
                     package.value("version", "") == recommendedVersion) {
-                    retValue = AccelerationDetector::ActivateJson(
-                        package.value("install_root", ""));
-                    return;
+                    retValue = NativeValue(Host(), AccelerationDetector::ActivateJson(
+                        package.value("install_root", "")));
+                    return retValue;
                 }
             }
             if (!allowDownload) {
-                retValue = json({
+                retValue = NativeValue(Host(), json({
                     {"schema_version", 1},
                     {"status", "available"},
                     {"backend", "nvidia"},
                     {"package_id", packageId},
                     {"download_required", true}
-                }).dump();
-                return;
+                }).dump());
+                return retValue;
             }
-            retValue = m_accelerationManager.StartInstall(
+            retValue = NativeValue(Host(), m_accelerationManager.StartInstall(
                 rt, packageId,
-                params.size() == 0 ? std::string("{}") : params[0].ToString());
+                params.size() == 0 ? std::string("{}") : params[0].ToString()));
         }
         catch (const std::exception& exception) {
-            retValue = GarnetJsonError("acceleration_prepare_failed", exception.what());
+            retValue = NativeValue(Host(), GarnetJsonError("acceleration_prepare_failed", exception.what()));
         }
+        return retValue;
     }
 
-    void GarnetAPI::AccelerationInstallStatusJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::AccelerationInstallStatusJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0) {
-            retValue = GarnetJsonError(
-                "job_id_required", "acceleration_install_status_json requires a job ID");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError(
+                "job_id_required", "acceleration_install_status_json requires a job ID"));
+            return retValue;
         }
         json status = json::parse(
             m_accelerationManager.InstallStatus(params[0].ToString()));
@@ -2709,33 +2821,40 @@ namespace Garnet
                 status["error"] = activation.value("message", "activation failed");
             }
         }
-        retValue = status.dump();
+        retValue = NativeValue(Host(), status.dump());
+        return retValue;
     }
 
-    void GarnetAPI::CancelAccelerationInstallJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::CancelAccelerationInstallJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = params.size() == 0
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), params.size() == 0
             ? GarnetJsonError("job_id_required", "cancel_acceleration_install_json requires a job ID")
-            : m_accelerationManager.CancelInstall(params[0].ToString());
+            : m_accelerationManager.CancelInstall(params[0].ToString()));
+        return retValue;
     }
 
-    void GarnetAPI::ListInstalledAccelerationsJson(
-        X::XRuntime*, X::XObj*, X::ARGS&, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ListInstalledAccelerationsJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        retValue = m_accelerationManager.ListInstalled();
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        retValue = NativeValue(Host(), m_accelerationManager.ListInstalled());
+        return retValue;
     }
 
-    void GarnetAPI::ActivateAccelerationJson(
-        X::XRuntime*, X::XObj*, X::ARGS& params, X::KWARGS&, X::Value& retValue)
+    X::Value GarnetAPI::ActivateAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0) {
-            retValue = GarnetJsonError(
-                "package_id_required", "activate_acceleration_json requires a package ID");
-            return;
+            retValue = NativeValue(Host(), GarnetJsonError(
+                "package_id_required", "activate_acceleration_json requires a package ID"));
+            return retValue;
         }
-        retValue = AccelerationDetector::ActivateJson(
-            m_accelerationManager.InstalledModelRoot(params[0].ToString()));
+        retValue = NativeValue(Host(), AccelerationDetector::ActivateJson(
+            m_accelerationManager.InstalledModelRoot(params[0].ToString())));
+        return retValue;
     }
 
     namespace
@@ -2744,11 +2863,11 @@ namespace Garnet
         {
             std::vector<int> result;
             if (!value.IsList()) return result;
-            X::List list(value);
-            long long size = list->Size();
+            X::Value list(value);
+            long long size = list.Size();
             result.reserve(static_cast<size_t>(size));
             for (long long i = 0; i < size; ++i) {
-                result.push_back(static_cast<int>(list->Get(i).ToLongLong()));
+                result.push_back(static_cast<int>(list.Get(i).ToLongLong()));
             }
             return result;
         }
@@ -2756,38 +2875,35 @@ namespace Garnet
         std::vector<int> TensorShape(X::Value value)
         {
             std::vector<int> result;
-            if (!value.IsTensor()) return result;
+            if (!X::Tensor::IsTensor(value)) return result;
             X::Tensor tensor(value);
-            int dimCount = tensor->GetDimCount();
+            int dimCount = tensor.Info().rank;
             result.reserve(static_cast<size_t>(dimCount));
             for (int i = 0; i < dimCount; ++i) {
-                result.push_back(static_cast<int>(tensor->GetDimSize(i)));
+                result.push_back(static_cast<int>(tensor.Info().shape[i]));
             }
             return result;
         }
 
-        X::Value GetKwarg(X::KWARGS& kwParams, const char* name)
+        X::Value GetKwarg(const X::KWARGS& kwParams, const char* name)
         {
-            if (kwParams.Has(name)) {
-                auto it = kwParams.find(name);
-                return it->val;
-            }
+            for (const auto& item : kwParams) if (item.first == name) return item.second;
             return X::Value();
         }
 
-        int GetIntArg(X::ARGS& params, X::KWARGS& kwParams, size_t index, const char* name, int defaultValue)
+        int GetIntArg(const X::ARGS& params, const X::KWARGS& kwParams, size_t index, const char* name, int defaultValue)
         {
             X::Value value = GetKwarg(kwParams, name);
             if (value.IsValid()) {
-                return static_cast<int>(value.ToLongLong());
+                return CheckedInt(value, "argument");
             }
             if (params.size() > index) {
-                return static_cast<int>(params[index].ToLongLong());
+                return CheckedInt(params[index], "argument");
             }
             return defaultValue;
         }
 
-        double GetDoubleArg(X::ARGS& params, X::KWARGS& kwParams, size_t index, const char* name, double defaultValue)
+        double GetDoubleArg(const X::ARGS& params, const X::KWARGS& kwParams, size_t index, const char* name, double defaultValue)
         {
             X::Value value = GetKwarg(kwParams, name);
             if (value.IsValid()) {
@@ -2799,7 +2915,7 @@ namespace Garnet
             return defaultValue;
         }
 
-        std::string GetStringArg(X::ARGS& params, X::KWARGS& kwParams, size_t index, const char* name, const std::string& defaultValue)
+        std::string GetStringArg(const X::ARGS& params, const X::KWARGS& kwParams, size_t index, const char* name, const std::string& defaultValue)
         {
             X::Value value = GetKwarg(kwParams, name);
             if (value.IsValid()) {
@@ -2811,67 +2927,39 @@ namespace Garnet
             return defaultValue;
         }
 
-        X::Value MakeInt64Tensor(const std::vector<long long>& values, bool ensureGpu = false)
+        X::Value MakeInt64Tensor(X3PackageHost* host, const std::vector<long long>& values, bool ensureGpu = false)
         {
-            X::Tensor tensor;
-            X::Port::vector<int> shape(1);
-            shape.push_back(static_cast<int>(values.size()));
-            tensor->SetDataType(X::TensorDataType::INT64);
-            tensor->SetShape(shape);
-            X::Value init;
-            bool created = tensor->Create(init);
-            if (!created || tensor->GetData() == nullptr) {
-                std::cout << "[GarnetAPI] MakeInt64Tensor failed to allocate count=" << values.size() << std::endl;
-                return X::Value();
-            }
-            if (!values.empty()) {
-                std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
-            }
-            if (ensureGpu && TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-                std::cout << "[GarnetAPI] MakeInt64Tensor failed to move tensor to GPU count=" << values.size() << std::endl;
-                return X::Value();
-            }
-            return X::Value(tensor);
+            const std::vector<int64_t> shape{static_cast<int64_t>(values.size())};
+            return ensureGpu ? TensorHelper::CreateGPU(host, X3_TENSOR_INT64, shape, values.data()) :
+                X::Tensor::Create(host, X3_TENSOR_INT64, shape, values.data(), values.size() * sizeof(long long));
         }
 
-        X::Value MakeInt64List(const std::vector<long long>& values)
+        X::Value MakeInt64List(X3PackageHost* host, const std::vector<long long>& values)
         {
-            X::V<X::XList> list;
+            auto list = X::Value::List(host);
             for (long long value : values) {
                 X::Value item(value);
-                list->AddItem(item);
+                if (!list.Append(item)) throw X::Error("cannot append integer");
             }
             return list;
         }
 
         X::Value MakeInt64Tensor2D(
+            X3PackageHost* host,
             const std::vector<long long>& values,
             int rows,
             int cols,
             bool ensureGpu = false)
         {
-            X::Tensor tensor;
-            X::Port::vector<int> shape(2);
-            shape.push_back(rows);
-            shape.push_back(cols);
-            tensor->SetDataType(X::TensorDataType::INT64);
-            tensor->SetShape(shape);
-            X::Value init;
-            bool created = tensor->Create(init);
-            if (!created || tensor->GetData() == nullptr) {
-                std::cout << "[GarnetAPI] MakeInt64Tensor2D failed to allocate count=" << values.size() << std::endl;
-                return X::Value();
-            }
-            if (!values.empty()) {
-                std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
-            }
-            if (ensureGpu && TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-                return X::Value();
-            }
-            return X::Value(tensor);
+            if (rows < 0 || cols < 0 || static_cast<uint64_t>(rows) * cols != values.size())
+                throw X::Error("integer tensor shape does not match data");
+            const std::vector<int64_t> shape{rows, cols};
+            return ensureGpu ? TensorHelper::CreateGPU(host, X3_TENSOR_INT64, shape, values.data()) :
+                X::Tensor::Create(host, X3_TENSOR_INT64, shape, values.data(), values.size() * sizeof(long long));
         }
 
         X::Value MakeInt64Tensor3DGpu(
+            X3PackageHost* host,
             const std::vector<long long>& values,
             int dimension0,
             int dimension1,
@@ -2881,44 +2969,15 @@ namespace Garnet
                 static_cast<size_t>(dimension0) * dimension1 * dimension2 != values.size()) {
                 return X::Value();
             }
-            X::Tensor tensor;
-            X::Port::vector<int> shape(3);
-            shape.push_back(dimension0);
-            shape.push_back(dimension1);
-            shape.push_back(dimension2);
-            tensor->SetDataType(X::TensorDataType::INT64);
-            tensor->SetShape(shape);
-            X::Value init;
-            if (!tensor->Create(init) || tensor->GetData() == nullptr) {
-                return X::Value();
-            }
-            if (!values.empty()) {
-                std::memcpy(tensor->GetData(), values.data(), values.size() * sizeof(long long));
-            }
-            if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-                return X::Value();
-            }
-            return X::Value(tensor);
+            return TensorHelper::CreateGPU(host, X3_TENSOR_INT64,
+                {dimension0, dimension1, dimension2}, values.data());
         }
 
-        X::Value MakeFloatTensor2D(const float* data, int rows, int cols)
+        X::Value MakeFloatTensor2D(X3PackageHost* host, const float* data, int rows, int cols)
         {
-            X::Tensor tensor;
-            X::Port::vector<int> shape(2);
-            shape.push_back(rows);
-            shape.push_back(cols);
-            tensor->SetDataType(X::TensorDataType::FLOAT32);
-            tensor->SetShape(shape);
-            X::Value init;
-            bool created = tensor->Create(init);
-            if (!created || tensor->GetData() == nullptr) {
-                std::cout << "[GarnetAPI] MakeFloatTensor2D failed to allocate rows=" << rows << " cols=" << cols << std::endl;
-                return X::Value();
-            }
-            if (data != nullptr && rows > 0 && cols > 0) {
-                std::memcpy(tensor->GetData(), data, static_cast<size_t>(rows) * static_cast<size_t>(cols) * sizeof(float));
-            }
-            return X::Value(tensor);
+            if (rows < 0 || cols < 0) throw X::Error("negative tensor dimension");
+            return X::Tensor::Create(host, X3_TENSOR_FLOAT32, {rows, cols}, data,
+                data ? static_cast<uint64_t>(rows) * cols * sizeof(float) : 0);
         }
 
         double MsSince(std::chrono::steady_clock::time_point start)
@@ -2928,46 +2987,48 @@ namespace Garnet
         }
     }
 
-    void QwenVLRequestContext::Stats(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value QwenVLRequestContext::Stats(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         auto tensorGpu = [](X::Value value) {
-            if (!value.IsTensor()) {
+            if (!X::Tensor::IsTensor(value)) {
                 return false;
             }
             X::Tensor tensor(value);
             return TensorHelper::GetGPUMemory(tensor) != nullptr;
         };
 
-        X::Dict stats;
-        stats->Set("source_height", X::Value(sourceHeight));
-        stats->Set("source_width", X::Value(sourceWidth));
-        stats->Set("height", X::Value(resizedHeight));
-        stats->Set("width", X::Value(resizedWidth));
-        stats->Set("prompt_token_count", X::Value(promptTokenCount));
-        stats->Set("visual_token_count", X::Value(visualTokenCount));
-        stats->Set("pixel_value_count", X::Value(pixelValueCount));
-        stats->Set("patch_size", X::Value(patchSize));
-        stats->Set("temporal_patch_size", X::Value(temporalPatchSize));
-        stats->Set("merge_size", X::Value(mergeSize));
-        stats->Set("input_ids_gpu", X::Value(tensorGpu(inputIds)));
-        stats->Set("mm_token_type_ids_gpu", X::Value(tensorGpu(mmTokenTypeIds)));
-        stats->Set("pixel_values_gpu", X::Value(tensorGpu(pixelValues)));
-        stats->Set("kv_allocated", X::Value(kvHandle > 0));
-        stats->Set("kv_handle", X::Value(kvHandle));
-        stats->Set("kv_max_tokens", X::Value(kvMaxTokens));
-        stats->Set("kv_logical_length", X::Value(kvLogicalLength));
-        stats->Set("kv_page_size", X::Value(kvPageSize));
-        stats->Set("kv_logical_pages", X::Value(kvLogicalPages));
-        stats->Set("kv_physical_pages", X::Value(kvPhysicalPages));
-        stats->Set("kv_q_heads", X::Value(kvQHeads));
-        stats->Set("kv_heads", X::Value(kvHeads));
-        stats->Set("kv_head_dim", X::Value(kvHeadDim));
-        stats->Set("image_preprocess_us", X::Value(imagePreprocessUs));
-        stats->Set("tokenize_us", X::Value(tokenizeUs));
-        stats->Set("tensor_upload_us", X::Value(tensorUploadUs));
-        stats->Set("total_us", X::Value(totalUs));
-        retValue = stats;
+        auto stats = X::Value::Dict(Host());
+        stats.SetItem("source_height", X::Value(sourceHeight));
+        stats.SetItem("source_width", X::Value(sourceWidth));
+        stats.SetItem("height", X::Value(resizedHeight));
+        stats.SetItem("width", X::Value(resizedWidth));
+        stats.SetItem("prompt_token_count", X::Value(promptTokenCount));
+        stats.SetItem("visual_token_count", X::Value(visualTokenCount));
+        stats.SetItem("pixel_value_count", X::Value(pixelValueCount));
+        stats.SetItem("patch_size", X::Value(patchSize));
+        stats.SetItem("temporal_patch_size", X::Value(temporalPatchSize));
+        stats.SetItem("merge_size", X::Value(mergeSize));
+        stats.SetItem("input_ids_gpu", X::Value(tensorGpu(inputIds)));
+        stats.SetItem("mm_token_type_ids_gpu", X::Value(tensorGpu(mmTokenTypeIds)));
+        stats.SetItem("pixel_values_gpu", X::Value(tensorGpu(pixelValues)));
+        stats.SetItem("kv_allocated", X::Value(kvHandle > 0));
+        stats.SetItem("kv_handle", X::Value(kvHandle));
+        stats.SetItem("kv_max_tokens", X::Value(kvMaxTokens));
+        stats.SetItem("kv_logical_length", X::Value(kvLogicalLength));
+        stats.SetItem("kv_page_size", X::Value(kvPageSize));
+        stats.SetItem("kv_logical_pages", X::Value(kvLogicalPages));
+        stats.SetItem("kv_physical_pages", X::Value(kvPhysicalPages));
+        stats.SetItem("kv_q_heads", X::Value(kvQHeads));
+        stats.SetItem("kv_heads", X::Value(kvHeads));
+        stats.SetItem("kv_head_dim", X::Value(kvHeadDim));
+        stats.SetItem("image_preprocess_us", X::Value(imagePreprocessUs));
+        stats.SetItem("tokenize_us", X::Value(tokenizeUs));
+        stats.SetItem("tensor_upload_us", X::Value(tensorUploadUs));
+        stats.SetItem("total_us", X::Value(totalUs));
+        retValue = NativeValue(Host(), stats);
+        return retValue;
     }
 
     KVCacheManager::~KVCacheManager()
@@ -2993,10 +3054,10 @@ namespace Garnet
 
     X::Value KVCacheManager::MakePageList(const std::vector<int>& pages) const
     {
-        X::V<X::XList> retList;
+        auto retList = X::Value::List(Host());
         for (int page : pages) {
             X::Value pageValue(page);
-            retList->AddItem(pageValue);
+            if (!retList.Append(pageValue)) throw X::Error("cannot append page index");
         }
         return retList;
     }
@@ -3074,9 +3135,10 @@ namespace Garnet
         }
     }
 
-    void KVCacheManager::Allocate(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value KVCacheManager::Allocate(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         long long seqId = params.size() > 0 ? params[0].ToLongLong() : 0;
         X::Value sequenceLengthValue = GetKwarg(kwParams, "sequence_length");
         long long sequenceLength = sequenceLengthValue.IsValid()
@@ -3094,15 +3156,17 @@ namespace Garnet
         if (!EnsurePages(seqId, sequenceLength)) {
             std::cout << "[KVCacheManager] Not enough free pages: need " << pagesNeeded
                 << ", have " << m_freePages.size() << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        retValue = MakePageList(m_sequences[seqId].pages);
+        retValue = NativeValue(Host(), MakePageList(m_sequences[seqId].pages));
+        return retValue;
     }
 
-    void KVCacheManager::Append(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value KVCacheManager::Append(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         long long seqId = params.size() > 0 ? params[0].ToLongLong() : 0;
         X::Value appendValue = GetKwarg(kwParams, "tokens");
         long long appendTokens = appendValue.IsValid()
@@ -3112,30 +3176,32 @@ namespace Garnet
         auto existing = m_sequences.find(seqId);
         if (existing == m_sequences.end()) {
             if (!EnsurePages(seqId, appendTokens)) {
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
         }
         else {
             long long newLength = existing->second.logicalLength + appendTokens;
             if (!EnsurePages(seqId, newLength)) {
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
         }
 
         const auto& state = m_sequences[seqId];
-        X::Dict dict;
-        dict->Set("sequence_id", X::Value(seqId));
-        dict->Set("logical_length", X::Value(state.logicalLength));
-        dict->Set("page_count", X::Value(static_cast<int>(state.pages.size())));
-        dict->Set("pages", MakePageList(state.pages));
-        retValue = dict;
+        auto dict = X::Value::Dict(Host());
+        dict.SetItem("sequence_id", X::Value(seqId));
+        dict.SetItem("logical_length", X::Value(state.logicalLength));
+        dict.SetItem("page_count", X::Value(static_cast<int>(state.pages.size())));
+        dict.SetItem("pages", MakePageList(state.pages));
+        retValue = NativeValue(Host(), dict);
+        return retValue;
     }
 
-    void KVCacheManager::Free(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value KVCacheManager::Free(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         long long seqId = params.size() > 0 ? params[0].ToLongLong() : 0;
         auto existing = m_sequences.find(seqId);
         bool released = existing != m_sequences.end();
@@ -3145,31 +3211,34 @@ namespace Garnet
             }
             m_sequences.erase(existing);
         }
-        retValue = X::Value(released);
+        retValue = NativeValue(Host(), X::Value(released));
+        return retValue;
     }
 
-    void KVCacheManager::Stats(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value KVCacheManager::Stats(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        X::Dict stats;
-        stats->Set("max_num_pages", X::Value(m_maxNumPages));
-        stats->Set("free_pages", X::Value(static_cast<int>(m_freePages.size())));
-        stats->Set("used_pages", X::Value(m_maxNumPages - static_cast<int>(m_freePages.size())));
-        stats->Set("page_size", X::Value(m_pageSize));
-        stats->Set("head_dim", X::Value(m_headDim));
-        stats->Set("num_kv_heads", X::Value(m_numKVHeads));
-        stats->Set("num_layers", X::Value(m_numLayers));
-        stats->Set("dtype_bytes", X::Value(m_dtypeBytes));
-        stats->Set("device_id", X::Value(m_deviceId));
-        stats->Set("bytes_per_page_per_layer", X::Value(static_cast<long long>(m_bytesPerPagePerLayer)));
-        stats->Set("total_key_bytes", X::Value(static_cast<long long>(m_totalBytes)));
-        stats->Set("total_value_bytes", X::Value(static_cast<long long>(m_totalBytes)));
-        stats->Set("gpu_allocated", X::Value(m_keyArena != nullptr && m_valueArena != nullptr));
-        stats->Set("sequence_count", X::Value(static_cast<int>(m_sequences.size())));
-        retValue = stats;
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        auto stats = X::Value::Dict(Host());
+        stats.SetItem("max_num_pages", X::Value(m_maxNumPages));
+        stats.SetItem("free_pages", X::Value(static_cast<int>(m_freePages.size())));
+        stats.SetItem("used_pages", X::Value(m_maxNumPages - static_cast<int>(m_freePages.size())));
+        stats.SetItem("page_size", X::Value(m_pageSize));
+        stats.SetItem("head_dim", X::Value(m_headDim));
+        stats.SetItem("num_kv_heads", X::Value(m_numKVHeads));
+        stats.SetItem("num_layers", X::Value(m_numLayers));
+        stats.SetItem("dtype_bytes", X::Value(m_dtypeBytes));
+        stats.SetItem("device_id", X::Value(m_deviceId));
+        stats.SetItem("bytes_per_page_per_layer", X::Value(static_cast<long long>(m_bytesPerPagePerLayer)));
+        stats.SetItem("total_key_bytes", X::Value(static_cast<long long>(m_totalBytes)));
+        stats.SetItem("total_value_bytes", X::Value(static_cast<long long>(m_totalBytes)));
+        stats.SetItem("gpu_allocated", X::Value(m_keyArena != nullptr && m_valueArena != nullptr));
+        stats.SetItem("sequence_count", X::Value(static_cast<int>(m_sequences.size())));
+        retValue = NativeValue(Host(), stats);
+        return retValue;
     }
 
-    bool GarnetAPI::LoadModelFromFile(std::string modelPath, X::Dict& model)
+    bool GarnetAPI::LoadModelFromFile(std::string modelPath, X::Value& model)
     {
         std::ifstream file(modelPath, std::ios::binary);
 
@@ -3191,70 +3260,65 @@ namespace Garnet
             std::getline(file, dtype, '\0');  // Read dtype
 
             // Determine the data type
-            X::TensorDataType tensor_data_type = X::TensorDataType::FLOAT32;  // Default to float32
+            X3TensorDType tensor_data_type = X3_TENSOR_FLOAT32;  // Default to float32
             if (dtype == "torch.float32") {
-                tensor_data_type = X::TensorDataType::FLOAT32;
+                tensor_data_type = X3_TENSOR_FLOAT32;
             }
             else if (dtype == "torch.float64") {
-                tensor_data_type = X::TensorDataType::FLOAT64;
+                tensor_data_type = X3_TENSOR_FLOAT64;
             }
             else if (dtype == "torch.int32") {
-                tensor_data_type = X::TensorDataType::INT32;
+                tensor_data_type = X3_TENSOR_INT32;
             }
             else if (dtype == "torch.int64") {
-                tensor_data_type = X::TensorDataType::INT64;
+                tensor_data_type = X3_TENSOR_INT64;
             }
             else if (dtype == "torch.bfloat16") {
-                tensor_data_type = X::TensorDataType::BFLOAT16;
+                tensor_data_type = X3_TENSOR_BFLOAT16;
             }
-            else if (dtype.find("torch.float8_e4m3fn") != std::string::npos)
+            else if (dtype == "torch.float8_e4m3fn")
             {
-                tensor_data_type = X::TensorDataType::FLOAT8_E4M3FN;
+                tensor_data_type = X3_TENSOR_FLOAT8_E4M3FN;
             }
-            else if (dtype.find("torch.float8_e4m3fnuz") != std::string::npos)
+            else if (dtype == "torch.float8_e4m3fnuz")
             {
-                tensor_data_type = X::TensorDataType::FLOAT8_E4M3FNUZ;
+                tensor_data_type = X3_TENSOR_FLOAT8_E4M3FNUZ;
             }
-            else if (dtype.find("torch.float8_e5m2") != std::string::npos)
+            else if (dtype == "torch.float8_e5m2")
             {
-                tensor_data_type = X::TensorDataType::FLOAT8_E5M2;
+                tensor_data_type = X3_TENSOR_FLOAT8_E5M2;
             }
-            else if (dtype.find("torch.float8_e5m2fnuz") != std::string::npos)
+            else if (dtype == "torch.float8_e5m2fnuz")
             {
-                tensor_data_type = X::TensorDataType::FLOAT8_E5M2FNUZ;
+                tensor_data_type = X3_TENSOR_FLOAT8_E5M2FNUZ;
             }
+            else throw X::Error("unsupported model tensor dtype: " + dtype);
             // Read shape
-            uint64_t num_dims;
-            file.read(reinterpret_cast<char*>(&num_dims), sizeof(uint64_t));
-            X::Port::vector<int> shape(static_cast<int>(num_dims));
+            uint64_t num_dims = 0;
+            if (!file.read(reinterpret_cast<char*>(&num_dims), sizeof(uint64_t)) || num_dims > 64)
+                throw X::Error("invalid model tensor rank");
+            std::vector<int64_t> shape;
+            shape.reserve(static_cast<size_t>(num_dims));
+            uint64_t num_bytes = TensorHelper::ItemSize(tensor_data_type);
             for (uint64_t i = 0; i < num_dims;i++) {
-                int64_t d;
-                file.read((char*)&d, sizeof(int64_t));
-				shape.push_back((int)d);
+                int64_t d = 0;
+                if (!file.read(reinterpret_cast<char*>(&d), sizeof(int64_t)) || d < 0 ||
+                    (d && num_bytes > INT64_MAX / static_cast<uint64_t>(d)))
+                    throw X::Error("invalid model tensor dimensions");
+                shape.push_back(d);
+                num_bytes *= d;
             }
-            X::Tensor tensor;
-            tensor->SetShape(shape);
-            tensor->SetDataType(tensor_data_type);
-
-            int64_t num_elements = std::accumulate(shape.begin(), shape.end(),
-                int64_t{1}, std::multiplies<int64_t>());
-            int64_t num_bytes = num_elements * tensor->GetItemSize();
+            const auto offset = file.tellg();
+            const auto fileSize = std::filesystem::file_size(modelPath);
+            if (offset < 0 || static_cast<uint64_t>(offset) > fileSize ||
+                num_bytes > fileSize - static_cast<uint64_t>(offset)) throw X::Error("truncated model tensor");
             std::vector<char> buffer(num_bytes);
-            file.read(buffer.data(), num_bytes);
-
-            // Create and populate X::Tensor
-            X::Value dummy;
-            tensor->Create(dummy);
-
-            // Copy data into tensor
-            memcpy(tensor->GetData(), buffer.data(), num_bytes);
-            if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-                LOG << "LoadModelFromFile failed to move tensor to GPU: " << key << LINE_END;
-                return false;
-            }
+            if (num_bytes && !file.read(buffer.data(), static_cast<std::streamsize>(num_bytes)))
+                throw X::Error("cannot read model tensor payload");
+            auto tensor = TensorHelper::CreateGPU(Host(), tensor_data_type, shape, buffer.data());
 
             // Store in dictionary
-            model->Set(key, tensor);
+            if (!model.SetItem(key, tensor)) throw X::Error("cannot register model weight");
         }
 
         file.close();
@@ -3264,7 +3328,7 @@ namespace Garnet
 
     X::Value GarnetAPI::LoadModel(std::string modelPath)
     {
-        X::Dict dictModel;
+        auto dictModel = X::Value::Dict(Host());
         namespace fs = std::filesystem;
 
         std::string tokenizerJsonPath;
@@ -3361,18 +3425,19 @@ namespace Garnet
             }
         }
 
-        X::XPackageValue<Model> varModel;
-        Model& model = *varModel;
+        auto varModel = CallChecked(__xlang3_package_->GetValue("model"));
+        Model& model = *varModel.NativeData<Model>();
 		model.SetInfo(strModelPath, tokenizerJsonPath, tokenizerConfigJsonPath, dictModel);
         return varModel;
     }
 
-    void GarnetAPI::CreateKVCacheManager(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::CreateKVCacheManager(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         auto getInt = [&](const char* name, size_t pos, int defaultValue) -> int {
             X::Value value = GetKwarg(kwParams, name);
-            if (value.IsValid()) return static_cast<int>(value.ToLongLong());
+            if (value.IsValid()) return CheckedInt(value, "argument");
             if (params.size() > pos) return static_cast<int>(params[pos].ToLongLong());
             return defaultValue;
         };
@@ -3383,53 +3448,57 @@ namespace Garnet
         int numLayers = getInt("num_layers", 4, 1);
         int dtypeBytes = getInt("dtype_bytes", 5, 2);
         int deviceId = getInt("device_id", 6, 0);
-        X::XPackageValue<KVCacheManager> manager;
-        (*manager).Configure(maxNumPages, pageSize, headDim, numKVHeads, numLayers, dtypeBytes, deviceId);
-        retValue = manager;
+        auto manager = CallChecked(__xlang3_package_->GetValue("KVCacheManagerClass"));
+        manager.NativeData<KVCacheManager>()->Configure(maxNumPages, pageSize, headDim, numKVHeads, numLayers, dtypeBytes, deviceId);
+        retValue = NativeValue(Host(), manager);
+        return retValue;
     }
 
-    void GarnetAPI::DevicePagedKVWriteTensor(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::DevicePagedKVWriteTensor(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 4 || !params[1].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 4 || !X::Tensor::IsTensor(params[1])) {
             std::cout << "[GarnetAPI] device_paged_kv_write(handle, qkv_tensor, token_count, start_position) expected." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
         long long handle = params[0].ToLongLong();
         X::Tensor qkv(params[1]);
-        int tokenCount = static_cast<int>(params[2].ToLongLong());
-        int startPosition = static_cast<int>(params[3].ToLongLong());
-        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2) {
+        ValidateDenseTensor(qkv);
+        int tokenCount = CheckedInt(params[2], "argument");
+        int startPosition = CheckedInt(params[3], "argument");
+        if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || qkv.Info().rank != 2) {
             std::cout << "[GarnetAPI] device_paged_kv_write requires a float32 2D qkv tensor." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
         DevicePagedKVFP32 cache;
         if (!GetDevicePagedKV(handle, cache)) {
             std::cout << "[GarnetAPI] device_paged_kv_write invalid handle: " << handle << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
         int qWidth = cache.qHeads * cache.headDim;
         int kvWidth = cache.kvHeads * cache.headDim;
         int qkvStride = qWidth + 2 * kvWidth;
-        if (tokenCount <= 0 || tokenCount > qkv->GetDimSize(0) || qkv->GetDimSize(1) < qkvStride ||
+        if (tokenCount <= 0 || tokenCount > qkv.Info().shape[0] || qkv.Info().shape[1] < qkvStride ||
             startPosition < 0 || startPosition + tokenCount > cache.logicalPageCount * cache.pageSize) {
             std::cout << "[GarnetAPI] device_paged_kv_write invalid shape or range." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
         if (TensorHelper::EnsureGPUMemory(qkv) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] device_paged_kv_write failed to ensure qkv GPU memory." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
+        auto qkvUse = qkv.Acquire();
         float* dQKV = static_cast<float*>(TensorHelper::GetGPUMemory(qkv));
         if (!dQKV) {
             std::cout << "[GarnetAPI] device_paged_kv_write qkv tensor has no GPU memory." << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
         cudaStream_t stream = nullptr;
         cudaError_t err = cudaStreamCreate(&stream);
@@ -3442,54 +3511,58 @@ namespace Garnet
         if (stream) cudaStreamDestroy(stream);
         if (err != cudaSuccess) {
             std::cout << "[GarnetAPI] device_paged_kv_write failed: " << cudaGetErrorString(err) << std::endl;
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
-        retValue = X::Value(true);
+        retValue = NativeValue(Host(), X::Value(true));
+        return retValue;
     }
 
-    void GarnetAPI::DevicePagedKVAttentionTensor(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::DevicePagedKVAttentionTensor(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 3 || !params[1].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 3 || !X::Tensor::IsTensor(params[1])) {
             std::cout << "[GarnetAPI] device_paged_kv_attention(handle, q_or_qkv_tensor, sequence_length) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         long long handle = params[0].ToLongLong();
         X::Tensor q(params[1]);
-        int sequenceLength = static_cast<int>(params[2].ToLongLong());
-        if (q->GetDataType() != X::TensorDataType::FLOAT32 || q->GetDimCount() != 2 || q->GetDimSize(0) < 1) {
+        ValidateDenseTensor(q);
+        int sequenceLength = CheckedInt(params[2], "argument");
+        if (q.Info().dtype != X3_TENSOR_FLOAT32 || q.Info().rank != 2 || q.Info().shape[0] < 1) {
             std::cout << "[GarnetAPI] device_paged_kv_attention requires a float32 2D q/qkv tensor." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         DevicePagedKVFP32 cache;
         if (!GetDevicePagedKV(handle, cache)) {
             std::cout << "[GarnetAPI] device_paged_kv_attention invalid handle: " << handle << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         int qWidth = cache.qHeads * cache.headDim;
-        if (q->GetDimSize(1) < qWidth || sequenceLength <= 0 ||
+        if (q.Info().shape[1] < qWidth || sequenceLength <= 0 ||
             sequenceLength > cache.logicalPageCount * cache.pageSize) {
             std::cout << "[GarnetAPI] device_paged_kv_attention invalid shape or sequence length." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         if (TensorHelper::EnsureGPUMemory(q) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] device_paged_kv_attention failed to ensure q GPU memory." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
+        auto qUse = q.Acquire();
         float* dQBase = static_cast<float*>(TensorHelper::GetGPUMemory(q));
         if (!dQBase) {
             std::cout << "[GarnetAPI] device_paged_kv_attention q tensor has no GPU memory." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        int qStride = q->GetDimSize(1);
-        float* dQ = dQBase + static_cast<size_t>(q->GetDimSize(0) - 1) * static_cast<size_t>(qStride);
+        int qStride = q.Info().shape[1];
+        float* dQ = dQBase + static_cast<size_t>(q.Info().shape[0] - 1) * static_cast<size_t>(qStride);
         size_t outputBytes = static_cast<size_t>(qWidth) * sizeof(float);
         float* dOut = nullptr;
         cudaStream_t stream = nullptr;
@@ -3505,372 +3578,343 @@ namespace Garnet
             if (dOut) cudaFree(dOut);
             if (stream) cudaStreamDestroy(stream);
             std::cout << "[GarnetAPI] device_paged_kv_attention failed: " << cudaGetErrorString(err) << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
-        X::Tensor output;
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        X::Port::vector<int> outputShape(2);
-        outputShape.push_back(1);
-        outputShape.push_back(qWidth);
-        output->SetShape(outputShape);
-        X::Value initData;
-        if (!output->Create(initData) || output->GetData() == nullptr ||
-            TensorHelper::AttachGPUMemory(output, dOut) != TensorOpStatus::Success) {
-            cudaFree(dOut);
-            if (stream) cudaStreamDestroy(stream);
-            retValue = X::Value();
-            return;
-        }
-        const char* syncEnv = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
-        bool syncCPU = !syncEnv || !(syncEnv[0] == '0' && syncEnv[1] == '\0');
-        if (syncCPU) {
-            err = cudaMemcpyAsync(output->GetData(), dOut, outputBytes, cudaMemcpyDeviceToHost, stream);
-            if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
-            if (err != cudaSuccess) {
-                cudaFree(dOut);
-                if (stream) cudaStreamDestroy(stream);
-                std::cout << "[GarnetAPI] device_paged_kv_attention CPU sync failed: " << cudaGetErrorString(err) << std::endl;
-                retValue = X::Value();
-                return;
-            }
-        }
         if (stream) cudaStreamDestroy(stream);
-        retValue = X::Value(output);
+        auto output = AdoptGpuOutput(Host(), X3_TENSOR_FLOAT32, {1, qWidth}, dOut);
+        retValue = NativeValue(Host(), X::Value(output));
+        return retValue;
     }
 
-    void GarnetAPI::TensorToCPU(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::TensorToCPU(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 1 || !params[0].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 1 || !X::Tensor::IsTensor(params[0])) {
             std::cout << "[GarnetAPI] tensor_to_cpu(tensor) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         X::Tensor tensor(params[0]);
-        retValue = TensorHelper::CopyToCPUTensor(tensor);
+        retValue = NativeValue(Host(), TensorHelper::CopyToCPUTensor(tensor));
         if (!retValue.IsValid()) {
             std::cout << "[GarnetAPI] tensor_to_cpu failed." << std::endl;
-            return;
+            return retValue;
         }
-        if (tensor->GetDataType() == X::TensorDataType::BFLOAT16) {
+        if (tensor.Info().dtype == X3_TENSOR_BFLOAT16) {
             X::Tensor raw(retValue);
-            X::Tensor converted = X::g_pXHost->CreateTensor();
-            X::Port::vector<int> shape(raw->GetDimCount());
-            for (int dimension = 0; dimension < raw->GetDimCount(); ++dimension) {
-                shape.push_back(raw->GetDimSize(dimension));
+            ValidateDenseTensor(raw);
+            auto rawUse = raw.Acquire();
+            std::vector<int64_t> shape;
+            shape.reserve(raw.Info().rank);
+            for (int dimension = 0; dimension < raw.Info().rank; ++dimension) {
+                shape.push_back(raw.Info().shape[dimension]);
             }
-            converted->SetDataType(X::TensorDataType::FLOAT32);
-            converted->SetShape(shape);
-            X::Value initialValue;
-            if (!converted->Create(initialValue) || !converted->GetData()) {
-                retValue = X::Value();
-                return;
-            }
-            const auto* source = reinterpret_cast<const unsigned short*>(raw->GetData());
-            auto* destination = reinterpret_cast<float*>(converted->GetData());
-            for (long long index = 0; index < raw->GetCount(); ++index) {
+            auto converted = X::Tensor::Create(Host(), X3_TENSOR_FLOAT32, shape);
+            const auto* source = reinterpret_cast<const unsigned short*>(raw.Info().data);
+            auto* destination = reinterpret_cast<float*>(converted.Info().data);
+            for (long long index = 0; index < TensorCount(raw); ++index) {
                 const unsigned int bits = static_cast<unsigned int>(source[index]) << 16;
                 std::memcpy(destination + index, &bits, sizeof(float));
             }
-            retValue = X::Value(converted);
+            retValue = NativeValue(Host(), X::Value(converted));
         }
+        return retValue;
     }
 
-    void GarnetAPI::TensorToGPU(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::TensorToGPU(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 1 || !params[0].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 1 || !X::Tensor::IsTensor(params[0])) {
             std::cout << "[GarnetAPI] tensor_to_gpu(tensor) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor tensor(params[0]);
         if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] tensor_to_gpu failed." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        retValue = X::Value(tensor);
+        retValue = NativeValue(Host(), X::Value(tensor));
+        return retValue;
     }
 
-    void GarnetAPI::TensorToBFloat16(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::TensorToBFloat16(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 1 || !params[0].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 1 || !X::Tensor::IsTensor(params[0])) {
             std::cout << "[GarnetAPI] tensor_to_bfloat16(tensor) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor source(params[0]);
-        if (source->GetDataType() == X::TensorDataType::BFLOAT16) {
-            retValue = X::Value(source);
-            return;
+        ValidateDenseTensor(source);
+        if (source.Info().dtype == X3_TENSOR_BFLOAT16) {
+            retValue = NativeValue(Host(), X::Value(source));
+            return retValue;
         }
-        if (source->GetDataType() != X::TensorDataType::FLOAT32 ||
+        if (source.Info().dtype != X3_TENSOR_FLOAT32 ||
             TensorHelper::EnsureGPUMemory(source) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] tensor_to_bfloat16 requires a GPU-capable FLOAT32 tensor." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
-        X::Tensor output(X::g_pXHost->CreateTensor());
-        X::Port::vector<int> shape(source->GetDimCount());
-        for (int dimension = 0; dimension < source->GetDimCount(); ++dimension) {
-            shape.push_back(static_cast<int>(source->GetDimSize(dimension)));
+        std::vector<int64_t> shape;
+        shape.reserve(source.Info().rank);
+        for (int dimension = 0; dimension < source.Info().rank; ++dimension) {
+            shape.push_back(static_cast<int>(source.Info().shape[dimension]));
         }
-        output->SetDataType(X::TensorDataType::BFLOAT16);
-        output->SetShape(shape);
         void* outputDevice = nullptr;
-        const size_t outputBytes = static_cast<size_t>(source->GetCount()) * sizeof(bfloat16);
+        const size_t outputBytes = static_cast<size_t>(TensorCount(source)) * sizeof(bfloat16);
+        if (!outputBytes) return TensorHelper::CreateGPU(Host(), X3_TENSOR_BFLOAT16, shape);
         if (cudaMalloc(&outputDevice, outputBytes) != cudaSuccess) {
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        const cudaError_t status = runConvertFP32ToBF16Async(
+        auto sourceUse = TensorHelper::AcquireGPU(source);
+        cudaError_t status = runConvertFP32ToBF16Async(
             static_cast<const float*>(TensorHelper::GetGPUMemory(source)),
             static_cast<bfloat16*>(outputDevice),
-            static_cast<int>(source->GetCount()),
+            static_cast<int>(TensorCount(source)),
             cudaStreamPerThread);
-        if (status != cudaSuccess ||
-            TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
+        if (status == cudaSuccess) status = cudaStreamSynchronize(cudaStreamPerThread);
+        if (status != cudaSuccess) {
             cudaFree(outputDevice);
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        retValue = X::Value(output);
+        retValue = AdoptGpuOutput(Host(), X3_TENSOR_BFLOAT16, shape, outputDevice);
+        return retValue;
     }
 
-    void GarnetAPI::TensorFromBFloat16Bits(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::TensorFromBFloat16Bits(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() == 0 || !params[0].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() == 0 || !X::Tensor::IsTensor(params[0])) {
             std::cout << "[GarnetAPI] tensor_from_bfloat16_bits(uint16_tensor) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor bits(params[0]);
-        if (bits->GetDataType() != X::TensorDataType::USHORT || !bits->GetData()) {
+        ValidateDenseTensor(bits);
+        auto bitsUse = bits.Acquire();
+        if (bits.Info().dtype != X3_TENSOR_UINT16 || bits.Info().device_type != 0 || !bits.Info().data) {
             std::cout << "[GarnetAPI] BF16 source must be a CPU uint16 tensor." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        X::Tensor tensor = X::g_pXHost->CreateTensor();
-        X::Port::vector<int> shape(bits->GetDimCount());
-        for (int dim = 0; dim < bits->GetDimCount(); ++dim) {
-            shape.push_back(static_cast<int>(bits->GetDimSize(dim)));
+        std::vector<int64_t> shape;
+        shape.reserve(bits.Info().rank);
+        for (int dim = 0; dim < bits.Info().rank; ++dim) {
+            shape.push_back(static_cast<int>(bits.Info().shape[dim]));
         }
-        tensor->SetDataType(X::TensorDataType::BFLOAT16);
-        tensor->SetShape(shape);
-        X::Value dummy;
-        tensor->Create(dummy);
-        if (!tensor->GetData() || tensor->GetDataSize() != bits->GetDataSize()) {
-            retValue = X::Value();
-            return;
-        }
-        std::memcpy(tensor->GetData(), bits->GetData(), static_cast<size_t>(bits->GetDataSize()));
         const std::string device = GetStringArg(
             params, kwParams, 1, "device", "cuda");
         if (device == "cpu") {
-            retValue = X::Value(tensor);
-            return;
+            retValue = X::Tensor::Create(Host(), X3_TENSOR_BFLOAT16, shape, bits.Info().data, bits.Info().byte_size);
+            return retValue;
         }
         if (device != "cuda") {
             std::cout << "[GarnetAPI] tensor_from_bfloat16_bits device must be cpu or cuda." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            std::cout << "[GarnetAPI] BF16 tensor GPU upload failed." << std::endl;
-            retValue = X::Value();
-            return;
-        }
-        retValue = X::Value(tensor);
+        retValue = TensorHelper::CreateGPU(Host(), X3_TENSOR_BFLOAT16, shape, bits.Info().data);
+        return retValue;
     }
 
-    void GarnetAPI::TensorFromHost(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::TensorFromHost(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         if (params.size() == 0 || !params[0].IsList()) {
             std::cout << "[GarnetAPI] tensor_from_host(values, dtype='int32', shape=[...]) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        X::List values(params[0]);
+        X::Value values(params[0]);
         const std::string dataTypeName = GetStringArg(params, kwParams, 1, "dtype", "float32");
-        X::TensorDataType dataType;
+        X3TensorDType dataType;
         size_t elementBytes = 0;
         if (dataTypeName == "int32") {
-            dataType = X::TensorDataType::INT;
+            dataType = X3_TENSOR_INT32;
             elementBytes = sizeof(int);
         }
         else if (dataTypeName == "int64") {
-            dataType = X::TensorDataType::LONGLONG;
+            dataType = X3_TENSOR_INT64;
             elementBytes = sizeof(long long);
         }
         else if (dataTypeName == "float32") {
-            dataType = X::TensorDataType::FLOAT32;
+            dataType = X3_TENSOR_FLOAT32;
             elementBytes = sizeof(float);
         }
         else {
             std::cout << "[GarnetAPI] tensor_from_host unsupported dtype: " << dataTypeName << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         std::vector<int> dimensions;
         X::Value shapeValue = GetKwarg(kwParams, "shape");
         if (shapeValue.IsList()) {
-            X::List shape(shapeValue);
-            for (long long index = 0; index < shape->Size(); ++index) {
-                dimensions.push_back(static_cast<int>(shape->Get(index).ToLongLong()));
+            X::Value shape(shapeValue);
+            for (long long index = 0; index < shape.Size(); ++index) {
+                dimensions.push_back(CheckedInt(shape.Get(index), "tensor dimension"));
             }
         }
-        if (dimensions.empty()) dimensions.push_back(static_cast<int>(values->Size()));
+        if (values.Size() > INT32_MAX) throw X::Error("tensor value count exceeds int32 limits");
+        if (dimensions.empty()) dimensions.push_back(static_cast<int>(values.Size()));
         size_t expectedCount = 1;
         for (const int dimension : dimensions) {
-            if (dimension <= 0) {
-                retValue = X::Value();
-                return;
-            }
+            if (dimension < 0 || (dimension && expectedCount > INT32_MAX / static_cast<size_t>(dimension)))
+                throw X::Error("tensor shape exceeds int32 kernel limits");
             expectedCount *= static_cast<size_t>(dimension);
         }
-        if (expectedCount != static_cast<size_t>(values->Size())) {
+        if (expectedCount != static_cast<size_t>(values.Size())) {
             std::cout << "[GarnetAPI] tensor_from_host shape does not match value count." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
         std::vector<char> bytes(expectedCount * elementBytes);
         for (size_t index = 0; index < expectedCount; ++index) {
-            X::Value value = values->Get(static_cast<long long>(index));
-            if (dataType == X::TensorDataType::INT) {
-                reinterpret_cast<int*>(bytes.data())[index] = static_cast<int>(value.ToLongLong());
+            X::Value value = values.Get(static_cast<long long>(index));
+            if (dataType == X3_TENSOR_INT32) {
+                const int number = CheckedInt(value, "tensor value");
+                std::memcpy(bytes.data() + index * sizeof(number), &number, sizeof(number));
             }
-            else if (dataType == X::TensorDataType::LONGLONG) {
-                reinterpret_cast<long long*>(bytes.data())[index] = value.ToLongLong();
+            else if (dataType == X3_TENSOR_INT64) {
+                const int64_t number = CheckedInt64(value, "tensor value");
+                std::memcpy(bytes.data() + index * sizeof(number), &number, sizeof(number));
             }
             else {
-                reinterpret_cast<float*>(bytes.data())[index] = static_cast<float>(value.ToDouble());
+                const float number = static_cast<float>(value.ToDouble());
+                std::memcpy(bytes.data() + index * sizeof(number), &number, sizeof(number));
             }
         }
 
-        X::Tensor tensor(X::g_pXHost->CreateTensor());
-        X::Port::vector<int> shape(static_cast<int>(dimensions.size()));
-        for (const int dimension : dimensions) shape.push_back(dimension);
-        tensor->SetDataType(dataType);
-        tensor->SetShape(shape);
-        X::Value init;
-        if (!tensor->Create(init) || !tensor->GetData()) {
-            retValue = X::Value();
-            return;
-        }
-        std::memcpy(tensor->GetData(), bytes.data(), bytes.size());
+        const std::vector<int64_t> shape(dimensions.begin(), dimensions.end());
         const std::string device = GetStringArg(params, kwParams, 3, "device", "cuda");
-        if (device == "cuda" && TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retValue = X::Value();
-            return;
-        }
-        retValue = X::Value(tensor);
+        if (device != "cuda" && device != "cpu") throw X::Error("tensor device must be cpu or cuda");
+        retValue = device == "cuda" ? TensorHelper::CreateGPU(Host(), dataType, shape, bytes.data()) :
+            X::Tensor::Create(Host(), dataType, shape, bytes.data(), bytes.size());
+        return retValue;
     }
 
-    void GarnetAPI::TensorUpdateFromHost(
-        X::XRuntime*,
-        X::XObj*,
-        X::ARGS& params,
-        X::KWARGS&,
-        X::Value& retValue)
+    X::Value GarnetAPI::TensorUpdateFromHost(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 2 || !params[0].IsTensor() ||
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 2 || !X::Tensor::IsTensor(params[0]) ||
             !params[1].IsList()) {
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
         X::Tensor tensor(params[0]);
-        X::List values(params[1]);
-        const size_t count = static_cast<size_t>(tensor->GetCount());
-        if (count != static_cast<size_t>(values->Size()) ||
-            TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
-            retValue = X::Value(false);
-            return;
+        ValidateDenseTensor(tensor, true);
+        X::Value values(params[1]);
+        const size_t count = static_cast<size_t>(TensorCount(tensor));
+        if (count != static_cast<size_t>(values.Size())) {
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
+        if (count == 0) return X::Value(true);
 
         size_t elementBytes = 0;
-        switch (tensor->GetDataType()) {
-        case X::TensorDataType::INT:
+        switch (tensor.Info().dtype) {
+        case X3_TENSOR_INT32:
             elementBytes = sizeof(int);
             break;
-        case X::TensorDataType::LONGLONG:
+        case X3_TENSOR_INT64:
             elementBytes = sizeof(long long);
             break;
-        case X::TensorDataType::FLOAT32:
+        case X3_TENSOR_FLOAT32:
             elementBytes = sizeof(float);
             break;
         default:
-            retValue = X::Value(false);
-            return;
+            retValue = NativeValue(Host(), X::Value(false));
+            return retValue;
         }
 
         std::vector<char> bytes(count * elementBytes);
         for (size_t index = 0; index < count; ++index) {
-            X::Value value = values->Get(static_cast<long long>(index));
-            if (tensor->GetDataType() == X::TensorDataType::INT) {
-                reinterpret_cast<int*>(bytes.data())[index] =
-                    static_cast<int>(value.ToLongLong());
+            X::Value value = values.Get(static_cast<long long>(index));
+            if (tensor.Info().dtype == X3_TENSOR_INT32) {
+                const int number = CheckedInt(value, "tensor value");
+                std::memcpy(bytes.data() + index * sizeof(number), &number, sizeof(number));
             }
-            else if (tensor->GetDataType() == X::TensorDataType::LONGLONG) {
-                reinterpret_cast<long long*>(bytes.data())[index] =
-                    value.ToLongLong();
+            else if (tensor.Info().dtype == X3_TENSOR_INT64) {
+                const int64_t number = CheckedInt64(value, "tensor value");
+                std::memcpy(bytes.data() + index * sizeof(number), &number, sizeof(number));
             }
             else {
-                reinterpret_cast<float*>(bytes.data())[index] =
-                    static_cast<float>(value.ToDouble());
+                const float number = static_cast<float>(value.ToDouble());
+                std::memcpy(bytes.data() + index * sizeof(number), &number, sizeof(number));
             }
         }
-        const cudaError_t status = cudaMemcpyAsync(
-            TensorHelper::GetGPUMemory(tensor),
+        if (tensor.Info().device_type == 0) {
+            auto use = tensor.Acquire(X3_TENSOR_WRITE);
+            if (!bytes.empty()) std::memcpy(tensor.Info().data, bytes.data(), bytes.size());
+            return X::Value(true);
+        }
+        auto tensorUse = TensorHelper::AcquireGPU(tensor, X3_TENSOR_WRITE);
+        cudaError_t status = cudaMemcpyAsync(
+            tensor.Info().data,
             bytes.data(),
             bytes.size(),
             cudaMemcpyHostToDevice,
             cudaStreamPerThread);
-        retValue = X::Value(status == cudaSuccess);
+        const auto copyComplete = cudaStreamSynchronize(cudaStreamPerThread);
+        if (status == cudaSuccess) status = copyComplete;
+        retValue = NativeValue(Host(), X::Value(status == cudaSuccess));
+        return retValue;
     }
 
-    void GarnetAPI::TensorAdd(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::TensorAdd(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 2 || !params[0].IsTensor() || !params[1].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 2 || !X::Tensor::IsTensor(params[0]) || !X::Tensor::IsTensor(params[1])) {
             std::cout << "[GarnetAPI] tensor_add(lhs, rhs) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor lhs(params[0]);
+        ValidateDenseTensor(lhs);
         X::Tensor rhs(params[1]);
-        if (lhs->GetDataType() != X::TensorDataType::FLOAT32 ||
-            rhs->GetDataType() != X::TensorDataType::FLOAT32 ||
-            lhs->GetDimCount() != rhs->GetDimCount() ||
-            lhs->GetCount() != rhs->GetCount()) {
+        ValidateDenseTensor(rhs);
+        if (lhs.Info().dtype != X3_TENSOR_FLOAT32 ||
+            rhs.Info().dtype != X3_TENSOR_FLOAT32 ||
+            lhs.Info().rank != rhs.Info().rank ||
+            TensorCount(lhs) != TensorCount(rhs)) {
             std::cout << "[GarnetAPI] tensor_add requires equal-shaped FLOAT32 tensors." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        for (int dim = 0; dim < lhs->GetDimCount(); ++dim) {
-            if (lhs->GetDimSize(dim) != rhs->GetDimSize(dim)) {
+        for (int dim = 0; dim < lhs.Info().rank; ++dim) {
+            if (lhs.Info().shape[dim] != rhs.Info().shape[dim]) {
                 std::cout << "[GarnetAPI] tensor_add shape mismatch." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
         }
         if (TensorHelper::EnsureGPUMemory(lhs) != TensorOpStatus::Success ||
             TensorHelper::EnsureGPUMemory(rhs) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] tensor_add failed to ensure GPU inputs." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
-        size_t bytes = static_cast<size_t>(lhs->GetDataSize());
+        auto inputsUse = X::Tensor::AcquireMany({{lhs, X3_TENSOR_READ}, {rhs, X3_TENSOR_READ}});
+        size_t bytes = static_cast<size_t>(lhs.Info().byte_size);
         float* outputDevice = nullptr;
         cudaStream_t stream = nullptr;
         cudaError_t err = cudaStreamCreate(&stream);
@@ -3880,7 +3924,7 @@ namespace Garnet
                 static_cast<const float*>(TensorHelper::GetGPUMemory(lhs)),
                 static_cast<const float*>(TensorHelper::GetGPUMemory(rhs)),
                 outputDevice,
-                static_cast<int>(lhs->GetCount()),
+                static_cast<int>(TensorCount(lhs)),
                 stream);
         }
         if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
@@ -3888,53 +3932,52 @@ namespace Garnet
             if (outputDevice) cudaFree(outputDevice);
             if (stream) cudaStreamDestroy(stream);
             std::cout << "[GarnetAPI] tensor_add failed: " << cudaGetErrorString(err) << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
-        X::Tensor output = X::g_pXHost->CreateTensor();
-        X::Port::vector<int> shape(lhs->GetDimCount());
-        for (int dim = 0; dim < lhs->GetDimCount(); ++dim) {
-            shape.push_back(static_cast<int>(lhs->GetDimSize(dim)));
-        }
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        output->SetShape(shape);
-        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
-            cudaFree(outputDevice);
-            cudaStreamDestroy(stream);
-            retValue = X::Value();
-            return;
+        std::vector<int64_t> shape; shape.reserve(lhs.Info().rank);
+        for (int dim = 0; dim < lhs.Info().rank; ++dim) {
+            shape.push_back(static_cast<int>(lhs.Info().shape[dim]));
         }
         cudaStreamDestroy(stream);
-        retValue = X::Value(output);
+        auto output = AdoptGpuOutput(Host(), X3_TENSOR_FLOAT32, shape, outputDevice);
+        retValue = NativeValue(Host(), X::Value(output));
+        return retValue;
     }
 
-    void GarnetAPI::Embedding(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::Embedding(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 2 || !params[0].IsTensor() || !params[1].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 2 || !X::Tensor::IsTensor(params[0]) || !X::Tensor::IsTensor(params[1])) {
             std::cout << "[GarnetAPI] embedding(weight, token_ids) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor weight(params[0]);
+        ValidateDenseTensor(weight);
         X::Tensor tokenIds(params[1]);
-        bool bf16Weight = weight->GetDataType() == X::TensorDataType::BFLOAT16;
-        if ((!bf16Weight && weight->GetDataType() != X::TensorDataType::FLOAT32) || weight->GetDimCount() != 2 ||
-            tokenIds->GetDataType() != X::TensorDataType::LONGLONG || tokenIds->GetDimCount() != 1) {
+        ValidateDenseTensor(tokenIds);
+        bool bf16Weight = weight.Info().dtype == X3_TENSOR_BFLOAT16;
+        if ((!bf16Weight && weight.Info().dtype != X3_TENSOR_FLOAT32) || weight.Info().rank != 2 ||
+            tokenIds.Info().dtype != X3_TENSOR_INT64 || tokenIds.Info().rank != 1) {
             std::cout << "[GarnetAPI] embedding requires FLOAT32/BF16 [vocab, hidden] and INT64 [tokens]." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         if (TensorHelper::EnsureGPUMemory(weight) != TensorOpStatus::Success ||
             TensorHelper::EnsureGPUMemory(tokenIds) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] embedding failed to ensure GPU inputs." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        int tokens = static_cast<int>(tokenIds->GetDimSize(0));
-        int vocab = static_cast<int>(weight->GetDimSize(0));
-        int hidden = static_cast<int>(weight->GetDimSize(1));
+        auto inputsUse = X::Tensor::AcquireMany({{weight, X3_TENSOR_READ}, {tokenIds, X3_TENSOR_READ}});
+        int tokens = static_cast<int>(tokenIds.Info().shape[0]);
+        int vocab = static_cast<int>(weight.Info().shape[0]);
+        int hidden = static_cast<int>(weight.Info().shape[1]);
+        if (hidden <= 0 || tokens < 0 || static_cast<int64_t>(tokens) * hidden > INT32_MAX - 1024)
+            throw X::Error("embedding output exceeds kernel indexing limits");
         size_t bytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
         float* outputDevice = nullptr;
         cudaStream_t stream = nullptr;
@@ -3956,55 +3999,54 @@ namespace Garnet
             if (outputDevice) cudaFree(outputDevice);
             if (stream) cudaStreamDestroy(stream);
             std::cout << "[GarnetAPI] embedding failed: " << cudaGetErrorString(err) << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        X::Tensor output = X::g_pXHost->CreateTensor();
-        X::Port::vector<int> shape(2);
+        std::vector<int64_t> shape; shape.reserve(2);
         shape.push_back(tokens);
         shape.push_back(hidden);
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        output->SetShape(shape);
-        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
-            cudaFree(outputDevice);
-            cudaStreamDestroy(stream);
-            retValue = X::Value();
-            return;
-        }
         cudaStreamDestroy(stream);
-        retValue = X::Value(output);
+        auto output = AdoptGpuOutput(Host(), X3_TENSOR_FLOAT32, shape, outputDevice);
+        retValue = NativeValue(Host(), X::Value(output));
+        return retValue;
     }
 
-    void GarnetAPI::ReplaceRowsByMask(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::ReplaceRowsByMask(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 3 || !params[0].IsTensor() || !params[1].IsTensor() || !params[2].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 3 || !X::Tensor::IsTensor(params[0]) || !X::Tensor::IsTensor(params[1]) || !X::Tensor::IsTensor(params[2])) {
             std::cout << "[GarnetAPI] replace_rows_by_mask(base, mask, replacements, mask_value=1) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor base(params[0]);
+        ValidateDenseTensor(base);
         X::Tensor mask(params[1]);
+        ValidateDenseTensor(mask);
         X::Tensor replacements(params[2]);
+        ValidateDenseTensor(replacements);
         long long maskValue = params.size() >= 4 ? params[3].ToLongLong() : 1;
-        if (base->GetDataType() != X::TensorDataType::FLOAT32 || base->GetDimCount() != 2 ||
-            mask->GetDataType() != X::TensorDataType::LONGLONG || mask->GetDimCount() != 1 ||
-            replacements->GetDataType() != X::TensorDataType::FLOAT32 || replacements->GetDimCount() != 2 ||
-            mask->GetDimSize(0) != base->GetDimSize(0) ||
-            replacements->GetDimSize(1) != base->GetDimSize(1)) {
+        if (base.Info().dtype != X3_TENSOR_FLOAT32 || base.Info().rank != 2 ||
+            mask.Info().dtype != X3_TENSOR_INT64 || mask.Info().rank != 1 ||
+            replacements.Info().dtype != X3_TENSOR_FLOAT32 || replacements.Info().rank != 2 ||
+            mask.Info().shape[0] != base.Info().shape[0] ||
+            replacements.Info().shape[1] != base.Info().shape[1]) {
             std::cout << "[GarnetAPI] replace_rows_by_mask shape or dtype mismatch." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         if (TensorHelper::EnsureGPUMemory(base) != TensorOpStatus::Success ||
             TensorHelper::EnsureGPUMemory(mask) != TensorOpStatus::Success ||
             TensorHelper::EnsureGPUMemory(replacements) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] replace_rows_by_mask failed to ensure GPU inputs." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
 
-        size_t bytes = static_cast<size_t>(base->GetDataSize());
+        auto inputsUse = X::Tensor::AcquireMany({{base, X3_TENSOR_READ}, {mask, X3_TENSOR_READ},
+            {replacements, X3_TENSOR_READ}});
+        size_t bytes = static_cast<size_t>(base.Info().byte_size);
         float* outputDevice = nullptr;
         cudaStream_t stream = nullptr;
         cudaError_t err = cudaStreamCreate(&stream);
@@ -4017,9 +4059,9 @@ namespace Garnet
                 outputDevice,
                 static_cast<const long long*>(TensorHelper::GetGPUMemory(mask)),
                 static_cast<const float*>(TensorHelper::GetGPUMemory(replacements)),
-                static_cast<int>(base->GetDimSize(0)),
-                static_cast<int>(replacements->GetDimSize(0)),
-                static_cast<int>(base->GetDimSize(1)),
+                static_cast<int>(base.Info().shape[0]),
+                static_cast<int>(replacements.Info().shape[0]),
+                static_cast<int>(base.Info().shape[1]),
                 maskValue,
                 stream);
         }
@@ -4028,88 +4070,82 @@ namespace Garnet
             if (outputDevice) cudaFree(outputDevice);
             if (stream) cudaStreamDestroy(stream);
             std::cout << "[GarnetAPI] replace_rows_by_mask failed: " << cudaGetErrorString(err) << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        X::Tensor output = X::g_pXHost->CreateTensor();
-        X::Port::vector<int> shape(2);
-        shape.push_back(static_cast<int>(base->GetDimSize(0)));
-        shape.push_back(static_cast<int>(base->GetDimSize(1)));
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        output->SetShape(shape);
-        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
-            cudaFree(outputDevice);
-            cudaStreamDestroy(stream);
-            retValue = X::Value();
-            return;
-        }
+        std::vector<int64_t> shape; shape.reserve(2);
+        shape.push_back(static_cast<int>(base.Info().shape[0]));
+        shape.push_back(static_cast<int>(base.Info().shape[1]));
         cudaStreamDestroy(stream);
-        retValue = X::Value(output);
+        auto output = AdoptGpuOutput(Host(), X3_TENSOR_FLOAT32, shape, outputDevice);
+        retValue = NativeValue(Host(), X::Value(output));
+        return retValue;
     }
 
-    void GarnetAPI::TensorLastRow(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::TensorLastRow(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 1 || !params[0].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 1 || !X::Tensor::IsTensor(params[0])) {
             std::cout << "[GarnetAPI] tensor_last_row(tensor) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor input(params[0]);
-        if (input->GetDimCount() != 2 || input->GetDimSize(0) <= 0 ||
+        ValidateDenseTensor(input);
+        if (input.Info().rank != 2 || input.Info().shape[0] <= 0 ||
             TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
             std::cout << "[GarnetAPI] tensor_last_row requires a non-empty 2D tensor." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        int rows = static_cast<int>(input->GetDimSize(0));
-        int columns = static_cast<int>(input->GetDimSize(1));
-        size_t rowBytes = static_cast<size_t>(columns) * static_cast<size_t>(input->GetItemSize());
+        int rows = static_cast<int>(input.Info().shape[0]);
+        int columns = static_cast<int>(input.Info().shape[1]);
+        size_t rowBytes = static_cast<size_t>(columns) * TensorHelper::ItemSize(input.Info().dtype);
+        auto inputUse = TensorHelper::AcquireGPU(input);
         auto* inputDevice = static_cast<const char*>(TensorHelper::GetGPUMemory(input));
         void* outputDevice = nullptr;
         cudaError_t err = cudaMalloc(&outputDevice, rowBytes);
         if (err == cudaSuccess) {
-            err = cudaMemcpy(
+            err = cudaMemcpyAsync(
                 outputDevice,
                 inputDevice + static_cast<size_t>(rows - 1) * rowBytes,
                 rowBytes,
-                cudaMemcpyDeviceToDevice);
+                cudaMemcpyDeviceToDevice, cudaStreamPerThread);
         }
+        if (err == cudaSuccess) err = cudaStreamSynchronize(cudaStreamPerThread);
         if (err != cudaSuccess) {
             if (outputDevice) cudaFree(outputDevice);
             std::cout << "[GarnetAPI] tensor_last_row failed: " << cudaGetErrorString(err) << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        X::Tensor output = X::g_pXHost->CreateTensor();
-        X::Port::vector<int> shape(2);
+        std::vector<int64_t> shape; shape.reserve(2);
         shape.push_back(1);
         shape.push_back(columns);
-        output->SetDataType(input->GetDataType());
-        output->SetShape(shape);
-        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
-            cudaFree(outputDevice);
-            retValue = X::Value();
-            return;
-        }
-        retValue = X::Value(output);
+        auto output = AdoptGpuOutput(Host(), input.Info().dtype, shape, outputDevice);
+        retValue = NativeValue(Host(), X::Value(output));
+        return retValue;
     }
 
-    void GarnetAPI::GeluTanh(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::GeluTanh(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 1 || !params[0].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 1 || !X::Tensor::IsTensor(params[0])) {
             std::cout << "[GarnetAPI] gelu_tanh(tensor) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor input(params[0]);
-        if (input->GetDataType() != X::TensorDataType::FLOAT32 || input->GetCount() <= 0 ||
+        ValidateDenseTensor(input);
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || TensorCount(input) <= 0 ||
             TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        size_t bytes = static_cast<size_t>(input->GetDataSize());
+        auto inputUse = input.Acquire();
+        size_t bytes = static_cast<size_t>(input.Info().byte_size);
         float* outputDevice = nullptr;
         cudaStream_t stream = nullptr;
         cudaError_t err = cudaStreamCreate(&stream);
@@ -4118,64 +4154,62 @@ namespace Garnet
             err = runGeluTanhFP32(
                 static_cast<const float*>(TensorHelper::GetGPUMemory(input)),
                 outputDevice,
-                static_cast<int>(input->GetCount()),
+                static_cast<int>(TensorCount(input)),
                 stream);
         }
         if (err == cudaSuccess) err = cudaStreamSynchronize(stream);
         if (err != cudaSuccess) {
             if (outputDevice) cudaFree(outputDevice);
             if (stream) cudaStreamDestroy(stream);
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        X::Tensor output = X::g_pXHost->CreateTensor();
-        X::Port::vector<int> shape(input->GetDimCount());
-        for (int dim = 0; dim < input->GetDimCount(); ++dim) {
-            shape.push_back(static_cast<int>(input->GetDimSize(dim)));
-        }
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        output->SetShape(shape);
-        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
-            cudaFree(outputDevice);
-            cudaStreamDestroy(stream);
-            retValue = X::Value();
-            return;
+        std::vector<int64_t> shape; shape.reserve(input.Info().rank);
+        for (int dim = 0; dim < input.Info().rank; ++dim) {
+            shape.push_back(static_cast<int>(input.Info().shape[dim]));
         }
         cudaStreamDestroy(stream);
-        retValue = X::Value(output);
+        auto output = AdoptGpuOutput(Host(), X3_TENSOR_FLOAT32, shape, outputDevice);
+        retValue = NativeValue(Host(), X::Value(output));
+        return retValue;
     }
 
-    void GarnetAPI::VisionRoPE(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::VisionRoPE(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() < 3 || !params[0].IsTensor() || !params[1].IsTensor() || !params[2].IsTensor()) {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() < 3 || !X::Tensor::IsTensor(params[0]) || !X::Tensor::IsTensor(params[1]) || !X::Tensor::IsTensor(params[2])) {
             std::cout << "[GarnetAPI] vision_rope(qkv, cos, sin, num_heads=16) expected." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
         X::Tensor qkv(params[0]);
+        ValidateDenseTensor(qkv);
         X::Tensor cos(params[1]);
+        ValidateDenseTensor(cos);
         X::Tensor sin(params[2]);
-        int numHeads = params.size() >= 4 ? static_cast<int>(params[3].ToLongLong()) : 16;
-        if (qkv->GetDataType() != X::TensorDataType::FLOAT32 || qkv->GetDimCount() != 2 ||
-            cos->GetDataType() != X::TensorDataType::FLOAT32 || cos->GetDimCount() != 2 ||
-            sin->GetDataType() != X::TensorDataType::FLOAT32 || sin->GetDimCount() != 2 ||
-            qkv->GetDimSize(0) != cos->GetDimSize(0) || cos->GetDimSize(0) != sin->GetDimSize(0) ||
-            cos->GetDimSize(1) != sin->GetDimSize(1) || numHeads <= 0) {
+        ValidateDenseTensor(sin);
+        int numHeads = params.size() >= 4 ? CheckedInt(params[3], "argument") : 16;
+        if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || qkv.Info().rank != 2 ||
+            cos.Info().dtype != X3_TENSOR_FLOAT32 || cos.Info().rank != 2 ||
+            sin.Info().dtype != X3_TENSOR_FLOAT32 || sin.Info().rank != 2 ||
+            qkv.Info().shape[0] != cos.Info().shape[0] || cos.Info().shape[0] != sin.Info().shape[0] ||
+            cos.Info().shape[1] != sin.Info().shape[1] || numHeads <= 0) {
             std::cout << "[GarnetAPI] vision_rope shape or dtype mismatch." << std::endl;
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        int tokens = static_cast<int>(qkv->GetDimSize(0));
-        int headDim = static_cast<int>(cos->GetDimSize(1));
-        if (qkv->GetDimSize(1) != 3 * numHeads * headDim ||
+        int tokens = static_cast<int>(qkv.Info().shape[0]);
+        int headDim = static_cast<int>(cos.Info().shape[1]);
+        if (headDim <= 0 || qkv.Info().shape[1] != int64_t{3} * numHeads * headDim ||
             TensorHelper::EnsureGPUMemory(qkv) != TensorOpStatus::Success ||
             TensorHelper::EnsureGPUMemory(cos) != TensorOpStatus::Success ||
             TensorHelper::EnsureGPUMemory(sin) != TensorOpStatus::Success) {
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        size_t bytes = static_cast<size_t>(qkv->GetDataSize());
+        auto inputsUse = X::Tensor::AcquireMany({{qkv, X3_TENSOR_READ}, {cos, X3_TENSOR_READ}, {sin, X3_TENSOR_READ}});
+        size_t bytes = static_cast<size_t>(qkv.Info().byte_size);
         float* outputDevice = nullptr;
         cudaStream_t stream = nullptr;
         cudaError_t err = cudaStreamCreate(&stream);
@@ -4191,29 +4225,23 @@ namespace Garnet
         if (err != cudaSuccess) {
             if (outputDevice) cudaFree(outputDevice);
             if (stream) cudaStreamDestroy(stream);
-            retValue = X::Value();
-            return;
+            retValue = NativeValue(Host(), X::Value());
+            return retValue;
         }
-        X::Tensor output = X::g_pXHost->CreateTensor();
-        X::Port::vector<int> shape(2);
+        std::vector<int64_t> shape; shape.reserve(2);
         shape.push_back(tokens);
-        shape.push_back(static_cast<int>(qkv->GetDimSize(1)));
-        output->SetDataType(X::TensorDataType::FLOAT32);
-        output->SetShape(shape);
-        if (TensorHelper::AttachGPUMemory(output, outputDevice) != TensorOpStatus::Success) {
-            cudaFree(outputDevice);
-            cudaStreamDestroy(stream);
-            retValue = X::Value();
-            return;
-        }
+        shape.push_back(static_cast<int>(qkv.Info().shape[1]));
         cudaStreamDestroy(stream);
-        retValue = X::Value(output);
+        auto output = AdoptGpuOutput(Host(), X3_TENSOR_FLOAT32, shape, outputDevice);
+        retValue = NativeValue(Host(), X::Value(output));
+        return retValue;
     }
 
-    void GarnetAPI::LoadModelEx(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::LoadModelEx(const X::ARGS& params, const X::KWARGS& kwParams)
     {
-        if (params.size() == 0) return;
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        if (params.size() == 0) return retValue;
         std::string modelPath = params[0].ToString();
         std::string runtimeMode;
         std::string weightsLocation;
@@ -4226,58 +4254,58 @@ namespace Garnet
         std::vector<std::string> compiledInputDataTypes;
         FusionPartitionOptions compiledPartitionOptions;
         for (auto& item : kwParams) {
-            const std::string key(item.key);
-            if (key == "runtime_mode") runtimeMode = item.val.ToString();
-            else if (key == "weights" && item.val.IsString()) weightsLocation = item.val.ToString();
-            else if (key == "cache_dir") compiledCacheDirectory = item.val.ToString();
-            else if (key == "entry_function") entryFunction = item.val.ToString();
-            else if (key == "frontend") compiledFrontend = item.val.ToString();
-            else if (key == "backend") compiledBackend = item.val.ToString();
-            else if (key == "precision") compiledPrecision = item.val.ToString();
-            else if (key == "input_shapes" && item.val.IsList()) {
-                X::List shapes(item.val);
-                for (long long inputIndex = 0; inputIndex < shapes->Size(); ++inputIndex) {
-                    X::Value dimensionsValue = shapes->Get(inputIndex);
+            const std::string key(item.first);
+            if (key == "runtime_mode") runtimeMode = item.second.ToString();
+            else if (key == "weights" && item.second.IsString()) weightsLocation = item.second.ToString();
+            else if (key == "cache_dir") compiledCacheDirectory = item.second.ToString();
+            else if (key == "entry_function") entryFunction = item.second.ToString();
+            else if (key == "frontend") compiledFrontend = item.second.ToString();
+            else if (key == "backend") compiledBackend = item.second.ToString();
+            else if (key == "precision") compiledPrecision = item.second.ToString();
+            else if (key == "input_shapes" && item.second.IsList()) {
+                X::Value shapes(item.second);
+                for (long long inputIndex = 0; inputIndex < shapes.Size(); ++inputIndex) {
+                    X::Value dimensionsValue = shapes.Get(inputIndex);
                     if (!dimensionsValue.IsList()) {
                         compiledInputShapes.clear();
                         break;
                     }
-                    X::List dimensions(dimensionsValue);
+                    X::Value dimensions(dimensionsValue);
                     std::vector<int> shape;
-                    for (long long dimension = 0; dimension < dimensions->Size(); ++dimension) {
-                        shape.push_back(static_cast<int>(dimensions->Get(dimension).ToLongLong()));
+                    for (long long dimension = 0; dimension < dimensions.Size(); ++dimension) {
+                        shape.push_back(static_cast<int>(dimensions.Get(dimension).ToLongLong()));
                     }
                     compiledInputShapes.push_back(std::move(shape));
                 }
             }
-            else if (key == "input_dtypes" && item.val.IsList()) {
-                X::List dataTypes(item.val);
-                for (long long index = 0; index < dataTypes->Size(); ++index) {
-                    compiledInputDataTypes.push_back(dataTypes->Get(index).ToString());
+            else if (key == "input_dtypes" && item.second.IsList()) {
+                X::Value dataTypes(item.second);
+                for (long long index = 0; index < dataTypes.Size(); ++index) {
+                    compiledInputDataTypes.push_back(dataTypes.Get(index).ToString());
                 }
             }
-            else if (key == "compile" && item.val.IsDict()) {
-                X::Dict compileOptions(item.val);
-                X::Value workspaceMb = compileOptions["builder_workspace_mb"];
+            else if (key == "compile" && item.second.IsDict()) {
+                X::Value compileOptions(item.second);
+                X::Value workspaceMb = FindField(compileOptions, "builder_workspace_mb");
                 if (workspaceMb.IsValid()) {
                     const unsigned long long megabytes = static_cast<unsigned long long>(
                         (std::max)(64LL, workspaceMb.ToLongLong()));
                     compiledPartitionOptions.builderWorkspaceBytes = megabytes << 20;
                 }
-                X::Value optimizationLevel = compileOptions["builder_optimization_level"];
+                X::Value optimizationLevel = FindField(compileOptions, "builder_optimization_level");
                 if (optimizationLevel.IsValid()) {
                     compiledPartitionOptions.builderOptimizationLevel = (std::max)(
                         0, (std::min)(5, static_cast<int>(optimizationLevel.ToLongLong())));
                 }
-                X::Value partitionValue = compileOptions["partition"];
+                X::Value partitionValue = FindField(compileOptions, "partition");
                 if (partitionValue.IsDict()) {
-                    X::Dict partition(partitionValue);
-                    X::Value preferredEnabled = partition["enable_preferred_boundaries"];
-                    X::Value preferredMin = partition["preferred_min_operations"];
-                    X::Value maxAtomic = partition["max_atomic_regions_per_partition"];
+                    X::Value partition(partitionValue);
+                    X::Value preferredEnabled = FindField(partition, "enable_preferred_boundaries");
+                    X::Value preferredMin = FindField(partition, "preferred_min_operations");
+                    X::Value maxAtomic = FindField(partition, "max_atomic_regions_per_partition");
                     if (preferredEnabled.IsValid()) {
                         compiledPartitionOptions.enablePreferredBoundaries =
-                            preferredEnabled.ToInt() != 0;
+                            preferredEnabled.ToLongLong() != 0;
                     }
                     if (preferredMin.IsValid()) {
                         compiledPartitionOptions.preferredMinOperations =
@@ -4293,11 +4321,19 @@ namespace Garnet
 
         namespace fs = std::filesystem;
         fs::path path(modelPath);
+        if (path.extension() == ".x") {
+            auto pythonPath = path;
+            pythonPath.replace_extension(".py");
+            if (fs::is_regular_file(pythonPath)) {
+                path = std::move(pythonPath);
+                modelPath = path.string();
+            }
+        }
 
         if (runtimeMode == "compiled_xmodel") {
-            X::XPackageValue<Model> varModel;
-            Model& model = *varModel;
-            X::Dict emptyWeights;
+            auto varModel = CallChecked(__xlang3_package_->GetValue("model"));
+            Model& model = *varModel.NativeData<Model>();
+            auto emptyWeights = X::Value::Dict(Host());
             std::string directory = path.parent_path().string();
             std::string emptyString;
             model.SetInfo(directory, emptyString, emptyString, emptyWeights);
@@ -4315,345 +4351,336 @@ namespace Garnet
                 compiledPartitionOptions,
                 compiledBackend,
                 compiledPrecision);
-            retValue = varModel;
-            return;
+            retValue = NativeValue(Host(), varModel);
+            return retValue;
         }
 
         X::Value modelVal;
-        
-        // Check if the path is a .x file
-        if (!fs::is_directory(path) && path.extension() == ".x") {
+
+        if (!fs::is_directory(path) && (path.extension() == ".py" || path.extension() == ".x")) {
             // Load an empty model object
-            X::XPackageValue<Model> varModel;
-            Model& model = *varModel;
-            X::Dict dictModel;
+            auto varModel = CallChecked(__xlang3_package_->GetValue("model"));
+            Model& model = *varModel.NativeData<Model>();
+            auto dictModel = X::Value::Dict(Host());
             std::string dir = path.parent_path().string();
             std::string emptyStr = "";
             model.SetInfo(dir, emptyStr, emptyStr, dictModel);
             modelVal = varModel;
-            
-            // Read the script file
-            std::cout << "[Garnet] Loading .x module from " << modelPath << std::endl;
-            std::ifstream file(modelPath);
-            std::string code((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-            if (file.fail() && code.empty()) {
-                std::cout << "[Garnet] Failed to read file " << modelPath << std::endl;
-            }
 
-            X::Value moduleVal;
-            bool bOK = X::g_pXHost->LoadModule(modelPath.c_str(), code.c_str(), (int)code.size(), moduleVal);
-            std::cout << "[Garnet] LoadModule returned " << bOK << std::endl;
-            if (bOK && moduleVal.IsObject()) {
+            {
                 X::Value weightsDict;
                 X::Value inputShapes;
                 X::Value weightShape;
                 std::string subgraph;
                 std::string cacheDir = (path.parent_path() / "cache").string();
                 for (auto& it : kwParams) {
-                    if (std::string(it.key) == "weights") {
-                        weightsDict = it.val;
+                    if (std::string(it.first) == "weights") {
+                        weightsDict = it.second;
                     }
-                    else if (std::string(it.key) == "input_shapes") {
-                        inputShapes = it.val;
+                    else if (std::string(it.first) == "input_shapes") {
+                        inputShapes = it.second;
                     }
-                    else if (std::string(it.key) == "weight_shape") {
-                        weightShape = it.val;
+                    else if (std::string(it.first) == "weight_shape") {
+                        weightShape = it.second;
                     }
-                    else if (std::string(it.key) == "cache_dir") {
-                        cacheDir = it.val.ToString();
+                    else if (std::string(it.first) == "cache_dir") {
+                        cacheDir = it.second.ToString();
                     }
-                    else if (std::string(it.key) == "subgraph") {
-                        subgraph = it.val.ToString();
+                    else if (std::string(it.first) == "subgraph") {
+                        subgraph = it.second.ToString();
                     }
                 }
 
                 model.SetInfo(dir, emptyStr, emptyStr, weightsDict);
                 model.SetSubgraph(subgraph);
-                
-                // Store weights in GarnetAPI singleton before running script
-                GarnetAPI::I().SetCurrentWeights(weightsDict);
 
-                X::Value retVal;
-                X::g_pXHost->RunModule(moduleVal, retVal, true);
+                // Keep compilation context on this runtime's package instance.
+                SetCurrentWeights(weightsDict);
+                SetCompiledEngine(X::Value());
+
+                X3Value evaluated = x3_value_invalid();
+                const auto evalStatus = x3_runtime_eval_file(Host()->runtime, modelPath.c_str(), &evaluated);
+                X::Value evaluationResult(Host(), evaluated, false);
+                if (evalStatus != X3_STATUS_OK) throw X::Error(Host()->runtime_last_error(Host()->runtime));
 
                 if (subgraph == "qwen3_text_mlp" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> gateShape = TensorShape(weights["language_model.layers.0.mlp.gate_proj.weight"]);
-                        std::vector<int> upShape = TensorShape(weights["language_model.layers.0.mlp.up_proj.weight"]);
-                        std::vector<int> downShape = TensorShape(weights["language_model.layers.0.mlp.down_proj.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> gateShape = TensorShape(FindField(weights, "language_model.layers.0.mlp.gate_proj.weight"));
+                        std::vector<int> upShape = TensorShape(FindField(weights, "language_model.layers.0.mlp.up_proj.weight"));
+                        std::vector<int> downShape = TensorShape(FindField(weights, "language_model.layers.0.mlp.down_proj.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         bool useCudaTextMlp = inputShape.size() == 2 && inputShape[0] > 64;
                         if (useCudaTextMlp) {
-                            model.SetEngine(X::Value("cuda_text_mlp"));
+                            model.SetEngine(X::Value::String(Host(), "cuda_text_mlp"));
                         }
                         else if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportTextMLPEngine(enginePath.string(), inputShape, gateShape, upShape, downShape);
                         }
                         if (!useCudaTextMlp && std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "text_qkv_proj" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> qShape = TensorShape(weights["language_model.layers.0.self_attn.q_proj.weight"]);
-                        std::vector<int> kShape = TensorShape(weights["language_model.layers.0.self_attn.k_proj.weight"]);
-                        std::vector<int> vShape = TensorShape(weights["language_model.layers.0.self_attn.v_proj.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> qShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.q_proj.weight"));
+                        std::vector<int> kShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.k_proj.weight"));
+                        std::vector<int> vShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.v_proj.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportTextQKVEngine(enginePath.string(), inputShape, qShape, kShape, vShape);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "text_qkv_head_norm" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> qShape = TensorShape(weights["language_model.layers.0.self_attn.q_proj.weight"]);
-                        std::vector<int> kShape = TensorShape(weights["language_model.layers.0.self_attn.k_proj.weight"]);
-                        std::vector<int> vShape = TensorShape(weights["language_model.layers.0.self_attn.v_proj.weight"]);
-                        std::vector<int> qNormShape = TensorShape(weights["language_model.layers.0.self_attn.q_norm.weight"]);
-                        std::vector<int> kNormShape = TensorShape(weights["language_model.layers.0.self_attn.k_norm.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> qShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.q_proj.weight"));
+                        std::vector<int> kShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.k_proj.weight"));
+                        std::vector<int> vShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.v_proj.weight"));
+                        std::vector<int> qNormShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.q_norm.weight"));
+                        std::vector<int> kNormShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.k_norm.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportTextQKVHeadNormEngine(enginePath.string(), inputShape, qShape, kShape, vShape, qNormShape, kNormShape, 1.0e-6f);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "text_rope_apply" && inputShapes.IsList()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() >= 3) {
-                        std::vector<int> qkvShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> cosShape = ReadIntList(shapeList->Get(1));
-                        std::vector<int> sinShape = ReadIntList(shapeList->Get(2));
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() >= 3) {
+                        std::vector<int> qkvShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> cosShape = ReadIntList(shapeList.Get(1));
+                        std::vector<int> sinShape = ReadIntList(shapeList.Get(2));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportTextRoPEEngine(enginePath.string(), qkvShape, cosShape, sinShape, 16, 8, 128);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "text_attention_core" && inputShapes.IsList()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        std::vector<int> qkvShape = ReadIntList(shapeList->Get(0));
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        std::vector<int> qkvShape = ReadIntList(shapeList.Get(uint64_t{0}));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportTextAttentionEngine(enginePath.string(), qkvShape, 16, 8, 128);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "vision_attention_core" && inputShapes.IsList()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        std::vector<int> qkvShape = ReadIntList(shapeList->Get(0));
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        std::vector<int> qkvShape = ReadIntList(shapeList.Get(uint64_t{0}));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (qkvShape.size() == 2 && qkvShape[0] > 512) {
-                            model.SetEngine(X::Value("cuda_exact_vision_attention"));
+                            model.SetEngine(X::Value::String(Host(), "cuda_exact_vision_attention"));
                         }
                         else if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportVisionAttentionEngine(enginePath.string(), qkvShape, 16, 64);
                         }
                         if (qkvShape.size() == 2 && qkvShape[0] > 512) {
-                            model.SetEngine(X::Value("cuda_exact_vision_attention"));
+                            model.SetEngine(X::Value::String(Host(), "cuda_exact_vision_attention"));
                         }
                         else if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "text_o_proj" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> oShape = TensorShape(weights["language_model.layers.0.self_attn.o_proj.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> oShape = TensorShape(FindField(weights, "language_model.layers.0.self_attn.o_proj.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportLinearTransposeEngine(enginePath.string(), inputShape, oShape);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "text_lm_head" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> embedShape = TensorShape(weights["language_model.embed_tokens.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> embedShape = TensorShape(FindField(weights, "language_model.embed_tokens.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         bool useCudaLinear = inputShape.size() == 2
                             && embedShape.size() == 2
                             && (embedShape[0] > 65536 || (static_cast<long long>(inputShape[0]) * static_cast<long long>(embedShape[0]) > 8LL * 1024LL * 1024LL));
                         if (useCudaLinear) {
-                            model.SetEngine(X::Value("cuda_linear_transpose"));
+                            model.SetEngine(X::Value::String(Host(), "cuda_linear_transpose"));
                         }
                         else if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportLinearTransposeEngine(enginePath.string(), inputShape, embedShape);
                         }
                         if (!useCudaLinear && std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "vision_patch_embed" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> weightShape = TensorShape(weights["visual.patch_embed.proj.weight"]);
-                        std::vector<int> biasShape = TensorShape(weights["visual.patch_embed.proj.bias"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> weightShape = TensorShape(FindField(weights, "visual.patch_embed.proj.weight"));
+                        std::vector<int> biasShape = TensorShape(FindField(weights, "visual.patch_embed.proj.bias"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportLinearBiasTransposeEngine(enginePath.string(), inputShape, weightShape, biasShape);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "linear_bias" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> weightShape = TensorShape(weights["W"]);
-                        std::vector<int> biasShape = TensorShape(weights["B"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> weightShape = TensorShape(FindField(weights, "W"));
+                        std::vector<int> biasShape = TensorShape(FindField(weights, "B"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         bool useCudaLinear = inputShape.size() == 2 && weightShape.size() == 2
                             && (inputShape[0] > 2048 || (static_cast<long long>(inputShape[0]) * static_cast<long long>(weightShape[0]) > 8LL * 1024LL * 1024LL));
                         if (useCudaLinear) {
-                            model.SetEngine(X::Value("cuda_linear_bias_transpose"));
+                            model.SetEngine(X::Value::String(Host(), "cuda_linear_bias_transpose"));
                         }
                         else if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportLinearBiasTransposeEngine(enginePath.string(), inputShape, weightShape, biasShape);
                         }
                         if (useCudaLinear) {
-                            model.SetEngine(X::Value("cuda_linear_bias_transpose"));
+                            model.SetEngine(X::Value::String(Host(), "cuda_linear_bias_transpose"));
                         }
                         else if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "vision_mlp" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> fc1Shape = TensorShape(weights["visual.blocks.0.mlp.linear_fc1.weight"]);
-                        std::vector<int> fc2Shape = TensorShape(weights["visual.blocks.0.mlp.linear_fc2.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> fc1Shape = TensorShape(FindField(weights, "visual.blocks.0.mlp.linear_fc1.weight"));
+                        std::vector<int> fc2Shape = TensorShape(FindField(weights, "visual.blocks.0.mlp.linear_fc2.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportVisionMLPEngine(enginePath.string(), inputShape, fc1Shape, fc2Shape);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "rms_norm" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        model.SetRMSNormWeight(weights["language_model.layers.0.input_layernorm.weight"]);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> weightShape = TensorShape(weights["language_model.layers.0.input_layernorm.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        model.SetRMSNormWeight(FindField(weights, "language_model.layers.0.input_layernorm.weight"));
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> weightShape = TensorShape(FindField(weights, "language_model.layers.0.input_layernorm.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportRMSNormEngine(enginePath.string(), inputShape, weightShape, 1.0e-6f);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "text_post_attention_rms_norm" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        model.SetRMSNormWeight(weights["language_model.layers.0.post_attention_layernorm.weight"]);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> weightShape = TensorShape(weights["language_model.layers.0.post_attention_layernorm.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        model.SetRMSNormWeight(FindField(weights, "language_model.layers.0.post_attention_layernorm.weight"));
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> weightShape = TensorShape(FindField(weights, "language_model.layers.0.post_attention_layernorm.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportRMSNormEngine(enginePath.string(), inputShape, weightShape, 1.0e-6f);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (subgraph == "layer_norm" && inputShapes.IsList() && weightsDict.IsObject()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        X::Dict weights(weightsDict);
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
-                        std::vector<int> weightShape = TensorShape(weights["visual.blocks.0.norm1.weight"]);
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        X::Value weights(weightsDict);
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
+                        std::vector<int> weightShape = TensorShape(FindField(weights, "visual.blocks.0.norm1.weight"));
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportLayerNormEngine(enginePath.string(), inputShape, weightShape, 1.0e-6f);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
                 else if (inputShapes.IsList() && weightShape.IsList()) {
-                    X::List shapeList(inputShapes);
-                    if (shapeList->Size() > 0) {
-                        std::vector<int> inputShape = ReadIntList(shapeList->Get(0));
+                    X::Value shapeList(inputShapes);
+                    if (shapeList.Size() > 0) {
+                        std::vector<int> inputShape = ReadIntList(shapeList.Get(uint64_t{0}));
                         std::vector<int> wShape = ReadIntList(weightShape);
                         std::filesystem::path enginePath = std::filesystem::path(cacheDir) / (path.stem().string() + ".engine");
                         if (!std::filesystem::exists(enginePath)) {
-                            TRTBuilder builder;
+                            TRTBuilder builder(Host());
                             builder.ExportMatmulEngine(enginePath.string(), inputShape, wShape);
                         }
                         if (std::filesystem::exists(enginePath)) {
-                            model.SetEngine(X::Value(enginePath.string()));
+                            model.SetEngine(X::Value::String(Host(), enginePath.string()));
                         }
                     }
                 }
 
                 // Extract compiled engine that was set during script execution
-                X::Value compiledEngine = GarnetAPI::I().GetCompiledEngine();
-                if (!model.m_engine.IsValid() && compiledEngine.IsValid()) {
+                X::Value compiledEngine = GetCompiledEngine();
+                if (!model.GetEngine().IsValid() && compiledEngine.IsValid()) {
                     model.SetEngine(compiledEngine);
-                } else if (!model.m_engine.IsValid()) {
+                } else if (!model.GetEngine().IsValid()) {
                     std::cout << "[Garnet] Warning: Script finished but no engine was compiled!" << std::endl;
                 }
             }
@@ -4661,13 +4688,15 @@ namespace Garnet
         else {
             modelVal = LoadModel(modelPath);
         }
-        
-        retValue = modelVal;
+
+        retValue = NativeValue(Host(), modelVal);
+        return retValue;
     }
 
-    void GarnetAPI::QwenVLSmartResize(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::QwenVLSmartResize(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         try {
             int height = GetIntArg(params, kwParams, 0, "height", 0);
             int width = GetIntArg(params, kwParams, 1, "width", 0);
@@ -4682,27 +4711,29 @@ namespace Garnet
                 minPixels,
                 maxPixels);
 
-            X::Dict result;
+            auto result = X::Value::Dict(Host());
             int gridH = resized.height / patchSize;
             int gridW = resized.width / patchSize;
-            result->Set("height", X::Value(resized.height));
-            result->Set("width", X::Value(resized.width));
-            result->Set("patch_size", X::Value(patchSize));
-            result->Set("merge_size", X::Value(mergeSize));
-            result->Set("grid_h", X::Value(gridH));
-            result->Set("grid_w", X::Value(gridW));
-            result->Set("visual_tokens", X::Value(gridH * gridW / (mergeSize * mergeSize)));
-            retValue = result;
+            result.SetItem("height", X::Value(resized.height));
+            result.SetItem("width", X::Value(resized.width));
+            result.SetItem("patch_size", X::Value(patchSize));
+            result.SetItem("merge_size", X::Value(mergeSize));
+            result.SetItem("grid_h", X::Value(gridH));
+            result.SetItem("grid_w", X::Value(gridW));
+            result.SetItem("visual_tokens", X::Value(gridH * gridW / (mergeSize * mergeSize)));
+            retValue = NativeValue(Host(), result);
         }
         catch (const std::exception& exc) {
             std::cout << "[GarnetAPI] qwen_vl_smart_resize failed: " << exc.what() << std::endl;
-            retValue = X::Value();
+            retValue = NativeValue(Host(), X::Value());
         }
+        return retValue;
     }
 
-    void GarnetAPI::QwenVLCreateRequest(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::QwenVLCreateRequest(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         auto totalStart = std::chrono::steady_clock::now();
         try {
             std::string modelDir = GetStringArg(params, kwParams, 0, "model_dir", "");
@@ -4712,8 +4743,8 @@ namespace Garnet
             int maxPixels = GetIntArg(params, kwParams, 4, "max_pixels", 65536);
             if (modelDir.empty() || imagePath.empty() || prompt.empty()) {
                 std::cout << "[GarnetAPI] qwen_vl_create_request requires model_dir, image_path, and prompt." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
             constexpr int patchSize = 16;
@@ -4722,18 +4753,18 @@ namespace Garnet
             int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
 
             auto imageStart = std::chrono::steady_clock::now();
-            auto imageResult = Image::QwenVL::PreprocessJpegFileToTensor(imagePath, minPixels, maxPixels);
+            auto imageResult = Image::QwenVL::PreprocessJpegFileToTensor(Host(), imagePath, minPixels, maxPixels);
             double imageMs = MsSince(imageStart);
             X::Tensor pixelValues(imageResult.pixelValues);
             X::Tensor imageGridTensor(imageResult.imageGridTHW);
-            auto* gridData = reinterpret_cast<long long*>(imageGridTensor->GetData());
+            auto* gridData = reinterpret_cast<long long*>(imageGridTensor.Info().data);
             long long grid[3] = { gridData[0], gridData[1], gridData[2] };
 
             int patchCount = (imageResult.resizedHeight / patchSize) * (imageResult.resizedWidth / patchSize);
             if (patchCount <= 0) {
                 std::cout << "[GarnetAPI] qwen_vl_create_request invalid patch count: " << patchCount << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
             auto tokenStart = std::chrono::steady_clock::now();
@@ -4741,8 +4772,8 @@ namespace Garnet
             auto tokenizer = Tokenization::GetCachedQwenTokenizer(modelDir, &tokenError);
             if (!tokenizer) {
                 std::cout << "[GarnetAPI] qwen_vl_create_request tokenizer load failed: " << tokenError << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
             std::vector<int64_t> promptIds = Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
                 *tokenizer,
@@ -4756,8 +4787,8 @@ namespace Garnet
                 tokenizer->TokenId("<|im_start|>") < 0 ||
                 tokenizer->TokenId("<|im_end|>") < 0) {
                 std::cout << "[GarnetAPI] qwen_vl_create_request tokenizer missing required Qwen-VL special tokens." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
             std::vector<long long> inputIds;
@@ -4777,24 +4808,24 @@ namespace Garnet
             if (visualTokenCount != expectedVisualTokenCount) {
                 std::cout << "[GarnetAPI] qwen_vl_create_request visual token mismatch: prompt="
                     << visualTokenCount << ", grid=" << expectedVisualTokenCount << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
             double tokenizeMs = MsSince(tokenStart);
 
             auto uploadStart = std::chrono::steady_clock::now();
-            X::Value inputIdsTensor = MakeInt64Tensor(inputIds, true);
-            X::Value mmTypesTensor = MakeInt64Tensor(mmTypes, true);
+            X::Value inputIdsTensor = MakeInt64Tensor(Host(), inputIds, true);
+            X::Value mmTypesTensor = MakeInt64Tensor(Host(), mmTypes, true);
             double uploadMs = MsSince(uploadStart);
-            if (!inputIdsTensor.IsTensor() || !mmTypesTensor.IsTensor() ||
+            if (!X::Tensor::IsTensor(inputIdsTensor) || !X::Tensor::IsTensor(mmTypesTensor) ||
                 TensorHelper::GetGPUMemory(pixelValues) == nullptr) {
                 std::cout << "[GarnetAPI] qwen_vl_create_request failed to create GPU tensors." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
-            X::XPackageValue<QwenVLRequestContext> requestValue;
-            QwenVLRequestContext& request = *requestValue;
+            auto requestValue = CallChecked(__xlang3_package_->GetValue("QwenVLRequestContext"));
+            QwenVLRequestContext& request = *requestValue.NativeData<QwenVLRequestContext>();
             request.inputIds = inputIdsTensor;
             request.mmTokenTypeIds = mmTypesTensor;
             request.pixelValues = imageResult.pixelValues;
@@ -4816,17 +4847,19 @@ namespace Garnet
             request.tokenizeUs = static_cast<long long>(tokenizeMs * 1000.0);
             request.tensorUploadUs = static_cast<long long>(uploadMs * 1000.0);
             request.totalUs = static_cast<long long>(MsSince(totalStart) * 1000.0);
-            retValue = requestValue;
+            retValue = NativeValue(Host(), requestValue);
         }
         catch (const std::exception& exc) {
             std::cout << "[GarnetAPI] qwen_vl_create_request failed: " << exc.what() << std::endl;
-            retValue = X::Value();
+            retValue = NativeValue(Host(), X::Value());
         }
+        return retValue;
     }
 
-    void GarnetAPI::QwenVLPrepareRequest(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::QwenVLPrepareRequest(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         auto totalStart = std::chrono::steady_clock::now();
         try {
             std::string modelDir = GetStringArg(params, kwParams, 0, "model_dir", "");
@@ -4836,8 +4869,8 @@ namespace Garnet
             int maxPixels = GetIntArg(params, kwParams, 4, "max_pixels", 65536);
             if (modelDir.empty() || imagePath.empty() || prompt.empty()) {
                 std::cout << "[GarnetAPI] qwen_vl_prepare_request requires model_dir, image_path, and prompt." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
             constexpr int patchSize = 16;
@@ -4846,17 +4879,17 @@ namespace Garnet
             int featureDim = 3 * temporalPatchSize * patchSize * patchSize;
 
             auto imageStart = std::chrono::steady_clock::now();
-            auto imageResult = Image::QwenVL::PreprocessJpegFileToTensor(imagePath, minPixels, maxPixels);
+            auto imageResult = Image::QwenVL::PreprocessJpegFileToTensor(Host(), imagePath, minPixels, maxPixels);
             double imageMs = MsSince(imageStart);
             int patchCount = (imageResult.resizedHeight / patchSize) * (imageResult.resizedWidth / patchSize);
             if (patchCount <= 0) {
                 std::cout << "[GarnetAPI] qwen_vl_prepare_request invalid patch count: " << patchCount << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
             X::Tensor pixelValues(imageResult.pixelValues);
             X::Tensor imageGridTensor(imageResult.imageGridTHW);
-            auto* gridData = reinterpret_cast<long long*>(imageGridTensor->GetData());
+            auto* gridData = reinterpret_cast<long long*>(imageGridTensor.Info().data);
             long long grid[3] = { gridData[0], gridData[1], gridData[2] };
 
             auto tokenStart = std::chrono::steady_clock::now();
@@ -4864,8 +4897,8 @@ namespace Garnet
             auto tokenizer = Tokenization::GetCachedQwenTokenizer(modelDir, &tokenError);
             if (!tokenizer) {
                 std::cout << "[GarnetAPI] qwen_vl_prepare_request tokenizer load failed: " << tokenError << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
             std::vector<int64_t> promptIds = Tokenization::QwenVLPromptBuilder::BuildSingleImagePromptIds(
                 *tokenizer,
@@ -4879,8 +4912,8 @@ namespace Garnet
                 tokenizer->TokenId("<|im_start|>") < 0 ||
                 tokenizer->TokenId("<|im_end|>") < 0) {
                 std::cout << "[GarnetAPI] qwen_vl_prepare_request tokenizer missing required Qwen-VL special tokens." << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
             double tokenizeMs = MsSince(tokenStart);
 
@@ -4902,8 +4935,8 @@ namespace Garnet
             if (visualTokenCount != expectedVisualTokenCount) {
                 std::cout << "[GarnetAPI] qwen_vl_prepare_request visual token mismatch: prompt="
                     << visualTokenCount << ", grid=" << expectedVisualTokenCount << std::endl;
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
             std::vector<long long> gridVector = { grid[0], grid[1], grid[2] };
@@ -4911,79 +4944,81 @@ namespace Garnet
                 mmTypes,
                 grid,
                 mergeSize);
-            X::Dict dict;
-            dict->Set("input_ids", MakeInt64List(inputIds));
-            dict->Set("mm_token_type_ids", MakeInt64List(mmTypes));
-            X::Value inputIdsTensorValue = MakeInt64Tensor(inputIds, true);
-            X::Value mmTypesTensorValue = MakeInt64Tensor(mmTypes, true);
-            dict->Set("input_ids_tensor", inputIdsTensorValue);
-            dict->Set("mm_token_type_ids_tensor", mmTypesTensorValue);
-            dict->Set("pixel_values", imageResult.pixelValues);
-            dict->Set("vision_bilinear_indices", imageResult.bilinearIndices);
-            dict->Set("vision_bilinear_weights", imageResult.bilinearWeights);
-            dict->Set("vision_position_ids", imageResult.visionPositionIds);
-            dict->Set("vision_cu_seqlens", imageResult.visionCuSeqlens);
-            dict->Set("position_ids", MakeInt64Tensor3DGpu(
+            auto dict = X::Value::Dict(Host());
+            dict.SetItem("input_ids", MakeInt64List(Host(), inputIds));
+            dict.SetItem("mm_token_type_ids", MakeInt64List(Host(), mmTypes));
+            X::Value inputIdsTensorValue = MakeInt64Tensor(Host(), inputIds, true);
+            X::Value mmTypesTensorValue = MakeInt64Tensor(Host(), mmTypes, true);
+            dict.SetItem("input_ids_tensor", inputIdsTensorValue);
+            dict.SetItem("mm_token_type_ids_tensor", mmTypesTensorValue);
+            dict.SetItem("pixel_values", imageResult.pixelValues);
+            dict.SetItem("vision_bilinear_indices", imageResult.bilinearIndices);
+            dict.SetItem("vision_bilinear_weights", imageResult.bilinearWeights);
+            dict.SetItem("vision_position_ids", imageResult.visionPositionIds);
+            dict.SetItem("vision_cu_seqlens", imageResult.visionCuSeqlens);
+            dict.SetItem("position_ids", MakeInt64Tensor3DGpu(Host(),
                 mropeMetadata.positionIds,
                 3,
                 1,
                 static_cast<int>(inputIds.size())));
-            dict->Set("mrope_position_deltas", MakeInt64Tensor2D(
+            dict.SetItem("mrope_position_deltas", MakeInt64Tensor2D(Host(),
                 { mropeMetadata.positionDelta }, 1, 1, true));
-            dict->Set("pixel_values_shape", MakeInt64List({
+            dict.SetItem("pixel_values_shape", MakeInt64List(Host(), {
                 static_cast<long long>(patchCount),
                 static_cast<long long>(featureDim),
             }));
-            dict->Set("pixel_value_count", X::Value(patchCount * featureDim));
-            dict->Set("image_grid_thw", MakeInt64List(gridVector));
-            dict->Set("pixel_values_gpu", X::Value(TensorHelper::GetGPUMemory(pixelValues) != nullptr));
+            dict.SetItem("pixel_value_count", X::Value(patchCount * featureDim));
+            dict.SetItem("image_grid_thw", MakeInt64List(Host(), gridVector));
+            dict.SetItem("pixel_values_gpu", X::Value(TensorHelper::GetGPUMemory(pixelValues) != nullptr));
             bool inputIdsGpu = false;
             bool mmTypesGpu = false;
-            if (inputIdsTensorValue.IsTensor()) {
+            if (X::Tensor::IsTensor(inputIdsTensorValue)) {
                 X::Tensor inputIdsTensor(inputIdsTensorValue);
                 inputIdsGpu = TensorHelper::GetGPUMemory(inputIdsTensor) != nullptr;
             }
-            if (mmTypesTensorValue.IsTensor()) {
+            if (X::Tensor::IsTensor(mmTypesTensorValue)) {
                 X::Tensor mmTypesTensor(mmTypesTensorValue);
                 mmTypesGpu = TensorHelper::GetGPUMemory(mmTypesTensor) != nullptr;
             }
-            dict->Set("input_ids_gpu", X::Value(inputIdsGpu));
-            dict->Set("mm_token_type_ids_gpu", X::Value(mmTypesGpu));
+            dict.SetItem("input_ids_gpu", X::Value(inputIdsGpu));
+            dict.SetItem("mm_token_type_ids_gpu", X::Value(mmTypesGpu));
 
-            X::Dict timings;
-            timings->Set("image_preprocess_us", X::Value(static_cast<long long>(imageMs * 1000.0)));
-            timings->Set("tokenize_us", X::Value(static_cast<long long>(tokenizeMs * 1000.0)));
-            timings->Set("total_us", X::Value(static_cast<long long>(MsSince(totalStart) * 1000.0)));
-            dict->Set("prompt_token_count", X::Value(static_cast<int>(inputIds.size())));
-            dict->Set("visual_token_count", X::Value(visualTokenCount));
-            dict->Set("source_height", X::Value(imageResult.sourceHeight));
-            dict->Set("source_width", X::Value(imageResult.sourceWidth));
-            dict->Set("height", X::Value(imageResult.resizedHeight));
-            dict->Set("width", X::Value(imageResult.resizedWidth));
-            dict->Set("patch_size", X::Value(patchSize));
-            dict->Set("temporal_patch_size", X::Value(temporalPatchSize));
-            dict->Set("merge_size", X::Value(mergeSize));
-            dict->Set("backend", X::Value("qwen_vl_request_native_tokenizer_nvjpeg_cuda_gpu_xtensor"));
-            dict->Set("timings", timings);
-            retValue = dict;
+            auto timings = X::Value::Dict(Host());
+            timings.SetItem("image_preprocess_us", X::Value(static_cast<long long>(imageMs * 1000.0)));
+            timings.SetItem("tokenize_us", X::Value(static_cast<long long>(tokenizeMs * 1000.0)));
+            timings.SetItem("total_us", X::Value(static_cast<long long>(MsSince(totalStart) * 1000.0)));
+            dict.SetItem("prompt_token_count", X::Value(static_cast<int>(inputIds.size())));
+            dict.SetItem("visual_token_count", X::Value(visualTokenCount));
+            dict.SetItem("source_height", X::Value(imageResult.sourceHeight));
+            dict.SetItem("source_width", X::Value(imageResult.sourceWidth));
+            dict.SetItem("height", X::Value(imageResult.resizedHeight));
+            dict.SetItem("width", X::Value(imageResult.resizedWidth));
+            dict.SetItem("patch_size", X::Value(patchSize));
+            dict.SetItem("temporal_patch_size", X::Value(temporalPatchSize));
+            dict.SetItem("merge_size", X::Value(mergeSize));
+            dict.SetItem("backend", X::Value::String(Host(), "qwen_vl_request_native_tokenizer_nvjpeg_cuda_gpu_xtensor"));
+            dict.SetItem("timings", timings);
+            retValue = NativeValue(Host(), dict);
         }
         catch (const std::exception& exc) {
             std::cout << "[GarnetAPI] qwen_vl_prepare_request failed: " << exc.what() << std::endl;
-            retValue = X::Value();
+            retValue = NativeValue(Host(), X::Value());
         }
+        return retValue;
     }
 
-    void GarnetAPI::QwenVLPreprocessImage(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::QwenVLPreprocessImage(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         try {
             X::Value image = GetKwarg(kwParams, "image");
             if (!image.IsValid() && params.size() > 0) {
                 image = params[0];
             }
             if (!image.IsValid()) {
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
             Image::QwenVL::QwenVLImagePreprocessConfig config;
@@ -4997,72 +5032,77 @@ namespace Garnet
             config.pixelFormat = Image::PixelFormatFromString(inputFormat);
 
             auto result = Image::QwenVL::PreprocessRawImageTensor(image, height, width, config);
-            X::Dict dict;
-            dict->Set("pixel_values", result.pixelValues);
-            dict->Set("image_grid_thw", result.imageGridTHW);
-            dict->Set("vision_bilinear_indices", result.bilinearIndices);
-            dict->Set("vision_bilinear_weights", result.bilinearWeights);
-            dict->Set("vision_position_ids", result.visionPositionIds);
-            dict->Set("vision_cu_seqlens", result.visionCuSeqlens);
-            dict->Set("source_height", X::Value(result.sourceHeight));
-            dict->Set("source_width", X::Value(result.sourceWidth));
-            dict->Set("height", X::Value(result.resizedHeight));
-            dict->Set("width", X::Value(result.resizedWidth));
-            dict->Set("patch_size", X::Value(result.patchSize));
-            dict->Set("temporal_patch_size", X::Value(result.temporalPatchSize));
-            dict->Set("merge_size", X::Value(result.mergeSize));
-            dict->Set("input_format", X::Value(inputFormat));
-            dict->Set("backend", X::Value("cuda_raw_tensor"));
-            retValue = dict;
+            auto dict = X::Value::Dict(Host());
+            dict.SetItem("pixel_values", result.pixelValues);
+            dict.SetItem("image_grid_thw", result.imageGridTHW);
+            dict.SetItem("vision_bilinear_indices", result.bilinearIndices);
+            dict.SetItem("vision_bilinear_weights", result.bilinearWeights);
+            dict.SetItem("vision_position_ids", result.visionPositionIds);
+            dict.SetItem("vision_cu_seqlens", result.visionCuSeqlens);
+            dict.SetItem("source_height", X::Value(result.sourceHeight));
+            dict.SetItem("source_width", X::Value(result.sourceWidth));
+            dict.SetItem("height", X::Value(result.resizedHeight));
+            dict.SetItem("width", X::Value(result.resizedWidth));
+            dict.SetItem("patch_size", X::Value(result.patchSize));
+            dict.SetItem("temporal_patch_size", X::Value(result.temporalPatchSize));
+            dict.SetItem("merge_size", X::Value(result.mergeSize));
+            dict.SetItem("input_format", X::Value::String(Host(), inputFormat));
+            dict.SetItem("backend", X::Value::String(Host(), "cuda_raw_tensor"));
+            retValue = NativeValue(Host(), dict);
         }
         catch (const std::exception& exc) {
             std::cout << "[GarnetAPI] qwen_vl_preprocess_image failed: " << exc.what() << std::endl;
-            retValue = X::Value();
+            retValue = NativeValue(Host(), X::Value());
         }
+        return retValue;
     }
 
-    void GarnetAPI::QwenVLPreprocessJpegFile(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::QwenVLPreprocessJpegFile(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
         try {
             std::string path = GetStringArg(params, kwParams, 0, "path", "");
             int minPixels = GetIntArg(params, kwParams, 1, "min_pixels", 65536);
             int maxPixels = GetIntArg(params, kwParams, 2, "max_pixels", 65536);
             if (path.empty() || minPixels <= 0 || maxPixels <= 0) {
-                retValue = X::Value();
-                return;
+                retValue = NativeValue(Host(), X::Value());
+                return retValue;
             }
 
-            auto result = Image::QwenVL::PreprocessJpegFileToTensor(path, minPixels, maxPixels);
+            auto result = Image::QwenVL::PreprocessJpegFileToTensor(Host(), path, minPixels, maxPixels);
             X::Tensor pixelValues(result.pixelValues);
             X::Tensor imageGrid(result.imageGridTHW);
 
-            X::Dict dict;
-            dict->Set("pixel_values", result.pixelValues);
-            dict->Set("image_grid_thw", result.imageGridTHW);
-            dict->Set("vision_bilinear_indices", result.bilinearIndices);
-            dict->Set("vision_bilinear_weights", result.bilinearWeights);
-            dict->Set("vision_position_ids", result.visionPositionIds);
-            dict->Set("vision_cu_seqlens", result.visionCuSeqlens);
-            dict->Set("height", X::Value(result.resizedHeight));
-            dict->Set("width", X::Value(result.resizedWidth));
-            dict->Set("patch_size", X::Value(result.patchSize));
-            dict->Set("temporal_patch_size", X::Value(result.temporalPatchSize));
-            dict->Set("merge_size", X::Value(result.mergeSize));
-            dict->Set("pixel_values_gpu", X::Value(TensorHelper::GetGPUMemory(pixelValues) != nullptr));
-            dict->Set("image_grid_gpu", X::Value(TensorHelper::GetGPUMemory(imageGrid) != nullptr));
-            dict->Set("backend", X::Value("cuda_nvjpeg_to_gpu_xtensor"));
-            retValue = dict;
+            auto dict = X::Value::Dict(Host());
+            dict.SetItem("pixel_values", result.pixelValues);
+            dict.SetItem("image_grid_thw", result.imageGridTHW);
+            dict.SetItem("vision_bilinear_indices", result.bilinearIndices);
+            dict.SetItem("vision_bilinear_weights", result.bilinearWeights);
+            dict.SetItem("vision_position_ids", result.visionPositionIds);
+            dict.SetItem("vision_cu_seqlens", result.visionCuSeqlens);
+            dict.SetItem("height", X::Value(result.resizedHeight));
+            dict.SetItem("width", X::Value(result.resizedWidth));
+            dict.SetItem("patch_size", X::Value(result.patchSize));
+            dict.SetItem("temporal_patch_size", X::Value(result.temporalPatchSize));
+            dict.SetItem("merge_size", X::Value(result.mergeSize));
+            dict.SetItem("pixel_values_gpu", X::Value(TensorHelper::GetGPUMemory(pixelValues) != nullptr));
+            dict.SetItem("image_grid_gpu", X::Value(TensorHelper::GetGPUMemory(imageGrid) != nullptr));
+            dict.SetItem("backend", X::Value::String(Host(), "cuda_nvjpeg_to_gpu_xtensor"));
+            retValue = NativeValue(Host(), dict);
         }
         catch (const std::exception& exc) {
             std::cout << "[GarnetAPI] qwen_vl_preprocess_jpeg_file failed: " << exc.what() << std::endl;
-            retValue = X::Value();
+            retValue = NativeValue(Host(), X::Value());
         }
+        return retValue;
     }
 
-    void GarnetAPI::RunTest(X::XRuntime* rt, X::XObj* pContext,
-        X::ARGS& params, X::KWARGS& kwParams, X::Value& retValue)
+    X::Value GarnetAPI::RunTest(const X::ARGS& params, const X::KWARGS& kwParams)
     {
+        X::Value retValue;
+        auto* rt = Host()->runtime;
+        return retValue;
     }
 
 }

@@ -11,19 +11,19 @@ from safetensors import safe_open
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-GARNET_DLL = REPO_ROOT / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
+GARNET_DLL = REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
 
 handles = []
 for directory in [
     GARNET_DLL.parent,
-    REPO_ROOT.parent / "xlang" / "out" / "build" / "x64-Release" / "bin",
+    REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin",
     REPO_ROOT.parent / "ThirdPartySDK" / "TensorRT" / "bin",
     Path("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.2/bin"),
 ]:
     if directory.exists() and hasattr(os, "add_dll_directory"):
         handles.append(os.add_dll_directory(str(directory)))
 
-import xlang
+import xlang3
 
 
 snapshot_root = (
@@ -54,7 +54,7 @@ source_fp32 = rng.normal(0.0, 0.15, size=(1, 1, 2048)).astype(np.float32)
 source_bits = (source_fp32.view(np.uint32) >> 16).astype(np.uint16)
 source_bf16 = (source_bits.astype(np.uint32) << 16).view(np.float32)
 
-garnet = xlang.importModule("garnet", fromPath=str(GARNET_DLL))
+garnet = xlang3.importModule("garnet", fromPath=str(GARNET_DLL))
 start = time.perf_counter()
 model = garnet.load_model(
     str(SCRIPT_DIR / "openvino_qwen3_mlp_model.x"),
@@ -76,7 +76,7 @@ result = model.forward({"inputs": [source]})
 inference_ms = (time.perf_counter() - start) * 1000.0
 assert result["status"] == "ok", result
 actual = np.asarray(
-    garnet.tensor_to_cpu(result["output"]).toarray(), dtype=np.float32
+    garnet.tensor_to_cpu(result["output"]).tolist(), dtype=np.float32
 ).reshape(1, 1, 2048)
 
 x = torch.from_numpy(source_bf16).to(torch.bfloat16)
