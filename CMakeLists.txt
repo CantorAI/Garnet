@@ -219,6 +219,8 @@ add_executable(garnet_repetition_sampler_test
     src/cuda/logits_sampler_kernel.cu)
 target_include_directories(garnet_repetition_sampler_test PRIVATE src/cuda)
 target_link_libraries(garnet_repetition_sampler_test PRIVATE CUDA::cudart)
+set_target_properties(garnet_repetition_sampler_test PROPERTIES
+    CUDA_ARCHITECTURES "80;86;89")
 add_test(NAME garnet_repetition_sampler COMMAND garnet_repetition_sampler_test)
 set_tests_properties(garnet_repetition_sampler PROPERTIES TIMEOUT 120)
 
@@ -352,7 +354,7 @@ add_executable(garnet_image_tests
 target_link_libraries(garnet_image_tests PRIVATE garnet_tensor_capture
     CUDA::cudart CUDA::nvjpeg CUDA::nppc CUDA::nppig)
 target_compile_definitions(garnet_image_tests PRIVATE NOMINMAX)
-set_target_properties(garnet_image_tests PROPERTIES CUDA_ARCHITECTURES "80;89")
+set_target_properties(garnet_image_tests PROPERTIES CUDA_ARCHITECTURES "80;86;89")
 if(MSVC)
     target_compile_options(garnet_image_tests PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
@@ -463,6 +465,25 @@ if(WIN32)
             "/DELAYLOAD:nvjpeg64_13.dll"
         )
     endif()
+
+    # CUDA 13 installs several runtime DLLs under bin/x64. Deploy every
+    # directly linked vendor runtime beside Garnet so applications and native
+    # tests do not depend on a machine-wide PATH entry.
+    set(GARNET_VENDOR_DLLS
+        "${GARNET_TENSORRT_ROOT}/bin/nvinfer_10.dll")
+    foreach(pattern cublas64_*.dll nppig64_*.dll nvjpeg64_*.dll)
+        file(GLOB matches
+            "${CUDAToolkit_BIN_DIR}/${pattern}"
+            "${CUDAToolkit_BIN_DIR}/x64/${pattern}")
+        if(NOT matches)
+            message(FATAL_ERROR "Garnet runtime dependency not found: ${pattern}")
+        endif()
+        list(APPEND GARNET_VENDOR_DLLS ${matches})
+    endforeach()
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            ${GARNET_VENDOR_DLLS} "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+        COMMAND_EXPAND_LISTS VERBATIM)
 else()
     find_library(GARNET_TENSORRT_LIBRARY NAMES nvinfer
         PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED NO_DEFAULT_PATH)
@@ -475,7 +496,7 @@ endif()
 # Enable separable CUDA compilation and specify architectures.
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
-    CUDA_ARCHITECTURES "80;89"
+    CUDA_ARCHITECTURES "80;86;89"
     RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>"
     LIBRARY_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>"
     ARCHIVE_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/lib>"
