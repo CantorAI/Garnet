@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
 project("garnet" LANGUAGES CXX CUDA)
 
+option(GARNET_ENABLE_GALAXY_FILTER "Build the optional Galaxy Garnet-VLM filter into garnet.dll" OFF)
+
 include(GNUInstallDirs)
 enable_testing()
 
@@ -146,6 +148,21 @@ add_library(${PROJECT_NAME}
     ${Tokenizer_SRC}
     ${Backend_SRC}
 )
+
+if(GARNET_ENABLE_GALAXY_FILTER)
+    set(GARNET_GALAXY_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../Galaxy")
+    file(GLOB GARNET_FILTER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/filters/*.cpp")
+    file(GLOB GARNET_GALAXY_COMMON_SRC "${GARNET_GALAXY_ROOT}/common/*.cpp")
+    # Garnet and Galaxy both provide a global Locker implementation, so keep
+    # Garnet's copy. Galaxy's namespaced help_func implementation is still
+    # required by the embedded filter sources (UID conversion, frame types).
+    list(FILTER GARNET_GALAXY_COMMON_SRC EXCLUDE REGEX "/Locker\\.cpp$")
+    target_sources(${PROJECT_NAME} PRIVATE ${GARNET_FILTER_SRC} ${GARNET_GALAXY_COMMON_SRC})
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/filters"
+        "${GARNET_GALAXY_ROOT}/common")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_ENABLE_GALAXY_FILTER=1)
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_SERVING_EXPORTS=1)
 target_compile_definitions(${PROJECT_NAME} PRIVATE XLANG3_USE_SHARED)

@@ -264,6 +264,7 @@ namespace Garnet
         nativePackages.erase(std::remove(nativePackages.begin(), nativePackages.end(), this), nativePackages.end());
         log.ResetForHost(Host());
     }
+
 }
 
 extern "C" GARNET_SERVING_API int GarnetListAvailableModelsJson(
@@ -2854,6 +2855,18 @@ namespace Garnet
         }
         retValue = NativeValue(Host(), AccelerationDetector::ActivateJson(
             m_accelerationManager.InstalledModelRoot(params[0].ToString())));
+        return retValue;
+    }
+
+    X::Value GarnetAPI::ActivateAccelerationPathJson(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        X::Value retValue;
+        if (params.size() == 0 || params[0].ToString().empty()) {
+            retValue = NativeValue(Host(), GarnetJsonError(
+                "package_path_required", "activate_acceleration_path_json requires a package path"));
+            return retValue;
+        }
+        retValue = NativeValue(Host(), AccelerationDetector::ActivateJson(params[0].ToString()));
         return retValue;
     }
 

@@ -226,6 +226,34 @@ namespace Garnet
                 resolvedLibraries.emplace_back(relative, full);
             }
 
+#if defined(_WIN32)
+            // TensorRT loads its architecture-specific builder resource by
+            // filename when a graph must be compiled. Older acceleration
+            // manifests listed nvinfer but omitted these companion DLLs, so
+            // explicitly retain every packaged builder resource found beside
+            // nvinfer. This keeps activation self-contained and independent
+            // of the process-wide PATH.
+            for (const auto& resolved : std::vector<std::pair<fs::path, fs::path>>(
+                     resolvedLibraries.begin(), resolvedLibraries.end())) {
+                if (resolved.second.filename() != "nvinfer_10.dll") continue;
+                const fs::path directory = resolved.second.parent_path();
+                std::error_code scanError;
+                for (fs::directory_iterator iterator(directory, scanError), end;
+                     !scanError && iterator != end; iterator.increment(scanError)) {
+                    if (!iterator->is_regular_file(scanError)) continue;
+                    const std::string filename = iterator->path().filename().string();
+                    if (filename.rfind("nvinfer_builder_resource_", 0) != 0 ||
+                        iterator->path().extension() != ".dll") continue;
+                    const fs::path relative = iterator->path().lexically_relative(root);
+                    const bool alreadyListed = std::any_of(
+                        resolvedLibraries.begin(), resolvedLibraries.end(),
+                        [&](const auto& existing) { return existing.second == iterator->path(); });
+                    if (!alreadyListed) resolvedLibraries.emplace_back(relative, iterator->path());
+                }
+                break;
+            }
+#endif
+
             std::lock_guard<std::mutex> guard(g_activationMutex);
             const std::string activationKey = root.generic_string();
             if (g_activatedPackages.count(activationKey) != 0) {

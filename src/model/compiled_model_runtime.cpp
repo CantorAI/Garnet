@@ -822,7 +822,6 @@ namespace Garnet
                 return false;
             }
         }
-
         std::ifstream sourceFile(rootPath, std::ios::binary);
         std::string source(
             (std::istreambuf_iterator<char>(sourceFile)),
@@ -846,7 +845,7 @@ namespace Garnet
         const std::filesystem::path graphCachePath =
             std::filesystem::path(m_cacheDirectory) / "runtime_graph.cache";
         const std::filesystem::path enginePath =
-            std::filesystem::path(m_cacheDirectory) / ("model_" + graphFingerprint + ".engine");
+            std::filesystem::path(m_cacheDirectory) / "model.engine";
         m_enginePath = enginePath.string();
         auto createDecodeRuntime = [&]()
             -> std::pair<std::shared_ptr<CompiledModelRuntime>, std::string> {

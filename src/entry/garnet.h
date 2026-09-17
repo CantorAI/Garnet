@@ -186,6 +186,7 @@ namespace Garnet
 			APISET().AddVarFunc("prepare_acceleration_json", &GarnetAPI::PrepareAccelerationJson);
 			APISET().AddVarFunc("list_installed_accelerations_json", &GarnetAPI::ListInstalledAccelerationsJson);
 			APISET().AddVarFunc("activate_acceleration_json", &GarnetAPI::ActivateAccelerationJson);
+			APISET().AddVarFunc("activate_acceleration_path_json", &GarnetAPI::ActivateAccelerationPathJson);
 			APISET().AddVarFunc("acceleration_install_status_json", &GarnetAPI::AccelerationInstallStatusJson);
 			APISET().AddVarFunc("cancel_acceleration_install_json", &GarnetAPI::CancelAccelerationInstallJson);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
@@ -275,6 +276,7 @@ namespace Garnet
 		X::Value PrepareAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ListInstalledAccelerationsJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ActivateAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value ActivateAccelerationPathJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value AccelerationInstallStatusJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value CancelAccelerationInstallJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value RunTest(const X::ARGS& params, const X::KWARGS& kwParams);
