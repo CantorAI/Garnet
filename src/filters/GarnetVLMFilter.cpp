@@ -42,8 +42,12 @@ std::string StripJsonFence(std::string text) {
         const auto fence = text.rfind("```");
         if (fence != std::string::npos) text.erase(fence);
     }
-    const auto begin = text.find('{');
-    const auto end = text.rfind('}');
+    const auto objectBegin = text.find('{');
+    const auto arrayBegin = text.find('[');
+    const bool useArray = arrayBegin != std::string::npos &&
+        (objectBegin == std::string::npos || arrayBegin < objectBegin);
+    const auto begin = useArray ? arrayBegin : objectBegin;
+    const auto end = useArray ? text.rfind(']') : text.rfind('}');
     return begin != std::string::npos && end != std::string::npos && end >= begin
         ? text.substr(begin, end - begin + 1) : text;
 }
@@ -189,6 +193,8 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
     X::Value jpeg = Has(candidate, "jpeg") ? candidate.Get("jpeg") : X::Value();
     const std::string eventPrompt = Has(candidate, "vlm_prompt") ? candidate.Get("vlm_prompt").ToString() : std::string();
     const std::string searchFocus = Has(candidate, "search_focus") ? candidate.Get("search_focus").ToString() : std::string();
+    const std::string outputLanguage = Has(candidate, "output_language") && !candidate.Get("output_language").ToString().empty()
+        ? candidate.Get("output_language").ToString() : "en";
     const bool eventEnabled = Has(candidate, "event_enabled") && candidate.Get("event_enabled").ToLongLong();
     const bool searchEnabled = Has(candidate, "search_enabled") && candidate.Get("search_enabled").ToLongLong();
 
@@ -196,6 +202,9 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
     prompt << "Analyze the camera image for an automated monitoring skill. Return ONLY one JSON object. "
            << "Schema: {\"event\":{\"matched\":boolean,\"title\":string,\"description\":string,\"confidence\":number},"
            << "\"search\":{\"description\":string,\"entities\":[string],\"actions\":[string],\"scene\":string,\"tags\":[string]}}. ";
+    prompt << "Keep JSON property names exactly as specified. Write every natural-language string value in "
+           << (outputLanguage == "zh-CN" ? "Simplified Chinese" : outputLanguage == "zh-TW" ? "Traditional Chinese" : "English")
+           << ". ";
     if (eventEnabled) prompt << "Event instruction: " << eventPrompt << ". ";
     else prompt << "Set event.matched to false. ";
     if (searchEnabled) {
@@ -222,6 +231,7 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
     result.SetItem("direct_event", Has(candidate, "direct_event") ? candidate.Get("direct_event") : X::Value(false));
     result.SetItem("verify_event", Has(candidate, "verify_event") ? candidate.Get("verify_event") : X::Value(false));
     result.SetItem("search_enabled", searchEnabled);
+    result.SetItem("output_language", X::Value::String(Host(), outputLanguage));
     if (Has(candidate, "event_id")) result.SetItem("event_id", candidate.Get("event_id"));
     result.SetItem("model_response", outer);
     result.SetItem("model_response_json", responseText);
@@ -231,6 +241,7 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
             if (structured.IsDict()) {
                 X::Value event = Has(structured, "event") ? structured.Get("event") : X::Value();
                 X::Value search = Has(structured, "search") ? structured.Get("search") : X::Value();
+                if (search.IsDict()) search.SetItem("language", X::Value::String(Host(), outputLanguage));
                 if (searchEnabled && search.IsDict() && Has(search, "description") &&
                     LooksLikeInstruction(search.Get("description").ToString(), searchFocus)) {
                     std::string fallback;
@@ -264,14 +275,16 @@ X::Value GarnetVLMFilter::PlanSearch(std::string query, X::Value imageSource) {
     }
     EnsureGarnetModel();
     std::ostringstream prompt;
-    prompt << "Translate this camera-history search into concise English camera-index keywords. Return JSON only. Schema: "
-           << "{\"normalized_query\":string,"
+    prompt << "Plan a multilingual camera-history search. Return JSON only. Schema: "
+           << "{\"normalized_query\":string,\"query_language\":string,\"source_terms\":[string],"
            << "\"device_id\":string|null,\"channel_id\":string|null,"
            << "\"skill_ref\":string|null,\"from_ms\":integer|null,\"to_ms\":integer|null}. "
            << "normalized_query must be the shortest literal English translation containing only content explicitly "
-           << "written by the user. Never expand it with synonyms or implied objects, locations, time, lighting, or "
+           << "written by the user. query_language must be a BCP-47 language code. source_terms must contain the shortest "
+           << "literal concepts in the user's original language. Never expand it with synonyms or implied objects, locations, time, lighting, or "
            << "visible details. Examples: '女人在做饭' becomes 'woman cooking'; '女人在编篮子' becomes "
-           << "'woman weaving basket'; 'empty parking lot at night' stays 'empty parking lot night'. Do not include generic "
+           << "'woman weaving basket'; '有人扫地' becomes normalized_query 'person sweeping' with source_terms ['人','扫地']; "
+           << "'empty parking lot at night' stays 'empty parking lot night'. Do not include generic "
            << "words such as image, video, scene, or camera unless the user explicitly searches for them. "
            << "Ignore the supplied reference image; use only the text request. "
            << "Never output SQL. Request: " << query;
@@ -301,7 +314,7 @@ X::Value GarnetVLMFilter::RankSearch(std::string query, X::Value candidates) {
     prompt << "Rank camera-history candidates for the user's request. Use only the supplied metadata. "
            << "Return JSON only with schema {\"rankings\":[{\"id\":string,\"score\":integer,\"reason\":string}]}. "
            << "Include every candidate exactly once, best first. score is 0-100. reason is one short factual sentence. "
-           << "Do not invent visible details. Request: " << query << " Candidates: " << candidateJson;
+           << "Write reason in the same language as the user's request. Do not invent visible details. Request: " << query << " Candidates: " << candidateJson;
     X::Value responseText = CallValue(m_garnet["infer_json"], {
         X::Value::String(Host(), prompt.str()), X::Value(),
         X::Value((std::min)(m_maxOutputTokens, 256)),
@@ -310,7 +323,13 @@ X::Value GarnetVLMFilter::RankSearch(std::string query, X::Value candidates) {
     if (!outer.IsDict() || !Has(outer, "status") || outer.Get("status").ToString() != "ok")
         throw X::Error(outer.IsDict() && Has(outer, "error_message")
             ? outer.Get("error_message").ToString() : "Garnet search ranking failed");
-    return m_json["loads"](StripJsonFence(outer.Get("text").ToString()));
+    X::Value parsed = m_json["loads"](StripJsonFence(outer.Get("text").ToString()));
+    if (parsed.IsList()) {
+        X::Value wrapped = X::Value::Dict(Host());
+        wrapped.SetItem("rankings", parsed);
+        return wrapped;
+    }
+    return parsed;
 }
 
 void GarnetVLMFilter::Deliver(X::Value& result, X::Value& metadata, long long startTime) {
