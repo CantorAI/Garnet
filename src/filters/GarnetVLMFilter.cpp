@@ -202,7 +202,7 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
     prompt << "Analyze the camera image for an automated monitoring skill. Return ONLY one JSON object. "
            << "Schema: {\"event\":{\"matched\":boolean,\"title\":string,\"description\":string,\"confidence\":number},"
            << "\"search\":{\"description\":string,\"entities\":[string],\"actions\":[string],\"scene\":string,"
-           << "\"tags\":[string],\"people_count\":integer|null}}. ";
+           << "\"tags\":[string],\"object_counts\":[{\"object\":string,\"count\":integer}],\"people_count\":integer|null}}. ";
     prompt << "Keep JSON property names exactly as specified. Write every natural-language string value in "
            << (outputLanguage == "zh-CN" ? "Simplified Chinese" : outputLanguage == "zh-TW" ? "Traditional Chinese" : "English")
            << ". ";
@@ -210,7 +210,9 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
     else prompt << "Set event.matched to false. ";
     if (searchEnabled) {
         prompt << "Generate factual searchable metadata using only visibly supported facts. "
-               << "Set search.people_count to the number of visibly distinct people; use null only when the count cannot be determined. "
+               << "Set search.object_counts to counts of reliably visible distinct objects. Every object value is a machine identifier and MUST remain a canonical "
+               << "lowercase English singular label such as person, bowl, dog, and car; object values are the only strings exempt from the output-language rule. "
+               << "Do not guess uncertain counts. Also set search.people_count to the count for object=person when present, otherwise null, for backward compatibility. "
                << "search.description must be a present-tense description of the image, never an instruction. "
                << "Do not copy or paraphrase the search focus and do not assume a focused item is present. "
                << "Observation priority: " << searchFocus << ". ";
@@ -278,12 +280,15 @@ X::Value GarnetVLMFilter::PlanSearch(std::string query, X::Value imageSource) {
     EnsureGarnetModel();
     std::ostringstream prompt;
     prompt << "Plan a multilingual camera-history search. Return JSON only. Schema: "
-           << "{\"normalized_query\":string,\"query_language\":string,\"source_terms\":[string],\"person_count\":integer|null,"
+           << "{\"normalized_query\":string,\"query_language\":string,\"source_terms\":[string],"
+           << "\"quantity_constraints\":[{\"object\":string,\"operator\":\"eq\"|\"gte\"|\"lte\",\"count\":integer}],\"person_count\":integer|null,"
            << "\"device_id\":string|null,\"channel_id\":string|null,"
            << "\"skill_ref\":string|null,\"from_ms\":integer|null,\"to_ms\":integer|null}. "
            << "normalized_query must be the shortest literal English translation containing only content explicitly "
            << "written by the user. query_language must be a BCP-47 language code. source_terms must contain the shortest "
-           << "literal concepts in the user's original language. person_count must preserve an explicitly requested number of people. "
+           << "literal concepts in the user's original language. Convert every explicit object quantity into quantity_constraints; "
+           << "object must be a canonical lowercase English singular label. A bare number means eq; preserve at least/at most as gte/lte. "
+           << "person_count must mirror an explicit exact person constraint for backward compatibility. "
            << "Never expand it with synonyms or implied objects, locations, time, lighting, or "
            << "visible details. Examples: '女人在做饭' becomes 'woman cooking'; '女人在编篮子' becomes "
            << "'woman weaving basket'; '有人扫地' becomes normalized_query 'person sweeping' with source_terms ['人','扫地']; "
@@ -317,7 +322,7 @@ X::Value GarnetVLMFilter::RankSearch(std::string query, X::Value candidates) {
     prompt << "Rank camera-history candidates for the user's request. Use only the supplied metadata. "
            << "Return JSON only with schema {\"rankings\":[{\"id\":string,\"score\":integer,\"reason\":string}]}. "
            << "Include every candidate exactly once, best first. score is 0-100. reason is one short factual sentence. "
-           << "Explicit quantities are hard requirements: a candidate with a conflicting people_count must score below every matching candidate. "
+           << "Explicit quantity constraints are hard requirements: a candidate with conflicting object_counts must score below every matching candidate. "
            << "Write reason in the same language as the user's request. Do not invent visible details. Request: " << query << " Candidates: " << candidateJson;
     X::Value responseText = CallValue(m_garnet["infer_json"], {
         X::Value::String(Host(), prompt.str()), X::Value(),
