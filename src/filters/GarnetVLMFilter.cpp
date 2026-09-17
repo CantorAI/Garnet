@@ -315,8 +315,10 @@ X::Value GarnetVLMFilter::RankSearch(std::string query, X::Value candidates) {
     std::string candidateJson = m_json["dumps"](candidates).ToString();
     std::ostringstream prompt;
     prompt << "Rank camera-history candidates for the user's request. Use only the supplied metadata. "
-           << "Return JSON only with schema {\"rankings\":[{\"id\":string,\"score\":integer,\"reason\":string}]}. "
+           << "Return JSON only with schema {\"rankings\":[{\"id\":string,\"score\":integer,\"exact_match\":boolean,\"reason\":string}]}. "
            << "Include every candidate exactly once, best first. score is 0-100. reason is one short factual sentence. "
+           << "exact_match is true only when the supplied metadata explicitly satisfies every requested subject, object, action, relation, attribute, and quantity; "
+           << "it is false when any required detail is absent, contradictory, or uncertain. "
            << "Explicit quantity constraints are hard requirements: a candidate with conflicting object_counts must score below every matching candidate. "
            << "Write reason in the same language as the user's request. Do not invent visible details. Request: " << query << " Candidates: " << candidateJson;
     X::Value responseText = CallValue(m_garnet["infer_json"], {
