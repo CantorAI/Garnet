@@ -3,6 +3,7 @@
 #include "../entry/garnet.h"
 #include "../runtime/acceleration_detector.h"
 #include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <sstream>
 
@@ -40,6 +41,29 @@ std::string StripJsonFence(std::string text) {
     const auto end = text.rfind('}');
     return begin != std::string::npos && end != std::string::npos && end >= begin
         ? text.substr(begin, end - begin + 1) : text;
+}
+
+std::string NormalizeInstructionText(std::string text) {
+    text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+    while (!text.empty() && (std::isspace(static_cast<unsigned char>(text.back())) ||
+            text.back() == '.')) text.pop_back();
+    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return text;
+}
+
+bool LooksLikeInstruction(std::string description, const std::string& focus) {
+    description = NormalizeInstructionText(std::move(description));
+    const std::string normalizedFocus = NormalizeInstructionText(focus);
+    if (description.empty() || (!normalizedFocus.empty() && description == normalizedFocus)) return true;
+    for (const char* prefix : {"describe ", "search for ", "find ", "generate ",
+            "create ", "list ", "identify ", "provide ", "a detailed analysis of "}) {
+        if (description.rfind(prefix, 0) == 0) return true;
+    }
+    return false;
 }
 }
 
@@ -168,7 +192,12 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
            << "\"search\":{\"description\":string,\"entities\":[string],\"actions\":[string],\"scene\":string,\"tags\":[string]}}. ";
     if (eventEnabled) prompt << "Event instruction: " << eventPrompt << ". ";
     else prompt << "Set event.matched to false. ";
-    if (searchEnabled) prompt << "Generate factual searchable metadata. Search focus: " << searchFocus << ". ";
+    if (searchEnabled) {
+        prompt << "Generate factual searchable metadata using only visibly supported facts. "
+               << "search.description must be a present-tense description of the image, never an instruction. "
+               << "Do not copy or paraphrase the search focus and do not assume a focused item is present. "
+               << "Observation priority: " << searchFocus << ". ";
+    }
     else prompt << "Return empty search fields. ";
 
     X::Value responseText = CallValue(m_garnet["infer_json"],
@@ -194,9 +223,20 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
         try {
             X::Value structured = m_json["loads"](StripJsonFence(outer.Get("text").ToString()));
             if (structured.IsDict()) {
+                X::Value event = Has(structured, "event") ? structured.Get("event") : X::Value();
+                X::Value search = Has(structured, "search") ? structured.Get("search") : X::Value();
+                if (searchEnabled && search.IsDict() && Has(search, "description") &&
+                    LooksLikeInstruction(search.Get("description").ToString(), searchFocus)) {
+                    std::string fallback;
+                    if (event.IsDict() && Has(event, "description"))
+                        fallback = event.Get("description").ToString();
+                    if (LooksLikeInstruction(fallback, searchFocus) && Has(search, "scene"))
+                        fallback = search.Get("scene").ToString();
+                    search.SetItem("description", X::Value::String(Host(), fallback));
+                }
                 result.SetItem("status", "ok");
-                result.SetItem("event", Has(structured, "event") ? structured.Get("event") : X::Value());
-                result.SetItem("search", Has(structured, "search") ? structured.Get("search") : X::Value());
+                result.SetItem("event", event);
+                result.SetItem("search", search);
                 return result;
             }
         } catch (...) {}
