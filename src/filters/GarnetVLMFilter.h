@@ -12,6 +12,7 @@ public:
     BEGIN_PACKAGE(GarnetVLMFilter)
         APISET().AddBase<BaseFilter>();
         APISET().AddFunc<2>("PlanSearch", &GarnetVLMFilter::PlanSearch);
+        APISET().AddFunc<2>("RankSearch", &GarnetVLMFilter::RankSearch);
     END_PACKAGE
 
     GarnetVLMFilter();
@@ -19,6 +20,7 @@ public:
     ~GarnetVLMFilter();
     bool onPinPutFrame(IPin* pin, X::Value& frame) override;
     X::Value PlanSearch(std::string query, X::Value imageSource);
+    X::Value RankSearch(std::string query, X::Value candidates);
 
 private:
     struct Request {

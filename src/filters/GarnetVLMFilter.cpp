@@ -286,6 +286,33 @@ X::Value GarnetVLMFilter::PlanSearch(std::string query, X::Value imageSource) {
     return m_json["loads"](StripJsonFence(outer.Get("text").ToString()));
 }
 
+X::Value GarnetVLMFilter::RankSearch(std::string query, X::Value candidates) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> servingLock(g_servingSessionMutex);
+    if (!m_initialized) {
+        if (m_Params.IsDict() && Has(m_Params, "maxOutputTokens"))
+            m_maxOutputTokens = static_cast<int>((std::max)(32LL, m_Params.Get("maxOutputTokens").ToInt64()));
+        InitializeGarnet();
+        m_initialized = true;
+    }
+    EnsureGarnetModel();
+    std::string candidateJson = m_json["dumps"](candidates).ToString();
+    std::ostringstream prompt;
+    prompt << "Rank camera-history candidates for the user's request. Use only the supplied metadata. "
+           << "Return JSON only with schema {\"rankings\":[{\"id\":string,\"score\":integer,\"reason\":string}]}. "
+           << "Include every candidate exactly once, best first. score is 0-100. reason is one short factual sentence. "
+           << "Do not invent visible details. Request: " << query << " Candidates: " << candidateJson;
+    X::Value responseText = CallValue(m_garnet["infer_json"], {
+        X::Value::String(Host(), prompt.str()), X::Value(),
+        X::Value((std::min)(m_maxOutputTokens, 256)),
+        X::Value::String(Host(), m_modelId)});
+    X::Value outer = m_json["loads"](responseText.ToString());
+    if (!outer.IsDict() || !Has(outer, "status") || outer.Get("status").ToString() != "ok")
+        throw X::Error(outer.IsDict() && Has(outer, "error_message")
+            ? outer.Get("error_message").ToString() : "Garnet search ranking failed");
+    return m_json["loads"](StripJsonFence(outer.Get("text").ToString()));
+}
+
 void GarnetVLMFilter::Deliver(X::Value& result, X::Value& metadata, long long startTime) {
     X::Value frame = m_pFactory->NewDataFrame();
     X::KWARGS kwargs;
