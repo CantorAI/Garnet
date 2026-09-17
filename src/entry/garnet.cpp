@@ -35,6 +35,26 @@ namespace
     using Garnet::CallChecked;
     using Garnet::TensorCount;
 
+    class CudaDeviceScope
+    {
+        int m_previous = -1;
+        bool m_changed = false;
+    public:
+        explicit CudaDeviceScope(int device)
+        {
+            if (cudaGetDevice(&m_previous) != cudaSuccess) m_previous = -1;
+            if (m_previous != device) {
+                if (cudaSetDevice(device) != cudaSuccess)
+                    throw std::runtime_error("failed to select CUDA device " + std::to_string(device));
+                m_changed = true;
+            }
+        }
+        ~CudaDeviceScope()
+        {
+            if (m_changed && m_previous >= 0) cudaSetDevice(m_previous);
+        }
+    };
+
     std::string GarnetJsonError(const std::string& code, const std::string& message)
     {
         return json({
@@ -184,6 +204,28 @@ namespace
 
 namespace Garnet
 {
+    std::shared_ptr<GarnetAPI::ServingInstance> GarnetAPI::FindServingInstance(
+        const std::string& modelId, const std::string& capability) const
+    {
+        std::lock_guard<std::mutex> guard(m_servingMutex);
+        if (!modelId.empty()) {
+            const auto it = m_servingInstances.find(modelId);
+            if (it != m_servingInstances.end() &&
+                (capability.empty() || it->second->inputCapability == capability)) {
+                return it->second;
+            }
+            return {};
+        }
+        if (!capability.empty()) {
+            for (const auto& item : m_servingInstances) {
+                if (item.second->inputCapability == capability) return item.second;
+            }
+            return {};
+        }
+        const auto current = m_servingInstances.find(m_defaultServingModelId);
+        return current == m_servingInstances.end() ? nullptr : current->second;
+    }
+
     namespace {
         std::mutex nativePackagesMutex;
         std::vector<GarnetAPI*> nativePackages;
@@ -1884,17 +1926,20 @@ namespace Garnet
         std::lock_guard<std::mutex> guard(m_servingMutex);
         json response = {
             {"schema_version", 1},
-            {"serving_mode", "single_instance"},
+            {"serving_mode", "multi_instance"},
             {"models", json::array()}
         };
-        if (m_servingModel.IsValid()) {
+        for (const auto& item : m_servingInstances) {
+            const auto& instance = item.second;
+            std::lock_guard<std::mutex> instanceGuard(instance->mutex);
             json model = GarnetServingStatus(
-                m_servingModel,
-                m_servingModelRoot,
-                m_servingModelId,
-                m_servingInputCapability,
-                m_servingError);
-            model["instance_id"] = m_servingModelId + "-0";
+                instance->model,
+                instance->modelRoot,
+                instance->modelId,
+                instance->inputCapability,
+                instance->error);
+            model["instance_id"] = instance->modelId;
+            model["device_id"] = instance->deviceId;
             response["models"].push_back(std::move(model));
         }
         return response.dump();
@@ -1970,6 +2015,7 @@ namespace Garnet
         int maxPixels = 1280 * 28 * 28;
         int maxOutputTokens = 256;
         int audioChunks = 5;
+        int deviceId = 0;
         if (params.size() > 3 && !params[3].ToString().empty()) {
             try {
                 const json profile = json::parse(params[3].ToString());
@@ -1981,6 +2027,7 @@ namespace Garnet
                 maxOutputTokens = profile.value(
                     "maxOutputTokens", maxOutputTokens);
                 audioChunks = profile.value("audioChunks", audioChunks);
+                deviceId = profile.value("deviceId", deviceId);
             }
             catch (const std::exception&) {
                 retValue = NativeValue(Host(), GarnetJsonError(
@@ -2008,7 +2055,7 @@ namespace Garnet
             maxInputTokens >= 128 && maxInputTokens <= 2048 &&
             kvPages >= 16 && kvPages <= 256;
         if ((!asrProfile && !ttsProfile && !textProfile && !fastProfile && !visionProfile) ||
-            maxOutputTokens < 1 || maxOutputTokens > 32768) {
+            maxOutputTokens < 1 || maxOutputTokens > 32768 || deviceId < 0) {
             retValue = NativeValue(Host(), GarnetJsonError(
                 "profile_unsupported",
                 "The requested Garnet inference profile is not supported"));
@@ -2030,20 +2077,37 @@ namespace Garnet
         }
 
         std::lock_guard<std::mutex> guard(m_servingMutex);
-        const std::string previousCacheRoot = m_servingCacheRoot;
-        if (m_servingModel.IsValid()) {
-            X::Value releaseCallable = m_servingModel["release_runtime"];
-            if (releaseCallable.IsObject()) CallChecked(releaseCallable);
+        const auto existing = m_servingInstances.find(modelId);
+        if (existing != m_servingInstances.end() && existing->second->model.IsValid()) {
+            const auto& instance = existing->second;
+            if (instance->modelRoot != modelRoot.string() ||
+                instance->cacheRoot != cacheRoot.string()) {
+                retValue = NativeValue(Host(), GarnetJsonError(
+                    "model_instance_conflict",
+                    "The model UID is already loaded from a different root"));
+                return retValue;
+            }
+            m_defaultServingModelId = modelId;
+            retValue = NativeValue(Host(), GarnetServingStatus(
+                instance->model, instance->modelRoot, instance->modelId,
+                instance->inputCapability, instance->error, rt).dump());
+            return retValue;
         }
-        m_servingModel = X::Value();
-        m_servingModelRoot.clear();
-        m_servingCacheRoot.clear();
-        m_servingModelId.clear();
-        m_servingInputCapability.clear();
-        if (!previousCacheRoot.empty()) {
-            TRTBuilder::ReleaseCachedExecutions(previousCacheRoot);
-        }
+        auto instance = std::make_shared<ServingInstance>();
+        instance->modelRoot = modelRoot.string();
+        instance->cacheRoot = cacheRoot.string();
+        instance->modelId = modelId;
+        instance->inputCapability = asrModel
+            ? "audio" : (ttsModel ? "speech" : (textModel ? "text" : "vision"));
+        instance->minPixels = minPixels;
+        instance->maxPixels = maxPixels;
+        instance->maxOutputTokens = maxOutputTokens;
+        instance->deviceId = deviceId;
         try {
+            int deviceCount = 0;
+            if (cudaGetDeviceCount(&deviceCount) != cudaSuccess || deviceId >= deviceCount)
+                throw std::runtime_error("CUDA device is unavailable: " + std::to_string(deviceId));
+            CudaDeviceScope deviceScope(deviceId);
             fs::create_directories(cacheRoot);
             auto modelValue = CallChecked(__xlang3_package_->GetValue("model"));
             Model& model = *modelValue.NativeData<Model>();
@@ -2117,41 +2181,24 @@ namespace Garnet
                             : ": " + code + ": " + detail;
                     }
                 }
-                m_servingModel = X::Value();
-                m_servingModelRoot.clear();
                 TRTBuilder::ReleaseCachedExecutions(cacheRoot.string());
-                m_servingCacheRoot.clear();
-                m_servingModelId.clear();
-                m_servingInputCapability.clear();
-                m_servingError = initializationError;
-                retValue = NativeValue(Host(), GarnetJsonError("model_load_failed", m_servingError));
+                instance->error = initializationError;
+                retValue = NativeValue(Host(), GarnetJsonError("model_load_failed", instance->error));
                 return retValue;
             }
-            m_servingModel = X::Value(modelValue);
-            m_servingModelRoot = modelRoot.string();
-            m_servingCacheRoot = cacheRoot.string();
-            m_servingModelId = modelId;
-            m_servingInputCapability = asrModel
-                ? "audio" : (ttsModel ? "speech" :
-                    (textModel ? "text" : "vision"));
-            m_servingMinPixels = minPixels;
-            m_servingMaxPixels = maxPixels;
-            m_servingMaxOutputTokens = maxOutputTokens;
-            m_servingError.clear();
+            instance->model = X::Value(modelValue);
+            instance->error.clear();
+            m_servingInstances[modelId] = instance;
+            m_defaultServingModelId = modelId;
             retValue = NativeValue(Host(), GarnetServingStatus(
-                m_servingModel, m_servingModelRoot, m_servingModelId,
-                m_servingInputCapability, m_servingError, rt
+                instance->model, instance->modelRoot, instance->modelId,
+                instance->inputCapability, instance->error, rt
             ).dump());
         }
         catch (const std::exception& exception) {
-            m_servingModel = X::Value();
-            m_servingModelRoot.clear();
             TRTBuilder::ReleaseCachedExecutions(cacheRoot.string());
-            m_servingCacheRoot.clear();
-            m_servingModelId.clear();
-            m_servingInputCapability.clear();
-            m_servingError = exception.what();
-            retValue = NativeValue(Host(), GarnetJsonError("model_load_failed", m_servingError));
+            instance->error = exception.what();
+            retValue = NativeValue(Host(), GarnetJsonError("model_load_failed", instance->error));
         }
         return retValue;
     }
@@ -2160,10 +2207,17 @@ namespace Garnet
     {
         X::Value retValue;
         auto* rt = Host()->runtime;
-        std::lock_guard<std::mutex> guard(m_servingMutex);
+        const std::string modelId = params.size() > 0 ? params[0].ToString() : std::string();
+        const auto instance = FindServingInstance(modelId);
+        if (!instance) {
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                modelId.empty() ? "Garnet serving is not started" : "The requested Garnet model is not loaded"));
+            return retValue;
+        }
+        std::lock_guard<std::mutex> guard(instance->mutex);
         retValue = NativeValue(Host(), GarnetServingStatus(
-            m_servingModel, m_servingModelRoot, m_servingModelId,
-            m_servingInputCapability, m_servingError, rt
+            instance->model, instance->modelRoot, instance->modelId,
+            instance->inputCapability, instance->error, rt
         ).dump());
         return retValue;
     }
@@ -2186,13 +2240,23 @@ namespace Garnet
         const int requestedMaxNewTokens = params.size() > 2
             ? CheckedInt(params[2], "argument")
             : 0;
+        const std::string requestedModelId = params.size() > 3
+            ? params[3].ToString() : std::string();
         if (prompt.empty()) {
             retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
                 "Garnet inference requires a prompt"));
             return retValue;
         }
-        std::lock_guard<std::mutex> guard(m_servingMutex);
-        if (m_servingInputCapability == "vision" &&
+        const auto instance = FindServingInstance(requestedModelId);
+        if (!instance) {
+            retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
+                requestedModelId.empty() ? "Garnet serving is not started" :
+                    "The requested Garnet model is not loaded"));
+            return retValue;
+        }
+        std::lock_guard<std::mutex> guard(instance->mutex);
+        CudaDeviceScope deviceScope(instance->deviceId);
+        if (instance->inputCapability == "vision" &&
             !hasImageBinary && !hasImagePath) {
             retValue = NativeValue(Host(), GarnetJsonError("request_invalid",
                 "Garnet Qwen-VL inference requires JPEG binary data or an image path"));
@@ -2200,24 +2264,24 @@ namespace Garnet
         }
         const int maxNewTokens = requestedMaxNewTokens > 0
             ? (std::max)(1, (std::min)(
-                m_servingMaxOutputTokens, requestedMaxNewTokens))
-            : m_servingMaxOutputTokens;
-        if (!m_servingModel.IsValid()) {
+                instance->maxOutputTokens, requestedMaxNewTokens))
+            : instance->maxOutputTokens;
+        if (!instance->model.IsValid()) {
             retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
-                m_servingError.empty() ? "Garnet serving is not started" : m_servingError));
+                instance->error.empty() ? "Garnet serving is not started" : instance->error));
             return retValue;
         }
-        X::Value forwardCallable = m_servingModel["forward"];
+        X::Value forwardCallable = instance->model["forward"];
         if (!forwardCallable.IsObject()) {
             retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
                 "Garnet serving model handle is invalid"));
             return retValue;
         }
         auto request = X::Value::Dict(Host());
-        if (m_servingInputCapability == "vision") {
+        if (instance->inputCapability == "vision") {
             request.SetItem("image", imageSource);
-            request.SetItem("min_pixels", X::Value(m_servingMinPixels));
-            request.SetItem("max_pixels", X::Value(m_servingMaxPixels));
+            request.SetItem("min_pixels", X::Value(instance->minPixels));
+            request.SetItem("max_pixels", X::Value(instance->maxPixels));
         }
         else {
             request.SetItem("enable_thinking", X::Value(0));
@@ -2234,7 +2298,7 @@ namespace Garnet
         X::Value result(resultValue);
         json response = {
             {"status", FindField(result, "status").ToString()},
-            {"model_id", m_servingModelId},
+            {"model_id", instance->modelId},
             {"text", FindField(result, "text").ToString()},
             {"error_code", FindField(result, "error_code").ToString()},
             {"error_message", FindField(result, "error_message").ToString()},
@@ -2281,18 +2345,20 @@ namespace Garnet
         const int requestedMaxNewTokens = params.size() > 3
             ? CheckedInt(params[3], "argument") : 0;
 
-        std::lock_guard<std::mutex> guard(m_servingMutex);
-        if (m_servingInputCapability != "audio") {
+        const auto instance = FindServingInstance(std::string(), "audio");
+        if (!instance) {
             retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
-                "The active Garnet model does not accept audio"));
+                "No loaded Garnet model accepts audio"));
             return retValue;
         }
-        if (!m_servingModel.IsValid()) {
+        std::lock_guard<std::mutex> guard(instance->mutex);
+        CudaDeviceScope deviceScope(instance->deviceId);
+        if (!instance->model.IsValid()) {
             retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
-                m_servingError.empty() ? "Garnet serving is not started" : m_servingError));
+                instance->error.empty() ? "Garnet serving is not started" : instance->error));
             return retValue;
         }
-        X::Value forwardCallable = m_servingModel["forward"];
+        X::Value forwardCallable = instance->model["forward"];
         if (!forwardCallable.IsObject()) {
             retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
                 "Garnet serving model handle is invalid"));
@@ -2300,8 +2366,8 @@ namespace Garnet
         }
         const int maxNewTokens = requestedMaxNewTokens > 0
             ? (std::max)(1, (std::min)(
-                m_servingMaxOutputTokens, requestedMaxNewTokens))
-            : m_servingMaxOutputTokens;
+                instance->maxOutputTokens, requestedMaxNewTokens))
+            : instance->maxOutputTokens;
         auto request = X::Value::Dict(Host());
         request.SetItem("audio", audioSource);
         request.SetItem("context", X::Value::String(Host(), context));
@@ -2317,7 +2383,7 @@ namespace Garnet
         X::Value result(resultValue);
         json response = {
             {"status", FindField(result, "status").ToString()},
-            {"model_id", m_servingModelId},
+            {"model_id", instance->modelId},
             {"text", FindField(result, "text").ToString()},
             {"error_code", FindField(result, "error_code").ToString()},
             {"error_message", FindField(result, "error_message").ToString()},
@@ -2356,24 +2422,26 @@ namespace Garnet
             CheckedInt(params[3], "argument"));
         const std::filesystem::path outputPath(params[4].ToString());
 
-        std::lock_guard<std::mutex> guard(m_servingMutex);
-        if (m_servingInputCapability != "speech") {
+        const auto instance = FindServingInstance(std::string(), "speech");
+        if (!instance) {
             retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
-                "The active Garnet model does not synthesize speech"));
+                "No loaded Garnet model synthesizes speech"));
             return retValue;
         }
-        if (!m_servingModel.IsValid()) {
+        std::lock_guard<std::mutex> guard(instance->mutex);
+        CudaDeviceScope deviceScope(instance->deviceId);
+        if (!instance->model.IsValid()) {
             retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
-                m_servingError.empty() ? "Garnet serving is not started" : m_servingError));
+                instance->error.empty() ? "Garnet serving is not started" : instance->error));
             return retValue;
         }
-        X::Value forwardCallable = m_servingModel["forward"];
+        X::Value forwardCallable = instance->model["forward"];
         if (!forwardCallable.IsObject()) {
             retValue = NativeValue(Host(), GarnetJsonError("serving_not_ready",
                 "Garnet serving model handle is invalid"));
             return retValue;
         }
-        const int maxFrames = (std::min)(m_servingMaxOutputTokens,
+        const int maxFrames = (std::min)(instance->maxOutputTokens,
             requestedFrames);
         auto request = X::Value::Dict(Host());
         request.SetItem("text", X::Value::String(Host(), text));
@@ -2508,7 +2576,7 @@ namespace Garnet
         }
         retValue = NativeValue(Host(), json({
             {"status", "ok"},
-            {"model_id", m_servingModelId},
+            {"model_id", instance->modelId},
             {"output_path", outputPath.string()},
             {"sample_rate", 24000},
             {"audio_frames", FindField(result, "audio_frame_count").ToLongLong()},
@@ -2523,25 +2591,39 @@ namespace Garnet
     {
         X::Value retValue;
         auto* rt = Host()->runtime;
-        std::lock_guard<std::mutex> guard(m_servingMutex);
-        const std::string cacheRoot = m_servingCacheRoot;
-        if (m_servingModel.IsValid()) {
-            X::Value releaseCallable = m_servingModel["release_runtime"];
-            if (releaseCallable.IsObject()) CallChecked(releaseCallable);
+        const std::string modelId = params.size() > 0 ? params[0].ToString() : std::string();
+        std::vector<std::shared_ptr<ServingInstance>> stopped;
+        {
+            std::lock_guard<std::mutex> guard(m_servingMutex);
+            if (modelId.empty()) {
+                for (const auto& item : m_servingInstances) stopped.push_back(item.second);
+                m_servingInstances.clear();
+                m_defaultServingModelId.clear();
+            }
+            else {
+                const auto it = m_servingInstances.find(modelId);
+                if (it != m_servingInstances.end()) {
+                    stopped.push_back(it->second);
+                    m_servingInstances.erase(it);
+                }
+                if (m_defaultServingModelId == modelId) {
+                    m_defaultServingModelId = m_servingInstances.empty()
+                        ? std::string() : m_servingInstances.begin()->first;
+                }
+            }
         }
-        m_servingModel = X::Value();
-        m_servingModelRoot.clear();
-        m_servingCacheRoot.clear();
-        m_servingModelId.clear();
-        m_servingInputCapability.clear();
-        if (!cacheRoot.empty()) {
-            TRTBuilder::ReleaseCachedExecutions(cacheRoot);
+        for (const auto& instance : stopped) {
+            std::lock_guard<std::mutex> instanceGuard(instance->mutex);
+            if (instance->model.IsValid()) {
+                X::Value releaseCallable = instance->model["release_runtime"];
+                if (releaseCallable.IsObject()) CallChecked(releaseCallable);
+            }
+            instance->model = X::Value();
+            if (!instance->cacheRoot.empty()) {
+                TRTBuilder::ReleaseCachedExecutions(instance->cacheRoot);
+            }
         }
         Garnet::Image::Cuda::ShutdownThreadNvJpegDecoder();
-        m_servingError.clear();
-        m_servingMinPixels = 256 * 28 * 28;
-        m_servingMaxPixels = 1280 * 28 * 28;
-        m_servingMaxOutputTokens = 256;
         retValue = NativeValue(Host(), true);
         return retValue;
     }
@@ -2627,7 +2709,8 @@ namespace Garnet
         const std::string modelId = params[0].ToString();
         {
             std::lock_guard<std::mutex> guard(m_servingMutex);
-            if (modelId == m_servingModelId && m_servingModel.IsValid()) {
+            const auto it = m_servingInstances.find(modelId);
+            if (it != m_servingInstances.end() && it->second->model.IsValid()) {
                 retValue = NativeValue(Host(), GarnetJsonError("model_in_use", "stop the served model before removing it"));
                 return retValue;
             }

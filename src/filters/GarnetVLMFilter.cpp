@@ -8,11 +8,8 @@
 #include <sstream>
 
 namespace {
-// Garnet currently owns one serving session per loaded module. Different
-// Galaxy filter instances may request different models, so model selection and
-// inference must remain one atomic operation across every filter instance.
-std::mutex g_servingSessionMutex;
-
+// Each filter keeps its own request serialization while Garnet routes calls to
+// independently resident model instances by model UID.
 X::Value CallValue(const X::Value& callable, const X::ARGS& args = {}, const X::KWARGS& kwargs = {}) {
     X::Value result;
     if (!callable.Call(args, kwargs, result)) {
@@ -110,7 +107,6 @@ bool GarnetVLMFilter::onPinPutFrame(IPin*, X::Value& frame) {
     std::unique_lock<std::mutex> lock(m_mutex, std::try_to_lock);
     if (!lock.owns_lock()) return true;
     try {
-        std::lock_guard<std::mutex> servingLock(g_servingSessionMutex);
         if (!m_initialized) {
             std::cerr << "Garnet-VLM: initializing model" << '\n';
             if (m_Params.IsDict() && Has(m_Params, "maxOutputTokens"))
@@ -180,7 +176,8 @@ void GarnetVLMFilter::InitializeGarnet() {
 
 void GarnetVLMFilter::EnsureGarnetModel() {
     if (!m_initialized || !m_garnet.IsObject() || m_modelId.empty()) return;
-    X::Value statusText = CallValue(m_garnet["serve_status_json"]);
+    X::Value statusText = CallValue(m_garnet["serve_status_json"], {
+        X::Value::String(Host(), m_modelId)});
     X::Value status = m_json["loads"](statusText.ToString());
     const bool sameModel = status.IsDict() && Has(status, "model_id") &&
         status.Get("model_id").ToString() == m_modelId &&
@@ -270,7 +267,6 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
 
 X::Value GarnetVLMFilter::PlanSearch(std::string query, X::Value imageSource) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    std::lock_guard<std::mutex> servingLock(g_servingSessionMutex);
     if (!m_initialized) {
         if (m_Params.IsDict() && Has(m_Params, "maxOutputTokens"))
             m_maxOutputTokens = static_cast<int>((std::max)(32LL, m_Params.Get("maxOutputTokens").ToInt64()));
@@ -309,7 +305,6 @@ X::Value GarnetVLMFilter::PlanSearch(std::string query, X::Value imageSource) {
 
 X::Value GarnetVLMFilter::RankSearch(std::string query, X::Value candidates) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    std::lock_guard<std::mutex> servingLock(g_servingSessionMutex);
     if (!m_initialized) {
         if (m_Params.IsDict() && Has(m_Params, "maxOutputTokens"))
             m_maxOutputTokens = static_cast<int>((std::max)(32LL, m_Params.Get("maxOutputTokens").ToInt64()));

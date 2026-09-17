@@ -6,6 +6,7 @@
 #include "log.h"
 #include <string>
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
@@ -120,16 +121,26 @@ namespace Garnet
 		std::string m_baseFolder;//like cantor's folder
 		X::Value m_current_weights;
 		X::Value m_compiledEngine;
-		X::Value m_servingModel;
-		std::string m_servingModelRoot;
-		std::string m_servingCacheRoot;
-		std::string m_servingModelId;
-		std::string m_servingInputCapability;
-		std::string m_servingError;
-		int m_servingMinPixels = 256 * 28 * 28;
-		int m_servingMaxPixels = 1280 * 28 * 28;
-		int m_servingMaxOutputTokens = 256;
+		struct ServingInstance
+		{
+			X::Value model;
+			std::string modelRoot;
+			std::string cacheRoot;
+			std::string modelId;
+			std::string inputCapability;
+			std::string error;
+			int minPixels = 256 * 28 * 28;
+			int maxPixels = 1280 * 28 * 28;
+			int maxOutputTokens = 256;
+			int deviceId = 0;
+			mutable std::mutex mutex;
+		};
+		std::unordered_map<std::string, std::shared_ptr<ServingInstance>> m_servingInstances;
+		std::string m_defaultServingModelId;
 		mutable std::mutex m_servingMutex;
+		std::shared_ptr<ServingInstance> FindServingInstance(
+			const std::string& modelId = std::string(),
+			const std::string& capability = std::string()) const;
 		ModelManager m_modelManager;
 		ModelManager m_accelerationManager;
 		bool LoadModelFromFile(std::string modelPath, X::Value& model);
