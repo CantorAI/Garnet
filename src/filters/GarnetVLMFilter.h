@@ -40,6 +40,10 @@ private:
     void EnsureGarnetModel();
     bool LoadModel(const X::Value& parameters, std::string& error);
     bool HasTextModelHeadroom(const X::Value& parameters, std::string& reason);
+    std::string WorldScope(const X::Value& metadata) const;
+    X::Value LoadWorldContext(const std::string& scope);
+    bool CommitWorldUpdates(X::Value& structured, Request& request,
+        const std::string& scope, X::Value& changes);
     X::Value Infer(Request& request);
     void Deliver(X::Value& result, X::Value& metadata, long long startTime);
 };

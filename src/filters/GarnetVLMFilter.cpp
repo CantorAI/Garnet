@@ -70,6 +70,9 @@ bool LooksLikeInstruction(std::string description, const std::string& focus) {
             "create ", "list ", "identify ", "provide ", "a detailed analysis of "}) {
         if (description.rfind(prefix, 0) == 0) return true;
     }
+    for (const char* prefix : {"观察画面", "请观察", "描述画面", "分析画面"}) {
+        if (description.rfind(prefix, 0) == 0) return true;
+    }
     return false;
 }
 }
@@ -131,6 +134,16 @@ bool GarnetVLMFilter::onPinPutFrame(IPin*, X::Value& frame) {
         std::cerr << "Garnet-VLM: inference start image=" << data.Get("image_id").ToInt64() << '\n';
         X::Value result = Infer(request);
         std::cerr << "Garnet-VLM: inference complete image=" << data.Get("image_id").ToInt64() << '\n';
+        if (!result.IsDict() || !Has(result, "status") || result.Get("status").ToString() != "ok") {
+            std::string diagnostic = result.IsDict() && Has(result, "model_response_json")
+                ? result.Get("model_response_json").ToString() : std::string();
+            if (diagnostic.size() > 2048) diagnostic.resize(2048);
+            std::cerr << "Garnet-VLM: invalid structured result image="
+                      << data.Get("image_id").ToInt64() << " error="
+                      << (result.IsDict() && Has(result, "error")
+                          ? result.Get("error").ToString() : "unknown")
+                      << " response=" << diagnostic << '\n';
+        }
         Deliver(result, request.metadata, request.startTime);
     } catch (const std::exception& error) {
         std::cerr << "Garnet-VLM inference: " << error.what() << '\n';
@@ -293,6 +306,158 @@ void GarnetVLMFilter::EnsureGarnetModel() {
     if (!sameModel) InitializeGarnet();
 }
 
+std::string GarnetVLMFilter::WorldScope(const X::Value& metadata) const {
+    if (!metadata.IsDict()) return "global";
+    std::string camera;
+    if (Has(metadata, "source_id")) camera = metadata.Get("source_id").ToString();
+    if (camera.empty() && Has(metadata, "deviceId")) {
+        camera = metadata.Get("deviceId").ToString();
+        if (Has(metadata, "channelId") && !metadata.Get("channelId").ToString().empty())
+            camera += "/channel:" + metadata.Get("channelId").ToString();
+    }
+    if (camera.empty()) return "global";
+    const long long preset = Has(metadata, "preset_id") ? metadata.Get("preset_id").ToInt64() : 0;
+    return "camera:" + camera + "/preset:" + std::to_string(preset);
+}
+
+X::Value GarnetVLMFilter::LoadWorldContext(const std::string& scope) {
+    X::Value context = X::Value::Dict(Host());
+    context.SetItem("scope", X::Value::String(Host(), scope));
+    context.SetItem("current", X::Value::List(Host()));
+    context.SetItem("recent_history", X::Value::List(Host()));
+    try {
+        X::Value cantor = m_pFactory->GetCantor();
+        X::Value world = cantor["WorldState"]();
+        X::Value current = world["Query"](scope);
+        if (!current.IsList()) return context;
+        X::Value compactCurrent = X::Value::List(Host());
+        X::Value histories = X::Value::List(Host());
+        const uint64_t count = (std::min)(current.Size(), static_cast<uint64_t>(16));
+        for (uint64_t i = 0; i < count; ++i) {
+            X::Value state = current[static_cast<long long>(i)];
+            if (!state.IsDict() || !Has(state, "scope") || !Has(state, "key")) continue;
+            X::Value currentItem = X::Value::Dict(Host());
+            currentItem.SetItem("key", state.Get("key"));
+            if (Has(state, "properties")) currentItem.SetItem("properties", state.Get("properties"));
+            if (Has(state, "revision")) currentItem.SetItem("revision", state.Get("revision"));
+            if (Has(state, "observed_at")) currentItem.SetItem("observed_at", state.Get("observed_at"));
+            compactCurrent.Append(currentItem);
+            X::Value item = X::Value::Dict(Host());
+            item.SetItem("key", state.Get("key"));
+            X::Value revisions = world["History"](
+                state.Get("scope"), state.Get("key"), X::Value(2));
+            X::Value compactRevisions = X::Value::List(Host());
+            if (revisions.IsList()) {
+                for (uint64_t j = 0; j < revisions.Size(); ++j) {
+                    X::Value revision = revisions[static_cast<long long>(j)];
+                    if (!revision.IsDict()) continue;
+                    X::Value revisionItem = X::Value::Dict(Host());
+                    if (Has(revision, "revision")) revisionItem.SetItem("revision", revision.Get("revision"));
+                    if (Has(revision, "observed_at")) revisionItem.SetItem("observed_at", revision.Get("observed_at"));
+                    if (Has(revision, "properties")) revisionItem.SetItem("properties", revision.Get("properties"));
+                    compactRevisions.Append(revisionItem);
+                }
+            }
+            item.SetItem("revisions", compactRevisions);
+            histories.Append(item);
+        }
+        context.SetItem("current", compactCurrent);
+        context.SetItem("recent_history", histories);
+        context.SetItem("available", X::Value(true));
+    } catch (const std::exception& error) {
+        context.SetItem("available", X::Value(false));
+        context.SetItem("error", X::Value::String(Host(), error.what()));
+    }
+    return context;
+}
+
+bool GarnetVLMFilter::CommitWorldUpdates(X::Value& structured, Request& request,
+    const std::string& scope, X::Value& changes) {
+    changes = X::Value::List(Host());
+    if (!structured.IsDict()) return false;
+    X::Value updates = Has(structured, "state_updates")
+        ? structured.Get("state_updates") : X::Value::List(Host());
+    bool changed = false;
+    try {
+        X::Value cantor = m_pFactory->GetCantor();
+        X::Value world = cantor["WorldState"]();
+        for (uint64_t i = 0; updates.IsList() && i < updates.Size(); ++i) {
+            X::Value state = updates[static_cast<long long>(i)];
+            if (!state.IsDict() || !Has(state, "key") || !state.Get("key").IsString() ||
+                state.Get("key").ToString().empty() || !Has(state, "properties") ||
+                !state.Get("properties").IsDict()) continue;
+            const std::string stateKey = state.Get("key").ToString();
+            if (stateKey == "event" || stateKey == "search" || stateKey == "camera" ||
+                stateKey == "world_state" || stateKey == "scene_inventory") continue;
+            X::Value update = X::Value::Dict(Host());
+            update.SetItem("scope", X::Value::String(Host(), scope));
+            update.SetItem("key", state.Get("key"));
+            update.SetItem("properties", state.Get("properties"));
+            update.SetItem("observed_at", X::Value(request.startTime));
+            if (Has(request.data, "image_id")) update.SetItem("update_uid", request.data.Get("image_id"));
+            if (Has(request.data, "skill_id")) update.SetItem("skill_id", request.data.Get("skill_id"));
+            if (Has(state, "confidence")) update.SetItem("confidence", state.Get("confidence"));
+            if (Has(state, "evidence")) update.SetItem("evidence", state.Get("evidence"));
+            if (request.metadata.IsDict()) {
+                if (Has(request.metadata, "source_id")) update.SetItem("source", request.metadata.Get("source_id"));
+                else if (Has(request.metadata, "deviceId")) update.SetItem("source", request.metadata.Get("deviceId"));
+            }
+            X::Value committed = world["Update"](update);
+            if (committed.IsDict()) {
+                changes.Append(committed);
+                if (Has(committed, "changed") && committed.Get("changed").ToLongLong()) changed = true;
+            }
+        }
+
+        X::Value search = Has(structured, "search") ? structured.Get("search") : X::Value();
+        X::Value objectCounts = search.IsDict() && Has(search, "object_counts")
+            ? search.Get("object_counts") : X::Value();
+        X::Value counts = X::Value::Dict(Host());
+        bool hasInventory = false;
+        if (objectCounts.IsList()) {
+            for (uint64_t i = 0; i < objectCounts.Size(); ++i) {
+                X::Value item = objectCounts[static_cast<long long>(i)];
+                if (!item.IsDict() || !Has(item, "object") || !Has(item, "count") ||
+                    item.Get("count").IsNone()) continue;
+                const std::string object = item.Get("object").ToString();
+                if (object.empty()) continue;
+                counts.SetItem(object.c_str(), item.Get("count"));
+                hasInventory = true;
+            }
+        }
+        if (search.IsDict() && Has(search, "people_count") &&
+            !search.Get("people_count").IsNone()) {
+            counts.SetItem("person", search.Get("people_count"));
+            hasInventory = true;
+        }
+        if (hasInventory) {
+            X::Value properties = X::Value::Dict(Host());
+            properties.SetItem("counts", counts);
+            X::Value inventory = X::Value::Dict(Host());
+            inventory.SetItem("scope", X::Value::String(Host(), scope));
+            inventory.SetItem("key", X::Value::String(Host(), "scene_inventory"));
+            inventory.SetItem("properties", properties);
+            inventory.SetItem("observed_at", X::Value(request.startTime));
+            if (Has(request.data, "image_id")) inventory.SetItem("update_uid", request.data.Get("image_id"));
+            if (Has(request.data, "skill_id")) inventory.SetItem("skill_id", request.data.Get("skill_id"));
+            if (request.metadata.IsDict()) {
+                if (Has(request.metadata, "source_id")) inventory.SetItem("source", request.metadata.Get("source_id"));
+                else if (Has(request.metadata, "deviceId")) inventory.SetItem("source", request.metadata.Get("deviceId"));
+            }
+            X::Value committed = world["Update"](inventory);
+            if (committed.IsDict()) {
+                changes.Append(committed);
+                if (Has(committed, "changed") && committed.Get("changed").ToLongLong()) changed = true;
+            }
+        }
+    } catch (const std::exception& error) {
+        X::Value failure = X::Value::Dict(Host());
+        failure.SetItem("error", X::Value::String(Host(), error.what()));
+        changes.Append(failure);
+    }
+    return changed;
+}
+
 X::Value GarnetVLMFilter::Infer(Request& request) {
     X::Value candidate = request.data;
     X::Value jpeg = Has(candidate, "jpeg") ? candidate.Get("jpeg") : X::Value();
@@ -302,17 +467,28 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
         ? candidate.Get("output_language").ToString() : "en";
     const bool eventEnabled = Has(candidate, "event_enabled") && candidate.Get("event_enabled").ToLongLong();
     const bool searchEnabled = Has(candidate, "search_enabled") && candidate.Get("search_enabled").ToLongLong();
+    const std::string worldScope = WorldScope(request.metadata);
+    X::Value worldContext = LoadWorldContext(worldScope);
+    const std::string worldJson = m_json["dumps"](worldContext).ToString();
 
     std::ostringstream prompt;
     prompt << "Analyze the camera image for an automated monitoring skill. Return ONLY one JSON object. "
            << "Schema: {\"event\":{\"matched\":boolean,\"title\":string,\"description\":string,\"confidence\":number},"
            << "\"search\":{\"description\":string,\"entities\":[string],\"actions\":[string],\"scene\":string,"
-           << "\"tags\":[string],\"object_counts\":[{\"object\":string,\"count\":integer}],\"people_count\":integer|null}}. ";
+           << "\"tags\":[string],\"object_counts\":[{\"object\":string,\"count\":integer}],\"people_count\":integer|null},"
+           << "\"state_updates\":[{\"key\":string,\"properties\":object,\"confidence\":number,\"evidence\":string}]}. ";
+    prompt << "Emit compact/minified JSON. Keep each title/description/evidence brief and each array at most 5 items. "
+           << "state_updates contain world facts only, not copies of event or search fields. ";
     prompt << "Keep JSON property names exactly as specified. Write every natural-language string value in "
            << (outputLanguage == "zh-CN" ? "Simplified Chinese" : outputLanguage == "zh-TW" ? "Traditional Chinese" : "English")
            << ". ";
+    prompt << "WorldState JSON for this camera/preset: " << worldJson << ". "
+           << "Use it to detect changes. Return stable snake_case state_updates needed by the event even when unmatched. "
+           << "One uncertain/occluded frame is not absence. event.matched may be true only for a NEW matching transition, never an unchanged condition. "
+           << "State example: {\"key\":\"cellphone\",\"properties\":{\"present\":true,\"count\":1,\"location\":\"desk\"}}. "
+           << "Never use event or search as a state key. ";
     if (eventEnabled) prompt << "Event instruction: " << eventPrompt << ". ";
-    else prompt << "Set event.matched to false. ";
+    else prompt << "Set event.matched to false and return an empty state_updates list unless state is required for an enabled event. ";
     if (searchEnabled) {
         prompt << "Generate factual searchable metadata using only visibly supported facts. "
                << "Set search.object_counts to counts of reliably visible distinct objects. Every object value is a machine identifier and MUST remain a canonical "
@@ -350,6 +526,12 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
             if (structured.IsDict()) {
                 X::Value event = Has(structured, "event") ? structured.Get("event") : X::Value();
                 X::Value search = Has(structured, "search") ? structured.Get("search") : X::Value();
+                X::Value stateChanges;
+                const bool worldChanged = CommitWorldUpdates(structured, request, worldScope, stateChanges);
+                X::Value stateUpdates = Has(structured, "state_updates") ? structured.Get("state_updates") : X::Value();
+                if (event.IsDict() && stateChanges.IsList() && stateChanges.Size() > 0 &&
+                    Has(event, "matched") && event.Get("matched").ToLongLong() && !worldChanged)
+                    event.SetItem("matched", X::Value(false));
                 if (search.IsDict()) search.SetItem("language", X::Value::String(Host(), outputLanguage));
                 if (searchEnabled && search.IsDict() && Has(search, "description") &&
                     LooksLikeInstruction(search.Get("description").ToString(), searchFocus)) {
@@ -363,13 +545,18 @@ X::Value GarnetVLMFilter::Infer(Request& request) {
                 result.SetItem("status", "ok");
                 result.SetItem("event", event);
                 result.SetItem("search", search);
+                result.SetItem("state_updates", stateUpdates);
+                result.SetItem("state_changes", stateChanges);
+                result.SetItem("world_state_scope", X::Value::String(Host(), worldScope));
                 return result;
             }
         } catch (...) {}
     }
     result.SetItem("status", "error");
-    result.SetItem("error", outer.IsDict() && Has(outer, "error_message")
-        ? outer.Get("error_message") : X::Value("Invalid structured VLM response"));
+    result.SetItem("error", outer.IsDict() && Has(outer, "error_message") &&
+        !outer.Get("error_message").ToString().empty()
+        ? outer.Get("error_message")
+        : X::Value::String(Host(), "Invalid structured VLM response"));
     return result;
 }
 
