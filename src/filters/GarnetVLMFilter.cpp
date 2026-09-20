@@ -2,6 +2,7 @@
 #include "help_func.h"
 #include "../entry/garnet.h"
 #include "../runtime/acceleration_detector.h"
+#include <cuda_runtime_api.h>
 #include <algorithm>
 #include <cctype>
 #include <iostream>
@@ -90,6 +91,16 @@ GarnetVLMFilter::GarnetVLMFilter(const char* library, const char* filter, IFacto
     parameters.SetItem("profile", "");
     parameters.SetItem("modelId", "Qwen3-VL-2B-Instruct");
     parameters.SetItem("maxOutputTokens", 384);
+    parameters.SetItem("searchModelMode", "");
+    parameters.SetItem("minTotalVramMB", 20480);
+    parameters.SetItem("minFreeVramMB", 6144);
+    X::Value textModel = X::Value::Dict(factory->Host());
+    textModel.SetItem("modelRoot", "");
+    textModel.SetItem("xmodelRoot", "");
+    textModel.SetItem("cacheRoot", "");
+    textModel.SetItem("profile", "");
+    textModel.SetItem("modelId", "Qwen3-1.7B");
+    parameters.SetItem("textModel", textModel);
     m_ParamTemplate = parameters;
 }
 
@@ -148,13 +159,66 @@ void GarnetVLMFilter::InitializeGarnet() {
         }
     }
     if (!m_Params.IsDict() || !Has(m_Params, "modelRoot")) return;
-    const std::string modelRoot = m_Params.Get("modelRoot").ToString();
-    if (modelRoot.empty()) return;
-    const std::string xmodelRoot = Has(m_Params, "xmodelRoot") ? m_Params.Get("xmodelRoot").ToString() : std::string();
-    const std::string cacheRoot = Has(m_Params, "cacheRoot") ? m_Params.Get("cacheRoot").ToString() : std::string();
-    const std::string profile = Has(m_Params, "profile") ? m_Params.Get("profile").ToString() : std::string();
-    const std::string modelId = Has(m_Params, "modelId") ? m_Params.Get("modelId").ToString() : "Qwen3-VL-2B-Instruct";
-    m_modelId = modelId;
+    m_searchModelMode = Has(m_Params, "searchModelMode")
+        ? m_Params.Get("searchModelMode").ToString() : std::string();
+    if (m_searchModelMode.empty()) {
+        std::string error;
+        if (!LoadModel(m_Params, error)) throw X::Error(error);
+        return;
+    }
+    if (m_searchModelMode != "auto" && m_searchModelMode != "shared_vlm" &&
+        m_searchModelMode != "separate_text") {
+        throw X::Error("searchModelMode must be auto, shared_vlm, or separate_text");
+    }
+
+    X::Value textModel = Has(m_Params, "textModel") ? m_Params.Get("textModel") : X::Value();
+    if (m_searchModelMode == "separate_text") {
+        std::string error;
+        if (!textModel.IsDict() || !LoadModel(textModel, error))
+            throw X::Error(error.empty() ? "The separate search text model is not configured" : error);
+        std::cerr << "Garnet-VLM: search selected separate text model " << m_modelId << '\n';
+        return;
+    }
+
+    std::string sharedError;
+    if (!LoadModel(m_Params, sharedError)) throw X::Error(sharedError);
+    const std::string sharedModelId = m_modelId;
+    if (m_searchModelMode == "shared_vlm") {
+        std::cerr << "Garnet-VLM: search selected shared VLM " << m_modelId << '\n';
+        return;
+    }
+
+    std::string reason;
+    if (!textModel.IsDict() || !HasTextModelHeadroom(textModel, reason)) {
+        m_modelId = sharedModelId;
+        std::cerr << "Garnet-VLM: search using shared VLM: "
+                  << (reason.empty() ? "text model is not configured" : reason) << '\n';
+        return;
+    }
+    std::string textError;
+    if (LoadModel(textModel, textError)) {
+        std::cerr << "Garnet-VLM: search selected separate text model " << m_modelId << '\n';
+        return;
+    }
+    m_modelId = sharedModelId;
+    std::cerr << "Garnet-VLM: separate text model unavailable; using shared VLM: "
+              << textError << '\n';
+}
+
+bool GarnetVLMFilter::LoadModel(const X::Value& parameters, std::string& error) {
+    if (!parameters.IsDict() || !Has(parameters, "modelRoot")) {
+        error = "Garnet model parameters are missing";
+        return false;
+    }
+    const std::string modelRoot = parameters.Get("modelRoot").ToString();
+    if (modelRoot.empty()) {
+        error = "Garnet modelRoot is empty";
+        return false;
+    }
+    const std::string xmodelRoot = Has(parameters, "xmodelRoot") ? parameters.Get("xmodelRoot").ToString() : std::string();
+    const std::string cacheRoot = Has(parameters, "cacheRoot") ? parameters.Get("cacheRoot").ToString() : std::string();
+    const std::string profile = Has(parameters, "profile") ? parameters.Get("profile").ToString() : std::string();
+    const std::string modelId = Has(parameters, "modelId") ? parameters.Get("modelId").ToString() : "Qwen3-VL-2B-Instruct";
     X::Value statusText = CallValue(m_garnet["serve_model"], {
         X::Value::String(Host(), modelRoot),
         X::Value::String(Host(), xmodelRoot),
@@ -166,12 +230,56 @@ void GarnetVLMFilter::InitializeGarnet() {
         (Has(status, "ready") && status.Get("ready").ToLongLong() != 0) ||
         (Has(status, "state") && status.Get("state").ToString() == "ready"));
     if (!ready) {
-        const std::string detail = status.IsDict() && Has(status, "error_message")
+        error = status.IsDict() && Has(status, "error_message")
             ? status.Get("error_message").ToString()
+            : (status.IsDict() && Has(status, "message")
+                ? status.Get("message").ToString()
             : (status.IsDict() && Has(status, "error")
-                ? status.Get("error").ToString() : "Garnet model did not become ready");
-        throw X::Error(detail);
+                ? status.Get("error").ToString() : "Garnet model did not become ready"));
+        return false;
     }
+    m_modelId = modelId;
+    error.clear();
+    return true;
+}
+
+bool GarnetVLMFilter::HasTextModelHeadroom(const X::Value& parameters, std::string& reason) {
+    int deviceId = 0;
+    if (parameters.IsDict() && Has(parameters, "profile")) {
+        const std::string profileText = parameters.Get("profile").ToString();
+        if (!profileText.empty()) {
+            try {
+                X::Value profile = m_json["loads"](profileText);
+                if (profile.IsDict() && Has(profile, "deviceId"))
+                    deviceId = static_cast<int>(profile.Get("deviceId").ToInt64());
+            } catch (...) {}
+        }
+    }
+    int previousDevice = 0;
+    if (cudaGetDevice(&previousDevice) != cudaSuccess || cudaSetDevice(deviceId) != cudaSuccess) {
+        reason = "CUDA device " + std::to_string(deviceId) + " is unavailable";
+        return false;
+    }
+    size_t freeBytes = 0;
+    size_t totalBytes = 0;
+    const cudaError_t status = cudaMemGetInfo(&freeBytes, &totalBytes);
+    if (previousDevice != deviceId) cudaSetDevice(previousDevice);
+    if (status != cudaSuccess) {
+        reason = "CUDA memory information is unavailable";
+        return false;
+    }
+    const long long freeMb = static_cast<long long>(freeBytes >> 20);
+    const long long totalMb = static_cast<long long>(totalBytes >> 20);
+    const long long minTotalMb = Has(m_Params, "minTotalVramMB")
+        ? (std::max)(0LL, m_Params.Get("minTotalVramMB").ToInt64()) : 20480LL;
+    const long long minFreeMb = Has(m_Params, "minFreeVramMB")
+        ? (std::max)(0LL, m_Params.Get("minFreeVramMB").ToInt64()) : 6144LL;
+    if (totalMb < minTotalMb || freeMb < minFreeMb) {
+        reason = "GPU memory below text-model threshold (total=" +
+            std::to_string(totalMb) + " MB, free=" + std::to_string(freeMb) + " MB)";
+        return false;
+    }
+    return true;
 }
 
 void GarnetVLMFilter::EnsureGarnetModel() {

@@ -33,10 +33,13 @@ private:
     bool m_initialized = false;
     int m_maxOutputTokens = 384;
     std::string m_modelId = "Qwen3-VL-2B-Instruct";
+    std::string m_searchModelMode;
     X::Value m_garnet;
     X::Value m_json;
     void InitializeGarnet();
     void EnsureGarnetModel();
+    bool LoadModel(const X::Value& parameters, std::string& error);
+    bool HasTextModelHeadroom(const X::Value& parameters, std::string& reason);
     X::Value Infer(Request& request);
     void Deliver(X::Value& result, X::Value& metadata, long long startTime);
 };
