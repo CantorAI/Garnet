@@ -446,8 +446,8 @@ endif()
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
-        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor>
+        $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor /utf-8>
+        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor,/utf-8>
     )
 endif()
 
@@ -488,6 +488,15 @@ if(WIN32)
     # tests do not depend on a machine-wide PATH entry.
     set(GARNET_VENDOR_DLLS
         "${GARNET_TENSORRT_ROOT}/bin/nvinfer_10.dll")
+    # TensorRT loads the GPU-architecture builder resource dynamically when a
+    # model is compiled. Ship these beside Garnet so a clean installation can
+    # generate its own engines on the local CUDA device.
+    file(GLOB GARNET_TENSORRT_BUILDER_DLLS
+        "${GARNET_TENSORRT_ROOT}/bin/nvinfer_builder_resource_*_10.dll")
+    if(NOT GARNET_TENSORRT_BUILDER_DLLS)
+        message(FATAL_ERROR "TensorRT builder resource DLLs were not found")
+    endif()
+    list(APPEND GARNET_VENDOR_DLLS ${GARNET_TENSORRT_BUILDER_DLLS})
     foreach(pattern cublas64_*.dll nppig64_*.dll nvjpeg64_*.dll)
         file(GLOB matches
             "${CUDAToolkit_BIN_DIR}/${pattern}"

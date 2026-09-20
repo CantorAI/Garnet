@@ -315,14 +315,21 @@ X::Value GarnetVLMFilter::RankSearch(std::string query, X::Value candidates) {
     std::string candidateJson = m_json["dumps"](candidates).ToString();
     std::ostringstream prompt;
     prompt << "Rank camera-history candidates for the user's request. Use only the supplied metadata. "
+           << "Ignore the supplied reference image; it is only present to satisfy the vision-model input contract. "
            << "Return JSON only with schema {\"rankings\":[{\"id\":string,\"score\":integer,\"exact_match\":boolean,\"reason\":string}]}. "
-           << "Include every candidate exactly once, best first. score is 0-100. reason is one short factual sentence. "
+           << "Include every candidate exactly once, best first. score is 0-100. reason must be at most 8 words or 12 Chinese characters. "
+           << "Emit the compact JSON object and stop immediately; do not use Markdown or add commentary. "
            << "exact_match is true only when the supplied metadata explicitly satisfies every requested subject, object, action, relation, attribute, and quantity; "
            << "it is false when any required detail is absent, contradictory, or uncertain. "
            << "Explicit quantity constraints are hard requirements: a candidate with conflicting object_counts must score below every matching candidate. "
            << "Write reason in the same language as the user's request. Do not invent visible details. Request: " << query << " Candidates: " << candidateJson;
+    X::Value imageSource;
+    if (candidates.IsList() && candidates.Size() > 0) {
+        X::Value first = candidates.Get(static_cast<uint64_t>(0));
+        if (first.IsDict() && Has(first, "image_path")) imageSource = first.Get("image_path");
+    }
     X::Value responseText = CallValue(m_garnet["infer_json"], {
-        X::Value::String(Host(), prompt.str()), X::Value(),
+        X::Value::String(Host(), prompt.str()), imageSource,
         X::Value((std::min)(m_maxOutputTokens, 256)),
         X::Value::String(Host(), m_modelId)});
     X::Value outer = m_json["loads"](responseText.ToString());
@@ -335,6 +342,8 @@ X::Value GarnetVLMFilter::RankSearch(std::string query, X::Value candidates) {
         wrapped.SetItem("rankings", parsed);
         return wrapped;
     }
+    if (!parsed.IsDict() || !Has(parsed, "rankings") || !parsed.Get("rankings").IsList())
+        throw X::Error("Garnet returned invalid search ranking JSON");
     return parsed;
 }
 
