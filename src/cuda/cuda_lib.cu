@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>

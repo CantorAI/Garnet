@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #include "../../src/image/qwen_vl/qwen_vl_image_preprocessor.h"
 #include "../../src/image/qwen_vl/qwen_vl_vision_metadata.h"
 #include "../../src/image/cuda/jpeg_decode_nvjpeg.h"

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 param(
     [Parameter(Mandatory=$true)][string]$RuntimePath,
     [Parameter(Mandatory=$true)][ValidateSet('tensorrt','openvino')][string]$Backend,

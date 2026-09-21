@@ -1,0 +1,54 @@
+<!-- SPDX-FileCopyrightText: 2024-2026 CantorAI Inc. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Garnet by CantorAI</title>
+  <desc id="desc">Programmable AI inference with xModel, XLang3 Tensor Expression, TensorGraph, and hardware-specialized execution.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06101e"/>
+      <stop offset="0.58" stop-color="#0c1930"/>
+      <stop offset="1" stop-color="#172044"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4ca5ff"/>
+      <stop offset="1" stop-color="#8a6cff"/>
+    </linearGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+    <style>
+      .brand { font: 800 78px Inter, Segoe UI, Arial, sans-serif; fill: #f8fafc; }
+      .tagline { font: 600 34px Inter, Segoe UI, Arial, sans-serif; fill: #c7d8ec; }
+      .flow { font: 600 24px Inter, Segoe UI, Arial, sans-serif; fill: #d9e8f8; }
+      .meta { font: 600 20px Inter, Segoe UI, Arial, sans-serif; fill: #8fb6df; }
+      .pill { fill: #10243d; stroke: #3c77b5; stroke-width: 1.5; rx: 18; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="1120" cy="70" r="250" fill="#2a6bad" opacity="0.16"/>
+  <circle cx="110" cy="620" r="260" fill="#673ca0" opacity="0.14"/>
+  <circle cx="980" cy="320" r="110" fill="#4ca5ff" opacity="0.14" filter="url(#glow)"/>
+
+  <rect x="64" y="62" width="8" height="516" rx="4" fill="url(#accent)"/>
+  <text x="112" y="170" class="brand">Garnet</text>
+  <text x="114" y="217" class="meta">OPEN-SOURCE AI INFERENCE RUNTIME · CANTORAI</text>
+
+  <text x="112" y="300" class="tagline">Models remain programs all the way</text>
+  <text x="112" y="346" class="tagline">to optimized execution.</text>
+
+  <rect x="112" y="405" width="190" height="58" class="pill"/>
+  <text x="207" y="442" class="flow" text-anchor="middle">xModel</text>
+  <text x="325" y="442" class="flow">→</text>
+  <rect x="366" y="405" width="246" height="58" class="pill"/>
+  <text x="489" y="442" class="flow" text-anchor="middle">Tensor Expression</text>
+  <text x="636" y="442" class="flow">→</text>
+  <rect x="678" y="405" width="210" height="58" class="pill"/>
+  <text x="783" y="442" class="flow" text-anchor="middle">TensorGraph</text>
+  <text x="912" y="442" class="flow">→</text>
+  <rect x="954" y="405" width="250" height="58" class="pill"/>
+  <text x="1079" y="442" class="flow" text-anchor="middle">Optimized runtime</text>
+
+  <text x="112" y="536" class="meta">TensorRT · OpenVINO · Native CPU · Custom hardware kernels</text>
+  <text x="1204" y="575" class="meta" text-anchor="end">garnetmodel.ai</text>
+</svg>

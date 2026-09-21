@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 import torch
 import json
 import struct
@@ -8,7 +11,7 @@ from safetensors import safe_open
 from safetensors.torch import load_file
 
 # Define paths
-safetensor_folder = "D:/CantorAIProjects/DeepSeek-V3/DeepSeek-V3-Base"
+safetensor_folder = os.environ.get("GARNET_MODEL_DIR", "models/DeepSeek-V3-Base")
 safetensor_file = os.path.join(safetensor_folder, "model-00001-of-000163.safetensors")
 
 def save_safetensor_weights_to_binary(model_path, output_file, compress=False):

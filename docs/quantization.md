@@ -38,7 +38,7 @@ and gate/up graph projections without taking ownership of the model, tokenizer,
 scheduler, or KV cache.
 
 `GARNET_OPENVINO_CPU_SIGNED_I4=1` emits the current NNCF-compatible symmetric
-I4 form without a zero-point subtraction. This is faster on ShawnPC002's
+I4 form without a zero-point subtraction. This is faster on the reference laptop's
 AVX2-only CPU and remains separately fingerprinted from the U4-compatible
 form required by its legacy Intel GPU plugin.
 

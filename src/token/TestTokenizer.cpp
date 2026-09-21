@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 
 #include "AutoTokenizer.h"
 #include <iostream>
@@ -8,7 +11,7 @@
 int simple_test(X::Runtime& rt) {
 
     // Load tokenizer
-    auto tokenizer = tokenizer::BPETokenizer::from_pretrained("D:/CantorAIProjects/DeepSeek-V3/deepseek-moe-16b-base", &rt);
+    auto tokenizer = tokenizer::BPETokenizer::from_pretrained("models/deepseek-moe-16b-base", &rt);
 
     // Tokenize text
     std::string text = "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors. The output is";

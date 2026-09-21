@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #include "qwen_tts_compiled_frontend.h"
 
 #include "garnet_tensor.h"

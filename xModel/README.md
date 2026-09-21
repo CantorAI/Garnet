@@ -1,12 +1,16 @@
-# Model Programs
+# xModel
 
-Garnet's Qwen model programs use Python source executed by XLang3. Each
-`model.json` selects `.py` entrypoints; relative imports connect the shared
-model helpers. The migrated `.x` copies have been removed.
+**xModel** is Garnet's backend-neutral model programming format and package
+contract. An xModel package contains XLang3 Tensor Expression programs written
+as `.py` source with Python-compatible syntax, an xModel manifest (`model.json`),
+backend profiles, and contracts for external assets.
 
-The 27 programs cover text, vision-language, speech recognition, and speech
-synthesis. Backend profiles remain separate from model semantics. Checkpoint
-and tokenizer assets are external and are not bundled here.
+Each xModel manifest selects `.py` entrypoints; relative imports connect shared
+xModel helpers. The migrated `.x` copies have been removed.
+
+The 27 xModel programs cover text, vision-language, speech recognition, and
+speech synthesis. Backend profiles remain separate from xModel semantics.
+Checkpoint and tokenizer assets are external and are not bundled here.
 
 `test/xlang3/models/run_production_capture.py` imports all programs and captures
 40 graphs with tiny symbolic profiles. This validates capture, not pretrained

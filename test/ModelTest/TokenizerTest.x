@@ -1,8 +1,11 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 import cantor thru 'lrpc:1000'
 from garnet import garnet
 T = garnet.tensor()
 garnet.cantor = cantor
-modelPath = "D:/CantorAIProjects/DeepSeek-V3/deepseek-moe-16b-base/*.bin"
+modelPath = "models/deepseek-moe-16b-base/*.bin"
 model = garnet.loadModel(modelPath)
 text = "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors. The output is"
 inputs = model.tokenizer(text, return_tensors = "pt")

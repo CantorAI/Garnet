@@ -1,16 +1,8 @@
 #!/bin/bash
-set -e
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
 
-echo "WARNING: Garnet currently requires CUDA. macOS natively does not support CUDA."
-echo "This build script assumes you have a decoupled CPU build target or an external GPU setup."
+set -euo pipefail
 
-# Move to parent workspace folder (GarnetDev)
-cd "$(dirname "$0")/../../../"
-
-BUILD_DIR="out/build/macos-Release"
-mkdir -p "$BUILD_DIR"
-rm -f "$BUILD_DIR/CMakeCache.txt"
-
-cd "$BUILD_DIR"
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=bin -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=bin -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=bin ../../../Garnet
-ninja
+echo "Garnet currently requires CUDA and cannot be built natively on macOS." >&2
+exit 1

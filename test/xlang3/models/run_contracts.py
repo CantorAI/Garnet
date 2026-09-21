@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Run with xlang3.exe run_contracts.py BACKEND CACHE_DIRECTORY."""
 import os
 import sys

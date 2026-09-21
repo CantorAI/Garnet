@@ -1,13 +1,20 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
 
-# Move to parent workspace folder (GarnetDev)
-cd "$(dirname "$0")/../../../"
+set -euo pipefail
 
-BUILD_DIR="out/build/linux-Debug"
-mkdir -p "$BUILD_DIR"
-rm -f "$BUILD_DIR/CMakeCache.txt"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+build_dir="${repo_root}/out/build/linux-Debug"
+xlang3_root="${XLANG3_ROOT:-${repo_root}/../xlang3}"
+tensorrt_root="${GARNET_TENSORRT_ROOT:-${repo_root}/../ThirdPartySDK/TensorRT}"
+target="${1:-garnet}"
 
-cd "$BUILD_DIR"
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=bin -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=bin -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=bin ../../../Garnet
-ninja
+cmake -S "${repo_root}" -B "${build_dir}" -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${build_dir}/bin" \
+  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="${build_dir}/bin" \
+  -DXLANG3_ROOT="${xlang3_root}" \
+  -DGARNET_TENSORRT_ROOT="${tensorrt_root}"
+
+cmake --build "${build_dir}" --target "${target}"

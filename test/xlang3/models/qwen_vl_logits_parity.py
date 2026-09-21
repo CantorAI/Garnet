@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Diagnose the WorldFusion Qwen case using identical teacher-forced tokens.
 
 Run native with the CPython 3.14 bridge, reference with the isolated Torch Python.

@@ -1,8 +1,8 @@
 # Garnet Model Packaging and Enumeration
 
-CantorOne ships the Garnet runtime and its native dependencies as part of the
-application. Model programs and checkpoint weights are installed separately
-after the user selects a compatible model from the signed remote catalog:
+Host applications ship the Garnet runtime and install model programs and
+checkpoint weights separately. Garnet receives local package paths and does
+not own network access, catalog retrieval, or package installation:
 
 ```text
 CantorOne/resources/garnet/bin/garnet.dll
@@ -46,34 +46,20 @@ loaded = garnet.list_loaded_models_json()
 ```
 
 `list_available_models_json(catalog_root)` accepts an optional custom catalog
-root. `list_loaded_models_json()` reports live serving instances separately
-from installed packages. Garnet currently owns one serving instance, so the
-response declares `serving_mode: "single_instance"`; the array contract can
-remain unchanged when the model manager becomes multi-instance.
+root. `list_loaded_models_json()` reports the live model instances owned by the
+runtime. Local package discovery and installation remain host responsibilities.
 
 Native C++, Python, Electron/JavaScript, and `.x` callers all consume the same
 XLang `garnet` package. No Garnet-specific C header is part of the public
 integration contract.
 
-## Remote model repository
+## Host-managed packages
 
-The Manifold host stores only the signed catalog below `/data/garnetmodels`
-and exposes it from `https://garnetmodel.ai/api/v1/garnet/models/`:
+The host application is responsible for catalog trust, downloads, signature
+and hash verification, installation, updates, and removal. Once a package is
+available locally, the host passes its model root, xModel root, cache root, and
+model ID to `serve_model(...)`.
 
-```text
-/data/garnetmodels/
-  catalog-v1.json
-  catalog-v1.sig
-```
-
-The catalog has four product categories: LLM (`text` in the wire contract),
-VLM, ASR, and TTS. Large immutable weight parts are GitHub Release assets in
-CantorAI/ModelZoo. Garnet verifies the catalog signature before showing remote
-entries, verifies every part and reconstructed file with SHA-256, and activates
-the model with an atomic directory rename.
-
-CantorOne never downloads the Garnet runtime. Community applications may get
-the same runtime binary from the public Garnet GitHub releases. The repository
-also carries public XModel source and examples for Python, C++, Electron, and
-`.x`; checkpoint weights are distributed through ModelZoo according to their
-upstream and Garnet license terms.
+Keeping package distribution outside the inference runtime lets Garnet remain
+embeddable in products with different stores, security policies, and deployment
+topologies. Checkpoint weights retain their upstream license terms.

@@ -1,7 +1,10 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 from garnet import garnet
 import CpuTensor as T
-# m = garnet.loadModel("D:/llama3/Meta-Llama-3-8B/model_weights.bin")
-m001 = garnet.loadModel("D:/CantorAIProjects/DeepSeek-V3/DeepSeek-V3-Base/model_weights_from_safetensor.bin")
+# m = garnet.loadModel("models/Meta-Llama-3-8B/model_weights.bin")
+m001 = garnet.loadModel("models/DeepSeek-V3-Base/model_weights_from_safetensor.bin")
 
 def softmax(m):
     return m

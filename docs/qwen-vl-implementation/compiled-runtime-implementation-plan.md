@@ -140,7 +140,7 @@ verified properties:
   to the ordinary full causal attention graph. A five-token fixture crosses a
   page boundary with a non-identity physical page table; a separately cached
   decode engine consumes all six logical positions with numerical parity.
-- `qwen_text_prefill.x` and `qwen_vl_prefill.x` now define real paged prefill
+- `qwen_text_prefill.py` and `qwen_vl_prefill.py` now define real paged prefill
   graphs. The latter contains vision encoding, visual embedding replacement,
   DeepStack injection, all 28 text layers, per-layer BF16 page writes, and the
   tied LM head. Its two-page test writes 16 multimodal tokens and hands the
@@ -318,9 +318,9 @@ verified properties:
   tiny-profile JPEG path returned its first GPU-sampled token in 16.77 ms;
   explicit full-logits observation took about 120 ms and is a debug boundary,
   not the serving path.
-- The original `qwen_vl_model.x` remains the cacheless correctness graph.
-  Production generation uses the explicit paged `qwen_vl_prefill.x` plus
-  `qwen_text_decode.x` partition; neither graph uses opaque cache handles.
+- The original `qwen_vl_model.py` remains the cacheless correctness graph.
+  Production generation uses the explicit paged `qwen_vl_prefill.py` plus
+  `qwen_text_decode.py` partition; neither graph uses opaque cache handles.
 - Multi-result model operations are represented as explicit single-output
   expressions or packed tensor state. Tensor expressions are never indexed as
   dictionaries; this is enforced by the root-capture regression test.
@@ -377,7 +377,7 @@ The public runtime flow is:
 
 ```python
 model = garnet.load_model(
-    xmodel="xModel/qwen3/vl_2b_instruct/qwen_vl_model.x",
+    xmodel="xModel/qwen3/vl_2b_instruct/qwen_vl_model.py",
     weights="models/Qwen3-VL-2B-Instruct",
     compile=compile_config,
     runtime=runtime_config,
@@ -427,7 +427,7 @@ Every stage must preserve these rules:
 ### Deliverables
 
 - Preserve current four-image output, logits/probe parity, and RTX 4080 metrics.
-- Add a production-path test that loads only `qwen_vl_model.x`.
+- Add a production-path test that loads only `qwen_vl_model.py`.
 - Add forbidden-path counters for Python bundles, hardcoded runners, CPU tensor
   conversions, and direct internal exports.
 - Mark the new test expected-fail until generic graph execution exists.

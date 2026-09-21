@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -22,7 +25,7 @@ namespace
 {
     std::string DefaultDllPath()
     {
-        return "D:\\CantorAI\\Garnet\\out\\build\\x64-Debug\\bin\\garnet.dll";
+        return "garnet.dll";
     }
 
     bool CheckCuda(cudaError_t err, const char* op)

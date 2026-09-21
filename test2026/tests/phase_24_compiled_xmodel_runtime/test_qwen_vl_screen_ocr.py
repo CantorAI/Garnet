@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 import json
 import os
 import time
@@ -7,7 +10,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
 GARNET_DLL = REPO_ROOT.parent / "out" / "build" / "x64-Release" / "bin" / "garnet.dll"
-SCREENSHOT_DIR = REPO_ROOT / "data" / "Screenshot"
+SCREENSHOT_DIR = REPO_ROOT / "test2026" / "fixtures" / "vlm_screenshots"
 ARTIFACT_DIR = REPO_ROOT / "test2026" / "artifacts" / "qwen_vl_screen_ocr"
 
 dll_handles = []

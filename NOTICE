@@ -1,0 +1,19 @@
+Garnet
+Copyright 2024-2026 CantorAI Inc.
+
+This product includes software developed by CantorAI Inc.
+
+Third-party components, model artifacts, and test media remain subject to
+their respective copyright notices and license terms.
+
+Third-party source included in this repository:
+
+- JSON for Modern C++, version 3.12.0
+  Copyright 2013-2025 Niels Lohmann
+  Licensed under the MIT License. The license identifier and copyright notice
+  are retained in third_party/nlohmann/json.hpp.
+
+- The MD5 implementation in src/common/md5.cpp and src/common/md5.h is derived
+  from the RSA Data Security, Inc. MD5 Message-Digest Algorithm and the BZFlag
+  C++ adaptation by Frank Thilo. Its required copyright and license notices are
+  retained in those source files.

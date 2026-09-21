@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #include "compiled_graph_capture.h"
 #include "../tensor/graph_capture.h"
 

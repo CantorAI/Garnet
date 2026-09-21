@@ -150,11 +150,11 @@ The automated same-machine comparison is:
 python test2026\tests\phase_24_compiled_xmodel_runtime\benchmark_cpu_int4_vs_ollama.py
 ```
 
-On `SHAWN-SRV-001` (i9-14900K), a 64-token run of the same Qwen3-1.7B prompt
+On a reference i9-14900K workstation, a 64-token run of the same Qwen3-1.7B prompt
 measured Garnet at 31.87 decode tokens/s and Ollama at 9.56 decode tokens/s, a
 3.33x ratio.
 
-On ShawnPC002 (i7-7567U), the U4-compatible OpenVINO CPU INT4 path measured
+On a reference i7-7567U laptop, the U4-compatible OpenVINO CPU INT4 path measured
 about 8.2-8.8 decode tokens/s and the CPU-specific signed-I4 graph measured
 9.09 tokens/s. Profiling showed OpenVINO selecting FP32 accumulation on this
 old AVX2 CPU. The opt-in
@@ -171,7 +171,7 @@ The native decode pack is persisted beside the fingerprinted decode engine.
 The versioned file validates checkpoint tensor bytes/count, model dimensions,
 matrix contracts, and total file size before binding its weights and FP32
 runtime scales through a read-only mapping. A missing or invalid file falls
-back to quantization and is atomically republished. On ShawnPC002:
+back to quantization and is atomically republished. On the reference i7-7567U laptop:
 
 - one-time quantization and pack creation: 53.68 seconds
 - full cold `load_model` including creation: 61.91 seconds

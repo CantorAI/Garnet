@@ -1,9 +1,12 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 import cantor thru 'lrpc:1000'
 from garnet import garnet
 garnet.cantor = cantor
 T = garnet.tensor()
-# modelPath = "D:/CantorAIProjects/DeepSeek-V3/DeepSeek-V3-Base/model_weights_from_safetensor.bin"
-modelPath = "D:/CantorAIProjects/DeepSeek-V3/deepseek-moe-16b-base"
+# modelPath = "models/DeepSeek-V3-Base/model_weights_from_safetensor.bin"
+modelPath = "models/deepseek-moe-16b-base"
 model = garnet.loadModel(modelPath)
 model_embed_tokens_weight = model["model.embed_tokens.weight"]
 model_layers_0_input_layernorm_weight = model["model.layers.0.input_layernorm.weight"]

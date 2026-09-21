@@ -1,12 +1,14 @@
-import torch
-from tqdm import tqdm
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+import argparse
 import os
 from glob import glob
-import shutil
-import safetensor_convert as sc
-#from safetensors.torch import load_file
 
-from safetensors.torch import safe_open
+import torch
+from tqdm import tqdm
+
+import safetensor_convert as sc
 
 def convert(src_path):
     #os.makedirs(dst_path, exist_ok=True)
@@ -30,5 +32,8 @@ def convert(src_path):
 
 
 if __name__ == "__main__":
-    #check(r'G:\deepseek\org', 'model-00163-of-000163.safetensors')
-    convert("D:\\CantorAIProjects\\DeepSeek-V3\\deepseek-moe-16b-base")
+    parser = argparse.ArgumentParser(
+        description="Convert every safetensors file in a directory to Garnet binary format.")
+    parser.add_argument("source", help="Directory containing safetensors files")
+    args = parser.parse_args()
+    convert(args.source)

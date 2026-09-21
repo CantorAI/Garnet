@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -33,12 +36,12 @@ namespace
 {
     std::string DefaultImagePath()
     {
-        return "D:\\CantorAI\\Garnet\\data\\Dataset.1980Love\\imgs\\frame_0.jpg";
+        return "data/Dataset.1980Love/imgs/frame_0.jpg";
     }
 
     std::string DefaultDllPath()
     {
-        return "D:\\CantorAI\\Garnet\\out\\build\\x64-Debug\\bin\\garnet.dll";
+        return "garnet.dll";
     }
 
     double ToMilliseconds(

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 // ptxGemm_kernel.cu
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>    // For __half and __float2half

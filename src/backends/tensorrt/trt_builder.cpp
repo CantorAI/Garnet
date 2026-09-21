@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #include "trt_builder.h"
 #include "trt_context_pool.h"
 #include "weight_quantization.h"

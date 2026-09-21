@@ -760,7 +760,7 @@ test2026/tests/phase_24_compiled_xmodel_runtime/test_paged_flash_attention.py
 
 ### Stage 3: batched decode
 
-- Make `qwen_text_decode.x` batch-aware.
+- Make `qwen_text_decode.py` batch-aware.
 - Add batched paged-KV metadata and kernels.
 - Add B1/B2/B4/B8 engine profiles.
 - Add batched greedy GPU sampling.

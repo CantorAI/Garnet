@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #include "qwen_vl_vision_metadata.h"
 #include "../../tensor/garnet_tensor.h"
 #include "../../tensor/tensor_helper.h"

@@ -1,4 +1,7 @@
-﻿//Transformer model with Mixture of Experts implementation
+﻿// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+//Transformer model with Mixture of Experts implementation
 // This is a C++ implementation of the DeepSeek-MoE architecture, featuring:
 // - 28 transformer layers (1 dense + 27 MoE)
 // - Distributed execution with tensor parallelism

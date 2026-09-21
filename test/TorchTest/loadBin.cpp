@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #include <torch/torch.h>
 #include <fstream>
 #include <iostream>
@@ -65,19 +68,4 @@ std::unordered_map<std::string, torch::Tensor> load_weights_from_binary(
 
     file.close();
     return model_weights;
-}
-
-int main3() {
-    try {
-        auto weights = load_weights_from_binary("D:\\ToGithub\\CantorAI\\Garnet\\model_weights.bin");
-        for (const auto& pair : weights) {
-            std::cout << "Key: " << pair.first << std::endl;
-        }
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-        return 1;
-    }
-
-    return 0;
 }

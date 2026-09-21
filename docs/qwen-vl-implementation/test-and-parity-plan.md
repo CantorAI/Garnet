@@ -93,7 +93,7 @@ Early flow:
 ```text
 read HF processor dump
 load Garnet DLL through xlang
-load qwen_vl_model.x
+load qwen_vl_model.py
 load config/weights if available
 create Garnet tensors from processor dump
 run first supported stage

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -107,12 +110,12 @@ namespace
 {
     std::string DefaultModelDir()
     {
-        return "D:\\CantorAI\\xWorld\\models\\hf_models\\qwen2.5-0.5b";
+        return {};
     }
 
     std::string DefaultImagePath()
     {
-        return "D:\\CantorAI\\Garnet\\data\\Dataset.1980Love\\imgs\\frame_0.jpg";
+        return "data/Dataset.1980Love/imgs/frame_0.jpg";
     }
 
     std::string DefaultPrompt()
@@ -122,7 +125,7 @@ namespace
 
     std::string DefaultDllPath()
     {
-        return "D:\\CantorAI\\Garnet\\out\\build\\x64-Debug\\bin\\garnet.dll";
+        return "garnet.dll";
     }
 
     bool CheckCuda(cudaError_t err, const char* op)
@@ -163,6 +166,12 @@ int main(int argc, char** argv)
     int minPixels = argc > 4 ? std::atoi(argv[4]) : 65536;
     int maxPixels = argc > 5 ? std::atoi(argv[5]) : 1003520;
     std::string dllPath = argc > 6 ? argv[6] : DefaultDllPath();
+
+    if (modelDir.empty()) {
+        std::cerr << "usage: qwen_vl_request_kv_native_smoke <model-directory> [image] [prompt] "
+                     "[min-pixels] [max-pixels] [garnet-library]\n";
+        return 64;
+    }
 
     NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {

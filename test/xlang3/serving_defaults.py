@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Checkpoint-free serving selection checks against the real Garnet DLL."""
 import os
 import json

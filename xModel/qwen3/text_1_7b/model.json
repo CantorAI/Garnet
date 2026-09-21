@@ -49,6 +49,13 @@
       "kvPages": 320
     },
     {
+      "id": "worldsense-skill-4k",
+      "usages": ["agent", "tool-calling", "world-state"],
+      "maxInputTokens": 4096,
+      "maxOutputTokens": 256,
+      "kvPages": 272
+    },
+    {
       "id": "agent-8k",
       "usages": ["agent", "tool-calling"],
       "maxInputTokens": 8192,

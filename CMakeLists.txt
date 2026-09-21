@@ -1,7 +1,8 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.18)
 project("garnet" LANGUAGES CXX CUDA)
-
-option(GARNET_ENABLE_GALAXY_FILTER "Build the optional Galaxy Garnet-VLM filter into garnet.dll" OFF)
 
 include(GNUInstallDirs)
 enable_testing()
@@ -45,15 +46,6 @@ set(xlang_sdk_folder "${XLANG3_ROOT}/sdk")
 set(GARNET_TENSORRT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../ThirdPartySDK/TensorRT"
     CACHE PATH "TensorRT SDK directory")
 include_directories(${xlang_sdk_folder})
-
-# Model catalog signatures and artifact hashes are verified in the runtime.
-if(WIN32)
-    set(GARNET_OPENSSL_ROOT "${XLANG3_ROOT}/modules/net/depends/windows")
-    include_directories("${GARNET_OPENSSL_ROOT}/include")
-else()
-    find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-    find_package(CURL REQUIRED)
-endif()
 
 # OpenVINO is an optional compiled backend. The Python wheel contains the
 # native C++ SDK as well as the Python API, so discover its CMake package when
@@ -149,40 +141,10 @@ add_library(${PROJECT_NAME}
     ${Backend_SRC}
 )
 
-if(GARNET_ENABLE_GALAXY_FILTER)
-    set(GARNET_GALAXY_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../Galaxy")
-    file(GLOB GARNET_FILTER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/filters/*.cpp")
-    file(GLOB GARNET_GALAXY_COMMON_SRC "${GARNET_GALAXY_ROOT}/common/*.cpp")
-    # Garnet and Galaxy both provide a global Locker implementation, so keep
-    # Garnet's copy. Galaxy's namespaced help_func implementation is still
-    # required by the embedded filter sources (UID conversion, frame types).
-    list(FILTER GARNET_GALAXY_COMMON_SRC EXCLUDE REGEX "/Locker\\.cpp$")
-    target_sources(${PROJECT_NAME} PRIVATE ${GARNET_FILTER_SRC} ${GARNET_GALAXY_COMMON_SRC})
-    target_include_directories(${PROJECT_NAME} PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/filters"
-        "${GARNET_GALAXY_ROOT}/common")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_ENABLE_GALAXY_FILTER=1)
-endif()
-
 target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_SERVING_EXPORTS=1)
 target_compile_definitions(${PROJECT_NAME} PRIVATE XLANG3_USE_SHARED)
 target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
 target_link_libraries(${PROJECT_NAME} xlang3_runtime)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/data/garnet-runtime.json"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/garnet-runtime.json"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/data/cantorai-acceleration-signing-public.pem"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/cantorai-acceleration-signing-public.pem"
-)
-install(FILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/data/garnet-runtime.json"
-    "${CMAKE_CURRENT_SOURCE_DIR}/data/cantorai-acceleration-signing-public.pem"
-    DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    COMPONENT garnet_runtime
-)
 
 if(OpenVINO_FOUND)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_WITH_OPENVINO=1)
@@ -293,29 +255,6 @@ add_executable(garnet_model_catalog_test
     "${CMAKE_CURRENT_SOURCE_DIR}/src/model/model_catalog.cpp"
 )
 
-add_executable(garnet-serving
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/serving/garnet_serving_main.cpp"
-)
-
-target_include_directories(garnet-serving PRIVATE
-    ${xlang_sdk_folder}
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
-)
-
-add_dependencies(garnet-serving ${PROJECT_NAME})
-target_compile_definitions(garnet-serving PRIVATE XLANG3_USE_SHARED)
-target_link_libraries(garnet-serving PRIVATE xlang3_runtime)
-
-if(UNIX AND NOT APPLE)
-    target_link_libraries(garnet-serving PRIVATE dl pthread)
-endif()
-
-add_custom_command(TARGET garnet-serving POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_SOURCE_DIR}/component/cantorfiber"
-        "$<TARGET_FILE_DIR:garnet-serving>/component/cantorfiber"
-)
-
 target_include_directories(garnet_model_catalog_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
@@ -378,7 +317,7 @@ if(MSVC)
         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor,/utf-8>)
 endif()
 add_test(NAME garnet_image_preprocessing COMMAND garnet_image_tests
-    "${CMAKE_CURRENT_SOURCE_DIR}/data/Screenshot/Q1.jpg")
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/fixtures/vlm_screenshots/Q1.jpg")
 set_tests_properties(garnet_image_preprocessing PROPERTIES TIMEOUT 120)
 add_test(NAME garnet_weight_quantization COMMAND garnet_weight_quantization_test)
 add_test(NAME garnet_q4q8_linear COMMAND garnet_q4q8_linear_test)
@@ -409,12 +348,6 @@ if(WIN32)
 else()
     set(GARNET_TENSORRT_RUNTIME_DIR "${GARNET_TENSORRT_ROOT}/lib")
 endif()
-    add_test(NAME garnet_serving_process
-        COMMAND "${GARNET_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
-            -File "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/run_serving_tests.ps1"
-            -Executable "$<TARGET_FILE:garnet-serving>"
-            -WorkRoot "${CMAKE_CURRENT_BINARY_DIR}/serving-tests")
-    set_tests_properties(garnet_serving_process PROPERTIES TIMEOUT 60)
     foreach(backend tensorrt openvino)
         if(backend STREQUAL "openvino" AND NOT OpenVINO_FOUND)
             continue()
@@ -454,17 +387,6 @@ endif()
 
 # On Windows, link against cudart (the CUDA runtime) explicitly.
 if(WIN32)
-    if(CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64")
-        set(GARNET_OPENSSL_LIB_DIR "${GARNET_OPENSSL_ROOT}/lib/arm64")
-    else()
-        set(GARNET_OPENSSL_LIB_DIR "${GARNET_OPENSSL_ROOT}/lib/x64")
-    endif()
-    target_link_directories(${PROJECT_NAME} PRIVATE "${GARNET_OPENSSL_LIB_DIR}")
-    set_property(SOURCE src/model/model_manager.cpp APPEND PROPERTY
-        COMPILE_DEFINITIONS CURL_STATICLIB)
-    target_link_libraries(${PROJECT_NAME}
-        libcurl_static libssl_static libcrypto_static zlib_static
-        crypt32 bcrypt ws2_32 wldap32 normaliz)
     target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES} ${CUDA_cuda_LIBRARY}
             cublas.lib "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib"
             nppc.lib nppig.lib nvjpeg.lib
@@ -513,7 +435,7 @@ if(WIN32)
 else()
     find_library(GARNET_TENSORRT_LIBRARY NAMES nvinfer
         PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED NO_DEFAULT_PATH)
-    target_link_libraries(${PROJECT_NAME} pthread dl m OpenSSL::Crypto CURL::libcurl
+    target_link_libraries(${PROJECT_NAME} pthread dl m
         "${GARNET_TENSORRT_LIBRARY}" CUDA::cudart CUDA::cuda_driver
         CUDA::cublas CUDA::nppc CUDA::nppig CUDA::nvjpeg)
     target_link_options(${PROJECT_NAME} PRIVATE "-Wl,--no-undefined")
@@ -550,13 +472,6 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_runtime
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_runtime
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_development
-)
-install(TARGETS garnet-serving
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_serving
-)
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/component/cantorfiber/"
-    DESTINATION "component/cantorfiber"
-    COMPONENT garnet_serving
 )
 if(GARNET_INSTALL_XMODELS)
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/xModel/"

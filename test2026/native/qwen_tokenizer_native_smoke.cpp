@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -36,12 +39,12 @@ namespace
 {
     std::string DefaultModelDir()
     {
-        return "D:\\CantorAI\\xWorld\\models\\hf_models\\qwen2.5-0.5b";
+        return {};
     }
 
     std::string DefaultDllPath()
     {
-        return "D:\\CantorAI\\Garnet\\out\\build\\x64-Debug\\bin\\garnet.dll";
+        return "garnet.dll";
     }
 }
 
@@ -50,6 +53,11 @@ int main(int argc, char** argv)
     std::string modelDir = argc > 1 ? argv[1] : DefaultModelDir();
     std::string dllPath = argc > 2 ? argv[2] : DefaultDllPath();
     const char* text = "Describe visible objects.";
+
+    if (modelDir.empty()) {
+        std::cerr << "usage: qwen_tokenizer_native_smoke <model-directory> [garnet-library]\n";
+        return 64;
+    }
 
     NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {

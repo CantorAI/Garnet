@@ -1,8 +1,10 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #pragma once
 #include "xlang3/xlang3.h"
 #include "garnet_tensor.h"
 #include "model.h"
-#include "model_manager.h"
 #include "log.h"
 #include <string>
 #include <deque>
@@ -141,8 +143,6 @@ namespace Garnet
 		std::shared_ptr<ServingInstance> FindServingInstance(
 			const std::string& modelId = std::string(),
 			const std::string& capability = std::string()) const;
-		ModelManager m_modelManager;
-		ModelManager m_accelerationManager;
 		bool LoadModelFromFile(std::string modelPath, X::Value& model);
 	public:
 		BEGIN_PACKAGE(GarnetAPI)
@@ -181,25 +181,8 @@ namespace Garnet
 			APISET().AddVarFunc("transcribe_json", &GarnetAPI::TranscribeJson);
 			APISET().AddVarFunc("synthesize_json", &GarnetAPI::SynthesizeJson);
 			APISET().AddVarFunc("stop_serving", &GarnetAPI::StopServing);
-			APISET().AddVarFunc("configure_model_manager_json", &GarnetAPI::ConfigureModelManagerJson);
-			APISET().AddVarFunc("list_remote_models_json", &GarnetAPI::ListRemoteModelsJson);
-			APISET().AddVarFunc("list_installed_models_json", &GarnetAPI::ListInstalledModelsJson);
-			APISET().AddVarFunc("install_model_json", &GarnetAPI::InstallModelJson);
-			APISET().AddVarFunc("model_install_status_json", &GarnetAPI::ModelInstallStatusJson);
-			APISET().AddVarFunc("cancel_model_install_json", &GarnetAPI::CancelModelInstallJson);
-			APISET().AddVarFunc("verify_installed_model_json", &GarnetAPI::VerifyInstalledModelJson);
-			APISET().AddVarFunc("remove_installed_model_json", &GarnetAPI::RemoveInstalledModelJson);
-			APISET().AddVarFunc("serve_installed_model_json", &GarnetAPI::ServeInstalledModelJson);
-			APISET().AddVarFunc("_run_model_install_job", &GarnetAPI::RunModelInstallJob);
 			APISET().AddVarFunc("detect_acceleration_json", &GarnetAPI::DetectAccelerationJson);
-			APISET().AddVarFunc("configure_acceleration_manager_json", &GarnetAPI::ConfigureAccelerationManagerJson);
-			APISET().AddVarFunc("list_acceleration_packages_json", &GarnetAPI::ListAccelerationPackagesJson);
-			APISET().AddVarFunc("prepare_acceleration_json", &GarnetAPI::PrepareAccelerationJson);
-			APISET().AddVarFunc("list_installed_accelerations_json", &GarnetAPI::ListInstalledAccelerationsJson);
-			APISET().AddVarFunc("activate_acceleration_json", &GarnetAPI::ActivateAccelerationJson);
 			APISET().AddVarFunc("activate_acceleration_path_json", &GarnetAPI::ActivateAccelerationPathJson);
-			APISET().AddVarFunc("acceleration_install_status_json", &GarnetAPI::AccelerationInstallStatusJson);
-			APISET().AddVarFunc("cancel_acceleration_install_json", &GarnetAPI::CancelAccelerationInstallJson);
 			APISET().AddVarFunc("runTest", &GarnetAPI::RunTest);
 			APISET().AddClass<0, KVCacheManager>("KVCacheManagerClass");
 			APISET().AddClass<0, QwenVLRequestContext>("QwenVLRequestContext");
@@ -271,25 +254,8 @@ namespace Garnet
 		X::Value TranscribeJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value SynthesizeJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value StopServing(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ConfigureModelManagerJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ListRemoteModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ListInstalledModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value InstallModelJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ModelInstallStatusJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value CancelModelInstallJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value VerifyInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value RemoveInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ServeInstalledModelJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value RunModelInstallJob(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value DetectAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ConfigureAccelerationManagerJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ListAccelerationPackagesJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value PrepareAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ListInstalledAccelerationsJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value ActivateAccelerationJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ActivateAccelerationPathJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value AccelerationInstallStatusJson(const X::ARGS& params, const X::KWARGS& kwParams);
-		X::Value CancelAccelerationInstallJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value RunTest(const X::ARGS& params, const X::KWARGS& kwParams);
 
 		std::string AvailableModelsJson(const std::string& catalogRoot) const;

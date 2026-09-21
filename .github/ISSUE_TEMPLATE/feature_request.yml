@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose an xModel, runtime, backend, or tooling improvement
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Explain the workload or limitation that motivates this request.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed design
+      description: Describe the desired behavior and which architectural layer should own it.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation and performance criteria
+      description: Explain how correctness and performance should be measured.

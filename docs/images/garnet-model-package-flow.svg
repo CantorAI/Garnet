@@ -1,0 +1,122 @@
+<!-- SPDX-FileCopyrightText: 2024-2026 CantorAI Inc. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="650" viewBox="0 0 1440 650" role="img" aria-labelledby="title desc">
+  <title id="title">From an xModel package to optimized execution</title>
+  <desc id="desc">XLang3 Tensor Expression programs, an xModel manifest, backend profiles, and external asset contracts are captured as a TensorGraph, lowered through Garnet, and executed using backend engines and custom hardware algorithms.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="1" stop-color="#101c32"/>
+    </linearGradient>
+    <linearGradient id="package" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#153963"/>
+      <stop offset="1" stop-color="#102a4a"/>
+    </linearGradient>
+    <linearGradient id="compiler" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#123f4a"/>
+      <stop offset="1" stop-color="#102e3a"/>
+    </linearGradient>
+    <linearGradient id="garnet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#49306d"/>
+      <stop offset="1" stop-color="#30234c"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#62a7ff"/>
+    </marker>
+    <style>
+      .title { font: 700 32px Inter, Segoe UI, Arial, sans-serif; fill: #f8fafc; }
+      .subtitle { font: 400 16px Inter, Segoe UI, Arial, sans-serif; fill: #aebfd5; }
+      .eyebrow { font: 700 12px Inter, Segoe UI, Arial, sans-serif; letter-spacing: 1.7px; fill: #69b4ff; }
+      .section { font: 700 20px Inter, Segoe UI, Arial, sans-serif; fill: #f8fafc; }
+      .item-title { font: 700 15px Inter, Segoe UI, Arial, sans-serif; fill: #edf6ff; }
+      .item-text { font: 400 12px Inter, Segoe UI, Arial, sans-serif; fill: #b9cbe0; }
+      .stage-title { font: 700 18px Inter, Segoe UI, Arial, sans-serif; fill: #f8fafc; }
+      .stage-text { font: 400 13px Inter, Segoe UI, Arial, sans-serif; fill: #bfd0e3; }
+      .small { font: 500 12px Inter, Segoe UI, Arial, sans-serif; fill: #93a8c1; }
+      .panel { stroke-width: 1.5; rx: 18; filter: url(#shadow); }
+      .item { fill: #10253f; stroke: #315b87; stroke-width: 1.2; rx: 10; }
+      .arrow { stroke: #62a7ff; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .branch { stroke: #7d91ad; stroke-width: 2.3; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="650" rx="24" fill="url(#bg)"/>
+  <circle cx="1325" cy="58" r="170" fill="#215f9d" opacity="0.08"/>
+  <circle cx="90" cy="620" r="190" fill="#4b2b76" opacity="0.10"/>
+
+  <text x="56" y="58" class="eyebrow">MODEL-TO-EXECUTION FLOW</text>
+  <text x="56" y="98" class="title">An xModel package carries semantics; the target machine supplies execution policy.</text>
+  <text x="56" y="128" class="subtitle">The model remains backend-neutral until Garnet lowers its captured TensorGraph.</text>
+
+  <rect x="56" y="178" width="350" height="354" class="panel" fill="url(#package)" stroke="#367fc9"/>
+  <text x="82" y="213" class="eyebrow">INPUT</text>
+  <text x="82" y="246" class="section">xModel package</text>
+
+  <rect x="82" y="270" width="298" height="52" class="item"/>
+  <text x="100" y="292" class="item-title">xModel program</text>
+  <text x="100" y="311" class="item-text">Python-compatible .py syntax</text>
+
+  <rect x="82" y="334" width="298" height="52" class="item"/>
+  <text x="100" y="356" class="item-title">xModel manifest (model.json)</text>
+  <text x="100" y="375" class="item-text">Entrypoints, capabilities, asset contract</text>
+
+  <rect x="82" y="398" width="298" height="52" class="item"/>
+  <text x="100" y="420" class="item-title">Backend profiles</text>
+  <text x="100" y="439" class="item-text">Target, precision, runtime options</text>
+
+  <rect x="82" y="462" width="298" height="52" class="item"/>
+  <text x="100" y="484" class="item-title">External assets</text>
+  <text x="100" y="503" class="item-text">Weights, config, tokenizer</text>
+
+  <path d="M406 355 H466" class="arrow"/>
+
+  <rect x="472" y="226" width="240" height="258" class="panel" fill="url(#compiler)" stroke="#2d9daf"/>
+  <text x="498" y="261" class="eyebrow">XLANG3</text>
+  <text x="498" y="294" class="stage-title">Execute description</text>
+  <text x="498" y="324" class="stage-text">Symbolic tensors</text>
+  <text x="498" y="348" class="stage-text">Expression composition</text>
+  <text x="498" y="372" class="stage-text">Fusion annotations</text>
+  <line x1="498" y1="396" x2="686" y2="396" stroke="#2f6872"/>
+  <text x="498" y="426" class="stage-title">Capture</text>
+  <text x="498" y="454" class="stage-text">Inspectable TensorGraph</text>
+
+  <path d="M712 355 H772" class="arrow"/>
+
+  <rect x="778" y="226" width="256" height="258" class="panel" fill="url(#garnet)" stroke="#8364c7"/>
+  <text x="804" y="261" class="eyebrow">GARNET</text>
+  <text x="804" y="294" class="stage-title">Compile and specialize</text>
+  <text x="804" y="324" class="stage-text">Validate and partition</text>
+  <text x="804" y="348" class="stage-text">Fingerprint dependencies</text>
+  <text x="804" y="372" class="stage-text">Lower operators and regions</text>
+  <text x="804" y="396" class="stage-text">Build and cache artifacts</text>
+  <line x1="804" y1="420" x2="1008" y2="420" stroke="#6c529f"/>
+  <text x="804" y="450" class="stage-text">Target architecture decides</text>
+  <text x="804" y="472" class="stage-text">the optimized implementation</text>
+
+  <path d="M1034 355 H1094" class="arrow"/>
+
+  <rect x="1100" y="178" width="284" height="354" class="panel" fill="#14243a" stroke="#477fbe"/>
+  <text x="1126" y="213" class="eyebrow">EXECUTION</text>
+  <text x="1126" y="246" class="section">Optimized paths</text>
+
+  <rect x="1126" y="270" width="232" height="62" class="item"/>
+  <text x="1144" y="296" class="item-title">TensorRT / CUDA</text>
+  <text x="1144" y="317" class="item-text">Engines, plugins, CUDA Graph</text>
+
+  <rect x="1126" y="346" width="232" height="62" class="item"/>
+  <text x="1144" y="372" class="item-title">OpenVINO</text>
+  <text x="1144" y="393" class="item-text">CPU and Intel device lowering</text>
+
+  <rect x="1126" y="422" width="232" height="76" class="item"/>
+  <text x="1144" y="448" class="item-title">Custom hardware algorithms</text>
+  <text x="1144" y="469" class="item-text">Native kernels and quantized paths</text>
+  <text x="1144" y="488" class="item-text">combined with backend execution</text>
+
+  <path d="M1242 532 V570" class="branch"/>
+  <path d="M592 570 H1242" class="branch"/>
+  <text x="592" y="598" class="small">Runtime execution: tensors · KV cache · scheduling · preprocessing · embedded or serving host</text>
+  <text x="1384" y="618" class="small" text-anchor="end">garnetmodel.ai · CantorAI</text>
+</svg>

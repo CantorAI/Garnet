@@ -1,27 +1,26 @@
+REM SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+REM SPDX-License-Identifier: Apache-2.0
+
 @echo off
 setlocal
 
-set REPO_ROOT=%~dp0..\..
-set TARGET=%~1
-if "%TARGET%"=="" set TARGET=garnet
+set "REPO_ROOT=%~dp0..\.."
+set "BUILD_DIR=%REPO_ROOT%\out\build\x64-Release"
+set "TARGET=%~1"
+if "%TARGET%"=="" set "TARGET=garnet"
+if "%XLANG3_ROOT%"=="" set "XLANG3_ROOT=%REPO_ROOT%\..\xlang3"
+if "%GARNET_TENSORRT_ROOT%"=="" set "GARNET_TENSORRT_ROOT=%REPO_ROOT%\..\ThirdPartySDK\TensorRT"
 
-call "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"
+where cmake >nul 2>nul || (echo cmake was not found on PATH & exit /b 1)
+where ninja >nul 2>nul || (echo ninja was not found on PATH & exit /b 1)
+
+cmake -S "%REPO_ROOT%" -B "%BUILD_DIR%" -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="%BUILD_DIR%\bin" ^
+  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%BUILD_DIR%\bin" ^
+  -DXLANG3_ROOT="%XLANG3_ROOT%" ^
+  -DGARNET_TENSORRT_ROOT="%GARNET_TENSORRT_ROOT%"
 if errorlevel 1 exit /b 1
 
-set PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.2\bin;%PATH%
-set CMAKE_EXE=C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe
-set NINJA_EXE=C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe
-
-if "%TARGET%"=="garnet_tensor_tests" goto tensor_tests
-
-set _CL_=/MP2 %_CL_%
-powershell -NoProfile -ExecutionPolicy Bypass -File "%REPO_ROOT%\..\CantorAIWorkspace\dev\tools\Build\build_project.ps1" -Root "%REPO_ROOT%\.." -BuildType Release -CantorOnly -WithGarnet -Target "%TARGET%"
-exit /b %ERRORLEVEL%
-
-:tensor_tests
-set WORKSPACE_OUTPUT=%REPO_ROOT%\..\out\build\x64-Release\bin\Release
-set TEST_BUILD=%REPO_ROOT%\..\out\build\x64-Release\garnet-tensor-tests
-"%CMAKE_EXE%" -S "%REPO_ROOT%\test\xlang3" -B "%TEST_BUILD%" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM="%NINJA_EXE%" -DXLANG3_RUNTIME_LIBRARY="%WORKSPACE_OUTPUT%\xlang3_runtime.lib" -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="%WORKSPACE_OUTPUT%"
-if errorlevel 1 exit /b 1
-"%CMAKE_EXE%" --build "%TEST_BUILD%" --target garnet_tensor_tests --config Release
+cmake --build "%BUILD_DIR%" --target "%TARGET%"
 exit /b %ERRORLEVEL%

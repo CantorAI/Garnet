@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -53,12 +56,12 @@ namespace
 {
     std::string DefaultModelDir()
     {
-        return "D:\\CantorAI\\Garnet\\models\\Qwen3-VL-2B-Instruct";
+        return {};
     }
 
     std::string DefaultImagePath()
     {
-        return "D:\\CantorAI\\Garnet\\data\\Dataset.1980Love\\imgs\\frame_0.jpg";
+        return "data/Dataset.1980Love/imgs/frame_0.jpg";
     }
 
     std::string DefaultPrompt()
@@ -68,7 +71,7 @@ namespace
 
     std::string DefaultDllPath()
     {
-        return "D:\\CantorAI\\Garnet\\out\\build\\x64-Debug\\bin\\garnet.dll";
+        return "garnet.dll";
     }
 
     double ToMilliseconds(
@@ -89,6 +92,12 @@ int main(int argc, char** argv)
     int maxPixels = argc > 6 ? std::atoi(argv[6]) : 1003520;
     std::string dllPath = argc > 7 ? argv[7] : DefaultDllPath();
     int warmup = argc > 8 ? std::max(0, std::atoi(argv[8])) : 3;
+
+    if (modelDir.empty()) {
+        std::cerr << "usage: qwen_vl_prepare_prompt_perf <model-directory> [image] [prompt] "
+                     "[iterations] [min-pixels] [max-pixels] [garnet-library] [warmup]\n";
+        return 64;
+    }
 
     NativeLibraryHandle dll = OpenNativeLibrary(dllPath.c_str());
     if (!dll) {

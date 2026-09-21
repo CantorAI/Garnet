@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Exercise persistent GPU inputs and reusable TensorRT output ownership."""
 import os
 import sys

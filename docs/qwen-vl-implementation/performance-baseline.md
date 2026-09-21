@@ -20,7 +20,7 @@ engine and refitting mapped safetensors took about 2.2 seconds.
 
 ## Real-image pipeline
 
-The reorganized `xModel/qwen3/vl_2b_instruct/qwen_vl_prefill.x` pipeline was
+The reorganized `xModel/qwen3/vl_2b_instruct/qwen_vl_prefill.py` pipeline was
 validated with real JPEG frames from `data/Dataset.1980Love/imgs`.
 
 | Input | End-to-end request | Generated text |

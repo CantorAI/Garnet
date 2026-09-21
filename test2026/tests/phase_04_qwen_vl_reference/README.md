@@ -85,7 +85,7 @@ Run when Garnet Qwen-VL loading/inference is ready:
 
 ```powershell
 $env:RUN_GARNET_QWEN_VL="1"
-$env:GARNET_DLL_PATH="D:\CantorAI2026\Garnet\out\build\x64-Debug\bin\garnet.dll"
+$env:GARNET_DLL_PATH="<build-root>\bin\garnet.dll"
 $env:GARNET_QWEN_VL_WEIGHTS="D:\path\to\weights"
 .\.venv\Scripts\python.exe test2026\tests\phase_04_qwen_vl_reference\test_garnet_qwen_vl.py
 ```

@@ -20,7 +20,7 @@ import xlang
 garnet = xlang.importModule("garnet")
 
 model = garnet.load_model(
-    xmodel="xModel/qwen3/vl_2b_instruct/qwen_vl_model.x",
+    xmodel="xModel/qwen3/vl_2b_instruct/qwen_vl_model.py",
     weights="models/Qwen3-VL-2B-Instruct",
     compile={
         "dtype": "bfloat16",
@@ -216,8 +216,8 @@ On a cache miss, `load_model` executes the `.x` forward function with symbolic
 `X::Tensor` values and model configuration:
 
 ```text
-qwen_vl_model.x
-  -> imports vision_encoder.x, vl_adapter.x, qwen_llm.x
+qwen_vl_model.py
+  -> imports vision_encoder.py, vl_adapter.py, qwen_llm.py
   -> symbolic execution
   -> complete xlang TensorGraph
 ```
@@ -1500,7 +1500,7 @@ but they must be labeled accordingly and cannot satisfy production milestones.
 ## Implementation Order
 
 1. Freeze the `load_model`, `forward`, and probe ABI.
-2. Add an acceptance test that loads only `qwen_vl_model.x` and currently fails.
+2. Add an acceptance test that loads only `qwen_vl_model.py` and currently fails.
 3. Make generic TensorGraph lowering fail loudly on unsupported operations.
 4. Implement backend tensor identity mapping and binary/unary operation registry.
 5. Compile and execute a complete small `.x` graph without subgraph assembly.

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Capture migrated Qwen Python programs without loading pretrained weights."""
 import importlib
 import os

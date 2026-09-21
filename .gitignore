@@ -10,15 +10,5 @@ test2026/artifacts/
 test2026/results.json
 *.engine
 test2026/tests/**/runtime_graph.cache
-
-# Garnet Train local artifacts
-train/.venv/
-train/runs/*
-!train/runs/.gitkeep
-train/data/raw/*
-!train/data/raw/caslang_examples.jsonl
-train/data/processed/*
-!train/data/processed/.gitkeep
-!train/data/processed/caslang_sft.jsonl
 *.safetensors
 adapter_model.bin
