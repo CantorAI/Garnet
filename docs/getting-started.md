@@ -242,6 +242,7 @@ expected and explicit boundary, not an automatic fallback.
 
 ## Next References
 
+- [XLang3, CPython, C++, and Electron integration examples](../examples/README.md)
 - [xModel format and current programs](../xModel/README.md)
 - [Production capture coverage](../test/xlang3/models/production-capture.md)
 - [Qwen3-1.7B performance baseline](qwen3-1.7b-performance.md)
