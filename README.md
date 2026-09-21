@@ -17,7 +17,7 @@ top of Garnet, but serving is not Garnet's architectural identity.
 
 **Website:** [https://www.garnetmodel.ai/](https://www.garnetmodel.ai/)
 
-[Getting started](docs/getting-started.md) · [Architecture diagram](docs/images/garnet-programmable-runtime.svg) · [xModel programs](xModel/README.md) · [Capture coverage](test/xlang3/models/production-capture.md) · [Benchmarks](docs/qwen3-1.7b-performance.md)
+[Getting started](docs/getting-started.md) · [Integration examples](examples/README.md) · [Architecture diagram](docs/images/garnet-programmable-runtime.svg) · [xModel programs](xModel/README.md) · [Capture coverage](test/xlang3/models/production-capture.md) · [Benchmarks](docs/qwen3-1.7b-performance.md)
 
 ![Garnet programmable inference architecture](docs/images/garnet-programmable-runtime.svg)
 
