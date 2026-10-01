@@ -3,7 +3,9 @@
 
 import garnet
 
-T = garnet.tensor()
+from .tensor_compat import tensor
+
+T = tensor()
 
 # Qwen3-VL multimodal glue.
 #

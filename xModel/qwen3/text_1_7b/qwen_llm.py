@@ -3,7 +3,9 @@
 
 import garnet
 
-T = garnet.tensor()
+from .tensor_compat import tensor
+
+T = tensor()
 
 
 def linear(x, weight_name, op="linear"):

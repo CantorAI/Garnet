@@ -3,7 +3,9 @@
 
 import garnet
 
-T = garnet.tensor()
+from .tensor_compat import tensor
+
+T = tensor()
 
 from . import vision_encoder as vision
 
