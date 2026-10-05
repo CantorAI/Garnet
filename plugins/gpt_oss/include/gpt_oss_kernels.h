@@ -20,4 +20,7 @@ cudaError_t RunGptOssAttention(const void* const*, float*, int, int, int, int,
 size_t GptOssMoeWorkspace(int tokens, const GptOssOptions&);
 cudaError_t RunGptOssMoe(const void* const*, float*, void*, int,
     const GptOssOptions&, cudaStream_t);
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssMxfp4Decode(const unsigned char*, const unsigned char*, float*, int);
+#endif
 }

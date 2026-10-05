@@ -102,6 +102,31 @@ float unpack(const std::vector<unsigned char>& blocks, const std::vector<unsigne
     float lut[]{0, .5f, 1, 1.5f, 2, 3, 4, 6};
     return bf(std::ldexp(c & 8 ? -lut[c & 7] : lut[c], int(scales[row * width / 32 + col / 32]) - 127));
 }
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+void testMxfp4Encoding() {
+    std::vector<unsigned char> blocks(256 * 16), scales(256);
+    for (int e = 0; e < 256; ++e) {
+        scales[e] = e;
+        for (int byte = 0; byte < 16; ++byte)
+            blocks[e * 16 + byte] = ((2 * byte) & 15) | (((2 * byte + 1) & 15) << 4);
+    }
+    Device<unsigned char> db(blocks), ds(scales);
+    Device<float> dy(std::vector<float>(256 * 32));
+    check(TestGptOssMxfp4Decode(db.p, ds.p, dy.p, 256));
+    auto actual = dy.read();
+    for (int e = 0; e < 256; ++e) for (int col = 0; col < 32; ++col) {
+        const float value = actual[e * 32 + col];
+        if (e == 255) {
+            if (!std::isnan(value)) throw std::runtime_error("reserved MXFP4 scale must produce NaN");
+        } else {
+            const float expected = unpack(blocks, scales, e, col, 32);
+            if (value != expected || std::signbit(value) != std::signbit(expected))
+                throw std::runtime_error("MXFP4 encoding mismatch, including subnormal/overflow/signed zero");
+        }
+    }
+    std::cout << "All MXFP4 nibbles and E8M0 scales passed exactly\n";
+}
+#endif
 void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = false) {
     GptOssOptions o; o.kind = 2; o.hidden = h; o.intermediate = intermediate; o.experts = 5; o.topK = 2;
     std::vector<float> x(tokens * h), router(5 * h), rb{-.2f, .4f, -.1f, .3f, -.5f}, ub(5 * 2 * intermediate), db(5 * h);
@@ -144,5 +169,9 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
     check(RunGptOssMoe(in, dy.p, workspace.p, tokens, o, nullptr));
     compare(dy.read(), expected, .002f, "Batched MoE routing, MXFP4, interleaved SwiGLU and biases");
 }
-int main() { try { testRope(); for (int dimension : {8, 64, 128}) testAttention(dimension); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); check(cudaDeviceSynchronize()); return 0; }
+int main() { try {
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+    testMxfp4Encoding();
+#endif
+    testRope(); for (int dimension : {8, 64, 128}) testAttention(dimension); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

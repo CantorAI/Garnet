@@ -17,15 +17,30 @@ __device__ float fp4(const unsigned char* blocks, const unsigned char* scales,
     size_t row, int column, int width) {
     const unsigned char byte = blocks[row * (width / 2) + column / 2];
     const int code = (column & 1) ? byte >> 4 : byte & 15;
-    const float values[8] = {0, .5f, 1, 1.5f, 2, 3, 4, 6};
     const unsigned char exponent = scales[row * (width / 32) + column / 32];
     // E8M0 255 is NaN, not an ordinary exponent.
     if (exponent == 255) return nanf("");
-    // E8M0 and IEEE float use the same exponent bias. Construct the exact
-    // power of two directly; code zero is the subnormal value 2^-127.
-    const float scale = __uint_as_float(exponent ? unsigned(exponent) << 23 : 0x00400000u);
-    return bf(((code & 8) ? -values[code & 7] : values[code]) * scale);
+    // Every scaled E2M1 value is exactly representable in BF16 (including
+    // its subnormals), or overflows to infinity. Construct the IEEE bits
+    // directly instead of a dynamically indexed per-thread LUT.
+    const unsigned sign = unsigned(code & 8) << 28;
+    const int magnitude = code & 7;
+    if (!magnitude) return __uint_as_float(sign);
+    const int adjusted = int(exponent) + (magnitude >> 1) - 1;
+    const unsigned mantissa = magnitude >= 3 && (magnitude & 1) ? 0x00400000u : 0u;
+    if (adjusted >= 255) return __uint_as_float(sign | 0x7f800000u);
+    const unsigned bits = adjusted > 0
+        ? (unsigned(adjusted) << 23) | mantissa
+        : (0x00800000u | mantissa) >> (1 - adjusted);
+    return __uint_as_float(sign | bits);
 }
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+__global__ void testMxfp4Decode(const unsigned char* blocks, const unsigned char* scales,
+    float* output, int rows) {
+    const int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < rows * 32) output[index] = fp4(blocks, scales, index / 32, index % 32, 32);
+}
+#endif
 __global__ void rope(const float* x, const std::int64_t* positions, float* y,
     int tokens, GptOssOptions o) {
     const int packed = (o.qHeads + 2 * o.kvHeads) * o.headDim;
@@ -226,7 +241,7 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
             a[index] = __float2bfloat16(value);
         }
         for (int index = threadIdx.x; index < 32 * 32; index += blockDim.x) {
-            const int k = index / 32, n = index % 32;
+            const int k = index % 32, n = index / 32;
             const float value = nStart + n < outputs && kStart + k < width
                 ? fp4(blocks, scales, size_t(expert) * outputs + nStart + n,
                     kStart + k, width) : 0;
@@ -235,9 +250,9 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
         __syncthreads();
         for (int sub = 0; sub < 32; sub += 16) {
             wmma::fragment<wmma::matrix_a, 16, 16, 16, __nv_bfloat16, wmma::row_major> af;
-            wmma::fragment<wmma::matrix_b, 16, 16, 16, __nv_bfloat16, wmma::row_major> bf;
+            wmma::fragment<wmma::matrix_b, 16, 16, 16, __nv_bfloat16, wmma::col_major> bf;
             wmma::load_matrix_sync(af, a + sub, 32);
-            wmma::load_matrix_sync(bf, b + sub * 32 + warp * 16, 32);
+            wmma::load_matrix_sync(bf, b + warp * 16 * 32 + sub, 32);
             wmma::mma_sync(acc, af, bf, acc);
         }
         __syncthreads();
@@ -274,6 +289,13 @@ __global__ void combineExperts(const float* values, const float* probabilities,
     y[index] = bf(result);
 }
 }
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssMxfp4Decode(const unsigned char* blocks, const unsigned char* scales,
+    float* output, int rows) {
+    testMxfp4Decode<<<(rows * 32 + 127) / 128, 128>>>(blocks, scales, output, rows);
+    return cudaGetLastError();
+}
+#endif
 cudaError_t RunGptOssRope(const float* x, const std::int64_t* p, float* y, int tokens,
     const GptOssOptions& o, cudaStream_t stream) {
     const size_t n = size_t(tokens) * (o.qHeads + 2 * o.kvHeads) * o.headDim;

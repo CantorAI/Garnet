@@ -30,7 +30,7 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
         ../../test2026/gpt_oss/kernel_parity.cpp cuda/gpt_oss_kernels.cu)
     target_include_directories(garnet_gpt_oss_kernel_parity PRIVATE include)
     target_link_libraries(garnet_gpt_oss_kernel_parity PRIVATE CUDA::cudart)
-    target_compile_definitions(garnet_gpt_oss_kernel_parity PRIVATE NOMINMAX)
+    target_compile_definitions(garnet_gpt_oss_kernel_parity PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
     add_test(NAME garnet_gpt_oss_kernel_parity COMMAND garnet_gpt_oss_kernel_parity)
 endif()
 
