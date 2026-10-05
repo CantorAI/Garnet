@@ -102,11 +102,15 @@ float unpack(const std::vector<unsigned char>& blocks, const std::vector<unsigne
     float lut[]{0, .5f, 1, 1.5f, 2, 3, 4, 6};
     return bf(std::ldexp(c & 8 ? -lut[c & 7] : lut[c], int(scales[row * width / 32 + col / 32]) - 127));
 }
-void testMoe(int tokens, int h = 32, int intermediate = 32) {
+void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = false) {
     GptOssOptions o; o.kind = 2; o.hidden = h; o.intermediate = intermediate; o.experts = 5; o.topK = 2;
     std::vector<float> x(tokens * h), router(5 * h), rb{-.2f, .4f, -.1f, .3f, -.5f}, ub(5 * 2 * intermediate), db(5 * h);
     for (size_t i = 0; i < x.size(); ++i) x[i] = bf(std::cos(float(i) * .17f));
     for (size_t i = 0; i < router.size(); ++i) router[i] = bf(std::sin(float(i) * .37f) * .1f);
+    if (tiedRouting) {
+        std::fill(router.begin(), router.end(), 0.f);
+        std::fill(rb.begin(), rb.end(), 0.f);
+    }
     for (size_t i = 0; i < ub.size(); ++i) ub[i] = bf(float(int(i % 9) - 4) * .125f);
     for (size_t i = 0; i < db.size(); ++i) db[i] = bf(float(int(i % 7) - 3) * .125f);
     std::vector<unsigned char> up(5 * 2 * intermediate * h / 2), us(5 * 2 * intermediate * h / 32, 123), down(5 * h * intermediate / 2), ds(5 * h * intermediate / 32, 124);
@@ -116,7 +120,7 @@ void testMoe(int tokens, int h = 32, int intermediate = 32) {
     for (int t = 0; t < tokens; ++t) {
         std::vector<std::pair<float,int>> logits;
         for (int e = 0; e < 5; ++e) { float value = 0; for (int d = 0; d < h; ++d) value += x[t * h + d] * router[e * h + d]; logits.push_back({bf(value + rb[e]),e}); }
-        std::sort(logits.begin(), logits.end(), [](auto a, auto b) { return a.first > b.first; });
+        std::sort(logits.begin(), logits.end(), [](auto a, auto b) { return a.first == b.first ? a.second < b.second : a.first > b.first; });
         float denominator = 1 + std::exp(logits[1].first - logits[0].first);
         for (int k = 0; k < 2; ++k) {
             int e = logits[k].second; float probability = bf(std::exp(logits[k].first - logits[0].first) / denominator);
@@ -140,5 +144,5 @@ void testMoe(int tokens, int h = 32, int intermediate = 32) {
     check(RunGptOssMoe(in, dy.p, workspace.p, tokens, o, nullptr));
     compare(dy.read(), expected, .002f, "Batched MoE routing, MXFP4, interleaved SwiGLU and biases");
 }
-int main() { try { testRope(); for (int dimension : {8, 64, 128}) testAttention(dimension); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } check(cudaDeviceSynchronize()); return 0; }
+int main() { try { testRope(); for (int dimension : {8, 64, 128}) testAttention(dimension); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }
