@@ -7,6 +7,11 @@
 namespace Garnet {
 namespace {
 __device__ float bf(float x) { return __bfloat162float(__float2bfloat16(x)); }
+__device__ float warpSum(float value) {
+    for (int offset = 16; offset; offset >>= 1)
+        value += __shfl_down_sync(0xffffffff, value, offset);
+    return value;
+}
 __device__ float fp4(const unsigned char* blocks, const unsigned char* scales,
     size_t row, int column, int width) {
     const unsigned char byte = blocks[row * (width / 2) + column / 2];
@@ -118,17 +123,23 @@ __global__ void route(const float* x, const float* weight, const float* bias,
 }
 __global__ void gateUp(const float* x, const unsigned char* blocks, const unsigned char* scales,
     const float* bias, const int* selected, float* hidden, int tokens, GptOssOptions o) {
-    const size_t index = size_t(blockIdx.x) * blockDim.x + threadIdx.x;
+    // A warp owns each output: neighboring lanes read neighboring MXFP4
+    // columns instead of issuing a separate serial dot product per thread.
+    const int lane = threadIdx.x & 31;
+    const size_t index = (size_t(blockIdx.x) * blockDim.x + threadIdx.x) / 32;
     if (index >= size_t(tokens) * o.topK * o.intermediate) return;
     const int i = index % o.intermediate, slot = index / o.intermediate, token = slot / o.topK;
     const int expert = selected[slot];
     const size_t row = size_t(expert) * 2 * o.intermediate + 2 * i;
     float gate = 0, up = 0;
-    for (int d = 0; d < o.hidden; ++d) {
+    for (int d = lane; d < o.hidden; d += 32) {
         const float v = x[size_t(token) * o.hidden + d];
         gate += v * fp4(blocks, scales, row, d, o.hidden);
         up += v * fp4(blocks, scales, row + 1, d, o.hidden);
     }
+    gate = warpSum(gate);
+    up = warpSum(up);
+    if (lane) return;
     gate = fminf(bf(bf(gate) + bias[row]), o.limit);
     up = fminf(o.limit, fmaxf(-o.limit, bf(bf(up) + bias[row + 1])));
     const float glu = bf(gate * bf(1.f / (1.f + expf(-bf(1.702f * gate)))));
@@ -137,7 +148,8 @@ __global__ void gateUp(const float* x, const unsigned char* blocks, const unsign
 __global__ void down(const float* hidden, const unsigned char* blocks, const unsigned char* scales,
     const float* bias, const int* selected, const float* probabilities, float* y,
     int tokens, GptOssOptions o) {
-    const size_t index = size_t(blockIdx.x) * blockDim.x + threadIdx.x;
+    const int lane = threadIdx.x & 31;
+    const size_t index = (size_t(blockIdx.x) * blockDim.x + threadIdx.x) / 32;
     if (index >= size_t(tokens) * o.hidden) return;
     const int token = index / o.hidden, d = index % o.hidden;
     float result = 0;
@@ -145,11 +157,12 @@ __global__ void down(const float* hidden, const unsigned char* blocks, const uns
         const int slot = token * o.topK + k, expert = selected[slot];
         const size_t row = size_t(expert) * o.hidden + d;
         float value = 0;
-        for (int i = 0; i < o.intermediate; ++i)
+        for (int i = lane; i < o.intermediate; i += 32)
             value += hidden[size_t(slot) * o.intermediate + i] * fp4(blocks, scales, row, i, o.intermediate);
-        result += bf(bf(value) + bias[row]) * probabilities[slot];
+        value = warpSum(value);
+        if (!lane) result += bf(bf(value) + bias[row]) * probabilities[slot];
     }
-    y[index] = bf(result);
+    if (!lane) y[index] = bf(result);
 }
 }
 cudaError_t RunGptOssRope(const float* x, const std::int64_t* p, float* y, int tokens,
@@ -183,11 +196,11 @@ cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int t
         (const float*)in[1], (const float*)in[2], selected, probabilities, tokens, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
     size_t n = size_t(tokens) * o.topK * o.intermediate;
-    gateUp<<<(n + 127) / 128, 128, 0, stream>>>((const float*)in[0],
+    gateUp<<<(n + 3) / 4, 128, 0, stream>>>((const float*)in[0],
         (const unsigned char*)in[3], (const unsigned char*)in[4], (const float*)in[5], selected, hidden, tokens, o);
     status = cudaGetLastError(); if (status != cudaSuccess) return status;
     n = size_t(tokens) * o.hidden;
-    down<<<(n + 127) / 128, 128, 0, stream>>>(hidden, (const unsigned char*)in[6],
+    down<<<(n + 3) / 4, 128, 0, stream>>>(hidden, (const unsigned char*)in[6],
         (const unsigned char*)in[7], (const float*)in[8], selected, probabilities, y, tokens, o);
     return cudaGetLastError();
 }

@@ -101,9 +101,8 @@ float unpack(const std::vector<unsigned char>& blocks, const std::vector<unsigne
     float lut[]{0, .5f, 1, 1.5f, 2, 3, 4, 6};
     return bf(std::ldexp(c & 8 ? -lut[c & 7] : lut[c], int(scales[row * width / 32 + col / 32]) - 127));
 }
-void testMoe() {
+void testMoe(int tokens) {
     GptOssOptions o; o.kind = 2; o.hidden = 32; o.intermediate = 32; o.experts = 5; o.topK = 2;
-    const int tokens = 3;
     std::vector<float> x(tokens * 32), router(5 * 32), rb{-.2f, .4f, -.1f, .3f, -.5f}, ub(5 * 64), db(5 * 32);
     for (size_t i = 0; i < x.size(); ++i) x[i] = bf(std::cos(float(i) * .17f));
     for (size_t i = 0; i < router.size(); ++i) router[i] = bf(std::sin(float(i) * .37f) * .1f);
@@ -140,5 +139,5 @@ void testMoe() {
     check(RunGptOssMoe(in, dy.p, workspace.p, tokens, o, nullptr));
     compare(dy.read(), expected, .002f, "Batched MoE routing, MXFP4, interleaved SwiGLU and biases");
 }
-int main() { try { testRope(); testAttention(); testMoe(); check(cudaDeviceSynchronize()); return 0; }
+int main() { try { testRope(); testAttention(); for (int tokens : {1, 3, 17, 65}) testMoe(tokens); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }
