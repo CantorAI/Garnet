@@ -17,7 +17,7 @@ if(WIN32)
     target_link_libraries(garnet_gpt_oss_ops PRIVATE CUDA::cudart "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
 else()
     find_library(GARNET_GPT_OSS_TRT_LIBRARY NAMES nvinfer
-        PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED)
+        PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED NO_DEFAULT_PATH)
     target_link_libraries(garnet_gpt_oss_ops PRIVATE CUDA::cudart ${GARNET_GPT_OSS_TRT_LIBRARY} ${CMAKE_DL_LIBS})
     set_target_properties(garnet_gpt_oss_ops PROPERTIES BUILD_RPATH "$ORIGIN" INSTALL_RPATH "$ORIGIN")
 endif()
