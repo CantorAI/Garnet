@@ -30,6 +30,32 @@ export LD_LIBRARY_PATH="$PWD/ThirdPartySDK/cuda-nvrtc-13.2/nvidia/cu13/lib:${LD_
 For these GPUs, pass `--cuda-architectures 120` to the build command below.
 Use `test/xlang3/run_model_tests.sh` for the broader Linux integration suite.
 
+## Optimized operator paths
+
+The GPT-OSS plugin uses cooperative warp reductions for decode expert dot
+products, router logits and paged attention. Prefill with at least 16 rows
+buckets routed slots by expert and runs grouped BF16 Tensor Core GEMMs, unpacking
+MXFP4 weight tiles into shared memory. The full expert weights remain packed.
+These paths require SM 80 or newer and the xModel's BF16-rounded activations;
+FP32 accumulation, intermediate BF16 rounding, learned attention sinks,
+sliding windows and router-order combination are preserved. Plugin version 2
+uses a larger prefill workspace; rebuild engines after upgrading the plugin.
+
+Kernel tests cover partial expert tiles, concentrated routing and ties,
+multiple K tiles, batches of 1, 3, 17 and 65 rows, and attention dimensions
+8, 64 and 128. Pretrained correctness and performance must also be measured
+after kernel changes.
+
+For comparisons, finish and record the reference runtime first, shut it down
+and confirm GPU memory is released, then run Garnet alone. Reuse identical
+Harmony input IDs, greedy sampling, stop IDs, output limits and BF16 KV precision;
+disable reference prefix caching. Report the parallel topology explicitly:
+Garnet currently uses sequential layer stages, while a TP2 reference splits
+operators. Separate engine initialization and cold compilation from warm
+inference. The driver reports `decode_wall_seconds`, including host control
+updates, in addition to forward-only `decode_seconds` and
+`decode_prepare_seconds` for the prefill-to-decode engine transition.
+
 ## Local build
 
 Use an existing XLang3 Release runtime. This avoids rebuilding or changing

@@ -178,12 +178,13 @@ __global__ void bucketExperts(const int* selected, int* counts, int* slots,
     if (slot >= tokens * o.topK) return;
     const int expert = selected[slot];
     const int row = atomicAdd(counts + expert, 1);
-    slots[expert * tokens + row] = slot;
+    slots[size_t(expert) * tokens * o.topK + row] = slot;
 }
 __global__ void expertTasks(const int* counts, int* taskCount, int* tasks,
     GptOssOptions o) {
     // Compact tiles rather than launching the worst-case token count for
-    // every expert. Each selected expert appears at most once per token.
+    // every expert. Every routed slot has its own row, including repeated
+    // selections if nonfinite router inputs reach this low-level operator.
     int total = 0;
     for (int e = 0; e < o.experts; ++e)
         for (int row = 0; row < counts[e]; row += 16) {
@@ -218,7 +219,7 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
             const int m = index / 32, k = index % 32;
             float value = 0;
             if (first + m < counts[expert] && kStart + k < width) {
-                const int slot = slots[expert * tokens + first + m];
+                const int slot = slots[size_t(expert) * tokens * o.topK + first + m];
                 const int inputRow = Up ? slot / o.topK : slot;
                 value = x[size_t(inputRow) * width + kStart + k];
             }
@@ -246,7 +247,7 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
     for (int index = threadIdx.x; index < 16 * 32; index += blockDim.x) {
         const int m = index / 32, n = index % 32;
         if (first + m >= counts[expert] || nStart + n >= outputs) continue;
-        const int slot = slots[expert * tokens + first + m];
+        const int slot = slots[size_t(expert) * tokens * o.topK + first + m];
         const size_t weightRow = size_t(expert) * outputs + nStart + n;
         if constexpr (Up) {
             if (n & 1) continue;
@@ -296,7 +297,7 @@ size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
     size_t bytes = size_t(tokens) * o.topK * (sizeof(int) + sizeof(float) * (1 + o.intermediate));
     if (tokens >= 16) {
         const size_t tasks = (size_t(tokens) * o.topK + 15) / 16 + o.experts;
-        bytes += sizeof(int) * (o.experts + size_t(o.experts) * tokens + 1 + 2 * tasks);
+        bytes += sizeof(int) * (o.experts + size_t(o.experts) * tokens * o.topK + 1 + 2 * tasks);
         bytes += sizeof(float) * size_t(tokens) * o.topK * o.hidden;
     }
     return bytes;
@@ -312,7 +313,7 @@ cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int t
     if (tokens >= 16) {
         auto* counts = (int*)(hidden + size_t(tokens) * o.topK * o.intermediate);
         auto* slots = counts + o.experts;
-        auto* taskCount = slots + size_t(o.experts) * tokens;
+        auto* taskCount = slots + size_t(o.experts) * tokens * o.topK;
         auto* tasks = taskCount + 1;
         const size_t maxTasks = (size_t(tokens) * o.topK + 15) / 16 + o.experts;
         auto* values = (float*)(tasks + 2 * maxTasks);
