@@ -21,7 +21,10 @@ __device__ float fp4(const unsigned char* blocks, const unsigned char* scales,
     const unsigned char exponent = scales[row * (width / 32) + column / 32];
     // E8M0 255 is NaN, not an ordinary exponent.
     if (exponent == 255) return nanf("");
-    return bf(ldexpf((code & 8) ? -values[code & 7] : values[code], int(exponent) - 127));
+    // E8M0 and IEEE float use the same exponent bias. Construct the exact
+    // power of two directly; code zero is the subnormal value 2^-127.
+    const float scale = __uint_as_float(exponent ? unsigned(exponent) << 23 : 0x00400000u);
+    return bf(((code & 8) ? -values[code & 7] : values[code]) * scale);
 }
 __global__ void rope(const float* x, const std::int64_t* positions, float* y,
     int tokens, GptOssOptions o) {
@@ -105,15 +108,16 @@ __global__ void attention(const float* qkv, const __nv_bfloat16* keys,
 }
 __global__ void route(const float* x, const float* weight, const float* bias,
     int* selected, float* probabilities, int tokens, GptOssOptions o) {
-    const int token = blockIdx.x, expert = threadIdx.x;
+    const int token = blockIdx.x, lane = threadIdx.x & 31;
     extern __shared__ float logits[];
-    if (expert < o.experts) {
+    for (int expert = threadIdx.x / 32; expert < o.experts; expert += blockDim.x / 32) {
         float value = 0;
-        for (int d = 0; d < o.hidden; ++d) value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
-        logits[expert] = bf(value + bias[expert]);
+        for (int d = lane; d < o.hidden; d += 32) value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
+        value = warpSum(value);
+        if (!lane) logits[expert] = bf(value + bias[expert]);
     }
     __syncthreads();
-    if (expert != 0) return;
+    if (threadIdx.x != 0) return;
     float top[8];
     for (int k = 0; k < o.topK; ++k) {
         int best = 0;
