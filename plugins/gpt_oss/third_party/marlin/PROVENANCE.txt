@@ -1,0 +1,20 @@
+Native CUDA headers from vLLM v0.31.0, commit
+db9527a46873454610df6dbedf79a36d6bf1a7f6:
+https://github.com/vllm-project/vllm/tree/v0.31.0/csrc
+
+Original paths are preserved below this directory. All original copyright
+and Apache License notices are retained; LICENSE is the upstream license.
+The MoE kernel is adapted by vLLM/Neural Magic from Elias Frantar's Marlin.
+Copyright contributors to the vLLM project; Marlin copyright (C) 2024 Elias Frantar.
+
+Garnet adaptations:
+- scalar type namespace renamed to garnet_marlin_types;
+- scalar validation uses std::invalid_argument, removing Torch headers;
+- MarlinScalarType template ID uses int64_t through ScalarTypeId (Windows
+  long is 32-bit);
+- kernel namespace is selected with MARLIN_NAMESPACE_NAME in the caller.
+
+No Torch or vLLM runtime is linked. Only BF16-activation MXFP4/E8M0 kernel
+specializations are instantiated by Garnet. Weight layout conversion is
+implemented in Garnet's native adapter with attribution to the upstream
+gptq_marlin_repack.cu, marlin_utils.py and marlin_utils_fp4.py mappings.

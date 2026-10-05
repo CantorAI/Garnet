@@ -6679,12 +6679,19 @@ namespace Garnet {
                 weightNameItem->second.ToString();
             const bool predictorWeight = projectionWeightName.rfind(
                 "talker.code_predictor.", 0) == 0;
-            ITensor* weight = opName == "lm_head" || predictorWeight
+            const std::string computeDtype = keywordText("compute_dtype");
+            if (!computeDtype.empty() && computeDtype != "float32" && computeDtype != "bfloat16") {
+                loweringError = opName + " compute_dtype must be float32 or bfloat16";
+                return X::Value();
+            }
+            const bool bf16Compute = computeDtype == "bfloat16";
+            ITensor* weight = !bf16Compute && (opName == "lm_head" || predictorWeight)
                 ? GetOrCreateTRTWeightFP32(weightNameItem->second.ToString())
                 : GetOrCreateTRTWeight(weightNameItem->second.ToString());
             ITensor* projectionInput = source;
             const DataType sourceType = source->getType();
-            const DataType projectionType = opName == "lm_head" ||
+            const DataType projectionType = bf16Compute ? DataType::kBF16 :
+                opName == "lm_head" || computeDtype == "float32" ||
                 keywordText("accumulation_dtype") == "float32"
                 ? DataType::kFLOAT
                 : (weight ? weight->getType() : sourceType);
@@ -6712,7 +6719,7 @@ namespace Garnet {
                 return X::Value();
             }
             lastOutput = projection->getOutput(0);
-            if (opName != "lm_head" && lastOutput->getType() != sourceType) {
+            if ((opName != "lm_head" || bf16Compute) && lastOutput->getType() != sourceType) {
                 auto* cast = network->addCast(*lastOutput, sourceType);
                 lastOutput = cast ? cast->getOutput(0) : nullptr;
                 if (!lastOutput) {

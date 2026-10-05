@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_plugin.h"
 #include <NvInferPlugin.h>
+#include <algorithm>
 #include <cstring>
 #include <mutex>
 #include <new>
@@ -97,7 +98,10 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
 }
 size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
     const PluginTensorDesc*, int) const noexcept {
-    return m_options.kind == 2 ? GptOssMoeWorkspace(rows(in[0].dims), m_options) : 0;
+    if (m_options.kind != 2) return 0;
+    const int tokens = rows(in[0].dims);
+    return std::max(GptOssMoeWorkspace(tokens, m_options),
+        GptOssMarlin::Workspace(tokens, m_options));
 }
 int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
     const void* const* in, void* const* out, void* workspace, cudaStream_t stream) noexcept {
@@ -107,15 +111,28 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
         (float*)out[0], n, m_options, stream);
     else if (m_options.kind == 1) status = RunGptOssAttention(in, (float*)out[0],
         d[0].dims.d[0], d[0].dims.d[1], d[3].dims.d[1], d[1].dims.d[1], m_options, stream);
-    else status = workspace ? RunGptOssMoe(in, (float*)out[0], workspace, n, m_options, stream) : cudaErrorInvalidValue;
+    else if (!workspace) status = cudaErrorInvalidValue;
+    else {
+        status = m_marlin ? m_marlin->Run(in, (float*)out[0], workspace, n, stream)
+                          : cudaErrorNotSupported;
+        if (status == cudaErrorNotSupported)
+            status = RunGptOssMoe(in, (float*)out[0], workspace, n, m_options, stream);
+    }
     return status == cudaSuccess ? 0 : 1;
 }
 DataType GptOssPlugin::getOutputDataType(int, const DataType*, int) const noexcept { return DataType::kFLOAT; }
 const char* GptOssPlugin::getPluginType() const noexcept { return kName; }
 const char* GptOssPlugin::getPluginVersion() const noexcept { return kVersion; }
 int GptOssPlugin::getNbOutputs() const noexcept { return 1; }
-int GptOssPlugin::initialize() noexcept { return m_valid ? 0 : 1; }
-void GptOssPlugin::terminate() noexcept {}
+int GptOssPlugin::initialize() noexcept {
+    if (!m_valid) return 1;
+    if (m_options.kind == 2 && !m_marlin) {
+        try { m_marlin.reset(new GptOssMarlin(m_options)); }
+        catch (...) { return 1; }
+    }
+    return 0;
+}
+void GptOssPlugin::terminate() noexcept { m_marlin.reset(); }
 size_t GptOssPlugin::getSerializationSize() const noexcept { return sizeof(m_options); }
 void GptOssPlugin::serialize(void* data) const noexcept { std::memcpy(data, &m_options, sizeof(m_options)); }
 void GptOssPlugin::destroy() noexcept { delete this; }

@@ -424,6 +424,12 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
 size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
     return moeWorkspace(tokens, o, tokens >= 16);
 }
+cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* probabilities,
+    int tokens, const GptOssOptions& o, cudaStream_t stream) {
+    route<<<tokens, 256, o.experts * sizeof(float), stream>>>((const float*)in[0],
+        (const float*)in[1], (const float*)in[2], selected, probabilities, tokens, o);
+    return cudaGetLastError();
+}
 cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int tokens,
     const GptOssOptions& o, cudaStream_t stream) {
     return runMoe(in, y, workspace, tokens, o, stream, tokens >= 16);

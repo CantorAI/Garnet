@@ -10,9 +10,12 @@ include(GNUInstallDirs)
 find_package(CUDAToolkit REQUIRED)
 set(GARNET_TENSORRT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../ThirdPartySDK/TensorRT"
     CACHE PATH "TensorRT SDK directory")
-add_library(garnet_gpt_oss_ops SHARED module/module.cpp tensorrt/gpt_oss_plugin.cpp cuda/gpt_oss_kernels.cu)
-target_include_directories(garnet_gpt_oss_ops PRIVATE include "${GARNET_TENSORRT_ROOT}/include")
+add_library(garnet_gpt_oss_ops SHARED module/module.cpp tensorrt/gpt_oss_plugin.cpp
+    cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
+target_include_directories(garnet_gpt_oss_ops PRIVATE include "${GARNET_TENSORRT_ROOT}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
 target_compile_definitions(garnet_gpt_oss_ops PRIVATE NOMINMAX)
+target_compile_options(garnet_gpt_oss_ops PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 if(WIN32)
     target_link_libraries(garnet_gpt_oss_ops PRIVATE CUDA::cudart "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
 else()
@@ -27,10 +30,12 @@ install(TARGETS garnet_gpt_oss_ops
 option(GARNET_GPT_OSS_BUILD_TESTS "Build GPT-OSS operator correctness tests" ON)
 if(GARNET_GPT_OSS_BUILD_TESTS)
     add_executable(garnet_gpt_oss_kernel_parity
-        ../../test2026/gpt_oss/kernel_parity.cpp cuda/gpt_oss_kernels.cu)
-    target_include_directories(garnet_gpt_oss_kernel_parity PRIVATE include)
+        ../../test2026/gpt_oss/kernel_parity.cpp cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
+    target_include_directories(garnet_gpt_oss_kernel_parity PRIVATE include
+        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
     target_link_libraries(garnet_gpt_oss_kernel_parity PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_kernel_parity PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
+    target_compile_options(garnet_gpt_oss_kernel_parity PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
     add_test(NAME garnet_gpt_oss_kernel_parity COMMAND garnet_gpt_oss_kernel_parity)
     add_executable(garnet_gpt_oss_kernel_benchmark
         ../../test2026/gpt_oss/kernel_benchmark.cu cuda/gpt_oss_kernels.cu)

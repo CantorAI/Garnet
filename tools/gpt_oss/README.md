@@ -201,6 +201,10 @@ The token-generation runner selects only the last prompt hidden state before
 the final norm and vocabulary projection. `build_pipeline` retains full logits
 by default; `last_token_logits=True` selects this generation profile with its
 own engine cache directory. Both modes write the same complete prompt KV cache.
+The vocabulary projection requests BF16 operands with FP32 accumulation and
+returns BF16-rounded logits. This keeps the checkpoint's BF16 output weights
+compressed to two bytes per element. The generic linear lowering accepts an
+explicit `compute_dtype` of `bfloat16` or `float32`; its default is unchanged.
 
 Single-token decode attention splits each head's context across eight warps
 and merges stable softmax states, counting the learned sink once. Prompt

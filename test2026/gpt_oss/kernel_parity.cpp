@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_kernels.h"
+#include "gpt_oss_marlin.h"
 #include <vector>
 #include <cmath>
 #include <cstring>
@@ -218,6 +219,14 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
     Device<unsigned char> groupedWorkspace(std::vector<unsigned char>(TestGptOssMoeWorkspace(tokens,o,true)));
     check(TestGptOssMoe(in, dy.p, groupedWorkspace.p, tokens, o, nullptr, true));
     compare(dy.read(), expected, .002f, "Forced grouped MoE, including partial row tiles");
+    if (tokens <= 8) {
+        GptOssMarlin marlin(o);
+        const size_t marlinBytes = GptOssMarlin::Workspace(tokens, o);
+        if (!marlinBytes) throw std::runtime_error("Marlin workspace unexpectedly unsupported");
+        Device<unsigned char> marlinWorkspace{std::vector<unsigned char>(marlinBytes)};
+        check(marlin.Run(in, dy.p, marlinWorkspace.p, tokens, nullptr));
+        compare(dy.read(), expected, .004f, "Marlin MXFP4 expert kernel parity");
+    }
 #endif
 }
 int main() { try {

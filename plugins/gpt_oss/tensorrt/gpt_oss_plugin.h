@@ -2,11 +2,13 @@
 #pragma once
 #include <NvInfer.h>
 #include "gpt_oss_kernels.h"
+#include "gpt_oss_marlin.h"
 #include <string>
 
 namespace Garnet {
 class GptOssPlugin final : public nvinfer1::IPluginV2DynamicExt {
     GptOssOptions m_options;
+    std::unique_ptr<GptOssMarlin> m_marlin;
     std::string m_namespace;
     bool m_valid = false;
 public:
