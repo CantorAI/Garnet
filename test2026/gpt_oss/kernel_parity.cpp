@@ -52,31 +52,32 @@ void testRope() {
     check(RunGptOssRope(dx.p, dp.p, dy.p, tokens, o, nullptr));
     compare(dy.read(), expected, .012f, "YaRN (including long positions and unchanged V)");
 }
-void testAttention() {
-    GptOssOptions o; o.kind = 1; o.qHeads = 4; o.kvHeads = 2; o.headDim = 8; o.pageSize = 2; o.layer = 1; o.prefill = 1;
-    const int batch = 2, tokens = 3, pages = 4, logical = 2, width = 64;
+void testAttention(int dimension) {
+    GptOssOptions o; o.kind = 1; o.qHeads = 4; o.kvHeads = 2; o.headDim = dimension; o.pageSize = 2; o.layer = 1; o.prefill = 1;
+    const int batch = 2, tokens = 3, pages = 4, logical = 2, width = 8 * dimension;
+    const int queryWidth = 4 * dimension, valueStart = 6 * dimension;
     std::vector<float> x(batch * tokens * width), sinks{.4f, -.2f, 2, -1};
     for (size_t i = 0; i < x.size(); ++i) x[i] = bf(std::sin(float(i) * .13f));
-    std::vector<uint16_t> keys(2 * pages * 2 * 2 * 8, bits(17)), values(keys);
+    std::vector<uint16_t> keys(2 * pages * 2 * 2 * dimension, bits(17)), values(keys);
     std::vector<int> table{2, 0, 3, 1}, lengths{3, 3}, starts{0, 0}, active{1, 1};
-    Device<float> dx(x), ds(sinks), dy(std::vector<float>(batch * tokens * 32));
+    Device<float> dx(x), ds(sinks), dy(std::vector<float>(batch * tokens * queryWidth));
     Device<uint16_t> dk(keys), dv(values);
     Device<int> dt(table), dl(lengths), dp(starts), da(active);
     const void* in[]{dx.p, dk.p, dv.p, dt.p, dl.p, dp.p, da.p, ds.p};
     for (int window : {0, 2}) {
         o.window = window;
         check(RunGptOssAttention(in, dy.p, batch, tokens, logical, pages, o, nullptr));
-        std::vector<float> expected(batch * tokens * 32);
+        std::vector<float> expected(batch * tokens * queryWidth);
         for (int b = 0; b < batch; ++b) for (int t = 0; t < tokens; ++t) for (int h = 0; h < 4; ++h) {
             int first = window ? std::max(0, t + 1 - window) : 0;
-            double sum = std::exp(double(sinks[h])); double accum[8]{};
+            double sum = std::exp(double(sinks[h])); std::vector<double> accum(dimension);
             for (int p = first; p <= t; ++p) {
                 double score = 0;
-                for (int d = 0; d < 8; ++d) score += double(x[(b * tokens + t) * width + h * 8 + d]) * x[(b * tokens + p) * width + 32 + (h / 2) * 8 + d];
-                double weight = std::exp(score / std::sqrt(8.)); sum += weight;
-                for (int d = 0; d < 8; ++d) accum[d] += weight * x[(b * tokens + p) * width + 48 + (h / 2) * 8 + d];
+                for (int d = 0; d < dimension; ++d) score += double(x[(b * tokens + t) * width + h * dimension + d]) * x[(b * tokens + p) * width + queryWidth + (h / 2) * dimension + d];
+                double weight = std::exp(score / std::sqrt(double(dimension))); sum += weight;
+                for (int d = 0; d < dimension; ++d) accum[d] += weight * x[(b * tokens + p) * width + valueStart + (h / 2) * dimension + d];
             }
-            for (int d = 0; d < 8; ++d) expected[(b * tokens + t) * 32 + h * 8 + d] = bf(float(accum[d] / sum));
+            for (int d = 0; d < dimension; ++d) expected[(b * tokens + t) * queryWidth + h * dimension + d] = bf(float(accum[d] / sum));
         }
         compare(dy.read(), expected, .006f, window ? "Sliding attention + sinks + batch isolation" : "Full attention + sinks + batch isolation");
     }
@@ -85,13 +86,13 @@ void testAttention() {
     auto savedK = dk.read(), savedV = dv.read();
     std::vector<float> decodeInput(batch * width);
     for (int b = 0; b < batch; ++b) std::copy_n(x.begin() + (b * tokens + 2) * width, width, decodeInput.begin() + b * width);
-    Device<float> dd(decodeInput), dout(std::vector<float>(batch * 32));
+    Device<float> dd(decodeInput), dout(std::vector<float>(batch * queryWidth));
     Device<int> decodeStarts(std::vector<int>{2, 2}), masked(std::vector<int>{1, 0});
     const void* decode[]{dd.p, dk.p, dv.p, dt.p, dl.p, decodeStarts.p, masked.p, ds.p};
     auto prefill = dy.read(); o.prefill = 0;
     check(RunGptOssAttention(decode, dout.p, batch, 1, logical, pages, o, nullptr));
-    auto actual = dout.read(); std::vector<float> expected(batch * 32, 0);
-    std::copy_n(prefill.begin() + 2 * 32, 32, expected.begin());
+    auto actual = dout.read(); std::vector<float> expected(batch * queryWidth, 0);
+    std::copy_n(prefill.begin() + 2 * queryWidth, queryWidth, expected.begin());
     compare(actual, expected, .006f, "Cached decode + inactive slot");
     if (dk.read() != savedK || dv.read() != savedV) throw std::runtime_error("decode cache mutation mismatch");
     for (size_t i = 0; i < keys.size() / 2; ++i) if (savedK[i] != keys[i]) throw std::runtime_error("wrong KV layer modified");
@@ -101,34 +102,34 @@ float unpack(const std::vector<unsigned char>& blocks, const std::vector<unsigne
     float lut[]{0, .5f, 1, 1.5f, 2, 3, 4, 6};
     return bf(std::ldexp(c & 8 ? -lut[c & 7] : lut[c], int(scales[row * width / 32 + col / 32]) - 127));
 }
-void testMoe(int tokens) {
-    GptOssOptions o; o.kind = 2; o.hidden = 32; o.intermediate = 32; o.experts = 5; o.topK = 2;
-    std::vector<float> x(tokens * 32), router(5 * 32), rb{-.2f, .4f, -.1f, .3f, -.5f}, ub(5 * 64), db(5 * 32);
+void testMoe(int tokens, int h = 32, int intermediate = 32) {
+    GptOssOptions o; o.kind = 2; o.hidden = h; o.intermediate = intermediate; o.experts = 5; o.topK = 2;
+    std::vector<float> x(tokens * h), router(5 * h), rb{-.2f, .4f, -.1f, .3f, -.5f}, ub(5 * 2 * intermediate), db(5 * h);
     for (size_t i = 0; i < x.size(); ++i) x[i] = bf(std::cos(float(i) * .17f));
     for (size_t i = 0; i < router.size(); ++i) router[i] = bf(std::sin(float(i) * .37f) * .1f);
     for (size_t i = 0; i < ub.size(); ++i) ub[i] = bf(float(int(i % 9) - 4) * .125f);
     for (size_t i = 0; i < db.size(); ++i) db[i] = bf(float(int(i % 7) - 3) * .125f);
-    std::vector<unsigned char> up(5 * 64 * 16), us(5 * 64, 123), down(5 * 32 * 16), ds(5 * 32, 124);
+    std::vector<unsigned char> up(5 * 2 * intermediate * h / 2), us(5 * 2 * intermediate * h / 32, 123), down(5 * h * intermediate / 2), ds(5 * h * intermediate / 32, 124);
     for (size_t i = 0; i < up.size(); ++i) up[i] = (i * 73 + 11) % 256;
     for (size_t i = 0; i < down.size(); ++i) down[i] = (i * 31 + 57) % 256;
-    std::vector<float> expected(tokens * 32);
+    std::vector<float> expected(tokens * h);
     for (int t = 0; t < tokens; ++t) {
         std::vector<std::pair<float,int>> logits;
-        for (int e = 0; e < 5; ++e) { float value = 0; for (int d = 0; d < 32; ++d) value += x[t * 32 + d] * router[e * 32 + d]; logits.push_back({bf(value + rb[e]),e}); }
+        for (int e = 0; e < 5; ++e) { float value = 0; for (int d = 0; d < h; ++d) value += x[t * h + d] * router[e * h + d]; logits.push_back({bf(value + rb[e]),e}); }
         std::sort(logits.begin(), logits.end(), [](auto a, auto b) { return a.first > b.first; });
         float denominator = 1 + std::exp(logits[1].first - logits[0].first);
         for (int k = 0; k < 2; ++k) {
             int e = logits[k].second; float probability = bf(std::exp(logits[k].first - logits[0].first) / denominator);
-            std::vector<float> hidden(32);
-            for (int i = 0; i < 32; ++i) {
-                int row = e * 64 + i * 2; float g = 0, u = 0;
-                for (int d = 0; d < 32; ++d) { g += x[t * 32 + d] * unpack(up, us, row, d, 32); u += x[t * 32 + d] * unpack(up, us, row + 1, d, 32); }
+            std::vector<float> hidden(intermediate);
+            for (int i = 0; i < intermediate; ++i) {
+                int row = e * 2 * intermediate + i * 2; float g = 0, u = 0;
+                for (int d = 0; d < h; ++d) { g += x[t * h + d] * unpack(up, us, row, d, h); u += x[t * h + d] * unpack(up, us, row + 1, d, h); }
                 g = std::min(bf(bf(g) + ub[row]), 7.f); u = std::clamp(bf(bf(u) + ub[row + 1]), -7.f, 7.f);
                 hidden[i] = bf(bf(g * bf(1 / (1 + std::exp(-bf(1.702f * g))))) * bf(u + 1));
             }
-            for (int d = 0; d < 32; ++d) {
-                float v = 0; for (int i = 0; i < 32; ++i) v += hidden[i] * unpack(down, ds, e * 32 + d, i, 32);
-                expected[t * 32 + d] += bf(bf(v) + db[e * 32 + d]) * probability;
+            for (int d = 0; d < h; ++d) {
+                float v = 0; for (int i = 0; i < intermediate; ++i) v += hidden[i] * unpack(down, ds, e * h + d, i, intermediate);
+                expected[t * h + d] += bf(bf(v) + db[e * h + d]) * probability;
             }
         }
     }
@@ -139,5 +140,5 @@ void testMoe(int tokens) {
     check(RunGptOssMoe(in, dy.p, workspace.p, tokens, o, nullptr));
     compare(dy.read(), expected, .002f, "Batched MoE routing, MXFP4, interleaved SwiGLU and biases");
 }
-int main() { try { testRope(); testAttention(); for (int tokens : {1, 3, 17, 65}) testMoe(tokens); check(cudaDeviceSynchronize()); return 0; }
+int main() { try { testRope(); for (int dimension : {8, 64, 128}) testAttention(dimension); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

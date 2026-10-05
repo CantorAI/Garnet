@@ -10,7 +10,8 @@ using namespace nvinfer1;
 namespace Garnet {
 namespace {
 constexpr const char* kName = "GarnetGptOss";
-constexpr const char* kVersion = "1";
+// Version 2 expands the MoE workspace for grouped Tensor Core prefill.
+constexpr const char* kVersion = "2";
 bool valid(const GptOssOptions& o) {
     if (o.kind < 0 || o.kind > 2) return false;
     if (o.kind == 2) return o.hidden > 0 && o.intermediate > 0 &&
@@ -150,7 +151,7 @@ bool EnsureGptOssPluginRegistered() {
 #define GPT_OSS_EXPORT __attribute__((visibility("default")))
 #endif
 extern "C" GPT_OSS_EXPORT const char* GarnetOperatorPluginManifest() {
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.1.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.2.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4"]})";
 }
 extern "C" GPT_OSS_EXPORT int GarnetRegisterOperatorPlugin() { return Garnet::EnsureGptOssPluginRegistered() ? 1 : 0; }
 extern "C" GPT_OSS_EXPORT nvinfer1::IPluginV2DynamicExt* GarnetCreateOperatorPlugin(
