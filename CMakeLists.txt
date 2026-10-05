@@ -372,30 +372,34 @@ set_tests_properties(garnet_weight_quantization garnet_q4q8_linear
 if(WIN32)
     find_program(GARNET_POWERSHELL NAMES powershell pwsh REQUIRED)
 else()
-    find_program(GARNET_POWERSHELL NAMES pwsh powershell)
+    find_program(GARNET_BASH NAMES bash REQUIRED)
 endif()
 if(WIN32)
     set(GARNET_TENSORRT_RUNTIME_DIR "${GARNET_TENSORRT_ROOT}/bin")
 else()
     set(GARNET_TENSORRT_RUNTIME_DIR "${GARNET_TENSORRT_ROOT}/lib")
 endif()
-if(GARNET_POWERSHELL)
     foreach(backend tensorrt openvino)
         if(backend STREQUAL "openvino" AND NOT OpenVINO_FOUND)
             continue()
         endif()
-        add_test(NAME garnet_models_${backend}
+        if(WIN32)
+            add_test(NAME garnet_models_${backend}
             COMMAND "${GARNET_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
                 -File "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/run_model_tests.ps1"
                 -RuntimePath "$<TARGET_FILE:xlang3>" -Backend "${backend}"
                 -WorkRoot "${CMAKE_CURRENT_BINARY_DIR}/model-tests/${backend}"
                 -TensorRTDirectory "${GARNET_TENSORRT_RUNTIME_DIR}"
                 -CudaDirectory "${CUDAToolkit_BIN_DIR}")
+        else()
+            add_test(NAME garnet_models_${backend}
+                COMMAND "${GARNET_BASH}" "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/run_model_tests.sh"
+                    "$<TARGET_FILE:xlang3>" "${backend}"
+                    "${CMAKE_CURRENT_BINARY_DIR}/model-tests/${backend}"
+                    "${GARNET_TENSORRT_RUNTIME_DIR}" "${CUDAToolkit_BIN_DIR}")
+        endif()
         set_tests_properties(garnet_models_${backend} PROPERTIES TIMEOUT 300)
     endforeach()
-else()
-    message(STATUS "PowerShell model-test runner unavailable; use tools/gpt_oss/verify.py for GPT-OSS checks")
-endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(garnet_test_library_path "${GARNET_TENSORRT_ROOT}/lib")

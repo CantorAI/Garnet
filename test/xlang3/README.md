@@ -50,3 +50,15 @@ TensorRT SDK's `bin` directory to their process search path; they do not require
 copying the entire acceleration SDK beside the application. OpenVINO tests are
 registered when its native SDK is configured. Missing CUDA devices fail the
 device execution suites; only the tensor-storage probe has an explicit skip.
+
+On Linux, CTest uses the Bash runner for the same model build/reload, contract,
+source-isolation, reusable-output and concurrent-execution checks. It can also
+be invoked directly, without PowerShell:
+
+```bash
+bash test/xlang3/run_model_tests.sh /absolute/path/to/xlang3 tensorrt \
+  /absolute/path/to/test-artifacts /absolute/path/to/TensorRT/lib /usr/local/cuda/bin
+```
+
+Each run keeps its engines and diagnostics in a fresh directory under the
+artifact root and stops on the first failure. The last two arguments are optional.
