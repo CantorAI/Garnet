@@ -2,6 +2,9 @@
 #include "gpt_oss_plugin.h"
 #include <NvInferPlugin.h>
 #include <algorithm>
+#include <atomic>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <mutex>
 #include <new>
@@ -11,6 +14,11 @@ using namespace nvinfer1;
 namespace Garnet {
 namespace {
 constexpr const char* kName = "GarnetGptOss";
+void reportMarlinFallback(bool initialized, int tokens) {
+    static std::atomic<int> count{0};
+    if (std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") && count.fetch_add(1) < 16)
+        std::fprintf(stderr, "GPT-OSS Marlin: fallback (plugin initialized=%d, rows=%d)\n", initialized, tokens);
+}
 // Version 2 expands the MoE workspace for grouped Tensor Core prefill.
 constexpr const char* kVersion = "2";
 bool valid(const GptOssOptions& o) {
@@ -115,8 +123,10 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
     else {
         status = m_marlin ? m_marlin->Run(in, (float*)out[0], workspace, n, stream)
                           : cudaErrorNotSupported;
-        if (status == cudaErrorNotSupported)
+        if (status == cudaErrorNotSupported) {
+            reportMarlinFallback(m_marlin != nullptr, n);
             status = RunGptOssMoe(in, (float*)out[0], workspace, n, m_options, stream);
+        }
     }
     return status == cudaSuccess ? 0 : 1;
 }

@@ -4,11 +4,22 @@
 #include "gpt_oss_marlin.h"
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <stdexcept>
 
 namespace Garnet {
 namespace {
+bool debugMarlin() {
+    static const bool enabled = std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") != nullptr;
+    return enabled;
+}
+void reportMarlin(const char* message, int a = 0, int b = 0) {
+    static std::atomic<int> count{0};
+    if (debugMarlin() && count.fetch_add(1) < 32) std::fprintf(stderr, "GPT-OSS Marlin: %s (%d, %d)\n", message, a, b);
+}
 struct Geometry {
     int upK,upN,downK,downN;
     explicit Geometry(const GptOssOptions& o) : upK((o.hidden+63)/64*64),
@@ -124,7 +135,7 @@ UpKernel downKernel() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat1
     garnet_marlin_types::kFE8M0fnu.id(),128,1,4,8,true,4,2,false>;}
 }
 struct GptOssMarlin::State {
-    GptOssOptions o;Geometry g;int device=-1,sms=0;bool ready=false,blocked=false;
+    GptOssOptions o;Geometry g;int device=-1,sms=0,blockedReason=0;bool ready=false,blocked=false;
     std::array<void*,4> weights{};std::array<const void*,4> sources{};
     explicit State(const GptOssOptions& options):o(options),g(options) {}
     ~State(){release();}
@@ -135,12 +146,15 @@ struct GptOssMarlin::State {
     }
     cudaError_t prepare(const void* const* in,cudaStream_t stream) {
         std::array<const void*,4> pointers{in[3],in[4],in[6],in[7]};
-        if(blocked && pointers==sources)return cudaErrorNotSupported;
+        if(blocked && pointers==sources) {
+            reportMarlin(blockedReason == 1 ? "device capability rejected" : "MXFP4 scales rejected", blockedReason, device);
+            return cudaErrorNotSupported;
+        }
         if(ready && pointers==sources)return cudaSuccess;
         release();blocked=false;sources=pointers;
         auto status=cudaGetDevice(&device);if(status!=cudaSuccess)return status;
         cudaDeviceProp prop{};status=cudaGetDeviceProperties(&prop,device);if(status!=cudaSuccess)return status;
-        if(prop.major<8 || prop.multiProcessorCount>512){blocked=true;return cudaErrorNotSupported;}
+        if(prop.major<8 || prop.multiProcessorCount>512){blocked=true;blockedReason=1;reportMarlin("device capability rejected", prop.major, prop.multiProcessorCount);return cudaErrorNotSupported;}
         sms=prop.multiProcessorCount;
         int* invalid=nullptr;status=cudaMalloc((void**)&invalid,4);if(status!=cudaSuccess)return status;
         status=cudaMemsetAsync(invalid,0,4,stream);
@@ -158,7 +172,7 @@ struct GptOssMarlin::State {
         if(status==cudaSuccess)status=cudaMemcpyAsync(&result,invalid,4,cudaMemcpyDeviceToHost,stream);
         if(status==cudaSuccess)status=cudaStreamSynchronize(stream);
         cudaFree(invalid);if(status!=cudaSuccess)return status;
-        if(result){blocked=true;return cudaErrorNotSupported;}
+        if(result){blocked=true;blockedReason=2;reportMarlin("MXFP4 scales rejected", result, device);return cudaErrorNotSupported;}
         const size_t sizes[]{size_t(o.experts)*g.upN*g.upK/2,size_t(o.experts)*g.upN*g.upK/32,
             size_t(o.experts)*g.downN*g.downK/2,size_t(o.experts)*g.downN*g.downK/32};
         for(int i=0;i<4;++i){status=cudaMalloc(&weights[i],sizes[i]);if(status!=cudaSuccess){release();return status;}}
@@ -178,7 +192,7 @@ size_t GptOssMarlin::Workspace(int tokens,const GptOssOptions& o) {
     return supported(tokens,o)?Layout(tokens,o).bytes:0;
 }
 cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int tokens,cudaStream_t stream) {
-    auto& s=*m_state;if(!supported(tokens,s.o))return cudaErrorNotSupported;
+    auto& s=*m_state;if(!supported(tokens,s.o)){reportMarlin("shape rejected", tokens, s.o.hidden);return cudaErrorNotSupported;}
     int device=-1;auto status=cudaGetDevice(&device);if(status!=cudaSuccess)return status;
     if(s.device>=0 && s.device!=device)return cudaErrorInvalidDevice;
     status=s.prepare(in,stream);if(status!=cudaSuccess)return status;
