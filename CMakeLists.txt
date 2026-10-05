@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.18)
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES "80;86;89")
+endif()
 project("garnet" LANGUAGES CXX CUDA)
 
 include(GNUInstallDirs)
@@ -223,7 +226,7 @@ add_executable(garnet_repetition_sampler_test
 target_include_directories(garnet_repetition_sampler_test PRIVATE src/cuda)
 target_link_libraries(garnet_repetition_sampler_test PRIVATE CUDA::cudart)
 set_target_properties(garnet_repetition_sampler_test PROPERTIES
-    CUDA_ARCHITECTURES "80;86;89")
+    CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
 add_test(NAME garnet_repetition_sampler COMMAND garnet_repetition_sampler_test)
 set_tests_properties(garnet_repetition_sampler PROPERTIES TIMEOUT 120)
 
@@ -334,7 +337,7 @@ add_executable(garnet_image_tests
 target_link_libraries(garnet_image_tests PRIVATE garnet_tensor_capture
     CUDA::cudart CUDA::nvjpeg CUDA::nppc CUDA::nppig)
 target_compile_definitions(garnet_image_tests PRIVATE NOMINMAX)
-set_target_properties(garnet_image_tests PROPERTIES CUDA_ARCHITECTURES "80;86;89")
+set_target_properties(garnet_image_tests PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
 if(MSVC)
     target_compile_options(garnet_image_tests PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
@@ -468,7 +471,7 @@ endif()
 # Enable separable CUDA compilation and specify architectures.
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
-    CUDA_ARCHITECTURES "80;86;89"
+    CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}"
     RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>"
     LIBRARY_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>"
     ARCHIVE_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/lib>"
