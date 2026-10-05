@@ -196,3 +196,14 @@ plan fails before engine generation. Estimates include headroom but remain
 estimates: full 120B engine memory, build host RAM, pretrained parity and speed
 must be measured on the rented GPUs. Prefill engines are released before
 decode engines load; the local KV caches are retained.
+
+Single-token decode attention splits each head's context across eight warps
+and merges stable softmax states, counting the learned sink once. Prompt
+attention still parallelizes query rows. Native parity tests include long
+paged decode, missing pages, sliding windows and inactive cache slots.
+
+`garnet_gpt_oss_kernel_benchmark` measures full-size 2880-dimensional,
+128-expert/top-8 MoE calls with L2 flushed outside each timed invocation.
+It compares warp and grouped Tensor Core paths and checks their outputs.
+This is a kernel diagnostic, not an end-to-end serving benchmark; grouped
+expert execution remains selected for 16 or more tokens.
