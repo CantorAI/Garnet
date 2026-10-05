@@ -4,6 +4,32 @@ Work from the CantorAI workspace, keeping Garnet, xlang3, and ThirdPartySDK as
 siblings. The feature branch is `feature/gpt-oss-120b`. Do not add model weights
 or generated engines to Git.
 
+## Verified Linux configuration
+
+On October 5, 2026, the original GPT-OSS-120B checkpoint completed greedy
+Harmony generation on two RTX PRO 6000 Blackwell Max-Q GPUs (SM 120), using
+TensorRT 10.16.1.11 and the XLang3 Release runtime at `990a745`. The automatic
+planner assigned layers 0–17 to GPU 0 and 18–35 to GPU 1. The synthetic suite
+and the Linux model integration runner passed, including cached two-GPU
+generation, inactive batch slots and existing Qwen compatibility checks.
+The pretrained smoke prompt produced a final `Hello!` response. This establishes
+execution of the full checkpoint; reference-logit parity, sustained serving,
+larger contexts and production throughput remain unverified.
+
+Use the selected TensorRT SDK for both Garnet and its native operator plugin.
+The tested container had CUDA 13.4, but TensorRT's generated kernel compilation
+failed with its NVRTC 13.4 library. Selecting NVRTC 13.2.86 resolved that failure
+without rebuilding the model code or replacing the container's CUDA toolkit:
+
+```bash
+python3 -m pip install --no-deps --target ThirdPartySDK/cuda-nvrtc-13.2 \
+  nvidia-cuda-nvrtc==13.2.86
+export LD_LIBRARY_PATH="$PWD/ThirdPartySDK/cuda-nvrtc-13.2/nvidia/cu13/lib:${LD_LIBRARY_PATH:-}"
+```
+
+For these GPUs, pass `--cuda-architectures 120` to the build command below.
+Use `test/xlang3/run_model_tests.sh` for the broader Linux integration suite.
+
 ## Local build
 
 Use an existing XLang3 Release runtime. This avoids rebuilding or changing
