@@ -22,5 +22,8 @@ cudaError_t RunGptOssMoe(const void* const*, float*, void*, int,
     const GptOssOptions&, cudaStream_t);
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
 cudaError_t TestGptOssMxfp4Decode(const unsigned char*, const unsigned char*, float*, int);
+size_t TestGptOssMoeWorkspace(int, const GptOssOptions&, bool grouped);
+cudaError_t TestGptOssMoe(const void* const*, float*, void*, int,
+    const GptOssOptions&, cudaStream_t, bool grouped);
 #endif
 }

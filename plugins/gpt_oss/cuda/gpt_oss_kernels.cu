@@ -315,24 +315,24 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int t
         (const float*)in[7], y, batch, tokens, logicalPages, physicalPages, o);
     return cudaGetLastError();
 }
-size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
+static size_t moeWorkspace(int tokens, const GptOssOptions& o, bool grouped) {
     size_t bytes = size_t(tokens) * o.topK * (sizeof(int) + sizeof(float) * (1 + o.intermediate));
-    if (tokens >= 16) {
+    if (grouped) {
         const size_t tasks = (size_t(tokens) * o.topK + 15) / 16 + o.experts;
         bytes += sizeof(int) * (o.experts + size_t(o.experts) * tokens * o.topK + 1 + 2 * tasks);
         bytes += sizeof(float) * size_t(tokens) * o.topK * o.hidden;
     }
     return bytes;
 }
-cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int tokens,
-    const GptOssOptions& o, cudaStream_t stream) {
+static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int tokens,
+    const GptOssOptions& o, cudaStream_t stream, bool grouped) {
     auto* selected = (int*)workspace;
     auto* probabilities = (float*)(selected + size_t(tokens) * o.topK);
     auto* hidden = probabilities + size_t(tokens) * o.topK;
     route<<<tokens, 256, o.experts * sizeof(float), stream>>>((const float*)in[0],
         (const float*)in[1], (const float*)in[2], selected, probabilities, tokens, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
-    if (tokens >= 16) {
+    if (grouped) {
         auto* counts = (int*)(hidden + size_t(tokens) * o.topK * o.intermediate);
         auto* slots = counts + o.experts;
         auto* taskCount = slots + size_t(o.experts) * tokens * o.topK;
@@ -366,4 +366,20 @@ cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int t
         (const unsigned char*)in[7], (const float*)in[8], selected, probabilities, y, tokens, o);
     return cudaGetLastError();
 }
+size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
+    return moeWorkspace(tokens, o, tokens >= 16);
+}
+cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int tokens,
+    const GptOssOptions& o, cudaStream_t stream) {
+    return runMoe(in, y, workspace, tokens, o, stream, tokens >= 16);
+}
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+size_t TestGptOssMoeWorkspace(int tokens, const GptOssOptions& o, bool grouped) {
+    return moeWorkspace(tokens, o, grouped);
+}
+cudaError_t TestGptOssMoe(const void* const* in, float* y, void* workspace, int tokens,
+    const GptOssOptions& o, cudaStream_t stream, bool grouped) {
+    return runMoe(in, y, workspace, tokens, o, stream, grouped);
+}
+#endif
 }

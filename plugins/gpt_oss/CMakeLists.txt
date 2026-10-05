@@ -32,6 +32,11 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
     target_link_libraries(garnet_gpt_oss_kernel_parity PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_kernel_parity PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
     add_test(NAME garnet_gpt_oss_kernel_parity COMMAND garnet_gpt_oss_kernel_parity)
+    add_executable(garnet_gpt_oss_kernel_benchmark
+        ../../test2026/gpt_oss/kernel_benchmark.cu cuda/gpt_oss_kernels.cu)
+    target_include_directories(garnet_gpt_oss_kernel_benchmark PRIVATE include)
+    target_link_libraries(garnet_gpt_oss_kernel_benchmark PRIVATE CUDA::cudart)
+    target_compile_definitions(garnet_gpt_oss_kernel_benchmark PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
 endif()
 
 set_target_properties(garnet_gpt_oss_ops PROPERTIES OUTPUT_NAME garnet_gpt_oss)

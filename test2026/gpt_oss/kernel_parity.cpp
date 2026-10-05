@@ -168,6 +168,11 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
     const void* in[]{dx.p, dr.p, drb.p, du.p, dus.p, dub.p, dd.p, dds.p, ddb.p};
     check(RunGptOssMoe(in, dy.p, workspace.p, tokens, o, nullptr));
     compare(dy.read(), expected, .002f, "Batched MoE routing, MXFP4, interleaved SwiGLU and biases");
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+    Device<unsigned char> groupedWorkspace(std::vector<unsigned char>(TestGptOssMoeWorkspace(tokens,o,true)));
+    check(TestGptOssMoe(in, dy.p, groupedWorkspace.p, tokens, o, nullptr, true));
+    compare(dy.read(), expected, .002f, "Forced grouped MoE, including partial row tiles");
+#endif
 }
 int main() { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
