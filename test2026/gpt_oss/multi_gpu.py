@@ -48,6 +48,11 @@ compare(forward(prefill, [row[:3] for row in expected['ids']], [[0, 1, 2]] * 2,
         [row for batch in expected['logits'] for row in batch[:3]], 'two GPU prefill')
 kv = [(s['keys'], s['values']) for s in prefill.stages]
 prefill.release()
+last_only = build_pipeline(weights, cache, plan, 3, True, last_token_logits=True)
+compare(forward(last_only, [row[:3] for row in expected['ids']], [[0, 1, 2]] * 2,
+                [3, 3], [0, 0], [1, 1]),
+        [batch[2] for batch in expected['logits']], 'two GPU last-token prefill logits')
+last_only.release()
 decode = build_pipeline(weights, cache, plan, 1, False, kv)
 ids = [[row[3]] for row in expected['ids']]
 compare(forward(decode, ids, [[3], [3]], [4, 4], [3, 3], [1, 1]),

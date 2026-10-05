@@ -197,6 +197,11 @@ estimates: full 120B engine memory, build host RAM, pretrained parity and speed
 must be measured on the rented GPUs. Prefill engines are released before
 decode engines load; the local KV caches are retained.
 
+The token-generation runner selects only the last prompt hidden state before
+the final norm and vocabulary projection. `build_pipeline` retains full logits
+by default; `last_token_logits=True` selects this generation profile with its
+own engine cache directory. Both modes write the same complete prompt KV cache.
+
 Single-token decode attention splits each head's context across eight warps
 and merges stable softmax states, counting the learned sink once. Prompt
 attention still parallelizes query rows. Native parity tests include long

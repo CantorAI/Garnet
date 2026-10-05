@@ -76,7 +76,7 @@ def forward(input_ids, position_ids, key_pages, value_pages, page_table,
 
 def forward_stage(x, position_ids, key_pages, value_pages, page_table,
                   context_length, slot_position, active_mask, weights, config,
-                  start, end, prefill):
+                  start, end, prefill, last_token_logits=False):
     if start == 0:
         x = rounded(x * T.unary_op("embedding", weight_name="embedding.weight"))
     for layer_idx in range(start, end):
@@ -84,5 +84,7 @@ def forward_stage(x, position_ids, key_pages, value_pages, page_table,
                   context_length, slot_position, active_mask, config, layer_idx,
                   prefill, layer_idx - start)
     if end == config['num_hidden_layers']:
+        if last_token_logits:
+            x = x * T.unary_op("last_token")
         x = linear(norm(x, "norm.scale"), "unembedding.weight", op="lm_head")
     return x

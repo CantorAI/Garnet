@@ -38,7 +38,7 @@ length = tensor([len(ids)], 'int32', [1])
 slot = tensor([0], 'int32', [1])
 active = tensor([1], 'int32', [1])
 started = time.perf_counter()
-model = build_pipeline(weights, cache, plan, len(ids), True)
+model = build_pipeline(weights, cache, plan, len(ids), True, last_token_logits=True)
 load_seconds = time.perf_counter() - started
 started = time.perf_counter()
 result = model.forward(tensor(ids, 'int64', [1, len(ids)]),

@@ -77,7 +77,7 @@ def make_plan(weights, devices, batch=1, capacity=4096, tokens=1,
     return plan
 
 
-def build_pipeline(weights, cache, plan, tokens, prefill, kv=None):
+def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_logits=False):
     import garnet as G
     if tokens < 1 or tokens > plan['max_tokens']:
         raise ValueError('token shape exceeds placement profile')
@@ -93,6 +93,8 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None):
             G.cuda_set_device(placement['device_id'])
             start, end = placement['start'], placement['end']
             stage_cache = cache / ('prefill' if prefill else 'decode') / str(tokens) / str(rank)
+            if last_token_logits:
+                stage_cache = stage_cache / 'last-token-logits'
             model_root = stage_cache / 'xmodel'
             model_root.mkdir(parents=True, exist_ok=True)
             for name in ('__init__.py', 'tensor_compat.py', 'gpt_oss_llm.py', 'model.json'):
@@ -101,6 +103,7 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None):
             source = source.replace('STAGE_START = 0', 'STAGE_START = ' + str(start))
             source = source.replace('STAGE_END = 1', 'STAGE_END = ' + str(end))
             source = source.replace('STAGE_PREFILL = 1', 'STAGE_PREFILL = ' + str(int(prefill)))
+            source = source.replace('STAGE_LAST_TOKEN = 0', 'STAGE_LAST_TOKEN = ' + str(int(last_token_logits)))
             (model_root / 'stage.py').write_text(source)
             shape = [end - start, plan['kv_pages'], 16, config['num_key_value_heads'], config['head_dim']]
             if kv is None:
