@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "GPT-OSS-120B",
+  "slug": "gpt-oss-120b",
+  "display_name": "GPT-OSS-120B",
+  "family": "gpt_oss",
+  "task": "text-generation",
+  "capabilities": {
+    "text": true,
+    "vision": false,
+    "paged_kv_cache": true,
+    "continuous_batching_graph": true
+  },
+  "entrypoints": {
+    "prefill": {
+      "file": "prefill.py",
+      "function": "GptOssPrefill"
+    },
+    "decode": {
+      "file": "decode.py",
+      "function": "GptOssDecode"
+    },
+    "decode_batch": {
+      "file": "decode_batch.py",
+      "function": "GptOssDecodeBatch"
+    }
+  },
+  "profile_files": [
+    "profiles/tensorrt_mxfp4.json"
+  ],
+  "weights": {
+    "bundled": false,
+    "format": "safetensors",
+    "source": "openai/gpt-oss-120b",
+    "checkpoint_subdirectory": "original",
+    "config_file": "config.json"
+  },
+  "serving_profiles": []
+}

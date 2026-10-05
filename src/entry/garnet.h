@@ -145,7 +145,19 @@ namespace Garnet
 			const std::string& capability = std::string()) const;
 		bool LoadModelFromFile(std::string modelPath, X::Value& model);
 	public:
+		X::Value CudaDevicesJson(const X::ARGS&, const X::KWARGS&);
+		X::Value CudaSetDevice(const X::ARGS&, const X::KWARGS&);
+		X::Value CudaSynchronize(const X::ARGS&, const X::KWARGS&);
+		X::Value TensorToDevice(const X::ARGS&, const X::KWARGS&);
+		X::Value TensorZeros(const X::ARGS&, const X::KWARGS&);
+		X::Value BindOperatorModuleAPI(const X::ARGS&, const X::KWARGS&);
 		BEGIN_PACKAGE(GarnetAPI)
+			APISET().AddVarFunc("cuda_devices_json", &GarnetAPI::CudaDevicesJson);
+			APISET().AddVarFunc("cuda_set_device", &GarnetAPI::CudaSetDevice);
+			APISET().AddVarFunc("cuda_synchronize", &GarnetAPI::CudaSynchronize);
+			APISET().AddVarFunc("tensor_to_device", &GarnetAPI::TensorToDevice);
+			APISET().AddVarFunc("tensor_zeros", &GarnetAPI::TensorZeros);
+			APISET().AddVarFunc("bind_operator_module", &GarnetAPI::BindOperatorModuleAPI);
 			APISET().AddPropL("cantor",
 				[](auto* pThis, X::Value v)
 				{

@@ -140,6 +140,9 @@ namespace Garnet {
         X::Value HandleBranchEnd() override;
 
     private:
+        nvinfer1::ITensor* LowerGptOss(const std::string&, nvinfer1::ITensor*,
+            nvinfer1::ITensor*, X::KWARGS&);
+        nvinfer1::ITensor* GetGptOssPackedWeight(const std::string&);
         nvinfer1::IBuilder* builder = nullptr;
         nvinfer1::INetworkDefinition* network = nullptr;
         nvinfer1::IBuilderConfig* config = nullptr;

@@ -4837,3 +4837,11 @@ namespace Garnet
     }
 
 }
+
+#include "operator_plugins.h"
+X::Value Garnet::GarnetAPI::BindOperatorModuleAPI(const X::ARGS& args, const X::KWARGS&) {
+    if (args.size() != 1) throw X::Error("bind_operator_module requires one imported native module");
+    std::string error;
+    if (!Garnet::BindOperatorModule(args[0], error)) throw X::Error(error);
+    return X::Value(true);
+}

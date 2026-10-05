@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "compiled_model_runtime.h"
+#include "operator_plugins.h"
 #include "compiled_graph_capture.h"
 #include "graph_capture.h"
 #include "md5.h"
@@ -1041,15 +1042,30 @@ namespace Garnet
             }
             return true;
         };
+        nlohmann::json resolvedOperatorPlugins = nlohmann::json::array();
         if (!inputShapes.empty() &&
             LoadGraphCache(
                 graphCachePath,
                 graphFingerprint,
                 m_graphSummary,
                 m_executionPlanJson)) {
+            bool pluginCacheUnchanged = true;
+            try {
+                resolvedOperatorPlugins = nlohmann::json::parse(m_executionPlanJson).value(
+                    "operator_plugins", nlohmann::json::array());
+                if (!ValidateCachedOperatorPlugins(m_host, resolvedOperatorPlugins, m_backend,
+                        pluginCacheUnchanged, m_errorMessage)) {
+                    m_state = "failed";
+                    m_errorCode = "operator_plugin_requirement_failed";
+                    return false;
+                }
+            } catch (const std::exception& exception) {
+                m_state = "failed"; m_errorCode = "operator_plugin_cache_invalid";
+                m_errorMessage = exception.what(); return false;
+            }
             m_cudaGraphEnabled =
                 ExecutionPlanRequestsCudaGraph(m_executionPlanJson);
-            bool partitionCacheValid = ParseEnginePartitions(
+            bool partitionCacheValid = pluginCacheUnchanged && ParseEnginePartitions(
                 m_executionPlanJson, m_enginePartitions);
             for (const auto& partition : m_enginePartitions) {
                 partitionCacheValid = partitionCacheValid &&
@@ -1164,6 +1180,31 @@ namespace Garnet
                 }
                 if (modelSpec.IsDict()) {
                     X::Value spec(modelSpec);
+                    X::Value requirements = Lookup(spec, "requires");
+                    nlohmann::json requestedPlugins = nlohmann::json::array();
+                    if (requirements.IsValid() && !requirements.IsNone()) {
+                        if (!requirements.IsDict()) {
+                            m_state = "failed"; m_errorCode = "invalid_model_spec";
+                            m_errorMessage = "GARNET_MODEL_SPEC.requires must be a dictionary"; return false;
+                        }
+                        X::Value requested = Lookup(requirements, "operator_plugins");
+                        if (requested.IsValid() && !requested.IsNone()) {
+                            X::Module jsonModule(host, "json"); X::Value serialized;
+                            if (!jsonModule["dumps"].Call({requested}, serialized)) {
+                                m_state = "failed"; m_errorCode = "invalid_model_spec";
+                                m_errorMessage = "operator plugin requirements must be JSON serializable"; return false;
+                            }
+                            try { requestedPlugins = nlohmann::json::parse(serialized.ToString()); }
+                            catch (const std::exception& e) {
+                                m_state = "failed"; m_errorCode = "invalid_model_spec";
+                                m_errorMessage = e.what(); return false;
+                            }
+                        }
+                    }
+                    if (!ResolveOperatorPlugins(m_host, requestedPlugins, m_backend, resolvedOperatorPlugins, m_errorMessage)) {
+                        m_state = "failed"; m_errorCode = "operator_plugin_requirement_failed"; return false;
+                    }
+
                     X::Value argumentSpecsValue = Lookup(spec, "arguments");
                     if (!argumentSpecsValue.IsList()) {
                         m_state = "failed";
@@ -1237,6 +1278,16 @@ namespace Garnet
                         else if (kind == "weights") rootArguments.push_back(symbolicWeights);
                         else if (kind == "config") rootArguments.push_back(configValue);
                         else if (kind == "none") rootArguments.push_back(NativeValue(host, nullptr));
+                        else if (kind == "int") {
+                            auto value = Lookup(argumentSpec, "value");
+                            if (!value.IsInt64() && !value.IsUInt64()) {
+                                m_state = "failed";
+                                m_errorCode = "invalid_model_spec";
+                                m_errorMessage = "integer model argument requires an integer value";
+                                return false;
+                            }
+                            rootArguments.push_back(value);
+                        }
                         else if (kind == "bool") rootArguments.push_back(Lookup(argumentSpec, "value"));
                         else {
                             m_state = "failed";
@@ -1287,6 +1338,11 @@ namespace Garnet
                     m_state = "failed";
                     m_errorCode = "graph_partition_analysis_failed";
                     return false;
+                }
+                std::vector<std::string> operatorNames;
+                for (const auto& operation : GetCapturedTensorOperations()) operatorNames.push_back(operation.name);
+                if (!ValidateOperatorPluginUse(operatorNames, resolvedOperatorPlugins, m_errorMessage)) {
+                    m_state = "failed"; m_errorCode = "undeclared_plugin_operator"; return false;
                 }
                 int partitionCount = 0;
                 for (const auto& operation : GetCapturedTensorOperations()) {
@@ -1352,6 +1408,11 @@ namespace Garnet
                     m_partitionOptions);
                 m_cudaGraphEnabled =
                     ExecutionPlanRequestsCudaGraph(m_executionPlanJson);
+                if (!resolvedOperatorPlugins.empty()) {
+                    auto plan = nlohmann::json::parse(m_executionPlanJson);
+                    plan["operator_plugins"] = resolvedOperatorPlugins;
+                    m_executionPlanJson = plan.dump();
+                }
                 if (!StoreGraphCache(
                         graphCachePath,
                         graphFingerprint,

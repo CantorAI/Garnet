@@ -326,6 +326,9 @@ namespace Garnet {
                             dataType = DataType::kFLOAT;
                             elementBytes = 4;
                         }
+                        else if (metadata->dataType == "U8") {
+                            dataType = DataType::kINT8; elementBytes = 1;
+                        }
                         else {
                             std::cout << "[TRTBuilder] unsupported refit dtype: " << metadata->dataType << std::endl;
                             return nullptr;
@@ -5169,6 +5172,7 @@ namespace Garnet {
         const bool isTextRope =
             isMultimodalTextRope || opName == "qwen3_apply_text_rope_packed";
         const bool isTextAttention = opName == "paged_attention_packed";
+        const bool isGptOssRope = opName == "gpt_oss_apply_yarn_rope_packed";
         const bool isDeepstackAdd = opName == "qwen3_vl_deepstack_add";
         const bool isPagedKVBinding =
             opName == "paged_kv_bind_key_pages" ||
@@ -5180,7 +5184,7 @@ namespace Garnet {
         if (!isElementwise && !isSequenceConcat && !isMatrix && !isVisionPositionInterpolate &&
             !isVisionRope && !isVisionAttention && !isVisualEmbeddingMerge &&
             !isAudioEmbeddingMerge && !isAudioTokenCompact &&
-            !isTextRope && !isTextAttention && !isDeepstackAdd && !isPagedKVBinding) {
+            !isTextRope && !isTextAttention && !isGptOssRope && !isDeepstackAdd && !isPagedKVBinding) {
             loweringError = "unsupported binary operation: " + opName;
             return X::Value();
         }
@@ -5190,7 +5194,10 @@ namespace Garnet {
             return X::Value();
         }
 
-        if (isPagedKVBinding) {
+        if (isGptOssRope) {
+            lastOutput = LowerGptOss(opName, left, right, kwParams);
+        }
+        else if (isPagedKVBinding) {
             if (opName == "paged_kv_bind_key_pages") pendingKVKeyPages = right;
             else if (opName == "paged_kv_bind_value_pages") pendingKVValuePages = right;
             else if (opName == "paged_kv_bind_page_table") pendingKVPageTable = right;
@@ -5619,7 +5626,10 @@ namespace Garnet {
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
 
-        if (opName == "neg" || opName == "exp") {
+        if (opName.rfind("gpt_oss_", 0) == 0) {
+            lastOutput = LowerGptOss(opName, source, nullptr, kwParams);
+        }
+        else if (opName == "neg" || opName == "exp") {
             auto* layer = network->addUnary(*source,
                 opName == "neg" ? UnaryOperation::kNEG : UnaryOperation::kEXP);
             lastOutput = layer ? layer->getOutput(0) : nullptr;
@@ -6674,7 +6684,8 @@ namespace Garnet {
                 : GetOrCreateTRTWeight(weightNameItem->second.ToString());
             ITensor* projectionInput = source;
             const DataType sourceType = source->getType();
-            const DataType projectionType = opName == "lm_head"
+            const DataType projectionType = opName == "lm_head" ||
+                keywordText("accumulation_dtype") == "float32"
                 ? DataType::kFLOAT
                 : (weight ? weight->getType() : sourceType);
             if (weight && weight->getType() != projectionType) {

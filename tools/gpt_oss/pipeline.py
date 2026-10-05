@@ -1,0 +1,132 @@
+"""GPT-OSS adapter for Garnet's generic GPU pipeline.
+
+The original packed checkpoint stays on disk. Each engine loads only weights
+referenced by its layer range, and each stage allocates only its local KV cache.
+"""
+import json
+import math
+import shutil
+import struct
+import sys
+from pathlib import Path
+
+repo = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(repo / 'python'))
+from garnet_pipeline import Pipeline, plan_layers
+
+
+def weight_sizes(weights):
+    sizes = {}
+    for path in sorted(Path(weights).rglob('*.safetensors')):
+        with path.open('rb') as handle:
+            header_length = struct.unpack('<Q', handle.read(8))[0]
+            if header_length > 256 * 1024 * 1024:
+                raise ValueError('safetensors header exceeds 256 MB')
+            header = json.loads(handle.read(header_length))
+        for name, item in header.items():
+            if name == '__metadata__':
+                continue
+            if name in sizes:
+                raise ValueError('duplicate checkpoint tensor: ' + name)
+            offsets = item['data_offsets']
+            size = offsets[1] - offsets[0]
+            if size < 0:
+                raise ValueError('invalid checkpoint offsets')
+            # Packed expert weights remain packed; dense BF16 constants may be
+            # lowered in FP32 by the correctness backend.
+            sizes[name] = size * (2 if item['dtype'] == 'BF16' else 1)
+    if not sizes:
+        raise ValueError('no original-layout safetensors weights found')
+    return sizes
+
+
+def make_plan(weights, devices, batch=1, capacity=4096, tokens=1,
+              reserve_bytes=1 << 30, memory_fraction=.9):
+    config = json.loads((Path(weights) / 'config.json').read_text())
+    if batch <= 0 or capacity <= 0 or tokens <= 0 or tokens > capacity:
+        raise ValueError('invalid batch/context/token capacity')
+    sizes = weight_sizes(weights)
+    layers = config['num_hidden_layers']
+    costs = [0] * layers
+    first, last = 0, 0
+    for name, size in sizes.items():
+        if name.startswith('block.'):
+            index = int(name.split('.')[1])
+            costs[index] += size
+        elif name == 'embedding.weight':
+            first += size
+        elif name in ('norm.scale', 'unembedding.weight'):
+            last += size
+        else:
+            raise ValueError('unexpected original-layout tensor: ' + name)
+    if not first or not last or any(n == 0 for n in costs):
+        raise ValueError('checkpoint has missing layer/embedding/output weights')
+    pages = batch * math.ceil(capacity / 16)
+    kv_per_layer = 2 * pages * 16 * config['num_key_value_heads'] * config['head_dim'] * 2
+    costs = [math.ceil(n * 1.15) + kv_per_layer for n in costs]
+    # Conservative stage activation/logit allowance plus explicit runtime reserve.
+    buffers = batch * tokens * (config['hidden_size'] * 64 + config['vocab_size'] * 4 +
+                               config['intermediate_size'] * config['experts_per_token'] * 4)
+    plan = plan_layers(devices, costs, math.ceil(first * 1.15), math.ceil(last * 1.15),
+                       reserve_bytes + buffers, memory_fraction)
+    plan['batch'] = batch
+    plan['capacity'] = capacity
+    plan['max_tokens'] = tokens
+    plan['kv_pages'] = pages
+    plan['config'] = config
+    return plan
+
+
+def build_pipeline(weights, cache, plan, tokens, prefill, kv=None):
+    import garnet as G
+    if tokens < 1 or tokens > plan['max_tokens']:
+        raise ValueError('token shape exceeds placement profile')
+    config, batch = plan['config'], plan['batch']
+    cache = Path(cache) / plan['cache_key']
+    cache.mkdir(parents=True, exist_ok=True)
+    (cache / 'placement.json').write_text(json.dumps(plan, indent=2))
+    root = repo / 'xModel/gpt_oss/120b'
+    stages = []
+    previous = G.cuda_set_device(plan['stages'][0]['device_id'])
+    try:
+        for rank, placement in enumerate(plan['stages']):
+            G.cuda_set_device(placement['device_id'])
+            start, end = placement['start'], placement['end']
+            stage_cache = cache / ('prefill' if prefill else 'decode') / str(tokens) / str(rank)
+            model_root = stage_cache / 'xmodel'
+            model_root.mkdir(parents=True, exist_ok=True)
+            for name in ('__init__.py', 'tensor_compat.py', 'gpt_oss_llm.py', 'model.json'):
+                shutil.copy2(root / name, model_root / name)
+            source = (root / 'stage.py').read_text()
+            source = source.replace('STAGE_START = 0', 'STAGE_START = ' + str(start))
+            source = source.replace('STAGE_END = 1', 'STAGE_END = ' + str(end))
+            source = source.replace('STAGE_PREFILL = 1', 'STAGE_PREFILL = ' + str(int(prefill)))
+            (model_root / 'stage.py').write_text(source)
+            shape = [end - start, plan['kv_pages'], 16, config['num_key_value_heads'], config['head_dim']]
+            if kv is None:
+                keys = G.tensor_zeros(shape, 'bfloat16')
+                values = G.tensor_zeros(shape, 'bfloat16')
+            else:
+                keys, values = kv[rank]
+            first_shape = [batch, tokens] if start == 0 else [batch, tokens, config['hidden_size']]
+            model = G.load_model(str(model_root / 'stage.py'), runtime_mode='compiled_xmodel',
+                backend='tensorrt', precision='bf16', entry_function='GptOssStage', weights=str(weights),
+                cache_dir=str(stage_cache / 'engine'),
+                input_shapes=[first_shape, [batch, tokens], shape, shape,
+                              [batch, math.ceil(plan['capacity'] / 16)], [batch], [batch], [batch]],
+                input_dtypes=['int64' if start == 0 else 'float32', 'int64', 'bfloat16', 'bfloat16',
+                              'int32', 'int32', 'int32', 'int32'],
+                compile={'builder_workspace_mb': 256, 'builder_optimization_level': 1,
+                         'partition': {'enable_preferred_boundaries': False,
+                                       'max_atomic_regions_per_partition': 0}})
+            status = model.runtime_status()
+            if not status['ready']:
+                raise RuntimeError(str(status))
+            stages.append(dict(placement, model=model, keys=keys, values=values))
+    except Exception:
+        if stages:
+            Pipeline(stages).release()
+        raise
+    finally:
+        G.cuda_set_device(previous)
+    return Pipeline(stages)

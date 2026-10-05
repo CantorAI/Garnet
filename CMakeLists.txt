@@ -125,6 +125,12 @@ FILE(GLOB_RECURSE Cuda_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/cuda/*.cu")
 list(FILTER Cuda_SRC EXCLUDE REGEX ".*/test\\.cu$")
 FILE(GLOB_RECURSE Backend_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/*.cpp")
 
+# Family-specific kernels/plugins are optional load-on-demand libraries.
+option(GARNET_BUILD_GPT_OSS_OPS "Build the GPT-OSS operator extension" ON)
+if(GARNET_BUILD_GPT_OSS_OPS)
+    add_subdirectory(plugins/gpt_oss)
+endif()
+
 # Create the shared library target.
 add_library(${PROJECT_NAME} 
     SHARED
@@ -141,6 +147,24 @@ add_library(${PROJECT_NAME}
     ${Backend_SRC}
 )
 
+if(GARNET_BUILD_GPT_OSS_OPS)
+    add_dependencies(${PROJECT_NAME} garnet_gpt_oss_ops)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:garnet_gpt_oss_ops>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
+endif()
+target_include_directories(${PROJECT_NAME} PRIVATE plugins/gpt_oss/include)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${PROJECT_SOURCE_DIR}/plugins/registry.json" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/registry.json")
+if(WIN32)
+    set(GARNET_PLUGIN_REGISTRY_DESTINATION "${CMAKE_INSTALL_BINDIR}/plugins")
+else()
+    set(GARNET_PLUGIN_REGISTRY_DESTINATION "${CMAKE_INSTALL_LIBDIR}/plugins")
+endif()
+install(FILES "${PROJECT_SOURCE_DIR}/plugins/registry.json"
+    DESTINATION "${GARNET_PLUGIN_REGISTRY_DESTINATION}" COMPONENT garnet_runtime)
 target_compile_definitions(${PROJECT_NAME} PRIVATE GARNET_SERVING_EXPORTS=1)
 target_compile_definitions(${PROJECT_NAME} PRIVATE XLANG3_USE_SHARED)
 target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
