@@ -48,10 +48,15 @@ prefill_seconds = time.perf_counter() - started
 kv = [(s['keys'], s['values']) for s in model.stages]
 model.release()
 decode_seconds = 0.
+decode_wall_seconds = 0.
+decode_prepare_seconds = 0.
 if limit > 1 and generated[-1] not in stops:
+    started = time.perf_counter()
     model = build_pipeline(weights, cache, plan, 1, False, kv)
     token = tensor([generated[-1]], 'int64', [1, 1])
     position = tensor([len(ids)], 'int64', [1, 1])
+    decode_prepare_seconds = time.perf_counter() - started
+    decode_started = time.perf_counter()
     for offset in range(1, limit):
         index = len(ids) + offset - 1
         G.tensor_update_from_host(token, [generated[-1]])
@@ -64,8 +69,10 @@ if limit > 1 and generated[-1] not in stops:
         generated.append(int(result['token_id']))
         if generated[-1] in stops:
             break
+    decode_wall_seconds = time.perf_counter() - decode_started
     model.release()
 Path(sys.argv[4]).write_text(json.dumps({'token_ids': generated, 'placement': plan,
     'load_seconds': load_seconds, 'prefill_seconds': prefill_seconds, 'decode_seconds': decode_seconds,
+    'decode_prepare_seconds': decode_prepare_seconds, 'decode_wall_seconds': decode_wall_seconds,
     'validation': 'experimental sequential GPU pipeline; full pretrained validation pending'}, indent=2))
 print('Generated', len(generated), 'tokens across', len(devices), 'GPUs', flush=True)
