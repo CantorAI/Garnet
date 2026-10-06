@@ -129,5 +129,5 @@ def forward_stage(x, position_ids, key_pages, value_pages, page_table,
                        tp_mode='vocab', tp_rank=tp_rank)
             x = tp_all_gather_logits(x, tp_rank, config)
         else:
-            x = linear(norm(x, "norm.scale"), "unembedding.weight", op="lm_head")
+            x = linear(norm(x, "norm.scale", config['hidden_size']), "unembedding.weight", op="lm_head")
     return x
