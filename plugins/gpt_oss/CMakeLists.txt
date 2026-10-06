@@ -18,11 +18,11 @@ target_include_directories(garnet_gpt_oss_ops PRIVATE include "${GARNET_TENSORRT
 target_compile_definitions(garnet_gpt_oss_ops PRIVATE NOMINMAX)
 target_compile_options(garnet_gpt_oss_ops PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 if(WIN32)
-    target_link_libraries(garnet_gpt_oss_ops PRIVATE CUDA::cudart CUDA::cublas "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
+    target_link_libraries(garnet_gpt_oss_ops PRIVATE CUDA::cudart "${GARNET_TENSORRT_ROOT}/lib/nvinfer_10.lib")
 else()
     find_library(GARNET_GPT_OSS_TRT_LIBRARY NAMES nvinfer
         PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED NO_DEFAULT_PATH)
-    target_link_libraries(garnet_gpt_oss_ops PRIVATE CUDA::cudart CUDA::cublas ${GARNET_GPT_OSS_TRT_LIBRARY} ${CMAKE_DL_LIBS})
+    target_link_libraries(garnet_gpt_oss_ops PRIVATE CUDA::cudart ${GARNET_GPT_OSS_TRT_LIBRARY} ${CMAKE_DL_LIBS})
     set_target_properties(garnet_gpt_oss_ops PROPERTIES BUILD_RPATH "$ORIGIN" INSTALL_RPATH "$ORIGIN")
 endif()
 option(GARNET_GPT_OSS_ENABLE_NCCL "Enable GPT-OSS two-GPU tensor-parallel collectives" OFF)
@@ -49,21 +49,21 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
         ../../test2026/gpt_oss/kernel_parity.cpp cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
     target_include_directories(garnet_gpt_oss_kernel_parity PRIVATE include
         "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
-    target_link_libraries(garnet_gpt_oss_kernel_parity PRIVATE CUDA::cudart CUDA::cublas)
+    target_link_libraries(garnet_gpt_oss_kernel_parity PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_kernel_parity PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
     target_compile_options(garnet_gpt_oss_kernel_parity PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
     add_test(NAME garnet_gpt_oss_kernel_parity COMMAND garnet_gpt_oss_kernel_parity)
     add_executable(garnet_gpt_oss_kernel_benchmark
         ../../test2026/gpt_oss/kernel_benchmark.cu cuda/gpt_oss_kernels.cu)
     target_include_directories(garnet_gpt_oss_kernel_benchmark PRIVATE include)
-    target_link_libraries(garnet_gpt_oss_kernel_benchmark PRIVATE CUDA::cudart CUDA::cublas)
+    target_link_libraries(garnet_gpt_oss_kernel_benchmark PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_kernel_benchmark PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
     add_executable(garnet_gpt_oss_marlin_decode_benchmark
         ../../test2026/gpt_oss/marlin_decode_benchmark.cu
         cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
     target_include_directories(garnet_gpt_oss_marlin_decode_benchmark PRIVATE include
         "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
-    target_link_libraries(garnet_gpt_oss_marlin_decode_benchmark PRIVATE CUDA::cudart CUDA::cublas)
+    target_link_libraries(garnet_gpt_oss_marlin_decode_benchmark PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_marlin_decode_benchmark PRIVATE NOMINMAX)
     target_compile_options(garnet_gpt_oss_marlin_decode_benchmark PRIVATE
         $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
