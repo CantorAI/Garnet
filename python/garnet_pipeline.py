@@ -106,7 +106,6 @@ class TensorParallel:
             raise ValueError('TensorParallel requires exactly two rank stages')
         self.stages = stages
         self.executor = ThreadPoolExecutor(max_workers=2)
-        self._static_control_copies = {}
 
     def forward(self, activation, controls, sample=False):
         import garnet as G
@@ -120,20 +119,7 @@ class TensorParallel:
                 if trace:
                     print('tp-rank', stage['rank'], 'copying inputs', flush=True)
                 local_activation = G.tensor_to_device(activation, stage['device_id'])
-                local = []
-                for index, tensor in enumerate(controls):
-                    # Page tables and active masks are request-stable. Keep one
-                    # peer copy per stage instead of synchronously recopying
-                    # them on every autoregressive decode step.
-                    if index in (1, 4):
-                        key = (stage['device_id'], index)
-                        cached = self._static_control_copies.get(key)
-                        if cached is None or cached[0] is not tensor:
-                            cached = (tensor, G.tensor_to_device(tensor, stage['device_id']))
-                            self._static_control_copies[key] = cached
-                        local.append(cached[1])
-                    else:
-                        local.append(G.tensor_to_device(tensor, stage['device_id']))
+                local = [G.tensor_to_device(t, stage['device_id']) for t in controls]
                 request = {'inputs': [local_activation, local[0], stage['keys'],
                     stage['values'], local[1], local[2], local[3], local[4]]}
                 if sample and stage['rank'] == 0:
@@ -153,13 +139,7 @@ class TensorParallel:
                     print('tp-rank', stage['rank'], 'returned model forward', flush=True)
                 if result['status'] != 'ok':
                     raise RuntimeError(str(result))
-                # Greedy sampling reads the selected token back to the host
-                # only after synchronizing its stream. That fence also follows
-                # the final TP collective, so another device-wide stream fence
-                # is redundant for sampled decode. Keep the explicit fence for
-                # callers that request logits/activations without sampling.
-                if not sample:
-                    G.cuda_synchronize()
+                G.cuda_synchronize()
                 if trace:
                     print('tp-rank', stage['rank'], 'synchronized', flush=True)
                 return result
