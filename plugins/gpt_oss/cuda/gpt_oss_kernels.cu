@@ -158,14 +158,15 @@ __global__ void attention(const float* qkv, const __nv_bfloat16* keys,
 // ranges almost completely overlap, so stage sixteen paged entries once in
 // shared memory and reuse them across the query warps. Keep the original
 // online softmax order (including the learned sink) for each query.
-template<bool FastExp, int QueryTile>
+template<bool FastExp, int QueryTile, int KeyTile = 16>
 __global__ void tiledPrefillAttention64(const float* qkv,
     const __nv_bfloat16* keys, const __nv_bfloat16* values,
     const int* table, const int* starts, const int* active,
     const float* sinks, float* output, int tokens, int logicalPages,
     int physicalPages, GptOssOptions o) {
     static_assert(QueryTile == 8 || QueryTile == 16);
-    constexpr int KeyTile = 16, Dim = 64;
+    static_assert(KeyTile == 16 || KeyTile == 32);
+    constexpr int Dim = 64;
     __shared__ __nv_bfloat16 tileK[KeyTile][Dim], tileV[KeyTile][Dim];
     __shared__ int tileValid[KeyTile];
     __shared__ size_t tileOffset[KeyTile];
@@ -788,8 +789,24 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
             const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_QUERY_TILE");
             return value && std::strcmp(value, "16") == 0 ? 16 : 8;
         }();
+        static const bool keyTile32 = [] {
+            const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_KEY_TILE");
+            return value && std::strcmp(value, "32") == 0;
+        }();
         const int blocks = batch * ((tokens + queryTile - 1) / queryTile) * o.qHeads;
-        if (fastExp && queryTile == 16)
+        if (keyTile32 && fastExp && queryTile == 16)
+            tiledPrefillAttention64<true, 16, 32><<<blocks, 512, 0, stream>>>(
+                (const float*)in[0], (const __nv_bfloat16*)in[1],
+                (const __nv_bfloat16*)in[2], (const int*)in[3],
+                (const int*)in[5], (const int*)in[6], (const float*)in[7],
+                y, tokens, logicalPages, physicalPages, o);
+        else if (keyTile32 && queryTile == 16)
+            tiledPrefillAttention64<false, 16, 32><<<blocks, 512, 0, stream>>>(
+                (const float*)in[0], (const __nv_bfloat16*)in[1],
+                (const __nv_bfloat16*)in[2], (const int*)in[3],
+                (const int*)in[5], (const int*)in[6], (const float*)in[7],
+                y, tokens, logicalPages, physicalPages, o);
+        else if (fastExp && queryTile == 16)
             tiledPrefillAttention64<true, 16><<<blocks, 512, 0, stream>>>(
                 (const float*)in[0], (const __nv_bfloat16*)in[1],
                 (const __nv_bfloat16*)in[2], (const int*)in[3],
