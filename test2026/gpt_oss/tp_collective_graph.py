@@ -1,7 +1,6 @@
 """End-to-end TensorRT-plugin test for paired rank execution and NCCL reduction."""
 import concurrent.futures
 import shutil
-import shutil
 import sys
 from pathlib import Path
 import garnet as G
@@ -39,9 +38,9 @@ try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
             outputs = list(pool.map(forward, range(2)))
         for rank, output in enumerate(outputs):
-            assert output == [[[0.75] * 8]], (rank, output)
+            assert output == [0.75] * 8, (rank, output)
         print('rank-paired graph all-reduce passed', iteration, flush=True)
 finally:
     for model in models:
-        model.release()
+        model.release_runtime()
 print('TensorRT GPT-OSS TP2 collective graph parity passed.', flush=True)
