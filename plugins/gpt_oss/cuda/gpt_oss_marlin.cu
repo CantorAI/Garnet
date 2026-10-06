@@ -121,7 +121,6 @@ __global__ void convertInput(const float* x,nv_bfloat16* a,int tokens,int width,
 __global__ void metadata(const int* selected,int* sorted,int* experts,int* padded,
     int slots,int expertCount,int rank,int block) {
     __shared__ int counts[256],starts[256];int e=threadIdx.x;
-    for(int i=e;i<slots+expertCount*block;i+=256)sorted[i]=slots;
     int localCount=rank<0?expertCount:(expertCount+1-rank)/2;
     int globalExpert=rank<0?e:2*e+rank;
     int count=0;if(e<localCount)for(int s=0;s<slots;++s)count+=selected[s]==globalExpert;
@@ -130,6 +129,8 @@ __global__ void metadata(const int* selected,int* sorted,int* experts,int* padde
     __syncthreads();
     if(e<localCount && count) {
         int row=0;for(int s=0;s<slots;++s)if(selected[s]==globalExpert)sorted[starts[e]+row++]=s;
+        const int paddedCount=(count+block-1)/block*block;
+        for(int i=count;i<paddedCount;++i)sorted[starts[e]+i]=slots;
         for(int i=0;i<count;i+=block)experts[(starts[e]+i)/block]=e;
     }
 }
