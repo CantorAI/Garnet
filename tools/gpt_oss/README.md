@@ -36,6 +36,10 @@ The GPT-OSS plugin uses cooperative warp reductions for decode expert dot
 products, router logits and paged attention. Prefill with at least 16 rows
 buckets routed slots by expert and runs grouped BF16 Tensor Core GEMMs, unpacking
 MXFP4 weight tiles into shared memory. The full expert weights remain packed.
+Decode attention defaults to eight warps per query head. Set
+`GARNET_GPT_OSS_DECODE_WARPS` to `1`, `2`, `4`, or `8` before starting the
+runtime to select a specialization for hardware/context tuning; unsupported
+values use the eight-warp default.
 These paths require SM 80 or newer and the xModel's BF16-rounded activations;
 FP32 accumulation, intermediate BF16 rounding, learned attention sinks,
 sliding windows and router-order combination are preserved. Plugin version 2
