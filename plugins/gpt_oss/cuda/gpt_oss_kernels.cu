@@ -122,20 +122,19 @@ __global__ void attention(const float* qkv, const __nv_bfloat16* keys,
         output[size_t(row) * o.qHeads * o.headDim + head * o.headDim + d] = bf(accum[d / 32] / sum);
 }
 // Decode has too few query rows to hide a serial context walk. Split each
-// head's paged KV range across Warps, then merge stable softmax states.
+// head's paged KV range across eight warps, then merge stable softmax states.
 // Include the learned sink exactly once in the final merge.
-template<int Warps>
 __global__ void decodeAttention(const float* qkv, const __nv_bfloat16* keys,
     const __nv_bfloat16* values, const int* table, const int* lengths,
     const int* starts, const int* active, const float* sinks, float* output,
     int batch, int logicalPages, int physicalPages, GptOssOptions o) {
-    static_assert(Warps > 0 && Warps <= 8);
+    constexpr int warps = 8;
     const int lane = threadIdx.x & 31, warp = threadIdx.x / 32;
     const int head = blockIdx.x % o.qHeads, b = blockIdx.x / o.qHeads;
     const int packed = (o.qHeads + 2 * o.kvHeads) * o.headDim;
     const int end = lengths[b], begin = o.window ? max(0, end - o.window) : 0;
     const bool valid = active[b] && end > 0 && end <= logicalPages * o.pageSize;
-    const int chunk = (max(0, end - begin) + Warps - 1) / Warps;
+    const int chunk = (max(0, end - begin) + warps - 1) / warps;
     float accum[4] = {}, maximum = -FLT_MAX, sum = 0;
     if (valid) for (int p = begin + warp * chunk; p < min(end, begin + (warp + 1) * chunk); ++p) {
         const size_t offset = cacheOffset(table, logicalPages, physicalPages, b, p,
@@ -151,22 +150,22 @@ __global__ void decodeAttention(const float* qkv, const __nv_bfloat16* keys,
             accum[d / 32] = accum[d / 32] * old + weight * __bfloat162float(values[offset + d]);
         maximum = next;
     }
-    __shared__ float maxima[Warps], sums[Warps], partial[Warps][128];
+    __shared__ float maxima[warps], sums[warps], partial[warps][128];
     if (!lane) { maxima[warp] = maximum; sums[warp] = sum; }
     for (int d = lane; d < o.headDim; d += 32) partial[warp][d] = accum[d / 32];
     __syncthreads();
     if (warp) return;
     maximum = sinks[head];
-    for (int w = 0; w < Warps; ++w) if (sums[w] > 0) maximum = fmaxf(maximum, maxima[w]);
+    for (int w = 0; w < warps; ++w) if (sums[w] > 0) maximum = fmaxf(maximum, maxima[w]);
     sum = expf(sinks[head] - maximum);
-    float weights[Warps];
-    for (int w = 0; w < Warps; ++w) {
+    float weights[warps];
+    for (int w = 0; w < warps; ++w) {
         weights[w] = sums[w] > 0 ? expf(maxima[w] - maximum) : 0;
         sum += sums[w] * weights[w];
     }
     for (int d = lane; d < o.headDim; d += 32) {
         float value = 0;
-        for (int w = 0; w < Warps; ++w) value += partial[w][d] * weights[w];
+        for (int w = 0; w < warps; ++w) value += partial[w][d] * weights[w];
         output[size_t(b) * o.qHeads * o.headDim + head * o.headDim + d] = bf(value / sum);
     }
 }
@@ -398,7 +397,7 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int t
         (const int*)in[5], (const int*)in[6], batch, tokens, logicalPages, physicalPages, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
     if (tokens == 1 && !o.prefill) {
-        decodeAttention<4><<<batch * o.qHeads, 128, 0, stream>>>(
+        decodeAttention<<<batch * o.qHeads, 256, 0, stream>>>(
             (const float*)in[0], (const __nv_bfloat16*)in[1], (const __nv_bfloat16*)in[2],
             (const int*)in[3], (const int*)in[4], (const int*)in[5], (const int*)in[6],
             (const float*)in[7], y, batch, logicalPages, physicalPages, o);
