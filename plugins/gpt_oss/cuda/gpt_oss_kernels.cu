@@ -281,14 +281,26 @@ __global__ void decodeAttentionMerge(const float* scratch, const float* sinks,
         output[size_t(blockIdx.x) * o.headDim + d] = bf(value / sum);
     }
 }
-template<int Threads>
+template<int Threads, bool Vector4 = false>
 __global__ void routeScores(const float* x, const float* weight, const float* bias,
     float* logits, int tokens, GptOssOptions o) {
     const int token = blockIdx.x / o.experts, expert = blockIdx.x % o.experts;
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
     float value = 0;
-    for (int d = threadIdx.x; d < o.hidden; d += blockDim.x)
-        value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
+    if constexpr (Vector4) {
+        const auto* input = reinterpret_cast<const float4*>(x + size_t(token) * o.hidden);
+        const auto* row = reinterpret_cast<const float4*>(weight + size_t(expert) * o.hidden);
+        for (int d = threadIdx.x; d < o.hidden / 4; d += blockDim.x) {
+            const float4 a = input[d], b = row[d];
+            value = fmaf(a.x, b.x, value);
+            value = fmaf(a.y, b.y, value);
+            value = fmaf(a.z, b.z, value);
+            value = fmaf(a.w, b.w, value);
+        }
+    } else {
+        for (int d = threadIdx.x; d < o.hidden; d += blockDim.x)
+            value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
+    }
     value = warpSum(value);
     __shared__ float partial[Threads / 32];
     if (!lane) partial[warp] = value;
@@ -706,7 +718,14 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
         const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_THREADS");
         return value && std::atoi(value) == 128 ? 128 : 256;
     }();
-    if (routerThreads == 256)
+    static const bool vector4 = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_VECTOR4");
+        return value && value[0] == '1' && value[1] == '\0';
+    }();
+    if (routerThreads == 256 && vector4 && o.hidden % 4 == 0 && tokens <= 8)
+        routeScores<256, true><<<tokens * o.experts, 256, 0, stream>>>(
+            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits, tokens, o);
+    else if (routerThreads == 256)
         routeScores<256><<<tokens * o.experts, 256, 0, stream>>>(
             (const float*)in[0], (const float*)in[1], (const float*)in[2], logits, tokens, o);
     else
