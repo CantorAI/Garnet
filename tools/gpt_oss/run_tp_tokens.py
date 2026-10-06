@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import time
+import ctypes
 from pathlib import Path
 import garnet as G
 from pipeline import make_tensor_parallel_plan, build_tensor_parallel
@@ -73,7 +74,14 @@ if limit > 1 and generated[-1] not in stops:
                 G.cuda_set_device(previous)
     decode_prepare_seconds = time.perf_counter() - started
     decode_started = time.perf_counter()
+    profile_steps = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_STEPS', '0'))
+    profiler = ctypes.CDLL('libcudart.so') if profile_steps else None
+    profiling = False
     for offset in range(1, limit):
+        if profiler and offset == 10:
+            if profiler.cudaProfilerStart() != 0:
+                raise RuntimeError('cudaProfilerStart failed')
+            profiling = True
         wall_step_started = time.perf_counter()
         index = len(ids) + offset - 1
         if rank_local:
@@ -110,8 +118,14 @@ if limit > 1 and generated[-1] not in stops:
         decode_wall_step_seconds.append(time.perf_counter() - wall_step_started)
         decode_seconds += step_seconds
         generated.append(int(result['token_id']))
+        if profiling and offset == 9 + profile_steps:
+            if profiler.cudaProfilerStop() != 0:
+                raise RuntimeError('cudaProfilerStop failed')
+            profiling = False
         if generated[-1] in stops:
             break
+    if profiling and profiler.cudaProfilerStop() != 0:
+        raise RuntimeError('cudaProfilerStop failed')
     decode_wall_seconds = time.perf_counter() - decode_started
     print('TP2 decode complete', decode_wall_seconds, flush=True)
     model.release()
