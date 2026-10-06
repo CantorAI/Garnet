@@ -91,7 +91,7 @@ cudaError_t GptOssTpAllGather(const float* input, float* output, float* scratch,
     if (result != ncclSuccess) return NcclStatus(result);
     const size_t localVocabBytes = size_t(localVocab) * sizeof(float);
     const size_t fullVocabBytes = localVocabBytes * 2;
-    auto status = cudaMemcpy2DAsync(output, fullVocabBytes, scratch,
+    status = cudaMemcpy2DAsync(output, fullVocabBytes, scratch,
         localVocabBytes, localVocabBytes, size_t(rows), cudaMemcpyDeviceToDevice, stream);
     if (status != cudaSuccess) return status;
     return cudaMemcpy2DAsync(output + localVocab, fullVocabBytes,
