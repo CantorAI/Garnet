@@ -278,7 +278,7 @@ __global__ void down(const float* hidden, const unsigned char* blocks, const uns
         value = warpSum(value);
         if (!lane) result += bf(bf(value) + bias[row]) * probabilities[slot];
     }
-    if (!lane) y[index] = bf(result);
+    if (!lane) y[index] = o.tpRank < 0 ? bf(result) : result;
 }
 
 __global__ void bucketExperts(const int* selected, int* counts, int* slots,
