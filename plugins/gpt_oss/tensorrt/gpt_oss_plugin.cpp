@@ -122,6 +122,10 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
 }
 size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
     const PluginTensorDesc*, int) const noexcept {
+    if (m_options.kind == 1 && !m_options.prefill && in &&
+        in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 && in[0].dims.d[1] == 1)
+        return size_t(in[0].dims.d[0]) * m_options.qHeads * 16 *
+            (2 + 128) * sizeof(float);
     if (m_options.kind == 4) {
         if (!in || in[0].dims.nbDims != 3 || in[0].dims.d[0] <= 0 ||
             in[0].dims.d[1] <= 0 || in[0].dims.d[2] <= 0) return 0;
@@ -140,7 +144,7 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
     const int n = rows(d[0].dims); cudaError_t status;
     if (m_options.kind == 0) status = RunGptOssRope((const float*)in[0], (const std::int64_t*)in[1],
         (float*)out[0], n, m_options, stream);
-    else if (m_options.kind == 1) status = RunGptOssAttention(in, (float*)out[0],
+    else if (m_options.kind == 1) status = RunGptOssAttention(in, (float*)out[0], workspace,
         d[0].dims.d[0], d[0].dims.d[1], d[3].dims.d[1], d[1].dims.d[1], m_options, stream);
     else if (m_options.kind == 3) {
         const size_t elements = size_t(d[0].dims.d[0]) * d[0].dims.d[1] * d[0].dims.d[2];

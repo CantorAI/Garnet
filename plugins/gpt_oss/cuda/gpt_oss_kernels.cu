@@ -199,6 +199,87 @@ __global__ void decodeAttention(const float* qkv, const __nv_bfloat16* keys,
         output[size_t(b) * o.qHeads * o.headDim + head * o.headDim + d] = bf(value / sum);
     }
 }
+// A split owns four warps and writes a stable softmax state. Splitting across
+// CTAs exposes more work when a single decode request has few query heads.
+template<int Splits>
+__global__ void decodeAttentionPartial(const float* qkv, const __nv_bfloat16* keys,
+    const __nv_bfloat16* values, const int* table, const int* lengths,
+    const int* active, float* scratch, int logicalPages, int physicalPages,
+    GptOssOptions o) {
+    constexpr int Warps = 4, Stride = 2 + 128;
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
+    const int split = blockIdx.x % Splits;
+    const int head = (blockIdx.x / Splits) % o.qHeads;
+    const int b = blockIdx.x / (Splits * o.qHeads);
+    const int packed = (o.qHeads + 2 * o.kvHeads) * o.headDim;
+    const int end = lengths[b], begin = o.window ? max(0, end - o.window) : 0;
+    const bool valid = active[b] && end > 0 && end <= logicalPages * o.pageSize;
+    const int chunk = (max(0, end - begin) + Splits * Warps - 1) / (Splits * Warps);
+    const int first = begin + (split * Warps + warp) * chunk;
+    float accum[4] = {}, maximum = -FLT_MAX, sum = 0;
+    if (valid) for (int p = first; p < min(end, first + chunk); ++p) {
+        const size_t offset = cacheOffset(table, logicalPages, physicalPages, b, p,
+            head / (o.qHeads / o.kvHeads), 0, o);
+        if (offset == SIZE_MAX) continue;
+        float score = 0;
+        for (int d = lane; d < o.headDim; d += 32)
+            score += qkv[size_t(b) * packed + head * o.headDim + d] *
+                __bfloat162float(keys[offset + d]);
+        score = __shfl_sync(0xffffffff, warpSum(score), 0) * rsqrtf(float(o.headDim));
+        const float next = fmaxf(maximum, score);
+        const float old = expf(maximum - next), weight = expf(score - next);
+        sum = sum * old + weight;
+        for (int d = lane; d < o.headDim; d += 32)
+            accum[d / 32] = accum[d / 32] * old + weight *
+                __bfloat162float(values[offset + d]);
+        maximum = next;
+    }
+    __shared__ float maxima[Warps], sums[Warps], partial[Warps][128];
+    if (!lane) { maxima[warp] = maximum; sums[warp] = sum; }
+    for (int d = lane; d < o.headDim; d += 32) partial[warp][d] = accum[d / 32];
+    __syncthreads();
+    if (warp) return;
+    maximum = -FLT_MAX;
+    for (int w = 0; w < Warps; ++w)
+        if (sums[w] > 0) maximum = fmaxf(maximum, maxima[w]);
+    float weights[Warps];
+    sum = 0;
+    for (int w = 0; w < Warps; ++w) {
+        weights[w] = sums[w] > 0 ? expf(maxima[w] - maximum) : 0;
+        sum += sums[w] * weights[w];
+    }
+    float* state = scratch + size_t(blockIdx.x) * Stride;
+    if (!lane) { state[0] = maximum; state[1] = sum; }
+    for (int d = lane; d < o.headDim; d += 32) {
+        float value = 0;
+        for (int w = 0; w < Warps; ++w) value += partial[w][d] * weights[w];
+        state[2 + d] = value;
+    }
+}
+template<int Splits>
+__global__ void decodeAttentionMerge(const float* scratch, const float* sinks,
+    float* output, GptOssOptions o) {
+    constexpr int Stride = 2 + 128;
+    const int lane = threadIdx.x, head = blockIdx.x % o.qHeads;
+    const float* states = scratch + size_t(blockIdx.x) * Splits * Stride;
+    float maximum = sinks[head];
+    for (int s = 0; s < Splits; ++s)
+        if (states[s * Stride + 1] > 0)
+            maximum = fmaxf(maximum, states[s * Stride]);
+    float sum = expf(sinks[head] - maximum);
+    float weights[Splits];
+    for (int s = 0; s < Splits; ++s) {
+        const float partialSum = states[s * Stride + 1];
+        weights[s] = partialSum > 0 ? expf(states[s * Stride] - maximum) : 0;
+        sum += partialSum * weights[s];
+    }
+    for (int d = lane; d < o.headDim; d += 32) {
+        float value = 0;
+        for (int s = 0; s < Splits; ++s)
+            value += states[s * Stride + 2 + d] * weights[s];
+        output[size_t(blockIdx.x) * o.headDim + d] = bf(value / sum);
+    }
+}
 __global__ void routeScores(const float* x, const float* weight, const float* bias,
     float* logits, int tokens, GptOssOptions o) {
     const int token = blockIdx.x / o.experts, expert = blockIdx.x % o.experts;
@@ -444,7 +525,8 @@ cudaError_t RunGptOssRmsNorm(const float* x, const float* weight, float* y,
     }
     return cudaGetLastError();
 }
-cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int tokens,
+cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
+    int batch, int tokens,
     int logicalPages, int physicalPages, const GptOssOptions& o, cudaStream_t stream) {
     const size_t n = size_t(batch) * tokens * o.kvHeads * o.headDim;
     writeKV<<<(n + 255) / 256, 256, 0, stream>>>(static_cast<const float*>(in[0]),
@@ -452,6 +534,13 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int t
         (const int*)in[5], (const int*)in[6], batch, tokens, logicalPages, physicalPages, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
     if (tokens == 1 && !o.prefill) {
+        static const int splits = [] {
+            const char* value = std::getenv("GARNET_GPT_OSS_DECODE_SPLITS");
+            if (!value) return 0;
+            const int requested = std::atoi(value);
+            return requested == 8 || requested == 16 ? requested : 0;
+        }();
+        if (splits && !workspace) return cudaErrorInvalidValue;
         static const int warps = [] {
             const char* value = std::getenv("GARNET_GPT_OSS_DECODE_WARPS");
             if (value) {
@@ -470,6 +559,24 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int t
         const auto* starts = (const int*)in[5];
         const auto* active = (const int*)in[6];
         const auto* sinks = (const float*)in[7];
+        if (splits == 8) {
+            decodeAttentionPartial<8><<<batch * o.qHeads * 8, 128, 0, stream>>>(
+                qkv, keys, values, table, lengths, active, (float*)workspace,
+                logicalPages, physicalPages, o);
+            status = cudaGetLastError(); if (status != cudaSuccess) return status;
+            decodeAttentionMerge<8><<<batch * o.qHeads, 32, 0, stream>>>(
+                (const float*)workspace, sinks, y, o);
+            return cudaGetLastError();
+        }
+        if (splits == 16) {
+            decodeAttentionPartial<16><<<batch * o.qHeads * 16, 128, 0, stream>>>(
+                qkv, keys, values, table, lengths, active, (float*)workspace,
+                logicalPages, physicalPages, o);
+            status = cudaGetLastError(); if (status != cudaSuccess) return status;
+            decodeAttentionMerge<16><<<batch * o.qHeads, 32, 0, stream>>>(
+                (const float*)workspace, sinks, y, o);
+            return cudaGetLastError();
+        }
         switch (warps) {
         case 1:
             decodeAttention<1><<<batch * o.qHeads, 32, 0, stream>>>(qkv, keys, values,

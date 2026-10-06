@@ -23,7 +23,7 @@ cudaError_t RunGptOssRope(const float*, const std::int64_t*, float*, int,
     const GptOssOptions&, cudaStream_t);
 cudaError_t RunGptOssRmsNorm(const float*, const float*, float*, int, int,
     float, int, cudaStream_t);
-cudaError_t RunGptOssAttention(const void* const*, float*, int, int, int, int,
+cudaError_t RunGptOssAttention(const void* const*, float*, void*, int, int, int, int,
     const GptOssOptions&, cudaStream_t);
 size_t GptOssMoeWorkspace(int tokens, const GptOssOptions&);
 cudaError_t RunGptOssMoe(const void* const*, float*, void*, int,

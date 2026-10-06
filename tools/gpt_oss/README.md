@@ -41,6 +41,10 @@ Decode attention defaults to 16 warps per query head on the tested RTX PRO 6000
 Blackwell GPUs. Set `GARNET_GPT_OSS_DECODE_WARPS` to `1`, `2`, `4`, `8`, or
 `16` before starting the runtime to select a specialization for hardware/context
 tuning; unsupported values use the 16-warp default.
+For experimental single-token decode, set `GARNET_GPT_OSS_DECODE_SPLITS` to
+`8` or `16` before starting the runtime. This splits each query head's KV
+range across separate CUDA blocks and merges their stable softmax states;
+unset the variable to use the measured 16-warp baseline.
 These paths require SM 80 or newer and the xModel's BF16-rounded activations;
 FP32 accumulation, intermediate BF16 rounding, learned attention sinks,
 sliding windows and router-order combination are preserved. Plugin version 2
