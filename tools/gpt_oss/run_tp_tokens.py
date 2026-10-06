@@ -49,6 +49,7 @@ print('TP2 prefill complete', prefill_seconds, flush=True)
 kv = [(stage['keys'], stage['values']) for stage in model.stages]
 model.release()
 decode_seconds = decode_wall_seconds = decode_prepare_seconds = 0.
+decode_step_seconds = []
 if limit > 1 and generated[-1] not in stops:
     started = time.perf_counter()
     print('Building TP2 decode engines', flush=True)
@@ -65,7 +66,9 @@ if limit > 1 and generated[-1] not in stops:
         G.tensor_update_from_host(slot, [index])
         started = time.perf_counter()
         result = model.forward(token, [position, table, length, slot, active], True)
-        decode_seconds += time.perf_counter() - started
+        step_seconds = time.perf_counter() - started
+        decode_step_seconds.append(step_seconds)
+        decode_seconds += step_seconds
         generated.append(int(result['token_id']))
         if generated[-1] in stops:
             break
@@ -73,11 +76,23 @@ if limit > 1 and generated[-1] not in stops:
     print('TP2 decode complete', decode_wall_seconds, flush=True)
     model.release()
 
+# The first decode invocation can lazily prepare rank-local Marlin weights.
+# Keep its latency visible, but exclude it from steady-state throughput just
+# as TTFT is kept separate from decode throughput in the vLLM measurements.
+warm_decode_seconds = sum(decode_step_seconds[1:])
+warm_decode_tokens = max(0, len(decode_step_seconds) - 1)
+warm_decode_tokens_per_second = (warm_decode_tokens / warm_decode_seconds
+    if warm_decode_seconds > 0 else None)
+
 Path(sys.argv[4]).write_text(json.dumps({
     'token_ids': generated, 'placement': plan, 'load_seconds': load_seconds,
     'prefill_seconds': prefill_seconds, 'decode_seconds': decode_seconds,
     'decode_prepare_seconds': decode_prepare_seconds,
     'decode_wall_seconds': decode_wall_seconds,
+    'decode_step_seconds': decode_step_seconds,
+    'warm_decode_seconds': warm_decode_seconds,
+    'warm_decode_tokens': warm_decode_tokens,
+    'warm_decode_tokens_per_second': warm_decode_tokens_per_second,
     'validation': 'experimental replicated-weight, expert-parallel TP2; full pretrained validation pending'
 }, indent=2))
 print('Generated', len(generated), 'tokens with two-rank GPT-OSS expert parallelism', flush=True)
