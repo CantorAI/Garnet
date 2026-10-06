@@ -117,6 +117,7 @@ __global__ void writeKV(const float* qkv, __nv_bfloat16* keys, __nv_bfloat16* va
 }
 // One warp per query head keeps paged KV reads coalesced. The learned sink
 // contributes to the softmax denominator, but never to the value accumulator.
+template<bool FastExp>
 __global__ void attention(const float* qkv, const __nv_bfloat16* keys,
     const __nv_bfloat16* values, const int* table, const int* lengths,
     const int* starts, const int* active, const float* sinks, float* output,
@@ -141,7 +142,9 @@ __global__ void attention(const float* qkv, const __nv_bfloat16* keys,
             score = warpSum(score);
             score = __shfl_sync(0xffffffff, score, 0);
             score *= rsqrtf(float(o.headDim));
-            const float next = fmaxf(maximum, score), old = expf(maximum - next), weight = expf(score - next);
+            const float next = fmaxf(maximum, score);
+            const float old = FastExp ? __expf(maximum - next) : expf(maximum - next);
+            const float weight = FastExp ? __expf(score - next) : expf(score - next);
             sum = sum * old + weight;
             for (int d = lane; d < o.headDim; d += 32)
                 accum[d / 32] = accum[d / 32] * old + weight * __bfloat162float(values[offset + d]);
@@ -635,10 +638,22 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
         }
         return cudaGetLastError();
     }
-    attention<<<(batch * tokens * o.qHeads + 3) / 4, 128, 0, stream>>>(
-        (const float*)in[0], (const __nv_bfloat16*)in[1], (const __nv_bfloat16*)in[2],
-        (const int*)in[3], (const int*)in[4], (const int*)in[5], (const int*)in[6],
-        (const float*)in[7], y, batch, tokens, logicalPages, physicalPages, o);
+    static const bool fastExp = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_FAST_EXP");
+        return value && std::strcmp(value, "1") == 0;
+    }();
+    if (fastExp)
+        attention<true><<<(batch * tokens * o.qHeads + 3) / 4, 128, 0, stream>>>(
+            (const float*)in[0], (const __nv_bfloat16*)in[1],
+            (const __nv_bfloat16*)in[2], (const int*)in[3], (const int*)in[4],
+            (const int*)in[5], (const int*)in[6], (const float*)in[7], y,
+            batch, tokens, logicalPages, physicalPages, o);
+    else
+        attention<false><<<(batch * tokens * o.qHeads + 3) / 4, 128, 0, stream>>>(
+            (const float*)in[0], (const __nv_bfloat16*)in[1],
+            (const __nv_bfloat16*)in[2], (const int*)in[3], (const int*)in[4],
+            (const int*)in[5], (const int*)in[6], (const float*)in[7], y,
+            batch, tokens, logicalPages, physicalPages, o);
     return cudaGetLastError();
 }
 static size_t moeWorkspace(int tokens, const GptOssOptions& o, bool grouped) {
