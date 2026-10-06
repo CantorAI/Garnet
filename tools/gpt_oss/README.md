@@ -185,6 +185,12 @@ fingerprints additionally validate source, weights, shapes and plugin binary.
 Changing available memory can change the placement; identical placement on
 identical hardware reuses the cache.
 
+The Linux build can enable the experimental two-rank GPT-OSS NCCL collective
+and run its two-GPU sum/parity test with `--enable-nccl`. This adds the
+`gpt_oss_tp_all_reduce` engine operator. It is a communication primitive;
+the current inference path still uses PP2 until rank-sharded attention/MoE
+weights and a lockstep TP2 scheduler are added and validated.
+
 Backbone APIs: `cuda_devices_json()` reports per-GPU free/total memory,
 architecture, PCI bus ID and P2P capability; `cuda_set_device(id)` selects the
 calling thread's device and returns its previous ID; `tensor_to_device(t, id)`

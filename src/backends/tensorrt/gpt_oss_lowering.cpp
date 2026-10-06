@@ -66,6 +66,8 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
         inputs.push_back(weight("gate_up_blocks_name", true)); inputs.push_back(weight("gate_up_scales_name", true));
         inputs.push_back(weight("gate_up_bias_name")); inputs.push_back(weight("down_blocks_name", true));
         inputs.push_back(weight("down_scales_name", true)); inputs.push_back(weight("down_bias_name"));
+    } else if (op == "gpt_oss_tp_all_reduce") {
+        o.kind = 3; o.hidden = integer("hidden_size", 0); o.tpRank = integer("tp_rank", -1);
     } else if (op == "gpt_oss_paged_attention") {
         o.kind = 1; o.layer = pendingKVLayerIndex; o.pageSize = integer("page_size", 16);
         o.window = integer("sliding_window", 0); o.prefill = integer("prefill", 0);

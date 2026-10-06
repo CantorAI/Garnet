@@ -15,6 +15,8 @@ parser.add_argument('--runtime-dll', type=Path, help='Windows runtime DLL')
 parser.add_argument('--tensorrt-root', type=Path, required=True)
 parser.add_argument('--build-dir', type=Path, required=True)
 parser.add_argument('--cuda-architectures', default='native')
+parser.add_argument('--enable-nccl', action='store_true',
+                    help='build GPT-OSS TP2 collectives and run their two-GPU parity test (Linux)')
 parser.add_argument('--cmake', default='cmake')
 parser.add_argument('--jobs', type=int, default=4)
 args = parser.parse_args()
@@ -49,13 +51,26 @@ if library.suffix.lower() == '.lib':
 text += ')\nset_target_properties(xlang3 PROPERTIES IMPORTED_LOCATION ' + quote(executable) + ')\n'
 text += 'add_subdirectory(' + quote(repo) + ' Garnet)\n'
 (source / 'CMakeLists.txt').write_text(text)
-subprocess.run([args.cmake, '-S', str(source), '-B', str(build), '-G', 'Ninja',
+configure = [args.cmake, '-S', str(source), '-B', str(build), '-G', 'Ninja',
     '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_CUDA_ARCHITECTURES=' + args.cuda_architectures,
     '-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=' + (build / 'bin').as_posix(),
     '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + (build / 'bin').as_posix(),
-    '-DGARNET_TENSORRT_ROOT=' + args.tensorrt_root.resolve().as_posix()], check=True)
-subprocess.run([args.cmake, '--build', str(build), '--target', 'garnet', 'garnet_gpt_oss_kernel_parity',
+    '-DGARNET_TENSORRT_ROOT=' + args.tensorrt_root.resolve().as_posix()]
+if args.enable_nccl:
+    configure.append('-DGARNET_GPT_OSS_ENABLE_NCCL=ON')
+subprocess.run(configure, check=True)
+targets = ['garnet', 'garnet_gpt_oss_kernel_parity']
+if args.enable_nccl:
+    targets.append('garnet_gpt_oss_tp_collective_test')
+subprocess.run([args.cmake, '--build', str(build), '--target', *targets,
                 '--parallel', str(args.jobs)], check=True)
+if args.enable_nccl:
+    subprocess.run([args.cmake, '--build', str(build), '--target', 'garnet_gpt_oss_ops',
+                    '--parallel', str(args.jobs)], check=True)
+    subprocess.run([args.cmake, '-E', 'env',
+        'LD_LIBRARY_PATH=' + str(build / 'bin') + ':' + str(args.tensorrt_root.resolve() / 'lib'),
+        'ctest', '--test-dir', str(build), '--output-on-failure',
+        '-R', '^garnet_gpt_oss_tp_collective_test$'], check=True)
 for artifact in (executable, shared):
     destination = build / 'bin' / artifact.name
     if artifact.resolve() != destination.resolve():

@@ -11,6 +11,7 @@ class GptOssPlugin final : public nvinfer1::IPluginV2DynamicExt {
     std::unique_ptr<GptOssMarlin> m_marlin;
     std::string m_namespace;
     bool m_valid = false;
+    bool m_tpInitialized = false;
 public:
     explicit GptOssPlugin(const GptOssOptions& options);
     GptOssPlugin(const void*, size_t);

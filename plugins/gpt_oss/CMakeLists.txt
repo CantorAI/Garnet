@@ -11,7 +11,7 @@ find_package(CUDAToolkit REQUIRED)
 set(GARNET_TENSORRT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../ThirdPartySDK/TensorRT"
     CACHE PATH "TensorRT SDK directory")
 add_library(garnet_gpt_oss_ops SHARED module/module.cpp tensorrt/gpt_oss_plugin.cpp
-    cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
+    cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu cuda/tp_collective.cpp)
 target_include_directories(garnet_gpt_oss_ops PRIVATE include "${GARNET_TENSORRT_ROOT}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
 target_compile_definitions(garnet_gpt_oss_ops PRIVATE NOMINMAX)
@@ -23,6 +23,21 @@ else()
         PATHS "${GARNET_TENSORRT_ROOT}/lib" REQUIRED NO_DEFAULT_PATH)
     target_link_libraries(garnet_gpt_oss_ops PRIVATE CUDA::cudart ${GARNET_GPT_OSS_TRT_LIBRARY} ${CMAKE_DL_LIBS})
     set_target_properties(garnet_gpt_oss_ops PROPERTIES BUILD_RPATH "$ORIGIN" INSTALL_RPATH "$ORIGIN")
+endif()
+option(GARNET_GPT_OSS_ENABLE_NCCL "Enable GPT-OSS two-GPU tensor-parallel collectives" OFF)
+if(GARNET_GPT_OSS_ENABLE_NCCL)
+    if(WIN32)
+        message(FATAL_ERROR "GPT-OSS NCCL tensor parallelism currently requires Linux")
+    endif()
+    find_path(GARNET_NCCL_INCLUDE_DIR nccl.h REQUIRED)
+    find_library(GARNET_NCCL_LIBRARY NAMES nccl REQUIRED)
+    target_include_directories(garnet_gpt_oss_ops PRIVATE "${GARNET_NCCL_INCLUDE_DIR}")
+    target_link_libraries(garnet_gpt_oss_ops PRIVATE "${GARNET_NCCL_LIBRARY}")
+    target_compile_definitions(garnet_gpt_oss_ops PRIVATE GARNET_GPT_OSS_ENABLE_NCCL=1)
+    set_property(TARGET garnet_gpt_oss_ops APPEND PROPERTY BUILD_RPATH
+        "/usr/lib/x86_64-linux-gnu")
+    set_property(TARGET garnet_gpt_oss_ops APPEND PROPERTY INSTALL_RPATH
+        "/usr/lib/x86_64-linux-gnu")
 endif()
 install(TARGETS garnet_gpt_oss_ops
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_gpt_oss_ops
@@ -42,6 +57,15 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
     target_include_directories(garnet_gpt_oss_kernel_benchmark PRIVATE include)
     target_link_libraries(garnet_gpt_oss_kernel_benchmark PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_kernel_benchmark PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
+    if(GARNET_GPT_OSS_ENABLE_NCCL)
+        add_executable(garnet_gpt_oss_tp_collective_test
+            ../../test2026/gpt_oss/tp_collective.cpp cuda/tp_collective.cpp)
+        target_include_directories(garnet_gpt_oss_tp_collective_test PRIVATE include
+            "${GARNET_NCCL_INCLUDE_DIR}")
+        target_link_libraries(garnet_gpt_oss_tp_collective_test PRIVATE CUDA::cudart "${GARNET_NCCL_LIBRARY}")
+        target_compile_definitions(garnet_gpt_oss_tp_collective_test PRIVATE GARNET_GPT_OSS_ENABLE_NCCL=1)
+        add_test(NAME garnet_gpt_oss_tp_collective_test COMMAND garnet_gpt_oss_tp_collective_test)
+    endif()
 endif()
 
 set_target_properties(garnet_gpt_oss_ops PROPERTIES OUTPUT_NAME garnet_gpt_oss)

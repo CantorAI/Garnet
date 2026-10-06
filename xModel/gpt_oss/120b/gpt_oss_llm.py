@@ -18,6 +18,12 @@ def linear(x, name, bias=None, op="linear"):
                                  accumulation_dtype="float32"))
 
 
+def tp_all_reduce(x, rank, config):
+    """Sum a rank-local partial hidden state across both GPT-OSS TP ranks."""
+    return x * T.unary_op("gpt_oss_tp_all_reduce",
+                          hidden_size=config['hidden_size'], tp_rank=rank)
+
+
 @T.fusion(role="decoder_layer", atomic=True, cuda_graph=True)
 def layer(x, position_ids, key_pages, value_pages, page_table,
           context_length, slot_position, active_mask, config, layer_idx, prefill, kv_layer_idx=None):

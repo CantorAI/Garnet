@@ -19,10 +19,11 @@ void reportMarlinFallback(bool initialized, int tokens) {
     if (std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") && count.fetch_add(1) < 16)
         std::fprintf(stderr, "GPT-OSS Marlin: fallback (plugin initialized=%d, rows=%d)\n", initialized, tokens);
 }
-// Version 2 expands the MoE workspace for grouped Tensor Core prefill.
-constexpr const char* kVersion = "2";
+// Version 3 adds the serialized TP rank for two-GPU collectives.
+constexpr const char* kVersion = "3";
 bool valid(const GptOssOptions& o) {
-    if (o.kind < 0 || o.kind > 2) return false;
+    if (o.kind < 0 || o.kind > 3) return false;
+    if (o.kind == 3) return o.hidden > 0 && o.tpRank >= 0 && o.tpRank < 2;
     if (o.kind == 2) return o.hidden > 0 && o.intermediate > 0 &&
         o.hidden % 32 == 0 && o.intermediate % 32 == 0 && o.experts > 0 &&
         o.experts <= 256 && o.topK > 0 && o.topK <= 8 && o.topK <= o.experts && o.limit > 0;
@@ -59,7 +60,7 @@ DimsExprs GptOssPlugin::getOutputDimensions(int, const DimsExprs* in, int count,
 }
 bool GptOssPlugin::supportsFormatCombination(int pos, const PluginTensorDesc* d, int count, int outputs) noexcept {
     if (!d || outputs != 1 || pos < 0 || pos > count ||
-        count != (m_options.kind == 0 ? 2 : m_options.kind == 1 ? 8 : 9)) return false;
+        count != (m_options.kind == 0 ? 2 : m_options.kind == 1 ? 8 : m_options.kind == 2 ? 9 : 1)) return false;
     DataType expected = DataType::kFLOAT;
     if (pos < count) {
         if (m_options.kind == 0 && pos == 1) expected = DataType::kINT64;
@@ -73,7 +74,8 @@ bool GptOssPlugin::supportsFormatCombination(int pos, const PluginTensorDesc* d,
 }
 void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
     const DynamicPluginTensorDesc*, int) noexcept {
-    m_valid = valid(m_options) && in && count == (m_options.kind == 0 ? 2 : m_options.kind == 1 ? 8 : 9);
+    m_valid = valid(m_options) && in && count ==
+        (m_options.kind == 0 ? 2 : m_options.kind == 1 ? 8 : m_options.kind == 2 ? 9 : 1);
     if (!m_valid) return;
     const auto& o = m_options; const Dims d = in[0].desc.dims;
     m_valid = rows(d) > 0;
@@ -93,7 +95,7 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
             shape(in[4].desc.dims, {batch}) && shape(in[5].desc.dims, {batch}) &&
             shape(in[6].desc.dims, {batch}) && shape(in[7].desc.dims, {o.qHeads}) &&
             (o.prefill || tokens == 1);
-    } else {
+    } else if (o.kind == 2) {
         m_valid = d.d[2] == o.hidden && shape(in[1].desc.dims, {o.experts, o.hidden}) &&
             shape(in[2].desc.dims, {o.experts}) &&
             shape(in[3].desc.dims, {o.experts, 2 * o.intermediate, o.hidden / 32, 16}) &&
@@ -102,6 +104,8 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
             shape(in[6].desc.dims, {o.experts, o.hidden, o.intermediate / 32, 16}) &&
             shape(in[7].desc.dims, {o.experts, o.hidden, o.intermediate / 32}) &&
             shape(in[8].desc.dims, {o.experts, o.hidden});
+    } else {
+        m_valid = d.d[2] == o.hidden;
     }
 }
 size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
@@ -119,6 +123,11 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
         (float*)out[0], n, m_options, stream);
     else if (m_options.kind == 1) status = RunGptOssAttention(in, (float*)out[0],
         d[0].dims.d[0], d[0].dims.d[1], d[3].dims.d[1], d[1].dims.d[1], m_options, stream);
+    else if (m_options.kind == 3) {
+        const size_t elements = size_t(d[0].dims.d[0]) * d[0].dims.d[1] * d[0].dims.d[2];
+        status = GptOssTpAllReduce(static_cast<const float*>(in[0]),
+            static_cast<float*>(out[0]), elements, m_options.tpRank, stream);
+    }
     else if (!workspace) status = cudaErrorInvalidValue;
     else {
         // Some TensorRT execution paths invoke enqueue without initialize().
@@ -143,16 +152,24 @@ const char* GptOssPlugin::getPluginVersion() const noexcept { return kVersion; }
 int GptOssPlugin::getNbOutputs() const noexcept { return 1; }
 int GptOssPlugin::initialize() noexcept {
     if (!m_valid) return 1;
+    if (m_options.kind == 3 && !m_tpInitialized) {
+        const auto status = GptOssTpAcquire();
+        if (status != cudaSuccess) return 1;
+        m_tpInitialized = true;
+    }
     if (m_options.kind == 2 && !m_marlin) {
         try { m_marlin.reset(new GptOssMarlin(m_options)); }
         catch (...) { return 1; }
     }
     return 0;
 }
-void GptOssPlugin::terminate() noexcept { m_marlin.reset(); }
+void GptOssPlugin::terminate() noexcept {
+    m_marlin.reset();
+    if (m_tpInitialized) { GptOssTpRelease(); m_tpInitialized = false; }
+}
 size_t GptOssPlugin::getSerializationSize() const noexcept { return sizeof(m_options); }
 void GptOssPlugin::serialize(void* data) const noexcept { std::memcpy(data, &m_options, sizeof(m_options)); }
-void GptOssPlugin::destroy() noexcept { delete this; }
+void GptOssPlugin::destroy() noexcept { terminate(); delete this; }
 void GptOssPlugin::setPluginNamespace(const char* ns) noexcept { m_namespace = ns ? ns : ""; }
 const char* GptOssPlugin::getPluginNamespace() const noexcept { return m_namespace.c_str(); }
 namespace {
@@ -185,7 +202,11 @@ bool EnsureGptOssPluginRegistered() {
 #define GPT_OSS_EXPORT __attribute__((visibility("default")))
 #endif
 extern "C" GPT_OSS_EXPORT const char* GarnetOperatorPluginManifest() {
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.2.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4"]})";
+#ifdef GARNET_GPT_OSS_ENABLE_NCCL
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.4.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce"]})";
+#else
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.3.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4"]})";
+#endif
 }
 extern "C" GPT_OSS_EXPORT int GarnetRegisterOperatorPlugin() { return Garnet::EnsureGptOssPluginRegistered() ? 1 : 0; }
 extern "C" GPT_OSS_EXPORT nvinfer1::IPluginV2DynamicExt* GarnetCreateOperatorPlugin(
