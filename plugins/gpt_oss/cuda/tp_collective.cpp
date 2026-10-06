@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_kernels.h"
+#include "tp_direct.h"
 #include <array>
+#include <cstdlib>
 #include <mutex>
 
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
@@ -12,6 +14,7 @@ namespace {
 std::mutex g_tpMutex;
 int g_tpUsers = 0;
 bool g_tpReady = false;
+bool g_directReady = false;
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
 std::array<ncclComm_t, 2> g_tpComms{};
 cudaError_t NcclStatus(ncclResult_t status) {
@@ -42,6 +45,10 @@ cudaError_t GptOssTpAcquire() {
     }
     g_tpReady = true;
     g_tpUsers = 1;
+    if (const char* direct = std::getenv("GARNET_GPT_OSS_DIRECT_ALLREDUCE")) {
+        if (direct[0] == '1' && direct[1] == '\0')
+            g_directReady = GptOssTpDirectAcquire() == cudaSuccess;
+    }
     return cudaSuccess;
 #else
     return cudaErrorNotSupported;
@@ -52,6 +59,8 @@ void GptOssTpRelease() {
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
     std::lock_guard<std::mutex> guard(g_tpMutex);
     if (!g_tpReady || --g_tpUsers > 0) return;
+    if (g_directReady) GptOssTpDirectRelease();
+    g_directReady = false;
     for (auto& comm : g_tpComms) {
         if (comm) ncclCommDestroy(comm);
         comm = nullptr;
@@ -69,6 +78,10 @@ cudaError_t GptOssTpAllReduce(const float* input, float* output, size_t count,
     auto status = cudaGetDevice(&device);
     if (status != cudaSuccess) return status;
     if (device != rank) return cudaErrorInvalidDevice;
+    if (g_directReady && count == 2880) {
+        status = GptOssTpDirectAllReduce(input, output, count, rank, stream);
+        if (status != cudaErrorNotSupported) return status;
+    }
     return NcclStatus(ncclAllReduce(input, output, count, ncclFloat32, ncclSum,
         g_tpComms[rank], stream));
 #else
