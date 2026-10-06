@@ -59,6 +59,7 @@ if limit > 1 and generated[-1] not in stops:
     token = tensor([generated[-1]], 'int64', [1, 1])
     position = tensor([len(ids)], 'int64', [1, 1])
     rank_local = os.environ.get('GARNET_TP_RANK_LOCAL_INPUTS') == '1'
+    batched_updates = os.environ.get('GARNET_GPT_OSS_BATCH_CONTROL_UPDATES') == '1'
     rank_inputs = None
     if rank_local:
         rank_inputs = []
@@ -79,17 +80,28 @@ if limit > 1 and generated[-1] not in stops:
             for stage, (local_token, local_controls) in zip(model.stages, rank_inputs):
                 previous = G.cuda_set_device(stage['device_id'])
                 try:
-                    G.tensor_update_from_host(local_token, [generated[-1]])
-                    G.tensor_update_from_host(local_controls[0], [index])
-                    G.tensor_update_from_host(local_controls[2], [index + 1])
-                    G.tensor_update_from_host(local_controls[3], [index])
+                    if batched_updates:
+                        if not G.tensor_update_int_scalars(
+                            [local_token, local_controls[0], local_controls[2], local_controls[3]],
+                            [generated[-1], index, index + 1, index]):
+                            raise RuntimeError('rank-local scalar update failed')
+                    else:
+                        G.tensor_update_from_host(local_token, [generated[-1]])
+                        G.tensor_update_from_host(local_controls[0], [index])
+                        G.tensor_update_from_host(local_controls[2], [index + 1])
+                        G.tensor_update_from_host(local_controls[3], [index])
                 finally:
                     G.cuda_set_device(previous)
         else:
-            G.tensor_update_from_host(token, [generated[-1]])
-            G.tensor_update_from_host(position, [index])
-            G.tensor_update_from_host(length, [index + 1])
-            G.tensor_update_from_host(slot, [index])
+            if batched_updates:
+                if not G.tensor_update_int_scalars([token, position, length, slot],
+                                                   [generated[-1], index, index + 1, index]):
+                    raise RuntimeError('scalar update failed')
+            else:
+                G.tensor_update_from_host(token, [generated[-1]])
+                G.tensor_update_from_host(position, [index])
+                G.tensor_update_from_host(length, [index + 1])
+                G.tensor_update_from_host(slot, [index])
         started = time.perf_counter()
         result = (model.forward_rank_local(rank_inputs, True) if rank_local else
             model.forward(token, [position, table, length, slot, active], True))
@@ -128,6 +140,7 @@ Path(sys.argv[4]).write_text(json.dumps({
     'warm_decode_tokens_per_second': warm_decode_tokens_per_second,
     'warm_decode_wall_tokens_per_second': warm_decode_wall_tokens_per_second,
     'rank_local_inputs': rank_local if limit > 1 else False,
+    'batched_control_updates': batched_updates if limit > 1 else False,
     'validation': 'experimental TP2 with sharded attention heads and rank-local experts; full pretrained validation pending'
 }, indent=2))
 print('Generated', len(generated), 'tokens with two-rank GPT-OSS tensor parallelism', flush=True)

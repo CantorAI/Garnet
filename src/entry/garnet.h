@@ -184,6 +184,7 @@ namespace Garnet
 			APISET().AddVarFunc("tensor_from_bfloat16_bits", &GarnetAPI::TensorFromBFloat16Bits);
 			APISET().AddVarFunc("tensor_from_host", &GarnetAPI::TensorFromHost);
 			APISET().AddVarFunc("tensor_update_from_host", &GarnetAPI::TensorUpdateFromHost);
+			APISET().AddVarFunc("tensor_update_int_scalars", &GarnetAPI::TensorUpdateIntScalars);
 			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
 			APISET().AddVarFunc("serve_model", &GarnetAPI::ServeModel);
 			APISET().AddVarFunc("list_available_models_json", &GarnetAPI::ListAvailableModelsJson);
@@ -257,6 +258,7 @@ namespace Garnet
 		X::Value TensorFromBFloat16Bits(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value TensorFromHost(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value TensorUpdateFromHost(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorUpdateIntScalars(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value TensorToCPU(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ServeModel(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ListAvailableModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);

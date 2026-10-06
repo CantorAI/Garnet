@@ -15,6 +15,7 @@
 #include "nlohmann/json.hpp"
 #include "xlang3/xlang3.h"
 #include <fstream>
+#include <array>
 #include <numeric>
 #include <filesystem>
 #include <regex>
@@ -3607,6 +3608,57 @@ namespace Garnet
         if (status == cudaSuccess) status = copyComplete;
         retValue = NativeValue(Host(), X::Value(status == cudaSuccess));
         return retValue;
+    }
+
+    X::Value GarnetAPI::TensorUpdateIntScalars(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        (void)kwParams;
+        if (params.size() != 2 || !params[0].IsList() || !params[1].IsList())
+            return X::Value(false);
+        X::Value tensorList(params[0]), valueList(params[1]);
+        const size_t count = static_cast<size_t>(tensorList.Size());
+        if (!count || count != static_cast<size_t>(valueList.Size()) || count > 32)
+            return X::Value(false);
+
+        std::vector<std::pair<X::Tensor, X3TensorAccess>> tensors;
+        std::vector<std::array<char, sizeof(int64_t)>> values;
+        tensors.reserve(count);
+        values.reserve(count);
+        for (size_t index = 0; index < count; ++index) {
+            X::Value item = tensorList.Get(static_cast<long long>(index));
+            if (!X::Tensor::IsTensor(item)) return X::Value(false);
+            X::Tensor tensor(item);
+            ValidateDenseTensor(tensor, true);
+            if (tensor.Info().device_type != 1 || TensorCount(tensor) != 1 ||
+                (tensor.Info().dtype != X3_TENSOR_INT32 && tensor.Info().dtype != X3_TENSOR_INT64))
+                return X::Value(false);
+            const int64_t value = CheckedInt64(valueList.Get(static_cast<long long>(index)),
+                "tensor scalar value");
+            if (tensor.Info().dtype == X3_TENSOR_INT32 &&
+                (value < INT32_MIN || value > INT32_MAX))
+                return X::Value(false);
+            tensors.emplace_back(tensor, X3_TENSOR_WRITE);
+            std::array<char, sizeof(int64_t)> bytes{};
+            if (tensor.Info().dtype == X3_TENSOR_INT32) {
+                const int32_t narrow = static_cast<int32_t>(value);
+                std::memcpy(bytes.data(), &narrow, sizeof(narrow));
+            }
+            else std::memcpy(bytes.data(), &value, sizeof(value));
+            values.push_back(bytes);
+        }
+
+        auto use = TensorHelper::AcquireGPU(tensors);
+        cudaError_t status = cudaSuccess;
+        for (size_t index = 0; index < count; ++index) {
+            const X::Tensor& tensor = tensors[index].first;
+            const size_t bytes = tensor.Info().dtype == X3_TENSOR_INT32 ? sizeof(int32_t) : sizeof(int64_t);
+            status = cudaMemcpyAsync(tensor.Info().data, values[index].data(), bytes,
+                cudaMemcpyHostToDevice, cudaStreamPerThread);
+            if (status != cudaSuccess) break;
+        }
+        const cudaError_t copyComplete = cudaStreamSynchronize(cudaStreamPerThread);
+        if (status == cudaSuccess) status = copyComplete;
+        return X::Value(status == cudaSuccess);
     }
 
     X::Value GarnetAPI::TensorAdd(const X::ARGS& params, const X::KWARGS& kwParams)

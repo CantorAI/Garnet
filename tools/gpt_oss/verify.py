@@ -40,6 +40,7 @@ fixture = work / 'fixture'
 run([sys.executable, repo / 'test2026/gpt_oss/make_fixture.py', fixture], 'fixture')
 run([sys.executable, repo / 'test2026/gpt_oss/placement.py'], 'placement')
 run([runtime / ('garnet_gpt_oss_kernel_parity' + suffix)], 'kernel-parity')
+run([executable, repo / 'test2026/gpt_oss/tensor_update_int_scalars.py'], 'batched-scalar-updates')
 run([executable, repo / 'test2026/gpt_oss/compiled_parity.py', fixture, work / 'cache'], 'compiled-parity-cold')
 run([executable, repo / 'test2026/gpt_oss/compiled_parity.py', fixture, work / 'cache'], 'compiled-parity-warm')
 run([executable, repo / 'test2026/gpt_oss/plugin_requirements.py', fixture, work / 'cache'], 'plugin-requirements')
