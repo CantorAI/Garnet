@@ -37,14 +37,14 @@ products, router logits and paged attention. Prefill buckets routed slots by
 expert and runs grouped BF16 Tensor Core GEMMs, unpacking MXFP4 weight tiles
 into shared memory. It reuses each tile across 32 routed rows for shorter
 prompts and 64 rows for prompts longer than 512 tokens. The full expert weights remain packed.
-Decode attention defaults to 16 warps per query head on the tested RTX PRO 6000
-Blackwell GPUs. Set `GARNET_GPT_OSS_DECODE_WARPS` to `1`, `2`, `4`, `8`, or
-`16` before starting the runtime to select a specialization for hardware/context
-tuning; unsupported values use the 16-warp default.
-For experimental single-token decode, set `GARNET_GPT_OSS_DECODE_SPLITS` to
-`8`, `16`, `32`, or `64` before starting the runtime. This splits each query head's KV
-range across separate CUDA blocks and merges their stable softmax states;
-unset the variable to use the measured 16-warp baseline.
+Single-token decode defaults to 16 splits per query head on the tested RTX PRO
+6000 Blackwell GPUs, with four warps in each split and a stable softmax merge.
+Set `GARNET_GPT_OSS_DECODE_SPLITS` to `8`, `16`, `32`, or `64` before starting
+the runtime to tune it; set `0` for the unsplit path. The unsplit path uses
+16 warps by default and accepts `GARNET_GPT_OSS_DECODE_WARPS` of `1`, `2`, `4`,
+`8`, or `16`.
+`GARNET_GPT_OSS_ROUTER_THREADS=256` enables an experimental wider router
+score block; the default is 128 threads.
 For paired TP2 engine experiments, `GARNET_GPT_OSS_TRT_OPT_LEVEL` sets the
 TensorRT builder optimization level (0–5, default 1), and
 `GARNET_GPT_OSS_TRT_WORKSPACE_MB` sets its workspace cap (256–4096 MiB,

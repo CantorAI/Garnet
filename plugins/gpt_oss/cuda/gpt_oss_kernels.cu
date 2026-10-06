@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cfloat>
 #include <cstdlib>
+#include <cstring>
 
 namespace Garnet {
 namespace {
@@ -280,6 +281,7 @@ __global__ void decodeAttentionMerge(const float* scratch, const float* sinks,
         output[size_t(blockIdx.x) * o.headDim + d] = bf(value / sum);
     }
 }
+template<int Threads>
 __global__ void routeScores(const float* x, const float* weight, const float* bias,
     float* logits, int tokens, GptOssOptions o) {
     const int token = blockIdx.x / o.experts, expert = blockIdx.x % o.experts;
@@ -288,11 +290,11 @@ __global__ void routeScores(const float* x, const float* weight, const float* bi
     for (int d = threadIdx.x; d < o.hidden; d += blockDim.x)
         value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
     value = warpSum(value);
-    __shared__ float partial[4];
+    __shared__ float partial[Threads / 32];
     if (!lane) partial[warp] = value;
     __syncthreads();
     if (warp == 0) {
-        value = lane < 4 ? partial[lane] : 0.f;
+        value = lane < Threads / 32 ? partial[lane] : 0.f;
         value = warpSum(value);
         if (!lane) logits[size_t(token) * o.experts + expert] = bf(value + bias[expert]);
     }
@@ -536,10 +538,11 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
     if (tokens == 1 && !o.prefill) {
         static const int splits = [] {
             const char* value = std::getenv("GARNET_GPT_OSS_DECODE_SPLITS");
-            if (!value) return 0;
+            if (!value) return 16;
+            if (std::strcmp(value, "0") == 0) return 0;
             const int requested = std::atoi(value);
             return requested == 8 || requested == 16 || requested == 32 ||
-                requested == 64 ? requested : 0;
+                requested == 64 ? requested : 16;
         }();
         if (splits && !workspace) return cudaErrorInvalidValue;
         static const int warps = [] {
@@ -699,8 +702,16 @@ size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
 }
 cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* probabilities,
     float* logits, int tokens, const GptOssOptions& o, cudaStream_t stream) {
-    routeScores<<<tokens * o.experts, 128, 0, stream>>>((const float*)in[0],
-        (const float*)in[1], (const float*)in[2], logits, tokens, o);
+    static const int routerThreads = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_THREADS");
+        return value && std::atoi(value) == 256 ? 256 : 128;
+    }();
+    if (routerThreads == 256)
+        routeScores<256><<<tokens * o.experts, 256, 0, stream>>>(
+            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits, tokens, o);
+    else
+        routeScores<128><<<tokens * o.experts, 128, 0, stream>>>(
+            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits, tokens, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
     routeTopK<<<tokens, 128, 0, stream>>>(logits, selected, probabilities, tokens, o);
     return cudaGetLastError();
