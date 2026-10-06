@@ -704,7 +704,7 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
     float* logits, int tokens, const GptOssOptions& o, cudaStream_t stream) {
     static const int routerThreads = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_THREADS");
-        return value && std::atoi(value) == 256 ? 256 : 128;
+        return value && std::atoi(value) == 128 ? 128 : 256;
     }();
     if (routerThreads == 256)
         routeScores<256><<<tokens * o.experts, 256, 0, stream>>>(

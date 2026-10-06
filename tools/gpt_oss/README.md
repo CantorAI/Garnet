@@ -43,8 +43,8 @@ Set `GARNET_GPT_OSS_DECODE_SPLITS` to `8`, `16`, `32`, or `64` before starting
 the runtime to tune it; set `0` for the unsplit path. The unsplit path uses
 16 warps by default and accepts `GARNET_GPT_OSS_DECODE_WARPS` of `1`, `2`, `4`,
 `8`, or `16`.
-`GARNET_GPT_OSS_ROUTER_THREADS=256` enables an experimental wider router
-score block; the default is 128 threads.
+Router scoring defaults to 256 threads on the tested Blackwell GPUs. Set
+`GARNET_GPT_OSS_ROUTER_THREADS=128` to use the previous block size.
 For paired TP2 engine experiments, `GARNET_GPT_OSS_TRT_OPT_LEVEL` sets the
 TensorRT builder optimization level (0–5, default 1), and
 `GARNET_GPT_OSS_TRT_WORKSPACE_MB` sets its workspace cap (256–4096 MiB,
