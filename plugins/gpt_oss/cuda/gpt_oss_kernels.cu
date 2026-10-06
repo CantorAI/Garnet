@@ -130,7 +130,7 @@ __global__ void decodeAttention(const float* qkv, const __nv_bfloat16* keys,
     const __nv_bfloat16* values, const int* table, const int* lengths,
     const int* starts, const int* active, const float* sinks, float* output,
     int batch, int logicalPages, int physicalPages, GptOssOptions o) {
-    static_assert(Warps > 0 && Warps <= 32);
+    static_assert(Warps > 0 && Warps <= 16);
     const int lane = threadIdx.x & 31, warp = threadIdx.x / 32;
     const int head = blockIdx.x % o.qHeads, b = blockIdx.x / o.qHeads;
     const int packed = (o.qHeads + 2 * o.kvHeads) * o.headDim;
@@ -403,11 +403,11 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int t
             const char* value = std::getenv("GARNET_GPT_OSS_DECODE_WARPS");
             if (value) {
                 const int requested = std::atoi(value);
-                if (requested == 1 || requested == 2 || requested == 4 || requested == 8 ||
-                    requested == 16 || requested == 32)
+                if (requested == 1 || requested == 2 || requested == 4 ||
+                    requested == 8 || requested == 16)
                     return requested;
             }
-            return 8;
+            return 16;
         }();
         const float* qkv = (const float*)in[0];
         const auto* keys = (const __nv_bfloat16*)in[1];
@@ -432,10 +432,6 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int t
             break;
         case 16:
             decodeAttention<16><<<batch * o.qHeads, 512, 0, stream>>>(qkv, keys, values,
-                table, lengths, starts, active, sinks, y, batch, logicalPages, physicalPages, o);
-            break;
-        case 32:
-            decodeAttention<32><<<batch * o.qHeads, 1024, 0, stream>>>(qkv, keys, values,
                 table, lengths, starts, active, sinks, y, batch, logicalPages, physicalPages, o);
             break;
         default:
