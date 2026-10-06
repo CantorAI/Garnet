@@ -18,7 +18,7 @@ bool debugMarlin() {
 }
 void reportMarlin(const char* message, int a = 0, int b = 0) {
     static std::atomic<int> count{0};
-    if (debugMarlin() && count.fetch_add(1) < 32) std::fprintf(stderr, "GPT-OSS Marlin: %s (%d, %d)\n", message, a, b);
+    if (debugMarlin() && count.fetch_add(1) < 128) std::fprintf(stderr, "GPT-OSS Marlin: %s (%d, %d)\n", message, a, b);
 }
 struct Geometry {
     int upK,upN,downK,downN;
@@ -193,6 +193,7 @@ size_t GptOssMarlin::Workspace(int tokens,const GptOssOptions& o) {
 }
 cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int tokens,cudaStream_t stream) {
     auto& s=*m_state;if(!supported(tokens,s.o)){reportMarlin("shape rejected", tokens, s.o.hidden);return cudaErrorNotSupported;}
+    reportMarlin("decode candidate", tokens, s.o.hidden);
     int device=-1;auto status=cudaGetDevice(&device);if(status!=cudaSuccess)return status;
     if(s.device>=0 && s.device!=device)return cudaErrorInvalidDevice;
     status=s.prepare(in,stream);if(status!=cudaSuccess)return status;

@@ -121,6 +121,13 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
         d[0].dims.d[0], d[0].dims.d[1], d[3].dims.d[1], d[1].dims.d[1], m_options, stream);
     else if (!workspace) status = cudaErrorInvalidValue;
     else {
+        // Some TensorRT execution paths invoke enqueue without initialize().
+        // Construct the per-plugin state lazily so optimized MoE dispatch is
+        // still available for those engines.
+        if (!m_marlin) {
+            try { m_marlin.reset(new GptOssMarlin(m_options)); }
+            catch (...) { reportMarlinFallback(false, n); }
+        }
         status = m_marlin ? m_marlin->Run(in, (float*)out[0], workspace, n, stream)
                           : cudaErrorNotSupported;
         if (status == cudaErrorNotSupported) {
