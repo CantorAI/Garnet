@@ -45,6 +45,13 @@ bool supported(int tokens,const GptOssOptions& o) {
         o.experts>0 && o.experts<=256 && o.topK>0 && o.topK<=8 && o.topK<=o.experts &&
         o.tpRank>=-1 && o.tpRank<2;
 }
+int marlinBlockSize(int tokens) {
+    static const bool largePrefill = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_BLOCK");
+        return value && std::atoi(value)==32;
+    }();
+    return largePrefill && tokens>=128 ? 32 : 8;
+}
 struct Layout {
     size_t bytes=0,selected,probabilities,routeLogits,a,up,activation,down,sorted,experts,padded,locks,tmp;
     size_t take(size_t size) { bytes=(bytes+15)&~size_t(15);size_t offset=bytes;bytes+=size;return offset; }
@@ -53,7 +60,9 @@ struct Layout {
         selected=take(slots*4);probabilities=take(slots*4);
         routeLogits=take(size_t(tokens)*o.experts*4);a=take(size_t(tokens)*g.upK*2);
         up=take(slots*g.upN*2);activation=take(slots*g.downK*2);down=take(slots*g.downN*2);
-        sorted=take(slots*8*4);experts=take(slots*4);padded=take(4);
+        const int block=marlinBlockSize(tokens);
+        const size_t maxPadded=slots+size_t(o.experts)*block;
+        sorted=take(maxPadded*4);experts=take(((maxPadded+block-1)/block)*4);padded=take(4);
         locks=take(size_t(o.experts)*(n/64)*16*4);
         // Matches upstream's FP32 partial-reduction bound, conservatively sized
         // for at most 512 SMs. The actual device is checked before execution.
@@ -110,18 +119,18 @@ __global__ void convertInput(const float* x,nv_bfloat16* a,int tokens,int width,
     int row=i/paddedWidth,d=i%paddedWidth;a[i]=__float2bfloat16(d<width?x[row*width+d]:0);
 }
 __global__ void metadata(const int* selected,int* sorted,int* experts,int* padded,
-    int slots,int expertCount,int rank) {
+    int slots,int expertCount,int rank,int block) {
     __shared__ int counts[256],starts[256];int e=threadIdx.x;
-    for(int i=e;i<slots*8;i+=256)sorted[i]=slots;
+    for(int i=e;i<slots+expertCount*block;i+=256)sorted[i]=slots;
     int localCount=rank<0?expertCount:(expertCount+1-rank)/2;
     int globalExpert=rank<0?e:2*e+rank;
     int count=0;if(e<localCount)for(int s=0;s<slots;++s)count+=selected[s]==globalExpert;
     counts[e]=count;__syncthreads();
-    if(!e) {int total=0;for(int i=0;i<localCount;++i){starts[i]=total;total+=(counts[i]+7)/8*8;}*padded=total;}
+    if(!e) {int total=0;for(int i=0;i<localCount;++i){starts[i]=total;total+=(counts[i]+block-1)/block*block;}*padded=total;}
     __syncthreads();
     if(e<localCount && count) {
         int row=0;for(int s=0;s<slots;++s)if(selected[s]==globalExpert)sorted[starts[e]+row++]=s;
-        for(int i=0;i<count;i+=8)experts[(starts[e]+i)/8]=e;
+        for(int i=0;i<count;i+=block)experts[(starts[e]+i)/block]=e;
     }
 }
 __global__ void activation(const nv_bfloat16* up,const float* bias,const int* selected,
@@ -156,6 +165,12 @@ UpKernel upKernel() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.
 UpKernel downKernel() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE8M0fnu.id(),128,1,4,8,true,4,2,false>;}
+UpKernel upKernel32() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
+    garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
+    garnet_marlin_types::kFE8M0fnu.id(),256,2,16,4,false,4,2,false>;}
+UpKernel downKernel32() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
+    garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
+    garnet_marlin_types::kFE8M0fnu.id(),256,2,16,4,false,4,2,false>;}
 }
 struct GptOssMarlin::State {
     GptOssOptions o;Geometry g;int device=-1,sms=0,computeMajor=0,blockedReason=0;bool ready=false,blocked=false;
@@ -207,6 +222,8 @@ struct GptOssMarlin::State {
         status=cudaGetLastError();if(status==cudaSuccess)status=cudaStreamSynchronize(stream);
         if(status==cudaSuccess)status=cudaFuncSetAttribute(upKernel(),cudaFuncAttributeMaxDynamicSharedMemorySize,27136);
         if(status==cudaSuccess)status=cudaFuncSetAttribute(downKernel(),cudaFuncAttributeMaxDynamicSharedMemorySize,35200);
+        if(status==cudaSuccess)status=cudaFuncSetAttribute(upKernel32(),cudaFuncAttributeMaxDynamicSharedMemorySize,54272);
+        if(status==cudaSuccess)status=cudaFuncSetAttribute(downKernel32(),cudaFuncAttributeMaxDynamicSharedMemorySize,54272);
         if(status!=cudaSuccess){release();return status;}ready=true;return cudaSuccess;
     }
 };
@@ -222,18 +239,19 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     if(s.device>=0 && s.device!=device)return cudaErrorInvalidDevice;
     status=s.prepare(in,stream);if(status!=cudaSuccess)return status;
     const auto& o=s.o;const auto& g=s.g;const Layout l(tokens,o);int slots=tokens*o.topK;
+    const int block=marlinBlockSize(tokens);
     auto selected=at<int>(workspace,l.selected);auto probabilities=at<float>(workspace,l.probabilities);
     status=RunGptOssMoeRoute(in,selected,probabilities,at<float>(workspace,l.routeLogits),tokens,o,stream);
     if(status!=cudaSuccess)return status;
     convertInput<<<(tokens*g.upK+255)/256,256,0,stream>>>((const float*)in[0],at<nv_bfloat16>(workspace,l.a),tokens,o.hidden,g.upK);
-    metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank);
+    metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank,block);
     status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
     if(status!=cudaSuccess)return status;
-    auto up=upKernel();up<<<s.sms*marlinCtasPerSm(s.computeMajor),128,27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
+    auto up=block==32?upKernel32():upKernel();up<<<s.sms*marlinCtasPerSm(s.computeMajor),block==32?256:128,block==32?54272:27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[1],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,o.topK,false,tokens,g.upN,g.upK,at<int>(workspace,l.locks),false,false,true);
     activation<<<(slots*g.downK+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.up),(const float*)in[5],selected,at<nv_bfloat16>(workspace,l.activation),slots,g.upN,g.downK,o);
-    auto down=downKernel();down<<<s.sms*marlinCtasPerSm(s.computeMajor),128,35200,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
+    auto down=block==32?downKernel32():downKernel();down<<<s.sms*marlinCtasPerSm(s.computeMajor),block==32?256:128,block==32?54272:35200,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[3],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,1,false,slots,g.downN,g.downK,at<int>(workspace,l.locks),false,false,true);
     combine<<<(tokens*o.hidden+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.down),(const float*)in[8],selected,probabilities,y,tokens,g.downN,o);

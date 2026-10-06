@@ -17,3 +17,12 @@ Third-party source included in this repository:
   from the RSA Data Security, Inc. MD5 Message-Digest Algorithm and the BZFlag
   C++ adaptation by Frank Thilo. Its required copyright and license notices are
   retained in those source files.
+
+- Marlin MXFP4 mixture-of-experts CUDA kernel headers under
+  plugins/gpt_oss/third_party/marlin are adapted from vLLM v0.31.0
+  (commit db9527a46873454610df6dbedf79a36d6bf1a7f6), itself adapted by
+  vLLM/Neural Magic from Marlin by Elias Frantar.
+  Copyright (C) 2024 Elias Frantar and contributors to the vLLM project.
+  Licensed under the Apache License, Version 2.0. The license text and detailed
+  modification record are retained in that directory's LICENSE and
+  PROVENANCE.txt files.
