@@ -106,7 +106,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         raise ValueError('replicated TP2 model estimate exceeds per-GPU budget; true checkpoint weight sharding is required')
     identity = {'schema': 1, 'mode': 'gpt-oss-expert-parallel-tp2', 'hardware': hardware,
         'checkpoint': str(Path(weights).resolve()), 'capacity': capacity, 'batch': batch,
-        'memory_fraction': memory_fraction, 'reserve_bytes': reserve_bytes}
+        'memory_fraction': memory_fraction, 'reserve_bytes': reserve_bytes,
+        'layer_cuda_graph': False}
     key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:24]
     stages = [{'device_id': d['id'], 'rank': rank, 'start': 0,
                'end': config['num_hidden_layers'], 'estimated_bytes': required,
@@ -199,8 +200,13 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                 stage_cache = stage_cache / 'last-token-logits'
             model_root = stage_cache / 'xmodel'
             model_root.mkdir(parents=True, exist_ok=True)
-            for name in ('__init__.py', 'tensor_compat.py', 'gpt_oss_llm.py', 'model.json'):
+            for name in ('__init__.py', 'tensor_compat.py', 'model.json'):
                 shutil.copy2(root / name, model_root / name)
+            # NCCL collectives are kept outside CUDA graph capture until the
+            # paired full-model replay path is proven safe.
+            llm_source = (root / 'gpt_oss_llm.py').read_text().replace(
+                'cuda_graph=True', 'cuda_graph=False')
+            (model_root / 'gpt_oss_llm.py').write_text(llm_source)
             source = (root / 'stage.py').read_text()
             source = source.replace('STAGE_START = 0', 'STAGE_START = 0')
             source = source.replace('STAGE_END = 1', 'STAGE_END = ' + str(end))

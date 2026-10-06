@@ -20,6 +20,7 @@ plan = make_tensor_parallel_plan(weights, devices, batch=1,
     capacity=len(ids) + limit, tokens=len(ids),
     reserve_bytes=int(request.get('reserve_mb', 1024)) << 20,
     memory_fraction=float(request.get('memory_fraction', .9)))
+print('TP2 plan', json.dumps({k: plan[k] for k in ('cache_key', 'estimated_per_gpu_bytes', 'hardware')}), flush=True)
 assert all(isinstance(token, int) and 0 <= token < plan['config']['vocab_size'] for token in ids)
 stops = request.get('stop_token_ids', [])
 
@@ -35,18 +36,22 @@ length = tensor([len(ids)], 'int32', [1])
 slot = tensor([0], 'int32', [1])
 active = tensor([1], 'int32', [1])
 started = time.perf_counter()
+print('Building TP2 prefill engines', flush=True)
 model = build_tensor_parallel(weights, cache, plan, len(ids), True, last_token_logits=True)
 load_seconds = time.perf_counter() - started
 started = time.perf_counter()
+print('Running paired TP2 prefill', flush=True)
 result = model.forward(tensor(ids, 'int64', [1, len(ids)]),
     [tensor(list(range(len(ids))), 'int64', [1, len(ids)]), table, length, slot, active], True)
 generated = [int(result['token_id'])]
 prefill_seconds = time.perf_counter() - started
+print('TP2 prefill complete', prefill_seconds, flush=True)
 kv = [(stage['keys'], stage['values']) for stage in model.stages]
 model.release()
 decode_seconds = decode_wall_seconds = decode_prepare_seconds = 0.
 if limit > 1 and generated[-1] not in stops:
     started = time.perf_counter()
+    print('Building TP2 decode engines', flush=True)
     model = build_tensor_parallel(weights, cache, plan, 1, False, kv)
     token = tensor([generated[-1]], 'int64', [1, 1])
     position = tensor([len(ids)], 'int64', [1, 1])
@@ -65,6 +70,7 @@ if limit > 1 and generated[-1] not in stops:
         if generated[-1] in stops:
             break
     decode_wall_seconds = time.perf_counter() - decode_started
+    print('TP2 decode complete', decode_wall_seconds, flush=True)
     model.release()
 
 Path(sys.argv[4]).write_text(json.dumps({
