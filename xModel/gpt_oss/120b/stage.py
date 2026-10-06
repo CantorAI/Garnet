@@ -10,6 +10,11 @@ STAGE_START = 0
 STAGE_END = 1
 STAGE_PREFILL = 1
 STAGE_LAST_TOKEN = 0
+STAGE_TP_RANK = -1
+STAGE_OPERATORS = ['gpt_oss_round_bf16', 'gpt_oss_apply_yarn_rope_packed',
+                   'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4']
+if STAGE_TP_RANK >= 0:
+    STAGE_OPERATORS.append('gpt_oss_tp_all_reduce')
 GARNET_MODEL_SPEC = {'arguments': [
     {'name': name, 'kind': 'tensor'} for name in
     ['hidden_or_ids', 'position_ids', 'key_pages', 'value_pages', 'page_table',
@@ -18,13 +23,13 @@ GARNET_MODEL_SPEC = {'arguments': [
     {'name': 'start', 'kind': 'int', 'value': STAGE_START},
     {'name': 'end', 'kind': 'int', 'value': STAGE_END},
     {'name': 'prefill', 'kind': 'int', 'value': STAGE_PREFILL},
-    {'name': 'last_token_logits', 'kind': 'int', 'value': STAGE_LAST_TOKEN}],
+    {'name': 'last_token_logits', 'kind': 'int', 'value': STAGE_LAST_TOKEN},
+    {'name': 'tp_rank', 'kind': 'int', 'value': STAGE_TP_RANK}],
     'requires': {'operator_plugins': [{'id': 'gpt_oss', 'module': 'garnet_gpt_oss',
-    'abi': 1, 'backend': 'tensorrt', 'operators': ['gpt_oss_round_bf16',
-    'gpt_oss_apply_yarn_rope_packed', 'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4']}]}}
+    'abi': 1, 'backend': 'tensorrt', 'operators': STAGE_OPERATORS}]}}
 
 @T.fusion(name='gpt_oss_stage', role='transformer_stage', boundary='required')
 def GptOssStage(x, position_ids, keys, values, table, length, slot, active,
-                weights, config, start, end, prefill, last_token_logits):
+                weights, config, start, end, prefill, last_token_logits, tp_rank):
     return llm.forward_stage(x, position_ids, keys, values, table, length, slot,
-                            active, weights, config, start, end, prefill, last_token_logits)
+                            active, weights, config, start, end, prefill, last_token_logits, tp_rank)

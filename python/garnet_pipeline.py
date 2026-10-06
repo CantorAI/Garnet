@@ -96,3 +96,44 @@ class Pipeline:
                 stage['model'].release_runtime()
         finally:
             G.cuda_set_device(previous)
+
+
+class TensorParallel:
+    """Lockstep TP execution: one rank-local full stage per GPU."""
+    def __init__(self, stages):
+        from concurrent.futures import ThreadPoolExecutor
+        if len(stages) != 2:
+            raise ValueError('TensorParallel requires exactly two rank stages')
+        self.stages = stages
+        self.executor = ThreadPoolExecutor(max_workers=2)
+
+    def forward(self, activation, controls, sample=False):
+        import garnet as G
+
+        def run(stage):
+            previous = G.cuda_set_device(stage['device_id'])
+            try:
+                local_activation = G.tensor_to_device(activation, stage['device_id'])
+                local = [G.tensor_to_device(t, stage['device_id']) for t in controls]
+                request = {'inputs': [local_activation, local[0], stage['keys'],
+                    stage['values'], local[1], local[2], local[3], local[4]]}
+                if sample and stage['rank'] == 0:
+                    request['sample'] = 'greedy'
+                result = stage['model'].forward(request)
+                if result['status'] != 'ok':
+                    raise RuntimeError(str(result))
+                G.cuda_synchronize()
+                return result
+            finally:
+                G.cuda_set_device(previous)
+
+        futures = [self.executor.submit(run, stage) for stage in self.stages]
+        results = [future.result() for future in futures]
+        return results[0]
+
+    def release(self):
+        import garnet as G
+        self.executor.shutdown(wait=True)
+        for stage in self.stages:
+            G.cuda_set_device(stage['device_id'])
+            stage['model'].release_runtime()

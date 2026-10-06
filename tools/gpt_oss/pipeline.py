@@ -5,6 +5,7 @@ referenced by its layer range, and each stage allocates only its local KV cache.
 """
 import json
 import math
+import hashlib
 import shutil
 import struct
 import sys
@@ -77,6 +78,46 @@ def make_plan(weights, devices, batch=1, capacity=4096, tokens=1,
     return plan
 
 
+def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1,
+                              reserve_bytes=1 << 30, memory_fraction=.9):
+    """Plan a two-rank GPT-OSS expert-parallel replica on both selected GPUs."""
+    if len(devices) != 2 or len({d['id'] for d in devices}) != 2:
+        raise ValueError('GPT-OSS TP2 requires exactly two distinct GPUs')
+    config = json.loads((Path(weights) / 'config.json').read_text())
+    if batch <= 0 or capacity <= 0 or tokens <= 0 or tokens > capacity:
+        raise ValueError('invalid batch/context/token capacity')
+    if config['num_experts'] < 2:
+        raise ValueError('expert parallelism requires at least two experts')
+    if not 0 < memory_fraction <= 1 or reserve_bytes < 0:
+        raise ValueError('invalid memory budget')
+    pages = batch * math.ceil(capacity / 16)
+    kv_bytes = (config['num_hidden_layers'] * 2 * pages * 16 *
+                config['num_key_value_heads'] * config['head_dim'] * 2)
+    activation_bytes = batch * tokens * (config['hidden_size'] * 64 +
+        config['vocab_size'] * 4 + config['intermediate_size'] * config['experts_per_token'] * 4)
+    # Dense BF16 constants are budgeted at FP32 size because TensorRT may
+    # promote some projections during engine construction.
+    full_weights = sum(weight_sizes(weights).values())
+    required = math.ceil(full_weights * 1.05) + kv_bytes + activation_bytes + reserve_bytes
+    hardware = [{k: d[k] for k in ('id', 'name', 'total_bytes', 'compute_major',
+                'compute_minor', 'pci_bus_id', 'peer_access')} for d in devices]
+    budgets = [int(min(d['free_bytes'], d['total_bytes'] * memory_fraction)) for d in devices]
+    if any(required > budget for budget in budgets):
+        raise ValueError('replicated TP2 model estimate exceeds per-GPU budget; true checkpoint weight sharding is required')
+    identity = {'schema': 1, 'mode': 'gpt-oss-expert-parallel-tp2', 'hardware': hardware,
+        'checkpoint': str(Path(weights).resolve()), 'capacity': capacity, 'batch': batch,
+        'memory_fraction': memory_fraction, 'reserve_bytes': reserve_bytes}
+    key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:24]
+    stages = [{'device_id': d['id'], 'rank': rank, 'start': 0,
+               'end': config['num_hidden_layers'], 'estimated_bytes': required,
+               'budget_bytes': budget}
+              for rank, (d, budget) in enumerate(zip(devices, budgets))]
+    return {'schema': 1, 'mode': 'gpt-oss-expert-parallel-tp2', 'cache_key': key,
+            'hardware': hardware, 'stages': stages, 'batch': batch,
+            'capacity': capacity, 'max_tokens': tokens, 'kv_pages': pages,
+            'config': config, 'estimated_per_gpu_bytes': required}
+
+
 def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_logits=False):
     import garnet as G
     if tokens < 1 or tokens > plan['max_tokens']:
@@ -133,3 +174,66 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_lo
     finally:
         G.cuda_set_device(previous)
     return Pipeline(stages)
+
+
+def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
+                          last_token_logits=False):
+    """Build paired full-stage engines with rank-local MoE work and NCCL sums."""
+    import garnet as G
+    if tokens < 1 or tokens > plan['max_tokens']:
+        raise ValueError('token shape exceeds TP2 placement profile')
+    config, batch = plan['config'], plan['batch']
+    cache = Path(cache) / plan['cache_key']
+    cache.mkdir(parents=True, exist_ok=True)
+    (cache / 'placement.json').write_text(json.dumps(plan, indent=2))
+    root = repo / 'xModel/gpt_oss/120b'
+    stages = []
+    previous = G.cuda_set_device(plan['stages'][0]['device_id'])
+    try:
+        for rank, placement in enumerate(plan['stages']):
+            device = placement['device_id']
+            G.cuda_set_device(device)
+            start, end = 0, config['num_hidden_layers']
+            stage_cache = cache / ('prefill' if prefill else 'decode') / str(tokens) / str(rank)
+            if last_token_logits:
+                stage_cache = stage_cache / 'last-token-logits'
+            model_root = stage_cache / 'xmodel'
+            model_root.mkdir(parents=True, exist_ok=True)
+            for name in ('__init__.py', 'tensor_compat.py', 'gpt_oss_llm.py', 'model.json'):
+                shutil.copy2(root / name, model_root / name)
+            source = (root / 'stage.py').read_text()
+            source = source.replace('STAGE_START = 0', 'STAGE_START = 0')
+            source = source.replace('STAGE_END = 1', 'STAGE_END = ' + str(end))
+            source = source.replace('STAGE_PREFILL = 1', 'STAGE_PREFILL = ' + str(int(prefill)))
+            source = source.replace('STAGE_LAST_TOKEN = 0', 'STAGE_LAST_TOKEN = ' + str(int(last_token_logits)))
+            source = source.replace('STAGE_TP_RANK = -1', 'STAGE_TP_RANK = ' + str(rank))
+            (model_root / 'stage.py').write_text(source)
+            shape = [end, plan['kv_pages'], 16, config['num_key_value_heads'], config['head_dim']]
+            if kv is None:
+                keys = G.tensor_zeros(shape, 'bfloat16')
+                values = G.tensor_zeros(shape, 'bfloat16')
+            else:
+                keys, values = kv[rank]
+            first_shape = [batch, tokens]
+            model = G.load_model(str(model_root / 'stage.py'), runtime_mode='compiled_xmodel',
+                backend='tensorrt', precision='bf16', entry_function='GptOssStage', weights=str(weights),
+                cache_dir=str(stage_cache / 'engine'),
+                input_shapes=[first_shape, [batch, tokens], shape, shape,
+                              [batch, math.ceil(plan['capacity'] / 16)], [batch], [batch], [batch]],
+                input_dtypes=['int64', 'int64', 'bfloat16', 'bfloat16', 'int32', 'int32', 'int32', 'int32'],
+                compile={'builder_workspace_mb': 256, 'builder_optimization_level': 1,
+                         'partition': {'enable_preferred_boundaries': False,
+                                       'max_atomic_regions_per_partition': 0}})
+            status = model.runtime_status()
+            if not status['ready']:
+                raise RuntimeError(str(status))
+            stages.append(dict(placement, model=model, keys=keys, values=values))
+    except Exception:
+        for stage in stages:
+            G.cuda_set_device(stage['device_id'])
+            stage['model'].release_runtime()
+        raise
+    finally:
+        G.cuda_set_device(previous)
+    from garnet_pipeline import TensorParallel
+    return TensorParallel(stages)
