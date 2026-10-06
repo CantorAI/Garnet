@@ -46,6 +46,7 @@ GARNET_MODEL_SPEC = {
                 "gpt_oss_apply_yarn_rope_packed",
                 "gpt_oss_paged_attention",
                 "gpt_oss_moe_mxfp4",
+                "gpt_oss_rms_norm",
             ],
         }],
     },

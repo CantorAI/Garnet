@@ -160,7 +160,8 @@ def create(root):
     model_root = Path(__file__).resolve().parents[2] / 'xModel' / 'gpt_oss' / '120b'
     normal = {'id': 'gpt_oss', 'module': 'garnet_gpt_oss', 'abi': 1, 'backend': 'tensorrt',
               'operators': ['gpt_oss_round_bf16', 'gpt_oss_apply_yarn_rope_packed',
-                            'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4']}
+                            'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4',
+                            'gpt_oss_rms_norm']}
     invalid = {'abi_mismatch': [dict(normal, abi=2)],
                'backend_mismatch': [dict(normal, backend='openvino')],
                'missing_plugin': [dict(normal, id='missing')],

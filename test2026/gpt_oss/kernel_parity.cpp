@@ -31,6 +31,30 @@ void compare(const std::vector<float>& actual, const std::vector<float>& expecte
     }
     std::cout << name << " passed; max absolute error " << maximum << "\n";
 }
+void testRmsNorm() {
+    constexpr int tokens = 19, hidden = 2880;
+    constexpr float epsilon = 1.0e-5f;
+    std::vector<float> x(size_t(tokens) * hidden), weight(hidden), expected(x.size());
+    for (size_t i = 0; i < x.size(); ++i)
+        x[i] = bf(std::sin(float(i) * .017f) * 1.7f + std::cos(float(i) * .003f));
+    for (int d = 0; d < hidden; ++d)
+        weight[d] = bf(.75f + .5f * std::sin(float(d) * .011f));
+    for (int row = 0; row < tokens; ++row) {
+        float squareSum = 0.f;
+        for (int d = 0; d < hidden; ++d) {
+            const float value = bf(x[size_t(row) * hidden + d]);
+            squareSum += value * value;
+        }
+        const float inverse = 1.f / std::sqrt(squareSum / hidden + epsilon);
+        for (int d = 0; d < hidden; ++d) {
+            const float value = bf(x[size_t(row) * hidden + d]);
+            expected[size_t(row) * hidden + d] = bf((value * inverse) * weight[d]);
+        }
+    }
+    Device<float> dx(x), dw(weight), dy(std::vector<float>(x.size()));
+    check(RunGptOssRmsNorm(dx.p, dw.p, dy.p, tokens, hidden, epsilon, nullptr));
+    compare(dy.read(), expected, .004f, "GPT-OSS BF16 RMSNorm");
+}
 void testRope() {
     GptOssOptions o; o.qHeads = 4; o.kvHeads = 2; o.headDim = 64;
     const int width = 512, tokens = 4;
@@ -257,5 +281,5 @@ int main() { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     testMxfp4Encoding();
 #endif
-        testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
+        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

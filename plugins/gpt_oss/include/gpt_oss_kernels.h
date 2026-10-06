@@ -6,13 +6,13 @@
 namespace Garnet {
 // Serialized by the TensorRT plugin; bump plugin version when this contract changes.
 struct GptOssOptions {
-    int kind = 0; // 0: YaRN, 1: paged attention, 2: compressed MoE, 3/4: TP collectives
+    int kind = 0; // 0: YaRN, 1: attention, 2: MoE, 3/4: TP collectives, 5: RMSNorm
     int qHeads = 0, kvHeads = 0, headDim = 0;
     int layer = 0, pageSize = 16, window = 0, prefill = 0;
     int hidden = 0, intermediate = 0, experts = 0, topK = 0;
     int tpRank = -1; // -1: unsharded; 0/1: GPT-OSS tensor-parallel rank
     float theta = 150000, factor = 32, initialContext = 4096;
-    float betaFast = 32, betaSlow = 1, limit = 7;
+    float betaFast = 32, betaSlow = 1, limit = 7, epsilon = 1.0e-5f;
 };
 cudaError_t GptOssTpAcquire();
 void GptOssTpRelease();
@@ -21,6 +21,8 @@ cudaError_t GptOssTpAllGather(const float*, float*, float*, size_t, int, int,
     int, cudaStream_t);
 cudaError_t RunGptOssRope(const float*, const std::int64_t*, float*, int,
     const GptOssOptions&, cudaStream_t);
+cudaError_t RunGptOssRmsNorm(const float*, const float*, float*, int, int,
+    float, cudaStream_t);
 cudaError_t RunGptOssAttention(const void* const*, float*, int, int, int, int,
     const GptOssOptions&, cudaStream_t);
 size_t GptOssMoeWorkspace(int tokens, const GptOssOptions&);

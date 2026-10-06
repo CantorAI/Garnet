@@ -8,8 +8,9 @@ def rounded(x):
     return x * T.unary_op("gpt_oss_round_bf16")
 
 
-def norm(x, name):
-    return rounded(x * T.unary_op("rms_norm", weight_name=name, eps=0.00001))
+def norm(x, name, hidden_size):
+    return x * T.unary_op("gpt_oss_rms_norm", weight_name=name,
+                          hidden_size=hidden_size, eps=0.00001)
 
 
 def linear(x, name, bias=None, op="linear", tp_mode=None, tp_rank=-1,
@@ -40,7 +41,7 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
           kv_layer_idx=None, tp_rank=-1):
     prefix = "block." + str(layer_idx)
     residual = x
-    x = norm(x, prefix + ".attn.norm.scale")
+    x = norm(x, prefix + ".attn.norm.scale", config['hidden_size'])
     q_heads, kv_heads = config['num_attention_heads'], config['num_key_value_heads']
     if tp_rank >= 0:
         if q_heads % 2 or kv_heads % 2:
@@ -85,7 +86,7 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         attention_output = linear(attention, prefix + ".attn.out.weight", prefix + ".attn.out.bias")
     x = rounded(residual + attention_output)
     residual = x
-    x = norm(x, prefix + ".mlp.norm.scale")
+    x = norm(x, prefix + ".mlp.norm.scale", config['hidden_size'])
     x = x * T.unary_op(
         "gpt_oss_moe_mxfp4", hidden_size=config['hidden_size'],
         intermediate_size=config['intermediate_size'], num_experts=config['num_experts'],
@@ -108,7 +109,7 @@ def forward(input_ids, position_ids, key_pages, value_pages, page_table,
     for layer_idx in range(config['num_hidden_layers']):
         x = layer(x, position_ids, key_pages, value_pages, page_table,
                   context_length, slot_position, active_mask, config, layer_idx, prefill)
-    return linear(norm(x, "norm.scale"), "unembedding.weight", op="lm_head")
+    return linear(norm(x, "norm.scale", config['hidden_size']), "unembedding.weight", op="lm_head")
 
 
 def forward_stage(x, position_ids, key_pages, value_pages, page_table,
@@ -124,7 +125,7 @@ def forward_stage(x, position_ids, key_pages, value_pages, page_table,
         if last_token_logits:
             x = x * T.unary_op("last_token")
         if tp_rank >= 0:
-            x = linear(norm(x, "norm.scale"), "unembedding.weight", op="lm_head",
+            x = linear(norm(x, "norm.scale", config['hidden_size']), "unembedding.weight", op="lm_head",
                        tp_mode='vocab', tp_rank=tp_rank)
             x = tp_all_gather_logits(x, tp_rank, config)
         else:

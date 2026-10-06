@@ -14,6 +14,33 @@ __device__ float warpSum(float value) {
         value += __shfl_down_sync(0xffffffff, value, offset);
     return value;
 }
+__global__ void rmsNorm(const float* x, const float* weight, float* y,
+    int rows, int hidden, float epsilon) {
+    const int row = blockIdx.x;
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
+    float sum = 0.f;
+    for (int d = threadIdx.x; d < hidden; d += blockDim.x) {
+        const float value = bf(x[size_t(row) * hidden + d]);
+        sum += value * value;
+    }
+    sum = warpSum(sum);
+    __shared__ float partial[8];
+    if (!lane) partial[warp] = sum;
+    __syncthreads();
+    if (warp == 0) {
+        sum = lane < 8 ? partial[lane] : 0.f;
+        sum = warpSum(sum);
+        if (!lane) partial[0] = rsqrtf(sum / hidden + epsilon);
+    }
+    __syncthreads();
+    const float inverse = partial[0];
+    for (int d = threadIdx.x; d < hidden; d += blockDim.x) {
+        const size_t index = size_t(row) * hidden + d;
+        const float value = bf(x[index]);
+        y[index] = bf((value * inverse) * weight[d]);
+    }
+    (void)rows;
+}
 __device__ float fp4(const unsigned char* blocks, const unsigned char* scales,
     size_t row, int column, int width) {
     const unsigned char byte = blocks[row * (width / 2) + column / 2];
@@ -401,6 +428,13 @@ cudaError_t RunGptOssRope(const float* x, const std::int64_t* p, float* y, int t
     const GptOssOptions& o, cudaStream_t stream) {
     const size_t n = size_t(tokens) * (o.qHeads + 2 * o.kvHeads) * o.headDim;
     rope<<<(n + 255) / 256, 256, 0, stream>>>(x, p, y, tokens, o);
+    return cudaGetLastError();
+}
+cudaError_t RunGptOssRmsNorm(const float* x, const float* weight, float* y,
+    int rows, int hidden, float epsilon, cudaStream_t stream) {
+    if (!x || !weight || !y || rows <= 0 || hidden <= 0 || epsilon <= 0.f)
+        return cudaErrorInvalidValue;
+    rmsNorm<<<rows, 256, 0, stream>>>(x, weight, y, rows, hidden, epsilon);
     return cudaGetLastError();
 }
 cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int tokens,
