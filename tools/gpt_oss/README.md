@@ -59,6 +59,14 @@ multiple K tiles, batches of 1, 3, 17 and 65 rows, and attention dimensions
 8, 64 and 128. Pretrained correctness and performance must also be measured
 after kernel changes.
 
+For a local decode-MoE CUDA-graph screen, build the standalone plugin's
+`garnet_gpt_oss_marlin_decode_benchmark` target. Run it in separate processes
+with `GARNET_GPT_OSS_FUSED_DECODE_ROUTE=0`, then `=1`, then `=1` plus
+`GARNET_GPT_OSS_FUSED_MARLIN_LOCK_CLEAR=1`. It reports graph node count and
+L2-flushed replay time for synthetic GPT-OSS-sized expert weights. These
+flags are experimental and must be checked with all four pretrained prompts
+on the target GPU before they can become defaults.
+
 For comparisons, finish and record the reference runtime first, shut it down
 and confirm GPU memory is released, then run Garnet alone. Reuse identical
 Harmony input IDs, greedy sampling, stop IDs, output limits and BF16 KV precision;

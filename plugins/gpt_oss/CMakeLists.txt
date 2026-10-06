@@ -58,6 +58,15 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
     target_include_directories(garnet_gpt_oss_kernel_benchmark PRIVATE include)
     target_link_libraries(garnet_gpt_oss_kernel_benchmark PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_kernel_benchmark PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
+    add_executable(garnet_gpt_oss_marlin_decode_benchmark
+        ../../test2026/gpt_oss/marlin_decode_benchmark.cu
+        cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
+    target_include_directories(garnet_gpt_oss_marlin_decode_benchmark PRIVATE include
+        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
+    target_link_libraries(garnet_gpt_oss_marlin_decode_benchmark PRIVATE CUDA::cudart)
+    target_compile_definitions(garnet_gpt_oss_marlin_decode_benchmark PRIVATE NOMINMAX)
+    target_compile_options(garnet_gpt_oss_marlin_decode_benchmark PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
     if(GARNET_GPT_OSS_ENABLE_NCCL)
         add_executable(garnet_gpt_oss_tp_collective_test
             ../../test2026/gpt_oss/tp_collective.cpp cuda/tp_collective.cpp
