@@ -90,12 +90,13 @@ void testAttention(int dimension) {
     std::vector<uint16_t> keys(2 * pages * 2 * 2 * dimension, bits(17)), values(keys);
     std::vector<int> table{2, 0, 3, 1}, lengths{3, 3}, starts{0, 0}, active{1, 1};
     Device<float> dx(x), ds(sinks), dy(std::vector<float>(batch * tokens * queryWidth));
+    Device<float> scratch(std::vector<float>(size_t(batch) * o.qHeads * 16 * 130));
     Device<uint16_t> dk(keys), dv(values);
     Device<int> dt(table), dl(lengths), dp(starts), da(active);
     const void* in[]{dx.p, dk.p, dv.p, dt.p, dl.p, dp.p, da.p, ds.p};
     for (int window : {0, 2}) {
         o.window = window;
-        check(RunGptOssAttention(in, dy.p, batch, tokens, logical, pages, o, nullptr));
+        check(RunGptOssAttention(in, dy.p, scratch.p, batch, tokens, logical, pages, o, nullptr));
         std::vector<float> expected(batch * tokens * queryWidth);
         for (int b = 0; b < batch; ++b) for (int t = 0; t < tokens; ++t) for (int h = 0; h < 4; ++h) {
             int first = window ? std::max(0, t + 1 - window) : 0;
@@ -119,7 +120,7 @@ void testAttention(int dimension) {
     Device<int> decodeStarts(std::vector<int>{2, 2}), masked(std::vector<int>{1, 0});
     const void* decode[]{dd.p, dk.p, dv.p, dt.p, dl.p, decodeStarts.p, masked.p, ds.p};
     auto prefill = dy.read(); o.prefill = 0;
-    check(RunGptOssAttention(decode, dout.p, batch, 1, logical, pages, o, nullptr));
+    check(RunGptOssAttention(decode, dout.p, scratch.p, batch, 1, logical, pages, o, nullptr));
     auto actual = dout.read(); std::vector<float> expected(batch * queryWidth, 0);
     std::copy_n(prefill.begin() + 2 * queryWidth, queryWidth, expected.begin());
     compare(actual, expected, .006f, "Cached decode + inactive slot");
@@ -140,12 +141,13 @@ void testLongDecodeAttention(int dimension) {
     for (int i=0; i<batch*logical; ++i) table[i]=(i*7)%pages;
     table[3]=-1; // Unmapped pages must contribute neither logits nor values.
     Device<float> dx(input), ds(sinks), dy(std::vector<float>(batch*queryWidth));
+    Device<float> scratch(std::vector<float>(size_t(batch) * o.qHeads * 16 * 130));
     Device<uint16_t> dk(keys), dv(values);
     Device<int> dt(table), dl(std::vector<int>{301,301}), dp(std::vector<int>{300,300}), da(std::vector<int>{1,0});
     const void* in[]{dx.p,dk.p,dv.p,dt.p,dl.p,dp.p,da.p,ds.p};
     for (int window : {0,128}) {
         o.window=window;
-        check(RunGptOssAttention(in,dy.p,batch,1,logical,pages,o,nullptr));
+        check(RunGptOssAttention(in,dy.p,scratch.p,batch,1,logical,pages,o,nullptr));
         auto actualKeys=dk.read(), actualValues=dv.read();
         auto value=[](uint16_t v) { uint32_t bits=uint32_t(v)<<16; float f; std::memcpy(&f,&bits,4); return f; };
         std::vector<float> expected(batch*queryWidth,0);
