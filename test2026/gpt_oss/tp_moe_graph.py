@@ -11,7 +11,6 @@ for rank in (-1, 0, 1):
     root = cache / f'rank{rank}'
     root.mkdir(parents=True, exist_ok=True)
     (root / 'tp_moe_test.py').write_text(source.read_text().replace('TP_RANK = -1', f'TP_RANK = {rank}'))
-    (root / '__init__.py').write_text('')
     G.cuda_set_device(0 if rank < 0 else rank)
     model = G.load_model(str(root / 'tp_moe_test.py'), runtime_mode='compiled_xmodel',
         backend='tensorrt', precision='bf16', entry_function='GptOssTpMoe',
