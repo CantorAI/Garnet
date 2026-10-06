@@ -7,6 +7,7 @@ This log records measurements, decisions, and tradeoffs for GPT-OSS-120B tensor-
 - Machine: 2 × RTX PRO 6000 Blackwell Max-Q (96 GB each), connected through PCIe/PHB, with 300 GB instance disk. This is tensor parallelism (TP2): each GPU holds part of the model, and both participate in each token.
 - Run one server/benchmark at a time. Run vLLM first, then Garnet, with the same saved request IDs, prompt text, output caps, decoding settings, model weights, and BF16 KV cache. Record correctness for arithmetic, code tracing, instruction following, and long context.
 - Separate cold first-request time (which can include one-time MXFP4 packing) from repeat prefill and warm decode. Report wall-clock decode including host updates and both ranks; a forward-only rate omits meaningful overhead. Keep raw logs and profiler traces in `D:/CantorAI/work/gpt-oss-benchmark-evidence-2026-10-05/` (outside Git).
+- `tools/gpt_oss/run_tp_prefill.py` repeats the same TP2 request in one loaded process and records the first (potentially cold) pass separately from the subsequent warm passes; use it for prefill A/B runs with all other environment settings held constant.
 - vLLM reference: 0.31.0, TP2, BF16 KV, FlashInfer attention, Marlin experts, and its automatic all-reduce selection. A different vLLM configuration would require a fresh baseline.
 
 ## Current end-to-end results
