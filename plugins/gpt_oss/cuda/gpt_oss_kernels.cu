@@ -199,23 +199,22 @@ __global__ void decodeAttention(const float* qkv, const __nv_bfloat16* keys,
         output[size_t(b) * o.qHeads * o.headDim + head * o.headDim + d] = bf(value / sum);
     }
 }
-// Score four experts per CTA, one warp per expert. Decode routing is a small
-// matrix-vector product; keeping each reduction within one warp avoids the
-// shared-memory cross-warp reduction and block barrier in the one-CTA/expert
-// version while retaining independent parallelism across all experts.
 __global__ void routeScores(const float* x, const float* weight, const float* bias,
     float* logits, int tokens, GptOssOptions o) {
-    const int expertsPerBlock = 4;
-    const int groups = (o.experts + expertsPerBlock - 1) / expertsPerBlock;
-    const int token = blockIdx.x / groups;
-    const int expert = (blockIdx.x % groups) * expertsPerBlock + (threadIdx.x >> 5);
-    const int lane = threadIdx.x & 31;
-    if (expert >= o.experts) return;
+    const int token = blockIdx.x / o.experts, expert = blockIdx.x % o.experts;
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
     float value = 0;
-    for (int d = lane; d < o.hidden; d += 32)
+    for (int d = threadIdx.x; d < o.hidden; d += blockDim.x)
         value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
     value = warpSum(value);
-    if (!lane) logits[size_t(token) * o.experts + expert] = bf(value + bias[expert]);
+    __shared__ float partial[4];
+    if (!lane) partial[warp] = value;
+    __syncthreads();
+    if (warp == 0) {
+        value = lane < 4 ? partial[lane] : 0.f;
+        value = warpSum(value);
+        if (!lane) logits[size_t(token) * o.experts + expert] = bf(value + bias[expert]);
+    }
 }
 __global__ void routeTopK(float* logits, int* selected, float* probabilities,
     int tokens, GptOssOptions o) {
@@ -574,7 +573,7 @@ size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
 }
 cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* probabilities,
     float* logits, int tokens, const GptOssOptions& o, cudaStream_t stream) {
-    routeScores<<<tokens * ((o.experts + 3) / 4), 128, 0, stream>>>((const float*)in[0],
+    routeScores<<<tokens * o.experts, 128, 0, stream>>>((const float*)in[0],
         (const float*)in[1], (const float*)in[2], logits, tokens, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
     routeTopK<<<tokens, 128, 0, stream>>>(logits, selected, probabilities, tokens, o);
