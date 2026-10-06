@@ -169,23 +169,35 @@ __global__ void decodeAttention(const float* qkv, const __nv_bfloat16* keys,
         output[size_t(b) * o.qHeads * o.headDim + head * o.headDim + d] = bf(value / sum);
     }
 }
-__global__ void route(const float* x, const float* weight, const float* bias,
-    int* selected, float* probabilities, int tokens, GptOssOptions o) {
-    const int token = blockIdx.x, lane = threadIdx.x & 31;
-    extern __shared__ float logits[];
-    for (int expert = threadIdx.x / 32; expert < o.experts; expert += blockDim.x / 32) {
-        float value = 0;
-        for (int d = lane; d < o.hidden; d += 32) value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
-        value = warpSum(value);
-        if (!lane) logits[expert] = bf(value + bias[expert]);
-    }
+__global__ void routeScores(const float* x, const float* weight, const float* bias,
+    float* logits, int tokens, GptOssOptions o) {
+    const int token = blockIdx.x / o.experts, expert = blockIdx.x % o.experts;
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
+    float value = 0;
+    for (int d = threadIdx.x; d < o.hidden; d += blockDim.x)
+        value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
+    value = warpSum(value);
+    __shared__ float partial[4];
+    if (!lane) partial[warp] = value;
     __syncthreads();
+    if (warp == 0) {
+        value = lane < 4 ? partial[lane] : 0.f;
+        value = warpSum(value);
+        if (!lane) logits[size_t(token) * o.experts + expert] = bf(value + bias[expert]);
+    }
+}
+__global__ void routeTopK(float* logits, int* selected, float* probabilities,
+    int tokens, GptOssOptions o) {
+    const int token = blockIdx.x;
     if (threadIdx.x != 0) return;
     float top[8];
     for (int k = 0; k < o.topK; ++k) {
         int best = 0;
-        for (int e = 1; e < o.experts; ++e) if (logits[e] > logits[best]) best = e;
-        selected[token * o.topK + k] = best; top[k] = logits[best]; logits[best] = -FLT_MAX;
+        for (int e = 1; e < o.experts; ++e)
+            if (logits[size_t(token) * o.experts + e] > logits[size_t(token) * o.experts + best]) best = e;
+        selected[token * o.topK + k] = best;
+        top[k] = logits[size_t(token) * o.experts + best];
+        logits[size_t(token) * o.experts + best] = -FLT_MAX;
     }
     float total = 0;
     for (int k = 0; k < o.topK; ++k) total += expf(top[k] - top[0]);
@@ -371,7 +383,9 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int t
     return cudaGetLastError();
 }
 static size_t moeWorkspace(int tokens, const GptOssOptions& o, bool grouped) {
-    size_t bytes = size_t(tokens) * o.topK * (sizeof(int) + sizeof(float) * (1 + o.intermediate));
+    const size_t slots = size_t(tokens) * o.topK;
+    size_t bytes = slots * (sizeof(int) + sizeof(float)) +
+        size_t(tokens) * o.experts * sizeof(float) + slots * o.intermediate * sizeof(float);
     if (grouped) {
         const size_t tasks = (size_t(tokens) * o.topK + 15) / 16 + o.experts;
         bytes += sizeof(int) * (o.experts + size_t(o.experts) * tokens * o.topK + 1 + 2 * tasks);
@@ -383,10 +397,10 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
     const GptOssOptions& o, cudaStream_t stream, bool grouped) {
     auto* selected = (int*)workspace;
     auto* probabilities = (float*)(selected + size_t(tokens) * o.topK);
-    auto* hidden = probabilities + size_t(tokens) * o.topK;
-    route<<<tokens, 256, o.experts * sizeof(float), stream>>>((const float*)in[0],
-        (const float*)in[1], (const float*)in[2], selected, probabilities, tokens, o);
-    auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
+    auto* logits = probabilities + size_t(tokens) * o.topK;
+    auto* hidden = logits + size_t(tokens) * o.experts;
+    auto status = RunGptOssMoeRoute(in, selected, probabilities, logits, tokens, o, stream);
+    if (status != cudaSuccess) return status;
     if (grouped) {
         auto* counts = (int*)(hidden + size_t(tokens) * o.topK * o.intermediate);
         auto* slots = counts + o.experts;
@@ -425,9 +439,11 @@ size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
     return moeWorkspace(tokens, o, tokens >= 16);
 }
 cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* probabilities,
-    int tokens, const GptOssOptions& o, cudaStream_t stream) {
-    route<<<tokens, 256, o.experts * sizeof(float), stream>>>((const float*)in[0],
-        (const float*)in[1], (const float*)in[2], selected, probabilities, tokens, o);
+    float* logits, int tokens, const GptOssOptions& o, cudaStream_t stream) {
+    routeScores<<<tokens * o.experts, 128, 0, stream>>>((const float*)in[0],
+        (const float*)in[1], (const float*)in[2], logits, tokens, o);
+    auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
+    routeTopK<<<tokens, 32, 0, stream>>>(logits, selected, probabilities, tokens, o);
     return cudaGetLastError();
 }
 cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int tokens,

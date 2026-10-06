@@ -32,11 +32,12 @@ bool supported(int tokens,const GptOssOptions& o) {
         o.experts>0 && o.experts<=256 && o.topK>0 && o.topK<=8 && o.topK<=o.experts;
 }
 struct Layout {
-    size_t bytes=0,selected,probabilities,a,up,activation,down,sorted,experts,padded,locks,tmp;
+    size_t bytes=0,selected,probabilities,routeLogits,a,up,activation,down,sorted,experts,padded,locks,tmp;
     size_t take(size_t size) { bytes=(bytes+15)&~size_t(15);size_t offset=bytes;bytes+=size;return offset; }
     Layout(int tokens,const GptOssOptions& o) {
         Geometry g(o); const size_t slots=size_t(tokens)*o.topK, n=std::max(g.upN,g.downN);
-        selected=take(slots*4);probabilities=take(slots*4);a=take(size_t(tokens)*g.upK*2);
+        selected=take(slots*4);probabilities=take(slots*4);
+        routeLogits=take(size_t(tokens)*o.experts*4);a=take(size_t(tokens)*g.upK*2);
         up=take(slots*g.upN*2);activation=take(slots*g.downK*2);down=take(slots*g.downN*2);
         sorted=take(slots*8*4);experts=take(slots*4);padded=take(4);
         locks=take(size_t(o.experts)*(n/64)*16*4);
@@ -199,7 +200,8 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     status=s.prepare(in,stream);if(status!=cudaSuccess)return status;
     const auto& o=s.o;const auto& g=s.g;const Layout l(tokens,o);int slots=tokens*o.topK;
     auto selected=at<int>(workspace,l.selected);auto probabilities=at<float>(workspace,l.probabilities);
-    status=RunGptOssMoeRoute(in,selected,probabilities,tokens,o,stream);if(status!=cudaSuccess)return status;
+    status=RunGptOssMoeRoute(in,selected,probabilities,at<float>(workspace,l.routeLogits),tokens,o,stream);
+    if(status!=cudaSuccess)return status;
     convertInput<<<(tokens*g.upK+255)/256,256,0,stream>>>((const float*)in[0],at<nv_bfloat16>(workspace,l.a),tokens,o.hidden,g.upK);
     metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts);
     status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
