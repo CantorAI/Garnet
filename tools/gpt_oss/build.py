@@ -4,6 +4,7 @@ Windows: run in a Visual Studio x64 developer shell. Linux: use CUDA + TensorRT
 SDKs matching the selected GPU. All build products stay under --build-dir.
 """
 import argparse
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -71,6 +72,13 @@ if args.enable_nccl:
         'LD_LIBRARY_PATH=' + str(build / 'bin') + ':' + str(args.tensorrt_root.resolve() / 'lib'),
         'ctest', '--test-dir', str(build), '--output-on-failure',
         '-R', '^garnet_gpt_oss_tp_collective_test$'], check=True)
+    environment = os.environ.copy()
+    environment['LD_LIBRARY_PATH'] = os.pathsep.join([
+        str(build / 'bin'), str(args.tensorrt_root.resolve() / 'lib'),
+        environment.get('LD_LIBRARY_PATH', '')])
+    subprocess.run([str(executable), str(repo / 'test2026/gpt_oss/tp_collective_graph.py'),
+                    str(build / 'tp2-collective-xmodel-test')],
+                   cwd=repo, env=environment, check=True)
 for artifact in (executable, shared):
     destination = build / 'bin' / artifact.name
     if artifact.resolve() != destination.resolve():
