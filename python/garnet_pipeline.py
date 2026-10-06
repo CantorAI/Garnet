@@ -130,11 +130,14 @@ class TensorParallel:
 
         return self._run_prepared(prepared)
 
-    def forward_rank_local(self, rank_inputs, sample=False):
+    def forward_rank_local(self, rank_inputs, sample=False, scalar_values=None):
         """Run tensors already resident on their corresponding rank device."""
         if len(rank_inputs) != len(self.stages):
             raise ValueError('one input group per tensor-parallel rank is required')
+        if scalar_values is not None and len(scalar_values) != 4:
+            raise ValueError('rank-local scalar update requires token, position, length and slot')
         prepared = []
+        updates = []
         for stage, (activation, controls) in zip(self.stages, rank_inputs):
             if len(controls) != 5:
                 raise ValueError('rank-local controls must contain position, page table, length, slot and active')
@@ -143,16 +146,20 @@ class TensorParallel:
             if sample and stage['rank'] == 0:
                 request['sample'] = 'greedy'
             prepared.append((stage, request))
-        return self._run_prepared(prepared)
+            if scalar_values is not None:
+                updates.append(([activation, controls[0], controls[2], controls[3]], scalar_values))
+        return self._run_prepared(prepared, updates if scalar_values is not None else None)
 
-    def _run_prepared(self, prepared):
+    def _run_prepared(self, prepared, updates=None):
         import garnet as G
         import os
 
-        def run(stage, request):
+        def run(stage, request, update):
             previous = G.cuda_set_device(stage['device_id'])
             try:
                 trace = os.environ.get('GARNET_TP_TRACE')
+                if update is not None and not G.tensor_update_int_scalars_async(*update):
+                    raise RuntimeError('rank-local scalar update failed')
                 if trace:
                     print('tp-rank', stage['rank'], 'enter model forward', flush=True)
                 result = stage['model'].forward(request)
@@ -167,7 +174,9 @@ class TensorParallel:
             finally:
                 G.cuda_set_device(previous)
 
-        futures = [self.executor.submit(run, stage, request) for stage, request in prepared]
+        futures = [self.executor.submit(run, stage, request,
+            updates[index] if updates is not None else None)
+            for index, (stage, request) in enumerate(prepared)]
         results = [future.result() for future in futures]
         return results[0]
 

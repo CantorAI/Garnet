@@ -8,6 +8,7 @@
 #include "../image/cuda/jpeg_decode_nvjpeg.h"
 #include "../tokenizer/qwen_tokenizer.h"
 #include "../cuda/cuda_lib.h"
+#include "../cuda/int_scalar_update.h"
 #include "../tensor/tensor_helper.h"
 #include "../model/model_catalog.h"
 #include "../runtime/acceleration_detector.h"
@@ -3659,6 +3660,40 @@ namespace Garnet
         const cudaError_t copyComplete = cudaStreamSynchronize(cudaStreamPerThread);
         if (status == cudaSuccess) status = copyComplete;
         return X::Value(status == cudaSuccess);
+    }
+
+    X::Value GarnetAPI::TensorUpdateIntScalarsAsync(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        (void)kwParams;
+        if (params.size() != 2 || !params[0].IsList() || !params[1].IsList())
+            return X::Value(false);
+        X::Value tensorList(params[0]), valueList(params[1]);
+        if (tensorList.Size() != 4 || valueList.Size() != 4)
+            return X::Value(false);
+
+        std::vector<std::pair<X::Tensor, X3TensorAccess>> tensors;
+        tensors.reserve(4);
+        IntScalarUpdate4 updates{};
+        for (int index = 0; index < 4; ++index) {
+            X::Value item = tensorList.Get(index);
+            if (!X::Tensor::IsTensor(item)) return X::Value(false);
+            X::Tensor tensor(item);
+            ValidateDenseTensor(tensor, true);
+            if (tensor.Info().device_type != 1 || TensorCount(tensor) != 1 ||
+                (tensor.Info().dtype != X3_TENSOR_INT32 && tensor.Info().dtype != X3_TENSOR_INT64))
+                return X::Value(false);
+            const int64_t value = CheckedInt64(valueList.Get(index), "tensor scalar value");
+            if (tensor.Info().dtype == X3_TENSOR_INT32 &&
+                (value < INT32_MIN || value > INT32_MAX))
+                return X::Value(false);
+            tensors.emplace_back(tensor, X3_TENSOR_WRITE);
+            updates.items[index] = {tensor.Info().data, value,
+                tensor.Info().dtype == X3_TENSOR_INT32 ? 4 : 8};
+        }
+        // The caller must enqueue its next GPU use on this same per-thread stream.
+        // CUDAUse records a completion event for the pending kernel without blocking.
+        auto use = TensorHelper::AcquireGPU(tensors);
+        return X::Value(LaunchIntScalarUpdate4(updates, cudaStreamPerThread) == cudaSuccess);
     }
 
     X::Value GarnetAPI::TensorAdd(const X::ARGS& params, const X::KWARGS& kwParams)

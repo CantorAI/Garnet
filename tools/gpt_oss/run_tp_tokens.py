@@ -61,6 +61,7 @@ if limit > 1 and generated[-1] not in stops:
     position = tensor([len(ids)], 'int64', [1, 1])
     rank_local = os.environ.get('GARNET_TP_RANK_LOCAL_INPUTS') == '1'
     batched_updates = os.environ.get('GARNET_GPT_OSS_BATCH_CONTROL_UPDATES') == '1'
+    inline_updates = rank_local and os.environ.get('GARNET_GPT_OSS_INLINE_CONTROL_KERNEL') == '1'
     rank_inputs = None
     if rank_local:
         rank_inputs = []
@@ -84,7 +85,7 @@ if limit > 1 and generated[-1] not in stops:
             profiling = True
         wall_step_started = time.perf_counter()
         index = len(ids) + offset - 1
-        if rank_local:
+        if rank_local and not inline_updates:
             for stage, (local_token, local_controls) in zip(model.stages, rank_inputs):
                 previous = G.cuda_set_device(stage['device_id'])
                 try:
@@ -100,7 +101,7 @@ if limit > 1 and generated[-1] not in stops:
                         G.tensor_update_from_host(local_controls[3], [index])
                 finally:
                     G.cuda_set_device(previous)
-        else:
+        elif not rank_local:
             if batched_updates:
                 if not G.tensor_update_int_scalars([token, position, length, slot],
                                                    [generated[-1], index, index + 1, index]):
@@ -111,7 +112,8 @@ if limit > 1 and generated[-1] not in stops:
                 G.tensor_update_from_host(length, [index + 1])
                 G.tensor_update_from_host(slot, [index])
         started = time.perf_counter()
-        result = (model.forward_rank_local(rank_inputs, True) if rank_local else
+        result = (model.forward_rank_local(rank_inputs, True,
+            [generated[-1], index, index + 1, index] if inline_updates else None) if rank_local else
             model.forward(token, [position, table, length, slot, active], True))
         step_seconds = time.perf_counter() - started
         decode_step_seconds.append(step_seconds)
@@ -155,6 +157,7 @@ Path(sys.argv[4]).write_text(json.dumps({
     'warm_decode_wall_tokens_per_second': warm_decode_wall_tokens_per_second,
     'rank_local_inputs': rank_local if limit > 1 else False,
     'batched_control_updates': batched_updates if limit > 1 else False,
+    'inline_control_kernel': inline_updates if limit > 1 else False,
     'validation': 'experimental TP2 with sharded attention heads and rank-local experts; full pretrained validation pending'
 }, indent=2))
 print('Generated', len(generated), 'tokens with two-rank GPT-OSS tensor parallelism', flush=True)
