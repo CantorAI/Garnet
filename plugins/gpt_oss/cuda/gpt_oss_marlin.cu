@@ -35,7 +35,12 @@ struct Geometry {
         downN((o.hidden+63)/64*64) {}
 };
 bool supported(int tokens,const GptOssOptions& o) {
-    return tokens>0 && tokens<=8 && o.hidden>0 && o.hidden<=16384 && o.hidden%32==0 &&
+    static const int maxTokens = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_MAX_TOKENS");
+        const int parsed = value ? std::atoi(value) : 8;
+        return parsed == 512 || parsed == 4096 ? parsed : 8;
+    }();
+    return tokens>0 && tokens<=maxTokens && o.hidden>0 && o.hidden<=16384 && o.hidden%32==0 &&
         o.intermediate>0 && o.intermediate<=65536 && o.intermediate%32==0 &&
         o.experts>0 && o.experts<=256 && o.topK>0 && o.topK<=8 && o.topK<=o.experts &&
         o.tpRank>=-1 && o.tpRank<2;
