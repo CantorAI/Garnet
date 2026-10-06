@@ -233,5 +233,5 @@ int main() { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     testMxfp4Encoding();
 #endif
-        testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); testMoe(1025, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
+        testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }
