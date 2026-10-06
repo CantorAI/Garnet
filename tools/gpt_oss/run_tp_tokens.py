@@ -1,5 +1,6 @@
 """XLang3: run_tp_tokens.py original-weights cache request.json result.json."""
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -50,24 +51,51 @@ kv = [(stage['keys'], stage['values']) for stage in model.stages]
 model.release()
 decode_seconds = decode_wall_seconds = decode_prepare_seconds = 0.
 decode_step_seconds = []
+decode_wall_step_seconds = []
 if limit > 1 and generated[-1] not in stops:
     started = time.perf_counter()
     print('Building TP2 decode engines', flush=True)
     model = build_tensor_parallel(weights, cache, plan, 1, False, kv)
     token = tensor([generated[-1]], 'int64', [1, 1])
     position = tensor([len(ids)], 'int64', [1, 1])
+    rank_local = os.environ.get('GARNET_TP_RANK_LOCAL_INPUTS') == '1'
+    rank_inputs = None
+    if rank_local:
+        rank_inputs = []
+        for stage in model.stages:
+            previous = G.cuda_set_device(stage['device_id'])
+            try:
+                rank_inputs.append((G.tensor_to_device(token, stage['device_id']),
+                    [G.tensor_to_device(t, stage['device_id'])
+                     for t in (position, table, length, slot, active)]))
+            finally:
+                G.cuda_set_device(previous)
     decode_prepare_seconds = time.perf_counter() - started
     decode_started = time.perf_counter()
     for offset in range(1, limit):
+        wall_step_started = time.perf_counter()
         index = len(ids) + offset - 1
-        G.tensor_update_from_host(token, [generated[-1]])
-        G.tensor_update_from_host(position, [index])
-        G.tensor_update_from_host(length, [index + 1])
-        G.tensor_update_from_host(slot, [index])
+        if rank_local:
+            for stage, (local_token, local_controls) in zip(model.stages, rank_inputs):
+                previous = G.cuda_set_device(stage['device_id'])
+                try:
+                    G.tensor_update_from_host(local_token, [generated[-1]])
+                    G.tensor_update_from_host(local_controls[0], [index])
+                    G.tensor_update_from_host(local_controls[2], [index + 1])
+                    G.tensor_update_from_host(local_controls[3], [index])
+                finally:
+                    G.cuda_set_device(previous)
+        else:
+            G.tensor_update_from_host(token, [generated[-1]])
+            G.tensor_update_from_host(position, [index])
+            G.tensor_update_from_host(length, [index + 1])
+            G.tensor_update_from_host(slot, [index])
         started = time.perf_counter()
-        result = model.forward(token, [position, table, length, slot, active], True)
+        result = (model.forward_rank_local(rank_inputs, True) if rank_local else
+            model.forward(token, [position, table, length, slot, active], True))
         step_seconds = time.perf_counter() - started
         decode_step_seconds.append(step_seconds)
+        decode_wall_step_seconds.append(time.perf_counter() - wall_step_started)
         decode_seconds += step_seconds
         generated.append(int(result['token_id']))
         if generated[-1] in stops:
@@ -80,9 +108,12 @@ if limit > 1 and generated[-1] not in stops:
 # Keep its latency visible, but exclude it from steady-state throughput just
 # as TTFT is kept separate from decode throughput in the vLLM measurements.
 warm_decode_seconds = sum(decode_step_seconds[1:])
+warm_decode_wall_seconds = sum(decode_wall_step_seconds[1:])
 warm_decode_tokens = max(0, len(decode_step_seconds) - 1)
 warm_decode_tokens_per_second = (warm_decode_tokens / warm_decode_seconds
     if warm_decode_seconds > 0 else None)
+warm_decode_wall_tokens_per_second = (warm_decode_tokens / warm_decode_wall_seconds
+    if warm_decode_wall_seconds > 0 else None)
 
 Path(sys.argv[4]).write_text(json.dumps({
     'token_ids': generated, 'placement': plan, 'load_seconds': load_seconds,
@@ -90,9 +121,13 @@ Path(sys.argv[4]).write_text(json.dumps({
     'decode_prepare_seconds': decode_prepare_seconds,
     'decode_wall_seconds': decode_wall_seconds,
     'decode_step_seconds': decode_step_seconds,
+    'decode_wall_step_seconds': decode_wall_step_seconds,
     'warm_decode_seconds': warm_decode_seconds,
+    'warm_decode_wall_seconds': warm_decode_wall_seconds,
     'warm_decode_tokens': warm_decode_tokens,
     'warm_decode_tokens_per_second': warm_decode_tokens_per_second,
+    'warm_decode_wall_tokens_per_second': warm_decode_wall_tokens_per_second,
+    'rank_local_inputs': rank_local if limit > 1 else False,
     'validation': 'experimental TP2 with sharded attention heads and rank-local experts; full pretrained validation pending'
 }, indent=2))
 print('Generated', len(generated), 'tokens with two-rank GPT-OSS tensor parallelism', flush=True)

@@ -128,6 +128,27 @@ class TensorParallel:
             finally:
                 G.cuda_set_device(previous)
 
+        return self._run_prepared(prepared)
+
+    def forward_rank_local(self, rank_inputs, sample=False):
+        """Run tensors already resident on their corresponding rank device."""
+        if len(rank_inputs) != len(self.stages):
+            raise ValueError('one input group per tensor-parallel rank is required')
+        prepared = []
+        for stage, (activation, controls) in zip(self.stages, rank_inputs):
+            if len(controls) != 5:
+                raise ValueError('rank-local controls must contain position, page table, length, slot and active')
+            request = {'inputs': [activation, controls[0], stage['keys'], stage['values'],
+                controls[1], controls[2], controls[3], controls[4]]}
+            if sample and stage['rank'] == 0:
+                request['sample'] = 'greedy'
+            prepared.append((stage, request))
+        return self._run_prepared(prepared)
+
+    def _run_prepared(self, prepared):
+        import garnet as G
+        import os
+
         def run(stage, request):
             previous = G.cuda_set_device(stage['device_id'])
             try:
