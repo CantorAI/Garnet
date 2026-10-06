@@ -374,7 +374,7 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
         }
     }
 }
-__global__ void combineExperts(const float* values, const float* probabilities,
+__global__ void combineExperts(const float* values, const float* probabilities, const int* selected,
     float* y, int tokens, GptOssOptions o) {
     const size_t index = size_t(blockIdx.x) * blockDim.x + threadIdx.x;
     if (index >= size_t(tokens) * o.hidden) return;
@@ -515,7 +515,7 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
                 (const float*)in[8], counts, slots, taskCount, tasks, values, tokens, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
         const size_t n = size_t(tokens) * o.hidden;
-        combineExperts<<<(n + 127) / 128, 128, 0, stream>>>(values, probabilities, y, tokens, o);
+        combineExperts<<<(n + 127) / 128, 128, 0, stream>>>(values, probabilities, selected, y, tokens, o);
         return cudaGetLastError();
     }
     size_t n = size_t(tokens) * o.topK * o.intermediate;
