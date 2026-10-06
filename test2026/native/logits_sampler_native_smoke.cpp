@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -101,7 +102,6 @@ int main(int argc, char** argv)
     cudaFree(dLogits);
     cudaFree(dTokenId);
     cudaFree(dTokenValue);
-    CloseNativeLibrary(dll);
     if (!cudaOk) {
         return 5;
     }
@@ -109,6 +109,43 @@ int main(int argc, char** argv)
         std::cerr << "unexpected sample token_id=" << tokenId << " token_value=" << tokenValue << "\n";
         return 6;
     }
+
+    // Exercise the large-vocabulary path, including a tie across chunks and a NaN.
+    constexpr int largeVocab = 200003;
+    std::vector<float> largeLogits(largeVocab, -10.0f);
+    largeLogits[1023] = 42.5f;
+    largeLogits[150001] = 42.5f;
+    largeLogits[190000] = std::numeric_limits<float>::quiet_NaN();
+    dLogits = nullptr;
+    dTokenId = nullptr;
+    dTokenValue = nullptr;
+    cudaOk =
+        CheckCuda(cudaMalloc(&dLogits, largeLogits.size() * sizeof(float)), "cudaMalloc large logits") &&
+        CheckCuda(cudaMalloc(&dTokenId, sizeof(long long)), "cudaMalloc large token id") &&
+        CheckCuda(cudaMalloc(&dTokenValue, sizeof(float)), "cudaMalloc large token value") &&
+        CheckCuda(cudaMemcpy(dLogits, largeLogits.data(), largeLogits.size() * sizeof(float), cudaMemcpyHostToDevice), "cudaMemcpy large logits");
+    if (cudaOk) {
+        error[0] = '\0';
+        rc = sample(dLogits, 1, largeVocab, dTokenId, dTokenValue, error, static_cast<int>(sizeof(error)));
+        if (rc != 0) {
+            std::cerr << "large-vocab sample failed rc=" << rc << " error=" << error << "\n";
+            cudaOk = false;
+        } else {
+            cudaOk =
+                CheckCuda(cudaMemcpy(&tokenId, dTokenId, sizeof(long long), cudaMemcpyDeviceToHost), "cudaMemcpy large token id") &&
+                CheckCuda(cudaMemcpy(&tokenValue, dTokenValue, sizeof(float), cudaMemcpyDeviceToHost), "cudaMemcpy large token value");
+        }
+    }
+    if (dLogits) cudaFree(dLogits);
+    if (dTokenId) cudaFree(dTokenId);
+    if (dTokenValue) cudaFree(dTokenValue);
+    if (!cudaOk || tokenId != 1023 || tokenValue != 42.5f) {
+        std::cerr << "unexpected large-vocab sample token_id=" << tokenId
+                  << " token_value=" << tokenValue << "\n";
+        CloseNativeLibrary(dll);
+        return 7;
+    }
+    CloseNativeLibrary(dll);
 
     std::cout << "Garnet debug logits sampler native smoke passed\n";
     std::cout << "rows: " << rows << "\n";

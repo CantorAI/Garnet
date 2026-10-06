@@ -60,6 +60,70 @@ namespace
         }
     }
 
+    // For large vocabularies, many blocks scan independent chunks and publish
+    // their best (value, lowest index) with one packed atomic maximum. The
+    // zero sentinel means no logit exceeded the legacy -FLT_MAX initial value.
+    __global__ void logitsTop1ChunksKernel(const float* logits,
+        unsigned long long* packedBest, int rows, int vocabSize)
+    {
+        constexpr int chunkSize = 1024;
+        __shared__ float values[256];
+        __shared__ int indices[256];
+        const int tid = threadIdx.x;
+        const int first = blockIdx.x * chunkSize;
+        const int end = min(first + chunkSize, vocabSize);
+        const float* row = logits + static_cast<size_t>(rows - 1) * vocabSize;
+        float bestValue = -3.4028234663852886e38f;
+        int bestIndex = 0;
+        for (int i = first + tid; i < end; i += blockDim.x) {
+            const float value = row[i];
+            if (value > bestValue || (value == bestValue && i < bestIndex)) {
+                bestValue = value;
+                bestIndex = i;
+            }
+        }
+        values[tid] = bestValue;
+        indices[tid] = bestIndex;
+        __syncthreads();
+        for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+            if (tid < stride) {
+                const float otherValue = values[tid + stride];
+                const int otherIndex = indices[tid + stride];
+                if (otherValue > values[tid] ||
+                    (otherValue == values[tid] && otherIndex < indices[tid])) {
+                    values[tid] = otherValue;
+                    indices[tid] = otherIndex;
+                }
+            }
+            __syncthreads();
+        }
+        if (tid == 0 && values[0] > -3.4028234663852886e38f) {
+            // Treat -0 and +0 as equal, matching float comparison. The finish
+            // kernel reads the original logit to retain its exact sign/value.
+            const float value = values[0] == 0.0f ? 0.0f : values[0];
+            const unsigned int raw = __float_as_uint(value);
+            const unsigned int ordered = (raw & 0x80000000u) ? ~raw : raw ^ 0x80000000u;
+            const unsigned long long packed =
+                (static_cast<unsigned long long>(ordered) << 32) |
+                (0xffffffffu - static_cast<unsigned int>(indices[0]));
+            atomicMax(packedBest, packed);
+        }
+    }
+
+    __global__ void logitsTop1FinishKernel(const float* logits,
+        long long* outputTokenId, float* outputTokenValue, int rows, int vocabSize)
+    {
+        const unsigned long long packed =
+            *reinterpret_cast<const unsigned long long*>(outputTokenId);
+        const int index = packed ? static_cast<int>(0xffffffffu - static_cast<unsigned int>(packed)) : 0;
+        outputTokenId[0] = static_cast<long long>(index);
+        if (outputTokenValue) {
+            outputTokenValue[0] = packed
+                ? logits[static_cast<size_t>(rows - 1) * vocabSize + index]
+                : -3.4028234663852886e38f;
+        }
+    }
+
     template<bool Penalize = false>
     __global__ void logitsTop1LastRowBF16Kernel(
         const __nv_bfloat16* logits,
@@ -232,12 +296,19 @@ extern "C" cudaError_t runLogitsTop1FP32(
     if (!logits || !outputTokenId || rows <= 0 || vocabSize <= 0) {
         return cudaErrorInvalidValue;
     }
-    logitsTop1LastRowKernel<false><<<1, 256, 0, stream>>>(
-        logits,
-        outputTokenId,
-        outputTokenValue,
-        rows,
-        vocabSize);
+    if (vocabSize >= 8192) {
+        auto status = cudaMemsetAsync(outputTokenId, 0, sizeof(long long), stream);
+        if (status != cudaSuccess) return status;
+        logitsTop1ChunksKernel<<<(vocabSize + 1023) / 1024, 256, 0, stream>>>(
+            logits, reinterpret_cast<unsigned long long*>(outputTokenId), rows, vocabSize);
+        status = cudaGetLastError();
+        if (status != cudaSuccess) return status;
+        logitsTop1FinishKernel<<<1, 1, 0, stream>>>(
+            logits, outputTokenId, outputTokenValue, rows, vocabSize);
+    } else {
+        logitsTop1LastRowKernel<false><<<1, 256, 0, stream>>>(
+            logits, outputTokenId, outputTokenValue, rows, vocabSize);
+    }
     return cudaGetLastError();
 }
 
