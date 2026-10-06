@@ -168,6 +168,7 @@ __global__ void tiledPrefillAttention64(const float* qkv,
     constexpr int KeyTile = 16, Dim = 64;
     __shared__ __nv_bfloat16 tileK[KeyTile][Dim], tileV[KeyTile][Dim];
     __shared__ int tileValid[KeyTile];
+    __shared__ size_t tileOffset[KeyTile];
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
     const int queryTiles = (tokens + QueryTile - 1) / QueryTile;
     const int head = blockIdx.x % o.qHeads;
@@ -193,11 +194,17 @@ __global__ void tiledPrefillAttention64(const float* qkv,
     float accum[2] = {}, maximum = sinks[head], sum = 1.f;
     const int kvHead = head / (o.qHeads / o.kvHeads);
     if (active[b]) for (int p0 = firstBegin; p0 < lastEnd; p0 += KeyTile) {
-        for (int i = threadIdx.x; i < KeyTile * Dim; i += blockDim.x) {
-            const int k = i / Dim, d = i % Dim, p = p0 + k;
+        if (threadIdx.x < KeyTile) {
+            const int p = p0 + threadIdx.x;
             const size_t offset = p < lastEnd ? cacheOffset(table, logicalPages,
                 physicalPages, b, p, kvHead, 0, o) : SIZE_MAX;
-            if (!d) tileValid[k] = offset != SIZE_MAX;
+            tileOffset[threadIdx.x] = offset;
+            tileValid[threadIdx.x] = offset != SIZE_MAX;
+        }
+        __syncthreads();
+        for (int i = threadIdx.x; i < KeyTile * Dim; i += blockDim.x) {
+            const int k = i / Dim, d = i % Dim;
+            const size_t offset = tileOffset[k];
             tileK[k][d] = offset == SIZE_MAX ? __float2bfloat16(0.f) : keys[offset + d];
             tileV[k][d] = offset == SIZE_MAX ? __float2bfloat16(0.f) : values[offset + d];
         }
