@@ -71,8 +71,13 @@ def main():
     left.release_runtime()
     # Edit only a relative dependency; both graph fingerprinting and import
     # namespaces must observe its new contents inside this same process.
-    write(os.path.join(os.path.dirname(left_source), "helper.py"),
-          "def combine(a, b):\n    return a * b\n")
+    helper_source = os.path.join(os.path.dirname(left_source), "helper.py")
+    previous_mtime = os.stat(helper_source).st_mtime
+    write(helper_source, "def combine(a, b):\n    return a * b\n")
+    # CPython timestamp pyc files use whole-second mtimes and source size.
+    # '+' and '*' have the same size, so a rapid rewrite can reuse stale code.
+    newer_mtime = max(os.stat(helper_source).st_mtime, previous_mtime + 2)
+    os.utime(helper_source, (newer_mtime, newer_mtime))
     edited = load(left_source, left_cache, backend)
     check(edited, [16, 18])
     check(right, [6, 3])
