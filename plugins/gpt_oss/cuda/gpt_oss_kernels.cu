@@ -284,6 +284,7 @@ __global__ void bucketExperts(const int* selected, int* counts, int* slots,
     const int row = atomicAdd(counts + expert, 1);
     slots[size_t(expert) * tokens * o.topK + row] = slot;
 }
+template<int Rows>
 __global__ void expertTasks(const int* counts, int* taskCount, int* tasks,
     GptOssOptions o) {
     // Compact tiles rather than launching the worst-case token count for
@@ -291,7 +292,7 @@ __global__ void expertTasks(const int* counts, int* taskCount, int* tasks,
     // selections if nonfinite router inputs reach this low-level operator.
     int total = 0;
     for (int e = 0; e < o.experts; ++e)
-        for (int row = 0; row < counts[e]; row += 32) {
+        for (int row = 0; row < counts[e]; row += Rows) {
             tasks[2 * total] = e;
             tasks[2 * total + 1] = row;
             ++total;
@@ -301,7 +302,7 @@ __global__ void expertTasks(const int* counts, int* taskCount, int* tasks,
 // W4A16 grouped prefill: unpack one weight tile into shared BF16, reuse it
 // across thirty-two routed tokens, and accumulate on BF16 Tensor Cores. Weight
 // storage remains MXFP4; there is no full-model BF16 materialization.
-template<bool Up>
+template<bool Up, int Rows>
 __global__ void groupedExperts(const float* x, const unsigned char* blocks,
     const unsigned char* scales, const float* bias, const int* counts,
     const int* slots, const int* taskCount, const int* tasks, float* output,
@@ -311,16 +312,16 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
     const int nStart = blockIdx.y * 32;
     const int width = Up ? o.hidden : o.intermediate;
     const int outputs = Up ? 2 * o.intermediate : o.hidden;
-    __shared__ __align__(32) __nv_bfloat16 a[32 * 32];
+    __shared__ __align__(32) __nv_bfloat16 a[Rows * 32];
     __shared__ __align__(32) __nv_bfloat16 b[32 * 32];
-    __shared__ __align__(32) float c[32 * 32];
+    __shared__ __align__(32) float c[Rows * 32];
     const int warp = threadIdx.x / 32;
     const int mStart = (warp / 2) * 16, nSub = warp % 2;
     using namespace nvcuda;
     wmma::fragment<wmma::accumulator, 16, 16, 16, float> acc;
     wmma::fill_fragment(acc, 0.f);
     for (int kStart = 0; kStart < width; kStart += 32) {
-        for (int index = threadIdx.x; index < 32 * 32; index += blockDim.x) {
+        for (int index = threadIdx.x; index < Rows * 32; index += blockDim.x) {
             const int m = index / 32, k = index % 32;
             float value = 0;
             if (first + m < counts[expert] && kStart + k < width) {
@@ -349,7 +350,7 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
     }
     wmma::store_matrix_sync(c + mStart * 32 + nSub * 16, acc, 32, wmma::mem_row_major);
     __syncthreads();
-    for (int index = threadIdx.x; index < 32 * 32; index += blockDim.x) {
+    for (int index = threadIdx.x; index < Rows * 32; index += blockDim.x) {
         const int m = index / 32, n = index % 32;
         if (first + m >= counts[expert] || nStart + n >= outputs) continue;
         const int slot = slots[size_t(expert) * tokens * o.topK + first + m];
@@ -453,7 +454,8 @@ static size_t moeWorkspace(int tokens, const GptOssOptions& o, bool grouped) {
     size_t bytes = slots * (sizeof(int) + sizeof(float)) +
         size_t(tokens) * o.experts * sizeof(float) + slots * o.intermediate * sizeof(float);
     if (grouped) {
-        const size_t tasks = (size_t(tokens) * o.topK + 31) / 32 + o.experts;
+        const size_t tileRows = tokens > 512 ? 64 : 32;
+        const size_t tasks = (slots + tileRows - 1) / tileRows + o.experts;
         bytes += sizeof(int) * (o.experts + size_t(o.experts) * tokens * o.topK + 1 + 2 * tasks);
         bytes += sizeof(float) * size_t(tokens) * o.topK * o.hidden;
     }
@@ -468,25 +470,39 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
     auto status = RunGptOssMoeRoute(in, selected, probabilities, logits, tokens, o, stream);
     if (status != cudaSuccess) return status;
     if (grouped) {
+        const int tileRows = tokens > 512 ? 64 : 32;
         auto* counts = (int*)(hidden + size_t(tokens) * o.topK * o.intermediate);
         auto* slots = counts + o.experts;
         auto* taskCount = slots + size_t(o.experts) * tokens * o.topK;
         auto* tasks = taskCount + 1;
-        const size_t maxTasks = (size_t(tokens) * o.topK + 31) / 32 + o.experts;
+        const size_t maxTasks = (size_t(tokens) * o.topK + tileRows - 1) / tileRows + o.experts;
         auto* values = (float*)(tasks + 2 * maxTasks);
         status = cudaMemsetAsync(counts, 0, o.experts * sizeof(int), stream);
         if (status != cudaSuccess) return status;
         bucketExperts<<<(tokens * o.topK + 127) / 128, 128, 0, stream>>>(selected, counts, slots, tokens, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
-        expertTasks<<<1, 1, 0, stream>>>(counts, taskCount, tasks, o);
+        if (tileRows == 64)
+            expertTasks<64><<<1, 1, 0, stream>>>(counts, taskCount, tasks, o);
+        else
+            expertTasks<32><<<1, 1, 0, stream>>>(counts, taskCount, tasks, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
-        groupedExperts<true><<<dim3(maxTasks, (2 * o.intermediate + 31) / 32), 128, 0, stream>>>(
-            (const float*)in[0], (const unsigned char*)in[3], (const unsigned char*)in[4],
-            (const float*)in[5], counts, slots, taskCount, tasks, hidden, tokens, o);
+        if (tileRows == 64)
+            groupedExperts<true, 64><<<dim3(maxTasks, (2 * o.intermediate + 31) / 32), 256, 0, stream>>>(
+                (const float*)in[0], (const unsigned char*)in[3], (const unsigned char*)in[4],
+                (const float*)in[5], counts, slots, taskCount, tasks, hidden, tokens, o);
+        else
+            groupedExperts<true, 32><<<dim3(maxTasks, (2 * o.intermediate + 31) / 32), 128, 0, stream>>>(
+                (const float*)in[0], (const unsigned char*)in[3], (const unsigned char*)in[4],
+                (const float*)in[5], counts, slots, taskCount, tasks, hidden, tokens, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
-        groupedExperts<false><<<dim3(maxTasks, (o.hidden + 31) / 32), 128, 0, stream>>>(
-            hidden, (const unsigned char*)in[6], (const unsigned char*)in[7],
-            (const float*)in[8], counts, slots, taskCount, tasks, values, tokens, o);
+        if (tileRows == 64)
+            groupedExperts<false, 64><<<dim3(maxTasks, (o.hidden + 31) / 32), 256, 0, stream>>>(
+                hidden, (const unsigned char*)in[6], (const unsigned char*)in[7],
+                (const float*)in[8], counts, slots, taskCount, tasks, values, tokens, o);
+        else
+            groupedExperts<false, 32><<<dim3(maxTasks, (o.hidden + 31) / 32), 128, 0, stream>>>(
+                hidden, (const unsigned char*)in[6], (const unsigned char*)in[7],
+                (const float*)in[8], counts, slots, taskCount, tasks, values, tokens, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
         const size_t n = size_t(tokens) * o.hidden;
         combineExperts<<<(n + 127) / 128, 128, 0, stream>>>(values, probabilities, y, tokens, o);
