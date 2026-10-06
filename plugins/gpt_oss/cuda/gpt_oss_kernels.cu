@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_kernels.h"
 #include <cuda_bf16.h>
+#include <cublas_v2.h>
 #include <mma.h>
 #include <cmath>
 #include <cfloat>
@@ -412,6 +413,47 @@ __global__ void routeScores(const float* x, const float* weight, const float* bi
         value = warpSum(value);
         if (!lane) logits[size_t(token) * o.experts + expert] = bf(value + bias[expert]);
     }
+}
+__global__ void routeBiasRound(float* logits, const float* bias,
+    int tokens, int experts) {
+    const int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < tokens * experts)
+        logits[index] = bf(logits[index] + bias[index % experts]);
+}
+// A handle is bound to one host execution thread and one CUDA device. TensorRT
+// may enqueue the two TP ranks concurrently on separate host threads.
+struct RouterBlasHandle {
+    cublasHandle_t handle = nullptr;
+    int device = -1;
+    ~RouterBlasHandle() { if (handle) cublasDestroy(handle); }
+};
+thread_local RouterBlasHandle routerBlas;
+cudaError_t routeScoresGemm(const float* x, const float* weight,
+    const float* bias, float* logits, int tokens, GptOssOptions o,
+    cudaStream_t stream) {
+    int device = -1;
+    auto status = cudaGetDevice(&device);
+    if (status != cudaSuccess) return status;
+    if (routerBlas.device != device) {
+        if (routerBlas.handle) cublasDestroy(routerBlas.handle);
+        routerBlas.handle = nullptr;
+        if (cublasCreate(&routerBlas.handle) != CUBLAS_STATUS_SUCCESS)
+            return cudaErrorUnknown;
+        routerBlas.device = device;
+    }
+    if (cublasSetStream(routerBlas.handle, stream) != CUBLAS_STATUS_SUCCESS)
+        return cudaErrorUnknown;
+    const float alpha = 1.f, beta = 0.f;
+    // Row-major X[tokens, hidden] and W[experts, hidden] appear as
+    // column-major X^T and W^T. The resulting column-major [experts, tokens]
+    // is exactly the row-major router-logit layout consumed by top-K.
+    if (cublasSgemm(routerBlas.handle, CUBLAS_OP_T, CUBLAS_OP_N,
+            o.experts, tokens, o.hidden, &alpha, weight, o.hidden,
+            x, o.hidden, &beta, logits, o.experts) != CUBLAS_STATUS_SUCCESS)
+        return cudaErrorUnknown;
+    routeBiasRound<<<(tokens * o.experts + 255) / 256, 256, 0, stream>>>(
+        logits, bias, tokens, o.experts);
+    return cudaGetLastError();
 }
 template<bool FusedMarlinDecode>
 __global__ void routeTopK(float* logits, int* selected, float* probabilities,
@@ -916,7 +958,15 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
         const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_VECTOR4");
         return !value || (value[0] == '1' && value[1] == '\0');
     }();
-    if (routerThreads == 256 && vector4 && o.hidden % 4 == 0 && tokens <= 8)
+    static const bool prefillGemm = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_ROUTER_SGEMM");
+        return value && std::strcmp(value, "1") == 0;
+    }();
+    if (prefillGemm && tokens >= 128 && !fuse) {
+        auto status = routeScoresGemm((const float*)in[0], (const float*)in[1],
+            (const float*)in[2], logits, tokens, o, stream);
+        if (status != cudaSuccess) return status;
+    } else if (routerThreads == 256 && vector4 && o.hidden % 4 == 0 && tokens <= 8)
         routeScores<256, true><<<tokens * o.experts, 256, 0, stream>>>(
             (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
             tokens, o, converted, paddedWidth, locks, locksPerExpert);
