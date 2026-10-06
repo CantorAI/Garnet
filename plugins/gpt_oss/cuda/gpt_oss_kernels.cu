@@ -174,7 +174,9 @@ __global__ void decodeAttention(const float* qkv, const __nv_bfloat16* keys,
         for (int d = lane; d < o.headDim; d += 32)
             score += qkv[size_t(b) * packed + head * o.headDim + d] * __bfloat162float(keys[offset + d]);
         score = __shfl_sync(0xffffffff, warpSum(score), 0) * rsqrtf(float(o.headDim));
-        const float next = fmaxf(maximum, score), old = expf(maximum - next), weight = expf(score - next);
+        // The approximate SFU exponential is sufficient for decode softmax and
+        // avoids the slower libdevice exponential in this serial context loop.
+        const float next = fmaxf(maximum, score), old = __expf(maximum - next), weight = __expf(score - next);
         sum = sum * old + weight;
         for (int d = lane; d < o.headDim; d += 32)
             accum[d / 32] = accum[d / 32] * old + weight * __bfloat162float(values[offset + d]);
@@ -187,10 +189,10 @@ __global__ void decodeAttention(const float* qkv, const __nv_bfloat16* keys,
     if (warp) return;
     maximum = sinks[head];
     for (int w = 0; w < Warps; ++w) if (sums[w] > 0) maximum = fmaxf(maximum, maxima[w]);
-    sum = expf(sinks[head] - maximum);
+    sum = __expf(sinks[head] - maximum);
     float weights[Warps];
     for (int w = 0; w < Warps; ++w) {
-        weights[w] = sums[w] > 0 ? expf(maxima[w] - maximum) : 0;
+        weights[w] = sums[w] > 0 ? __expf(maxima[w] - maximum) : 0;
         sum += sums[w] * weights[w];
     }
     for (int d = lane; d < o.headDim; d += 32) {
