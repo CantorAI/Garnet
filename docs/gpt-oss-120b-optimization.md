@@ -10,6 +10,25 @@ This log records measurements, decisions, and tradeoffs for GPT-OSS-120B tensor-
 - `tools/gpt_oss/run_tp_prefill.py` repeats the same TP2 request in one loaded process and records the first (potentially cold) pass separately from the subsequent warm passes; use it for prefill A/B runs with all other environment settings held constant.
 - vLLM reference: 0.31.0, TP2, BF16 KV, FlashInfer attention, Marlin experts, and its automatic all-reduce selection. A different vLLM configuration would require a fresh baseline.
 
+## October 6 rerun setup
+
+The original Japan instance 54383358 could not regain its two GPUs after restart and stayed `Scheduling`. It is now stopped as a backup; its 300 GB disk, with 281 GB used, costs about $0.084/hour. Vast accepted a copy request from that instance to the new one, but the source-side rsync failed (`No user exists for uid 0`), so no copied data has been accepted as valid.
+
+The replacement is interruptible Vast instance 54530961 in Czechia: 2 × RTX PRO 6000 Blackwell Max-Q (96 GB each), PCIe 5.0 ×16, 350 GB disk. The suggested bid at creation was $1.540/hour for GPUs plus $0.098/hour for storage ($1.638/hour total); the running instance subsequently displayed $1.617/hour for GPUs ($1.715/hour total). Interruptible bids can be outbid, so checkpoint results and stop the GPU when the experiment is finished. The host-reliability indicator was 95.4% when selected.
+
+The new machine cloned Garnet `feature/gpt-oss-120b` at `947b357` and XLang3 at `990a745f` from GitHub. It downloaded the original GPT-OSS checkpoint (about 61 GB) and a separate Hugging Face-layout checkpoint for vLLM (about 61 GB). The Hugging Face download also included an unused 61 GB `metal/` directory, which was removed. This leaves substantially more build and engine-cache headroom than copying all 281 GB from the old disk into 350 GB. Setup uses the PyTorch NGC 26.08 image, CUDA 13.4, system TensorRT 11.2.1.2, and isolated vLLM 0.31.0 installation.
+
+The new-machine vLLM 0.31.0 baseline has finished. It used TP2, BF16 KV, FlashInfer attention (XQA decode), Marlin MXFP4 experts, and its selected custom/PyNCCL all-reduce backends; no Garnet GPU process ran alongside it. Three trials per case, after an eight-token warmup, gave:
+
+| Case | Warm decode tok/s (three trials) | Time to first token (three trials) |
+|---|---|---|
+| Arithmetic | 247.65, 247.63, 247.56 | 30.22, 30.11, 29.98 ms |
+| Code tracing | 247.24, 247.25, 247.29 | 30.76, 30.98, 30.70 ms |
+| Instruction following | 247.45, 247.36, 247.37 | 29.28, 29.74, 29.52 ms |
+| Long context | 247.44, 247.99, 248.07 | 98.89, 100.20, 100.68 ms |
+
+Raw vLLM results, configuration, and logs are saved under `D:/CantorAI/work/vast-54530961/`. Garnet runs on this machine are still pending; do not compare these numbers with old-machine Garnet results as a same-host result.
+
 ## Current end-to-end results
 
 | Case | Optimized vLLM warm decode | Garnet with rank-local inputs and direct TP, warm wall decode | Status |
