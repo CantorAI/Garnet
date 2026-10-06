@@ -62,6 +62,7 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
     } else if (op == "gpt_oss_moe_mxfp4") {
         o.kind = 2; o.hidden = integer("hidden_size", 0); o.intermediate = integer("intermediate_size", 0);
         o.experts = integer("num_experts", 0); o.topK = integer("experts_per_token", 0); o.limit = real("swiglu_limit", 7);
+        o.tpRank = integer("tp_rank", -1);
         inputs.push_back(weight("router_weight_name")); inputs.push_back(weight("router_bias_name"));
         inputs.push_back(weight("gate_up_blocks_name", true)); inputs.push_back(weight("gate_up_scales_name", true));
         inputs.push_back(weight("gate_up_bias_name")); inputs.push_back(weight("down_blocks_name", true));

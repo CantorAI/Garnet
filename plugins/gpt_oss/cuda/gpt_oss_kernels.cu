@@ -241,6 +241,10 @@ __global__ void gateUp(const float* x, const unsigned char* blocks, const unsign
     if (index >= size_t(tokens) * o.topK * o.intermediate) return;
     const int i = index % o.intermediate, slot = index / o.intermediate, token = slot / o.topK;
     const int expert = selected[slot];
+    if (o.tpRank >= 0 && expert % 2 != o.tpRank) {
+        if (!lane) hidden[index] = 0.f;
+        return;
+    }
     const size_t row = size_t(expert) * 2 * o.intermediate + 2 * i;
     float gate = 0, up = 0;
     for (int d = lane; d < o.hidden; d += 32) {
@@ -266,6 +270,7 @@ __global__ void down(const float* hidden, const unsigned char* blocks, const uns
     float result = 0;
     for (int k = 0; k < o.topK; ++k) {
         const int slot = token * o.topK + k, expert = selected[slot];
+        if (o.tpRank >= 0 && expert % 2 != o.tpRank) continue;
         const size_t row = size_t(expert) * o.hidden + d;
         float value = 0;
         for (int i = lane; i < o.intermediate; i += 32)
@@ -281,6 +286,7 @@ __global__ void bucketExperts(const int* selected, int* counts, int* slots,
     const int slot = blockIdx.x * blockDim.x + threadIdx.x;
     if (slot >= tokens * o.topK) return;
     const int expert = selected[slot];
+    if (o.tpRank >= 0 && expert % 2 != o.tpRank) return;
     const int row = atomicAdd(counts + expert, 1);
     slots[size_t(expert) * tokens * o.topK + row] = slot;
 }
@@ -291,7 +297,9 @@ __global__ void expertTasks(const int* counts, int* taskCount, int* tasks,
     // every expert. Every routed slot has its own row, including repeated
     // selections if nonfinite router inputs reach this low-level operator.
     int total = 0;
-    for (int e = 0; e < o.experts; ++e)
+    const int first = o.tpRank < 0 ? 0 : o.tpRank;
+    const int stride = o.tpRank < 0 ? 1 : 2;
+    for (int e = first; e < o.experts; e += stride)
         for (int row = 0; row < counts[e]; row += Rows) {
             tasks[2 * total] = e;
             tasks[2 * total + 1] = row;
@@ -375,9 +383,11 @@ __global__ void combineExperts(const float* values, const float* probabilities,
     // Preserve router order regardless of atomic bucketing order.
     for (int k = 0; k < o.topK; ++k) {
         const int slot = token * o.topK + k;
+        const int expert = selected[slot];
+        if (o.tpRank >= 0 && expert % 2 != o.tpRank) continue;
         result += values[size_t(slot) * o.hidden + d] * probabilities[slot];
     }
-    y[index] = bf(result);
+    y[index] = o.tpRank < 0 ? bf(result) : result;
 }
 }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST

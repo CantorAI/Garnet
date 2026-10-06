@@ -215,6 +215,16 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
     const void* in[]{dx.p, dr.p, drb.p, du.p, dus.p, dub.p, dd.p, dds.p, ddb.p};
     check(RunGptOssMoe(in, dy.p, workspace.p, tokens, o, nullptr));
     compare(dy.read(), expected, .002f, "Batched MoE routing, MXFP4, interleaved SwiGLU and biases");
+    std::vector<float> shardedSum(expected.size());
+    for (int rank = 0; rank < 2; ++rank) {
+        GptOssOptions shard = o; shard.tpRank = rank;
+        Device<float> partial(std::vector<float>(expected.size()));
+        Device<unsigned char> shardWorkspace(std::vector<unsigned char>(GptOssMoeWorkspace(tokens, shard)));
+        check(RunGptOssMoe(in, partial.p, shardWorkspace.p, tokens, shard, nullptr));
+        const auto values = partial.read();
+        for (size_t i = 0; i < values.size(); ++i) shardedSum[i] += values[i];
+    }
+    compare(shardedSum, expected, .002f, "Two-rank expert-parallel MoE sum");
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     Device<unsigned char> groupedWorkspace(std::vector<unsigned char>(TestGptOssMoeWorkspace(tokens,o,true)));
     check(TestGptOssMoe(in, dy.p, groupedWorkspace.p, tokens, o, nullptr, true));

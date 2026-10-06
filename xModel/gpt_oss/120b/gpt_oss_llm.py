@@ -63,12 +63,15 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         "gpt_oss_moe_mxfp4", hidden_size=config['hidden_size'],
         intermediate_size=config['intermediate_size'], num_experts=config['num_experts'],
         experts_per_token=config['experts_per_token'], swiglu_limit=config['swiglu_limit'],
+        tp_rank=config.get('tp_rank', -1),
         router_weight_name=prefix + ".mlp.gate.weight", router_bias_name=prefix + ".mlp.gate.bias",
         gate_up_blocks_name=prefix + ".mlp.mlp1_weight.blocks",
         gate_up_scales_name=prefix + ".mlp.mlp1_weight.scales",
         gate_up_bias_name=prefix + ".mlp.mlp1_bias",
         down_blocks_name=prefix + ".mlp.mlp2_weight.blocks",
         down_scales_name=prefix + ".mlp.mlp2_weight.scales", down_bias_name=prefix + ".mlp.mlp2_bias")
+    if config.get('tp_rank', -1) >= 0:
+        x = tp_all_reduce(x, config['tp_rank'], config)
     return rounded(residual + x)
 
 
