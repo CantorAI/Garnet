@@ -99,7 +99,7 @@ class Pipeline:
 
 
 class TensorParallel:
-    """Lockstep TP execution: one rank-local full stage per GPU."""
+    """Lockstep two-rank TensorRT execution with NCCL collectives."""
     def __init__(self, stages):
         from concurrent.futures import ThreadPoolExecutor
         if len(stages) != 2:

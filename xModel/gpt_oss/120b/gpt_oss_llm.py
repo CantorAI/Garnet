@@ -12,10 +12,15 @@ def norm(x, name):
     return rounded(x * T.unary_op("rms_norm", weight_name=name, eps=0.00001))
 
 
-def linear(x, name, bias=None, op="linear"):
-    return rounded(x * T.unary_op(op, weight_name=name, bias_name=bias,
-                                 compute_dtype="bfloat16",
-                                 accumulation_dtype="float32"))
+def linear(x, name, bias=None, op="linear", tp_mode=None, tp_rank=-1,
+           tp_heads=0, tp_kv_heads=0, tp_head_dim=0):
+    attributes = dict(weight_name=name, bias_name=bias,
+                      compute_dtype="bfloat16", accumulation_dtype="float32")
+    if tp_mode is not None and tp_rank >= 0:
+        attributes.update(tp_mode=tp_mode, tp_rank=tp_rank,
+                          tp_heads=tp_heads, tp_kv_heads=tp_kv_heads,
+                          tp_head_dim=tp_head_dim)
+    return rounded(x * T.unary_op(op, **attributes))
 
 
 def tp_all_reduce(x, rank, config):
@@ -31,10 +36,20 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
     prefix = "block." + str(layer_idx)
     residual = x
     x = norm(x, prefix + ".attn.norm.scale")
-    qkv = linear(x, prefix + ".attn.qkv.weight", prefix + ".attn.qkv.bias")
+    q_heads, kv_heads = config['num_attention_heads'], config['num_key_value_heads']
+    if tp_rank >= 0:
+        if q_heads % 2 or kv_heads % 2:
+            raise ValueError('GPT-OSS TP2 requires even query and KV head counts')
+        qkv = linear(x, prefix + ".attn.qkv.weight", prefix + ".attn.qkv.bias",
+                     tp_mode='qkv', tp_rank=tp_rank, tp_heads=q_heads,
+                     tp_kv_heads=kv_heads, tp_head_dim=config['head_dim'])
+        q_heads //= 2
+        kv_heads //= 2
+    else:
+        qkv = linear(x, prefix + ".attn.qkv.weight", prefix + ".attn.qkv.bias")
     qkv = qkv * T.binary_op(
         "gpt_oss_apply_yarn_rope_packed",
-        num_heads=config['num_attention_heads'], num_kv_heads=config['num_key_value_heads'],
+        num_heads=q_heads, num_kv_heads=kv_heads, tp_rank=tp_rank,
         head_dim=config['head_dim'], rope_theta=config['rope_theta'],
         rope_scaling_factor=config['rope_scaling_factor'],
         initial_context_length=config['initial_context_length'],
@@ -57,7 +72,13 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         num_heads=config['num_attention_heads'], num_kv_heads=config['num_key_value_heads'],
         head_dim=config['head_dim'], sliding_window=window,
         sinks_weight_name=prefix + ".attn.sinks")
-    x = rounded(residual + linear(attention, prefix + ".attn.out.weight", prefix + ".attn.out.bias"))
+    if tp_rank >= 0:
+        attention_output = linear(attention, prefix + ".attn.out.weight",
+                                  prefix + ".attn.out.bias", tp_mode='row', tp_rank=tp_rank)
+        attention_output = rounded(tp_all_reduce(attention_output, tp_rank, config))
+    else:
+        attention_output = linear(attention, prefix + ".attn.out.weight", prefix + ".attn.out.bias")
+    x = rounded(residual + attention_output)
     residual = x
     x = norm(x, prefix + ".mlp.norm.scale")
     x = x * T.unary_op(

@@ -93,6 +93,6 @@ Path(sys.argv[4]).write_text(json.dumps({
     'warm_decode_seconds': warm_decode_seconds,
     'warm_decode_tokens': warm_decode_tokens,
     'warm_decode_tokens_per_second': warm_decode_tokens_per_second,
-    'validation': 'experimental replicated-weight, expert-parallel TP2; full pretrained validation pending'
+    'validation': 'experimental TP2 with sharded attention heads and rank-local experts; full pretrained validation pending'
 }, indent=2))
-print('Generated', len(generated), 'tokens with two-rank GPT-OSS expert parallelism', flush=True)
+print('Generated', len(generated), 'tokens with two-rank GPT-OSS tensor parallelism', flush=True)

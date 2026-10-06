@@ -80,7 +80,7 @@ def make_plan(weights, devices, batch=1, capacity=4096, tokens=1,
 
 def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1,
                               reserve_bytes=1 << 30, memory_fraction=.9):
-    """Plan a two-rank GPT-OSS expert-parallel replica on both selected GPUs."""
+    """Plan a two-rank GPT-OSS attention and expert tensor-parallel stage."""
     if len(devices) != 2 or len({d['id'] for d in devices}) != 2:
         raise ValueError('GPT-OSS TP2 requires exactly two distinct GPUs')
     config = json.loads((Path(weights) / 'config.json').read_text())
@@ -91,8 +91,11 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     if not 0 < memory_fraction <= 1 or reserve_bytes < 0:
         raise ValueError('invalid memory budget')
     pages = batch * math.ceil(capacity / 16)
+    local_kv_heads = config['num_key_value_heads'] // 2
+    if config['num_key_value_heads'] % 2:
+        raise ValueError('GPT-OSS TP2 requires an even KV head count')
     kv_bytes = (config['num_hidden_layers'] * 2 * pages * 16 *
-                config['num_key_value_heads'] * config['head_dim'] * 2)
+                local_kv_heads * config['head_dim'] * 2)
     activation_bytes = batch * tokens * (config['hidden_size'] * 64 +
         config['vocab_size'] * 4 + config['intermediate_size'] * config['experts_per_token'] * 4)
     # Dense BF16 constants are budgeted at FP32 size because TensorRT may
@@ -103,8 +106,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
                 'compute_minor', 'pci_bus_id', 'peer_access')} for d in devices]
     budgets = [int(min(d['free_bytes'], d['total_bytes'] * memory_fraction)) for d in devices]
     if any(required > budget for budget in budgets):
-        raise ValueError('replicated TP2 model estimate exceeds per-GPU budget; true checkpoint weight sharding is required')
-    identity = {'schema': 1, 'mode': 'gpt-oss-expert-parallel-tp2', 'hardware': hardware,
+        raise ValueError('GPT-OSS TP2 checkpoint estimate exceeds per-GPU memory budget')
+    identity = {'schema': 2, 'mode': 'gpt-oss-tensor-parallel-tp2', 'hardware': hardware,
         'checkpoint': str(Path(weights).resolve()), 'capacity': capacity, 'batch': batch,
         'memory_fraction': memory_fraction, 'reserve_bytes': reserve_bytes,
         'layer_cuda_graph': True}
@@ -113,10 +116,11 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
                'end': config['num_hidden_layers'], 'estimated_bytes': required,
                'budget_bytes': budget}
               for rank, (d, budget) in enumerate(zip(devices, budgets))]
-    return {'schema': 1, 'mode': 'gpt-oss-expert-parallel-tp2', 'cache_key': key,
+    return {'schema': 2, 'mode': 'gpt-oss-tensor-parallel-tp2', 'cache_key': key,
             'hardware': hardware, 'stages': stages, 'batch': batch,
             'capacity': capacity, 'max_tokens': tokens, 'kv_pages': pages,
-            'config': config, 'estimated_per_gpu_bytes': required}
+            'config': config, 'estimated_per_gpu_bytes': required,
+            'local_kv_heads': local_kv_heads}
 
 
 def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_logits=False):
@@ -179,7 +183,7 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_lo
 
 def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                           last_token_logits=False):
-    """Build paired full-stage engines with rank-local MoE work and NCCL sums."""
+    """Build paired engines with sharded attention heads and rank-local MoE."""
     import garnet as G
     if tokens < 1 or tokens > plan['max_tokens']:
         raise ValueError('token shape exceeds TP2 placement profile')
@@ -209,7 +213,7 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
             source = source.replace('STAGE_LAST_TOKEN = 0', 'STAGE_LAST_TOKEN = ' + str(int(last_token_logits)))
             source = source.replace('STAGE_TP_RANK = -1', 'STAGE_TP_RANK = ' + str(rank))
             (model_root / 'stage.py').write_text(source)
-            shape = [end, plan['kv_pages'], 16, config['num_key_value_heads'], config['head_dim']]
+            shape = [end, plan['kv_pages'], 16, plan['local_kv_heads'], config['head_dim']]
             if kv is None:
                 keys = G.tensor_zeros(shape, 'bfloat16')
                 values = G.tensor_zeros(shape, 'bfloat16')

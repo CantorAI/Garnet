@@ -6688,6 +6688,71 @@ namespace Garnet {
             ITensor* weight = !bf16Compute && (opName == "lm_head" || predictorWeight)
                 ? GetOrCreateTRTWeightFP32(weightNameItem->second.ToString())
                 : GetOrCreateTRTWeight(weightNameItem->second.ToString());
+            const std::string tpMode = keywordText("tp_mode");
+            const int tpRank = keywordInt("tp_rank", -1);
+            auto sliceWeight = [&](ITensor* tensor, int axis, int start, int length) -> ITensor* {
+                if (!tensor) return nullptr;
+                const Dims dims = tensor->getDimensions();
+                if (axis < 0 || axis >= dims.nbDims || start < 0 || length <= 0 ||
+                    start > dims.d[axis] || length > dims.d[axis] - start) return nullptr;
+                Dims starts{}, sizes = dims, strides{};
+                starts.nbDims = sizes.nbDims;
+                strides.nbDims = sizes.nbDims;
+                for (int i = 0; i < dims.nbDims; ++i) {
+                    starts.d[i] = i == axis ? start : 0;
+                    strides.d[i] = 1;
+                }
+                sizes.d[axis] = length;
+                auto* layer = network->addSlice(*tensor, starts, sizes, strides);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            auto catWeights = [&](const std::vector<ITensor*>& tensors) -> ITensor* {
+                if (tensors.empty() || std::any_of(tensors.begin(), tensors.end(),
+                        [](ITensor* tensor) { return tensor == nullptr; })) return nullptr;
+                auto* layer = network->addConcatenation(tensors.data(), int(tensors.size()));
+                if (layer) layer->setAxis(0);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            auto shardQkv = [&](ITensor* tensor) -> ITensor* {
+                const int qHeads = keywordInt("tp_heads", 0);
+                const int kvHeads = keywordInt("tp_kv_heads", 0);
+                const int headDim = keywordInt("tp_head_dim", 0);
+                if (!tensor || (tpRank != 0 && tpRank != 1) || qHeads <= 0 ||
+                    kvHeads <= 0 || headDim <= 0 || qHeads % 2 || kvHeads % 2) return nullptr;
+                const Dims dims = tensor->getDimensions();
+                if ((dims.nbDims != 1 && dims.nbDims != 2) ||
+                    dims.d[0] != (qHeads + 2 * kvHeads) * headDim) return nullptr;
+                const int qWidth = qHeads * headDim, kvWidth = kvHeads * headDim;
+                const int qPart = qWidth / 2, kvPart = kvWidth / 2;
+                return catWeights({
+                    sliceWeight(tensor, 0, tpRank * qPart, qPart),
+                    sliceWeight(tensor, 0, qWidth + tpRank * kvPart, kvPart),
+                    sliceWeight(tensor, 0, qWidth + kvWidth + tpRank * kvPart, kvPart)});
+            };
+            if (tpRank >= 0) {
+                if (tpMode == "qkv") {
+                    weight = shardQkv(weight);
+                    if (!weight) {
+                        loweringError = opName + " TP2 QKV weight shard failed";
+                        return X::Value();
+                    }
+                } else if (tpMode == "row") {
+                    const Dims dims = weight ? weight->getDimensions() : Dims{};
+                    if (tpRank > 1 || dims.nbDims != 2 || dims.d[1] % 2) {
+                        loweringError = opName + " TP2 row-parallel weight shape is invalid";
+                        return X::Value();
+                    }
+                    const int part = dims.d[1] / 2;
+                    weight = sliceWeight(weight, 1, tpRank * part, part);
+                    if (!weight) {
+                        loweringError = opName + " TP2 row-parallel weight shard failed";
+                        return X::Value();
+                    }
+                } else if (!tpMode.empty()) {
+                    loweringError = opName + " has unknown TP2 mode: " + tpMode;
+                    return X::Value();
+                }
+            }
             ITensor* projectionInput = source;
             const DataType sourceType = source->getType();
             const DataType projectionType = bf16Compute ? DataType::kBF16 :
@@ -6731,8 +6796,15 @@ namespace Garnet {
             auto* biasNameItem = FindKeyword(kwParams, "bias_name");
             if (biasNameItem && !biasNameItem->second.IsNone()) {
                 const std::string biasName = biasNameItem->second.ToString();
-                if (!biasName.empty()) {
+                if (!biasName.empty() && !(tpMode == "row" && tpRank == 1)) {
                     ITensor* bias = GetOrCreateTRTWeight(biasName);
+                    if (tpMode == "qkv" && tpRank >= 0) {
+                        bias = shardQkv(bias);
+                        if (!bias) {
+                            loweringError = opName + " TP2 QKV bias shard failed";
+                            return X::Value();
+                        }
+                    }
                     if (bias && bias->getType() != lastOutput->getType()) {
                         auto* cast = network->addCast(
                             *bias, lastOutput->getType());

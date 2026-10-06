@@ -2,8 +2,10 @@
 #include "trt_builder.h"
 #include "gpt_oss_extension.h"
 #include "operator_plugins.h"
+#include <algorithm>
 #include <limits>
 #include <cmath>
+#include <vector>
 using namespace nvinfer1;
 namespace Garnet {
 ITensor* TRTBuilder::GetGptOssPackedWeight(const std::string& name) {
@@ -46,6 +48,45 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
     auto weight = [&](const char* key, bool packed = false) {
         return packed ? GetGptOssPackedWeight(text(key)) : asFloat(GetOrCreateTRTWeight(text(key)));
     };
+    auto sliceAxis = [&](ITensor* value, int axis, int start, int length) -> ITensor* {
+        if (!value) return nullptr;
+        const Dims dims = value->getDimensions();
+        if (axis < 0 || axis >= dims.nbDims || start < 0 || length <= 0 ||
+            start > dims.d[axis] || length > dims.d[axis] - start) return nullptr;
+        Dims starts{}, sizes = dims, strides{};
+        starts.nbDims = sizes.nbDims;
+        strides.nbDims = sizes.nbDims;
+        for (int i = 0; i < dims.nbDims; ++i) {
+            starts.d[i] = i == axis ? start : 0;
+            strides.d[i] = 1;
+        }
+        sizes.d[axis] = length;
+        auto* layer = network->addSlice(*value, starts, sizes, strides);
+        return layer ? layer->getOutput(0) : nullptr;
+    };
+    auto concatAxis = [&](const std::vector<ITensor*>& values, int axis) -> ITensor* {
+        if (values.empty() || std::any_of(values.begin(), values.end(),
+                [](ITensor* value) { return value == nullptr; })) return nullptr;
+        auto* layer = network->addConcatenation(values.data(), int(values.size()));
+        if (!layer) return nullptr;
+        layer->setAxis(axis);
+        return layer->getOutput(0);
+    };
+    auto shardQkv = [&](ITensor* value, int rank, int qHeads, int kvHeads,
+                        int headDim) -> ITensor* {
+        if (!value || (rank != 0 && rank != 1) || qHeads <= 0 || kvHeads <= 0 ||
+            headDim <= 0 || (qHeads % 2) || (kvHeads % 2)) return nullptr;
+        const Dims dims = value->getDimensions();
+        if (dims.nbDims != 1 && dims.nbDims != 2) return nullptr;
+        const int qWidth = qHeads * headDim, kvWidth = kvHeads * headDim;
+        if (dims.d[0] != qWidth + 2 * kvWidth) return nullptr;
+        const int qLocal = qWidth / 2, kvLocal = kvWidth / 2;
+        const int qStart = rank * qLocal, kvStart = qWidth + rank * kvLocal;
+        return concatAxis({sliceAxis(value, 0, qStart, qLocal),
+                           sliceAxis(value, 0, kvStart, kvLocal),
+                           sliceAxis(value, 0, qWidth + kvWidth + rank * kvLocal,
+                                     kvLocal)}, 0);
+    };
     if (op == "gpt_oss_round_bf16") {
         auto* c = network->addCast(*source, DataType::kBF16);
         return c ? asFloat(c->getOutput(0)) : nullptr;
@@ -72,8 +113,14 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
     } else if (op == "gpt_oss_paged_attention") {
         o.kind = 1; o.layer = pendingKVLayerIndex; o.pageSize = integer("page_size", 16);
         o.window = integer("sliding_window", 0); o.prefill = integer("prefill", 0);
+        o.tpRank = integer("tp_rank", -1);
+        ITensor* sinks = weight("sinks_weight_name");
+        if (o.tpRank >= 0) {
+            sinks = sliceAxis(sinks, 0, o.tpRank * o.qHeads, o.qHeads);
+            if (!sinks) { loweringError = "GPT-OSS TP2 sink-head slice failed"; return nullptr; }
+        }
         inputs.insert(inputs.end(), {pendingKVKeyPages, pendingKVValuePages, pendingKVPageTable,
-            pendingKVContextLength, pendingKVSlotPosition, pendingKVActiveMask, weight("sinks_weight_name")});
+            pendingKVContextLength, pendingKVSlotPosition, pendingKVActiveMask, sinks});
         // Binding state belongs to exactly one attention invocation.
         pendingKVKeyPages = nullptr; pendingKVValuePages = nullptr; pendingKVPageTable = nullptr;
         pendingKVContextLength = nullptr; pendingKVSlotPosition = nullptr; pendingKVActiveMask = nullptr;

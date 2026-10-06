@@ -10,7 +10,7 @@ struct GptOssOptions {
     int qHeads = 0, kvHeads = 0, headDim = 0;
     int layer = 0, pageSize = 16, window = 0, prefill = 0;
     int hidden = 0, intermediate = 0, experts = 0, topK = 0;
-    int tpRank = -1; // -1: unsharded; 0/1: GPT-OSS MoE expert-parallel rank
+    int tpRank = -1; // -1: unsharded; 0/1: GPT-OSS tensor-parallel rank
     float theta = 150000, factor = 32, initialContext = 4096;
     float betaFast = 32, betaSlow = 1, limit = 7;
 };
