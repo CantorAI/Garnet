@@ -46,6 +46,17 @@ namespace Garnet {
 
 
     namespace {
+        constexpr uint32_t ExplicitBatchNetworkFlag()
+        {
+#if NV_TENSORRT_MAJOR >= 11
+            // TensorRT 11 always creates explicit-batch networks.
+            return 0U;
+#else
+            return 1U << static_cast<uint32_t>(
+                NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+#endif
+        }
+
         void AppendTensorDependencies(
             const X::Value& value,
             std::vector<unsigned long long>& tensorIds)
@@ -658,7 +669,7 @@ namespace Garnet {
             return X::Value();
         }
 
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) {
             std::cout << "[TRTBuilder] createNetworkV2 failed." << std::endl;
@@ -841,7 +852,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -1142,7 +1153,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -1298,7 +1309,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -1539,7 +1550,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -1765,7 +1776,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -1997,7 +2008,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -2223,7 +2234,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -2400,7 +2411,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -2596,7 +2607,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -2779,7 +2790,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -2905,7 +2916,7 @@ namespace Garnet {
 
         auto builder = createInferBuilder(gLogger);
         if (!builder) return X::Value();
-        uint32_t flags = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        uint32_t flags = ExplicitBatchNetworkFlag();
         auto network = builder->createNetworkV2(flags);
         if (!network) return X::Value();
         auto config = builder->createBuilderConfig();
@@ -4314,7 +4325,7 @@ namespace Garnet {
             return false;
         }
         const uint32_t flags =
-            (1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH)) |
+            (ExplicitBatchNetworkFlag()) |
             (1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kSTRONGLY_TYPED));
         network = builder->createNetworkV2(flags);
         config = builder->createBuilderConfig();
