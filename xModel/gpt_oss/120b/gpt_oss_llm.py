@@ -29,6 +29,11 @@ def tp_all_reduce(x, rank, config):
                           hidden_size=config['hidden_size'], tp_rank=rank)
 
 
+def tp_all_gather_logits(x, rank, config):
+    return x * T.unary_op("gpt_oss_tp_all_gather", tp_rank=rank,
+                          hidden_size=config['vocab_size'] // 2)
+
+
 @T.fusion(role="decoder_layer", atomic=True, cuda_graph=True)
 def layer(x, position_ids, key_pages, value_pages, page_table,
           context_length, slot_position, active_mask, config, layer_idx, prefill,
@@ -118,5 +123,10 @@ def forward_stage(x, position_ids, key_pages, value_pages, page_table,
     if end == config['num_hidden_layers']:
         if last_token_logits:
             x = x * T.unary_op("last_token")
-        x = linear(norm(x, "norm.scale"), "unembedding.weight", op="lm_head")
+        if tp_rank >= 0:
+            x = linear(norm(x, "norm.scale"), "unembedding.weight", op="lm_head",
+                       tp_mode='vocab', tp_rank=tp_rank)
+            x = tp_all_gather_logits(x, tp_rank, config)
+        else:
+            x = linear(norm(x, "norm.scale"), "unembedding.weight", op="lm_head")
     return x

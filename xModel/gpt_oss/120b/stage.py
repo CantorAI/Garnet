@@ -14,7 +14,7 @@ STAGE_TP_RANK = -1
 STAGE_OPERATORS = ['gpt_oss_round_bf16', 'gpt_oss_apply_yarn_rope_packed',
                    'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4']
 if STAGE_TP_RANK >= 0:
-    STAGE_OPERATORS.append('gpt_oss_tp_all_reduce')
+    STAGE_OPERATORS.extend(['gpt_oss_tp_all_reduce', 'gpt_oss_tp_all_gather'])
 GARNET_MODEL_SPEC = {'arguments': [
     {'name': name, 'kind': 'tensor'} for name in
     ['hidden_or_ids', 'position_ids', 'key_pages', 'value_pages', 'page_table',

@@ -17,6 +17,17 @@ std::array<ncclComm_t, 2> g_tpComms{};
 cudaError_t NcclStatus(ncclResult_t status) {
     return status == ncclSuccess ? cudaSuccess : cudaErrorUnknown;
 }
+__global__ void interleaveVocab(const float* gathered, float* output,
+    size_t localVocab, size_t rows) {
+    const size_t index = size_t(blockIdx.x) * blockDim.x + threadIdx.x;
+    const size_t total = rows * localVocab * 2;
+    if (index >= total) return;
+    const size_t row = index / (localVocab * 2);
+    const size_t within = index % (localVocab * 2);
+    const size_t rank = within / localVocab;
+    const size_t column = within % localVocab;
+    output[index] = gathered[rank * rows * localVocab + row * localVocab + column];
+}
 #endif
 }
 
@@ -73,6 +84,29 @@ cudaError_t GptOssTpAllReduce(const float* input, float* output, size_t count,
         g_tpComms[rank], stream));
 #else
     (void)input; (void)output; (void)count; (void)rank; (void)stream;
+    return cudaErrorNotSupported;
+#endif
+}
+
+cudaError_t GptOssTpAllGather(const float* input, float* output, float* scratch,
+    size_t count, int rows, int localVocab, int rank, cudaStream_t stream) {
+#ifdef GARNET_GPT_OSS_ENABLE_NCCL
+    if (!g_tpReady || rank < 0 || rank >= static_cast<int>(g_tpComms.size()) ||
+        rows <= 0 || localVocab <= 0 || count != size_t(rows) * localVocab ||
+        !input || !output || !scratch) return cudaErrorInvalidValue;
+    int device = -1;
+    auto status = cudaGetDevice(&device);
+    if (status != cudaSuccess) return status;
+    if (device != rank) return cudaErrorInvalidDevice;
+    auto result = ncclAllGather(input, scratch, count, ncclFloat, g_tpComms[rank], stream);
+    if (result != ncclSuccess) return NcclStatus(result);
+    const size_t total = count * 2;
+    interleaveVocab<<<(total + 255) / 256, 256, 0, stream>>>(
+        scratch, output, size_t(localVocab), size_t(rows));
+    return cudaGetLastError();
+#else
+    (void)input; (void)output; (void)scratch; (void)count;
+    (void)rows; (void)localVocab; (void)rank; (void)stream;
     return cudaErrorNotSupported;
 #endif
 }

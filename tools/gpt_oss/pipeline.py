@@ -107,7 +107,7 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     budgets = [int(min(d['free_bytes'], d['total_bytes'] * memory_fraction)) for d in devices]
     if any(required > budget for budget in budgets):
         raise ValueError('GPT-OSS TP2 checkpoint estimate exceeds per-GPU memory budget')
-    identity = {'schema': 2, 'mode': 'gpt-oss-tensor-parallel-tp2', 'hardware': hardware,
+    identity = {'schema': 3, 'mode': 'gpt-oss-tensor-parallel-tp2', 'hardware': hardware,
         'checkpoint': str(Path(weights).resolve()), 'capacity': capacity, 'batch': batch,
         'memory_fraction': memory_fraction, 'reserve_bytes': reserve_bytes,
         'layer_cuda_graph': True}
@@ -116,7 +116,7 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
                'end': config['num_hidden_layers'], 'estimated_bytes': required,
                'budget_bytes': budget}
               for rank, (d, budget) in enumerate(zip(devices, budgets))]
-    return {'schema': 2, 'mode': 'gpt-oss-tensor-parallel-tp2', 'cache_key': key,
+    return {'schema': 3, 'mode': 'gpt-oss-tensor-parallel-tp2', 'cache_key': key,
             'hardware': hardware, 'stages': stages, 'batch': batch,
             'capacity': capacity, 'max_tokens': tokens, 'kv_pages': pages,
             'config': config, 'estimated_per_gpu_bytes': required,

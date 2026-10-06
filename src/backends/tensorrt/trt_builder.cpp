@@ -6748,6 +6748,18 @@ namespace Garnet {
                         loweringError = opName + " TP2 row-parallel weight shard failed";
                         return X::Value();
                     }
+                } else if (tpMode == "vocab") {
+                    const Dims dims = weight ? weight->getDimensions() : Dims{};
+                    if (tpRank > 1 || dims.nbDims != 2 || dims.d[0] % 2) {
+                        loweringError = opName + " TP2 vocabulary weight shape is invalid";
+                        return X::Value();
+                    }
+                    const int part = dims.d[0] / 2;
+                    weight = sliceWeight(weight, 0, tpRank * part, part);
+                    if (!weight) {
+                        loweringError = opName + " TP2 vocabulary weight shard failed";
+                        return X::Value();
+                    }
                 } else if (!tpMode.empty()) {
                     loweringError = opName + " has unknown TP2 mode: " + tpMode;
                     return X::Value();
@@ -6802,6 +6814,18 @@ namespace Garnet {
                         bias = shardQkv(bias);
                         if (!bias) {
                             loweringError = opName + " TP2 QKV bias shard failed";
+                            return X::Value();
+                        }
+                    } else if (tpMode == "vocab" && tpRank >= 0) {
+                        const Dims dims = bias ? bias->getDimensions() : Dims{};
+                        if (dims.nbDims != 1 || dims.d[0] % 2) {
+                            loweringError = opName + " TP2 vocabulary bias shape is invalid";
+                            return X::Value();
+                        }
+                        const int part = dims.d[0] / 2;
+                        bias = sliceWeight(bias, 0, tpRank * part, part);
+                        if (!bias) {
+                            loweringError = opName + " TP2 vocabulary bias shard failed";
                             return X::Value();
                         }
                     }

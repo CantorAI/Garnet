@@ -185,11 +185,12 @@ fingerprints additionally validate source, weights, shapes and plugin binary.
 Changing available memory can change the placement; identical placement on
 identical hardware reuses the cache.
 
-The Linux build can enable the experimental two-rank GPT-OSS NCCL collective
-and run its two-GPU sum/parity test with `--enable-nccl`. This adds the
-`gpt_oss_tp_all_reduce` engine operator. It is a communication primitive;
-the current inference path still uses PP2 until rank-sharded attention/MoE
-weights and a lockstep TP2 scheduler are added and validated.
+The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
+and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
+path shards attention heads and vocabulary rows, keeps rank-local MoE work,
+and uses reductions plus a final logits all-gather. Dense checkpoint weights
+are still loaded from the full checkpoint on each rank, and performance and
+correctness must be measured on the rented GPUs.
 
 Backbone APIs: `cuda_devices_json()` reports per-GPU free/total memory,
 architecture, PCI bus ID and P2P capability; `cuda_set_device(id)` selects the
@@ -199,14 +200,14 @@ the selected GPU. The generic planner/scheduler is `python/garnet_pipeline.py`.
 GPT-OSS-specific size estimates and graph instantiation are in
 `tools/gpt_oss/pipeline.py` and `xModel/gpt_oss/120b/stage.py`.
 
-This first scheduler executes stages sequentially and fences their per-thread
-streams. P2P copies are used where supported; otherwise transfers go through
-host RAM. It does not overlap requests, split individual operators, perform
-tensor/expert parallelism, or offload model weights. An insufficient-memory
-plan fails before engine generation. Estimates include headroom but remain
-estimates: full 120B engine memory, build host RAM, pretrained parity and speed
-must be measured on the rented GPUs. Prefill engines are released before
-decode engines load; the local KV caches are retained.
+The generic pipeline scheduler executes stages sequentially and fences their
+per-thread streams. P2P copies are used where supported; otherwise transfers
+go through host RAM. It does not overlap requests or shard arbitrary
+operators. An insufficient-memory plan fails before engine generation.
+Estimates include headroom but remain estimates: full 120B engine memory,
+build host RAM, pretrained parity and speed must be measured on the rented
+GPUs. Prefill engines are released before decode engines load; local KV caches
+are retained.
 
 The token-generation runner selects only the last prompt hidden state before
 the final norm and vocabulary projection. `build_pipeline` retains full logits

@@ -49,6 +49,7 @@ generated = json.loads((work / 'generation.json').read_text())
 expected = json.loads((fixture / 'expected.json').read_text())
 assert generated['token_ids'] == expected['generated'], (generated['token_ids'], expected['generated'])
 if args.multi_gpu:
+    run([runtime / ('garnet_gpt_oss_tp_collective_test' + suffix)], 'tp-collectives')
     run([executable, repo / 'test2026/gpt_oss/tp_moe_graph.py', fixture,
          work / 'tp-moe-graph-cache'], 'tp-moe-graph')
     for phase in ('cold', 'warm'):

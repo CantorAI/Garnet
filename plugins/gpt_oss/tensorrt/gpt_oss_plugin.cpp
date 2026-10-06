@@ -19,11 +19,11 @@ void reportMarlinFallback(bool initialized, int tokens) {
     if (std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") && count.fetch_add(1) < 16)
         std::fprintf(stderr, "GPT-OSS Marlin: fallback (plugin initialized=%d, rows=%d)\n", initialized, tokens);
 }
-// Version 4 adds rank-local GPT-OSS expert execution semantics.
-constexpr const char* kVersion = "4";
+// Version 5 adds the TP2 vocabulary all-gather plugin contract.
+constexpr const char* kVersion = "5";
 bool valid(const GptOssOptions& o) {
-    if (o.kind < 0 || o.kind > 3) return false;
-    if (o.kind == 3) return o.hidden > 0 && o.tpRank >= 0 && o.tpRank < 2;
+    if (o.kind < 0 || o.kind > 4) return false;
+    if (o.kind == 3 || o.kind == 4) return o.hidden > 0 && o.tpRank >= 0 && o.tpRank < 2;
     if (o.kind == 2) return o.hidden > 0 && o.intermediate > 0 &&
         o.hidden % 32 == 0 && o.intermediate % 32 == 0 && o.experts > 0 &&
         o.experts <= 256 && o.topK > 0 && o.topK <= 8 && o.topK <= o.experts && o.limit > 0 &&
@@ -57,6 +57,10 @@ DimsExprs GptOssPlugin::getOutputDimensions(int, const DimsExprs* in, int count,
     if (!in || count < 1 || in[0].nbDims != 3) return {};
     auto out = in[0];
     if (m_options.kind == 1) out.d[2] = b.constant(m_options.qHeads * m_options.headDim);
+    if (m_options.kind == 4) {
+        const auto* two = b.constant(2);
+        out.d[2] = two ? b.operation(DimensionOperation::kPROD, *in[0].d[2], *two) : nullptr;
+    }
     return out;
 }
 bool GptOssPlugin::supportsFormatCombination(int pos, const PluginTensorDesc* d, int count, int outputs) noexcept {
@@ -105,12 +109,21 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
             shape(in[6].desc.dims, {o.experts, o.hidden, o.intermediate / 32, 16}) &&
             shape(in[7].desc.dims, {o.experts, o.hidden, o.intermediate / 32}) &&
             shape(in[8].desc.dims, {o.experts, o.hidden});
-    } else {
+    } else if (o.kind == 3) {
         m_valid = d.d[2] == o.hidden;
+    } else {
+        m_valid = d.nbDims == 3 && d.d[0] > 0 && d.d[1] > 0 && d.d[2] > 0;
     }
 }
 size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
     const PluginTensorDesc*, int) const noexcept {
+    if (m_options.kind == 4) {
+        if (!in || in[0].dims.nbDims != 3 || in[0].dims.d[0] <= 0 ||
+            in[0].dims.d[1] <= 0 || in[0].dims.d[2] <= 0) return 0;
+        const size_t count = size_t(in[0].dims.d[0]) * in[0].dims.d[1] * in[0].dims.d[2];
+        return count <= std::numeric_limits<size_t>::max() / (2 * sizeof(float))
+            ? count * 2 * sizeof(float) : 0;
+    }
     if (m_options.kind != 2) return 0;
     const int tokens = rows(in[0].dims);
     return std::max(GptOssMoeWorkspace(tokens, m_options),
@@ -128,6 +141,14 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
         const size_t elements = size_t(d[0].dims.d[0]) * d[0].dims.d[1] * d[0].dims.d[2];
         status = GptOssTpAllReduce(static_cast<const float*>(in[0]),
             static_cast<float*>(out[0]), elements, m_options.tpRank, stream);
+    }
+    else if (m_options.kind == 4) {
+        const size_t rows = size_t(d[0].dims.d[0]) * d[0].dims.d[1];
+        const size_t localVocab = d[0].dims.d[2];
+        status = GptOssTpAllGather(static_cast<const float*>(in[0]),
+            static_cast<float*>(out[0]), static_cast<float*>(workspace),
+            rows * localVocab, static_cast<int>(rows), static_cast<int>(localVocab),
+            m_options.tpRank, stream);
     }
     else if (!workspace) status = cudaErrorInvalidValue;
     else {
@@ -154,7 +175,7 @@ const char* GptOssPlugin::getPluginVersion() const noexcept { return kVersion; }
 int GptOssPlugin::getNbOutputs() const noexcept { return 1; }
 int GptOssPlugin::initialize() noexcept {
     if (!m_valid) return 1;
-    if (m_options.kind == 3 && !m_tpInitialized) {
+    if ((m_options.kind == 3 || m_options.kind == 4) && !m_tpInitialized) {
         const auto status = GptOssTpAcquire();
         if (status != cudaSuccess) return 1;
         m_tpInitialized = true;
@@ -205,9 +226,9 @@ bool EnsureGptOssPluginRegistered() {
 #endif
 extern "C" GPT_OSS_EXPORT const char* GarnetOperatorPluginManifest() {
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.5.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.6.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather"]})";
 #else
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.5.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.6.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4"]})";
 #endif
 }
 extern "C" GPT_OSS_EXPORT int GarnetRegisterOperatorPlugin() { return Garnet::EnsureGptOssPluginRegistered() ? 1 : 0; }
