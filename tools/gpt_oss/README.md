@@ -33,7 +33,7 @@ Use `test/xlang3/run_model_tests.sh` for the broader Linux integration suite.
 ## Optimized operator paths
 
 The GPT-OSS plugin uses cooperative warp reductions for decode expert dot
-products, router logits and paged attention. Prefill with at least 16 rows
+products, router logits and paged attention. Prefill with at least 32 rows
 buckets routed slots by expert and runs grouped BF16 Tensor Core GEMMs, unpacking
 MXFP4 weight tiles into shared memory. The full expert weights remain packed.
 Decode attention defaults to 16 warps per query head on the tested RTX PRO 6000

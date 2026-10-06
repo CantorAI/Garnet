@@ -291,7 +291,7 @@ __global__ void expertTasks(const int* counts, int* taskCount, int* tasks,
     // selections if nonfinite router inputs reach this low-level operator.
     int total = 0;
     for (int e = 0; e < o.experts; ++e)
-        for (int row = 0; row < counts[e]; row += 16) {
+        for (int row = 0; row < counts[e]; row += 32) {
             tasks[2 * total] = e;
             tasks[2 * total + 1] = row;
             ++total;
@@ -299,7 +299,7 @@ __global__ void expertTasks(const int* counts, int* taskCount, int* tasks,
     *taskCount = total;
 }
 // W4A16 grouped prefill: unpack one weight tile into shared BF16, reuse it
-// across sixteen routed tokens, and accumulate on BF16 Tensor Cores. Weight
+// across thirty-two routed tokens, and accumulate on BF16 Tensor Cores. Weight
 // storage remains MXFP4; there is no full-model BF16 materialization.
 template<bool Up>
 __global__ void groupedExperts(const float* x, const unsigned char* blocks,
@@ -311,15 +311,16 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
     const int nStart = blockIdx.y * 32;
     const int width = Up ? o.hidden : o.intermediate;
     const int outputs = Up ? 2 * o.intermediate : o.hidden;
-    __shared__ __align__(32) __nv_bfloat16 a[16 * 32];
+    __shared__ __align__(32) __nv_bfloat16 a[32 * 32];
     __shared__ __align__(32) __nv_bfloat16 b[32 * 32];
-    __shared__ __align__(32) float c[16 * 32];
+    __shared__ __align__(32) float c[32 * 32];
     const int warp = threadIdx.x / 32;
+    const int mStart = (warp / 2) * 16, nSub = warp % 2;
     using namespace nvcuda;
     wmma::fragment<wmma::accumulator, 16, 16, 16, float> acc;
     wmma::fill_fragment(acc, 0.f);
     for (int kStart = 0; kStart < width; kStart += 32) {
-        for (int index = threadIdx.x; index < 16 * 32; index += blockDim.x) {
+        for (int index = threadIdx.x; index < 32 * 32; index += blockDim.x) {
             const int m = index / 32, k = index % 32;
             float value = 0;
             if (first + m < counts[expert] && kStart + k < width) {
@@ -338,17 +339,17 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
         }
         __syncthreads();
         for (int sub = 0; sub < 32; sub += 16) {
-            wmma::fragment<wmma::matrix_a, 16, 16, 16, __nv_bfloat16, wmma::row_major> af;
-            wmma::fragment<wmma::matrix_b, 16, 16, 16, __nv_bfloat16, wmma::col_major> bf;
-            wmma::load_matrix_sync(af, a + sub, 32);
-            wmma::load_matrix_sync(bf, b + warp * 16 * 32 + sub, 32);
-            wmma::mma_sync(acc, af, bf, acc);
+            wmma::fragment<wmma::matrix_a, 16, 16, 16, __nv_bfloat16, wmma::row_major> aTile;
+            wmma::fragment<wmma::matrix_b, 16, 16, 16, __nv_bfloat16, wmma::col_major> bTile;
+            wmma::load_matrix_sync(aTile, a + mStart * 32 + sub, 32);
+            wmma::load_matrix_sync(bTile, b + nSub * 16 * 32 + sub, 32);
+            wmma::mma_sync(acc, aTile, bTile, acc);
         }
         __syncthreads();
     }
-    wmma::store_matrix_sync(c + warp * 16, acc, 32, wmma::mem_row_major);
+    wmma::store_matrix_sync(c + mStart * 32 + nSub * 16, acc, 32, wmma::mem_row_major);
     __syncthreads();
-    for (int index = threadIdx.x; index < 16 * 32; index += blockDim.x) {
+    for (int index = threadIdx.x; index < 32 * 32; index += blockDim.x) {
         const int m = index / 32, n = index % 32;
         if (first + m >= counts[expert] || nStart + n >= outputs) continue;
         const int slot = slots[size_t(expert) * tokens * o.topK + first + m];
@@ -452,7 +453,7 @@ static size_t moeWorkspace(int tokens, const GptOssOptions& o, bool grouped) {
     size_t bytes = slots * (sizeof(int) + sizeof(float)) +
         size_t(tokens) * o.experts * sizeof(float) + slots * o.intermediate * sizeof(float);
     if (grouped) {
-        const size_t tasks = (size_t(tokens) * o.topK + 15) / 16 + o.experts;
+        const size_t tasks = (size_t(tokens) * o.topK + 31) / 32 + o.experts;
         bytes += sizeof(int) * (o.experts + size_t(o.experts) * tokens * o.topK + 1 + 2 * tasks);
         bytes += sizeof(float) * size_t(tokens) * o.topK * o.hidden;
     }
@@ -471,7 +472,7 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
         auto* slots = counts + o.experts;
         auto* taskCount = slots + size_t(o.experts) * tokens * o.topK;
         auto* tasks = taskCount + 1;
-        const size_t maxTasks = (size_t(tokens) * o.topK + 15) / 16 + o.experts;
+        const size_t maxTasks = (size_t(tokens) * o.topK + 31) / 32 + o.experts;
         auto* values = (float*)(tasks + 2 * maxTasks);
         status = cudaMemsetAsync(counts, 0, o.experts * sizeof(int), stream);
         if (status != cudaSuccess) return status;
@@ -479,11 +480,11 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
         expertTasks<<<1, 1, 0, stream>>>(counts, taskCount, tasks, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
-        groupedExperts<true><<<dim3(maxTasks, (2 * o.intermediate + 31) / 32), 64, 0, stream>>>(
+        groupedExperts<true><<<dim3(maxTasks, (2 * o.intermediate + 31) / 32), 128, 0, stream>>>(
             (const float*)in[0], (const unsigned char*)in[3], (const unsigned char*)in[4],
             (const float*)in[5], counts, slots, taskCount, tasks, hidden, tokens, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
-        groupedExperts<false><<<dim3(maxTasks, (o.hidden + 31) / 32), 64, 0, stream>>>(
+        groupedExperts<false><<<dim3(maxTasks, (o.hidden + 31) / 32), 128, 0, stream>>>(
             hidden, (const unsigned char*)in[6], (const unsigned char*)in[7],
             (const float*)in[8], counts, slots, taskCount, tasks, values, tokens, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
