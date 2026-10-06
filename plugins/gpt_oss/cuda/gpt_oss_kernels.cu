@@ -454,7 +454,7 @@ static size_t moeWorkspace(int tokens, const GptOssOptions& o, bool grouped) {
     size_t bytes = slots * (sizeof(int) + sizeof(float)) +
         size_t(tokens) * o.experts * sizeof(float) + slots * o.intermediate * sizeof(float);
     if (grouped) {
-        const size_t tileRows = tokens > 512 ? 64 : 32;
+        const size_t tileRows = tokens > 1024 ? 128 : tokens > 512 ? 64 : 32;
         const size_t tasks = (slots + tileRows - 1) / tileRows + o.experts;
         bytes += sizeof(int) * (o.experts + size_t(o.experts) * tokens * o.topK + 1 + 2 * tasks);
         bytes += sizeof(float) * size_t(tokens) * o.topK * o.hidden;
@@ -470,7 +470,7 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
     auto status = RunGptOssMoeRoute(in, selected, probabilities, logits, tokens, o, stream);
     if (status != cudaSuccess) return status;
     if (grouped) {
-        const int tileRows = tokens > 512 ? 64 : 32;
+        const int tileRows = tokens > 1024 ? 128 : tokens > 512 ? 64 : 32;
         auto* counts = (int*)(hidden + size_t(tokens) * o.topK * o.intermediate);
         auto* slots = counts + o.experts;
         auto* taskCount = slots + size_t(o.experts) * tokens * o.topK;
@@ -481,12 +481,18 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
         if (status != cudaSuccess) return status;
         bucketExperts<<<(tokens * o.topK + 127) / 128, 128, 0, stream>>>(selected, counts, slots, tokens, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
-        if (tileRows == 64)
+        if (tileRows == 128)
+            expertTasks<128><<<1, 1, 0, stream>>>(counts, taskCount, tasks, o);
+        else if (tileRows == 64)
             expertTasks<64><<<1, 1, 0, stream>>>(counts, taskCount, tasks, o);
         else
             expertTasks<32><<<1, 1, 0, stream>>>(counts, taskCount, tasks, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
-        if (tileRows == 64)
+        if (tileRows == 128)
+            groupedExperts<true, 128><<<dim3(maxTasks, (2 * o.intermediate + 31) / 32), 512, 0, stream>>>(
+                (const float*)in[0], (const unsigned char*)in[3], (const unsigned char*)in[4],
+                (const float*)in[5], counts, slots, taskCount, tasks, hidden, tokens, o);
+        else if (tileRows == 64)
             groupedExperts<true, 64><<<dim3(maxTasks, (2 * o.intermediate + 31) / 32), 256, 0, stream>>>(
                 (const float*)in[0], (const unsigned char*)in[3], (const unsigned char*)in[4],
                 (const float*)in[5], counts, slots, taskCount, tasks, hidden, tokens, o);
@@ -495,7 +501,11 @@ static cudaError_t runMoe(const void* const* in, float* y, void* workspace, int 
                 (const float*)in[0], (const unsigned char*)in[3], (const unsigned char*)in[4],
                 (const float*)in[5], counts, slots, taskCount, tasks, hidden, tokens, o);
         status = cudaGetLastError(); if (status != cudaSuccess) return status;
-        if (tileRows == 64)
+        if (tileRows == 128)
+            groupedExperts<false, 128><<<dim3(maxTasks, (o.hidden + 31) / 32), 512, 0, stream>>>(
+                hidden, (const unsigned char*)in[6], (const unsigned char*)in[7],
+                (const float*)in[8], counts, slots, taskCount, tasks, values, tokens, o);
+        else if (tileRows == 64)
             groupedExperts<false, 64><<<dim3(maxTasks, (o.hidden + 31) / 32), 256, 0, stream>>>(
                 hidden, (const unsigned char*)in[6], (const unsigned char*)in[7],
                 (const float*)in[8], counts, slots, taskCount, tasks, values, tokens, o);

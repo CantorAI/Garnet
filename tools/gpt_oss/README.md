@@ -35,8 +35,9 @@ Use `test/xlang3/run_model_tests.sh` for the broader Linux integration suite.
 The GPT-OSS plugin uses cooperative warp reductions for decode expert dot
 products, router logits and paged attention. Prefill buckets routed slots by
 expert and runs grouped BF16 Tensor Core GEMMs, unpacking MXFP4 weight tiles
-into shared memory. It reuses each tile across 32 routed rows for shorter
-prompts and 64 rows for prompts longer than 512 tokens. The full expert weights remain packed.
+into shared memory. It reuses each tile across 32 routed rows for prompts up to
+512 tokens, 64 rows through 1,024 tokens, and 128 rows for longer prompts. The
+full expert weights remain packed.
 Decode attention defaults to 16 warps per query head on the tested RTX PRO 6000
 Blackwell GPUs. Set `GARNET_GPT_OSS_DECODE_WARPS` to `1`, `2`, `4`, `8`, or
 `16` before starting the runtime to select a specialization for hardware/context
