@@ -18,7 +18,7 @@ def linear(x, name, bias=None, op="linear"):
                                  accumulation_dtype="float32"))
 
 
-@T.fusion(role="decoder_layer", atomic=True)
+@T.fusion(role="decoder_layer", atomic=True, cuda_graph=True)
 def layer(x, position_ids, key_pages, value_pages, page_table,
           context_length, slot_position, active_mask, config, layer_idx, prefill, kv_layer_idx=None):
     prefix = "block." + str(layer_idx)
