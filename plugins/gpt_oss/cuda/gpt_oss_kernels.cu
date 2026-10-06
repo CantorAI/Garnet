@@ -14,6 +14,7 @@ __device__ float warpSum(float value) {
         value += __shfl_down_sync(0xffffffff, value, offset);
     return value;
 }
+template<int Threads>
 __global__ void rmsNorm(const float* x, const float* weight, float* y,
     int rows, int hidden, float epsilon) {
     const int row = blockIdx.x;
@@ -24,11 +25,11 @@ __global__ void rmsNorm(const float* x, const float* weight, float* y,
         sum += value * value;
     }
     sum = warpSum(sum);
-    __shared__ float partial[8];
+    __shared__ float partial[Threads / 32];
     if (!lane) partial[warp] = sum;
     __syncthreads();
     if (warp == 0) {
-        sum = lane < 8 ? partial[lane] : 0.f;
+        sum = lane < Threads / 32 ? partial[lane] : 0.f;
         sum = warpSum(sum);
         if (!lane) partial[0] = rsqrtf(sum / hidden + epsilon);
     }
@@ -431,10 +432,16 @@ cudaError_t RunGptOssRope(const float* x, const std::int64_t* p, float* y, int t
     return cudaGetLastError();
 }
 cudaError_t RunGptOssRmsNorm(const float* x, const float* weight, float* y,
-    int rows, int hidden, float epsilon, cudaStream_t stream) {
+    int rows, int hidden, float epsilon, int threads, cudaStream_t stream) {
     if (!x || !weight || !y || rows <= 0 || hidden <= 0 || epsilon <= 0.f)
         return cudaErrorInvalidValue;
-    rmsNorm<<<rows, 256, 0, stream>>>(x, weight, y, rows, hidden, epsilon);
+    switch (threads) {
+    case 128: rmsNorm<128><<<rows, 128, 0, stream>>>(x, weight, y, rows, hidden, epsilon); break;
+    case 256: rmsNorm<256><<<rows, 256, 0, stream>>>(x, weight, y, rows, hidden, epsilon); break;
+    case 512: rmsNorm<512><<<rows, 512, 0, stream>>>(x, weight, y, rows, hidden, epsilon); break;
+    case 1024: rmsNorm<1024><<<rows, 1024, 0, stream>>>(x, weight, y, rows, hidden, epsilon); break;
+    default: return cudaErrorInvalidConfiguration;
+    }
     return cudaGetLastError();
 }
 cudaError_t RunGptOssAttention(const void* const* in, float* y, int batch, int tokens,

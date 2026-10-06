@@ -157,7 +157,7 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
     }
     else if (m_options.kind == 5) status = RunGptOssRmsNorm(
         static_cast<const float*>(in[0]), static_cast<const float*>(in[1]),
-        static_cast<float*>(out[0]), n, m_options.hidden, m_options.epsilon, stream);
+        static_cast<float*>(out[0]), n, m_options.hidden, m_options.epsilon, 256, stream);
     else if (!workspace) status = cudaErrorInvalidValue;
     else {
         // Some TensorRT execution paths invoke enqueue without initialize().

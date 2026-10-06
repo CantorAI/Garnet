@@ -52,7 +52,7 @@ void testRmsNorm() {
         }
     }
     Device<float> dx(x), dw(weight), dy(std::vector<float>(x.size()));
-    check(RunGptOssRmsNorm(dx.p, dw.p, dy.p, tokens, hidden, epsilon, nullptr));
+    check(RunGptOssRmsNorm(dx.p, dw.p, dy.p, tokens, hidden, epsilon, 256, nullptr));
     // The CUDA tree reduction and the CPU reference sum in different orders;
     // permit at most one BF16-scale rounding step while retaining a tight bound.
     compare(dy.read(), expected, .008f, "GPT-OSS BF16 RMSNorm");

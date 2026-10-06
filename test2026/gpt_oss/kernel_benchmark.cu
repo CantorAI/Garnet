@@ -25,6 +25,35 @@ __global__ void flushCache(unsigned* data, size_t count) {
 int main() { try {
     cudaDeviceProp device; check(cudaGetDeviceProperties(&device, 0));
     std::cout << "device=" << device.name << ", L2_bytes=" << device.l2CacheSize << "\n";
+    {
+        constexpr int hidden = 2880;
+        Buffer x(128 * hidden * sizeof(float)), weight(hidden * sizeof(float)),
+            output(128 * hidden * sizeof(float));
+        std::vector<float> hostX(128 * hidden), hostWeight(hidden, 1.f);
+        for (size_t i = 0; i < hostX.size(); ++i)
+            hostX[i] = std::sin(float(i) * .017f) + std::cos(float(i) * .003f);
+        check(cudaMemcpy(x.p, hostX.data(), hostX.size() * sizeof(float), cudaMemcpyHostToDevice));
+        check(cudaMemcpy(weight.p, hostWeight.data(), hostWeight.size() * sizeof(float), cudaMemcpyHostToDevice));
+        cudaEvent_t begin, end; check(cudaEventCreate(&begin)); check(cudaEventCreate(&end));
+        for (int rows : {1, 128}) for (int threads : {128, 256, 512, 1024}) {
+            for (int i = 0; i < 10; ++i)
+                check(RunGptOssRmsNorm((float*)x.p, (float*)weight.p, (float*)output.p,
+                    rows, hidden, 1.0e-5f, threads, nullptr));
+            std::vector<float> times;
+            for (int i = 0; i < 80; ++i) {
+                check(cudaEventRecord(begin));
+                check(RunGptOssRmsNorm((float*)x.p, (float*)weight.p, (float*)output.p,
+                    rows, hidden, 1.0e-5f, threads, nullptr));
+                check(cudaEventRecord(end)); check(cudaEventSynchronize(end));
+                float milliseconds; check(cudaEventElapsedTime(&milliseconds, begin, end));
+                times.push_back(milliseconds * 1000.f);
+            }
+            std::sort(times.begin(), times.end());
+            std::cout << "rmsnorm_rows=" << rows << ", threads=" << threads
+                << ", median_us=" << times[times.size() / 2] << "\n";
+        }
+        check(cudaEventDestroy(begin)); check(cudaEventDestroy(end));
+    }
     GptOssOptions o; o.hidden = o.intermediate = 2880; o.experts = 128; o.topK = 8;
     size_t h = o.hidden, inner = o.intermediate, e = o.experts;
     Buffer router(e*h*4), rb(e*4), up(e*2*inner*h/2, 0x31), us(e*2*inner*h/32, 120),
