@@ -19,10 +19,12 @@ void reportMarlinFallback(bool initialized, int tokens) {
     if (std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") && count.fetch_add(1) < 16)
         std::fprintf(stderr, "GPT-OSS Marlin: fallback (plugin initialized=%d, rows=%d)\n", initialized, tokens);
 }
-// Version 6 adds the fused GPT-OSS RMSNorm kernel contract.
-constexpr const char* kVersion = "6";
+// Version 7 adds the attention prefill BF16 communication option.
+constexpr const char* kVersion = "7";
 bool valid(const GptOssOptions& o) {
     if (o.kind < 0 || o.kind > 5) return false;
+    if (o.bf16Communication < 0 || o.bf16Communication > 1 ||
+        (o.bf16Communication && o.kind != 3)) return false;
     if (o.kind == 3 || o.kind == 4) return o.hidden > 0 && o.tpRank >= 0 && o.tpRank < 2;
     if (o.kind == 5) return o.hidden > 0 && o.epsilon > 0.f;
     if (o.kind == 2) return o.hidden > 0 && o.intermediate > 0 &&
@@ -122,6 +124,13 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
 }
 size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
     const PluginTensorDesc*, int) const noexcept {
+    if (m_options.kind == 3 && m_options.bf16Communication && in &&
+        in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 &&
+        in[0].dims.d[1] >= 128 && in[0].dims.d[2] == m_options.hidden) {
+        const size_t count = size_t(in[0].dims.d[0]) * in[0].dims.d[1] * in[0].dims.d[2];
+        return count <= std::numeric_limits<size_t>::max() / (2 * sizeof(uint16_t))
+            ? count * 2 * sizeof(uint16_t) : 0;
+    }
     if (m_options.kind == 1 && !m_options.prefill && in &&
         in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 && in[0].dims.d[1] == 1)
         return size_t(in[0].dims.d[0]) * m_options.qHeads * 64 *
@@ -148,8 +157,17 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
         d[0].dims.d[0], d[0].dims.d[1], d[3].dims.d[1], d[1].dims.d[1], m_options, stream);
     else if (m_options.kind == 3) {
         const size_t elements = size_t(d[0].dims.d[0]) * d[0].dims.d[1] * d[0].dims.d[2];
-        status = GptOssTpAllReduce(static_cast<const float*>(in[0]),
-            static_cast<float*>(out[0]), elements, m_options.tpRank, stream);
+        static const bool useBf16 = [] {
+            const char* flag = std::getenv("GARNET_GPT_OSS_BF16_PREFILL_ALLREDUCE");
+            return flag && std::strcmp(flag, "1") == 0;
+        }();
+        if (useBf16 && m_options.bf16Communication && n >= 128 && workspace)
+            status = GptOssTpAllReduceBf16(static_cast<const float*>(in[0]),
+                static_cast<float*>(out[0]), workspace, elements,
+                m_options.tpRank, stream);
+        else
+            status = GptOssTpAllReduce(static_cast<const float*>(in[0]),
+                static_cast<float*>(out[0]), elements, m_options.tpRank, stream);
     }
     else if (m_options.kind == 4) {
         const size_t rows = size_t(d[0].dims.d[0]) * d[0].dims.d[1];

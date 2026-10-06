@@ -24,10 +24,11 @@ def linear(x, name, bias=None, op="linear", tp_mode=None, tp_rank=-1,
     return rounded(x * T.unary_op(op, **attributes))
 
 
-def tp_all_reduce(x, rank, config):
+def tp_all_reduce(x, rank, config, bf16_communication=False):
     """Sum a rank-local partial hidden state across both GPT-OSS TP ranks."""
     return x * T.unary_op("gpt_oss_tp_all_reduce",
-                          hidden_size=config['hidden_size'], tp_rank=rank)
+                          hidden_size=config['hidden_size'], tp_rank=rank,
+                          bf16_communication=1 if bf16_communication else 0)
 
 
 def tp_all_gather_logits(x, rank, config):
@@ -81,7 +82,8 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
     if tp_rank >= 0:
         attention_output = linear(attention, prefix + ".attn.out.weight",
                                   prefix + ".attn.out.bias", tp_mode='row', tp_rank=tp_rank)
-        attention_output = rounded(tp_all_reduce(attention_output, tp_rank, config))
+        attention_output = rounded(tp_all_reduce(
+            attention_output, tp_rank, config, bf16_communication=True))
     else:
         attention_output = linear(attention, prefix + ".attn.out.weight", prefix + ".attn.out.bias")
     x = rounded(residual + attention_output)

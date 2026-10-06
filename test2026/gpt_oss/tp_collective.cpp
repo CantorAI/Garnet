@@ -19,6 +19,7 @@ int main() {
     if (!Check(Garnet::GptOssTpAcquire(), "initialize TP communicator")) return 1;
     std::array<cudaStream_t, 2> streams{};
     std::array<float*, 2> inputs{}, outputs{};
+    std::array<void*, 2> bf16Scratch{};
     std::array<float*, 2> gatherOutputs{}, gatherScratch{};
     std::array<std::vector<float>, 2> hostInputs{
         std::vector<float>(count, 1.25f), std::vector<float>(count, -0.5f)};
@@ -29,6 +30,8 @@ int main() {
         if (status == cudaSuccess) status = cudaStreamCreate(&streams[rank]);
         if (status == cudaSuccess) status = cudaMalloc((void**)&inputs[rank], count * sizeof(float));
         if (status == cudaSuccess) status = cudaMalloc((void**)&outputs[rank], count * sizeof(float));
+        if (status == cudaSuccess) status = cudaMalloc(&bf16Scratch[rank],
+            2 * count * sizeof(uint16_t));
         if (status == cudaSuccess) status = cudaMalloc((void**)&gatherOutputs[rank], 12 * sizeof(float));
         if (status == cudaSuccess) status = cudaMalloc((void**)&gatherScratch[rank], 12 * sizeof(float));
         if (status == cudaSuccess) status = cudaMemcpyAsync(inputs[rank], hostInputs[rank].data(),
@@ -42,6 +45,10 @@ int main() {
             if (collectiveStatus[rank] == cudaSuccess)
                 collectiveStatus[rank] = Garnet::GptOssTpAllReduce(
                     inputs[rank], outputs[rank], count, rank, streams[rank]);
+            if (collectiveStatus[rank] == cudaSuccess)
+                collectiveStatus[rank] = Garnet::GptOssTpAllReduceBf16(
+                    inputs[rank], outputs[rank], bf16Scratch[rank], count,
+                    rank, streams[rank]);
             if (collectiveStatus[rank] == cudaSuccess)
                 collectiveStatus[rank] = Garnet::GptOssTpAllGather(
                     inputs[rank], gatherOutputs[rank], gatherScratch[rank], 6,
@@ -80,11 +87,12 @@ int main() {
         cudaSetDevice(rank);
         if (inputs[rank]) cudaFree(inputs[rank]);
         if (outputs[rank]) cudaFree(outputs[rank]);
+        if (bf16Scratch[rank]) cudaFree(bf16Scratch[rank]);
         if (gatherOutputs[rank]) cudaFree(gatherOutputs[rank]);
         if (gatherScratch[rank]) cudaFree(gatherScratch[rank]);
         if (streams[rank]) cudaStreamDestroy(streams[rank]);
     }
     Garnet::GptOssTpRelease();
-    std::puts("NCCL TP2 all-reduce and vocabulary all-gather parity passed.");
+    std::puts("NCCL TP2 FP32/BF16 all-reduce and vocabulary all-gather parity passed.");
     return 0;
 }

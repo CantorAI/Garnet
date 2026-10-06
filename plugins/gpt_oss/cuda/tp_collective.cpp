@@ -90,6 +90,31 @@ cudaError_t GptOssTpAllReduce(const float* input, float* output, size_t count,
 #endif
 }
 
+cudaError_t GptOssTpAllReduceBf16(const float* input, float* output,
+    void* workspace, size_t count, int rank, cudaStream_t stream) {
+#ifdef GARNET_GPT_OSS_ENABLE_NCCL
+    if (!g_tpReady || rank < 0 || rank >= static_cast<int>(g_tpComms.size()) ||
+        !input || !output || !workspace || !count ||
+        count > SIZE_MAX / (2 * sizeof(uint16_t))) return cudaErrorInvalidValue;
+    int device = -1;
+    auto status = cudaGetDevice(&device);
+    if (status != cudaSuccess) return status;
+    if (device != rank) return cudaErrorInvalidDevice;
+    auto* packed = static_cast<unsigned char*>(workspace);
+    auto* reduced = packed + count * sizeof(uint16_t);
+    status = GptOssTpPackBf16(input, packed, count, stream);
+    if (status != cudaSuccess) return status;
+    const auto result = ncclAllReduce(packed, reduced, count, ncclBfloat16,
+        ncclSum, g_tpComms[rank], stream);
+    if (result != ncclSuccess) return NcclStatus(result);
+    return GptOssTpUnpackBf16(reduced, output, count, stream);
+#else
+    (void)input; (void)output; (void)workspace; (void)count;
+    (void)rank; (void)stream;
+    return cudaErrorNotSupported;
+#endif
+}
+
 cudaError_t GptOssTpAllGather(const float* input, float* output, float* scratch,
     size_t count, int rows, int localVocab, int rank, cudaStream_t stream) {
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
