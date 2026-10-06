@@ -14,7 +14,7 @@ def norm(x, name):
 
 def linear(x, name, bias=None, op="linear"):
     return rounded(x * T.unary_op(op, weight_name=name, bias_name=bias,
-                                 compute_dtype="bfloat16" if op == "lm_head" else "float32",
+                                 compute_dtype="bfloat16",
                                  accumulation_dtype="float32"))
 
 
