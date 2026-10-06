@@ -364,9 +364,16 @@ __global__ void decodeAttentionMerge(const float* scratch, const float* sinks,
 template<int Threads, bool Vector4 = false>
 __global__ void routeScores(const float* x, const float* weight, const float* bias,
     float* logits, int tokens, GptOssOptions o,
-    __nv_bfloat16* converted, int paddedWidth) {
+    __nv_bfloat16* converted, int paddedWidth, int* locks, int locksPerExpert) {
     const int token = blockIdx.x / o.experts, expert = blockIdx.x % o.experts;
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
+    if (locks) {
+        // One router CTA owns each expert. Clear its Marlin lock slice before
+        // top-K and GEMM consume it; this removes a separate decode memset.
+        auto* slice = reinterpret_cast<int4*>(locks + size_t(expert) * locksPerExpert);
+        for (int i = threadIdx.x; i < locksPerExpert / 4; i += blockDim.x)
+            slice[i] = make_int4(0, 0, 0, 0);
+    }
     float value = 0;
     if constexpr (Vector4) {
         const auto* input = reinterpret_cast<const float4*>(x + size_t(token) * o.hidden);
@@ -899,6 +906,8 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
     const bool fuse = fused && tokens == 1 && o.experts <= 128;
     auto* converted = fuse ? static_cast<__nv_bfloat16*>(fused->convertedInput) : nullptr;
     const int paddedWidth = fuse ? fused->paddedWidth : 0;
+    int* locks = fuse ? fused->locks : nullptr;
+    const int locksPerExpert = fuse ? fused->locksPerExpert : 0;
     static const int routerThreads = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_THREADS");
         return value && std::atoi(value) == 128 ? 128 : 256;
@@ -910,15 +919,15 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
     if (routerThreads == 256 && vector4 && o.hidden % 4 == 0 && tokens <= 8)
         routeScores<256, true><<<tokens * o.experts, 256, 0, stream>>>(
             (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
-            tokens, o, converted, paddedWidth);
+            tokens, o, converted, paddedWidth, locks, locksPerExpert);
     else if (routerThreads == 256)
         routeScores<256><<<tokens * o.experts, 256, 0, stream>>>(
             (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
-            tokens, o, converted, paddedWidth);
+            tokens, o, converted, paddedWidth, locks, locksPerExpert);
     else
         routeScores<128><<<tokens * o.experts, 128, 0, stream>>>(
             (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
-            tokens, o, converted, paddedWidth);
+            tokens, o, converted, paddedWidth, locks, locksPerExpert);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
     if (fuse)
         routeTopK<true><<<1, 128, 0, stream>>>(logits, selected, probabilities,

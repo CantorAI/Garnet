@@ -31,6 +31,8 @@ cudaError_t RunGptOssMoe(const void* const*, float*, void*, int,
 struct GptOssMarlinDecodeBuffers {
     void* convertedInput = nullptr;
     int paddedWidth = 0;
+    int* locks = nullptr;
+    int locksPerExpert = 0;
     int* sorted = nullptr;
     int* experts = nullptr;
     int* padded = nullptr;

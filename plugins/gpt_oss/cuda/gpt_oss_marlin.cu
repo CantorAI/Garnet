@@ -246,9 +246,17 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
         const char* value=std::getenv("GARNET_GPT_OSS_FUSED_DECODE_ROUTE");
         return value && value[0]=='1' && value[1]=='\0';
     }();
+    static const bool fuseLockClear=[] {
+        const char* value=std::getenv("GARNET_GPT_OSS_FUSED_MARLIN_LOCK_CLEAR");
+        return value && value[0]=='1' && value[1]=='\0';
+    }();
     const bool fused=fuseDecodeRoute && tokens==1 && o.experts<=128;
+    const bool fusedLocks=fused && fuseLockClear;
     GptOssMarlinDecodeBuffers fusedBuffers{
-        at<nv_bfloat16>(workspace,l.a),g.upK,at<int>(workspace,l.sorted),
+        at<nv_bfloat16>(workspace,l.a),g.upK,
+        fusedLocks?at<int>(workspace,l.locks):nullptr,
+        fusedLocks?std::max(g.upN,g.downN)/64*16:0,
+        at<int>(workspace,l.sorted),
         at<int>(workspace,l.experts),at<int>(workspace,l.padded),block};
     status=RunGptOssMoeRoute(in,selected,probabilities,at<float>(workspace,l.routeLogits),
         tokens,o,stream,fused?&fusedBuffers:nullptr);
@@ -257,8 +265,10 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
         convertInput<<<(tokens*g.upK+255)/256,256,0,stream>>>((const float*)in[0],at<nv_bfloat16>(workspace,l.a),tokens,o.hidden,g.upK);
         metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank,block);
     }
-    status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
-    if(status!=cudaSuccess)return status;
+    if(!fusedLocks) {
+        status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
+        if(status!=cudaSuccess)return status;
+    }
     auto up=block==32?upKernel32():upKernel();up<<<s.sms*marlinCtasPerSm(s.computeMajor),128,block==32?35584:27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[1],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,o.topK,false,tokens,g.upN,g.upK,at<int>(workspace,l.locks),false,false,true);
