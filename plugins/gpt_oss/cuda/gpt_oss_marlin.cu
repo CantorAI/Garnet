@@ -16,6 +16,14 @@ bool debugMarlin() {
     static const bool enabled = std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") != nullptr;
     return enabled;
 }
+int marlinCtasPerSm() {
+    static const int count = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_CTAS_PER_SM");
+        const int parsed = value ? std::atoi(value) : 2;
+        return parsed == 1 || parsed == 4 ? parsed : 2;
+    }();
+    return count;
+}
 void reportMarlin(const char* message, int a = 0, int b = 0) {
     static std::atomic<int> count{0};
     if (debugMarlin() && count.fetch_add(1) < 128) std::fprintf(stderr, "GPT-OSS Marlin: %s (%d, %d)\n", message, a, b);
@@ -216,11 +224,11 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank);
     status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
     if(status!=cudaSuccess)return status;
-    auto up=upKernel();up<<<s.sms*2,128,27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
+    auto up=upKernel();up<<<s.sms*marlinCtasPerSm(),128,27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[1],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,o.topK,false,tokens,g.upN,g.upK,at<int>(workspace,l.locks),false,false,true);
     activation<<<(slots*g.downK+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.up),(const float*)in[5],selected,at<nv_bfloat16>(workspace,l.activation),slots,g.upN,g.downK,o);
-    auto down=downKernel();down<<<s.sms*2,128,35200,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
+    auto down=downKernel();down<<<s.sms*marlinCtasPerSm(),128,35200,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[3],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,1,false,slots,g.downN,g.downK,at<int>(workspace,l.locks),false,false,true);
     combine<<<(tokens*o.hidden+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.down),(const float*)in[8],selected,probabilities,y,tokens,g.downN,o);
