@@ -16,13 +16,13 @@ bool debugMarlin() {
     static const bool enabled = std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") != nullptr;
     return enabled;
 }
-int marlinCtasPerSm() {
-    static const int count = [] {
+int marlinCtasPerSm(int computeMajor) {
+    static const int overrideCount = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_CTAS_PER_SM");
-        const int parsed = value ? std::atoi(value) : 2;
-        return parsed == 1 || parsed == 4 ? parsed : 2;
+        const int parsed = value ? std::atoi(value) : 0;
+        return parsed == 1 || parsed == 2 || parsed == 4 ? parsed : 0;
     }();
-    return count;
+    return overrideCount ? overrideCount : (computeMajor >= 12 ? 1 : 2);
 }
 void reportMarlin(const char* message, int a = 0, int b = 0) {
     static std::atomic<int> count{0};
@@ -153,7 +153,7 @@ UpKernel downKernel() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat1
     garnet_marlin_types::kFE8M0fnu.id(),128,1,4,8,true,4,2,false>;}
 }
 struct GptOssMarlin::State {
-    GptOssOptions o;Geometry g;int device=-1,sms=0,blockedReason=0;bool ready=false,blocked=false;
+    GptOssOptions o;Geometry g;int device=-1,sms=0,computeMajor=0,blockedReason=0;bool ready=false,blocked=false;
     std::array<void*,4> weights{};std::array<const void*,4> sources{};
     explicit State(const GptOssOptions& options):o(options),g(options) {}
     ~State(){release();}
@@ -173,7 +173,7 @@ struct GptOssMarlin::State {
         auto status=cudaGetDevice(&device);if(status!=cudaSuccess)return status;
         cudaDeviceProp prop{};status=cudaGetDeviceProperties(&prop,device);if(status!=cudaSuccess)return status;
         if(prop.major<8 || prop.multiProcessorCount>512){blocked=true;blockedReason=1;reportMarlin("device capability rejected", prop.major, prop.multiProcessorCount);return cudaErrorNotSupported;}
-        sms=prop.multiProcessorCount;
+        sms=prop.multiProcessorCount;computeMajor=prop.major;
         int* invalid=nullptr;status=cudaMalloc((void**)&invalid,4);if(status!=cudaSuccess)return status;
         status=cudaMemsetAsync(invalid,0,4,stream);
         const size_t upScales=size_t(o.experts)*2*o.intermediate*(o.hidden/32);
@@ -224,11 +224,11 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank);
     status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
     if(status!=cudaSuccess)return status;
-    auto up=upKernel();up<<<s.sms*marlinCtasPerSm(),128,27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
+    auto up=upKernel();up<<<s.sms*marlinCtasPerSm(s.computeMajor),128,27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[1],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,o.topK,false,tokens,g.upN,g.upK,at<int>(workspace,l.locks),false,false,true);
     activation<<<(slots*g.downK+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.up),(const float*)in[5],selected,at<nv_bfloat16>(workspace,l.activation),slots,g.upN,g.downK,o);
-    auto down=downKernel();down<<<s.sms*marlinCtasPerSm(),128,35200,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
+    auto down=downKernel();down<<<s.sms*marlinCtasPerSm(s.computeMajor),128,35200,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[3],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,1,false,slots,g.downN,g.downK,at<int>(workspace,l.locks),false,false,true);
     combine<<<(tokens*o.hidden+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.down),(const float*)in[8],selected,probabilities,y,tokens,g.downN,o);
