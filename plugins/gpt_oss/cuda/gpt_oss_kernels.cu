@@ -720,7 +720,7 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
     }();
     static const bool vector4 = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_VECTOR4");
-        return value && value[0] == '1' && value[1] == '\0';
+        return !value || (value[0] == '1' && value[1] == '\0');
     }();
     if (routerThreads == 256 && vector4 && o.hidden % 4 == 0 && tokens <= 8)
         routeScores<256, true><<<tokens * o.experts, 256, 0, stream>>>(
