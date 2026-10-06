@@ -7,6 +7,7 @@ root=${CANTORAI_ROOT:-$(dirname "$repo")}
 work=${GARNET_BENCH_WORK_DIR:-$root/work}
 output=${GARNET_BENCH_OUTPUT:?Set GARNET_BENCH_OUTPUT to a new results directory}
 trials=${GARNET_BENCH_TRIALS:-2}
+cases=${GARNET_BENCH_CASES:-arithmetic code-tracing instruction-following long-context-retrieval}
 runtime=${XLANG3_RUNTIME_BIN:-$root/out/build/xlang3/bin/xlang3}
 build=${GARNET_BUILD_DIR:-$root/out/build/gpt-oss}
 weights=${GARNET_GPT_OSS_WEIGHTS:-$root/models/gpt-oss-120b/original}
@@ -31,7 +32,11 @@ git -C "$repo" rev-parse HEAD >"$output/revision.txt"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv >"$output/gpus.csv"
 env | grep -E '^(GARNET_[^=]*|XLANG3_PYTHON_LIB|PYTHONPATH|LD_LIBRARY_PATH)=' | sort >"$output/environment.txt"
 
-for case in arithmetic code-tracing instruction-following long-context-retrieval; do
+for case in $cases; do
+    case "$case" in
+        arithmetic|code-tracing|instruction-following|long-context-retrieval) ;;
+        *) echo "Unknown benchmark case: $case" >&2; exit 2 ;;
+    esac
     request="$work/prompt-benchmarks/$case/request.json"
     [[ $case != long-context-retrieval ]] || request="$work/long-prompt-test/request.json"
     [[ -f $request ]] || { echo "Missing request: $request" >&2; exit 2; }
