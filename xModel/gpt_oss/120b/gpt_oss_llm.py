@@ -71,7 +71,7 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         down_blocks_name=prefix + ".mlp.mlp2_weight.blocks",
         down_scales_name=prefix + ".mlp.mlp2_weight.scales", down_bias_name=prefix + ".mlp.mlp2_bias")
     if config.get('tp_rank', -1) >= 0:
-        x = tp_all_reduce(x, config['tp_rank'], config)
+        x = rounded(tp_all_reduce(x, config['tp_rank'], config))
     return rounded(residual + x)
 
 

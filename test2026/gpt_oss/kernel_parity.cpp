@@ -224,6 +224,7 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
         const auto values = partial.read();
         for (size_t i = 0; i < values.size(); ++i) shardedSum[i] += values[i];
     }
+    for (float& value : shardedSum) value = bf(value);
     compare(shardedSum, expected, .002f, "Two-rank expert-parallel MoE sum");
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     Device<unsigned char> groupedWorkspace(std::vector<unsigned char>(TestGptOssMoeWorkspace(tokens,o,true)));
