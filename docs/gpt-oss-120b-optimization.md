@@ -43,12 +43,25 @@ The direct reduction uses system-scope release/acquire signals, peer-access memo
 
 A steady decode trace showed roughly 4.58 ms of GPU graph work per token plus ~0.66 ms between host graph launches. Per-GPU kernel groups were approximately TensorRT BF16 GEMMs 1.19 ms, Marlin experts 0.96–0.99 ms, NCCL 0.66–0.70 ms, attention 0.36 ms, and remaining operations ~1.07 ms. A faster collective helps only one group; reaching ~4.0 ms/token, the rough vLLM target, also requires reducing graph work and launch gaps. The long-context prefill gap is a separate problem.
 
+A CUDA graph trace of the warmed 2,005-token prefill measured 0.465 s wall time under the profiler. After separating the second pass from the first pass's one-time repacking, the main per-GPU kernel totals were:
+
+| Warm prefill group | GPU 0 | GPU 1 | Interpretation |
+|---|---:|---:|---|
+| Attention | 239.9 ms | 237.4 ms | Largest cost; current prefill kernel walks prior keys serially per query warp. |
+| NCCL all-reduce | 90.9 ms | 96.7 ms | Large hidden-state messages across PCIe, twice per layer. |
+| Marlin experts | 59.2 ms | 56.2 ms | MXFP4 expert matrix products. |
+| Router scores | 31.4 ms | 30.9 ms | Routing matrix/vector work. |
+| Expert metadata | 16.4 ms | 16.6 ms | Sorting and padding expert assignments. |
+
+These are kernel-duration sums on each GPU, not percentages of wall time; some work overlaps and profiler overhead affects latency. The complete trace and SQLite export are saved under `D:/CantorAI/work/gpt-oss-benchmark-evidence-2026-10-05/tp2-prefill-warm-profile/`. The attention loop in `plugins/gpt_oss/cuda/gpt_oss_kernels.cu` is the first prefill redesign target. Reducing that cost alone will not erase the collective and expert costs, so a vLLM-beating prefill still needs an end-to-end rerun.
+
 Garnet's `xModel/gpt_oss/120b/profiles/tensorrt_mxfp4.json` describes backend/capability choices. The hardware planner in `tools/gpt_oss/pipeline.py` inspects available memory, reserves headroom, sizes KV cache, selects placement, and builds shapes. That is memory/placement fitting; the measured kernel tiles, TensorRT tactics, collective protocol, and graph behavior still need workload-specific profiling. Avoid encoding a single 2-GPU result as a universal default.
 
 ## Next checks
 
 1. Keep the direct collective experimental until changing per-token activations, repeated requests, and concurrent-request safety are validated. The four saved requests passed and showed a small speed gain, but the shared scratch design is not ready as a general serving default.
-2. Profile and shorten the host graph-launch gap and remaining norm/router/metadata work without changing output.
-3. Re-run the four saved cases, then compare against the same vLLM baseline. Keep rejected results in this log so later hardware choices can be revisited with evidence.
+2. Replace or tile the serial prefill attention walk, preserving the learned sink, sliding window, GQA layout, BF16 cache and output rounding. Measure it with 2,005-token prefill and all four final-answer checks.
+3. Profile and shorten the host graph-launch gap and remaining norm/router/metadata work without changing output.
+4. Re-run the four saved cases, then compare against the same vLLM baseline. Keep rejected results in this log so later hardware choices can be revisited with evidence.
 
 Marlin-derived source attribution and Apache-2.0 terms are in the repository `NOTICE` and the GPT-OSS plugin provenance/license files. Qwen code is unchanged by this work.
