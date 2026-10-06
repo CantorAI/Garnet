@@ -124,7 +124,7 @@ size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
     const PluginTensorDesc*, int) const noexcept {
     if (m_options.kind == 1 && !m_options.prefill && in &&
         in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 && in[0].dims.d[1] == 1)
-        return size_t(in[0].dims.d[0]) * m_options.qHeads * 16 *
+        return size_t(in[0].dims.d[0]) * m_options.qHeads * 64 *
             (2 + 128) * sizeof(float);
     if (m_options.kind == 4) {
         if (!in || in[0].dims.nbDims != 3 || in[0].dims.d[0] <= 0 ||

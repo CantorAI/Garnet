@@ -42,7 +42,7 @@ Blackwell GPUs. Set `GARNET_GPT_OSS_DECODE_WARPS` to `1`, `2`, `4`, `8`, or
 `16` before starting the runtime to select a specialization for hardware/context
 tuning; unsupported values use the 16-warp default.
 For experimental single-token decode, set `GARNET_GPT_OSS_DECODE_SPLITS` to
-`8` or `16` before starting the runtime. This splits each query head's KV
+`8`, `16`, `32`, or `64` before starting the runtime. This splits each query head's KV
 range across separate CUDA blocks and merges their stable softmax states;
 unset the variable to use the measured 16-warp baseline.
 These paths require SM 80 or newer and the xModel's BF16-rounded activations;

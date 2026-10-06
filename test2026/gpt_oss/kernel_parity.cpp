@@ -90,7 +90,7 @@ void testAttention(int dimension) {
     std::vector<uint16_t> keys(2 * pages * 2 * 2 * dimension, bits(17)), values(keys);
     std::vector<int> table{2, 0, 3, 1}, lengths{3, 3}, starts{0, 0}, active{1, 1};
     Device<float> dx(x), ds(sinks), dy(std::vector<float>(batch * tokens * queryWidth));
-    Device<float> scratch(std::vector<float>(size_t(batch) * o.qHeads * 16 * 130));
+    Device<float> scratch(std::vector<float>(size_t(batch) * o.qHeads * 64 * 130));
     Device<uint16_t> dk(keys), dv(values);
     Device<int> dt(table), dl(lengths), dp(starts), da(active);
     const void* in[]{dx.p, dk.p, dv.p, dt.p, dl.p, dp.p, da.p, ds.p};
@@ -141,7 +141,7 @@ void testLongDecodeAttention(int dimension) {
     for (int i=0; i<batch*logical; ++i) table[i]=(i*7)%pages;
     table[3]=-1; // Unmapped pages must contribute neither logits nor values.
     Device<float> dx(input), ds(sinks), dy(std::vector<float>(batch*queryWidth));
-    Device<float> scratch(std::vector<float>(size_t(batch) * o.qHeads * 16 * 130));
+    Device<float> scratch(std::vector<float>(size_t(batch) * o.qHeads * 64 * 130));
     Device<uint16_t> dk(keys), dv(values);
     Device<int> dt(table), dl(std::vector<int>{301,301}), dp(std::vector<int>{300,300}), da(std::vector<int>{1,0});
     const void* in[]{dx.p,dk.p,dv.p,dt.p,dl.p,dp.p,da.p,ds.p};

@@ -538,7 +538,8 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
             const char* value = std::getenv("GARNET_GPT_OSS_DECODE_SPLITS");
             if (!value) return 0;
             const int requested = std::atoi(value);
-            return requested == 8 || requested == 16 ? requested : 0;
+            return requested == 8 || requested == 16 || requested == 32 ||
+                requested == 64 ? requested : 0;
         }();
         if (splits && !workspace) return cudaErrorInvalidValue;
         static const int warps = [] {
@@ -574,6 +575,24 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
                 logicalPages, physicalPages, o);
             status = cudaGetLastError(); if (status != cudaSuccess) return status;
             decodeAttentionMerge<16><<<batch * o.qHeads, 32, 0, stream>>>(
+                (const float*)workspace, sinks, y, o);
+            return cudaGetLastError();
+        }
+        if (splits == 32) {
+            decodeAttentionPartial<32><<<batch * o.qHeads * 32, 128, 0, stream>>>(
+                qkv, keys, values, table, lengths, active, (float*)workspace,
+                logicalPages, physicalPages, o);
+            status = cudaGetLastError(); if (status != cudaSuccess) return status;
+            decodeAttentionMerge<32><<<batch * o.qHeads, 32, 0, stream>>>(
+                (const float*)workspace, sinks, y, o);
+            return cudaGetLastError();
+        }
+        if (splits == 64) {
+            decodeAttentionPartial<64><<<batch * o.qHeads * 64, 128, 0, stream>>>(
+                qkv, keys, values, table, lengths, active, (float*)workspace,
+                logicalPages, physicalPages, o);
+            status = cudaGetLastError(); if (status != cudaSuccess) return status;
+            decodeAttentionMerge<64><<<batch * o.qHeads, 32, 0, stream>>>(
                 (const float*)workspace, sinks, y, o);
             return cudaGetLastError();
         }
