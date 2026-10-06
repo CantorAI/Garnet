@@ -2,9 +2,20 @@
 import garnet
 import garnet_gpt_oss
 garnet.bind_operator_module(garnet_gpt_oss)
-from .tensor_compat import tensor
 
-T = tensor()
+
+class TensorCompat:
+    def __init__(self, native):
+        self._native = native
+
+    def __getattr__(self, name):
+        return getattr(self._native, name)
+
+    def unary_op(self, name, **attributes):
+        return self._native.unary_op(name, **attributes)
+
+
+T = TensorCompat(garnet.tensor())
 TP_RANK = -1
 operators = ['gpt_oss_moe_mxfp4', 'gpt_oss_round_bf16']
 if TP_RANK >= 0:

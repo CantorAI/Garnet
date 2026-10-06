@@ -1,6 +1,5 @@
 """Compare full MoE output with two concurrently executing expert-parallel ranks."""
 import concurrent.futures
-import shutil
 import sys
 from pathlib import Path
 import garnet as G
@@ -13,7 +12,6 @@ for rank in (-1, 0, 1):
     root.mkdir(parents=True, exist_ok=True)
     (root / 'tp_moe_test.py').write_text(source.read_text().replace('TP_RANK = -1', f'TP_RANK = {rank}'))
     (root / '__init__.py').write_text('')
-    shutil.copy2(source.parent / 'tensor_compat.py', root / 'tensor_compat.py')
     G.cuda_set_device(0 if rank < 0 else rank)
     model = G.load_model(str(root / 'tp_moe_test.py'), runtime_mode='compiled_xmodel',
         backend='tensorrt', precision='bf16', entry_function='GptOssTpMoe',
