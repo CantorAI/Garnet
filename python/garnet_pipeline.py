@@ -109,20 +109,30 @@ class TensorParallel:
 
     def forward(self, activation, controls, sample=False):
         import garnet as G
+        import os
 
         def run(stage):
             previous = G.cuda_set_device(stage['device_id'])
             try:
+                trace = os.environ.get('GARNET_TP_TRACE')
+                if trace:
+                    print('tp-rank', stage['rank'], 'copying inputs', flush=True)
                 local_activation = G.tensor_to_device(activation, stage['device_id'])
                 local = [G.tensor_to_device(t, stage['device_id']) for t in controls]
                 request = {'inputs': [local_activation, local[0], stage['keys'],
                     stage['values'], local[1], local[2], local[3], local[4]]}
                 if sample and stage['rank'] == 0:
                     request['sample'] = 'greedy'
+                if trace:
+                    print('tp-rank', stage['rank'], 'enter model forward', flush=True)
                 result = stage['model'].forward(request)
+                if trace:
+                    print('tp-rank', stage['rank'], 'returned model forward', flush=True)
                 if result['status'] != 'ok':
                     raise RuntimeError(str(result))
                 G.cuda_synchronize()
+                if trace:
+                    print('tp-rank', stage['rank'], 'synchronized', flush=True)
                 return result
             finally:
                 G.cuda_set_device(previous)
