@@ -61,9 +61,8 @@ def plan_layers(devices, layer_bytes, first_bytes=0, last_bytes=0,
 
 class Pipeline:
     """Models and persistent inputs are owned by their assigned GPU stage."""
-    def __init__(self, stages, synchronize_stages=True):
+    def __init__(self, stages):
         self.stages = stages
-        self.synchronize_stages = synchronize_stages
 
     def forward(self, activation, controls, sample=False):
         import garnet as G
@@ -81,8 +80,7 @@ class Pipeline:
                 result = stage['model'].forward(request)
                 if result['status'] != 'ok':
                     raise RuntimeError(str(result))
-                if self.synchronize_stages:
-                    G.cuda_synchronize()
+                G.cuda_synchronize()
                 if rank < len(self.stages) - 1 or not sample:
                     activation = result['output']
             return result
