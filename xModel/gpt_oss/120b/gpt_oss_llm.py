@@ -69,7 +69,7 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         window = config['sliding_window']
     attention = state * T.unary_op(
         "gpt_oss_paged_attention", page_size=16, prefill=prefill,
-        num_heads=config['num_attention_heads'], num_kv_heads=config['num_key_value_heads'],
+        num_heads=q_heads, num_kv_heads=kv_heads, tp_rank=tp_rank,
         head_dim=config['head_dim'], sliding_window=window,
         sinks_weight_name=prefix + ".attn.sinks")
     if tp_rank >= 0:
