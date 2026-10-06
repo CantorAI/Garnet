@@ -45,6 +45,10 @@ the runtime to tune it; set `0` for the unsplit path. The unsplit path uses
 `8`, or `16`.
 Router scoring defaults to 256 threads on the tested Blackwell GPUs. Set
 `GARNET_GPT_OSS_ROUTER_THREADS=128` to use the previous block size.
+`GARNET_GPT_OSS_MARLIN_WIDE=1` experimentally selects a 256-thread,
+128×128 Marlin expert tile for single-token decode; the default retains the
+measured narrower tile. The expert weight layout pads its K/N dimensions to
+128 for either setting, so switching the setting does not change workspace size.
 For paired TP2 engine experiments, `GARNET_GPT_OSS_TRT_OPT_LEVEL` sets the
 TensorRT builder optimization level (0–5, default 1), and
 `GARNET_GPT_OSS_TRT_WORKSPACE_MB` sets its workspace cap (256–4096 MiB,
