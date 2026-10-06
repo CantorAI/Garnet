@@ -363,7 +363,8 @@ __global__ void decodeAttentionMerge(const float* scratch, const float* sinks,
 }
 template<int Threads, bool Vector4 = false>
 __global__ void routeScores(const float* x, const float* weight, const float* bias,
-    float* logits, int tokens, GptOssOptions o) {
+    float* logits, int tokens, GptOssOptions o,
+    __nv_bfloat16* converted, int paddedWidth) {
     const int token = blockIdx.x / o.experts, expert = blockIdx.x % o.experts;
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
     float value = 0;
@@ -372,15 +373,29 @@ __global__ void routeScores(const float* x, const float* weight, const float* bi
         const auto* row = reinterpret_cast<const float4*>(weight + size_t(expert) * o.hidden);
         for (int d = threadIdx.x; d < o.hidden / 4; d += blockDim.x) {
             const float4 a = input[d], b = row[d];
+            if (converted && expert == 0) {
+                const int index = 4 * d;
+                converted[index] = __float2bfloat16(a.x);
+                converted[index + 1] = __float2bfloat16(a.y);
+                converted[index + 2] = __float2bfloat16(a.z);
+                converted[index + 3] = __float2bfloat16(a.w);
+            }
             value = fmaf(a.x, b.x, value);
             value = fmaf(a.y, b.y, value);
             value = fmaf(a.z, b.z, value);
             value = fmaf(a.w, b.w, value);
         }
     } else {
-        for (int d = threadIdx.x; d < o.hidden; d += blockDim.x)
-            value += x[size_t(token) * o.hidden + d] * weight[size_t(expert) * o.hidden + d];
+        for (int d = threadIdx.x; d < o.hidden; d += blockDim.x) {
+            const float inputValue = x[size_t(token) * o.hidden + d];
+            if (converted && expert == 0)
+                converted[d] = __float2bfloat16(inputValue);
+            value += inputValue * weight[size_t(expert) * o.hidden + d];
+        }
     }
+    if (converted && expert == 0)
+        for (int d = threadIdx.x + o.hidden; d < paddedWidth; d += blockDim.x)
+            converted[d] = __float2bfloat16(0.f);
     value = warpSum(value);
     __shared__ float partial[Threads / 32];
     if (!lane) partial[warp] = value;
@@ -391,8 +406,10 @@ __global__ void routeScores(const float* x, const float* weight, const float* bi
         if (!lane) logits[size_t(token) * o.experts + expert] = bf(value + bias[expert]);
     }
 }
+template<bool FusedMarlinDecode>
 __global__ void routeTopK(float* logits, int* selected, float* probabilities,
-    int tokens, GptOssOptions o) {
+    int tokens, GptOssOptions o, int* sorted, int* experts, int* padded,
+    int marlinBlock) {
     const int token = blockIdx.x;
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
     __shared__ float warpValues[4], top[8];
@@ -433,6 +450,41 @@ __global__ void routeTopK(float* logits, int* selected, float* probabilities,
         for (int k = 0; k < o.topK; ++k) total += expf(top[k] - top[0]);
         for (int k = 0; k < o.topK; ++k)
             probabilities[token * o.topK + k] = bf(expf(top[k] - top[0]) / total);
+    }
+    if constexpr (FusedMarlinDecode) {
+        // Decode has one token. Reuse the top-K block to prepare Marlin's
+        // expert rows; the score block converts its input in parallel.
+        __syncthreads();
+        __shared__ int counts[128], starts[128];
+        const int e = threadIdx.x;
+        const int localCount = o.tpRank < 0 ? o.experts :
+            (o.experts + 1 - o.tpRank) / 2;
+        const int globalExpert = o.tpRank < 0 ? e : 2 * e + o.tpRank;
+        int count = 0;
+        if (e < localCount)
+            for (int s = 0; s < o.topK; ++s)
+                count += selected[s] == globalExpert;
+        counts[e] = count;
+        __syncthreads();
+        if (!e) {
+            int total = 0;
+            for (int i = 0; i < localCount; ++i) {
+                starts[i] = total;
+                total += (counts[i] + marlinBlock - 1) / marlinBlock * marlinBlock;
+            }
+            *padded = total;
+        }
+        __syncthreads();
+        if (e < localCount && count) {
+            int row = 0;
+            for (int s = 0; s < o.topK; ++s)
+                if (selected[s] == globalExpert) sorted[starts[e] + row++] = s;
+            const int paddedCount = (count + marlinBlock - 1) / marlinBlock * marlinBlock;
+            for (int i = count; i < paddedCount; ++i)
+                sorted[starts[e] + i] = o.topK;
+            for (int i = 0; i < count; i += marlinBlock)
+                experts[(starts[e] + i) / marlinBlock] = e;
+        }
     }
 }
 __global__ void gateUp(const float* x, const unsigned char* blocks, const unsigned char* scales,
@@ -842,7 +894,11 @@ size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
     return moeWorkspace(tokens, o, tokens >= 16);
 }
 cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* probabilities,
-    float* logits, int tokens, const GptOssOptions& o, cudaStream_t stream) {
+    float* logits, int tokens, const GptOssOptions& o, cudaStream_t stream,
+    const GptOssMarlinDecodeBuffers* fused) {
+    const bool fuse = fused && tokens == 1 && o.experts <= 128;
+    auto* converted = fuse ? static_cast<__nv_bfloat16*>(fused->convertedInput) : nullptr;
+    const int paddedWidth = fuse ? fused->paddedWidth : 0;
     static const int routerThreads = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_THREADS");
         return value && std::atoi(value) == 128 ? 128 : 256;
@@ -853,15 +909,23 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
     }();
     if (routerThreads == 256 && vector4 && o.hidden % 4 == 0 && tokens <= 8)
         routeScores<256, true><<<tokens * o.experts, 256, 0, stream>>>(
-            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits, tokens, o);
+            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
+            tokens, o, converted, paddedWidth);
     else if (routerThreads == 256)
         routeScores<256><<<tokens * o.experts, 256, 0, stream>>>(
-            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits, tokens, o);
+            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
+            tokens, o, converted, paddedWidth);
     else
         routeScores<128><<<tokens * o.experts, 128, 0, stream>>>(
-            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits, tokens, o);
+            (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
+            tokens, o, converted, paddedWidth);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
-    routeTopK<<<tokens, 128, 0, stream>>>(logits, selected, probabilities, tokens, o);
+    if (fuse)
+        routeTopK<true><<<1, 128, 0, stream>>>(logits, selected, probabilities,
+            tokens, o, fused->sorted, fused->experts, fused->padded, fused->block);
+    else
+        routeTopK<false><<<tokens, 128, 0, stream>>>(logits, selected, probabilities,
+            tokens, o, nullptr, nullptr, nullptr, 0);
     return cudaGetLastError();
 }
 cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int tokens,

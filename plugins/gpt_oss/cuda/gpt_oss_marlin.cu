@@ -242,10 +242,21 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     const auto& o=s.o;const auto& g=s.g;const Layout l(tokens,o);int slots=tokens*o.topK;
     const int block=marlinBlockSize(tokens);
     auto selected=at<int>(workspace,l.selected);auto probabilities=at<float>(workspace,l.probabilities);
-    status=RunGptOssMoeRoute(in,selected,probabilities,at<float>(workspace,l.routeLogits),tokens,o,stream);
+    static const bool fuseDecodeRoute=[] {
+        const char* value=std::getenv("GARNET_GPT_OSS_FUSED_DECODE_ROUTE");
+        return value && value[0]=='1' && value[1]=='\0';
+    }();
+    const bool fused=fuseDecodeRoute && tokens==1 && o.experts<=128;
+    GptOssMarlinDecodeBuffers fusedBuffers{
+        at<nv_bfloat16>(workspace,l.a),g.upK,at<int>(workspace,l.sorted),
+        at<int>(workspace,l.experts),at<int>(workspace,l.padded),block};
+    status=RunGptOssMoeRoute(in,selected,probabilities,at<float>(workspace,l.routeLogits),
+        tokens,o,stream,fused?&fusedBuffers:nullptr);
     if(status!=cudaSuccess)return status;
-    convertInput<<<(tokens*g.upK+255)/256,256,0,stream>>>((const float*)in[0],at<nv_bfloat16>(workspace,l.a),tokens,o.hidden,g.upK);
-    metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank,block);
+    if(!fused) {
+        convertInput<<<(tokens*g.upK+255)/256,256,0,stream>>>((const float*)in[0],at<nv_bfloat16>(workspace,l.a),tokens,o.hidden,g.upK);
+        metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank,block);
+    }
     status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
     if(status!=cudaSuccess)return status;
     auto up=block==32?upKernel32():upKernel();up<<<s.sms*marlinCtasPerSm(s.computeMajor),128,block==32?35584:27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
