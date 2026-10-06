@@ -138,7 +138,7 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
             try { m_marlin.reset(new GptOssMarlin(m_options)); }
             catch (...) { reportMarlinFallback(false, n); }
         }
-        status = m_marlin && m_options.tpRank < 0
+        status = m_marlin
             ? m_marlin->Run(in, (float*)out[0], workspace, n, stream)
                           : cudaErrorNotSupported;
         if (status == cudaErrorNotSupported) {

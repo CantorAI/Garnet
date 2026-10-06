@@ -237,6 +237,19 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
         Device<unsigned char> marlinWorkspace{std::vector<unsigned char>(marlinBytes)};
         check(marlin.Run(in, dy.p, marlinWorkspace.p, tokens, nullptr));
         compare(dy.read(), expected, .004f, "Marlin MXFP4 expert kernel parity");
+        std::vector<float> marlinShardSum(expected.size());
+        for (int rank = 0; rank < 2; ++rank) {
+            GptOssOptions shard = o; shard.tpRank = rank;
+            GptOssMarlin shardMarlin(shard);
+            Device<float> partial(std::vector<float>(expected.size()));
+            Device<unsigned char> shardWorkspace{
+                std::vector<unsigned char>(GptOssMarlin::Workspace(tokens, shard))};
+            check(shardMarlin.Run(in, partial.p, shardWorkspace.p, tokens, nullptr));
+            const auto values = partial.read();
+            for (size_t i = 0; i < values.size(); ++i) marlinShardSum[i] += values[i];
+        }
+        for (float& value : marlinShardSum) value = bf(value);
+        compare(marlinShardSum, expected, .004f, "Two-rank Marlin expert-parallel MoE sum");
     }
 #endif
 }

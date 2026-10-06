@@ -29,7 +29,8 @@ struct Geometry {
 bool supported(int tokens,const GptOssOptions& o) {
     return tokens>0 && tokens<=8 && o.hidden>0 && o.hidden<=16384 && o.hidden%32==0 &&
         o.intermediate>0 && o.intermediate<=65536 && o.intermediate%32==0 &&
-        o.experts>0 && o.experts<=256 && o.topK>0 && o.topK<=8 && o.topK<=o.experts;
+        o.experts>0 && o.experts<=256 && o.topK>0 && o.topK<=8 && o.topK<=o.experts &&
+        o.tpRank>=-1 && o.tpRank<2;
 }
 struct Layout {
     size_t bytes=0,selected,probabilities,routeLogits,a,up,activation,down,sorted,experts,padded,locks,tmp;
@@ -51,11 +52,12 @@ __device__ float rounded(float x) { return __bfloat162float(__float2bfloat16(x))
 // Marlin's target tile mapping follows vLLM v0.31.0's Apache-licensed
 // gptq_marlin_repack.cu, marlin_utils.py and marlin_utils_fp4.py.
 __global__ void repackOriginal(const unsigned char* original,unsigned* packed,
-    int experts,int originalK,int originalN,int paddedK,int paddedN) {
+    int experts,int rank,int originalK,int originalN,int paddedK,int paddedN) {
     size_t index=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
     const size_t perExpert=size_t(paddedK)*paddedN/8;
     if(index>=size_t(experts)*perExpert) return;
-    int expert=index/perExpert;size_t local=index%perExpert;
+    int localExpert=index/perExpert,expert=rank<0?localExpert:2*localExpert+rank;
+    if(expert>=experts)return;size_t local=index%perExpert;
     int lane=(local%128)/4,warp=local%4,tile=local/128;
     int kTile=tile/(paddedN/64),nTile=tile%(paddedN/64);
     int firstN=nTile*64+warp*16+lane/4,firstK=kTile*16+(lane%4)*2;
@@ -73,11 +75,13 @@ __global__ void repackOriginal(const unsigned char* original,unsigned* packed,
     packed[index]=result;
 }
 __global__ void repackScales(const unsigned char* original,unsigned char* packed,
-    int experts,int originalK,int originalN,int paddedK,int paddedN) {
+    int experts,int rank,int originalK,int originalN,int paddedK,int paddedN) {
     size_t index=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
     const size_t perExpert=size_t(paddedK/32)*paddedN;
     if(index>=size_t(experts)*perExpert) return;
-    int expert=index/perExpert,kGroup=(index%perExpert)/paddedN,n=(index%perExpert)%paddedN;
+    int localExpert=index/perExpert,expert=rank<0?localExpert:2*localExpert+rank;
+    if(expert>=experts)return;
+    int kGroup=(index%perExpert)/paddedN,n=(index%perExpert)%paddedN;
     n=(n&~3)|((n&1)<<1)|((n&2)>>1);
     n=(n/64)*64+(n%64)/8+8*(n%8);
     packed[index]=n<originalN && kGroup<originalK/32
@@ -92,15 +96,18 @@ __global__ void convertInput(const float* x,nv_bfloat16* a,int tokens,int width,
     int i=blockIdx.x*blockDim.x+threadIdx.x;if(i>=tokens*paddedWidth)return;
     int row=i/paddedWidth,d=i%paddedWidth;a[i]=__float2bfloat16(d<width?x[row*width+d]:0);
 }
-__global__ void metadata(const int* selected,int* sorted,int* experts,int* padded,int slots,int expertCount) {
+__global__ void metadata(const int* selected,int* sorted,int* experts,int* padded,
+    int slots,int expertCount,int rank) {
     __shared__ int counts[256],starts[256];int e=threadIdx.x;
     for(int i=e;i<slots*8;i+=256)sorted[i]=slots;
-    int count=0;if(e<expertCount)for(int s=0;s<slots;++s)count+=selected[s]==e;
+    int localCount=rank<0?expertCount:(expertCount+1-rank)/2;
+    int globalExpert=rank<0?e:2*e+rank;
+    int count=0;if(e<localCount)for(int s=0;s<slots;++s)count+=selected[s]==globalExpert;
     counts[e]=count;__syncthreads();
-    if(!e) {int total=0;for(int i=0;i<expertCount;++i){starts[i]=total;total+=(counts[i]+7)/8*8;}*padded=total;}
+    if(!e) {int total=0;for(int i=0;i<localCount;++i){starts[i]=total;total+=(counts[i]+7)/8*8;}*padded=total;}
     __syncthreads();
-    if(e<expertCount && count) {
-        int row=0;for(int s=0;s<slots;++s)if(selected[s]==e)sorted[starts[e]+row++]=s;
+    if(e<localCount && count) {
+        int row=0;for(int s=0;s<slots;++s)if(selected[s]==globalExpert)sorted[starts[e]+row++]=s;
         for(int i=0;i<count;i+=8)experts[(starts[e]+i)/8]=e;
     }
 }
@@ -109,6 +116,7 @@ __global__ void activation(const nv_bfloat16* up,const float* bias,const int* se
     int index=blockIdx.x*blockDim.x+threadIdx.x;if(index>=slots*paddedWidth)return;
     int slot=index/paddedWidth,i=index%paddedWidth;
     if(i>=o.intermediate){output[index]=__float2bfloat16(0);return;}
+    if(o.tpRank>=0 && selected[slot]%2!=o.tpRank){output[index]=__float2bfloat16(0);return;}
     int row=selected[slot]*2*o.intermediate+2*i;
     float gate=fminf(rounded(__bfloat162float(up[size_t(slot)*upWidth+2*i])+bias[row]),o.limit);
     float u=fminf(o.limit,fmaxf(-o.limit,rounded(__bfloat162float(up[size_t(slot)*upWidth+2*i+1])+bias[row+1])));
@@ -121,9 +129,10 @@ __global__ void combine(const nv_bfloat16* down,const float* bias,const int* sel
     int token=index/o.hidden,d=index%o.hidden;float value=0;
     for(int k=0;k<o.topK;++k) {
         int slot=token*o.topK+k,expert=selected[slot];
+        if(o.tpRank>=0 && expert%2!=o.tpRank)continue;
         value+=rounded(__bfloat162float(down[size_t(slot)*width+d])+bias[expert*o.hidden+d])*probabilities[slot];
     }
-    y[index]=rounded(value);
+    y[index]=o.tpRank<0?rounded(value):value;
 }
 using UpKernel = void(*)(const int4*,const int4*,int4*,int4*,const int4*,const float*,
     const int4*,const float*,const int4*,const int32_t*,const int32_t*,const int32_t*,
@@ -174,13 +183,14 @@ struct GptOssMarlin::State {
         if(status==cudaSuccess)status=cudaStreamSynchronize(stream);
         cudaFree(invalid);if(status!=cudaSuccess)return status;
         if(result){blocked=true;blockedReason=2;reportMarlin("MXFP4 scales rejected", result, device);return cudaErrorNotSupported;}
-        const size_t sizes[]{size_t(o.experts)*g.upN*g.upK/2,size_t(o.experts)*g.upN*g.upK/32,
-            size_t(o.experts)*g.downN*g.downK/2,size_t(o.experts)*g.downN*g.downK/32};
+        const int localExperts=o.tpRank<0?o.experts:(o.experts+1-o.tpRank)/2;
+        const size_t sizes[]{size_t(localExperts)*g.upN*g.upK/2,size_t(localExperts)*g.upN*g.upK/32,
+            size_t(localExperts)*g.downN*g.downK/2,size_t(localExperts)*g.downN*g.downK/32};
         for(int i=0;i<4;++i){status=cudaMalloc(&weights[i],sizes[i]);if(status!=cudaSuccess){release();return status;}}
-        repackOriginal<<<(sizes[0]/4+255)/256,256,0,stream>>>((const unsigned char*)in[3],(unsigned*)weights[0],o.experts,o.hidden,2*o.intermediate,g.upK,g.upN);
-        repackScales<<<(sizes[1]+255)/256,256,0,stream>>>((const unsigned char*)in[4],(unsigned char*)weights[1],o.experts,o.hidden,2*o.intermediate,g.upK,g.upN);
-        repackOriginal<<<(sizes[2]/4+255)/256,256,0,stream>>>((const unsigned char*)in[6],(unsigned*)weights[2],o.experts,o.intermediate,o.hidden,g.downK,g.downN);
-        repackScales<<<(sizes[3]+255)/256,256,0,stream>>>((const unsigned char*)in[7],(unsigned char*)weights[3],o.experts,o.intermediate,o.hidden,g.downK,g.downN);
+        repackOriginal<<<(sizes[0]/4+255)/256,256,0,stream>>>((const unsigned char*)in[3],(unsigned*)weights[0],o.experts,o.tpRank,o.hidden,2*o.intermediate,g.upK,g.upN);
+        repackScales<<<(sizes[1]+255)/256,256,0,stream>>>((const unsigned char*)in[4],(unsigned char*)weights[1],o.experts,o.tpRank,o.hidden,2*o.intermediate,g.upK,g.upN);
+        repackOriginal<<<(sizes[2]/4+255)/256,256,0,stream>>>((const unsigned char*)in[6],(unsigned*)weights[2],o.experts,o.tpRank,o.intermediate,o.hidden,g.downK,g.downN);
+        repackScales<<<(sizes[3]+255)/256,256,0,stream>>>((const unsigned char*)in[7],(unsigned char*)weights[3],o.experts,o.tpRank,o.intermediate,o.hidden,g.downK,g.downN);
         status=cudaGetLastError();if(status==cudaSuccess)status=cudaStreamSynchronize(stream);
         if(status==cudaSuccess)status=cudaFuncSetAttribute(upKernel(),cudaFuncAttributeMaxDynamicSharedMemorySize,27136);
         if(status==cudaSuccess)status=cudaFuncSetAttribute(downKernel(),cudaFuncAttributeMaxDynamicSharedMemorySize,35200);
@@ -203,7 +213,7 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     status=RunGptOssMoeRoute(in,selected,probabilities,at<float>(workspace,l.routeLogits),tokens,o,stream);
     if(status!=cudaSuccess)return status;
     convertInput<<<(tokens*g.upK+255)/256,256,0,stream>>>((const float*)in[0],at<nv_bfloat16>(workspace,l.a),tokens,o.hidden,g.upK);
-    metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts);
+    metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank);
     status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
     if(status!=cudaSuccess)return status;
     auto up=upKernel();up<<<s.sms*2,128,27136,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
