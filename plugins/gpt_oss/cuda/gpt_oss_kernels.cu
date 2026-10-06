@@ -413,7 +413,7 @@ __global__ void routeScores(const float* x, const float* weight, const float* bi
         if (!lane) logits[size_t(token) * o.experts + expert] = bf(value + bias[expert]);
     }
 }
-template<bool FusedMarlinDecode, bool WarpTopK = false>
+template<bool FusedMarlinDecode>
 __global__ void routeTopK(float* logits, int* selected, float* probabilities,
     int tokens, GptOssOptions o, int* sorted, int* experts, int* padded,
     int marlinBlock) {
@@ -421,48 +421,7 @@ __global__ void routeTopK(float* logits, int* selected, float* probabilities,
     const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
     __shared__ float warpValues[4], top[8];
     __shared__ int warpExperts[4];
-    if constexpr (WarpTopK) {
-        // Single-token decode: each lane owns up to four expert scores. Keep
-        // them in registers across all top-K rounds instead of synchronizing
-        // four warps twice per selected expert.
-        if (warp == 0) {
-            float scores[4];
-            const int base = size_t(token) * o.experts;
-            #pragma unroll
-            for (int j = 0; j < 4; ++j) {
-                const int expert = lane + 32 * j;
-                scores[j] = expert < o.experts ? logits[base + expert] : -FLT_MAX;
-            }
-            for (int k = 0; k < o.topK; ++k) {
-                float value = -FLT_MAX;
-                int expert = 0x7fffffff;
-                #pragma unroll
-                for (int j = 0; j < 4; ++j) {
-                    const int candidate = lane + 32 * j;
-                    if (candidate < o.experts &&
-                        (scores[j] > value || (scores[j] == value && candidate < expert))) {
-                        value = scores[j]; expert = candidate;
-                    }
-                }
-                for (int offset = 16; offset; offset >>= 1) {
-                    const float otherValue = __shfl_down_sync(0xffffffff, value, offset);
-                    const int otherExpert = __shfl_down_sync(0xffffffff, expert, offset);
-                    if (otherValue > value || (otherValue == value && otherExpert < expert)) {
-                        value = otherValue; expert = otherExpert;
-                    }
-                }
-                if (!lane) {
-                    selected[token * o.topK + k] = expert;
-                    top[k] = value;
-                    logits[base + expert] = -FLT_MAX;
-                }
-                const int winner = __shfl_sync(0xffffffff, expert, 0);
-                #pragma unroll
-                for (int j = 0; j < 4; ++j)
-                    if (lane + 32 * j == winner) scores[j] = -FLT_MAX;
-            }
-        }
-    } else for (int k = 0; k < o.topK; ++k) {
+    for (int k = 0; k < o.topK; ++k) {
         float value = threadIdx.x < o.experts
             ? logits[size_t(token) * o.experts + threadIdx.x] : -FLT_MAX;
         int expert = threadIdx.x < o.experts ? threadIdx.x : 0x7fffffff;
@@ -970,14 +929,7 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
             (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
             tokens, o, converted, paddedWidth, locks, locksPerExpert);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
-    static const bool warpTopK = [] {
-        const char* value = std::getenv("GARNET_GPT_OSS_WARP_DECODE_TOPK");
-        return value && std::strcmp(value, "1") == 0;
-    }();
-    if (fuse && warpTopK)
-        routeTopK<true, true><<<1, 128, 0, stream>>>(logits, selected, probabilities,
-            tokens, o, fused->sorted, fused->experts, fused->padded, fused->block);
-    else if (fuse)
+    if (fuse)
         routeTopK<true><<<1, 128, 0, stream>>>(logits, selected, probabilities,
             tokens, o, fused->sorted, fused->experts, fused->padded, fused->block);
     else
