@@ -45,6 +45,10 @@ For experimental single-token decode, set `GARNET_GPT_OSS_DECODE_SPLITS` to
 `8`, `16`, `32`, or `64` before starting the runtime. This splits each query head's KV
 range across separate CUDA blocks and merges their stable softmax states;
 unset the variable to use the measured 16-warp baseline.
+For paired TP2 engine experiments, `GARNET_GPT_OSS_TRT_OPT_LEVEL` sets the
+TensorRT builder optimization level (0–5, default 1), and
+`GARNET_GPT_OSS_TRT_WORKSPACE_MB` sets its workspace cap (256–4096 MiB,
+default 256). Use a separate engine cache for each configuration.
 These paths require SM 80 or newer and the xModel's BF16-rounded activations;
 FP32 accumulation, intermediate BF16 rounding, learned attention sinks,
 sliding windows and router-order combination are preserved. Plugin version 2

@@ -6,6 +6,7 @@ referenced by its layer range, and each stage allocates only its local KV cache.
 import json
 import math
 import hashlib
+import os
 import shutil
 import struct
 import sys
@@ -185,6 +186,10 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                           last_token_logits=False):
     """Build paired engines with sharded attention heads and rank-local MoE."""
     import garnet as G
+    optimization_level = int(os.environ.get('GARNET_GPT_OSS_TRT_OPT_LEVEL', '1'))
+    workspace_mb = int(os.environ.get('GARNET_GPT_OSS_TRT_WORKSPACE_MB', '256'))
+    if not 0 <= optimization_level <= 5 or not 256 <= workspace_mb <= 4096:
+        raise ValueError('unsupported GPT-OSS TensorRT optimization or workspace setting')
     if tokens < 1 or tokens > plan['max_tokens']:
         raise ValueError('token shape exceeds TP2 placement profile')
     config, batch = plan['config'], plan['batch']
@@ -226,7 +231,8 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                 input_shapes=[first_shape, [batch, tokens], shape, shape,
                               [batch, math.ceil(plan['capacity'] / 16)], [batch], [batch], [batch]],
                 input_dtypes=['int64', 'int64', 'bfloat16', 'bfloat16', 'int32', 'int32', 'int32', 'int32'],
-                compile={'builder_workspace_mb': 256, 'builder_optimization_level': 1,
+                compile={'builder_workspace_mb': workspace_mb,
+                         'builder_optimization_level': optimization_level,
                          'partition': {'enable_preferred_boundaries': False,
                                        'max_atomic_regions_per_partition': 0}})
             status = model.runtime_status()
