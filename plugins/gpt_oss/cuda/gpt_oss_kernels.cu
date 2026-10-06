@@ -154,6 +154,75 @@ __global__ void attention(const float* qkv, const __nv_bfloat16* keys,
     for (int d = lane; d < o.headDim; d += 32)
         output[size_t(row) * o.qHeads * o.headDim + head * o.headDim + d] = bf(accum[d / 32] / sum);
 }
+// Prefill processes eight adjacent queries for one head in a CTA. Their KV
+// ranges almost completely overlap, so stage sixteen paged entries once in
+// shared memory and reuse them across the query warps. Keep the original
+// online softmax order (including the learned sink) for each query.
+template<bool FastExp>
+__global__ void tiledPrefillAttention64(const float* qkv,
+    const __nv_bfloat16* keys, const __nv_bfloat16* values,
+    const int* table, const int* starts, const int* active,
+    const float* sinks, float* output, int tokens, int logicalPages,
+    int physicalPages, GptOssOptions o) {
+    constexpr int QueryTile = 8, KeyTile = 16, Dim = 64;
+    __shared__ __nv_bfloat16 tileK[KeyTile][Dim], tileV[KeyTile][Dim];
+    __shared__ int tileValid[KeyTile];
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
+    const int queryTiles = (tokens + QueryTile - 1) / QueryTile;
+    const int head = blockIdx.x % o.qHeads;
+    const int queryTile = (blockIdx.x / o.qHeads) % queryTiles;
+    const int b = blockIdx.x / (o.qHeads * queryTiles);
+    const int first = queryTile * QueryTile;
+    const int t = first + warp;
+    const int last = min(tokens - 1, first + QueryTile - 1);
+    const int capacity = logicalPages * o.pageSize;
+    const int end = starts[b] + t + 1;
+    const int begin = o.window ? max(0, end - o.window) : 0;
+    const bool validQuery = active[b] && t < tokens && end > 0 && end <= capacity;
+    const int firstEnd = starts[b] + first + 1;
+    const int firstBegin = o.window ? max(0, firstEnd - o.window) : 0;
+    const int lastEnd = min(capacity, starts[b] + last + 1);
+    const int packed = (o.qHeads + 2 * o.kvHeads) * Dim;
+    float query[2] = {};
+    if (validQuery) {
+        const size_t base = size_t(b * tokens + t) * packed + head * Dim + lane;
+        query[0] = qkv[base];
+        query[1] = qkv[base + 32];
+    }
+    float accum[2] = {}, maximum = sinks[head], sum = 1.f;
+    const int kvHead = head / (o.qHeads / o.kvHeads);
+    if (active[b]) for (int p0 = firstBegin; p0 < lastEnd; p0 += KeyTile) {
+        for (int i = threadIdx.x; i < KeyTile * Dim; i += blockDim.x) {
+            const int k = i / Dim, d = i % Dim, p = p0 + k;
+            const size_t offset = p < lastEnd ? cacheOffset(table, logicalPages,
+                physicalPages, b, p, kvHead, 0, o) : SIZE_MAX;
+            if (!d) tileValid[k] = offset != SIZE_MAX;
+            tileK[k][d] = offset == SIZE_MAX ? __float2bfloat16(0.f) : keys[offset + d];
+            tileV[k][d] = offset == SIZE_MAX ? __float2bfloat16(0.f) : values[offset + d];
+        }
+        __syncthreads();
+        if (validQuery) for (int k = 0; k < KeyTile; ++k) {
+            const int p = p0 + k;
+            if (p < begin || p >= end || !tileValid[k]) continue;
+            float score = query[0] * __bfloat162float(tileK[k][lane]);
+            score += query[1] * __bfloat162float(tileK[k][lane + 32]);
+            score = __shfl_sync(0xffffffff, warpSum(score), 0) * rsqrtf(float(Dim));
+            const float next = fmaxf(maximum, score);
+            const float old = FastExp ? __expf(maximum - next) : expf(maximum - next);
+            const float weight = FastExp ? __expf(score - next) : expf(score - next);
+            sum = sum * old + weight;
+            accum[0] = accum[0] * old + weight * __bfloat162float(tileV[k][lane]);
+            accum[1] = accum[1] * old + weight * __bfloat162float(tileV[k][lane + 32]);
+            maximum = next;
+        }
+        __syncthreads();
+    }
+    if (t < tokens) {
+        const size_t base = size_t(b * tokens + t) * o.qHeads * Dim + head * Dim + lane;
+        output[base] = bf(accum[0] / sum);
+        output[base + 32] = bf(accum[1] / sum);
+    }
+}
 // Decode has too few query rows to hide a serial context walk. Split each
 // head's paged KV range across eight warps, then merge stable softmax states.
 // Include the learned sink exactly once in the final merge.
@@ -642,6 +711,27 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
         const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_FAST_EXP");
         return value && std::strcmp(value, "1") == 0;
     }();
+    static const bool tiledPrefill = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_TILED_64");
+        return value && std::strcmp(value, "1") == 0;
+    }();
+    if (tiledPrefill && o.prefill && o.headDim == 64 &&
+        o.qHeads > 0 && o.kvHeads > 0 && o.qHeads % o.kvHeads == 0) {
+        const int blocks = batch * ((tokens + 7) / 8) * o.qHeads;
+        if (fastExp)
+            tiledPrefillAttention64<true><<<blocks, 256, 0, stream>>>(
+                (const float*)in[0], (const __nv_bfloat16*)in[1],
+                (const __nv_bfloat16*)in[2], (const int*)in[3],
+                (const int*)in[5], (const int*)in[6], (const float*)in[7],
+                y, tokens, logicalPages, physicalPages, o);
+        else
+            tiledPrefillAttention64<false><<<blocks, 256, 0, stream>>>(
+                (const float*)in[0], (const __nv_bfloat16*)in[1],
+                (const __nv_bfloat16*)in[2], (const int*)in[3],
+                (const int*)in[5], (const int*)in[6], (const float*)in[7],
+                y, tokens, logicalPages, physicalPages, o);
+        return cudaGetLastError();
+    }
     if (fastExp)
         attention<true><<<(batch * tokens * o.qHeads + 3) / 4, 128, 0, stream>>>(
             (const float*)in[0], (const __nv_bfloat16*)in[1],

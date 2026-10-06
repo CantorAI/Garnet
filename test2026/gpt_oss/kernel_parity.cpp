@@ -127,6 +127,45 @@ void testAttention(int dimension) {
     if (dk.read() != savedK || dv.read() != savedV) throw std::runtime_error("decode cache mutation mismatch");
     for (size_t i = 0; i < keys.size() / 2; ++i) if (savedK[i] != keys[i]) throw std::runtime_error("wrong KV layer modified");
 }
+void testLongPrefillAttention64() {
+    GptOssOptions o; o.kind = 1; o.qHeads = 4; o.kvHeads = 2;
+    o.headDim = 64; o.pageSize = 16; o.layer = 1; o.prefill = 1;
+    constexpr int tokens = 40, pages = 4, logical = 3, width = 8 * 64;
+    constexpr int queryWidth = 4 * 64, valueStart = 6 * 64;
+    std::vector<float> x(tokens * width), sinks{.4f, -.2f, 2.f, -1.f};
+    for (size_t i = 0; i < x.size(); ++i) x[i] = bf(std::sin(float(i) * .013f));
+    std::vector<uint16_t> cache(2 * pages * o.pageSize * o.kvHeads * o.headDim, bits(0));
+    Device<float> dx(x), ds(sinks), dy(std::vector<float>(tokens * queryWidth));
+    Device<uint16_t> dk(cache), dv(cache);
+    Device<int> dt(std::vector<int>{2, 0, 3}), dl(std::vector<int>{tokens});
+    Device<int> dp(std::vector<int>{0}), da(std::vector<int>{1});
+    const void* in[]{dx.p, dk.p, dv.p, dt.p, dl.p, dp.p, da.p, ds.p};
+    for (int window : {0, 17}) {
+        o.window = window;
+        check(RunGptOssAttention(in, dy.p, nullptr, 1, tokens, logical, pages, o, nullptr));
+        std::vector<float> expected(tokens * queryWidth);
+        for (int t = 0; t < tokens; ++t) for (int h = 0; h < o.qHeads; ++h) {
+            const int first = window ? std::max(0, t + 1 - window) : 0;
+            double sum = std::exp(double(sinks[h]));
+            double accum[64] = {};
+            for (int p = first; p <= t; ++p) {
+                double score = 0;
+                for (int d = 0; d < 64; ++d)
+                    score += double(x[t * width + h * 64 + d]) *
+                        x[p * width + queryWidth + (h / 2) * 64 + d];
+                const double weight = std::exp(score / 8.);
+                sum += weight;
+                for (int d = 0; d < 64; ++d)
+                    accum[d] += weight * x[p * width + valueStart + (h / 2) * 64 + d];
+            }
+            for (int d = 0; d < 64; ++d)
+                expected[t * queryWidth + h * 64 + d] = bf(float(accum[d] / sum));
+        }
+        compare(dy.read(), expected, .006f,
+            window ? "Tiled prefill: paged sliding attention" :
+                     "Tiled prefill: paged full attention");
+    }
+}
 void testLongDecodeAttention(int dimension) {
     GptOssOptions o; o.kind=1; o.qHeads=4; o.kvHeads=2; o.headDim=dimension;
     o.layer=1; o.pageSize=16; o.prefill=0;
@@ -287,5 +326,5 @@ int main() { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     testMxfp4Encoding();
 #endif
-        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
+        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }
