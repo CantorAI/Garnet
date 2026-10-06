@@ -151,64 +151,6 @@ __global__ void attention(const float* qkv, const __nv_bfloat16* keys,
     for (int d = lane; d < o.headDim; d += 32)
         output[size_t(row) * o.qHeads * o.headDim + head * o.headDim + d] = bf(accum[d / 32] / sum);
 }
-// Experimental prefill path: split each query's key range between warps in
-// one CTA, then merge their online-softmax states and add the sink once.
-template<int Warps>
-__global__ void prefillWarpSplitAttention(const float* qkv,
-    const __nv_bfloat16* keys, const __nv_bfloat16* values,
-    const int* table, const int* starts, const int* active,
-    const float* sinks, float* output, int tokens, int logicalPages,
-    int physicalPages, GptOssOptions o) {
-    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
-    const int head = blockIdx.x % o.qHeads;
-    const int row = blockIdx.x / o.qHeads;
-    const int b = row / tokens, t = row % tokens;
-    const int packed = (o.qHeads + 2 * o.kvHeads) * o.headDim;
-    const int end = starts[b] + t + 1;
-    const int begin = o.window ? max(0, end - o.window) : 0;
-    const bool valid = active[b] && end > 0 && end <= logicalPages * o.pageSize;
-    const int chunk = (max(0, end - begin) + Warps - 1) / Warps;
-    const int first = begin + warp * chunk;
-    float accum[4] = {}, maximum = -FLT_MAX, sum = 0;
-    if (valid) for (int p = first; p < min(end, first + chunk); ++p) {
-        const size_t offset = cacheOffset(table, logicalPages, physicalPages, b, p,
-            head / (o.qHeads / o.kvHeads), 0, o);
-        if (offset == SIZE_MAX) continue;
-        float score = 0;
-        for (int d = lane; d < o.headDim; d += 32)
-            score += qkv[size_t(row) * packed + head * o.headDim + d] *
-                __bfloat162float(keys[offset + d]);
-        score = __shfl_sync(0xffffffff, warpSum(score), 0) * rsqrtf(float(o.headDim));
-        const float next = fmaxf(maximum, score);
-        const float old = expf(maximum - next), weight = expf(score - next);
-        sum = sum * old + weight;
-        for (int d = lane; d < o.headDim; d += 32)
-            accum[d / 32] = accum[d / 32] * old + weight *
-                __bfloat162float(values[offset + d]);
-        maximum = next;
-    }
-    __shared__ float maxima[Warps], sums[Warps], partial[Warps][128];
-    if (!lane) { maxima[warp] = maximum; sums[warp] = sum; }
-    for (int d = lane; d < o.headDim; d += 32) partial[warp][d] = accum[d / 32];
-    __syncthreads();
-    if (warp) return;
-    maximum = sinks[head];
-    for (int w = 0; w < Warps; ++w)
-        if (sums[w] > 0) maximum = fmaxf(maximum, maxima[w]);
-    sum = expf(sinks[head] - maximum);
-    float weights[Warps];
-    for (int w = 0; w < Warps; ++w) {
-        weights[w] = sums[w] > 0 ? expf(maxima[w] - maximum) : 0;
-        sum += sums[w] * weights[w];
-    }
-    for (int d = lane; d < o.headDim; d += 32) {
-        float value = 0;
-        for (int w = 0; w < Warps; ++w)
-            value += partial[w][d] * weights[w];
-        output[size_t(row) * o.qHeads * o.headDim + head * o.headDim + d] =
-            bf(value / sum);
-    }
-}
 // Decode has too few query rows to hide a serial context walk. Split each
 // head's paged KV range across eight warps, then merge stable softmax states.
 // Include the learned sink exactly once in the final merge.
@@ -691,26 +633,6 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
                 table, lengths, starts, active, sinks, y, batch, logicalPages, physicalPages, o);
             break;
         }
-        return cudaGetLastError();
-    }
-    static const int prefillWarps = [] {
-        const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_WARPS");
-        const int requested = value ? std::atoi(value) : 0;
-        return requested == 2 || requested == 4 ? requested : 0;
-    }();
-    if (o.prefill && tokens >= 128 && prefillWarps) {
-        if (prefillWarps == 2)
-            prefillWarpSplitAttention<2><<<batch * tokens * o.qHeads, 64, 0, stream>>>(
-                (const float*)in[0], (const __nv_bfloat16*)in[1],
-                (const __nv_bfloat16*)in[2], (const int*)in[3],
-                (const int*)in[5], (const int*)in[6], (const float*)in[7],
-                y, tokens, logicalPages, physicalPages, o);
-        else
-            prefillWarpSplitAttention<4><<<batch * tokens * o.qHeads, 128, 0, stream>>>(
-                (const float*)in[0], (const __nv_bfloat16*)in[1],
-                (const __nv_bfloat16*)in[2], (const int*)in[3],
-                (const int*)in[5], (const int*)in[6], (const float*)in[7],
-                y, tokens, logicalPages, physicalPages, o);
         return cudaGetLastError();
     }
     attention<<<(batch * tokens * o.qHeads + 3) / 4, 128, 0, stream>>>(
