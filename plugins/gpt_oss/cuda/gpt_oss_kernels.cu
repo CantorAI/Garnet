@@ -189,19 +189,46 @@ __global__ void routeScores(const float* x, const float* weight, const float* bi
 __global__ void routeTopK(float* logits, int* selected, float* probabilities,
     int tokens, GptOssOptions o) {
     const int token = blockIdx.x;
-    if (threadIdx.x != 0) return;
-    float top[8];
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
+    __shared__ float warpValues[4], top[8];
+    __shared__ int warpExperts[4];
     for (int k = 0; k < o.topK; ++k) {
-        int best = 0;
-        for (int e = 1; e < o.experts; ++e)
-            if (logits[size_t(token) * o.experts + e] > logits[size_t(token) * o.experts + best]) best = e;
-        selected[token * o.topK + k] = best;
-        top[k] = logits[size_t(token) * o.experts + best];
-        logits[size_t(token) * o.experts + best] = -FLT_MAX;
+        float value = threadIdx.x < o.experts
+            ? logits[size_t(token) * o.experts + threadIdx.x] : -FLT_MAX;
+        int expert = threadIdx.x < o.experts ? threadIdx.x : 0x7fffffff;
+        for (int offset = 16; offset; offset >>= 1) {
+            const float otherValue = __shfl_down_sync(0xffffffff, value, offset);
+            const int otherExpert = __shfl_down_sync(0xffffffff, expert, offset);
+            if (otherValue > value || (otherValue == value && otherExpert < expert)) {
+                value = otherValue; expert = otherExpert;
+            }
+        }
+        if (!lane) { warpValues[warp] = value; warpExperts[warp] = expert; }
+        __syncthreads();
+        if (warp == 0) {
+            value = lane < 4 ? warpValues[lane] : -FLT_MAX;
+            expert = lane < 4 ? warpExperts[lane] : 0x7fffffff;
+            for (int offset = 16; offset; offset >>= 1) {
+                const float otherValue = __shfl_down_sync(0xffffffff, value, offset);
+                const int otherExpert = __shfl_down_sync(0xffffffff, expert, offset);
+                if (otherValue > value || (otherValue == value && otherExpert < expert)) {
+                    value = otherValue; expert = otherExpert;
+                }
+            }
+            if (!lane) {
+                selected[token * o.topK + k] = expert;
+                top[k] = value;
+                logits[size_t(token) * o.experts + expert] = -FLT_MAX;
+            }
+        }
+        __syncthreads();
     }
-    float total = 0;
-    for (int k = 0; k < o.topK; ++k) total += expf(top[k] - top[0]);
-    for (int k = 0; k < o.topK; ++k) probabilities[token * o.topK + k] = bf(expf(top[k] - top[0]) / total);
+    if (!threadIdx.x) {
+        float total = 0;
+        for (int k = 0; k < o.topK; ++k) total += expf(top[k] - top[0]);
+        for (int k = 0; k < o.topK; ++k)
+            probabilities[token * o.topK + k] = bf(expf(top[k] - top[0]) / total);
+    }
 }
 __global__ void gateUp(const float* x, const unsigned char* blocks, const unsigned char* scales,
     const float* bias, const int* selected, float* hidden, int tokens, GptOssOptions o) {
@@ -443,7 +470,7 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
     routeScores<<<tokens * o.experts, 128, 0, stream>>>((const float*)in[0],
         (const float*)in[1], (const float*)in[2], logits, tokens, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
-    routeTopK<<<tokens, 32, 0, stream>>>(logits, selected, probabilities, tokens, o);
+    routeTopK<<<tokens, 128, 0, stream>>>(logits, selected, probabilities, tokens, o);
     return cudaGetLastError();
 }
 cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int tokens,
