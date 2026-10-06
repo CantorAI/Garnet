@@ -132,4 +132,6 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_lo
         raise
     finally:
         G.cuda_set_device(previous)
-    return Pipeline(stages)
+    # tensor_to_device acquires the previous stage's tensor completion fence
+    # before copying, so a separate device-wide synchronize is redundant here.
+    return Pipeline(stages, synchronize_stages=False)
