@@ -152,7 +152,11 @@ class TensorParallel:
 
     def release(self):
         import garnet as G
-        self.executor.shutdown(wait=True)
-        for stage in self.stages:
-            G.cuda_set_device(stage['device_id'])
-            stage['model'].release_runtime()
+        previous = G.cuda_set_device(self.stages[0]['device_id'])
+        try:
+            self.executor.shutdown(wait=True)
+            for stage in self.stages:
+                G.cuda_set_device(stage['device_id'])
+                stage['model'].release_runtime()
+        finally:
+            G.cuda_set_device(previous)
