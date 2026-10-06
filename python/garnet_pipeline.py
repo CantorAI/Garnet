@@ -111,7 +111,8 @@ class TensorParallel:
         import garnet as G
         import os
 
-        def run(stage):
+        prepared = []
+        for stage in self.stages:
             previous = G.cuda_set_device(stage['device_id'])
             try:
                 trace = os.environ.get('GARNET_TP_TRACE')
@@ -123,6 +124,14 @@ class TensorParallel:
                     stage['values'], local[1], local[2], local[3], local[4]]}
                 if sample and stage['rank'] == 0:
                     request['sample'] = 'greedy'
+                prepared.append((stage, request))
+            finally:
+                G.cuda_set_device(previous)
+
+        def run(stage, request):
+            previous = G.cuda_set_device(stage['device_id'])
+            try:
+                trace = os.environ.get('GARNET_TP_TRACE')
                 if trace:
                     print('tp-rank', stage['rank'], 'enter model forward', flush=True)
                 result = stage['model'].forward(request)
@@ -137,7 +146,7 @@ class TensorParallel:
             finally:
                 G.cuda_set_device(previous)
 
-        futures = [self.executor.submit(run, stage) for stage in self.stages]
+        futures = [self.executor.submit(run, stage, request) for stage, request in prepared]
         results = [future.result() for future in futures]
         return results[0]
 
