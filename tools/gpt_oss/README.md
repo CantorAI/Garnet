@@ -215,6 +215,9 @@ Single-token decode attention splits each head's context across eight warps
 and merges stable softmax states, counting the learned sink once. Prompt
 attention still parallelizes query rows. Native parity tests include long
 paged decode, missing pages, sliding windows and inactive cache slots.
+GPT-OSS decoder-layer fusions request TensorRT CUDA Graph replay for repeated
+decode calls. Set `GARNET_DECODE_CUDA_GRAPH=0` to disable replay when diagnosing
+or benchmarking this path; the setting is scoped to the GPT-OSS model runtime.
 
 `garnet_gpt_oss_kernel_benchmark` measures full-size 2880-dimensional,
 128-expert/top-8 MoE calls with L2 flushed outside each timed invocation.
