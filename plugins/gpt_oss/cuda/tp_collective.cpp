@@ -17,17 +17,6 @@ std::array<ncclComm_t, 2> g_tpComms{};
 cudaError_t NcclStatus(ncclResult_t status) {
     return status == ncclSuccess ? cudaSuccess : cudaErrorUnknown;
 }
-__global__ void interleaveVocab(const float* gathered, float* output,
-    size_t localVocab, size_t rows) {
-    const size_t index = size_t(blockIdx.x) * blockDim.x + threadIdx.x;
-    const size_t total = rows * localVocab * 2;
-    if (index >= total) return;
-    const size_t row = index / (localVocab * 2);
-    const size_t within = index % (localVocab * 2);
-    const size_t rank = within / localVocab;
-    const size_t column = within % localVocab;
-    output[index] = gathered[rank * rows * localVocab + row * localVocab + column];
-}
 #endif
 }
 
@@ -100,10 +89,14 @@ cudaError_t GptOssTpAllGather(const float* input, float* output, float* scratch,
     if (device != rank) return cudaErrorInvalidDevice;
     auto result = ncclAllGather(input, scratch, count, ncclFloat, g_tpComms[rank], stream);
     if (result != ncclSuccess) return NcclStatus(result);
-    const size_t total = count * 2;
-    interleaveVocab<<<(total + 255) / 256, 256, 0, stream>>>(
-        scratch, output, size_t(localVocab), size_t(rows));
-    return cudaGetLastError();
+    const size_t localVocabBytes = size_t(localVocab) * sizeof(float);
+    const size_t fullVocabBytes = localVocabBytes * 2;
+    auto status = cudaMemcpy2DAsync(output, fullVocabBytes, scratch,
+        localVocabBytes, localVocabBytes, size_t(rows), cudaMemcpyDeviceToDevice, stream);
+    if (status != cudaSuccess) return status;
+    return cudaMemcpy2DAsync(output + localVocab, fullVocabBytes,
+        scratch + count, localVocabBytes, localVocabBytes, size_t(rows),
+        cudaMemcpyDeviceToDevice, stream);
 #else
     (void)input; (void)output; (void)scratch; (void)count;
     (void)rows; (void)localVocab; (void)rank; (void)stream;
