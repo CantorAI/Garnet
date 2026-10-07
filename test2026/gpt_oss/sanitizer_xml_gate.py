@@ -10,6 +10,7 @@ from validate_sanitizer_xml import known_initialization
 records=[record for source in sys.argv[1:] for record in ET.parse(source).getroot().findall('record')]
 assert records and all(known_initialization(record) for record in records)
 cases={known_initialization(record): record for record in records}
+hazards = 0
 for record in cases.values():
     for path,value in [('kind','Memory'),('what/api','cudaLaunchKernel'),('what/result','719'),
                        ('hostStack/saveLocation','launch'),
@@ -22,4 +23,12 @@ for record in cases.values():
         assert field is not None
         field.text=value
         assert known_initialization(hazard) is None, f'Unexpected exclusion: {path}={value}'
-print(f'All {len(records)} recorded initialization APIs classified; {len(cases)*8} memory/API/code/caller/module hazards rejected')
+        hazards += 1
+    if 'GptOssTpDirectAcquire' in known_initialization(record):
+        for path,value in [('what/error','cudaErrorLaunchFailure'),
+                           ('hostStack/frame[4]/func','Garnet::UnrelatedAcquire'),
+                           ('hostStack/frame[4]/module','/tmp/libgarnet_gpt_oss.so')]:
+            hazard=deepcopy(record); hazard.find(path).text=value
+            assert known_initialization(hazard) is None, (path,value)
+            hazards += 1
+print(f'All {len(records)} recorded initialization APIs classified; {hazards} memory/API/code/caller/module hazards rejected')

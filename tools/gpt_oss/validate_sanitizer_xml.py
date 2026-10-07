@@ -39,6 +39,21 @@ def known_initialization(record):
     known = known_nccl_initialization(record)
     if known:
         return known
+    if (record.findtext('kind'), record.findtext('what/api'), record.findtext('what/result'),
+            record.findtext('what/error')) == ('Api', 'cudaGetLastError', '704', 'cudaErrorPeerAccessAlreadyEnabled'):
+        stack = record.find('hostStack')
+        if stack is not None and stack.findtext('saveLocation') == 'error':
+            frames = stack.findall('frame')
+            if (len(frames) >= 4 and frames[1].findtext('func') == 'cudaGetLastError' and
+                    Path(frames[1].findtext('module','')).name == 'libcudart.so.13' and
+                    all(Path(frame.findtext('module','')).name == 'garnet_gpt_oss_tp_direct_benchmark'
+                        for frame in frames[2:4]) and
+                    re.fullmatch(r'Garnet::GptOssTpDirectAcquire(?:\(.*\))?', frames[2].findtext('func','')) and
+                    re.fullmatch(r'Garnet::GptOssTpAcquire(?:\(.*\))?', frames[3].findtext('func',''))):
+                # Only the observed benchmark reacquire branch, after the
+                # exact already-enabled return from EnablePeerAccess. No
+                # plugin-library or other704 caller exception is inferred.
+                return 'cudaGetLastError/704/Garnet::GptOssTpDirectAcquire/benchmark-init'
     # TensorToDevice checks EnablePeerAccess's return before clearing only704.
     # CUDA documents this as an already-established connection, not a failed copy.
     # Do not exclude704 from any other Garnet caller, or any other status here.
@@ -77,7 +92,7 @@ def validate(source, output):
     audit = dict(xml=str(source.resolve()), sha256=hashlib.sha256(data).hexdigest(),
         records=len(records), excluded_known_initialization=dict(excluded),
         unexpected=unexpected, passed=not unexpected,
-        scope='Only exact NCCL initialization probes and documented704 clearing in Garnet TensorToDevice are excluded; all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
+        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, and the observed benchmark DirectAcquire reacquire stack are excluded; all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(audit, indent=2))
     if unexpected:
