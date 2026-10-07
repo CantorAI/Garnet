@@ -284,12 +284,17 @@ UpKernel upKernel64() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat1
 UpKernel downKernel64() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE8M0fnu.id(),128,4,4,8,false,4,2,false>;}
+// The pinned pipeline advances at k == b_sh_wr_iters - 2. N64/K64
+// has 128 int4 weight vectors per stage and therefore needs <=64 threads.
+constexpr int kDownK64Threads = 64;
+static_assert((4 * 16 * 16 / 8 / 4 * 4) / kDownK64Threads >= 2,
+    "Marlin down-K64 requires at least two weight-load iterations");
 UpKernel downKernel32K64() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
-    garnet_marlin_types::kFE8M0fnu.id(),128,2,4,4,false,4,2,false>;}
+    garnet_marlin_types::kFE8M0fnu.id(),kDownK64Threads,2,4,4,false,4,2,false>;}
 UpKernel downKernel64K64() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
-    garnet_marlin_types::kFE8M0fnu.id(),128,4,4,4,false,4,2,false>;}
+    garnet_marlin_types::kFE8M0fnu.id(),kDownK64Threads,4,4,4,false,4,2,false>;}
 // Mirror the pinned template's int4 pointer layout for BF16/FP4/E8M0,
 // four pipeline stages and group_blocks=2 (no zero points). Include the
 // overlapping B/reduction/bias maximum, metadata, scales and all A stages.
@@ -407,10 +412,10 @@ struct GptOssMarlin::State {
             cudaFuncAttributes attributes{};int active=0;
             status=cudaFuncGetAttributes(&attributes,kernel);
             if(status==cudaSuccess)
-                status=cudaOccupancyMaxActiveBlocksPerMultiprocessor(&active,kernel,128,shared);
+                status=cudaOccupancyMaxActiveBlocksPerMultiprocessor(&active,kernel,kDownK64Threads,shared);
             if(status==cudaSuccess)std::fprintf(stderr,
-                "GPT-OSS down-K64 config: rows=%d shared=%d regs=%d local=%zu active_blocks_per_sm=%d device_shared_per_sm=%zu\n",
-                largePrefill64()?64:32,shared,attributes.numRegs,attributes.localSizeBytes,
+                "GPT-OSS down-K64 config: rows=%d threads=%d shared=%d regs=%d local=%zu active_blocks_per_sm=%d device_shared_per_sm=%zu\n",
+                largePrefill64()?64:32,kDownK64Threads,shared,attributes.numRegs,attributes.localSizeBytes,
                 active,prop.sharedMemPerMultiprocessor);
         }
         if(status!=cudaSuccess){release();return status;}ready=true;return cudaSuccess;
@@ -477,7 +482,7 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
         : (block==64?kDownShared64:(block==32?51840:35200));
     const int downCtas=downCandidate ? downCtasPerSm(s.computeMajor)
         : marlinCtasPerSm(s.computeMajor,o.prefill);
-    down<<<s.sms*downCtas,128,downShared,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
+    down<<<s.sms*downCtas,downCandidate?kDownK64Threads:128,downShared,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[3],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,1,false,slots,g.downN,g.downK,at<int>(workspace,l.locks),false,false,true);
     combine<<<(tokens*o.hidden+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.down),(const float*)in[8],selected,probabilities,y,tokens,g.downN,o);
