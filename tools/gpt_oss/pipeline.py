@@ -139,6 +139,9 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     if expert_weight_shards:
         # Weight storage changes serialized constants and the plugin contract.
         identity['expert_weight_shards'] = True
+    # These options change getWorkspaceSize()/buffer offsets. A serialized
+    # engine built with a smaller layout cannot safely serve the larger one.
+    identity['marlin_workspace_layout'] = marlin_workspace_profile()
     key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:24]
     stages = [{'device_id': d['id'], 'rank': rank, 'start': 0,
                'end': config['num_hidden_layers'], 'estimated_bytes': required,
@@ -150,7 +153,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'config': config, 'estimated_per_gpu_bytes': required,
             'local_kv_heads': local_kv_heads,
             'expert_weight_shards': expert_weight_shards,
-            'weight_storage_estimate': weight_storage}
+            'weight_storage_estimate': weight_storage,
+            'marlin_workspace_layout': identity['marlin_workspace_layout']}
 
 
 def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_logits=False):
@@ -211,6 +215,41 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_lo
     return Pipeline(stages)
 
 
+def marlin_workspace_profile():
+    try:
+        maximum = int(os.environ.get('GARNET_GPT_OSS_MARLIN_MAX_TOKENS', '8'))
+        block = int(os.environ.get('GARNET_GPT_OSS_MARLIN_PREFILL_BLOCK', '8'))
+    except ValueError as error:
+        raise ValueError('Marlin workspace profile must use integer settings') from error
+    return {'max_tokens': maximum if maximum in (512, 4096) else 8,
+            'prefill_block': 32 if block == 32 else 8}
+
+
+def estimate_tp2_marlin_workspace_bytes(config, rows):
+    """Include every aligned buffer in the plugin's Marlin workspace layout."""
+    profile = marlin_workspace_profile()
+    h, intermediate = config['hidden_size'], config['intermediate_size']
+    experts, top_k = config['num_experts'], config['experts_per_token']
+    if not (0 < rows <= profile['max_tokens'] and 0 < h <= 16384 and h % 32 == 0
+            and 0 < intermediate <= 65536 and intermediate % 32 == 0
+            and 0 < experts <= 256 and 0 < top_k <= min(8, experts)):
+        return 0
+    up_k, up_n = (h + 63) // 64 * 64, (2 * intermediate + 127) // 128 * 128
+    down_k, down_n = (intermediate + 127) // 128 * 128, (h + 63) // 64 * 64
+    slots, n = rows * top_k, max(up_n, down_n)
+    block = profile['prefill_block'] if rows >= 128 else 8
+    padded = slots + experts * block
+    buffers = (slots * 4, slots * 4, rows * experts * 4, rows * up_k * 2,
+               slots * up_n * 2, slots * down_k * 2, slots * down_n * 2,
+               padded * 4, ((padded + block - 1) // block) * 4, 4,
+               experts * (n // 64) * 16 * 4,
+               2 * min(n * slots * 8, 512 * 4 * 8 * 256) * 4)
+    size = 0
+    for buffer in buffers:
+        size = (size + 15) // 16 * 16 + buffer
+    return size
+
+
 def estimate_tp2_moe_workspace_bytes(config, rows):
     """Mirror the grouped fallback scratch in GptOssMoeWorkspace()."""
     top_k = config['experts_per_token']
@@ -237,11 +276,14 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
     if tokens < 1 or tokens > plan['max_tokens']:
         raise ValueError('token shape exceeds TP2 placement profile')
     config, batch = plan['config'], plan['batch']
+    if plan.get('marlin_workspace_layout', marlin_workspace_profile()) != marlin_workspace_profile():
+        raise ValueError('Marlin workspace settings changed after planning; regenerate the TP2 profile')
     if prefill:
         # Large batch × prompt shapes can exceed TensorRT's 256 MiB default
         # even when the checkpoint and KV cache fit on both GPUs.
         rows = batch * tokens
-        moe_scratch = estimate_tp2_moe_workspace_bytes(config, rows)
+        moe_scratch = max(estimate_tp2_moe_workspace_bytes(config, rows),
+                          estimate_tp2_marlin_workspace_bytes(config, rows))
         needed_mb = (moe_scratch + (1 << 20) - 1) >> 20
         auto_workspace_mb = 1 << max(0, needed_mb - 1).bit_length()
         if auto_workspace_mb > 4096:

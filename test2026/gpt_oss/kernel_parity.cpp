@@ -426,7 +426,16 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
     }
 #endif
 }
-int main() { try {
+int main(int argc, char** argv) { try {
+    if (argc == 2 && std::strcmp(argv[1], "--workspace") == 0) {
+        GptOssOptions options;
+        options.kind = 2; options.hidden = options.intermediate = 2880;
+        options.experts = 128; options.topK = 8; options.tpRank = 0;
+        for (int rows : {1, 8, 32, 128, 513, 4096, 8020})
+            std::cout << rows << ' ' << GptOssMoeWorkspace(rows, options) << ' '
+                << GptOssMarlin::Workspace(rows, options) << '\n';
+        return 0;
+    }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     testMxfp4Encoding();
 #endif

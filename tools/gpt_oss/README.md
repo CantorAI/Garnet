@@ -259,6 +259,11 @@ tests unchunked prefill and chunk128 with1/2/4 Marlin CTAs per SM sequentially,
 validating every slot/trial before continuing. It requires a newly recorded
 vLLM reference with identical input token IDs, batch, output limit and context;
 it preserves failure logs and refuses to overwrite existing evidence.
+Marlin row admission and prefill block size affect workspace bytes and buffer
+offsets, so they are part of the placement/cache profile. Builder workspace
+sizing uses the larger of grouped fallback and aligned Marlin scratch; at
+4096 GPT-OSS rows, Marlin needs more scratch than the grouped path. Generate
+a fresh profile if these layout settings change before loading an engine.
 
 The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
 and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
