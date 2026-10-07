@@ -27,7 +27,7 @@ selected = request.get('device_ids', [d['id'] for d in available[:2]])
 assert len(selected) == 2 and len(set(selected)) == 2
 devices = [next(d for d in available if d['id'] == device_id) for device_id in selected]
 plan = make_tensor_parallel_plan(weights, devices, batch=batch,
-    capacity=len(ids) + output_tokens, tokens=len(ids),
+    capacity=4096, tokens=len(ids),
     reserve_bytes=int(request.get('reserve_mb', 1024)) << 20,
     memory_fraction=float(request.get('memory_fraction', .9)))
 print('TP2 batch plan', json.dumps({k: plan[k] for k in
