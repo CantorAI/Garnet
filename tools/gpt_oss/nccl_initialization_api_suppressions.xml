@@ -10,6 +10,7 @@
     <kind>Api</kind>
     <what><api>cudaFuncGetAttributes</api><result>209</result></what>
     <hostStack>
+      <saveLocation>error</saveLocation>
       <frame><module>.*libcuda\.so\.1</module></frame>
       <frame><func>cudaFuncGetAttributes</func><module>.*libnccl\.so\.2</module></frame>
       <frame><func>ncclInitKernelsForDevice</func><module>.*libnccl\.so\.2</module></frame>
@@ -19,6 +20,7 @@
     <kind>Api</kind>
     <what><api>cudaGetLastError</api><result>209</result></what>
     <hostStack>
+      <saveLocation>error</saveLocation>
       <frame><module>.*libcuda\.so\.1</module></frame>
       <frame><func>cudaGetLastError</func><module>.*libnccl\.so\.2</module></frame>
       <frame><func>ncclInitKernelsForDevice</func><module>.*libnccl\.so\.2</module></frame>
@@ -28,6 +30,7 @@
     <kind>Api</kind>
     <what><api>cudaGetLastError</api><result>704</result></what>
     <hostStack>
+      <saveLocation>error</saveLocation>
       <frame><module>.*libcuda\.so\.1</module></frame>
       <frame><func>cudaGetLastError</func><module>.*libnccl\.so\.2</module></frame>
       <frame><func>p2pRecvConnect</func><module>.*libnccl\.so\.2</module></frame>
