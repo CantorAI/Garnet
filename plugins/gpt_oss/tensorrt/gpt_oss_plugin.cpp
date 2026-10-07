@@ -28,7 +28,11 @@ bool valid(const GptOssOptions& o) {
     if (o.kind == 3 || o.kind == 4) return o.hidden > 0 && o.tpRank >= 0 && o.tpRank < 2;
     if (o.kind == 5) return o.hidden > 0 && o.epsilon > 0.f;
     if (o.kind == 6) return o.hidden > 0 && o.hidden % 32 == 0 &&
-        o.intermediate > 0 && o.intermediate <= 16384;
+        o.intermediate > 0 && o.intermediate <= 16384 &&
+        (o.tpRank == 0 || o.tpRank == 1) &&
+        (o.qHeads == 0 || (o.qHeads > 0 && o.kvHeads > 0 &&
+         o.headDim > 0 && o.qHeads % 2 == 0 && o.kvHeads % 2 == 0 &&
+         o.intermediate == (o.qHeads / 2 + o.kvHeads) * o.headDim));
     if (o.kind == 2) return o.hidden > 0 && o.intermediate > 0 &&
         o.hidden % 32 == 0 && o.intermediate % 32 == 0 && o.experts > 0 &&
         o.experts <= 256 && o.topK > 0 && o.topK <= 8 && o.topK <= o.experts && o.limit > 0 &&
@@ -126,7 +130,10 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
         m_valid = d.d[2] == o.hidden && shape(in[1].desc.dims, {o.hidden});
     } else if (o.kind == 6) {
         m_valid = rows(d) == 1 && d.d[2] == o.hidden &&
-            shape(in[1].desc.dims, {o.intermediate, o.hidden});
+            (o.qHeads > 0
+                ? shape(in[1].desc.dims,
+                    {(o.qHeads + 2 * o.kvHeads) * o.headDim, o.hidden})
+                : shape(in[1].desc.dims, {o.intermediate, 2 * o.hidden}));
     } else {
         m_valid = d.nbDims == 3 && d.d[0] > 0 && d.d[1] > 0 && d.d[2] > 0;
     }
@@ -191,7 +198,11 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
         static_cast<float*>(out[0]), n, m_options.hidden, m_options.epsilon,
         m_options.hidden >= 1024 ? 1024 : 256, stream);
     else if (m_options.kind == 6) status = RunGptOssDecodeGemv(
-        in[0], in[1], out[0], m_options.intermediate, m_options.hidden, stream);
+        in[0], in[1], out[0], m_options.intermediate, m_options.hidden,
+        m_options.qHeads > 0 ? m_options.hidden : 2 * m_options.hidden,
+        m_options.qHeads > 0 ? 0 : m_options.tpRank * m_options.hidden,
+        m_options.qHeads, m_options.kvHeads, m_options.headDim,
+        m_options.tpRank, stream);
     else if (!workspace) status = cudaErrorInvalidValue;
     else {
         // Some TensorRT execution paths invoke enqueue without initialize().

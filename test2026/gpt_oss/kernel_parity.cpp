@@ -38,7 +38,8 @@ void testDecodeGemv(int outputs, int inputs) {
     for (size_t i = 0; i < weight.size(); ++i)
         weight[i] = bits(std::cos(float(i) * .017f) * .1f);
     Device<uint16_t> dx(x), dw(weight), dy{std::vector<uint16_t>(outputs)};
-    check(RunGptOssDecodeGemv(dx.p, dw.p, dy.p, outputs, inputs, nullptr));
+    check(RunGptOssDecodeGemv(dx.p, dw.p, dy.p, outputs, inputs,
+        inputs, 0, 0, 0, 0, -1, nullptr));
     std::vector<float> expected(outputs), actual(outputs);
     const auto result = dy.read();
     for (int row = 0; row < outputs; ++row) {
@@ -56,6 +57,52 @@ void testDecodeGemv(int outputs, int inputs) {
         std::memcpy(&actual[row], &yb, sizeof(float));
     }
     compare(actual, expected, .008f, "GPT-OSS BF16 decode GEMV");
+}
+void testDecodeGemvSharded(bool qkv, int rank) {
+    const int inputs = qkv ? 2880 : 2048;
+    const int outputs = qkv ? 2560 : 2880;
+    const int fullRows = qkv ? 5120 : 2880;
+    const int fullColumns = qkv ? 2880 : 4096;
+    std::vector<uint16_t> x(inputs), weight(size_t(fullRows) * fullColumns);
+    for (int col = 0; col < inputs; ++col)
+        x[col] = bits(std::sin(float(col) * .013f) * .1f);
+    for (size_t i = 0; i < weight.size(); ++i)
+        weight[i] = bits(std::cos(float(i) * .017f) * .1f);
+    Device<uint16_t> dx(x), dw(weight), dy{std::vector<uint16_t>(outputs)};
+    check(RunGptOssDecodeGemv(dx.p, dw.p, dy.p, outputs, inputs,
+        fullColumns, qkv ? 0 : rank * inputs,
+        qkv ? 64 : 0, qkv ? 8 : 0, qkv ? 64 : 0, rank, nullptr));
+    const auto result = dy.read();
+    const std::vector<int> sampled = qkv
+        ? std::vector<int>{0, 2047, 2048, 2303, 2304, 2559}
+        : std::vector<int>{0, 1, 1439, 2879};
+    std::vector<float> expected, actual;
+    for (int row : sampled) {
+        int weightRow = row;
+        if (qkv) {
+            if (row < 2048) weightRow = rank * 2048 + row;
+            else if (row < 2304) weightRow = 4096 + rank * 256 + row - 2048;
+            else weightRow = 4608 + rank * 256 + row - 2304;
+        }
+        const int columnOffset = qkv ? 0 : rank * inputs;
+        float sum = 0;
+        for (int col = 0; col < inputs; ++col) {
+            uint32_t xb = uint32_t(x[col]) << 16;
+            uint32_t wb = uint32_t(weight[size_t(weightRow) * fullColumns +
+                columnOffset + col]) << 16;
+            float xf, wf;
+            std::memcpy(&xf, &xb, sizeof(xf));
+            std::memcpy(&wf, &wb, sizeof(wf));
+            sum = std::fma(xf, wf, sum);
+        }
+        expected.push_back(bf(sum));
+        uint32_t yb = uint32_t(result[row]) << 16;
+        float yf;
+        std::memcpy(&yf, &yb, sizeof(yf));
+        actual.push_back(yf);
+    }
+    compare(actual, expected, .008f,
+        qkv ? "GPT-OSS TP2 QKV GEMV" : "GPT-OSS TP2 row GEMV");
 }
 void testRmsNorm() {
     constexpr int tokens = 19, hidden = 2880;
@@ -353,5 +400,9 @@ int main() { try {
     testMxfp4Encoding();
 #endif
         testDecodeGemv(2560, 2880); testDecodeGemv(2880, 2048);
+        for (int rank : {0, 1}) {
+            testDecodeGemvSharded(true, rank);
+            testDecodeGemvSharded(false, rank);
+        }
         testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

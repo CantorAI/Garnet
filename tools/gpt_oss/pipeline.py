@@ -208,7 +208,7 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
             # The GEMV choice changes the compiled TensorRT graph, so do not reuse
             # an engine built with the other projection implementation.
             if not prefill and os.environ.get('GARNET_GPT_OSS_DECODE_GEMV') == '1':
-                stage_cache = stage_cache / 'bf16-gemv-v1'
+                stage_cache = stage_cache / 'bf16-gemv-v2'
             if last_token_logits:
                 stage_cache = stage_cache / 'last-token-logits'
             model_root = stage_cache / 'xmodel'

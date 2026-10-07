@@ -24,7 +24,7 @@ This is an append-only record of performance hypotheses, implementations, correc
 | OPT-0016 | TP communication | BF16 attention-prefill all-reduce | 0.4622–0.4650 s | 0.4582–0.4589 s | ~4.2 ms paired median gain | ACCEPT, opt-in |
 | OPT-0017 | Layer fusion | Residual add + RMSNorm | 193–196 tok/s short | 193–195 tok/s short | No material gain | REJECT |
 | OPT-0018 | TensorRT | Builder level 5 | 193–196 tok/s short | 197–199 tok/s short | ~2% decode gain; changed token sequences | INCONCLUSIVE |
-| OPT-0019 | Dense decode | GPT-OSS BF16 GEMV plugin | TRT projection group ~1.07 ms/token, profiled | Isolated 72-projection CUDA graph 0.727 ms/replay | Full-model result pending | INCONCLUSIVE |
+| OPT-0019 | Dense decode | GPT-OSS BF16 GEMV plugin | 193–196 short, 170–171 long tok/s | First integration 186–190 short, 166–169 long tok/s; revised weight mapping pending | First integration regressed | INCONCLUSIVE |
 
 ## Cumulative accepted-stage history
 
@@ -276,3 +276,11 @@ A matched 32-token arithmetic Nsight Systems capture on the same Workstation hel
 **Performance result:** On Blackwell, graph replay of 72 distinct projections: four rows/block **0.7266 ms/decode**, eight rows/block **0.7536 ms/decode**. On local RTX 4080, 1.6594 and 1.6541 ms respectively. These exclude the full model and are not a measured speedup over TensorRT under identical instrumentation. TTFT, ITL, GPU memory delta and end-to-end tok/s pending.
 **Decision / Analysis:** INCONCLUSIVE. The screen is promising enough to test in the model, but no claim of serving gain is justified yet.
 **Next step:** Complete the opt-in plugin, run CUDA/TP2 parity and all four saved requests sequentially, compare token outputs and warm rates to level-1 TensorRT on the same machine; reject/revert if it does not produce a meaningful end-to-end gain.
+
+#### OPT-0019 first integration and trace, 2026-10-07
+
+The first opt-in TensorRT integration used rank-sharded weight tensors produced by TensorRT slices/concatenation. The full synthetic suite, Qwen compatibility and direct GEMV parity passed. All eight pretrained final answers passed, but warm wall decode regressed: arithmetic **189.02/186.38** vs baseline **193.84/192.86**, code **188.78/189.74** vs **195.86/194.78**, instruction **188.07/188.51** vs **194.30/194.50**, and long **168.99/166.31** vs **170.22/170.69 tok/s**. Arithmetic, code and long token sequences matched the baseline; instruction changed from 146 to 149 tokens while preserving the expected final answer. Long prefill **0.476/0.463 s** showed no gain. Raw JSON, logs and decoded answers: `D:/CantorAI/work/vast-54543362/garnet-decode-gemv-all-four/`.
+
+A matched 32-token arithmetic Nsight capture explained the regression. GPU 0's first GEMV graph had **29,088 kernels**, **128.07 ms** summed kernel time and a **194.04 ms** span, compared with **27,936**, **120.36 ms** and **188.31 ms** for the prior TensorRT graph. GEMV kernels themselves summed **9.48 ms** over 2,304 calls, but two TensorRT `Move` groups materializing the sharded QKV and output weights summed **11.49 + 9.43 ms** over 1,152 calls each. These extra copies were absent from the baseline and outweighed the arithmetic savings. The full-model result REJECTS this first implementation, not the broader direct-weight hypothesis. Raw trace: `D:/CantorAI/work/vast-54543362/profiles/garnet-decode-gemv-arithmetic.*`.
+
+The revised candidate leaves the checkpoint's full refittable weight bound to the plugin and computes rank-specific QKV row selection or output-projection column offsets inside GEMV. It avoids per-token TensorRT weight-slice materialization without duplicating the checkpoint. Dedicated parity cases now cover both TP ranks and boundary rows. It has not yet been built or benchmarked; no revised speedup is claimed.

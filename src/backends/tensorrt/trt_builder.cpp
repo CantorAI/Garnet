@@ -6740,9 +6740,21 @@ namespace Garnet {
                     sliceWeight(tensor, 0, qWidth + tpRank * kvPart, kvPart),
                     sliceWeight(tensor, 0, qWidth + kvWidth + tpRank * kvPart, kvPart)});
             };
+            const char* gemvFlag = std::getenv("GARNET_GPT_OSS_DECODE_GEMV");
+            const Dims sourceDims = source->getDimensions();
+            const bool gptOssGemv =
+                gemvFlag && std::strcmp(gemvFlag, "1") == 0 &&
+                bf16Compute && tpRank >= 0 &&
+                projectionWeightName.rfind("block.", 0) == 0 &&
+                ((tpMode == "qkv" &&
+                  projectionWeightName.find(".attn.qkv.weight") != std::string::npos) ||
+                 (tpMode == "row" &&
+                  projectionWeightName.find(".attn.out.weight") != std::string::npos)) &&
+                sourceDims.nbDims == 3 && sourceDims.d[0] == 1 &&
+                sourceDims.d[1] == 1;
             if (tpRank >= 0) {
                 if (tpMode == "qkv") {
-                    weight = shardQkv(weight);
+                    if (!gptOssGemv) weight = shardQkv(weight);
                     if (!weight) {
                         loweringError = opName + " TP2 QKV weight shard failed";
                         return X::Value();
@@ -6754,7 +6766,8 @@ namespace Garnet {
                         return X::Value();
                     }
                     const int part = dims.d[1] / 2;
-                    weight = sliceWeight(weight, 1, tpRank * part, part);
+                    if (!gptOssGemv)
+                        weight = sliceWeight(weight, 1, tpRank * part, part);
                     if (!weight) {
                         loweringError = opName + " TP2 row-parallel weight shard failed";
                         return X::Value();
@@ -6791,19 +6804,10 @@ namespace Garnet {
                 auto* cast = network->addCast(*source, projectionType);
                 projectionInput = cast ? cast->getOutput(0) : nullptr;
             }
-            const char* gemvFlag = std::getenv("GARNET_GPT_OSS_DECODE_GEMV");
-            const bool gptOssGemv =
-                gemvFlag && std::strcmp(gemvFlag, "1") == 0 &&
-                bf16Compute && tpRank >= 0 &&
-                projectionWeightName.rfind("block.", 0) == 0 &&
-                (projectionWeightName.find(".attn.qkv.weight") != std::string::npos ||
-                 projectionWeightName.find(".attn.out.weight") != std::string::npos) &&
-                projectionInput && projectionInput->getType() == DataType::kBF16 &&
-                projectionInput->getDimensions().nbDims == 3 &&
-                projectionInput->getDimensions().d[0] == 1 &&
-                projectionInput->getDimensions().d[1] == 1;
             if (gptOssGemv) {
-                lastOutput = LowerGptOssDecodeGemv(projectionInput, weight);
+                lastOutput = LowerGptOssDecodeGemv(projectionInput, weight,
+                    tpRank, tpMode == "qkv", keywordInt("tp_heads", 0),
+                    keywordInt("tp_kv_heads", 0), keywordInt("tp_head_dim", 0));
                 if (!lastOutput) return X::Value();
             } else {
                 weight = projectionInput
