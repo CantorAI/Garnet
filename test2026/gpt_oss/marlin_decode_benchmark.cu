@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-// One GPT-OSS-sized decode MoE invocation, captured as a CUDA graph. Run in
-// separate processes for each GARNET_GPT_OSS_FUSED_* environment setting.
+// One synthetic GPT-OSS-sized MoE invocation, captured as a CUDA graph.
+// Optional ROWS prefill|decode; separate processes for scheduling settings.
 #include "gpt_oss_marlin.h"
 #include <cuda_runtime.h>
 #include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -30,34 +33,60 @@ __global__ void flushL2(unsigned* data, size_t count) {
     if (i < count) data[i] += unsigned(i) + 1;
 }
 
-int main() { try {
+int main(int argc, char** argv) { try {
+    const int tokens = argc > 1 ? std::stoi(argv[1]) : 1;
+    const bool prefill = argc > 2 && std::strcmp(argv[2], "prefill") == 0;
+    if (argc > 3 || tokens < 1 || tokens > 4096 ||
+        (argc > 2 && !prefill && std::strcmp(argv[2], "decode") != 0)) return 2;
     GptOssOptions options;
     options.kind = 2;
     options.hidden = 2880;
     options.intermediate = 2880;
     options.experts = 128;
     options.topK = 8;
+    options.prefill = prefill;
     constexpr size_t h = 2880, intermediate = 2880, experts = 128;
-    Buffer x(h * 4), router(experts * h * 4), routerBias(experts * 4);
+    Buffer x(size_t(tokens) * h * 4), router(experts * h * 4), routerBias(experts * 4);
+    // Diverse deterministic rows/router, rather than only tied zero routes.
+    // This is synthetic scheduling evidence, not a pretrained benchmark.
+    auto values = [](size_t count, uint32_t seed, float scale) {
+        std::vector<float> result(count);
+        for (size_t i = 0; i < count; ++i) {
+            uint32_t v = uint32_t(i) + seed;
+            v ^= v >> 16; v *= 0x7feb352du; v ^= v >> 15;
+            v *= 0x846ca68bu; v ^= v >> 16;
+            result[i] = (int(v % 65) - 32) * scale;
+        }
+        return result;
+    };
+    auto hostX=values(size_t(tokens)*h,17,1.f/128);
+    auto hostRouter=values(experts*h,991,1.f/4096);
+    check(cudaMemcpy(x.data,hostX.data(),hostX.size()*4,cudaMemcpyHostToDevice));
+    check(cudaMemcpy(router.data,hostRouter.data(),hostRouter.size()*4,cudaMemcpyHostToDevice));
     Buffer up(experts * 2 * intermediate * h / 2, 0x31);
     Buffer upScales(experts * 2 * intermediate * h / 32, 120);
     Buffer upBias(experts * 2 * intermediate * 4);
     Buffer down(experts * h * intermediate / 2, 0x24);
     Buffer downScales(experts * h * intermediate / 32, 120);
-    Buffer downBias(experts * h * 4), output(h * 4);
-    Buffer workspace(GptOssMarlin::Workspace(1, options));
+    Buffer downBias(experts * h * 4), output(size_t(tokens) * h * 4);
+    const auto workspaceBytes=GptOssMarlin::Workspace(tokens, options);
+    if(!workspaceBytes) throw std::runtime_error("Requested Marlin shape is unsupported");
+    Buffer workspace(workspaceBytes);
     const void* inputs[]{x.data, router.data, routerBias.data, up.data,
         upScales.data, upBias.data, down.data, downScales.data, downBias.data};
     GptOssMarlin marlin(options);
     cudaStream_t stream = nullptr;
     check(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
-    check(marlin.Run(inputs, static_cast<float*>(output.data), workspace.data, 1, stream));
+    check(marlin.Run(inputs, static_cast<float*>(output.data), workspace.data, tokens, stream));
     check(cudaDeviceSynchronize());
+    std::vector<float> reference(size_t(tokens)*h), actual(reference.size());
+    check(cudaMemcpy(reference.data(),output.data,reference.size()*4,cudaMemcpyDeviceToHost));
+    for(float value:reference)if(!std::isfinite(value))throw std::runtime_error("Nonfinite synthetic output");
 
     cudaGraph_t graph = nullptr;
     cudaGraphExec_t executable = nullptr;
     check(cudaStreamBeginCapture(stream, cudaStreamCaptureModeGlobal));
-    check(marlin.Run(inputs, static_cast<float*>(output.data), workspace.data, 1, stream));
+    check(marlin.Run(inputs, static_cast<float*>(output.data), workspace.data, tokens, stream));
     check(cudaStreamEndCapture(stream, &graph));
     check(cudaGraphInstantiate(&executable, graph, nullptr, nullptr, 0));
     size_t graphNodes = 0;
@@ -74,7 +103,7 @@ int main() { try {
     check(cudaDeviceSynchronize());
     std::vector<float> milliseconds;
     for (int i = 0; i < 25; ++i) {
-        flushL2<<<(flushBytes / 4 + 255) / 256, 256>>>(
+        flushL2<<<(flushBytes / 4 + 255) / 256, 256, 0, stream>>>(
             static_cast<unsigned*>(flush.data), flushBytes / 4);
         check(cudaGetLastError());
         check(cudaEventRecord(begin, stream));
@@ -86,7 +115,11 @@ int main() { try {
         milliseconds.push_back(elapsed);
     }
     std::sort(milliseconds.begin(), milliseconds.end());
-    std::cout << "device=" << device.name << " graph_nodes=" << graphNodes
+    check(cudaMemcpy(actual.data(),output.data,actual.size()*4,cudaMemcpyDeviceToHost));
+    if(actual!=reference)throw std::runtime_error("Warm graph replay differs from eager output");
+    std::cout << "measurement=synthetic_single_moe device=" << device.name
+              << " rows=" << tokens << " phase=" << (prefill?"prefill":"decode")
+              << " workspace_bytes=" << workspaceBytes << " graph_replay_exact=PASS graph_nodes=" << graphNodes
               << " median_ms="
               << milliseconds[milliseconds.size() / 2]
               << " min_ms=" << milliseconds.front() << '\n';
