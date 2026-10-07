@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // One synthetic GPT-OSS-sized MoE invocation, captured as a CUDA graph.
-// Optional ROWS prefill|decode; separate processes for scheduling settings.
+// Optional ROWS prefill|decode OUTPUT_BIN; separate processes per setting.
 #include "gpt_oss_marlin.h"
 #include <cuda_runtime.h>
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -36,8 +38,10 @@ __global__ void flushL2(unsigned* data, size_t count) {
 int main(int argc, char** argv) { try {
     const int tokens = argc > 1 ? std::stoi(argv[1]) : 1;
     const bool prefill = argc > 2 && std::strcmp(argv[2], "prefill") == 0;
-    if (argc > 3 || tokens < 1 || tokens > 4096 ||
+    if (argc > 4 || tokens < 1 || tokens > 4096 ||
         (argc > 2 && !prefill && std::strcmp(argv[2], "decode") != 0)) return 2;
+    if(argc==4 && std::filesystem::exists(argv[3]))
+        throw std::runtime_error("Synthetic output evidence already exists");
     GptOssOptions options;
     options.kind = 2;
     options.hidden = 2880;
@@ -117,6 +121,12 @@ int main(int argc, char** argv) { try {
     std::sort(milliseconds.begin(), milliseconds.end());
     check(cudaMemcpy(actual.data(),output.data,actual.size()*4,cudaMemcpyDeviceToHost));
     if(actual!=reference)throw std::runtime_error("Warm graph replay differs from eager output");
+    if(argc==4) {
+        std::ofstream outputFile(argv[3],std::ios::binary);
+        outputFile.write(reinterpret_cast<const char*>(actual.data()),actual.size()*sizeof(float));
+        outputFile.close();
+        if(!outputFile)throw std::runtime_error("Failed to preserve synthetic output evidence");
+    }
     std::cout << "measurement=synthetic_single_moe device=" << device.name
               << " rows=" << tokens << " phase=" << (prefill?"prefill":"decode")
               << " workspace_bytes=" << workspaceBytes << " graph_replay_exact=PASS graph_nodes=" << graphNodes

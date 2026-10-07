@@ -1,12 +1,14 @@
 """Independent memory arithmetic, rejection and shared-KV lifetime checks."""
 import copy
+import os
 from pathlib import Path
 import sys
+from unittest.mock import patch
 
 repo = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(repo / 'tools/gpt_oss'))
 sys.path.insert(0, str(repo / 'python'))
-from resident_budget import admit_resident, plan_identity
+from resident_budget import admit_resident, plan_identity, kernel_environment
 from garnet_pipeline import ResidentTensorParallel
 
 plan = dict(schema=3, mode='gpt-oss-tensor-parallel-tp2', cache_key='measured',
@@ -44,6 +46,15 @@ for key in ('native_binaries', 'hardware_csv', 'kernel_environment', 'checkpoint
     candidate[key] = None
     rejected(candidate)
 rejected(placement=dict(plan, marlin_prepacked=False))
+for key,value in [('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K','64'),
+                  ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM','2')]:
+    with patch.dict(os.environ,{key:value}):
+        assert kernel_environment()[key]==value
+    environment=dict(identity['environment'],**{key:value})
+    rejected(environment=environment) # Old profile must not admit new kernel settings.
+    candidate=copy.deepcopy(profile)
+    candidate['kernel_environment']=environment
+    assert admit_resident(candidate,plan,devices,**dict(identity,environment=environment))['ranks']==result['ranks']
 rejected(reserve_bytes=(2 << 30) - 1)
 rejected(memory_fraction=.91)
 rejected(hardware=[dict(d, free_bytes=expected - 1) for d in devices])

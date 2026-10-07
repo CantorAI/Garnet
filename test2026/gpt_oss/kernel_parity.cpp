@@ -980,7 +980,8 @@ int main(int argc, char** argv) { try {
         }
         return 0;
     }
-    if (argc == 2 && std::strcmp(argv[1], "--large-prefill-parity") == 0) {
+    if (argc == 2 && (std::strcmp(argv[1], "--large-prefill-parity") == 0 ||
+                     std::strcmp(argv[1], "--prefill-down-parity") == 0)) {
         GptOssOptions probe; probe.kind=2; probe.hidden=probe.intermediate=32;
         probe.experts=5; probe.topK=2; probe.prefill=1;
         if(!GptOssMarlin::Workspace(4096,probe))
@@ -991,6 +992,8 @@ int main(int argc, char** argv) { try {
         testMoe(1024,96,64,false);
         testMoe(4096,32,32,true);
         testMoe(1024,32,32,true,true); // Decode must retain its old tile.
+        if(std::strcmp(argv[1], "--prefill-down-parity") == 0)
+            testMoe(1024,96,256,false); // Multiple real K64 reduction tiles, both TP axes.
         check(cudaDeviceSynchronize()); return 0;
     }
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL

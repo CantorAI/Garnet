@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>
+#include <string>
 
 namespace Garnet {
 namespace {
@@ -20,6 +21,13 @@ bool largePrefill64() {
     static const bool enabled = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK");
         return value && std::atoi(value) == 64;
+    }();
+    return enabled;
+}
+bool prefillDownK64() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K");
+        return value && std::string(value) == "64";
     }();
     return enabled;
 }
@@ -36,6 +44,14 @@ int marlinCtasPerSm(int computeMajor, bool prefill) {
     }();
     return prefill && prefillCount ? prefillCount :
         (overrideCount ? overrideCount : (computeMajor >= 12 ? 1 : 2));
+}
+int downCtasPerSm(int computeMajor) {
+    static const int overrideCount = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM");
+        const int parsed = value ? std::atoi(value) : 0;
+        return parsed == 1 || parsed == 2 || parsed == 4 ? parsed : 0;
+    }();
+    return overrideCount ? overrideCount : marlinCtasPerSm(computeMajor, true);
 }
 void reportMarlin(const char* message, int a = 0, int b = 0) {
     static std::atomic<int> count{0};
@@ -268,21 +284,30 @@ UpKernel upKernel64() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat1
 UpKernel downKernel64() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE8M0fnu.id(),128,4,4,8,false,4,2,false>;}
+UpKernel downKernel32K64() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
+    garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
+    garnet_marlin_types::kFE8M0fnu.id(),128,2,4,4,false,4,2,false>;}
+UpKernel downKernel64K64() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
+    garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
+    garnet_marlin_types::kFE8M0fnu.id(),128,4,4,4,false,4,2,false>;}
 // Mirror the pinned template's int4 pointer layout for BF16/FP4/E8M0,
 // four pipeline stages and group_blocks=2 (no zero points). Include the
 // overlapping B/reduction/bias maximum, metadata, scales and all A stages.
-constexpr int shared64(int nBlocks, int kBlocks) {
+constexpr int sharedPrefill(int mBlocks, int nBlocks, int kBlocks) {
     const int b = 4 * ((nBlocks * 16 * 16 / 8) / 4) * kBlocks;
-    const int reduction = (2 * nBlocks + 1) * 16 * 4;
+    const int reduction = (2 * nBlocks + 1) * 16 * mBlocks;
     const int overlap = std::max(std::max(b, reduction),
         std::min(b, reduction) + nBlocks * 16 / 8);
-    return (64 + overlap + 4 * (kBlocks / 2) * nBlocks +
-        4 * (16 * kBlocks / 8) * 64) * 16;
+    return (16 * mBlocks + overlap + 4 * (kBlocks / 2) * nBlocks +
+        4 * (16 * kBlocks / 8) * (16 * mBlocks)) * 16;
 }
 // Conservatively retain 2KiB beyond the derived extent, rounded to 256B.
-constexpr int kUpShared64 = (shared64(8,4) + 2048 + 255) / 256 * 256;
-constexpr int kDownShared64 = (shared64(4,8) + 2048 + 255) / 256 * 256;
-static_assert(shared64(8,4) == 52224 && shared64(4,8) == 83968);
+constexpr int kUpShared64 = (sharedPrefill(4,8,4) + 2048 + 255) / 256 * 256;
+constexpr int kDownShared64 = (sharedPrefill(4,4,8) + 2048 + 255) / 256 * 256;
+constexpr int kDownShared32K64 = (sharedPrefill(2,4,4) + 2048 + 255) / 256 * 256;
+constexpr int kDownShared64K64 = (sharedPrefill(4,4,4) + 2048 + 255) / 256 * 256;
+static_assert(sharedPrefill(4,8,4) == 52224 && sharedPrefill(4,4,8) == 83968);
+static_assert(sharedPrefill(2,4,4) == 25600 && sharedPrefill(4,4,4) == 43520);
 }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
 cudaError_t TestGptOssMarlinRepack(const unsigned char* blocks,const unsigned char* scales,
@@ -321,7 +346,11 @@ struct GptOssMarlin::State {
         cudaDeviceProp prop{};status=cudaGetDeviceProperties(&prop,device);if(status!=cudaSuccess)return status;
         if(prop.major<8 || prop.multiProcessorCount>512){blocked=true;blockedReason=1;reportMarlin("device capability rejected", prop.major, prop.multiProcessorCount);return cudaErrorNotSupported;}
         sms=prop.multiProcessorCount;computeMajor=prop.major;
-        if(o.prefill && largePrefill64() && prop.sharedMemPerBlockOptin < kDownShared64)
+        const int requiredPrefillShared = std::max(largePrefill64() ? kUpShared64 : 35584,
+            prefillDownK64() ? (largePrefill64() ? kDownShared64K64 : kDownShared32K64)
+                : (largePrefill64() ? kDownShared64 : 51840));
+        if(o.prefill && (largePrefill64() || prefillDownK64()) &&
+           prop.sharedMemPerBlockOptin < requiredPrefillShared)
             return cudaErrorNotSupported;
         int* invalid=nullptr;status=cudaMalloc((void**)&invalid,4);if(status!=cudaSuccess)return status;
         status=cudaMemsetAsync(invalid,0,4,stream);
@@ -366,8 +395,24 @@ struct GptOssMarlin::State {
         if(status==cudaSuccess)status=cudaFuncSetAttribute(downKernel32(),cudaFuncAttributeMaxDynamicSharedMemorySize,51840);
         if(status==cudaSuccess && o.prefill && largePrefill64())
             status=cudaFuncSetAttribute(upKernel64(),cudaFuncAttributeMaxDynamicSharedMemorySize,kUpShared64);
-        if(status==cudaSuccess && o.prefill && largePrefill64())
+        if(status==cudaSuccess && o.prefill && largePrefill64() && !prefillDownK64())
             status=cudaFuncSetAttribute(downKernel64(),cudaFuncAttributeMaxDynamicSharedMemorySize,kDownShared64);
+        if(status==cudaSuccess && o.prefill && prefillDownK64())
+            status=cudaFuncSetAttribute(downKernel32K64(),cudaFuncAttributeMaxDynamicSharedMemorySize,kDownShared32K64);
+        if(status==cudaSuccess && o.prefill && prefillDownK64() && largePrefill64())
+            status=cudaFuncSetAttribute(downKernel64K64(),cudaFuncAttributeMaxDynamicSharedMemorySize,kDownShared64K64);
+        if(status==cudaSuccess && debugMarlin() && o.prefill && prefillDownK64()) {
+            const auto kernel=largePrefill64()?downKernel64K64():downKernel32K64();
+            const int shared=largePrefill64()?kDownShared64K64:kDownShared32K64;
+            cudaFuncAttributes attributes{};int active=0;
+            status=cudaFuncGetAttributes(&attributes,kernel);
+            if(status==cudaSuccess)
+                status=cudaOccupancyMaxActiveBlocksPerMultiprocessor(&active,kernel,128,shared);
+            if(status==cudaSuccess)std::fprintf(stderr,
+                "GPT-OSS down-K64 config: rows=%d shared=%d regs=%d local=%zu active_blocks_per_sm=%d device_shared_per_sm=%zu\n",
+                largePrefill64()?64:32,shared,attributes.numRegs,attributes.localSizeBytes,
+                active,prop.sharedMemPerMultiprocessor);
+        }
         if(status!=cudaSuccess){release();return status;}ready=true;return cudaSuccess;
     }
 };
@@ -425,8 +470,14 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
         nullptr,nullptr,(const int4*)s.weights[1],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,o.topK,false,tokens,g.upN,g.upK,at<int>(workspace,l.locks),false,false,true);
     activation<<<(slots*g.downK+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.up),(const float*)in[5],selected,at<nv_bfloat16>(workspace,l.activation),slots,g.upN,g.downK,o);
-    auto down=block==64?downKernel64():(block==32?downKernel32():downKernel());
-    down<<<s.sms*marlinCtasPerSm(s.computeMajor,o.prefill),128,block==64?kDownShared64:(block==32?51840:35200),stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
+    const bool downCandidate=o.prefill && tokens>=1024 && block>=32 && prefillDownK64();
+    auto down=downCandidate ? (block==64?downKernel64K64():downKernel32K64())
+        : (block==64?downKernel64():(block==32?downKernel32():downKernel()));
+    const int downShared=downCandidate ? (block==64?kDownShared64K64:kDownShared32K64)
+        : (block==64?kDownShared64:(block==32?51840:35200));
+    const int downCtas=downCandidate ? downCtasPerSm(s.computeMajor)
+        : marlinCtasPerSm(s.computeMajor,o.prefill);
+    down<<<s.sms*downCtas,128,downShared,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[3],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,1,false,slots,g.downN,g.downK,at<int>(workspace,l.locks),false,false,true);
     combine<<<(tokens*o.hidden+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.down),(const float*)in[8],selected,probabilities,y,tokens,g.downN,o);

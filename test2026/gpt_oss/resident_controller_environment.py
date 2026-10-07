@@ -61,11 +61,14 @@ with tempfile.TemporaryDirectory() as temporary:
         assert len(observed)==1, (name,observed)
     execute('profile_tp_engine_memory.py',[
         reference,root/'profile','--padded-prefill','--large-prefill-block','64',
-        '--prefill-ctas','2','--direct-max-batch','256','--direct-ctas','16'],{
+        '--prefill-ctas','2','--prefill-down-k','64','--prefill-down-ctas','1',
+        '--direct-max-batch','256','--direct-ctas','16'],{
             'GARNET_RESIDENT_PROFILE':None, 'GARNET_RESIDENT_WARMUPS':None,
             'GARNET_RESIDENT_PADDED_PREFILL':'1',
             'GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK':'64',
             'GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM':'2',
+            'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K':'64',
+            'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM':'1',
             'GARNET_GPT_OSS_DIRECT_MAX_BATCH':'256',
             'GARNET_GPT_OSS_DIRECT_BATCH_CTAS':'16'})
     execute('paired_batch_suite.py',[reference,root/'paired','arithmetic',

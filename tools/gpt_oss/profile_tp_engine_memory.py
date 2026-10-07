@@ -77,6 +77,9 @@ parser.add_argument('--prepacked-candidate', action='store_true',
 parser.add_argument('--large-prefill-block', type=int, choices=(0,64),
     help='explicit OPT42 large-prefill tile override; not a validated model result')
 parser.add_argument('--prefill-ctas', type=int, choices=(1,2,4))
+parser.add_argument('--prefill-down-k', type=int, choices=(64,128),
+    help='explicit OPT43 large-prefill down-projection K tile; no quality claim')
+parser.add_argument('--prefill-down-ctas', type=int, choices=(1,2,4))
 parser.add_argument('--direct-max-batch', type=int, choices=(128,256,512))
 parser.add_argument('--direct-ctas', type=int, choices=(2,4,8,16,32))
 args = parser.parse_args()
@@ -106,12 +109,19 @@ if env.get('GARNET_GPT_OSS_MARLIN_PREPACKED') != '1':
 overrides = {key: str(value) for key, value in (
     ('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', args.large_prefill_block),
     ('GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM', args.prefill_ctas),
+    ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K', args.prefill_down_k),
+    ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM', args.prefill_down_ctas),
     ('GARNET_GPT_OSS_DIRECT_MAX_BATCH', args.direct_max_batch),
     ('GARNET_GPT_OSS_DIRECT_BATCH_CTAS', args.direct_ctas)) if value is not None}
 if args.direct_max_batch is not None or args.direct_ctas is not None:
     if any(env.get(key) != '1' for key in ('GARNET_GPT_OSS_DIRECT_ALLREDUCE',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE', 'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE')):
         raise ValueError('Direct screen requires explicitly enabled recorded direct batch flags')
+if args.prefill_down_ctas is not None:
+    selected_k=overrides.get('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K',
+        env.get('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K'))
+    if selected_k!='64':
+        raise ValueError('Independent down CTA override requires explicit large-prefill down-K64')
 env.update(overrides)
 build = Path(env.get('GARNET_BUILD_DIR', root / 'out/build/gpt-oss'))
 tensorrt = Path(env.get('GARNET_TENSORRT_ROOT', root / 'ThirdPartySDK/TensorRT'))
