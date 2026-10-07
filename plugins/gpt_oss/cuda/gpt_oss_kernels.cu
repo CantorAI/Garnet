@@ -495,6 +495,28 @@ __global__ void routeScores(const float* x, const float* weight, const float* bi
         if (!lane) logits[size_t(token) * o.experts + expert] = bf(value + bias[expert]);
     }
 }
+// Reuse one expert weight row across several queries, retaining each query's
+// original 256-thread accumulation and reduction order exactly.
+template<int Queries>
+__global__ void routeScoresBatch(const float* x,const float* weight,const float* bias,
+    float* logits,int tokens,GptOssOptions o) {
+    __shared__ float row[4096],partial[Queries][8];
+    const int expert=blockIdx.x%o.experts,first=blockIdx.x/o.experts*Queries;
+    const int query=threadIdx.x/256,tid=threadIdx.x%256,lane=tid%32,warp=tid/32;
+    for(int d=threadIdx.x;d<o.hidden;d+=Queries*256)row[d]=weight[size_t(expert)*o.hidden+d];
+    __syncthreads();
+    const int token=first+query;
+    float value=0;
+    if(token<tokens)for(int d=tid;d<o.hidden;d+=256)value+=x[size_t(token)*o.hidden+d]*row[d];
+    value=warpSum(value);
+    if(!lane)partial[query][warp]=value;
+    __syncthreads();
+    if(!warp) {
+        value=lane<8?partial[query][lane]:0.f;
+        value=warpSum(value);
+        if(!lane && token<tokens)logits[size_t(token)*o.experts+expert]=bf(value+bias[expert]);
+    }
+}
 template<bool FusedMarlinDecode>
 __global__ void routeTopK(float* logits, int* selected, float* probabilities,
     int tokens, GptOssOptions o, int* sorted, int* experts, int* padded,
@@ -1031,7 +1053,19 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
         const char* value = std::getenv("GARNET_GPT_OSS_ROUTER_VECTOR4");
         return !value || (value[0] == '1' && value[1] == '\0');
     }();
-    if (routerThreads == 256 && vector4 && o.hidden % 4 == 0 && tokens <= 8)
+    static const int queryTile=[] {
+        const char* value=std::getenv("GARNET_GPT_OSS_ROUTER_QUERY_TILE");
+        const int parsed=value?std::atoi(value):0;
+        return parsed==2 || parsed==4?parsed:0;
+    }();
+    const bool tiled=routerThreads==256 && queryTile && tokens>=16 && o.hidden<=4096 && o.experts<=128;
+    if(tiled && queryTile==4)
+        routeScoresBatch<4><<<((tokens+3)/4)*o.experts,1024,0,stream>>>(
+            (const float*)in[0],(const float*)in[1],(const float*)in[2],logits,tokens,o);
+    else if(tiled)
+        routeScoresBatch<2><<<((tokens+1)/2)*o.experts,512,0,stream>>>(
+            (const float*)in[0],(const float*)in[1],(const float*)in[2],logits,tokens,o);
+    else if (routerThreads == 256 && vector4 && o.hidden % 4 == 0 && tokens <= 8)
         routeScores<256, true><<<tokens * o.experts, 256, 0, stream>>>(
             (const float*)in[0], (const float*)in[1], (const float*)in[2], logits,
             tokens, o, converted, paddedWidth, locks, locksPerExpert);
@@ -1057,6 +1091,19 @@ cudaError_t RunGptOssMoe(const void* const* in, float* y, void* workspace, int t
     return runMoe(in, y, workspace, tokens, o, stream, tokens >= 16);
 }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssBatchRouter(const float* x,const float* weight,const float* bias,
+    float* logits,int* selected,float* probabilities,int tokens,const GptOssOptions& o,
+    int queryTile,bool topK,cudaStream_t stream) {
+    if(tokens<=0 || o.hidden<=0 || o.hidden>4096 || o.experts<=0 || o.experts>128 ||
+        o.topK<=0 || o.topK>8 || o.topK>o.experts ||
+        (queryTile!=0 && queryTile!=2 && queryTile!=4))return cudaErrorInvalidValue;
+    if(queryTile==4)routeScoresBatch<4><<<((tokens+3)/4)*o.experts,1024,0,stream>>>(x,weight,bias,logits,tokens,o);
+    else if(queryTile==2)routeScoresBatch<2><<<((tokens+1)/2)*o.experts,512,0,stream>>>(x,weight,bias,logits,tokens,o);
+    else routeScores<256><<<tokens*o.experts,256,0,stream>>>(x,weight,bias,logits,tokens,o,nullptr,0,nullptr,0);
+    auto status=cudaGetLastError();if(status!=cudaSuccess)return status;
+    if(topK)routeTopK<false><<<tokens,128,0,stream>>>(logits,selected,probabilities,tokens,o,nullptr,nullptr,nullptr,0);
+    return cudaGetLastError();
+}
 size_t TestGptOssMoeWorkspace(int tokens, const GptOssOptions& o, bool grouped) {
     return moeWorkspace(tokens, o, grouped);
 }

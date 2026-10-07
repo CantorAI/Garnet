@@ -52,6 +52,8 @@ cudaError_t RunGptOssMoeRoute(const void* const*, int*, float*, float*, int,
     const GptOssOptions&, cudaStream_t,
     const GptOssMarlinDecodeBuffers* = nullptr);
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssBatchRouter(const float*,const float*,const float*,float*,int*,
+    float*,int,const GptOssOptions&,int queryTile,bool topK,cudaStream_t);
 cudaError_t TestGptOssMxfp4Decode(const unsigned char*, const unsigned char*, float*, int);
 size_t TestGptOssMoeWorkspace(int, const GptOssOptions&, bool grouped);
 cudaError_t TestGptOssMoe(const void* const*, float*, void*, int,

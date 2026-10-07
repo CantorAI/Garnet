@@ -472,6 +472,74 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
 #endif
 }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+void testBatchRouter() {
+    int cases=0;
+    for(int tokens : {16,17,65,128,513,4096})for(int width : {96,2880,4096})for(bool ties : {false,true}) {
+        GptOssOptions o;o.hidden=width;o.experts=128;o.topK=4;
+        std::vector<float> x(size_t(tokens)*width),weight(size_t(o.experts)*width),bias(o.experts);
+        for(size_t i=0;i<x.size();++i)x[i]=bf(std::ldexp((i%2?-1.f:1.f)*(.5f+float(i%23)/46.f),int(i%17)-8));
+        for(size_t i=0;i<weight.size();++i) {
+            const size_t pattern=ties?i%width:i;
+            weight[i]=bf(std::ldexp((pattern%3?-1.f:1.f)*(.5f+float(pattern%31)/62.f),int(pattern%11)-5));
+        }
+        for(int e=0;e<o.experts;++e)bias[e]=ties?0.f:bf(float(e%7-3)*.00390625f);
+        Device<float> dx(x),dw(weight),db(bias),logits{std::vector<float>(size_t(tokens)*o.experts)},
+            probability{std::vector<float>(tokens*o.topK)};
+        Device<int> selected{std::vector<int>(tokens*o.topK)};
+        check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,0,false,nullptr));
+        const auto expectedScores=logits.read();
+        check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,0,true,nullptr));
+        const auto expectedSelected=selected.read();
+        const auto expectedProbabilities=probability.read();
+        for(int tile : {2,4}) {
+            check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,tile,false,nullptr));
+            const auto scores=logits.read();
+            if(std::memcmp(scores.data(),expectedScores.data(),scores.size()*sizeof(float)))
+                throw std::runtime_error("Tiled batch router scores differ bitwise from scalar256");
+            check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,tile,true,nullptr));
+            const auto probabilities=probability.read();
+            if(selected.read()!=expectedSelected || std::memcmp(probabilities.data(),expectedProbabilities.data(),probabilities.size()*sizeof(float)))
+                throw std::runtime_error("Tiled batch router selections/probabilities differ bitwise");
+        }
+        ++cases;
+    }
+    std::cout << "Batch router2/4 exact scalar256 scores, top4 and probabilities passed: " << cases << " cases\n";
+}
+void benchmarkBatchRouter() {
+    constexpr int layers=36,width=2880,experts=128;
+    cudaStream_t stream;check(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
+    for(int tokens : {128,4096}) {
+        std::vector<float> x(size_t(layers)*tokens*width),weights(size_t(layers)*experts*width),bias(layers*experts);
+        for(size_t i=0;i<x.size();++i)x[i]=bf(float(int(i%23)-11)*.015625f);
+        for(size_t i=0;i<weights.size();++i)weights[i]=bf(float(int(i%31)-15)*.0078125f);
+        Device<float> dx(x),dw(weights),db(bias),logits{std::vector<float>(size_t(layers)*tokens*experts)};
+        GptOssOptions o;o.hidden=width;o.experts=experts;o.topK=4;
+        for(int tile : {0,2,4}) {
+            cudaGraph_t graph;cudaGraphExec_t executable;
+            check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeGlobal));
+            for(int layer=0;layer<layers;++layer)check(TestGptOssBatchRouter(
+                dx.p+size_t(layer)*tokens*width,dw.p+size_t(layer)*experts*width,db.p+layer*experts,
+                logits.p+size_t(layer)*tokens*experts,nullptr,nullptr,tokens,o,tile,false,stream));
+            check(cudaStreamEndCapture(stream,&graph));check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
+            for(int i=0;i<3;++i)check(cudaGraphLaunch(executable,stream));
+            check(cudaStreamSynchronize(stream));
+            cudaEvent_t begin,end;check(cudaEventCreate(&begin));check(cudaEventCreate(&end));
+            std::vector<float> samples;
+            for(int trial=0;trial<9;++trial) {
+                check(cudaEventRecord(begin,stream));
+                for(int replay=0;replay<3;++replay)check(cudaGraphLaunch(executable,stream));
+                check(cudaEventRecord(end,stream));check(cudaEventSynchronize(end));
+                float ms;check(cudaEventElapsedTime(&ms,begin,end));samples.push_back(ms/3);
+            }
+            std::sort(samples.begin(),samples.end());
+            std::cout << "router score graph tokens=" << tokens << " width=2880 experts=128 layers=36 tile="
+                << tile << " median_ms=" << samples[4] << " min_ms=" << samples.front() << " max_ms=" << samples.back() << '\n';
+            check(cudaEventDestroy(begin));check(cudaEventDestroy(end));
+            check(cudaGraphExecDestroy(executable));check(cudaGraphDestroy(graph));
+        }
+    }
+    check(cudaStreamDestroy(stream));
+}
 std::vector<int> metadataRoutes(int slots,int experts,int pattern,int layer=0) {
     std::vector<int> selected(slots);
     for(int s=0;s<slots;++s)selected[s]=pattern==0 ? (s%4+layer)%experts
@@ -551,6 +619,9 @@ void benchmarkMarlinMetadata() {
 #endif
 int main(int argc, char** argv) { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+    if(argc==2 && std::strcmp(argv[1],"--router-benchmark")==0) {
+        testBatchRouter();benchmarkBatchRouter();return 0;
+    }
     if(argc==2 && std::strcmp(argv[1],"--metadata-benchmark")==0) {
         testMarlinMetadata();benchmarkMarlinMetadata();return 0;
     }
@@ -569,6 +640,7 @@ int main(int argc, char** argv) { try {
         return 0;
     }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+    testBatchRouter();
     testMarlinMetadata();
     testMxfp4Encoding();
 #endif

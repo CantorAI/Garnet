@@ -1,6 +1,6 @@
-"""Replay a recorded unprofiled Garnet shape, sequential legacy/parallel metadata.
+"""Replay a recorded shape for exact-order metadata or batch-router candidates.
 
-Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR.
+Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router].
 Uses the vLLM environment for validation; preserves all logs and token evidence.
 """
 import json
@@ -10,9 +10,13 @@ import statistics
 import subprocess
 import sys
 
-if len(sys.argv) != 5:
-    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR')
-request_path, expected_path, reference_path, directory = map(Path, sys.argv[1:])
+if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5]!='router'):
+    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router]')
+request_path, expected_path, reference_path, directory = map(Path, sys.argv[1:5])
+router = len(sys.argv)==6
+flag = 'GARNET_GPT_OSS_ROUTER_QUERY_TILE' if router else 'GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA'
+label = 'router' if router else 'parallel'
+choices = (0,2,4) if router else (0,1)
 reference = json.loads(reference_path.read_text())
 request = json.loads(request_path.read_text())
 if reference['input_token_ids'] != request['input_ids']:
@@ -21,7 +25,7 @@ if reference.get('profile_decode_steps') or reference.get('profile_prefill'):
     raise ValueError('Reference must be unprofiled')
 batch, output = reference['batch'], reference['output_tokens_per_request']
 if not (16 <= batch <= 128 and 16 <= output <= 512):
-    raise ValueError('Invalid batch/output for parallel metadata')
+    raise ValueError('Invalid batch/output for exact-order candidate')
 if not expected_path.is_file():
     raise FileNotFoundError(expected_path)
 if directory.exists():
@@ -44,11 +48,11 @@ repo = Path(__file__).resolve().parents[2]
 root = Path(env.get('CANTORAI_ROOT', repo.parent))
 tokenizer = env.get('GARNET_GPT_OSS_TOKENIZER', str(root / 'models/gpt-oss-120b-hf'))
 results = []
-for parallel in (0, 1):
-    env['GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA'] = str(parallel)
-    prefix = directory / f'parallel{parallel}-b{batch}-o{output}'
+for value in choices:
+    env[flag] = str(value)
+    prefix = directory / f'{label}{value}-b{batch}-o{output}'
     result, validation = Path(str(prefix) + '.json'), Path(str(prefix) + '.validation.json')
-    print(f'Starting parallel_metadata={parallel}, batch={batch}, input={len(request["input_ids"])}, '
+    print(f'Starting {flag}={value}, batch={batch}, input={len(request["input_ids"])}, '
           f'output={output}, reference={reference_path}', flush=True)
     with Path(str(prefix) + '.log').open('x') as log:
         subprocess.run(['bash', str(repo / 'tools/gpt_oss/benchmark_batch_tp2.sh'),
@@ -72,17 +76,18 @@ for parallel in (0, 1):
           'full_tok_s', measured['full_request_output_tokens_per_second'], flush=True)
 baseline = results[0]['decode_trials'][0]['token_ids_by_request']
 comparison = {'reference_result': str(reference_path.resolve()),
+              'flag': flag,
               'batch': batch, 'input': len(request['input_ids']), 'output': output,
               'context': reference['max_context_tokens_per_request'], 'modes': []}
-for parallel, measured in enumerate(results):
+for value, measured in zip(choices,results):
     matches = [sum(a == b for a, b in zip(baseline, trial['token_ids_by_request']))
                for trial in measured['decode_trials']]
-    comparison['modes'].append({'parallel': parallel, 'exact_baseline_slots_per_trial': matches,
+    comparison['modes'].append({label: value, 'exact_baseline_slots_per_trial': matches,
         'median_decode_tok_s': statistics.median(
             trial['decode_aggregate_output_tokens_per_second'] for trial in measured['decode_trials']),
         'prefill_s': measured['prefill_seconds'],
         'full_tok_s': measured['full_request_output_tokens_per_second']})
 (directory / 'comparison.json').write_text(json.dumps(comparison, indent=2))
 if any(count != batch for mode in comparison['modes'] for count in mode['exact_baseline_slots_per_trial']):
-    raise AssertionError('Metadata-only change altered token trajectories; evidence retained')
-print('All legacy/parallel token trajectories match exactly', flush=True)
+    raise AssertionError('Exact-order candidate altered token trajectories; evidence retained')
+print('All baseline/candidate token trajectories match exactly', flush=True)

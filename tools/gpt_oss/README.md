@@ -401,3 +401,13 @@ access through their ordinary launchers. Setup/handoff costs are reported
 separately: Garnet's execution rate is not cold full-request wall throughput.
 `GARNET_BATCH_PLAN_ONLY=1` makes the Garnet batch runner write admission evidence
 and exit before creating tensors, engines or inference work.
+
+The opt-in `GARNET_GPT_OSS_ROUTER_QUERY_TILE=2` or `4` shares each expert
+weight row across that many queries, preserving the original scalar256
+accumulation/reduction order. It applies at16 or more rows, hidden width<=4096,
+experts<=128 and the256-thread router setting; other profiles retain their
+existing path. Workspace and options serialization do not change. Append
+`router` to the `screen_batch_metadata_tp2.py` arguments to screen tiles0/2/4
+sequentially and require exact whole token trajectories plus answer validation.
+Use native `--router-benchmark` for bitwise score/top4/probability checks and
+separate36-layer score-kernel timing. Kernel timing is diagnostic only.
