@@ -223,6 +223,8 @@ for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
                 trial['decode_aggregate_output_tokens_per_second'] for trial in measured['decode_trials']),
             'full_request_tok_s': measured['full_request_output_tokens_per_second'],
             'peak_gpu_mib': measured['sampled_peak_gpu_memory_mib']}
+        if 'cold_startup_seconds' in measured:
+            case[engine]['cold_startup_seconds'] = measured['cold_startup_seconds']
         if engine == 'garnet':
             if measured['kv_cache_dtype'] != 'bfloat16':
                 raise AssertionError('Garnet KV dtype differs from the matched BF16 profile')

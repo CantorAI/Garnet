@@ -37,6 +37,7 @@ async def main():
     from vllm.engine.arg_utils import AsyncEngineArgs
     from vllm.v1.engine.async_llm import AsyncLLM
 
+    startup_started = time.perf_counter()
     settings = dict(model=str(model), tensor_parallel_size=2,
                     dtype='bfloat16', kv_cache_dtype='auto',
                     max_model_len=capacity, max_num_seqs=batch,
@@ -59,6 +60,7 @@ async def main():
         ['nvidia-smi', '--query-gpu=index,name,uuid,pci.bus_id,memory.total,driver_version',
          '--format=csv'], text=True)
     topology = subprocess.check_output(['nvidia-smi', 'topo', '-m'], text=True)
+    cold_startup_seconds = time.perf_counter() - startup_started
 
     async def generate(index, prefix):
         result = None
@@ -115,6 +117,8 @@ async def main():
 
     result_path.write_text(json.dumps({
         'vllm_version': vllm.__version__, 'settings': settings,
+        'cold_startup_seconds': cold_startup_seconds,
+        'startup_measurement': 'After explicit vLLM imports through engine construction/graph setup and initial hardware/memory collection; excludes complete warmup and timed requests.',
         'measurement': 'homogeneous fixed-size TP2 batch, greedy, no early stop',
         'input_tokens_per_request': len(request['input_ids']),
         'input_token_ids': request['input_ids'],
