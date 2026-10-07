@@ -477,3 +477,8 @@ caller frames. Device-memory errors and Garnet callers are not suppressed.
 Full unsuppressed diagnostic XML remains in the research evidence; the final
 run also saves XML. New errors must be investigated rather than broadening
 these exclusions to make a gate pass.
+
+The `prefill-router` screen mode runs just router0/1 with BF16 communication
+explicitly off. It can isolate router quality/performance after its own native,
+memory and compiled-model gates, while an independent transport experiment is
+still pending. It retains the same three-trial answer and trajectory evidence.
