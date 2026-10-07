@@ -37,7 +37,7 @@ void testDecodeGemv(int outputs, int inputs) {
         x[col] = bits(std::sin(float(col) * .013f) * .1f);
     for (size_t i = 0; i < weight.size(); ++i)
         weight[i] = bits(std::cos(float(i) * .017f) * .1f);
-    Device<uint16_t> dx(x), dw(weight), dy(std::vector<uint16_t>(outputs));
+    Device<uint16_t> dx(x), dw(weight), dy{std::vector<uint16_t>(outputs)};
     check(RunGptOssDecodeGemv(dx.p, dw.p, dy.p, outputs, inputs, nullptr));
     std::vector<float> expected(outputs), actual(outputs);
     const auto result = dy.read();
