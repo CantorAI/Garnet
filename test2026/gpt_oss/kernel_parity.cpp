@@ -757,6 +757,9 @@ void benchmarkMarlinMetadata() {
 #endif
 int main(int argc, char** argv) { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+    if(argc==2 && std::strcmp(argv[1],"--prefill-gqa-parity")==0) {
+        testGqaPrefill64();return 0;
+    }
     if((argc==2 || argc==3) && std::strcmp(argv[1],"--prefill-gqa-benchmark")==0) {
         testGqaPrefill64();benchmarkGqaPrefill64(argc==3?std::stoi(argv[2]):8);return 0;
     }

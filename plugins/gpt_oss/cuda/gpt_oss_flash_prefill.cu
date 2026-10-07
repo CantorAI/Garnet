@@ -106,7 +106,8 @@ cudaError_t RunGptOssFlashPrefill(const void* const* in,float* y,void* workspace
     const size_t layerOffset=size_t(o.layer)*physical*16*o.kvHeads*64;
     p.paged_kv=flashinfer::paged_kv_t<Bf16,int>(o.kvHeads,16,64,batch,flashinfer::QKVLayout::kNHD,
         (Bf16*)in[1]+layerOffset,(Bf16*)in[2]+layerOffset,at<int>(workspace,l.indices),at<int>(workspace,l.pptr),at<int>(workspace,l.last));
-    p.q_indptr=at<int>(workspace,l.qptr);p.num_qo_heads=o.qHeads;p.group_size=flashinfer::uint_fastdiv(8);
+    p.q_indptr=at<int>(workspace,l.qptr);p.o_indptr=p.q_indptr;
+    p.num_qo_heads=o.qHeads;p.group_size=flashinfer::uint_fastdiv(8);
     p.q_stride_n=o.qHeads*64;p.q_stride_h=64;p.sm_scale=.125f;
     p.request_indices=at<int>(workspace,l.requests);p.qo_tile_indices=at<int>(workspace,l.tiles);
     p.kv_tile_indices=at<int>(workspace,l.kvTiles);p.kv_chunk_size_ptr=at<int>(workspace,l.chunk);
