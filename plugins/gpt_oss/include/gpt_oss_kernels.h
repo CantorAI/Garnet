@@ -56,6 +56,7 @@ cudaError_t TestGptOssGqaPrefill64(const void* const*,float*,int,int,int,int,
     const GptOssOptions&,int queriesPerWarp,cudaStream_t);
 cudaError_t TestGptOssBatchRouter(const float*,const float*,const float*,float*,int*,
     float*,int,const GptOssOptions&,int queryTile,bool topK,cudaStream_t);
+// queryTile16 selects the approximate BF16 tensor-core prefill experiment.
 cudaError_t TestGptOssMxfp4Decode(const unsigned char*, const unsigned char*, float*, int);
 size_t TestGptOssMoeWorkspace(int, const GptOssOptions&, bool grouped);
 cudaError_t TestGptOssMoe(const void* const*, float*, void*, int,

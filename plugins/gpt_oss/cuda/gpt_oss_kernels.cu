@@ -606,6 +606,58 @@ __global__ void routeScoresBatch(const float* x,const float* weight,const float*
         if(!lane && token<tokens)logits[size_t(token)*o.experts+expert]=bf(value+bias[expert]);
     }
 }
+// BF16 tensor-core router, intended for large prefill shapes only. Each CTA
+// shares sixteen query rows across four warps, each owning sixteen experts.
+// GPT-OSS normalized inputs and original router weights are BF16-representable;
+// the accumulation order differs from the scalar path and remains opt-in.
+__global__ void routeScoresTensorCore(const float* x,const float* weight,const float* bias,
+    float* logits,int tokens,GptOssOptions o) {
+    const int first=blockIdx.x*16,firstExpert=blockIdx.y*64;
+#if __CUDA_ARCH__ >= 800
+    namespace W=nvcuda::wmma;
+    __shared__ __align__(32) __nv_bfloat16 a[16*32],b[64*32];
+    __shared__ __align__(32) float result[4][16*16];
+    const int warp=threadIdx.x/32;
+    W::fragment<W::matrix_a,16,16,16,__nv_bfloat16,W::row_major> af;
+    W::fragment<W::matrix_b,16,16,16,__nv_bfloat16,W::col_major> bfFragment;
+    W::fragment<W::accumulator,16,16,16,float> acc;
+    W::fill_fragment(acc,0.f);
+    for(int start=0;start<o.hidden;start+=32) {
+        for(int i=threadIdx.x;i<16*32;i+=128) {
+            const int token=first+i/32,k=start+i%32;
+            a[i]=__float2bfloat16(token<tokens && k<o.hidden?x[size_t(token)*o.hidden+k]:0.f);
+        }
+        for(int i=threadIdx.x;i<64*32;i+=128) {
+            const int expert=firstExpert+i/32,k=start+i%32;
+            b[i]=__float2bfloat16(expert<o.experts && k<o.hidden?weight[size_t(expert)*o.hidden+k]:0.f);
+        }
+        __syncthreads();
+        for(int offset=0;offset<32;offset+=16) {
+            W::load_matrix_sync(af,a+offset,32);
+            W::load_matrix_sync(bfFragment,b+warp*16*32+offset,32);
+            W::mma_sync(acc,af,bfFragment,acc);
+        }
+        __syncthreads();
+    }
+    W::store_matrix_sync(result[warp],acc,16,W::mem_row_major);
+    __syncthreads();
+    for(int i=threadIdx.x;i<16*64;i+=128) {
+        const int token=first+i/64,e=i%64,expert=firstExpert+e;
+        if(token<tokens && expert<o.experts)
+            logits[size_t(token)*o.experts+expert]=bf(result[e/16][(i/64)*16+e%16]+bias[expert]);
+    }
+#else
+    // Older architectures retain functional scores, without a tensor-core gain.
+    for(int i=threadIdx.x;i<16*64;i+=128) {
+        const int token=first+i/64,expert=firstExpert+i%64;
+        if(token<tokens && expert<o.experts) {
+            float value=0;
+            for(int k=0;k<o.hidden;++k)value+=bf(x[size_t(token)*o.hidden+k])*bf(weight[size_t(expert)*o.hidden+k]);
+            logits[size_t(token)*o.experts+expert]=bf(value+bias[expert]);
+        }
+    }
+#endif
+}
 template<bool FusedMarlinDecode>
 __global__ void routeTopK(float* logits, int* selected, float* probabilities,
     int tokens, GptOssOptions o, int* sorted, int* experts, int* padded,
@@ -1214,7 +1266,14 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
         return parsed==2 || parsed==4?parsed:0;
     }();
     const bool tiled=routerThreads==256 && queryTile && tokens>=16 && o.hidden<=4096 && o.experts<=128;
-    if(tiled && queryTile==4)
+    static const bool tensorCorePrefill=[] {
+        const char* value=std::getenv("GARNET_GPT_OSS_PREFILL_ROUTER_TENSORCORE");
+        return value && value[0]=='1' && value[1]=='\0';
+    }();
+    if(tensorCorePrefill && o.prefill && tokens>=1024 && o.hidden<=4096 && o.experts<=128)
+        routeScoresTensorCore<<<dim3((tokens+15)/16,(o.experts+63)/64),128,0,stream>>>(
+            (const float*)in[0],(const float*)in[1],(const float*)in[2],logits,tokens,o);
+    else if(tiled && queryTile==4)
         routeScoresBatch<4><<<((tokens+3)/4)*o.experts,1024,0,stream>>>(
             (const float*)in[0],(const float*)in[1],(const float*)in[2],logits,tokens,o);
     else if(tiled)
@@ -1251,8 +1310,9 @@ cudaError_t TestGptOssBatchRouter(const float* x,const float* weight,const float
     int queryTile,bool topK,cudaStream_t stream) {
     if(tokens<=0 || o.hidden<=0 || o.hidden>4096 || o.experts<=0 || o.experts>128 ||
         o.topK<=0 || o.topK>8 || o.topK>o.experts ||
-        (queryTile!=0 && queryTile!=2 && queryTile!=4))return cudaErrorInvalidValue;
-    if(queryTile==4)routeScoresBatch<4><<<((tokens+3)/4)*o.experts,1024,0,stream>>>(x,weight,bias,logits,tokens,o);
+        (queryTile!=0 && queryTile!=2 && queryTile!=4 && queryTile!=16))return cudaErrorInvalidValue;
+    if(queryTile==16)routeScoresTensorCore<<<dim3((tokens+15)/16,(o.experts+63)/64),128,0,stream>>>(x,weight,bias,logits,tokens,o);
+    else if(queryTile==4)routeScoresBatch<4><<<((tokens+3)/4)*o.experts,1024,0,stream>>>(x,weight,bias,logits,tokens,o);
     else if(queryTile==2)routeScoresBatch<2><<<((tokens+1)/2)*o.experts,512,0,stream>>>(x,weight,bias,logits,tokens,o);
     else routeScores<256><<<tokens*o.experts,256,0,stream>>>(x,weight,bias,logits,tokens,o,nullptr,0,nullptr,0);
     auto status=cudaGetLastError();if(status!=cudaSuccess)return status;

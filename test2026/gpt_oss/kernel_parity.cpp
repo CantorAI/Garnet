@@ -731,6 +731,64 @@ void testBatchRouter() {
     }
     std::cout << "Batch router2/4 exact scalar256 scores, top4 and probabilities passed: " << cases << " cases\n";
 }
+void testTensorCoreBatchRouter() {
+    int cases=0,changedTop4Rows=0;float maximum=0;
+    for(int tokens : {1,17,128,513,4096})for(int width : {96,97,2880,4096})
+    for(int experts : {5,65,128})for(bool ties : {false,true}) {
+        GptOssOptions o;o.hidden=width;o.experts=experts;o.topK=std::min(4,experts);
+        std::vector<float> x(size_t(tokens)*width),weight(size_t(experts)*width),bias(experts);
+        for(size_t i=0;i<x.size();++i)x[i]=bf(std::sin(float(i)*.13f)*.3f);
+        for(size_t i=0;i<weight.size();++i)weight[i]=ties?0:bf(std::cos(float(i)*.17f)*.07f);
+        for(int e=0;e<experts;++e)bias[e]=ties?.125f:bf(float(e%7-3)*.01f);
+        Device<float> dx(x),dw(weight),db(bias),logits{std::vector<float>(size_t(tokens)*experts)},
+            probability{std::vector<float>(tokens*o.topK)};
+        Device<int> selected{std::vector<int>(tokens*o.topK)};
+        check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,0,true,nullptr));
+        const auto scalarSelected=selected.read();
+        check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,16,false,nullptr));
+        const auto scores=logits.read();
+        // Sample every expert at eight or more rows against an independent
+        // FP64 dot product, rather than another GPU reduction implementation.
+        for(int t=0;t<tokens;t+=std::max(1,tokens/8))for(int e=0;e<experts;++e) {
+            double sum=bias[e];
+            for(int k=0;k<width;++k)sum+=double(x[size_t(t)*width+k])*weight[size_t(e)*width+k];
+            const float expected=bf(float(sum)),actual=scores[size_t(t)*experts+e];
+            maximum=std::max(maximum,std::abs(actual-expected));
+            if(!std::isfinite(actual) || std::abs(actual-expected)>.006f*(1+std::abs(expected)))
+                throw std::runtime_error("Tensor-core router score differs from independent FP64 oracle");
+        }
+        std::vector<int> expectedSelected;std::vector<float> expectedProbability;
+        for(int t=0;t<tokens;++t) {
+            std::vector<int> order(experts);for(int e=0;e<experts;++e)order[e]=e;
+            std::sort(order.begin(),order.end(),[&](int a,int b) {
+                const float av=scores[size_t(t)*experts+a],bv=scores[size_t(t)*experts+b];
+                return av>bv || (av==bv && a<b);
+            });
+            bool changed=false;float total=0;
+            for(int k=0;k<o.topK;++k)total+=std::exp(scores[size_t(t)*experts+order[k]]-scores[size_t(t)*experts+order[0]]);
+            for(int k=0;k<o.topK;++k) {
+                changed|=order[k]!=scalarSelected[t*o.topK+k];
+                expectedSelected.push_back(order[k]);
+                expectedProbability.push_back(bf(std::exp(scores[size_t(t)*experts+order[k]]-scores[size_t(t)*experts+order[0]])/total));
+            }
+            changedTop4Rows+=changed;
+        }
+        check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,16,true,nullptr));
+        if(selected.read()!=expectedSelected)throw std::runtime_error("Tensor-core router top-K differs from independent score sorting");
+        compare(probability.read(),expectedProbability,.006f,"Tensor-core router probabilities vs independent CPU");
+        const char* flag=std::getenv("GARNET_GPT_OSS_PREFILL_ROUTER_TENSORCORE");
+        if(tokens>=1024 && flag && flag[0]=='1' && flag[1]=='\0') {
+            o.prefill=1;
+            const void* in[]{dx.p,dw.p,db.p};
+            check(RunGptOssMoeRoute(in,selected.p,probability.p,logits.p,tokens,o,nullptr));
+            if(selected.read()!=expectedSelected)throw std::runtime_error("Opt-in production prefill router differs from tensor-core score sorting");
+            compare(probability.read(),expectedProbability,.006f,"Production prefill router probabilities vs independent CPU");
+        }
+        ++cases;
+    }
+    std::cout<<"Tensor-core BF16 router FP64 scores/CPU sorting/probabilities passed: "<<cases
+             <<" cases; maximum score error="<<maximum<<" changed scalar top4 rows="<<changedTop4Rows<<'\n';
+}
 void benchmarkBatchRouter() {
     constexpr int layers=36,width=2880,experts=128;
     cudaStream_t stream;check(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
@@ -740,7 +798,7 @@ void benchmarkBatchRouter() {
         for(size_t i=0;i<weights.size();++i)weights[i]=bf(float(int(i%31)-15)*.0078125f);
         Device<float> dx(x),dw(weights),db(bias),logits{std::vector<float>(size_t(layers)*tokens*experts)};
         GptOssOptions o;o.hidden=width;o.experts=experts;o.topK=4;
-        for(int tile : {0,2,4}) {
+        for(int tile : {0,2,4,16}) {
             cudaGraph_t graph;cudaGraphExec_t executable;
             check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeGlobal));
             for(int layer=0;layer<layers;++layer)check(TestGptOssBatchRouter(
@@ -848,6 +906,9 @@ int main(int argc, char** argv) { try {
     if(argc==2&&std::strcmp(argv[1],"--flash-decode-parity")==0){testFlashDecode64();return 0;}
 #endif
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+    if(argc==2 && std::strcmp(argv[1],"--tensorcore-router-parity")==0) {
+        testBatchRouter();testTensorCoreBatchRouter();return 0;
+    }
     if(argc==2 && std::strcmp(argv[1],"--prefill-gqa-parity")==0) {
         testGqaPrefill64();return 0;
     }
@@ -880,6 +941,7 @@ int main(int argc, char** argv) { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     testGqaPrefill64();
     testBatchRouter();
+    testTensorCoreBatchRouter();
     testMarlinMetadata();
     testMxfp4Encoding();
 #endif
