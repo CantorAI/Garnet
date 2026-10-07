@@ -290,6 +290,16 @@ logs, validates every slot/trial before advancing, and inherits the exact
 context/IDs from the reference. The peer collective uses the separately
 gated128-row capacity and32 CTAs; this remains a serialized-stream experiment.
 
+`garnet_gpt_oss_attention_batch_benchmark BATCH CONTEXT_LENGTH REPEATS` isolates
+one GPU's36-layer decode attention pass (18 full,18 sliding128), with distinct
+KV backing per layer and ten graph warmups before five timed replay trials.
+Run each split/warp setting in a fresh process, without competing inference.
+It checks sampled double-precision references, all output finiteness and an
+inactive slot, with permuted pages and a missing page. Full native parity is
+still required for each setting. The GPU-event timings include KV writes,
+attention and merges, excluding host reference work; they are not serving
+throughput. Distinct KV prevents repeatedly timing one layer entirely in L2.
+
 The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
 and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
 path shards attention heads and vocabulary rows, keeps rank-local MoE work,

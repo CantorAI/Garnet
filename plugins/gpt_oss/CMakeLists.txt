@@ -65,6 +65,11 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
     target_include_directories(garnet_gpt_oss_kernel_benchmark PRIVATE include)
     target_link_libraries(garnet_gpt_oss_kernel_benchmark PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_kernel_benchmark PRIVATE NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
+    add_executable(garnet_gpt_oss_attention_batch_benchmark
+        ../../test2026/gpt_oss/attention_batch_benchmark.cu cuda/gpt_oss_kernels.cu)
+    target_include_directories(garnet_gpt_oss_attention_batch_benchmark PRIVATE include)
+    target_link_libraries(garnet_gpt_oss_attention_batch_benchmark PRIVATE CUDA::cudart)
+    target_compile_definitions(garnet_gpt_oss_attention_batch_benchmark PRIVATE NOMINMAX)
     add_executable(garnet_gpt_oss_marlin_decode_benchmark
         ../../test2026/gpt_oss/marlin_decode_benchmark.cu
         cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
