@@ -40,6 +40,8 @@ fixture = work / 'fixture'
 run([sys.executable, repo / 'test2026/gpt_oss/make_fixture.py', fixture], 'fixture')
 run([sys.executable, repo / 'test2026/gpt_oss/placement.py'], 'placement')
 run([sys.executable, repo / 'test2026/gpt_oss/resident_admission.py'], 'resident-admission')
+run([sys.executable, repo / 'test2026/gpt_oss/resident_session.py'], 'resident-session-contract')
+run([sys.executable, repo / 'test2026/gpt_oss/resident_session_controller.py'], 'resident-session-controller')
 run([sys.executable, repo / 'test2026/gpt_oss/hybrid_kv.py'], 'hybrid-kv-contract')
 run([sys.executable, repo / 'test2026/gpt_oss/resident_controller_environment.py'], 'resident-controller-environment')
 run([executable, repo / 'test2026/gpt_oss/sequence_selection.py', work / 'selection-cache'], 'sequence-selection')

@@ -118,7 +118,7 @@ for key in list(env):
     if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
-    if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS'):
+    if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS', 'GARNET_RESIDENT_SESSION'):
         # Prior admission file/warmup controls are result provenance, not
         # inputs to a new sequential engine profile on another binary.
         continue

@@ -26,11 +26,15 @@ parser.add_argument('--reuse-vllm-manifest', type=Path,
                     help='reuse and revalidate completed matched references on this hardware')
 parser.add_argument('--resident-profile', type=Path,
                     help='explicit measured resident engine profile; full warmed Garnet requests')
+parser.add_argument('--resident-session', action='store_true',
+                    help='reuse one admitted engine pair for identical-shape cases; validate each before advancing')
 parser.add_argument('--vllm-only', action='store_true',
                     help='fresh reference phase only; no Garnet inference or paired success claim')
 args = parser.parse_args()
 if args.vllm_only and args.reuse_vllm_manifest is not None:
     raise ValueError('Fresh vLLM-only phase cannot reuse a prior manifest')
+if args.resident_session and (args.resident_profile is None or args.vllm_only):
+    raise ValueError('Resident session requires a measured paired resident comparison')
 reference_path, directory = args.profile, args.directory
 names = args.cases or ['code-tracing', 'instruction-following', 'long-context-retrieval']
 allowed = {'arithmetic', 'code-tracing', 'instruction-following', 'long-context-retrieval'}
@@ -62,7 +66,7 @@ for key in list(env):
     if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
-    if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS'):
+    if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS', 'GARNET_RESIDENT_SESSION'):
         continue  # New admission is selected only by --resident-profile.
     if (not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')) or
             key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value, str)):
@@ -166,6 +170,28 @@ for name in names:
         case['reused_vllm_sha256'] = hashlib.sha256(prior_path.read_bytes()).hexdigest()
     manifest['cases'].append(case)
 manifest_path = directory / 'manifest.json'
+session_manifest_path = directory / 'resident-session-input.json'
+session_result_path = directory / 'resident-session.json'
+session_payload = None
+if args.resident_session:
+    from resident_session import read_session
+    contexts = {case['context'] for case in manifest['cases']}
+    if len(contexts) != 1:
+        raise ValueError('Resident session cannot mix context reservations')
+    session_payload = dict(resident_session_schema=1, batch=batch, output=output,
+        context=manifest['cases'][0]['context'], prefill_chunk=resident_profile['plan']['max_tokens'],
+        validation_python=str(Path(sys.executable).resolve()), tokenizer=str(model.resolve()),
+        cases=[dict(name=case['name'], request=case['request'], expected=case['expected'],
+            result=str((directory / (case['name'] + '.garnet.json')).resolve()),
+            validation=str((directory / (case['name'] + '.garnet.validation.json')).resolve()))
+            for case in manifest['cases']])
+    session_manifest_path.write_text(json.dumps(session_payload, indent=2))
+    read_session(session_manifest_path, session_result_path, batch, output,
+        session_payload['context'], session_payload['prefill_chunk'],
+        protected_paths=[args.resident_profile, reference_path, manifest_path])
+    manifest['resident_session'] = dict(input=str(session_manifest_path.resolve()),
+        input_sha256=hashlib.sha256(session_manifest_path.read_bytes()).hexdigest(),
+        result=str(session_result_path.resolve()), scope='Serial identical-shape cases with shared cold preparation')
 manifest_path.write_text(json.dumps(manifest, indent=2))
 
 def command_logged(command, log, environment):
@@ -174,8 +200,14 @@ def command_logged(command, log, environment):
                        stdout=stream, stderr=subprocess.STDOUT, check=True)
 
 def validate(case, result, validation):
-    subprocess.run([sys.executable, repo / 'tools/gpt_oss/validate_batch_results.py',
-                    model, result, case['expected'], validation], check=True)
+    if args.resident_session and str(result) == str(directory / (case['name'] + '.garnet.json')):
+        # The resident child validates this result before the next case.
+        checked = json.loads(validation.read_text())
+        if checked.get('all_pass') is not True or len(checked['slots']) != 3 * batch:
+            raise AssertionError('Resident session did not validate the complete case')
+    else:
+        subprocess.run([sys.executable, repo / 'tools/gpt_oss/validate_batch_results.py',
+                        model, result, case['expected'], validation], check=True)
     measured = json.loads(result.read_text())
     request = json.loads(Path(case['request']).read_text())
     if (measured['input_token_ids'] != request['input_ids'] or measured['batch'] != batch or
@@ -185,6 +217,9 @@ def validate(case, result, validation):
     return measured
 
 for case in manifest['cases']:
+    if args.resident_session and case is not manifest['cases'][0]:
+        case['admission_shared_with'] = manifest['cases'][0]['name']
+        continue
     case_env = env.copy()
     case_env.update(GARNET_BATCH_CONTEXT_CAPACITY=str(case['context']), GARNET_BATCH_PLAN_ONLY='1')
     admission = directory / (case['name'] + '.admission.json')
@@ -197,6 +232,26 @@ for case in manifest['cases']:
                    directory / (case['name'] + '.admission.log'), case_env)
 
 for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
+    if engine == 'garnet' and args.resident_session:
+        case_env = env.copy()
+        case_env.update(GARNET_BATCH_CONTEXT_CAPACITY=str(session_payload['context']),
+            GARNET_BATCH_PREFILL_CHUNK=str(session_payload['prefill_chunk']), GARNET_RESIDENT_SESSION='1')
+        command_logged(['bash', repo / 'tools/gpt_oss/benchmark_batch_tp2.sh',
+            session_manifest_path, session_result_path, batch, output],
+            directory / 'resident-session.log', case_env)
+        completed_session = json.loads(session_result_path.read_text())
+        if (completed_session.get('session_complete') is not True or
+                [case['name'] for case in completed_session['cases']] != names or
+                completed_session['session_manifest_sha256'] != manifest['resident_session']['input_sha256']):
+            raise AssertionError('Resident session did not complete the ordered matched cases')
+        for case in completed_session['cases']:
+            if (hashlib.sha256(Path(case['result']).read_bytes()).hexdigest() != case['result_sha256'] or
+                    hashlib.sha256(Path(case['validation']).read_bytes()).hexdigest() != case['validation_sha256']):
+                raise AssertionError('Resident session result or answer validation changed')
+        manifest['resident_session'].update(result_sha256=hashlib.sha256(session_result_path.read_bytes()).hexdigest(),
+            cold_startup_seconds_excluding_module_imports=completed_session['cold_startup_seconds_excluding_module_imports'],
+            prefill_build_seconds=completed_session['prefill_build_seconds'],
+            decode_build_seconds=completed_session['decode_build_seconds'])
     for case in manifest['cases']:
         prefix = directory / (case['name'] + '.' + engine)
         result = Path(str(prefix) + '.json')
@@ -215,7 +270,7 @@ for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
         if engine == 'vllm' and args.reuse_vllm_manifest is not None:
             result = Path(case['reused_vllm_result'])
             print('Revalidating prior vLLM reference', result, flush=True)
-        else:
+        elif not (engine == 'garnet' and args.resident_session):
             command_logged(command, Path(str(prefix) + '.log'), case_env)
         measured = validate(case, result, Path(str(prefix) + '.validation.json'))
         case[engine] = {'result': str(result.resolve()),
@@ -229,10 +284,15 @@ for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
             if measured['kv_cache_dtype'] != 'bfloat16':
                 raise AssertionError('Garnet KV dtype differs from the matched BF16 profile')
             case[engine].update(prefill_seconds=measured['prefill_seconds'],
-                prefill_build_load_seconds=measured['prefill_build_seconds'],
-                decode_build_load_seconds=measured['decode_build_seconds'],
                 kv_allocated_bytes_per_gpu=measured['kv_cache_allocated_bytes_per_gpu'],
                 estimated_full_kv_history_bytes_per_gpu=measured['logical_kv_bytes_per_gpu_at_completion'])
+            if args.resident_session:
+                case[engine].update(resident_session_result=str(session_result_path.resolve()),
+                    engine_pair_reused=measured['engine_pair_reused'],
+                    case_preparation_seconds=measured['case_preparation_seconds'])
+            else:
+                case[engine].update(prefill_build_load_seconds=measured['prefill_build_seconds'],
+                    decode_build_load_seconds=measured['decode_build_seconds'])
             if resident_profile is not None:
                 if (measured.get('complete_warmup_count') != 1 or len(measured['decode_trials']) != 3 or
                         any(trial['prefill_kv_reused_for_decode_trial'] for trial in measured['decode_trials'])):

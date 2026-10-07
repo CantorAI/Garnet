@@ -41,6 +41,15 @@ if [[ -n ${GARNET_RESIDENT_PROFILE:-} ]]; then
 fi
 command=("$runtime" "$runner"
     "$weights" "$cache" "$1" "$2" "$3" "$4")
+if [[ ${GARNET_RESIDENT_SESSION:-0} != 0 ]]; then
+    [[ ${GARNET_RESIDENT_SESSION} == 1 && -n ${GARNET_RESIDENT_PROFILE:-} &&
+       ${GARNET_BATCH_PLAN_ONLY:-0} == 0 && -z ${GARNET_BENCH_NSYS_OUTPUT:-} ]] || {
+        echo 'Resident session requires a measured profile and uninstrumented inference' >&2
+        exit 2
+    }
+    command=("$runtime" "$runner" --session
+        "$weights" "$cache" "$1" "$2" "$3" "$4")
+fi
 if [[ -n ${GARNET_BENCH_NSYS_OUTPUT:-} ]]; then
     # Profiled results retain profile_decode_steps/profile_prefill in JSON and
     # must stay separate from uninstrumented throughput comparisons.
