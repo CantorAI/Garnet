@@ -161,7 +161,7 @@ def create(root):
     normal = {'id': 'gpt_oss', 'module': 'garnet_gpt_oss', 'abi': 1, 'backend': 'tensorrt',
               'operators': ['gpt_oss_round_bf16', 'gpt_oss_apply_yarn_rope_packed',
                             'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4',
-                            'gpt_oss_rms_norm', 'gpt_oss_add_rms_norm']}
+                            'gpt_oss_rms_norm']}
     invalid = {'abi_mismatch': [dict(normal, abi=2)],
                'backend_mismatch': [dict(normal, backend='openvino')],
                'missing_plugin': [dict(normal, id='missing')],

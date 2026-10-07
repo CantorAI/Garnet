@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
-import os
 import garnet
 from .tensor_compat import tensor
 T = tensor()
-FUSED_ADD_NORM = os.getenv("GARNET_GPT_OSS_FUSED_ADD_NORM") == "1"
 
 
 def rounded(x):
@@ -13,15 +11,6 @@ def rounded(x):
 def norm(x, name, hidden_size):
     return x * T.unary_op("gpt_oss_rms_norm", weight_name=name,
                           hidden_size=hidden_size, eps=0.00001)
-
-
-def add_norm(residual, update, name, hidden_size):
-    attributes = dict(weight_name=name, hidden_size=hidden_size, eps=0.00001)
-    rounded_sum = residual * T.binary_op(
-        "gpt_oss_add_rms_norm", output_index=0, **attributes) * update
-    normalized = residual * T.binary_op(
-        "gpt_oss_add_rms_norm", output_index=1, **attributes) * update
-    return rounded_sum, normalized
 
 
 def linear(x, name, bias=None, op="linear", tp_mode=None, tp_rank=-1,
@@ -97,13 +86,9 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
             attention_output, tp_rank, config, bf16_communication=True))
     else:
         attention_output = linear(attention, prefix + ".attn.out.weight", prefix + ".attn.out.bias")
-    if FUSED_ADD_NORM:
-        residual, x = add_norm(residual, attention_output,
-                               prefix + ".mlp.norm.scale", config['hidden_size'])
-    else:
-        x = rounded(residual + attention_output)
-        residual = x
-        x = norm(x, prefix + ".mlp.norm.scale", config['hidden_size'])
+    x = rounded(residual + attention_output)
+    residual = x
+    x = norm(x, prefix + ".mlp.norm.scale", config['hidden_size'])
     x = x * T.unary_op(
         "gpt_oss_moe_mxfp4", hidden_size=config['hidden_size'],
         intermediate_size=config['intermediate_size'], num_experts=config['num_experts'],

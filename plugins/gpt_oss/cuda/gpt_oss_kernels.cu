@@ -43,35 +43,6 @@ __global__ void rmsNorm(const float* x, const float* weight, float* y,
     }
     (void)rows;
 }
-template<int Threads>
-__global__ void addRmsNorm(const float* residual, const float* update,
-    const float* weight, float* roundedSum, float* normalized,
-    int hidden, float epsilon) {
-    const int row = blockIdx.x;
-    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
-    float squared = 0.f;
-    for (int d = threadIdx.x; d < hidden; d += blockDim.x) {
-        const size_t index = size_t(row) * hidden + d;
-        const float value = bf(residual[index] + update[index]);
-        roundedSum[index] = value;
-        squared += value * value;
-    }
-    squared = warpSum(squared);
-    __shared__ float partial[Threads / 32];
-    if (!lane) partial[warp] = squared;
-    __syncthreads();
-    if (warp == 0) {
-        squared = lane < Threads / 32 ? partial[lane] : 0.f;
-        squared = warpSum(squared);
-        if (!lane) partial[0] = rsqrtf(squared / hidden + epsilon);
-    }
-    __syncthreads();
-    const float inverse = partial[0];
-    for (int d = threadIdx.x; d < hidden; d += blockDim.x) {
-        const size_t index = size_t(row) * hidden + d;
-        normalized[index] = bf((roundedSum[index] * inverse) * weight[d]);
-    }
-}
 __device__ float fp4(const unsigned char* blocks, const unsigned char* scales,
     size_t row, int column, int width) {
     const unsigned char byte = blocks[row * (width / 2) + column / 2];
@@ -705,15 +676,6 @@ cudaError_t RunGptOssRmsNorm(const float* x, const float* weight, float* y,
     case 1024: rmsNorm<1024><<<rows, 1024, 0, stream>>>(x, weight, y, rows, hidden, epsilon); break;
     default: return cudaErrorInvalidConfiguration;
     }
-    return cudaGetLastError();
-}
-cudaError_t RunGptOssAddRmsNorm(const float* residual, const float* update,
-    const float* weight, float* roundedSum, float* normalized,
-    int rows, int hidden, float epsilon, cudaStream_t stream) {
-    if (!residual || !update || !weight || !roundedSum || !normalized ||
-        rows <= 0 || hidden <= 0 || epsilon <= 0.f) return cudaErrorInvalidValue;
-    addRmsNorm<1024><<<rows, 1024, 0, stream>>>(residual, update, weight,
-        roundedSum, normalized, hidden, epsilon);
     return cudaGetLastError();
 }
 cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
