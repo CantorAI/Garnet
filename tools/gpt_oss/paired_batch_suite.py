@@ -6,6 +6,7 @@ The existing arithmetic reference is not rerun unnecessarily. Uses vLLM Python.
 """
 import importlib.metadata
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -21,6 +22,8 @@ parser.add_argument('--batch', type=int, help='explicit homogeneous batch overri
 parser.add_argument('--output', type=int, help='explicit fixed output length, up to2048')
 parser.add_argument('--prefill-chunk', type=int, help='explicit Garnet query chunk length')
 parser.add_argument('--context', type=int, help='explicit context reservation; reject shorter requests')
+parser.add_argument('--reuse-vllm-manifest', type=Path,
+                    help='reuse and revalidate completed matched references on this hardware')
 args = parser.parse_args()
 reference_path, directory = args.profile, args.directory
 names = args.cases or ['code-tracing', 'instruction-following', 'long-context-retrieval']
@@ -77,6 +80,16 @@ manifest = {'garnet_profile': str(reference_path.resolve()), 'vllm_version': ver
             'explicit_profile_overrides': {'batch': args.batch, 'output': args.output,
                 'prefill_chunk': args.prefill_chunk, 'context': args.context},
             'measurement_limits': 'Garnet full_request_tok_s is execution only, excluding engine build/load and handoff. vLLM measures complete warmed requests. Garnet later decode trials reuse input KV. KV history is estimated, not live scheduler occupancy. See each raw result for timings and limits.'}
+reused = {}
+if args.reuse_vllm_manifest is not None:
+    previous = json.loads(args.reuse_vllm_manifest.read_text())
+    if previous['vllm_version'] != version or previous['batch'] != batch or previous['output'] != output:
+        raise ValueError('Saved vLLM version/batch/output does not match this profile')
+    reused = {case['name']: case for case in previous['cases']}
+    manifest['reused_vllm_manifest'] = str(args.reuse_vllm_manifest.resolve())
+    manifest['phase_order'] = ['admission', 'revalidate_saved_vllm', 'garnet']
+    hardware = subprocess.check_output(['nvidia-smi',
+        '--query-gpu=index,name,uuid,pci.bus_id,memory.total,driver_version', '--format=csv'], text=True)
 for name in names:
     saved = work / ('long-prompt-test' if name == 'long-context-retrieval' else f'prompt-benchmarks/{name}')
     request, expected = saved / 'request.json', saved / 'expected.json'
@@ -91,6 +104,27 @@ for name in names:
         raise ValueError('Saved request exceeds supported context profile')
     case = {'name': name, 'request': str(request.resolve()), 'expected': str(expected.resolve()),
             'input': len(ids), 'context': capacity, 'batch': batch, 'output': output}
+    if args.reuse_vllm_manifest is not None:
+        saved_case = reused[name]
+        if 'garnet' not in saved_case or 'vllm' not in saved_case:
+            raise ValueError('Only completed paired references can be reused')
+        prior_path = Path(saved_case['vllm']['result'])
+        prior = json.loads(prior_path.read_text())
+        if (prior['hardware_csv'] != hardware or prior['input_token_ids'] != ids or
+                prior['batch'] != batch or prior['output_tokens_per_request'] != output or
+                prior['max_context_tokens_per_request'] != capacity or prior['vllm_version'] != version or
+                prior['measurement'] != 'homogeneous fixed-size TP2 batch, greedy, no early stop' or
+                len(prior['decode_trials']) != 3):
+            raise ValueError('Saved reference hardware, workload or measurement differs')
+        settings = prior['settings']
+        expected_settings = dict(model=str(model), tensor_parallel_size=2, dtype='bfloat16',
+            kv_cache_dtype='auto', max_model_len=capacity, max_num_seqs=batch,
+            max_num_batched_tokens=8192, enable_prefix_caching=False,
+            enable_chunked_prefill=True, gpu_memory_utilization=.8, seed=0)
+        if any(settings.get(key) != value for key, value in expected_settings.items()):
+            raise ValueError('Saved reference differs from the optimized supported vLLM settings')
+        case['reused_vllm_result'] = str(prior_path.resolve())
+        case['reused_vllm_sha256'] = hashlib.sha256(prior_path.read_bytes()).hexdigest()
     manifest['cases'].append(case)
 manifest_path = directory / 'manifest.json'
 manifest_path.write_text(json.dumps(manifest, indent=2))
@@ -137,7 +171,11 @@ for engine in ('vllm', 'garnet'):
         else:
             command = ['bash', repo / 'tools/gpt_oss/benchmark_batch_tp2.sh',
                        case['request'], result, batch, output]
-        command_logged(command, Path(str(prefix) + '.log'), case_env)
+        if engine == 'vllm' and args.reuse_vllm_manifest is not None:
+            result = Path(case['reused_vllm_result'])
+            print('Revalidating prior vLLM reference', result, flush=True)
+        else:
+            command_logged(command, Path(str(prefix) + '.log'), case_env)
         measured = validate(case, result, Path(str(prefix) + '.validation.json'))
         case[engine] = {'result': str(result.resolve()),
             'median_decode_tok_s': statistics.median(
