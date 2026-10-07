@@ -74,6 +74,9 @@ warm_prefill = os.environ.get('GARNET_BATCH_PREFILL_WARMUP') == '1'
 prefill_warmup_step_seconds = []
 prefill_engine_memory_samples_mib = []
 prefill_completed_memory_samples_mib = []
+profile_prefill = os.environ.get('GARNET_GPT_OSS_PROFILE_PREFILL') == '1'
+profile_steps = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_STEPS', '0'))
+profiler = ctypes.CDLL('libcudart.so') if profile_prefill or profile_steps else None
 model = kv = prefill = None
 loaded_tokens = None
 for offset, chunk_tokens in prefill_chunks:
@@ -89,6 +92,8 @@ for offset, chunk_tokens in prefill_chunks:
         prefill_build_seconds += time.perf_counter() - started
         loaded_tokens = chunk_tokens
     prefill_engine_memory_samples_mib.append(gpu_memory_mib())
+    print('TP2 prefill memory before execution MiB',
+          prefill_engine_memory_samples_mib[-1], flush=True)
     chunk_ids = ids[offset:offset + chunk_tokens]
     input_ids = tensor(chunk_ids * batch, 'int64', [batch, chunk_tokens])
     positions = tensor(list(range(offset, offset + chunk_tokens)) * batch,
@@ -103,10 +108,19 @@ for offset, chunk_tokens in prefill_chunks:
         model.forward(input_ids, [positions, table, length, slot, active],
                       True, sample_batch=True)
         prefill_warmup_step_seconds.append(time.perf_counter() - warm_started)
+    if profile_prefill and profiler.cudaProfilerStart() != 0:
+        raise RuntimeError('cudaProfilerStart failed for prefill')
     started = time.perf_counter()
-    prefill = model.forward(input_ids, [positions, table, length, slot, active],
-                            True, sample_batch=True)
-    step = time.perf_counter() - started
+    try:
+        prefill = model.forward(input_ids, [positions, table, length, slot, active],
+                                True, sample_batch=True)
+    finally:
+        step = time.perf_counter() - started
+        if profile_prefill:
+            status = profiler.cudaProfilerStop()
+            if status:
+                print('cudaProfilerStop failed for prefill:', status,
+                      file=sys.stderr, flush=True)
     prefill_seconds += step
     prefill_step_seconds.append(step)
     prefill_completed_memory_samples_mib.append(gpu_memory_mib())
@@ -139,8 +153,6 @@ for stage in model.stages:
 
 inline_batch = batch <= 64 and os.environ.get('GARNET_GPT_OSS_INLINE_BATCH_CONTROLS') == '1'
 inline_single = not inline_batch and batch == 1 and os.environ.get('GARNET_GPT_OSS_INLINE_CONTROL_KERNEL') == '1'
-profile_steps = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_STEPS', '0'))
-profiler = ctypes.CDLL('libcudart.so') if profile_steps else None
 
 
 def forward_decode_step(tokens, index):
@@ -279,6 +291,7 @@ result_path.write_text(json.dumps({
     'inline_single_request_controls': inline_single,
     'inline_batch_controls': inline_batch,
     'profile_decode_steps': profile_steps,
+    'profile_prefill': profile_prefill,
     'decode_output_tokens': decode_output_tokens,
     'decode_aggregate_output_tokens_per_second':
         decode_output_tokens / decode_seconds if decode_seconds > 0 else None,

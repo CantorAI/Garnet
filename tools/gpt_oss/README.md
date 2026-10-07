@@ -214,6 +214,10 @@ in every window. These are decode repeats, not repeated full requests.
 The continuous decode wall timer excludes progress logging and memory-query
 subprocesses. Execution throughput still excludes engine loading/handoff;
 consult its separate timing fields and measurement limitations.
+`GARNET_GPT_OSS_PROFILE_PREFILL=1` brackets each measured prefill chunk with
+the CUDA profiler API, after any enabled warmup. Use an Nsight capture that
+supports repeated ranges for a chunked request. Retain separate unprofiled
+trials for throughput: instrumentation can substantially perturb timing.
 The vLLM runner supports `VLLM_BATCH_TRIALS=3` for three full-request trials
 and `VLLM_BATCH_MAX_BATCHED_TOKENS=8192` to screen the official recipe's
 larger prefill budget. Its repeats perform a fresh prefill without prefix

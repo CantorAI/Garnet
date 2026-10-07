@@ -220,6 +220,17 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
             status = RunGptOssMoe(in, (float*)out[0], workspace, n, m_options, stream);
         }
     }
+    if (status != cudaSuccess) {
+        static std::atomic<int> failures{0};
+        if (failures.fetch_add(1) < 16) {
+            int device = -1;
+            cudaGetDevice(&device);
+            std::fprintf(stderr,
+                "GPT-OSS plugin execution failed: kind=%d rank=%d device=%d rows=%d CUDA=%d (%s)\n",
+                m_options.kind, m_options.tpRank, device, n, int(status),
+                cudaGetErrorString(status));
+        }
+    }
     return status == cudaSuccess ? 0 : 1;
 }
 DataType GptOssPlugin::getOutputDataType(int, const DataType*, int) const noexcept {
