@@ -168,12 +168,15 @@ size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
             return std::max(flash,size_t(in[0].dims.d[0])*m_options.qHeads*64*130*sizeof(float));
     }
 #endif
-    if (m_options.kind == 3 && m_options.bf16Communication && in &&
+    if (m_options.kind == 3 && m_options.bf16Communication && m_options.prefill && in &&
         in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 &&
-        in[0].dims.d[1] >= 128 && in[0].dims.d[2] == m_options.hidden) {
-        const size_t count = size_t(in[0].dims.d[0]) * in[0].dims.d[1] * in[0].dims.d[2];
-        return count <= std::numeric_limits<size_t>::max() / (2 * sizeof(uint16_t))
-            ? count * 2 * sizeof(uint16_t) : 0;
+        in[0].dims.d[1] > 0 && in[0].dims.d[2] > 0 && in[0].dims.d[2] == m_options.hidden) {
+        // Match enqueue's flattened batch*sequence threshold. TRT can pass a
+        // shared non-null workspace even if this plugin reserved zero bytes.
+        const size_t tokens = rows(in[0].dims);
+        const size_t bytesPerToken = size_t(m_options.hidden) * 2 * sizeof(uint16_t);
+        return tokens >= 128 && tokens <= std::numeric_limits<size_t>::max() / bytesPerToken
+            ? tokens * bytesPerToken : 0;
     }
     if (m_options.kind == 1 && !m_options.prefill && in &&
         in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 && in[0].dims.d[1] == 1)

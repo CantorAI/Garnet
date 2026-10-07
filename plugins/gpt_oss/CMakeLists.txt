@@ -100,6 +100,11 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
     target_compile_options(garnet_gpt_oss_marlin_decode_benchmark PRIVATE
         $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
     if(GARNET_GPT_OSS_ENABLE_NCCL)
+        add_executable(garnet_gpt_oss_tp_workspace_test ../../test2026/gpt_oss/tp_workspace.cpp)
+        target_include_directories(garnet_gpt_oss_tp_workspace_test PRIVATE
+            include tensorrt "${GARNET_TENSORRT_ROOT}/include")
+        target_link_libraries(garnet_gpt_oss_tp_workspace_test PRIVATE garnet_gpt_oss_ops CUDA::cudart)
+        add_test(NAME garnet_gpt_oss_tp_workspace_test COMMAND garnet_gpt_oss_tp_workspace_test)
         add_executable(garnet_gpt_oss_tp_collective_test
             ../../test2026/gpt_oss/tp_collective.cpp cuda/tp_collective.cpp
             cuda/tp_direct.cu cuda/tp_bf16.cu)

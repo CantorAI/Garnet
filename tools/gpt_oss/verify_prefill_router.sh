@@ -38,6 +38,8 @@ export GARNET_GPT_OSS_MARLIN_DECODE_BLOCK=32
 export GARNET_GPT_OSS_BF16_PREFILL_ALLREDUCE=0
 git -C "$repo" rev-parse HEAD >"$directory/source-commit.txt"
 nvidia-smi --query-gpu=index,name,uuid,driver_version --format=csv >"$directory/hardware.csv"
+"$build/bin/garnet_gpt_oss_tp_workspace_test" >"$directory/collective-workspace.log" 2>&1
+echo 'Compiled plugin prefill workspace contract passed'
 "$parity" --tensorcore-router-parity >"$directory/router-parity.log" 2>&1
 echo 'Independent router score/sorting/probability gates passed'
 compute-sanitizer --tool memcheck --error-exitcode 99 --target-processes all \
@@ -61,20 +63,30 @@ for bf16 in 0 1; do
         command=("$runtime" "$repo/test2026/gpt_oss/tp_teacher_forced.py" "$directory/fixture64"
             "$directory/teacher-cache" "$directory/$label.json" 512)
         export GARNET_GPT_OSS_PROFILE_TEACHER_STEP=-1
-        if [[ $bf16 == 1 ]]; then
-            if [[ $phase == warm ]]; then
-                export GARNET_GPT_OSS_PROFILE_TEACHER_STEP=1
-                command=(nsys profile --force-overwrite=false --trace=cuda --sample=none
-                    --cuda-graph-trace=node --capture-range=cudaProfilerApi --capture-range-end=stop
-                    --output="$directory/$label" "${command[@]}")
-            else
-                command=(nsys profile --force-overwrite=false --trace=cuda --sample=none
-                    --cuda-graph-trace=node --output="$directory/$label" "${command[@]}")
-            fi
+        if [[ $bf16 == 1 && $phase == cold ]]; then
+            # The substring selects both packBf16 and unpackBf16. NCCL and
+            # reference kernels execute without instrumentation in this check.
+            command=(compute-sanitizer --tool memcheck --error-exitcode 99 --target-processes all
+                --kernel-name kns=packBf16 --print-session-details "${command[@]}")
         fi
         "${command[@]}" >"$directory/$label.log" 2>&1
+        if [[ $bf16 == 1 && $phase == cold ]]; then
+            grep -Fq 'ERROR SUMMARY: 0 errors' "$directory/$label.log"
+        fi
         echo "Full-model batch512 teacher-forced BF16=$bf16 $phase gate passed"
     done
+done
+# Keep instrumentation separate from the complete numerical/reload checks.
+# Capture one actual execution phase per process, not engine teardown/build.
+export GARNET_GPT_OSS_BF16_PREFILL_ALLREDUCE=1
+for phase in prefill decode; do
+    label=teacher-bf1-$phase-trace
+    export GARNET_GPT_OSS_PROFILE_TEACHER_STEP=0
+    [[ $phase != decode ]] || export GARNET_GPT_OSS_PROFILE_TEACHER_STEP=1
+    nsys profile --force-overwrite=false --trace=cuda --sample=none --cuda-graph-trace=node \
+        --capture-range=cudaProfilerApi --capture-range-end=stop --output="$directory/$label" \
+        "$runtime" "$repo/test2026/gpt_oss/tp_teacher_forced.py" "$directory/fixture64" \
+        "$directory/teacher-cache" "$directory/$label.json" 512 >"$directory/$label.log" 2>&1
 done
 "$python" - "$directory" <<'PY'
 import json,sys
@@ -82,18 +94,19 @@ from pathlib import Path
 root=Path(sys.argv[1])
 results=[json.loads((root/f'teacher-bf{mode}-{phase}.json').read_text())
          for mode in (0,1) for phase in ('cold','warm')]
+results += [json.loads((root/f'teacher-bf1-{phase}-trace.json').read_text()) for phase in ('prefill','decode')]
 baseline=[step['tp_logits'] for step in results[0]['steps']]
 assert all([step['tp_logits'] for step in result['steps']]==baseline for result in results), 'BF16 wire or reload changed compiled logits'
 print('Every batch512 CPU-prefix logit matches across FP32/BF16 wire and reload')
 PY
-for phase in cold warm; do
-    nsys stats --report cuda_gpu_kern_sum --format csv --output - "$directory/teacher-bf1-$phase.nsys-rep" \
+for phase in prefill decode; do
+    nsys stats --report cuda_gpu_kern_sum --format csv --output - "$directory/teacher-bf1-$phase-trace.nsys-rep" \
         >"$directory/teacher-kernels-$phase.csv" 2>"$directory/teacher-kernels-$phase.log"
 done
-grep -Fq 'routeScoresTensorCore' "$directory/teacher-kernels-cold.csv"
-grep -Fq '::packBf16(' "$directory/teacher-kernels-cold.csv"
-if grep -Fq 'routeScoresTensorCore' "$directory/teacher-kernels-warm.csv" || \
-   grep -Fq '::packBf16(' "$directory/teacher-kernels-warm.csv"; then
+grep -Fq 'routeScoresTensorCore' "$directory/teacher-kernels-prefill.csv"
+grep -Fq '::packBf16(' "$directory/teacher-kernels-prefill.csv"
+if grep -Fq 'routeScoresTensorCore' "$directory/teacher-kernels-decode.csv" || \
+   grep -Fq '::packBf16(' "$directory/teacher-kernels-decode.csv"; then
     echo 'Prefill-only router or BF16 wire ran during batch512 decode' >&2; exit 1
 fi
 echo 'Traces confirm tensor-core router/BF16 wire in prefill and neither in batch512 decode'
