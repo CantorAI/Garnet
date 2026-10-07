@@ -125,6 +125,13 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
             "${GARNET_NCCL_INCLUDE_DIR}")
         target_link_libraries(garnet_gpt_oss_tp_direct_benchmark PRIVATE CUDA::cudart "${GARNET_NCCL_LIBRARY}")
         target_compile_definitions(garnet_gpt_oss_tp_direct_benchmark PRIVATE GARNET_GPT_OSS_ENABLE_NCCL=1)
+        add_executable(garnet_gpt_oss_tp_bf16_wire_benchmark
+            ../../test2026/gpt_oss/tp_bf16_wire_benchmark.cu cuda/tp_collective.cpp
+            cuda/tp_direct.cu cuda/tp_bf16.cu)
+        target_include_directories(garnet_gpt_oss_tp_bf16_wire_benchmark PRIVATE include cuda
+            "${GARNET_NCCL_INCLUDE_DIR}")
+        target_link_libraries(garnet_gpt_oss_tp_bf16_wire_benchmark PRIVATE CUDA::cudart "${GARNET_NCCL_LIBRARY}")
+        target_compile_definitions(garnet_gpt_oss_tp_bf16_wire_benchmark PRIVATE GARNET_GPT_OSS_ENABLE_NCCL=1)
     endif()
 endif()
 
