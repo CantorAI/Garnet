@@ -25,6 +25,7 @@ for batch in 128 256 512; do
         label=b$batch-$mode-memcheck
         timeout --signal=TERM --kill-after=15s 900s compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all \
             --report-api-errors explicit --xml --print-limit 0 --print-session-details \
+            --backtrace-short no --strip-paths no \
             --save "$directory/$label.xml" "$binary" "$batch" "$mode" 1 \
             >"$directory/$label.log" 2>&1
         "$python" "$repo/tools/gpt_oss/validate_sanitizer_xml.py" \

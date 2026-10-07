@@ -46,9 +46,15 @@ def known_nccl_graph_initialization(record):
     if stack is None or stack.findtext('saveLocation')!='error':
         return None
     frames=stack.findall('frame')
+    if len(frames)<10:
+        return None
+    caller=next((name for name in ('Garnet::GptOssTpAllReduce','Garnet::GptOssTpAllReduceBf16')
+        if re.fullmatch(re.escape(name)+r'(?:\(.*\))?',frames[9].findtext('func',''))),None)
+    if caller is None:
+        return None
     names=('cuMemRetainAllocationHandle','ipcRegisterBuffer','ncclIpcGraphRegisterBuffer',
            'ncclRegisterCollBuffers','ncclTasksRegAndEnqueue','groupLaunch',
-           'ncclGroupEndInternal','ncclEnqueueCheck','pncclAllReduce','Garnet::GptOssTpAllReduce')
+           'ncclGroupEndInternal','ncclEnqueueCheck','pncclAllReduce',caller)
     modules=('libcuda.so.1',)+('libnccl.so.2',)*8+('garnet_gpt_oss_tp_bf16_wire_benchmark',)
     if len(frames)<len(names):
         return None
@@ -60,7 +66,8 @@ def known_nccl_graph_initialization(record):
                             (3,'register/coll_reg.cc','384')):
         if (frames[index].findtext('path'),frames[index].findtext('line'))!=(path,line):
             return None
-    return 'cuMemRetainAllocationHandle/1/NCCL-IPC-graph-init/benchmark-fp32'
+    mode='bf16' if caller.endswith('Bf16') else 'fp32'
+    return f'cuMemRetainAllocationHandle/1/NCCL-IPC-graph-init/benchmark-{mode}'
 
 
 def known_initialization(record):
@@ -123,7 +130,7 @@ def validate(source, output):
     audit = dict(xml=str(source.resolve()), sha256=hashlib.sha256(data).hexdigest(),
         records=len(records), excluded_known_initialization=dict(excluded),
         unexpected=unexpected, passed=not unexpected,
-        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, the observed benchmark DirectAcquire reacquire stack, and the exact FP32 BF-wire benchmark IPC graph-initialization VMM probe are excluded; all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
+        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, the observed benchmark DirectAcquire reacquire stack, and the exact observed FP32/BF16 native wire-benchmark IPC graph-initialization VMM probes are excluded; malformed stack metadata, all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(audit, indent=2))
     if unexpected:
