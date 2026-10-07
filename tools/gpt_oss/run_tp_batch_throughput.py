@@ -76,6 +76,10 @@ prefill_engine_memory_samples_mib = []
 prefill_completed_memory_samples_mib = []
 profile_prefill = os.environ.get('GARNET_GPT_OSS_PROFILE_PREFILL') == '1'
 profile_steps = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_STEPS', '0'))
+profile_start = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_START', '10'))
+assert profile_steps >= 0
+if profile_steps:
+    assert 1 <= profile_start and profile_start + profile_steps <= output_tokens
 profiler = ctypes.CDLL('libcudart.so') if profile_prefill or profile_steps else None
 model = kv = prefill = None
 loaded_tokens = None
@@ -192,7 +196,7 @@ def run_decode_trial(trial):
     profiling = False
     trial_started = warm_started = time.perf_counter()
     for offset in range(1, output_tokens):
-        if profiler and trial == 0 and offset == 10:
+        if profile_steps and trial == 0 and offset == profile_start:
             if profiler.cudaProfilerStart() != 0:
                 raise RuntimeError('cudaProfilerStart failed')
             profiling = True
@@ -207,7 +211,7 @@ def run_decode_trial(trial):
         steps.append(time.perf_counter() - started)
         if offset == 1:
             warm_started = time.perf_counter()
-        if profiling and offset == 9 + profile_steps:
+        if profiling and offset == profile_start + profile_steps - 1:
             if profiler.cudaProfilerStop() != 0:
                 raise RuntimeError('cudaProfilerStop failed')
             profiling = False
@@ -295,6 +299,8 @@ result_path.write_text(json.dumps({
     'inline_single_request_controls': inline_single,
     'inline_batch_controls': inline_batch,
     'profile_decode_steps': profile_steps,
+    'profile_decode_start': profile_start if profile_steps else None,
+    'profiler_output': os.environ.get('GARNET_BENCH_NSYS_OUTPUT'),
     'profile_prefill': profile_prefill,
     'decode_output_tokens': decode_output_tokens,
     'decode_aggregate_output_tokens_per_second':

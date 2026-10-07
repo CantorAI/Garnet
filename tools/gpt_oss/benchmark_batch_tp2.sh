@@ -30,5 +30,19 @@ fi
 export XLANG3_PYTHON_LIB=${XLANG3_PYTHON_LIB:-$root/ThirdPartySDK/Python-3.14.0/Lib}
 export PYTHONPATH="$build/bin${PYTHONPATH:+:$PYTHONPATH}"
 export LD_LIBRARY_PATH="$build/bin:$tensorrt/lib:/usr/local/nvidia/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-"$runtime" "$repo/tools/gpt_oss/run_tp_batch_throughput.py" \
-    "$weights" "$cache" "$1" "$2" "$3" "$4"
+command=("$runtime" "$repo/tools/gpt_oss/run_tp_batch_throughput.py"
+    "$weights" "$cache" "$1" "$2" "$3" "$4")
+if [[ -n ${GARNET_BENCH_NSYS_OUTPUT:-} ]]; then
+    # Profiled results retain profile_decode_steps/profile_prefill in JSON and
+    # must stay separate from uninstrumented throughput comparisons.
+    command -v nsys >/dev/null
+    [[ ${GARNET_GPT_OSS_PROFILE_DECODE_STEPS:-0} != 0 || ${GARNET_GPT_OSS_PROFILE_PREFILL:-0} == 1 ]] || {
+        echo 'Nsight capture requires an explicit prefill or decode range' >&2
+        exit 2
+    }
+    mkdir -p "$(dirname "$GARNET_BENCH_NSYS_OUTPUT")"
+    command=(nsys profile --force-overwrite=false --trace=cuda,nvtx
+        --sample=none --cuda-graph-trace=node --capture-range=cudaProfilerApi
+        --capture-range-end=stop --output="$GARNET_BENCH_NSYS_OUTPUT" "${command[@]}")
+fi
+"${command[@]}"
