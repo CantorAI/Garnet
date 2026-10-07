@@ -56,23 +56,48 @@ table_data = [batch_index * pages_per_request + page
               for batch_index in range(batch)
               for page in range(pages_per_request)]
 table = tensor(table_data, 'int32', [batch, pages_per_request])
-length = tensor([len(ids)] * batch, 'int32', [batch])
-slot = tensor([0] * batch, 'int32', [batch])
 active = tensor([1] * batch, 'int32', [batch])
-input_ids = tensor(ids * batch, 'int64', [batch, len(ids)])
-positions = tensor(list(range(len(ids))) * batch, 'int64', [batch, len(ids)])
-
-started = time.perf_counter()
-print('Building TP2 batch prefill engines', flush=True)
-model = build_tensor_parallel(weights, cache, plan, len(ids), True,
-                              last_token_logits=True)
-prefill_build_seconds = time.perf_counter() - started
-prefill_engine_memory_mib = gpu_memory_mib()
-started = time.perf_counter()
-prefill = model.forward(input_ids, [positions, table, length, slot, active],
-                        True, sample_batch=True)
-prefill_seconds = time.perf_counter() - started
-prefill_completed_memory_mib = gpu_memory_mib()
+configured_chunk = int(os.environ.get('GARNET_BATCH_PREFILL_CHUNK', '0'))
+assert 0 <= configured_chunk <= 4096
+chunk_limit = configured_chunk or len(ids)
+prefill_chunks = [(offset, min(chunk_limit, len(ids) - offset))
+                  for offset in range(0, len(ids), chunk_limit)]
+prefill_build_seconds = prefill_seconds = 0.
+prefill_step_seconds = []
+prefill_engine_memory_samples_mib = []
+prefill_completed_memory_samples_mib = []
+model = kv = prefill = None
+loaded_tokens = None
+for offset, chunk_tokens in prefill_chunks:
+    if chunk_tokens != loaded_tokens:
+        if model is not None:
+            kv = [(stage['keys'], stage['values']) for stage in model.stages]
+            model.release()
+        started = time.perf_counter()
+        print('Building TP2 batch prefill engines for', chunk_tokens,
+              'tokens', flush=True)
+        model = build_tensor_parallel(weights, cache, plan, chunk_tokens, True,
+                                      kv, last_token_logits=True)
+        prefill_build_seconds += time.perf_counter() - started
+        loaded_tokens = chunk_tokens
+    prefill_engine_memory_samples_mib.append(gpu_memory_mib())
+    chunk_ids = ids[offset:offset + chunk_tokens]
+    input_ids = tensor(chunk_ids * batch, 'int64', [batch, chunk_tokens])
+    positions = tensor(list(range(offset, offset + chunk_tokens)) * batch,
+                       'int64', [batch, chunk_tokens])
+    length = tensor([offset + chunk_tokens] * batch, 'int32', [batch])
+    slot = tensor([offset] * batch, 'int32', [batch])
+    started = time.perf_counter()
+    prefill = model.forward(input_ids, [positions, table, length, slot, active],
+                            True, sample_batch=True)
+    step = time.perf_counter() - started
+    prefill_seconds += step
+    prefill_step_seconds.append(step)
+    prefill_completed_memory_samples_mib.append(gpu_memory_mib())
+    print('TP2 batch prefill chunk', offset, chunk_tokens, 'complete',
+          step, flush=True)
+prefill_engine_memory_mib = prefill_engine_memory_samples_mib[-1]
+prefill_completed_memory_mib = prefill_completed_memory_samples_mib[-1]
 generated = [[int(token)] for token in prefill['token_ids']]
 assert len(generated) == batch, (len(generated), batch)
 print('TP2 batch prefill complete', prefill_seconds, flush=True)
@@ -162,6 +187,9 @@ result_path.write_text(json.dumps({
         all(row == generated[0] for row in generated),
     'input_tokens_per_request': len(ids), 'output_tokens_per_request': output_tokens,
     'batch': batch, 'prefill_seconds': prefill_seconds,
+    'prefill_chunk_tokens': configured_chunk,
+    'prefill_chunks': prefill_chunks,
+    'prefill_step_seconds': prefill_step_seconds,
     'max_context_tokens_per_request': capacity,
     'kv_cache_allocated_bytes_per_gpu': (
         plan['config']['num_hidden_layers'] * 2 * plan['kv_pages'] * 16 *
@@ -169,6 +197,10 @@ result_path.write_text(json.dumps({
     'kv_pages_per_gpu': plan['kv_pages'],
     'gpu_memory_mib_after_prefill_engine': prefill_engine_memory_mib,
     'gpu_memory_mib_after_prefill': prefill_completed_memory_mib,
+    'gpu_memory_mib_after_prefill_engine_by_chunk':
+        prefill_engine_memory_samples_mib,
+    'gpu_memory_mib_after_prefill_by_chunk':
+        prefill_completed_memory_samples_mib,
     'gpu_memory_mib_after_decode_engine': decode_engine_memory_mib,
     'gpu_memory_mib_during_decode': memory_samples_mib,
     'prefill_build_seconds': prefill_build_seconds,
