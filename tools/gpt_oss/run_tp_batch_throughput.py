@@ -301,6 +301,7 @@ result_path.write_text(json.dumps({
     'profile_decode_steps': profile_steps,
     'profile_decode_start': profile_start if profile_steps else None,
     'profiler_output': os.environ.get('GARNET_BENCH_NSYS_OUTPUT'),
+    'profile_reference_result': os.environ.get('GARNET_BENCH_REFERENCE_JSON'),
     'profile_prefill': profile_prefill,
     'decode_output_tokens': decode_output_tokens,
     'decode_aggregate_output_tokens_per_second':

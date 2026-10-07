@@ -357,11 +357,17 @@ existing logs/results are preserved rather than overwritten.
 To attribute a remaining gap, use the ordinary batch launcher with
 `GARNET_BENCH_NSYS_OUTPUT=/workspace/CantorAI/work/profiles/<new-name>` and
 `GARNET_GPT_OSS_PROFILE_DECODE_STEPS=32`. The default capture begins at decode
-offset10; `GARNET_GPT_OSS_PROFILE_DECODE_START=479` captures the last32 steps
-of a512-output request (processed context reaches input length+510). Use
+offset10; `GARNET_GPT_OSS_PROFILE_DECODE_START=480` captures the last32 steps
+of a512-output request (processed context reaches input length+511). Use
 `GARNET_GPT_OSS_PROFILE_PREFILL=1` for prefill instead. Preserve the chosen
 kernel/environment settings and use a separate result JSON for each profile.
 The launcher retains exclusive GPU access, refuses report overwrite and
 stops collection at the bounded range while allowing validation to finish.
 JSON records the range/report path; instrumented throughput must not be used
 as the unprofiled vLLM comparison. `nsys` must already be installed.
+`profile_batch_tp2.py REQUEST EXPECTED UNPROFILED_GARNET_RESULT NEW_OUTPUT_PREFIX
+START STEPS` replays the recorded optimization environment, checks exact
+input IDs, preserves output length/context and validates outputs after the
+capture. Use the vLLM Python environment for tokenizer validation. It reduces
+repeats to one diagnostic trial and refuses existing reports/results. For
+input256/output512, `START=480 STEPS=32` captures processed context736..767.
