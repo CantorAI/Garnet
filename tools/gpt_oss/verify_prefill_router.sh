@@ -67,7 +67,7 @@ for bf16 in 0 1; do
             # The substring selects both packBf16 and unpackBf16. NCCL and
             # reference kernels execute without instrumentation in this check.
             # Preserve the application's exit code, then reject every saved
-            # report except the exact documented NCCL initialization statuses.
+            # report except exact documented NCCL/Garnet initialization statuses.
             command=(compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all
                 --kernel-name kns=packBf16 --print-session-details --report-api-errors explicit
                 --xml --save "$directory/$label.memcheck.xml" --print-limit 0 "${command[@]}")

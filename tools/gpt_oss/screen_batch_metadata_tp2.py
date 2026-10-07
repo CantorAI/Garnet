@@ -1,6 +1,6 @@
 """Replay a recorded shape for metadata, batch-router or FlashInfer attention candidates.
 
-Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode|intermediate-tp|prefill-router|prefill-router-wire].
+Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode|intermediate-tp|prefill-router|prefill-router-wire|prefill-wire].
 Uses the vLLM environment for validation; preserves all logs and token evidence.
 """
 import json
@@ -10,21 +10,22 @@ import statistics
 import subprocess
 import sys
 
-if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5] not in ('router','flash-prefill','flash-decode','intermediate-tp','prefill-router','prefill-router-wire')):
-    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode|intermediate-tp|prefill-router|prefill-router-wire]')
+if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5] not in ('router','flash-prefill','flash-decode','intermediate-tp','prefill-router','prefill-router-wire','prefill-wire')):
+    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode|intermediate-tp|prefill-router|prefill-router-wire|prefill-wire]')
 request_path, expected_path, reference_path, directory = map(Path, sys.argv[1:5])
 mode=sys.argv[5] if len(sys.argv)==6 else 'metadata'
 router = mode=='router'
 flash = mode in ('flash-prefill','flash-decode')
 inner = mode=='intermediate-tp'
-prefill_wire = mode=='prefill-router-wire'
-prefill_router = mode in ('prefill-router','prefill-router-wire')
+wire_only = mode=='prefill-wire'
+prefill_wire = mode in ('prefill-router-wire','prefill-wire')
+prefill_router = mode in ('prefill-router','prefill-router-wire','prefill-wire')
 flag = ('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS' if inner else
         'GARNET_GPT_OSS_DECODE_FLASHINFER' if mode=='flash-decode' else
         'GARNET_GPT_OSS_PREFILL_FLASHINFER' if flash else
         'GARNET_GPT_OSS_ROUTER_QUERY_TILE' if router else 'GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA')
 label = 'prefill' if prefill_router else 'inner' if inner else 'flash' if flash else 'router' if router else 'parallel'
-choices = (0,1,2) if prefill_wire else (0,2,4) if router else (0,1)
+choices = (1,2) if wire_only else (0,1,2) if prefill_wire else (0,2,4) if router else (0,1)
 reference = json.loads(reference_path.read_text())
 request = json.loads(request_path.read_text())
 if reference['input_token_ids'] != request['input_ids']:
@@ -113,9 +114,9 @@ for value, measured in zip(choices,results):
         'prefill_s': measured['prefill_seconds'],
         'full_tok_s': measured['full_request_output_tokens_per_second']})
 if prefill_wire:
-    reference_trials = results[1]['decode_trials']
+    reference_trials = results[-2]['decode_trials']
     wire_matches = [sum(a == b for a,b in zip(first['token_ids_by_request'],second['token_ids_by_request']))
-                    for first,second in zip(reference_trials,results[2]['decode_trials'])]
+                    for first,second in zip(reference_trials,results[-1]['decode_trials'])]
     comparison['wire_only_exact_slots_per_trial'] = wire_matches
 (directory / 'comparison.json').write_text(json.dumps(comparison, indent=2))
 if prefill_wire and any(count != batch for count in wire_matches):
