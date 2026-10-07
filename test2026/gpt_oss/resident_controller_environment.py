@@ -24,7 +24,8 @@ with tempfile.TemporaryDirectory() as temporary:
     (saved / 'request.json').write_text(json.dumps({'input_ids': [1]*256}))
     (saved / 'expected.json').write_text('{}')
     reference = root / 'reference.json'
-    reference.write_text(json.dumps(dict(batch=256, output_tokens_per_request=512,
+    reference.write_text(json.dumps(dict(batch=256, input_token_ids=[1]*256,
+        input_tokens_per_request=256, prefill_chunk_tokens=16, output_tokens_per_request=512,
         max_context_tokens_per_request=1024, optimization_environment={
             'GARNET_RESIDENT_PROFILE': '/old/binary/admission.json',
             'GARNET_RESIDENT_WARMUPS': '99',
@@ -37,13 +38,19 @@ with tempfile.TemporaryDirectory() as temporary:
     fresh.write_text(json.dumps(dict(resident_profile_schema=1,
         kernel_environment={'GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK':'64'},
         plan=dict(batch=256, capacity=1024, max_tokens=16))))
-    def execute(name, args, expected):
+    def execute(name, args, expected, shape=None):
         observed=[]
         def stop(command, **kwargs):
             environment=kwargs['env']
             for key,value in expected.items():
                 assert environment.get(key)==value, (name,key,environment.get(key),value)
             assert '/old/binary/admission.json' not in environment.values()
+            if shape is not None:
+                specification=json.loads(Path(command[-1]).read_text())
+                for key,value in shape.items():
+                    assert specification[key]==value,(key,specification[key],value)
+                assert specification['scope'].startswith('Unvalidated')
+                assert json.loads(reference.read_text())['batch']==256
             observed.append(command)
             raise ObservedCommand
         with patch.dict(os.environ, {
@@ -71,6 +78,13 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM':'1',
             'GARNET_GPT_OSS_DIRECT_MAX_BATCH':'256',
             'GARNET_GPT_OSS_DIRECT_BATCH_CTAS':'16'})
+    execute('profile_tp_engine_memory.py',[
+        reference,root/'larger-profile','--padded-prefill','--batch','448',
+        '--context','768','--prefill-chunk','8','--output','512'],{
+            'GARNET_RESIDENT_PROFILE':None,'GARNET_RESIDENT_WARMUPS':None,
+            'GARNET_BATCH_PREFILL_CHUNK':'8','GARNET_RESIDENT_PADDED_PREFILL':'1'},
+        shape=dict(batch=448,input_tokens_per_request=256,output_tokens_per_request=512,
+                   max_context_tokens_per_request=768,prefill_chunk_tokens=8))
     execute('paired_batch_suite.py',[reference,root/'paired','arithmetic',
         '--resident-profile',fresh],{'GARNET_RESIDENT_PROFILE':str(fresh.resolve()),
             'GARNET_RESIDENT_WARMUPS':'1',

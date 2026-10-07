@@ -16,21 +16,26 @@ repo = Path(__file__).resolve().parents[2]
 root = Path(os.environ.get('CANTORAI_ROOT', repo.parent))
 from resident_budget import (native_identity, hardware_identity, kernel_environment,
                              checkpoint_identity, plan_identity, file_sha256)
+from engine_profile_shape import candidate_shape, validate_candidate_shape
 
-if len(sys.argv) == 4 and sys.argv[1] == '--runtime':
+if len(sys.argv) in (4,5) and sys.argv[1] == '--runtime':
     import garnet as G
     from pipeline import make_tensor_parallel_plan, build_tensor_parallel
-    reference_path, output = map(Path, sys.argv[2:])
-    reference = json.loads(reference_path.read_text())
+    reference_path, output = map(Path, sys.argv[2:4])
+    reference_bytes = reference_path.read_bytes()
+    reference = json.loads(reference_bytes)
+    specification = (validate_candidate_shape(json.loads(Path(sys.argv[4]).read_text()),
+        reference, reference_bytes) if len(sys.argv) == 5 else None)
+    shape = specification or reference
     if output.exists():
         raise FileExistsError(output)
     weights = Path(os.environ.get('GARNET_GPT_OSS_WEIGHTS', root / 'models/gpt-oss-120b/original'))
     cache = Path(os.environ.get('GARNET_GPT_OSS_CACHE', root / 'work/gpt-oss-tp-cache'))
     devices = json.loads(G.cuda_devices_json())[:2]
-    plan = make_tensor_parallel_plan(weights, devices, batch=reference['batch'],
-        capacity=reference['max_context_tokens_per_request'],
-        tokens=min(reference['prefill_chunk_tokens'] or reference['input_tokens_per_request'],
-                   reference['input_tokens_per_request']))
+    plan = make_tensor_parallel_plan(weights, devices, batch=shape['batch'],
+        capacity=shape['max_context_tokens_per_request'],
+        tokens=min(shape['prefill_chunk_tokens'] or shape['input_tokens_per_request'],
+                   shape['input_tokens_per_request']))
     if not plan['marlin_prepacked']:
         raise ValueError('Resident budget probe requires validated prepacked constants')
     if plan['hardware'] != reference['hardware']:
@@ -64,6 +69,7 @@ if len(sys.argv) == 4 and sys.argv[1] == '--runtime':
         native_binaries=native_identity(build), hardware_csv=hardware_identity(),
         kernel_environment=kernel_environment(), checkpoint=checkpoint_identity(weights),
         cache_root=str(cache.resolve()), padded_prefill=os.environ.get('GARNET_RESIDENT_PADDED_PREFILL') == '1',
+        candidate_shape=specification,
         measurement='Sequential engine loads only; no inference or paired residency',
         limits='Sampled process memory and engine/context bounds do not include all execution peaks'), indent=2))
     sys.exit(0)
@@ -72,6 +78,10 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('reference', type=Path)
 parser.add_argument('directory', type=Path)
 parser.add_argument('--padded-prefill', action='store_true')
+parser.add_argument('--batch', type=int, help='explicit UNVALIDATED candidate batch, up to512')
+parser.add_argument('--output', type=int, help='explicit UNVALIDATED fixed output reservation, up to2048')
+parser.add_argument('--context', type=int, help='explicit context; must preserve input plus output')
+parser.add_argument('--prefill-chunk', type=int, help='explicit UNVALIDATED prefill query chunk')
 parser.add_argument('--prepacked-candidate', action='store_true',
     help='explicitly profile packed engines for a completed original-layout workload; no quality claim')
 parser.add_argument('--large-prefill-block', type=int, choices=(0,64),
@@ -84,11 +94,16 @@ parser.add_argument('--direct-max-batch', type=int, choices=(128,256,512))
 parser.add_argument('--direct-ctas', type=int, choices=(2,4,8,16,32))
 args = parser.parse_args()
 reference_path, directory = args.reference, args.directory
-reference = json.loads(reference_path.read_text())
+reference_bytes = reference_path.read_bytes()
+reference = json.loads(reference_bytes)
 if reference.get('profiled_diagnostic') or reference.get('profile_decode_steps') or reference.get('profile_prefill'):
     raise ValueError('Expected unprofiled completed reference')
 if directory.exists():
     raise FileExistsError(directory)
+shape_overrides = dict(batch=args.batch,output=args.output,
+    context=args.context,prefill_chunk=args.prefill_chunk)
+specification = (candidate_shape(reference,reference_bytes,**shape_overrides)
+    if any(value is not None for value in shape_overrides.values()) else None)
 env = os.environ.copy()
 for key in list(env):
     if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
@@ -123,6 +138,8 @@ if args.prefill_down_ctas is not None:
     if selected_k!='64':
         raise ValueError('Independent down CTA override requires explicit large-prefill down-K64')
 env.update(overrides)
+if specification is not None:
+    env['GARNET_BATCH_PREFILL_CHUNK'] = str(specification['prefill_chunk_tokens'])
 build = Path(env.get('GARNET_BUILD_DIR', root / 'out/build/gpt-oss'))
 tensorrt = Path(env.get('GARNET_TENSORRT_ROOT', root / 'ThirdPartySDK/TensorRT'))
 env['GARNET_TRT_LOG_ENGINE_MEMORY'] = '1'
@@ -132,6 +149,9 @@ env['PYTHONPATH'] = str(build / 'bin') + os.pathsep + env.get('PYTHONPATH', '')
 env['LD_LIBRARY_PATH'] = os.pathsep.join([str(build / 'bin'), str(tensorrt / 'lib'),
                                         '/usr/local/nvidia/lib64', env.get('LD_LIBRARY_PATH', '')])
 directory.mkdir(parents=True)
+specification_path = directory / 'candidate-shape.json'
+if specification is not None:
+    specification_path.write_text(json.dumps(specification,indent=2))
 report = directory / 'engine-loads.json'
 log = directory / 'engine-loads.log'
 lock = root / 'work/gpu-benchmark.lock'
@@ -140,6 +160,8 @@ command = ['flock', '-n', str(lock), 'bash', '-c',
            '[[ -z $(nvidia-smi --query-compute-apps=pid --format=csv,noheader) ]] || exit 1; exec "$@"',
            'engine-profile', str(build / 'bin/xlang3'), str(Path(__file__).resolve()),
            '--runtime', str(reference_path.resolve()), str(report.resolve())]
+if specification is not None:
+    command.append(str(specification_path.resolve()))
 if subprocess.check_output(['nvidia-smi', '--query-compute-apps=pid', '--format=csv,noheader'], text=True).strip():
     raise RuntimeError('Another GPU process is active')
 with log.open('x') as handle:
@@ -168,6 +190,7 @@ result['source_commit'] = subprocess.check_output(['git', 'rev-parse', 'HEAD'], 
 result['reference_result'] = str(reference_path.resolve())
 result['explicit_prepacked_candidate_override'] = args.prepacked_candidate
 result['explicit_kernel_candidate_overrides'] = overrides
+result['explicit_workload_candidate_overrides'] = shape_overrides
 result['reference_result_sha256'] = file_sha256(reference_path)
 report.write_text(json.dumps(result, indent=2))
 print(json.dumps(statistics, indent=2))
