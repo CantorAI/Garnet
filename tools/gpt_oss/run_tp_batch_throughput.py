@@ -27,7 +27,7 @@ request = json.loads(Path(sys.argv[3]).read_text())
 result_path = Path(sys.argv[4])
 batch, output_tokens = int(sys.argv[5]), int(sys.argv[6])
 ids = request['input_ids']
-assert 1 <= batch <= 128 and 16 <= output_tokens <= 512
+assert 1 <= batch <= 512 and 16 <= output_tokens <= 2048
 capacity = int(os.environ.get('GARNET_BATCH_CONTEXT_CAPACITY', '4096'))
 assert ids and len(ids) + output_tokens <= capacity <= 4096
 configured_chunk = int(os.environ.get('GARNET_BATCH_PREFILL_CHUNK', '0'))

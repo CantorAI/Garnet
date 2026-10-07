@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_kernels.h"
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+#include "gpt_oss_flash_prefill.h"
+#endif
 #include <cuda_bf16.h>
 #include <mma.h>
 #include <cmath>
@@ -229,6 +232,92 @@ __global__ void tiledPrefillAttention64(const float* qkv,
         const size_t base = size_t(b * tokens + t) * o.qHeads * Dim + head * Dim + lane;
         output[base] = bf(accum[0] / sum);
         output[base + 32] = bf(accum[1] / sum);
+    }
+}
+// Eight GQA heads share one KV tile. Each warp keeps independent online
+// softmax states for two/four queries; arithmetic order within a query stays
+// identical to tiledPrefillAttention64. All tail warps join CTA barriers.
+template<bool FastExp, int QueriesPerWarp>
+__global__ void gqaPrefillAttention64(const float* qkv,
+    const __nv_bfloat16* keys, const __nv_bfloat16* values,
+    const int* table, const int* starts, const int* active,
+    const float* sinks, float* output, int tokens, int logicalPages,
+    int physicalPages, GptOssOptions o) {
+    static_assert(QueriesPerWarp == 2 || QueriesPerWarp == 4);
+    constexpr int KeyTile = 16, Dim = 64, QueryTile = 2 * QueriesPerWarp;
+    __shared__ __nv_bfloat16 tileK[KeyTile][Dim], tileV[KeyTile][Dim];
+    __shared__ int tileValid[KeyTile];
+    __shared__ size_t tileOffset[KeyTile];
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
+    const int queryTiles = (tokens + QueryTile - 1) / QueryTile;
+    const int kvHead = blockIdx.x % o.kvHeads;
+    const int queryTile = (blockIdx.x / o.kvHeads) % queryTiles;
+    const int b = blockIdx.x / (o.kvHeads * queryTiles);
+    const int head = kvHead * 8 + warp % 8;
+    const int first = queryTile * QueryTile;
+    const int firstQuery = first + (warp / 8) * QueriesPerWarp;
+    const int last = min(tokens - 1, first + QueryTile - 1);
+    const int capacity = logicalPages * o.pageSize;
+    const int firstEnd = starts[b] + first + 1;
+    const int firstBegin = o.window ? max(0, firstEnd - o.window) : 0;
+    const int lastEnd = min(capacity, starts[b] + last + 1);
+    const int packed = (o.qHeads + 2 * o.kvHeads) * Dim;
+    float query[QueriesPerWarp][2] = {}, accum[QueriesPerWarp][2] = {};
+    float maximum[QueriesPerWarp], sum[QueriesPerWarp];
+    int begin[QueriesPerWarp], end[QueriesPerWarp];
+    bool valid[QueriesPerWarp];
+#pragma unroll
+    for (int q = 0; q < QueriesPerWarp; ++q) {
+        const int t = firstQuery + q;
+        end[q] = starts[b] + t + 1;
+        begin[q] = o.window ? max(0, end[q] - o.window) : 0;
+        valid[q] = active[b] && t < tokens && end[q] > 0 && end[q] <= capacity;
+        maximum[q] = sinks[head]; sum[q] = 1.f;
+        if (valid[q]) {
+            const size_t base = size_t(b * tokens + t) * packed + head * Dim + lane;
+            query[q][0] = qkv[base]; query[q][1] = qkv[base + 32];
+        }
+    }
+    if (active[b]) for (int p0 = firstBegin; p0 < lastEnd; p0 += KeyTile) {
+        if (threadIdx.x < KeyTile) {
+            const int p = p0 + threadIdx.x;
+            const size_t offset = p < lastEnd ? cacheOffset(table, logicalPages,
+                physicalPages, b, p, kvHead, 0, o) : SIZE_MAX;
+            tileOffset[threadIdx.x] = offset;
+            tileValid[threadIdx.x] = offset != SIZE_MAX;
+        }
+        __syncthreads();
+        for (int i = threadIdx.x; i < KeyTile * Dim; i += blockDim.x) {
+            const int k = i / Dim, d = i % Dim;
+            const size_t offset = tileOffset[k];
+            tileK[k][d] = offset == SIZE_MAX ? __float2bfloat16(0.f) : keys[offset + d];
+            tileV[k][d] = offset == SIZE_MAX ? __float2bfloat16(0.f) : values[offset + d];
+        }
+        __syncthreads();
+        for (int k = 0; k < KeyTile; ++k) {
+            const int p = p0 + k;
+#pragma unroll
+            for (int q = 0; q < QueriesPerWarp; ++q) {
+                if (!valid[q] || p < begin[q] || p >= end[q] || !tileValid[k]) continue;
+                float score = query[q][0] * __bfloat162float(tileK[k][lane]);
+                score += query[q][1] * __bfloat162float(tileK[k][lane + 32]);
+                score = __shfl_sync(0xffffffff, warpSum(score), 0) * rsqrtf(float(Dim));
+                const float next = fmaxf(maximum[q], score);
+                const float old = FastExp ? __expf(maximum[q] - next) : expf(maximum[q] - next);
+                const float weight = FastExp ? __expf(score - next) : expf(score - next);
+                sum[q] = sum[q] * old + weight;
+                accum[q][0] = accum[q][0] * old + weight * __bfloat162float(tileV[k][lane]);
+                accum[q][1] = accum[q][1] * old + weight * __bfloat162float(tileV[k][lane + 32]);
+                maximum[q] = next;
+            }
+        }
+        __syncthreads();
+    }
+#pragma unroll
+    for (int q = 0; q < QueriesPerWarp; ++q) if (firstQuery + q < tokens) {
+        const size_t base = size_t(b * tokens + firstQuery + q) * o.qHeads * Dim + head * Dim + lane;
+        output[base] = bf(accum[q][0] / sum[q]);
+        output[base + 32] = bf(accum[q][1] / sum[q]);
     }
 }
 // Decode has too few query rows to hide a serial context walk. Split each
@@ -792,6 +881,46 @@ cudaError_t RunGptOssRmsNorm(const float* x, const float* weight, float* y,
     }
     return cudaGetLastError();
 }
+template<bool FastExp>
+cudaError_t launchGqaPrefill64(const void* const* in, float* y, int batch,
+    int tokens, int logicalPages, int physicalPages, const GptOssOptions& o,
+    int queriesPerWarp, cudaStream_t stream) {
+#define PREFILL_GQA_CASE(Q) if (queriesPerWarp == Q) { \
+    const int blocks = batch * ((tokens + 2 * Q - 1) / (2 * Q)) * o.kvHeads; \
+    gqaPrefillAttention64<FastExp, Q><<<blocks, 512, 0, stream>>>( \
+        (const float*)in[0], (const __nv_bfloat16*)in[1], \
+        (const __nv_bfloat16*)in[2], (const int*)in[3], \
+        (const int*)in[5], (const int*)in[6], (const float*)in[7], \
+        y, tokens, logicalPages, physicalPages, o); \
+    return cudaGetLastError(); }
+    PREFILL_GQA_CASE(2)
+    PREFILL_GQA_CASE(4)
+#undef PREFILL_GQA_CASE
+    return cudaErrorInvalidValue;
+}
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssGqaPrefill64(const void* const* in, float* y, int batch,
+    int tokens, int logicalPages, int physicalPages, const GptOssOptions& o,
+    int queriesPerWarp, cudaStream_t stream) {
+    if (!o.prefill || o.headDim != 64 || o.kvHeads <= 0 || o.qHeads != 8 * o.kvHeads ||
+        batch <= 0 || tokens <= 0 || (queriesPerWarp != -1 && queriesPerWarp != 0 && queriesPerWarp != 2 && queriesPerWarp != 4))
+        return cudaErrorInvalidValue;
+    const size_t n = size_t(batch) * tokens * o.kvHeads * o.headDim;
+    writeKV<<<(n + 255) / 256, 256, 0, stream>>>((const float*)in[0],
+        (__nv_bfloat16*)in[1], (__nv_bfloat16*)in[2], (const int*)in[3],
+        (const int*)in[5], (const int*)in[6], batch, tokens, logicalPages, physicalPages, o);
+    auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
+    if(queriesPerWarp==-1)return cudaSuccess; // Benchmark write-only preparation.
+    if (queriesPerWarp) return launchGqaPrefill64<false>(in, y, batch,
+        tokens, logicalPages, physicalPages, o, queriesPerWarp, stream);
+    const int blocks = batch * ((tokens + 15) / 16) * o.qHeads;
+    tiledPrefillAttention64<false, 16><<<blocks, 512, 0, stream>>>(
+        (const float*)in[0], (const __nv_bfloat16*)in[1], (const __nv_bfloat16*)in[2],
+        (const int*)in[3], (const int*)in[5], (const int*)in[6], (const float*)in[7],
+        y, tokens, logicalPages, physicalPages, o);
+    return cudaGetLastError();
+}
+#endif
 cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
     int batch, int tokens,
     int logicalPages, int physicalPages, const GptOssOptions& o, cudaStream_t stream) {
@@ -915,12 +1044,30 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
         const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_FAST_EXP");
         return value && std::strcmp(value, "1") == 0;
     }();
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+    static const bool flashPrefill = [] {
+        const char* value=std::getenv("GARNET_GPT_OSS_PREFILL_FLASHINFER");
+        return value && std::strcmp(value,"1")==0;
+    }();
+    if(flashPrefill && GptOssFlashPrefillWorkspace(batch,tokens,logicalPages,o))
+        return RunGptOssFlashPrefill(in,y,workspace,batch,tokens,logicalPages,physicalPages,o,stream);
+#endif
     static const bool tiledPrefill = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_TILED_64");
         return value && std::strcmp(value, "1") == 0;
     }();
     if (tiledPrefill && o.prefill && o.headDim == 64 &&
         o.qHeads > 0 && o.kvHeads > 0 && o.qHeads % o.kvHeads == 0) {
+        static const int gqaQueries = [] {
+            const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE");
+            const int requested = value ? std::atoi(value) : 0;
+            return requested == 2 || requested == 4 ? requested : 0;
+        }();
+        if (gqaQueries && o.qHeads == 8 * o.kvHeads)
+            return fastExp ? launchGqaPrefill64<true>(in, y, batch, tokens,
+                logicalPages, physicalPages, o, gqaQueries, stream) :
+                launchGqaPrefill64<false>(in, y, batch, tokens,
+                logicalPages, physicalPages, o, gqaQueries, stream);
         static const int queryTile = [] {
             const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_QUERY_TILE");
             return value && std::strcmp(value, "16") == 0 ? 16 : 8;

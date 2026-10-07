@@ -1,0 +1,24 @@
+FlashInfer FA2 prefill header subset
+
+Upstream: https://github.com/flashinfer-ai/flashinfer
+Release: v0.7.0.post1
+Commit: 946200de1ae94fc93fdd0926f0a13afd1fa7f0f1
+License: Apache-2.0; upstream LICENSE and per-file notices retained.
+
+The 20 transitive headers used by attention/prefill.cuh and
+attention/default_prefill_params.cuh are unmodified. Every file comes from
+the official Git checkout at the pinned commit. SHA256SUMS records them.
+The installed flashinfer-python 0.7.0.post1 headers were inspected separately;
+package/header differences are recorded in the experiment evidence.
+No PyTorch, Python runtime, TVM bindings, binary kernels or unrelated sources
+are included by this subset.
+
+Garnet's cuda/gpt_oss_flash_prefill.cu adapts the AttentionSink variant from
+flashinfer/jit/attention/variants.py (Copyright 2025 FlashInfer team) under
+the same license. Additions: fixed-capacity GPU-generated metadata, safe
+indices plus original-table hole masks, inactive/over-capacity query masks,
+explicit causal offsets, FP32/BF16 conversions and invocation-owned workspace.
+No split-KV is used, so the learned sink contributes exactly once.
+Tensor-core reduction/softmax order and BF16 probability rounding differ from
+Garnet's scalar attention; native numerical and pretrained quality gates are
+required before enabling the optional path.

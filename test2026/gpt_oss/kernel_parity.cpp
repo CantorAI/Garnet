@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_kernels.h"
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+#include "gpt_oss_flash_prefill.h"
+#endif
 #include "gpt_oss_marlin.h"
 #include "gpt_oss_weight_shard.h"
 #include <vector>
@@ -252,7 +255,7 @@ void testLongPrefillAttention64() {
 }
 void testVocabTop1() {
     for (int width : {7, 65, 100544}) {
-        constexpr int rows = 128;
+      for (int rows : {128,256,512}) {
         std::vector<float> full(size_t(rows) * width * 2), local(size_t(rows) * width);
         for (int row = 0; row < rows; ++row)
             for (int col = 0; col < width * 2; ++col)
@@ -287,8 +290,9 @@ void testVocabTop1() {
                 std::signbit(takeB ? b : a) != std::signbit(best))
                 throw std::runtime_error("Compact vocab top1 differs from full vocabulary greedy");
         }
+      }
     }
-    std::cout << "Compact vocabulary pairs match full greedy, ties/NaN/Inf/signed zero,128 rows\n";
+    std::cout << "Compact vocabulary pairs match full greedy, ties/NaN/Inf/signed zero,128/256/512 rows\n";
 }
 void testLongDecodeAttention(int dimension, int qHeads = 4, int kvHeads = 2) {
     GptOssOptions o; o.kind=1; o.qHeads=qHeads; o.kvHeads=kvHeads; o.headDim=dimension;
@@ -472,6 +476,140 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
 #endif
 }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+void testGqaPrefill64() {
+    int cases = 0;
+    for (int tokens : {3,21,32,128}) for (int start : {0,509,2005})
+        for (int window : {0,128}) for (int heads : {8,32}) {
+        GptOssOptions o; o.kind=1; o.qHeads=heads; o.kvHeads=heads/8;
+        o.headDim=64; o.pageSize=16; o.layer=1; o.prefill=1; o.window=window;
+        constexpr int batch=3;
+        const int logical=(start+tokens+15)/16, pages=batch*logical;
+        const int width=(heads+2*o.kvHeads)*64, queryWidth=heads*64;
+        std::vector<float> x(size_t(batch)*tokens*width), sinks(heads);
+        for(size_t i=0;i<x.size();++i)x[i]=bf(std::sin(float(i)*.019f)*1.5f);
+        const float sinkValues[]{12.f,-12.f,2.f,-1.f};
+        for(int h=0;h<heads;++h)sinks[h]=sinkValues[h%4];
+        std::vector<uint16_t> keys(size_t(2)*pages*16*o.kvHeads*64),values(keys.size());
+        for(size_t i=0;i<keys.size();++i) {
+            keys[i]=bits(std::cos(float(i)*.023f));values[i]=bits(std::sin(float(i)*.017f));
+        }
+        std::vector<int> table(batch*logical);
+        for(int b=0;b<batch;++b)for(int p=0;p<logical;++p)
+            table[b*logical+p]=b*logical+(logical-1-p);
+        if(logical>3)table[3]=-1;
+        if(logical>5)table[5]=pages; // Out-of-range physical page is a hole too.
+        const std::vector<int> starts{start,logical*16-3,0},active{1,1,0};
+        Device<float> dx(x),ds(sinks),dy{std::vector<float>(size_t(batch)*tokens*queryWidth)};
+        Device<uint16_t> dk(keys),dv(values);
+        Device<int> dt(table),dp(starts),da(active),dl{std::vector<int>(batch,start+tokens)};
+        const void* in[]{dx.p,dk.p,dv.p,dt.p,dl.p,dp.p,da.p,ds.p};
+        check(TestGptOssGqaPrefill64(in,dy.p,batch,tokens,logical,pages,o,0,nullptr));
+        const auto baseline=dy.read();
+        const auto savedK=dk.read(),savedV=dv.read();
+        std::vector<float> oracle(baseline.size(),std::numeric_limits<float>::quiet_NaN());
+        for(float value:baseline)if(!std::isfinite(value))throw std::runtime_error("Non-finite prefill baseline");
+        auto value=[](uint16_t v){uint32_t raw=uint32_t(v)<<16;float f;std::memcpy(&f,&raw,4);return f;};
+        // Independent FP64 oracle at first/middle/last queries, every head,
+        // including sinks, missing pages, inactive and over-capacity queries.
+        for(int b=0;b<batch;++b)for(int t : {0,tokens/2,tokens-1})for(int h=0;h<heads;++h) {
+            const int end=starts[b]+t+1;
+            double sum=std::exp(double(sinks[h])),accum[64]={};
+            if(active[b] && end>0 && end<=logical*16)for(int p=window?std::max(0,end-window):0;p<end;++p) {
+                const int page=table[b*logical+p/16];if(page<0||page>=pages)continue;
+                const size_t offset=(((size_t(o.layer)*pages+page)*16+p%16)*o.kvHeads+h/8)*64;
+                double score=0;
+                const size_t row=size_t(b*tokens+t)*width+h*64;
+                for(int d=0;d<64;++d)score+=double(x[row+d])*value(savedK[offset+d]);
+                const double weight=std::exp(score/8.);sum+=weight;
+                for(int d=0;d<64;++d)accum[d]+=weight*value(savedV[offset+d]);
+            }
+            for(int d=0;d<64;++d) {
+                const float expected=bf(float(accum[d]/sum));
+                oracle[size_t(b*tokens+t)*queryWidth+h*64+d]=expected;
+                if(std::abs(baseline[size_t(b*tokens+t)*queryWidth+h*64+d]-expected)>.006f*(1+std::abs(expected)))
+                    throw std::runtime_error("GQA prefill differs from independent FP64 oracle");
+            }
+        }
+        for(int tile : {2,4}) {
+            check(TestGptOssGqaPrefill64(in,dy.p,batch,tokens,logical,pages,o,tile,nullptr));
+            const auto actual=dy.read();
+            if(std::memcmp(actual.data(),baseline.data(),actual.size()*sizeof(float))||dk.read()!=savedK||dv.read()!=savedV)
+                throw std::runtime_error("GQA prefill2/4 output/cache differs bitwise from query16 baseline");
+        }
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+        Device<unsigned char> flashWorkspace{std::vector<unsigned char>(GptOssFlashPrefillWorkspace(batch,tokens,logical,o))};
+        check(RunGptOssFlashPrefill(in,dy.p,flashWorkspace.p,batch,tokens,logical,pages,o,nullptr));
+        const auto flash=dy.read();
+        compare(flash,baseline,.006f,"FlashInfer prefill: full output vs scalar baseline");
+        for(size_t i=0;i<flash.size();++i)if(std::isfinite(oracle[i])&&std::abs(flash[i]-oracle[i])>.006f*(1+std::abs(oracle[i])))
+            throw std::runtime_error("FlashInfer prefill differs from sampled independent FP64 oracle");
+        if(dk.read()!=savedK||dv.read()!=savedV)throw std::runtime_error("FlashInfer prefill mutated KV");
+#endif
+        const size_t layerBytes=size_t(pages)*16*o.kvHeads*64;
+        if(!std::equal(savedK.begin(),savedK.begin()+layerBytes,keys.begin())||
+            !std::equal(savedV.begin(),savedV.begin()+layerBytes,values.begin()))
+            throw std::runtime_error("GQA prefill modified another cache layer");
+        const size_t inactive=layerBytes+size_t(2*logical)*16*o.kvHeads*64;
+        if(!std::equal(savedK.begin()+inactive,savedK.end(),keys.begin()+inactive)||
+            !std::equal(savedV.begin()+inactive,savedV.end(),values.begin()+inactive))
+            throw std::runtime_error("GQA prefill modified inactive cache pages");
+        ++cases;
+    }
+    std::cout << "GQA prefill2/4 exact query16 outputs/cache plus sampled FP64 oracle passed: " << cases << " cases\n";
+}
+void benchmarkGqaPrefill64(int batch) {
+    if(batch<1||batch>128)throw std::runtime_error("Prefill benchmark batch must be1..128");
+    constexpr int layers=36,cacheLayers=4,tokens=32,heads=32,kvHeads=4,dim=64,width=40*64;
+    cudaStream_t stream;check(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
+    for(int start : {224,1952})for(int window : {0,128}) {
+        const int logical=(start+tokens+15)/16,pages=batch*logical;
+        std::vector<float> x(size_t(layers)*batch*tokens*width),sinks(layers*heads);
+        for(size_t i=0;i<x.size();++i)x[i]=bf(float(int(i%31)-15)*.03125f);
+        for(size_t i=0;i<sinks.size();++i)sinks[i]=float(int(i%7)-3);
+        std::vector<uint16_t> keys(size_t(cacheLayers)*pages*16*kvHeads*dim),values(keys.size());
+        for(size_t i=0;i<keys.size();++i){keys[i]=bits(float(int(i%23)-11)*.03125f);values[i]=bits(float(int(i%19)-9)*.03125f);}
+        std::vector<int> table(pages);for(int i=0;i<pages;++i)table[i]=i;
+        Device<float> dx(x),ds(sinks),dy{std::vector<float>(size_t(layers)*batch*tokens*heads*dim)};
+        Device<uint16_t> dk(keys),dv(values);
+        Device<int> dt(table),dp{std::vector<int>(batch,start)},da{std::vector<int>(batch,1)},dl{std::vector<int>(batch,start+tokens)};
+        std::vector<int> modes{0,2,4};
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+        GptOssOptions flashOptions;flashOptions.prefill=1;flashOptions.headDim=dim;flashOptions.pageSize=16;
+        flashOptions.qHeads=heads;flashOptions.kvHeads=kvHeads;
+        Device<unsigned char> flashWorkspace{std::vector<unsigned char>(GptOssFlashPrefillWorkspace(batch,tokens,logical,flashOptions))};
+        modes.push_back(8); // Diagnostic label8 means FlashInfer, not a scalar query tile.
+#endif
+        for(int tile : modes) {
+            cudaGraph_t graph;cudaGraphExec_t executable;
+            check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeGlobal));
+            for(int layer=0;layer<layers;++layer) {
+                GptOssOptions o;o.kind=1;o.qHeads=heads;o.kvHeads=kvHeads;o.headDim=dim;
+                o.pageSize=16;o.prefill=1;o.window=window;o.layer=layer%cacheLayers;
+                const void* in[]{dx.p+size_t(layer)*batch*tokens*width,dk.p,dv.p,dt.p,dl.p,dp.p,da.p,ds.p+layer*heads};
+                float* output=dy.p+size_t(layer)*batch*tokens*heads*dim;
+                check(TestGptOssGqaPrefill64(in,output,batch,tokens,logical,pages,o,tile==8?-1:tile,stream));
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+                if(tile==8)check(RunGptOssFlashPrefill(in,output,flashWorkspace.p,batch,tokens,logical,pages,o,stream));
+#endif
+            }
+            check(cudaStreamEndCapture(stream,&graph));check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
+            for(int i=0;i<3;++i)check(cudaGraphLaunch(executable,stream));check(cudaStreamSynchronize(stream));
+            cudaEvent_t begin,end;check(cudaEventCreate(&begin));check(cudaEventCreate(&end));
+            std::vector<float> samples;
+            for(int trial=0;trial<9;++trial) {
+                check(cudaEventRecord(begin,stream));
+                for(int replay=0;replay<3;++replay)check(cudaGraphLaunch(executable,stream));
+                check(cudaEventRecord(end,stream));check(cudaEventSynchronize(end));
+                float ms;check(cudaEventElapsedTime(&ms,begin,end));samples.push_back(ms/3);
+            }
+            std::sort(samples.begin(),samples.end());
+            std::cout << "prefill GQA graph batch="<<batch<<" tokens=32 start="<<start<<" window="<<window
+                <<" layers=36 cache_layers=4 tile="<<tile<<" median_ms="<<samples[4]<<" min_ms="<<samples.front()<<" max_ms="<<samples.back()<<'\n';
+            check(cudaEventDestroy(begin));check(cudaEventDestroy(end));check(cudaGraphExecDestroy(executable));check(cudaGraphDestroy(graph));
+        }
+    }
+    check(cudaStreamDestroy(stream));
+}
 void testBatchRouter() {
     int cases=0;
     for(int tokens : {16,17,65,128,513,4096})for(int width : {96,2880,4096})for(bool ties : {false,true}) {
@@ -619,6 +757,9 @@ void benchmarkMarlinMetadata() {
 #endif
 int main(int argc, char** argv) { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+    if((argc==2 || argc==3) && std::strcmp(argv[1],"--prefill-gqa-benchmark")==0) {
+        testGqaPrefill64();benchmarkGqaPrefill64(argc==3?std::stoi(argv[2]):8);return 0;
+    }
     if(argc==2 && std::strcmp(argv[1],"--router-benchmark")==0) {
         testBatchRouter();benchmarkBatchRouter();return 0;
     }
@@ -640,6 +781,7 @@ int main(int argc, char** argv) { try {
         return 0;
     }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+    testGqaPrefill64();
     testBatchRouter();
     testMarlinMetadata();
     testMxfp4Encoding();

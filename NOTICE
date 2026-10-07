@@ -26,3 +26,10 @@ Third-party source included in this repository:
   Licensed under the Apache License, Version 2.0. The license text and detailed
   modification record are retained in that directory's LICENSE and
   PROVENANCE.txt files.
+
+- FlashInfer FA2 prefill headers under plugins/gpt_oss/third_party/flashinfer
+  are an unmodified subset of v0.7.0.post1, commit
+  946200de1ae94fc93fdd0926f0a13afd1fa7f0f1.
+  Copyright 2023-2025 FlashInfer team. Licensed under Apache-2.0.
+  The license, source checksums and adaptation record are retained there.
+  The GPT-OSS prefill adapter also adapts FlashInfer's AttentionSink variant.

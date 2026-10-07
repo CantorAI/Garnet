@@ -5,13 +5,15 @@ batch isolation against the independent reference made by make_fixture.py.
 """
 import sys
 import json
+import math
 from pathlib import Path
 import garnet as G
 
 weights, cache = Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve()
 root = Path(__file__).resolve().parents[2] / 'xModel' / 'gpt_oss' / '120b'
 expected = json.loads((weights / 'expected.json').read_text())
-page_shape = [2, 2, 16, 2, 8]
+config=json.loads((weights/'config.json').read_text())
+page_shape = [2, 2, 16, config['num_key_value_heads'], config['head_dim']]
 
 
 def load(name, batch, tokens):
@@ -30,8 +32,8 @@ def tensor(values, dtype, shape):
     return G.tensor_from_host(values, dtype=dtype, shape=shape, device='cuda')
 
 
-keys = G.tensor_to_bfloat16(tensor([0.] * 1024, 'float32', page_shape))
-values = G.tensor_to_bfloat16(tensor([0.] * 1024, 'float32', page_shape))
+keys = G.tensor_to_bfloat16(tensor([0.] * math.prod(page_shape), 'float32', page_shape))
+values = G.tensor_to_bfloat16(tensor([0.] * math.prod(page_shape), 'float32', page_shape))
 
 
 def run(model, ids, positions, lengths, starts, active, pages):

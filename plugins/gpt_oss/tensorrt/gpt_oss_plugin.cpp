@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_plugin.h"
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+#include "gpt_oss_flash_prefill.h"
+#endif
 #include <NvInferPlugin.h>
 #include <algorithm>
 #include <atomic>
@@ -154,6 +157,12 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
 }
 size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
     const PluginTensorDesc*, int) const noexcept {
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+    // Reserve independently of the runtime flag so baseline/candidate engines
+    // share a safe workspace contract. Build identity includes plugin bytes.
+    if(m_options.kind==1 && m_options.prefill && in && in[0].dims.nbDims==3 && in[3].dims.nbDims==2)
+        return GptOssFlashPrefillWorkspace(in[0].dims.d[0],in[0].dims.d[1],in[3].dims.d[1],m_options);
+#endif
     if (m_options.kind == 3 && m_options.bf16Communication && in &&
         in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 &&
         in[0].dims.d[1] >= 128 && in[0].dims.d[2] == m_options.hidden) {

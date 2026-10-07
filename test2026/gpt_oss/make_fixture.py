@@ -16,13 +16,17 @@ def bf(x):
     return struct.unpack('<f', struct.pack('<I', value))[0]
 
 
-def create(root):
+def create(root,gqa8=False):
     root.mkdir(parents=True, exist_ok=True)
     config = dict(num_hidden_layers=2, num_experts=5, experts_per_token=2,
                   vocab_size=64, hidden_size=32, intermediate_size=32,
                   swiglu_limit=7, head_dim=8, num_attention_heads=4,
                   num_key_value_heads=2, sliding_window=2, initial_context_length=4096,
                   rope_theta=150000, rope_scaling_factor=32, rope_ntk_alpha=1, rope_ntk_beta=32)
+    if gqa8:
+        config.update(head_dim=64,num_attention_heads=8,num_key_value_heads=1)
+    dim=config['head_dim'];heads=config['num_attention_heads'];kv_heads=config['num_key_value_heads']
+    query_width=heads*dim;kv_width=kv_heads*dim;packed_width=query_width+2*kv_width
     entries, tensors, dense, data = {}, {}, {}, bytearray()
 
     def add(name, shape, values, dtype='BF16'):
@@ -58,11 +62,11 @@ def create(root):
         p = f'block.{layer}'
         add(p + '.attn.norm.scale', [32], [1] * 32)
         add(p + '.mlp.norm.scale', [32], [1] * 32)
-        floating(p + '.attn.qkv.weight', [64, 32])
-        floating(p + '.attn.qkv.bias', [64], .03)
-        floating(p + '.attn.out.weight', [32, 32])
+        floating(p + '.attn.qkv.weight', [packed_width, 32])
+        floating(p + '.attn.qkv.bias', [packed_width], .03)
+        floating(p + '.attn.out.weight', [32, query_width])
         floating(p + '.attn.out.bias', [32], .03)
-        floating(p + '.attn.sinks', [4], 1)
+        floating(p + '.attn.sinks', [heads], 1)
         floating(p + '.mlp.gate.weight', [5, 32])
         floating(p + '.mlp.gate.bias', [5], .1)
         floating(p + '.mlp.mlp1_bias', [5, 64], .02)
@@ -88,16 +92,17 @@ def create(root):
 
     def rotary(qkv, position):
         out = qkv[:]
-        low = 4 * math.log(4096 / (32 * 2 * math.pi)) / math.log(150000)
-        high = 4 * math.log(4096 / (2 * math.pi)) / math.log(150000)
-        for head in range(6):
-            for d in range(8):
-                ramp = min(1, max(0, (d % 4 - low) / (high - low)))
-                inv = 150000 ** (-2 * (d % 4) / 8) * ((1 - ramp) + ramp / 32)
+        half=dim//2
+        low = half * math.log(4096 / (32 * 2 * math.pi)) / math.log(150000)
+        high = half * math.log(4096 / (2 * math.pi)) / math.log(150000)
+        for head in range(heads+kv_heads):
+            for d in range(dim):
+                ramp = min(1, max(0, (d % half - low) / (high - low)))
+                inv = 150000 ** (-2 * (d % half) / dim) * ((1 - ramp) + ramp / 32)
                 cosine = bf(math.cos(position * inv) * (1 + .1 * math.log(32)))
                 sine = bf(math.sin(position * inv) * (1 + .1 * math.log(32)))
-                i = head * 8 + d
-                rotated = -qkv[i + 4] if d < 4 else qkv[i - 4]
+                i = head * dim + d
+                rotated = -qkv[i + half] if d < half else qkv[i - half]
                 out[i] = bf(bf(qkv[i] * cosine) + bf(rotated * sine))
         return out
 
@@ -130,15 +135,16 @@ def create(root):
             outputs = []
             for t, x in enumerate(xs):
                 attention = []
-                for head in range(4):
+                for head in range(heads):
                     first = max(0, t - 1) if layer % 2 == 0 else 0
-                    scores = [sum(qs[t][head * 8 + d] * qs[s][32 + (head // 2) * 8 + d] for d in range(8)) / math.sqrt(8)
+                    kv_head=head//(heads//kv_heads)
+                    scores = [sum(qs[t][head * dim + d] * qs[s][query_width + kv_head * dim + d] for d in range(dim)) / math.sqrt(dim)
                               for s in range(first, t + 1)]
                     sink = tensors[p + '.attn.sinks'][head]
                     maximum = max(scores + [sink])
                     denominator = sum(math.exp(s - maximum) for s in scores + [sink])
-                    for d in range(8):
-                        attention.append(bf(sum(math.exp(score - maximum) * qs[s][48 + (head // 2) * 8 + d]
+                    for d in range(dim):
+                        attention.append(bf(sum(math.exp(score - maximum) * qs[s][query_width + kv_width + kv_head * dim + d]
                                                 for s, score in zip(range(first, t + 1), scores)) / denominator))
                 projected = linear(attention, p + '.attn.out.weight', p + '.attn.out.bias')
                 x = [bf(a + b) for a, b in zip(x, projected)]
@@ -185,4 +191,6 @@ def create(root):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('destination', type=Path)
-    create(parser.parse_args().destination)
+    parser.add_argument('--gqa8',action='store_true',help='head64 and8:1 GQA for native tensor-core prefill coverage')
+    args=parser.parse_args()
+    create(args.destination,args.gqa8)

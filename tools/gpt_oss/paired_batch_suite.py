@@ -5,6 +5,7 @@ Defaults to code-tracing, instruction-following and long-context-retrieval.
 The existing arithmetic reference is not rerun unnecessarily. Uses vLLM Python.
 """
 import importlib.metadata
+import argparse
 import json
 import os
 from pathlib import Path
@@ -12,19 +13,31 @@ import statistics
 import subprocess
 import sys
 
-if len(sys.argv) < 3:
-    raise SystemExit('Expected UNPROFILED_GARNET_PROFILE NEW_RESULT_DIR [CASE ...]')
-reference_path, directory = map(Path, sys.argv[1:3])
-names = sys.argv[3:] or ['code-tracing', 'instruction-following', 'long-context-retrieval']
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('profile', type=Path)
+parser.add_argument('directory', type=Path)
+parser.add_argument('cases', nargs='*')
+parser.add_argument('--batch', type=int, help='explicit homogeneous batch override, up to512')
+parser.add_argument('--output', type=int, help='explicit fixed output length, up to2048')
+parser.add_argument('--prefill-chunk', type=int, help='explicit Garnet query chunk length')
+parser.add_argument('--context', type=int, help='explicit context reservation; reject shorter requests')
+args = parser.parse_args()
+reference_path, directory = args.profile, args.directory
+names = args.cases or ['code-tracing', 'instruction-following', 'long-context-retrieval']
 allowed = {'arithmetic', 'code-tracing', 'instruction-following', 'long-context-retrieval'}
 if len(names) != len(set(names)) or any(name not in allowed for name in names):
     raise ValueError('Cases must be unique saved benchmark names')
 reference = json.loads(reference_path.read_text())
 if reference.get('profile_decode_steps') or reference.get('profile_prefill'):
     raise ValueError('Profile must be an uninstrumented benchmark')
-batch, output = reference['batch'], reference['output_tokens_per_request']
-if not (1 <= batch <= 128 and 16 <= output <= 512):
+batch = reference['batch'] if args.batch is None else args.batch
+output = reference['output_tokens_per_request'] if args.output is None else args.output
+if not (1 <= batch <= 512 and 16 <= output <= 2048):
     raise ValueError('Invalid batch/output profile')
+if args.prefill_chunk is not None and not 1 <= args.prefill_chunk <= 4096:
+    raise ValueError('Invalid prefill chunk')
+if args.context is not None and not 1 <= args.context <= 4096:
+    raise ValueError('Invalid context reservation')
 if directory.exists():
     raise FileExistsError(f'Refusing to overwrite evidence: {directory}')
 repo = Path(__file__).resolve().parents[2]
@@ -44,6 +57,8 @@ for key, value in reference['optimization_environment'].items():
             key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value, str)):
         raise ValueError(f'Invalid recorded optimization setting: {key}')
     env[key] = value
+if args.prefill_chunk is not None:
+    env['GARNET_BATCH_PREFILL_CHUNK'] = str(args.prefill_chunk)
 for key in ('GARNET_BENCH_NSYS_OUTPUT', 'GARNET_BENCH_REFERENCE_JSON', 'GARNET_BATCH_PLAN_ONLY'):
     env.pop(key, None)
 env.update(GARNET_GPT_OSS_PROFILE_DECODE_STEPS='0', GARNET_GPT_OSS_PROFILE_PREFILL='0',
@@ -59,6 +74,8 @@ if subprocess.check_output(['nvidia-smi', '--query-compute-apps=pid', '--format=
 directory.mkdir(parents=True)
 manifest = {'garnet_profile': str(reference_path.resolve()), 'vllm_version': version,
             'batch': batch, 'output': output, 'cases': [], 'phase_order': ['admission', 'vllm', 'garnet'],
+            'explicit_profile_overrides': {'batch': args.batch, 'output': args.output,
+                'prefill_chunk': args.prefill_chunk, 'context': args.context},
             'measurement_limits': 'Garnet full_request_tok_s is execution only, excluding engine build/load and handoff. vLLM measures complete warmed requests. Garnet later decode trials reuse input KV. KV history is estimated, not live scheduler occupancy. See each raw result for timings and limits.'}
 for name in names:
     saved = work / ('long-prompt-test' if name == 'long-context-retrieval' else f'prompt-benchmarks/{name}')
@@ -66,7 +83,10 @@ for name in names:
     ids = json.loads(request.read_text())['input_ids']
     if not expected.is_file():
         raise FileNotFoundError(expected)
-    capacity = max(reference['max_context_tokens_per_request'], ((len(ids) + output + 511) // 512) * 512)
+    capacity = (max(reference['max_context_tokens_per_request'], ((len(ids) + output + 511) // 512) * 512)
+                if args.context is None else args.context)
+    if len(ids) + output > capacity:
+        raise ValueError('Explicit context reservation is shorter than input plus output')
     if capacity > 4096:
         raise ValueError('Saved request exceeds supported context profile')
     case = {'name': name, 'request': str(request.resolve()), 'expected': str(expected.resolve()),

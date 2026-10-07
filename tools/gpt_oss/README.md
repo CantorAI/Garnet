@@ -411,3 +411,31 @@ existing path. Workspace and options serialization do not change. Append
 sequentially and require exact whole token trajectories plus answer validation.
 Use native `--router-benchmark` for bitwise score/top4/probability checks and
 separate36-layer score-kernel timing. Kernel timing is diagnostic only.
+
+The batch runners and profile helpers accept batch1..512 and fixed output16..2048,
+with input plus output constrained by context<=4096. These are harness limits,
+not tested throughput maxima. `paired_batch_suite.py PROFILE NEWDIR CASE...`
+accepts explicit `--batch`, `--output`, `--prefill-chunk` and `--context` overrides.
+For example use `arithmetic --batch 256 --output 512 --prefill-chunk 16 --context 1024`.
+The actual Garnet planner runs before all vLLM cases, followed by all Garnet cases;
+invalid/OOM admission preserves requested shapes rather than shrinking them.
+
+Experimental exact-order prefill `GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE=2/4`
+requires tiled head64 attention and8:1 GQA. It shares paged KV across query heads
+and multiple queries per warp. Local timing regresses; keep it disabled pending
+target isolation. `--prefill-gqa-benchmark [BATCH]` checks exact output/cache
+parity and reports36-layer graph timings at short/long context and full/sliding
+windows. Four cache layers are reused and query/output buffers differ perlayer.
+
+Optional native tensor-core prefill builds with
+`-DGARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL=ON` (CUDA12.9+), then opt in through
+`GARNET_GPT_OSS_PREFILL_FLASHINFER=1`. Default build and runtime keep this off.
+The pinned Apache-2.0 header subset and provenance live under the GPT-OSS plugin.
+It needs no PyTorch/TVM/Python runtime. Invocation-owned workspace packs BF16 Q,
+safe page indices and a fixed-capacity device-generated schedule; original
+page masks, active rows, causal offsets, sliding windows and one learned sink
+are retained. Tensor-core/probability rounding differs from scalar attention.
+Native numerical and pretrained quality/performance validation is required.
+Native benchmark label `tile=8` denotes FlashInfer, including conversions and
+KV write, rather than an eight-query scalar tile. The optional `make_fixture.py
+DEST --gqa8` fixture exercises head64/8:1 GQA through compiled_parity.py.

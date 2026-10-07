@@ -20,7 +20,7 @@ if reference['input_token_ids'] != request['input_ids']:
 if reference.get('profile_decode_steps') or reference.get('profile_prefill'):
     raise ValueError('Reference must be an unprofiled benchmark')
 batch, output = reference['batch'], reference['output_tokens_per_request']
-if not (1 <= batch <= 128 and 16 <= output <= 512 and
+if not (1 <= batch <= 512 and 16 <= output <= 2048 and
         1 <= start and 1 <= steps and start + steps <= output):
     raise ValueError('Invalid batch/output/range')
 if not expected_path.is_file():

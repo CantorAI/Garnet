@@ -23,7 +23,7 @@ if result_path.exists():
     raise FileExistsError(f'Refusing to overwrite benchmark evidence: {result_path}')
 result_path.parent.mkdir(parents=True, exist_ok=True)
 batch, output_tokens = int(sys.argv[4]), int(sys.argv[5])
-assert 1 <= batch <= 128 and 16 <= output_tokens <= 512
+assert 1 <= batch <= 512 and 16 <= output_tokens <= 2048
 capacity = int(os.environ.get('VLLM_BATCH_CONTEXT_CAPACITY', '4096'))
 assert request['input_ids'] and len(request['input_ids']) + output_tokens <= capacity <= 4096
 trial_count = int(os.environ.get('VLLM_BATCH_TRIALS', '1'))

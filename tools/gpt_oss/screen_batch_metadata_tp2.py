@@ -24,7 +24,7 @@ if reference['input_token_ids'] != request['input_ids']:
 if reference.get('profile_decode_steps') or reference.get('profile_prefill'):
     raise ValueError('Reference must be unprofiled')
 batch, output = reference['batch'], reference['output_tokens_per_request']
-if not (16 <= batch <= 128 and 16 <= output <= 512):
+if not (16 <= batch <= 512 and 16 <= output <= 2048):
     raise ValueError('Invalid batch/output for exact-order candidate')
 if not expected_path.is_file():
     raise FileNotFoundError(expected_path)
