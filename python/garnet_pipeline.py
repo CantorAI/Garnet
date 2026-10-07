@@ -100,11 +100,12 @@ class Pipeline:
 
 class TensorParallel:
     """Lockstep two-rank TensorRT execution with NCCL collectives."""
-    def __init__(self, stages):
+    def __init__(self, stages, greedy_candidate_pairs=False):
         from concurrent.futures import ThreadPoolExecutor
         if len(stages) != 2:
             raise ValueError('TensorParallel requires exactly two rank stages')
         self.stages = stages
+        self.greedy_candidate_pairs = greedy_candidate_pairs
         self.executor = ThreadPoolExecutor(max_workers=2)
 
     def forward(self, activation, controls, sample=False, sample_batch=False):
@@ -122,13 +123,13 @@ class TensorParallel:
                 local = [G.tensor_to_device(t, stage['device_id']) for t in controls]
                 request = {'inputs': [local_activation, local[0], stage['keys'],
                     stage['values'], local[1], local[2], local[3], local[4]]}
-                if sample and stage['rank'] == 0:
+                if sample and stage['rank'] == 0 and not self.greedy_candidate_pairs:
                     request['sample'] = 'greedy_batch' if sample_batch else 'greedy'
                 prepared.append((stage, request))
             finally:
                 G.cuda_set_device(previous)
 
-        return self._run_prepared(prepared)
+        return self._run_prepared(prepared, compact_sample=sample and self.greedy_candidate_pairs)
 
     def forward_rank_local(self, rank_inputs, sample=False, scalar_values=None,
                            sample_batch=False, vector_values=None):
@@ -146,7 +147,7 @@ class TensorParallel:
                 raise ValueError('rank-local controls must contain position, page table, length, slot and active')
             request = {'inputs': [activation, controls[0], stage['keys'], stage['values'],
                 controls[1], controls[2], controls[3], controls[4]]}
-            if sample and stage['rank'] == 0:
+            if sample and stage['rank'] == 0 and not self.greedy_candidate_pairs:
                 request['sample'] = 'greedy_batch' if sample_batch else 'greedy'
             prepared.append((stage, request))
             if scalar_values is not None:
@@ -154,9 +155,10 @@ class TensorParallel:
             elif vector_values is not None:
                 updates.append(([activation, controls[0], controls[2], controls[3]], vector_values))
         return self._run_prepared(prepared, updates if updates else None,
-                                  vector_updates=vector_values is not None)
+                                  vector_updates=vector_values is not None,
+                                  compact_sample=sample and self.greedy_candidate_pairs)
 
-    def _run_prepared(self, prepared, updates=None, vector_updates=False):
+    def _run_prepared(self, prepared, updates=None, vector_updates=False, compact_sample=False):
         import garnet as G
         import os
 
@@ -187,6 +189,24 @@ class TensorParallel:
             updates[index] if updates is not None else None)
             for index, (stage, request) in enumerate(prepared)]
         results = [future.result() for future in futures]
+        if compact_sample:
+            previous = G.cuda_set_device(self.stages[0]['device_id'])
+            try:
+                pairs = G.tensor_to_cpu(results[0]['output']).tolist()
+            finally:
+                G.cuda_set_device(previous)
+            if not pairs or len(pairs) % 4:
+                raise ValueError('Greedy candidate output must contain two score/ID pairs per row')
+            ids, values = [], []
+            for i in range(0, len(pairs), 4):
+                a, ai, b, bi = pairs[i:i + 4]
+                if ai != int(ai) or bi != int(bi) or not (0 <= ai < (1 << 24) and 0 <= bi < (1 << 24)):
+                    raise ValueError('Greedy candidate IDs must be exact nonnegative FP32 integers')
+                take_b = b > a or (b == a and bi < ai)
+                ids.append(int(bi if take_b else ai))
+                values.append(b if take_b else a)
+            return {'status': 'ok', 'token_ids': ids, 'token_values': values,
+                    'token_id': ids[0]}
         return results[0]
 
     def release(self):

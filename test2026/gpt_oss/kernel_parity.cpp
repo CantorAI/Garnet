@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
+#include <limits>
 using namespace Garnet;
 void check(cudaError_t e) { if (e != cudaSuccess) throw std::runtime_error(cudaGetErrorString(e)); }
 float bf(float x) { uint32_t v; std::memcpy(&v, &x, 4); v += 0x7fff + ((v >> 16) & 1); v &= 0xffff0000; std::memcpy(&x, &v, 4); return x; }
@@ -249,6 +250,46 @@ void testLongPrefillAttention64() {
                      "Tiled prefill: paged full attention");
     }
 }
+void testVocabTop1() {
+    for (int width : {7, 65, 100544}) {
+        constexpr int rows = 128;
+        std::vector<float> full(size_t(rows) * width * 2), local(size_t(rows) * width);
+        for (int row = 0; row < rows; ++row)
+            for (int col = 0; col < width * 2; ++col)
+                full[size_t(row) * width * 2 + col] = bf(((row * 17 + col * 13) % 997 - 498) * .03125f);
+        full[width - 1] = full[width] = 32.f; // Cross-shard tie: lower global ID wins.
+        full[size_t(width) * 2 + width] = 64.f; // Rank1 wins.
+        for (int col = 0; col < width * 2; ++col) {
+            full[size_t(2) * width * 2 + col] = std::numeric_limits<float>::quiet_NaN();
+            full[size_t(3) * width * 2 + col] = -std::numeric_limits<float>::infinity();
+            full[size_t(4) * width * 2 + col] = -0.f;
+        }
+        full[size_t(5) * width * 2 + 1] = full[size_t(5) * width * 2 + width] = std::numeric_limits<float>::infinity();
+        std::vector<float> candidates[2];
+        for (int rank = 0; rank < 2; ++rank) {
+            for (int row = 0; row < rows; ++row)
+                std::copy_n(full.data() + size_t(row) * width * 2 + rank * width,
+                            width, local.data() + size_t(row) * width);
+            Device<float> input(local), output(std::vector<float>(rows * 2));
+            check(RunGptOssVocabTop1(input.p, output.p, rows, width, rank, nullptr));
+            candidates[rank] = output.read();
+        }
+        for (int row = 0; row < rows; ++row) {
+            float best = -std::numeric_limits<float>::max(); int index = 0;
+            for (int col = 0; col < width * 2; ++col) {
+                float value = full[size_t(row) * width * 2 + col];
+                if (value > best || (value == best && col < index)) { best = value; index = col; }
+            }
+            const float a = candidates[0][row * 2], b = candidates[1][row * 2];
+            const int ai = int(candidates[0][row * 2 + 1]), bi = int(candidates[1][row * 2 + 1]);
+            const bool takeB = b > a || (b == a && bi < ai);
+            if ((takeB ? bi : ai) != index || (takeB ? b : a) != best ||
+                std::signbit(takeB ? b : a) != std::signbit(best))
+                throw std::runtime_error("Compact vocab top1 differs from full vocabulary greedy");
+        }
+    }
+    std::cout << "Compact vocabulary pairs match full greedy, ties/NaN/Inf/signed zero,128 rows\n";
+}
 void testLongDecodeAttention(int dimension, int qHeads = 4, int kvHeads = 2) {
     GptOssOptions o; o.kind=1; o.qHeads=qHeads; o.kvHeads=kvHeads; o.headDim=dimension;
     o.layer=1; o.pageSize=16; o.prefill=0;
@@ -452,5 +493,5 @@ int main(int argc, char** argv) { try {
             testDecodeGemvSharded(true, rank);
             testDecodeGemvSharded(false, rank);
         }
-        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongDecodeAttention(64, 8, 1); testLongDecodeAttention(64, 32, 4); testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); testMoe(128, 96, 64, false, true); check(cudaDeviceSynchronize()); return 0; }
+        testVocabTop1(); testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongDecodeAttention(64, 8, 1); testLongDecodeAttention(64, 32, 4); testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); testMoe(128, 96, 64, false, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

@@ -22,7 +22,7 @@ void reportMarlinFallback(bool initialized, int tokens) {
 // Version 8 adds the expert-weight storage layout; old engines must rebuild.
 constexpr const char* kVersion = "8";
 bool valid(const GptOssOptions& o) {
-    if (o.kind < 0 || o.kind > 6) return false;
+    if (o.kind < 0 || o.kind > 7) return false;
     if (o.expertWeightsSharded != 0 &&
         (o.expertWeightsSharded != 1 || o.kind != 2 || o.tpRank < 0 || o.tpRank > 1 || o.experts < 2))
         return false;
@@ -30,6 +30,8 @@ bool valid(const GptOssOptions& o) {
         (o.bf16Communication && o.kind != 3)) return false;
     if (o.kind == 3 || o.kind == 4) return o.hidden > 0 && o.tpRank >= 0 && o.tpRank < 2;
     if (o.kind == 5) return o.hidden > 0 && o.epsilon > 0.f;
+    if (o.kind == 7) return o.hidden > 0 && o.hidden <= (1 << 23) &&
+        (o.tpRank == 0 || o.tpRank == 1);
     if (o.kind == 6) return o.hidden > 0 && o.hidden % 32 == 0 &&
         o.intermediate > 0 && o.intermediate <= 16384 &&
         (o.tpRank == 0 || o.tpRank == 1) &&
@@ -75,6 +77,7 @@ DimsExprs GptOssPlugin::getOutputDimensions(int, const DimsExprs* in, int count,
         out.d[2] = two ? b.operation(DimensionOperation::kPROD, *in[0].d[2], *two) : nullptr;
     }
     if (m_options.kind == 6) out.d[2] = b.constant(m_options.intermediate);
+    if (m_options.kind == 7) out.d[2] = b.constant(2);
     return out;
 }
 bool GptOssPlugin::supportsFormatCombination(int pos, const PluginTensorDesc* d, int count, int outputs) noexcept {
@@ -134,6 +137,8 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
             shape(in[7].desc.dims, {storedExperts, o.hidden, o.intermediate / 32}) &&
             shape(in[8].desc.dims, {storedExperts, o.hidden});
     } else if (o.kind == 3) {
+        m_valid = d.d[2] == o.hidden;
+    } else if (o.kind == 7) {
         m_valid = d.d[2] == o.hidden;
     } else if (o.kind == 5) {
         m_valid = d.d[2] == o.hidden && shape(in[1].desc.dims, {o.hidden});
@@ -202,6 +207,9 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
             rows * localVocab, static_cast<int>(rows), static_cast<int>(localVocab),
             m_options.tpRank, stream);
     }
+    else if (m_options.kind == 7) status = RunGptOssVocabTop1(
+        static_cast<const float*>(in[0]), static_cast<float*>(out[0]),
+        n, m_options.hidden, m_options.tpRank, stream);
     else if (m_options.kind == 5) status = RunGptOssRmsNorm(
         static_cast<const float*>(in[0]), static_cast<const float*>(in[1]),
         static_cast<float*>(out[0]), n, m_options.hidden, m_options.epsilon,
@@ -301,9 +309,9 @@ bool EnsureGptOssPluginRegistered() {
 #endif
 extern "C" GPT_OSS_EXPORT const char* GarnetOperatorPluginManifest() {
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.8.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather","gpt_oss_rms_norm","gpt_oss_decode_gemv"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.9.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
 #else
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.8.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_rms_norm","gpt_oss_decode_gemv"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.9.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
 #endif
 }
 extern "C" GPT_OSS_EXPORT int GarnetRegisterOperatorPlugin() { return Garnet::EnsureGptOssPluginRegistered() ? 1 : 0; }

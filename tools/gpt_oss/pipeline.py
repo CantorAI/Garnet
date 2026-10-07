@@ -142,6 +142,11 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     # These options change getWorkspaceSize()/buffer offsets. A serialized
     # engine built with a smaller layout cannot safely serve the larger one.
     identity['marlin_workspace_layout'] = marlin_workspace_profile()
+    compact_greedy = os.environ.get('GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY') == '1'
+    if compact_greedy:
+        if config['vocab_size'] % 2 or not (0 < config['vocab_size'] <= (1 << 24)):
+            raise ValueError('Compact TP2 greedy requires equal vocabulary shards and exact FP32 token IDs')
+        identity['compact_vocab_greedy'] = True
     key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:24]
     stages = [{'device_id': d['id'], 'rank': rank, 'start': 0,
                'end': config['num_hidden_layers'], 'estimated_bytes': required,
@@ -153,6 +158,7 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'config': config, 'estimated_per_gpu_bytes': required,
             'local_kv_heads': local_kv_heads,
             'expert_weight_shards': expert_weight_shards,
+            'compact_vocab_greedy': compact_greedy,
             'weight_storage_estimate': weight_storage,
             'marlin_workspace_layout': identity['marlin_workspace_layout']}
 
@@ -275,6 +281,9 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                           last_token_logits=False):
     """Build paired engines with sharded attention heads and rank-local MoE."""
     import garnet as G
+    compact_greedy = plan.get('compact_vocab_greedy', False)
+    if compact_greedy and prefill and not last_token_logits:
+        raise ValueError('Compact greedy prefill requires one last-token row per request')
     optimization_level = int(os.environ.get('GARNET_GPT_OSS_TRT_OPT_LEVEL', '1'))
     workspace_mb = int(os.environ.get('GARNET_GPT_OSS_TRT_WORKSPACE_MB', '256'))
     if not 0 <= optimization_level <= 5 or not 256 <= workspace_mb <= 4096:
@@ -328,6 +337,8 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
             source = source.replace('STAGE_TP_RANK = -1', 'STAGE_TP_RANK = ' + str(rank))
             source = source.replace('STAGE_EXPERT_WEIGHT_SHARD = 0',
                 'STAGE_EXPERT_WEIGHT_SHARD = ' + str(int(plan.get('expert_weight_shards', False))))
+            source = source.replace('STAGE_COMPACT_GREEDY = 0',
+                'STAGE_COMPACT_GREEDY = ' + str(int(compact_greedy)))
             (model_root / 'stage.py').write_text(source)
             shape = [end, plan['kv_pages'], 16, plan['local_kv_heads'], config['head_dim']]
             if kv is None:
@@ -358,4 +369,4 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
     finally:
         G.cuda_set_device(previous)
     from garnet_pipeline import TensorParallel
-    return TensorParallel(stages)
+    return TensorParallel(stages, greedy_candidate_pairs=compact_greedy)

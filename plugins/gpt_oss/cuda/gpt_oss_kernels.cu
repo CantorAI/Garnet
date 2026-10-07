@@ -337,6 +337,32 @@ __global__ void decodeAttentionPartial(const float* qkv, const __nv_bfloat16* ke
         state[2 + d] = value;
     }
 }
+__global__ void vocabTop1(const float* logits, float* pairs, int width, int rank) {
+    __shared__ float scores[256];
+    __shared__ int indices[256];
+    const int tid = threadIdx.x;
+    float score = -FLT_MAX;
+    int index = 0;
+    for (int i = tid; i < width; i += 256) {
+        const float value = logits[size_t(blockIdx.x) * width + i];
+        if (value > score || (value == score && i < index)) {
+            score = value; index = i;
+        }
+    }
+    scores[tid] = score; indices[tid] = index;
+    __syncthreads();
+    for (int stride = 128; stride; stride >>= 1) {
+        if (tid < stride && (scores[tid + stride] > scores[tid] ||
+            (scores[tid + stride] == scores[tid] && indices[tid + stride] < indices[tid]))) {
+            scores[tid] = scores[tid + stride]; indices[tid] = indices[tid + stride];
+        }
+        __syncthreads();
+    }
+    if (!tid) {
+        pairs[size_t(blockIdx.x) * 2] = scores[0];
+        pairs[size_t(blockIdx.x) * 2 + 1] = float(rank * width + indices[0]);
+    }
+}
 // Eight query heads share one KV head. Stage each paged tile once and reuse
 // it across eight query warps, retaining FP32 scores/softmax and one sink.
 template<int Splits>
@@ -718,6 +744,13 @@ cudaError_t TestGptOssMxfp4Decode(const unsigned char* blocks, const unsigned ch
     return cudaGetLastError();
 }
 #endif
+cudaError_t RunGptOssVocabTop1(const float* x, float* pairs, int rows, int width,
+    int rank, cudaStream_t stream) {
+    if (!x || !pairs || rows <= 0 || width <= 0 || width > (1 << 23) ||
+        (rank != 0 && rank != 1)) return cudaErrorInvalidValue;
+    vocabTop1<<<rows, 256, 0, stream>>>(x, pairs, width, rank);
+    return cudaGetLastError();
+}
 cudaError_t RunGptOssRope(const float* x, const std::int64_t* p, float* y, int tokens,
     const GptOssOptions& o, cudaStream_t stream) {
     const size_t n = size_t(tokens) * (o.qHeads + 2 * o.kvHeads) * o.headDim;

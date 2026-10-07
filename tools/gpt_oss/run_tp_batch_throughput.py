@@ -254,6 +254,7 @@ result_path.write_text(json.dumps({
     'hardware': plan['hardware'],
     'estimated_per_gpu_bytes': plan['estimated_per_gpu_bytes'],
     'expert_weight_shards': plan.get('expert_weight_shards', False),
+    'compact_vocab_greedy': plan.get('compact_vocab_greedy', False),
     'weight_storage_estimate': plan.get('weight_storage_estimate'),
     'marlin_workspace_layout': plan.get('marlin_workspace_layout'),
     'memory_budget_per_gpu_bytes': [stage['budget_bytes'] for stage in plan['stages']],

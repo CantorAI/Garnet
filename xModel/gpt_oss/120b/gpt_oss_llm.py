@@ -117,7 +117,7 @@ def forward(input_ids, position_ids, key_pages, value_pages, page_table,
 def forward_stage(x, position_ids, key_pages, value_pages, page_table,
                   context_length, slot_position, active_mask, weights, config,
                   start, end, prefill, last_token_logits=False, tp_rank=-1,
-                  expert_weight_shard=0):
+                  expert_weight_shard=0, compact_greedy=0):
     if start == 0:
         x = rounded(x * T.unary_op("embedding", weight_name="embedding.weight"))
     for layer_idx in range(start, end):
@@ -130,7 +130,13 @@ def forward_stage(x, position_ids, key_pages, value_pages, page_table,
         if tp_rank >= 0:
             x = linear(norm(x, "norm.scale", config['hidden_size']), "unembedding.weight", op="lm_head",
                        tp_mode='vocab', tp_rank=tp_rank)
-            x = tp_all_gather_logits(x, tp_rank, config)
+            if compact_greedy:
+                x = x * T.unary_op("gpt_oss_vocab_top1", tp_rank=tp_rank,
+                                   hidden_size=config['vocab_size'] // 2)
+                x = x * T.unary_op("gpt_oss_tp_all_gather", tp_rank=tp_rank,
+                                   hidden_size=2)
+            else:
+                x = tp_all_gather_logits(x, tp_rank, config)
         else:
             x = linear(norm(x, "norm.scale", config['hidden_size']), "unembedding.weight", op="lm_head")
     return x

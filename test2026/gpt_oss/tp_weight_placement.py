@@ -60,3 +60,14 @@ try:
 except ValueError:
     pass
 print('TP2 expert-storage and memory admission tests passed')
+
+os.environ.pop('GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY', None)
+for device in devices:
+    device['free_bytes'] = device['total_bytes']
+regular_vocab = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+os.environ['GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY'] = '1'
+compact_vocab = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+assert compact_vocab['compact_vocab_greedy'] and not regular_vocab['compact_vocab_greedy']
+assert compact_vocab['cache_key'] != regular_vocab['cache_key']
+os.environ.pop('GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY', None)
+print('Compact/full vocabulary profiles have distinct cache identities')

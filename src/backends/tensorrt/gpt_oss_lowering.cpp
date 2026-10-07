@@ -221,6 +221,8 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
     } else if (op == "gpt_oss_tp_all_reduce") {
         o.kind = 3; o.hidden = integer("hidden_size", 0); o.tpRank = integer("tp_rank", -1);
         o.bf16Communication = integer("bf16_communication", 0);
+    } else if (op == "gpt_oss_vocab_top1") {
+        o.kind = 7; o.hidden = integer("hidden_size", 0); o.tpRank = integer("tp_rank", -1);
     } else if (op == "gpt_oss_tp_all_gather") {
         o.kind = 4; o.hidden = integer("hidden_size", 0); o.tpRank = integer("tp_rank", -1);
     } else if (op == "gpt_oss_rms_norm") {

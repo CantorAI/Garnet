@@ -622,3 +622,32 @@ All three settings completed sequentially atsource4bd4822/nativefae4735 and pass
 GQA4 remains the next measured configuration; its approximately1.2% median lead over8 is small enough to warrant matched repeat/profile confirmation. All settings repeat128/128 complete512-token sequences within each mode, but GQA8/16 match0/128 GQA4 sequences in all trials. Cached build/load timingsGQA8=41.84/40.34s andGQA16=41.72/40.25s remain excluded. Full local evidence backed up/extracted atbatch128-gqa-fae4735-evidence.tgz and garnet-batch128-gqa-fae4735, including token-trajectory-comparison.json generated locally. Decision remains INCONCLUSIVE because other prompts/lengths and actual serving lifecycle are unverified and vLLM still leads.
 
 Next run recorded-configuration Nsight captures at decode offsets10..41 (processed context266..297) and480..511 (context736..767), keeping384-slot screen evidence separate from the one-trial diagnostic128-slot validation. Use profile_batch_tp2.py with exact reference settings/IDs and no concurrent GPU job. Then attribute remaining per-rank kernel/collective/host costs and broaden the saved four prompts before selecting a larger next implementation; no unmeasured TP expert-distribution redesign is accepted.
+#### OPT-0027 early/late Nsight attribution, 2026-10-07
+
+Source82c3770/nativefae4735, GQA4/expert32/CTA1, same batch128/input256/output512/context1024. Both one-trial diagnostic runs pass128 arithmetic checks. Capture32 decode steps at offsets10..41 (processed context266..297) and480..511 (736..767). GPU0 spans793.425/1103.639ms, or24.795/34.489ms per step under tracing. Per-GPU kernel-duration sums below are not additive wall shares; TP waits/overlap and profiling overhead apply. Instrumented full-run decode3729/3701tok/s is not the unprofiled reference comparison.
+
+| GPU0 group | Early32 steps ms | Late32 steps ms | Observation |
+|---|---:|---:|---|
+|Direct TP reduction,2304 calls|143.198|136.240|About4.3-4.5ms summed/step; synchronization included|
+|Marlin experts,2304 calls|130.283|290.232|Routing distribution may increase padded expert work; requires counts/profiling before redesign|
+|Shared GQA attention,1152 calls|85.616|215.905|Longer context increases attention work despite shared KV|
+|Router scores,1152 calls|79.226|86.262|About2.5-2.7ms summed/step|
+|Vocabulary all-gather,32 calls|50.849|50.675|About1.59ms/step to move full logits before greedy|
+|Expert metadata,1152 calls|35.785|39.032|About1.1-1.2ms summed/step|
+|Dense projection GEMMs,2304 calls|33.631|35.811|Attention/other projections|
+|Vocabulary projection,32 calls|19.564|23.504|Necessary local shard scoring|
+|Full-vocabulary top1,32 calls|9.026|9.068|About0.28ms/step scan after all-gather|
+
+Runtime memcpy/synchronize duration sums649.4/637.2ms early and956.7/944.4ms late include waits and overlap GPU execution; do not call them independently removable host overhead. The scripts formerly used for batch8 had a hardcoded per32 label despite16 captured steps; no old result is reused as a new profile. Here counts verify32 top1/all-gather calls and1152attention/2304reductions per rank. Complete reports/SQL/JSON/validation are backed up/extracted atD:/CantorAI/work/vast-54543362/batch128-gqa-context-profiles-82c3770.tgz and profiles/garnet-gqa4-b128-{early,late}.*.
+
+### OPT-0028: Compact vocabulary candidates for exact TP2 greedy sampling
+
+**Date / Commit:** 2026-10-07 local candidate on feature/gpt-oss-120b. Source: GPT-OSS plugin/lowering/xModel, pipeline planner and generic optional TensorParallel pair merge; Qwen code untouched.
+
+**System / Workload / Baseline:** Blackwell batch128/input256/output512/context1024. Prior GQA4 unprofiled median4580.18decode,3745.44complete execution; vLLM5394.05/5379.66. Early/late traces show~1.59ms/step full-logit all-gather plus~.28ms full top1. Candidate runtime/target model performance unmeasured.
+
+**Hypothesis / Implementation:** Greedy needs only the best rounded score and global token ID on each rank. Opt-in GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY=1 adds gpt_oss_vocab_top1 (new kind7), reuses the existing TP all-gather for two FP32 words/rank/row, then merges the two pairs through the existing tensor_to_cpu bridge with ties to lower global ID. At128 rows, collective input falls51,478,528 to1024bytes/rank. No logits/weight precision change or approximate math. IDs remain exactly representable up to2^24; equal vocabulary shards required. Full-logit model stays the default; compact prefill requires a last-token row per request. Compile/cache identity and operator requirements distinguish compact output. Existing kind0-6 options serialization/ABI stay unchanged; manifest minor version0.9.0 advertises the new operator. CPU transfer/merge overhead may offset some benefit and is included in decode wall time.
+
+**Correctness:** Local CUDA12/RTX4080 full native parity passes, including128-row vocabularies7/65/100544 with cross-rank ties, all NaN, all negative infinity, positive infinity and signed zero versus full-vocabulary greedy semantics. Cache-identity/admission test passes after restoring the test's intentionally reduced VRAM budget; initial test attempt correctly rejected that leftover budget rather than indicating a planner defect. Python syntax checks pass. Real TP2 compiled full/compact exact ID/value tests and target full model still pending. No pretrained speed/equivalence claim yet.
+
+**Decision / Next Step:** INCONCLUSIVE. Push locally, build on idle target, run native/compiled TP2 exact gates and complete fixture generation cold/warm. If those pass, compare matched full-logit/compact pretrained outputs and speed sequentially, then all four prompts and length/batch profiles. Do not infer vLLM superiority from removed bytes alone.
