@@ -19,6 +19,8 @@ from garnet_pipeline import ResidentTensorParallel
 from resident_budget import (admit_resident, native_identity, hardware_identity,
     kernel_environment, checkpoint_identity, validate_engine_files, file_sha256)
 
+startup_started = time.perf_counter()
+
 if len(sys.argv) != 7:
     raise ValueError('Expected weights, cache, request, result, batch, output')
 weights, cache, request_path, result_path = map(Path, sys.argv[1:5])
@@ -53,12 +55,20 @@ plan = make_tensor_parallel_plan(weights, devices, batch=batch, capacity=capacit
 if not ids or any(type(token) is not int or not 0 <= token < plan['config']['vocab_size'] for token in ids):
     raise ValueError('Invalid input token ID')
 repo = Path(__file__).resolve().parents[2]
+# The embedded Python subprocess bridge requires a string cwd. Resolve this
+# metadata before GPU work, so a reporting failure cannot discard a trial.
+source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+    cwd=str(repo), text=True).strip()
+partial_path = result_path.with_suffix('.trials.partial.json')
+if partial_path.exists():
+    raise FileExistsError(partial_path)
 build = Path(os.environ.get('GARNET_BUILD_DIR', repo.parent / 'out/build/gpt-oss'))
 admission = admit_resident(profile, plan, devices, binaries=native_identity(build),
     hardware_csv=hardware_identity(), environment=kernel_environment(),
     checkpoint=checkpoint_identity(weights), cache=cache, padded_prefill=padded,
     memory_fraction=float(request.get('memory_fraction', .9)))
 validate_engine_files(profile)
+admission_seconds = time.perf_counter() - startup_started
 print('Resident admission', json.dumps(admission), flush=True)
 
 def memory():
@@ -161,6 +171,7 @@ def run_request(trial):
 try:
     prefill_inputs = tensors(pair.prefill_stages, chunk)
     decode_inputs = tensors(pair.decode_stages, 1)
+    cold_startup_seconds = time.perf_counter() - startup_started
     for warmup in range(warmup_count):
         measured = run_request(-1 - warmup)
         warmups.append(dict(seconds=measured['full_request_wall_seconds'],
@@ -170,6 +181,11 @@ try:
     for trial in range(3):
         trials.append(run_request(trial))
         samples.append(memory())
+        partial_path.write_text(json.dumps(dict(source_commit=source_commit,
+            batch=batch, input_token_ids=ids, input_tokens_per_request=len(ids),
+            output_tokens_per_request=output_tokens, max_context_tokens_per_request=capacity,
+            measurement='Incomplete resident run; preserve completed trial matrices, not a success claim',
+            complete_warmups=warmups, decode_trials=trials, gpu_memory_samples_mib=samples), indent=2))
         print('Complete trial', trial, 'output tok/s', trials[-1]['full_request_output_tokens_per_second'], flush=True)
 finally:
     pair.release()
@@ -182,8 +198,7 @@ if any(peak * (1 << 20) > admitted['budget_bytes'] for peak, admitted in zip(pea
     raise RuntimeError('Observed resident memory exceeds admitted budget')
 
 kv_per_token = plan['config']['num_hidden_layers'] * 2 * plan['local_kv_heads'] * plan['config']['head_dim'] * 2
-result_path.write_text(json.dumps(dict(source_commit=subprocess.check_output(
-    ['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip(),
+result_path.write_text(json.dumps(dict(source_commit=source_commit,
     resident_profile=str(profile_path.resolve()), resident_profile_sha256=file_sha256(profile_path),
     resident_admission=admission, native_binaries=profile['native_binaries'],
     optimization_environment={key:value for key,value in os.environ.items()
@@ -200,6 +215,8 @@ result_path.write_text(json.dumps(dict(source_commit=subprocess.check_output(
     sampled_peak_gpu_memory_mib=peaks,
     gpu_memory_samples_mib=samples, prefill_build_seconds=load_seconds['prefill'],
     decode_build_seconds=load_seconds['decode'], complete_warmup_count=warmup_count,
+    admission_and_engine_checksum_seconds=admission_seconds,
+    cold_startup_seconds_excluding_module_imports=cold_startup_seconds,
     complete_warmups=warmups, decode_trials=trials, token_ids_by_request=trials[0]['token_ids_by_request'],
     prefill_seconds=trials[0]['prefill_seconds'],
     full_request_output_tokens_per_second=trials[0]['full_request_output_tokens_per_second'],
