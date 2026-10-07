@@ -43,7 +43,7 @@ This is an append-only record of performance hypotheses, implementations, correc
 | OPT-0035 | MoE TP2 | Split every expert's intermediate channels | Arithmetic5896.163decode/4668.401execution | 6084.620/4823.917;384 answers/mode pass | +3.20% decode/+3.33% execution; changed trajectories, broader cases pending | INCONCLUSIVE, opt-in |
 | OPT-0036 | Prefill router | BF16 WMMA16x64 score tiles | Long b128 execution2035.921tok/s, prefill20.777s | 2341.994tok/s, prefill17.071s;384 answers/mode pass | +15.03% execution; below vLLM2943.742, lifecycle excluded, trajectories change | INCONCLUSIVE, opt-in |
 | OPT-0037 | TP prefill communication | Explicit phase and flattened workspace guard; BF16 wire for already-BF16 intermediate partials | Long router1 execution2350.462tok/s, prefill16.989s | 2480.055tok/s, prefill15.491s;384 answers/mode and every trajectory match | +5.51% execution; below vLLM2943.742, lifecycle excluded, broader profiles pending | INCONCLUSIVE, opt-in |
-| OPT-0038 | Weight storage / engine lifecycle | Build-time Marlin prepacking | 30,457,036,800 original +31,585,075,200 repacked quant bytes/rank | Local80 independent packing/ASan/UBSan and110 exact native GPU checks pass; target gates running | Potential larger batches/resident engines; measured target saving/throughput pending | INCONCLUSIVE, opt-in |
+| OPT-0038 | Weight storage / engine lifecycle | Build-time Marlin prepacking | Original GPU peak74021/74001MiB | Prepacked44837/44817MiB; all arithmetic256x512 trajectories exact across3 repeats | Saves28.5GiB/rank, execution unchanged; fresh setup+28.14%, other prompts/residency pending | INCONCLUSIVE, opt-in |
 | OPT-0039 | Resident admission profiling | Opt-in TensorRT engine weight/context statistics | Full-checkpoint density estimate and sampled process peak | Implemented locally; target build/measurements pending | Diagnostic only; no residency or speed claim | INCONCLUSIVE |
 
 ## Cumulative accepted-stage history
@@ -1113,3 +1113,29 @@ The default-off GARNET_TRT_LOG_ENGINE_MEMORY=1 flag prints device, TensorRT tota
 #### OPT-0039 sequential engine-budget probe
 
 Add tools/gpt_oss/profile_tp_engine_memory.py to replay a completed, unprofiled prepacked workload and load its prefill and decode engines sequentially under the existing exclusive GPU lock. It validates recorded hardware/settings, preserves shared KV between sequential loads, records sampled memory and native TensorRT weight/context statistics per rank/phase, and rejects missing/inconsistent statistics. It issues no model inference and does not attempt paired residency. Python AST/diff checks pass; target execution and full diagnostic compilation are pending. This is engineering evidence collection, not a substitute for correctness/performance benchmarks. Prefer this targeted probe after the live storage screen and combine later source builds where possible; do not repeatedly rerun valid vLLM references.
+
+#### OPT-0038 completed pretrained storage-only A/B, 2026-10-07 14:24 UTC
+
+**Date / Commit / System / Workload:** Source a310066/native f156f51, same target hardware/precision/TP2 intermediate partition. Batch256/input256/output512/context1024/chunk16, router/FlashInfer/wire/tile/CTA flags identical. Original0 first, prepacked1 second, no competing inference. One identical-KV warmup per prefill chunk and one decode warmup, then three decode trials; later trials reuse input KV. Both storage formats rebuild fresh engines after the plugin-version change. Saved optimized vLLM0.31.0 reference for this exact shape ran first before this A/B.
+
+**Baseline / Observed Bottleneck / Hypothesis / Implementation:** Original quantized constants plus runtime Marlin copies consume memory while engines are released between phases. Composed build-time packing and versioned refit eliminate the original GPU quantized copies; plugin borrowing removes private repack allocations. This should free batch/resident capacity, while host packing can increase fresh setup. The proposal and byte/refit/native/compiled/ownership gates are preserved above; no resident handoff removal is implemented by this A/B.
+
+**Correctness Validation:** Both formats pass768 expected-answer checks each. Every256-request complete512-token trajectory matches across formats in all three trials, and every trajectory repeats exactly within each format. Native zero-error memory check and compiled cold/warm refit parity remain as recorded in the preceding gate. No numerical bound or answer changes.
+
+**Performance Result:**
+
+| Metric | Original + lazy repack | Engine-owned prepacked | Change |
+|---|---:|---:|---:|
+| Sampled peak GPU0/GPU1 | 74021/74001MiB | 44837/44817MiB | -29184MiB/rank (28.5GiB) |
+| Allocated BF16 KV/rank | 9,663,676,416bytes | Same | No change |
+| Warm prefill execution | 3.677889s | 3.680413s | +0.07% |
+| Median aggregate decode output | 7642.439363tok/s | 7647.054213tok/s | +0.06%, effectively unchanged |
+| First complete execution output | 6332.823274tok/s | 6331.910881tok/s | -0.01% |
+| Fresh prefill build/load, excluded | 228.947225s | 292.112357s | +63.165s |
+| Fresh decode build/load, excluded | 223.806959s | 288.040344s | +64.233s |
+
+Decode trials original7686.306958/7642.439363/7610.816232 and prepacked7686.100134/7647.054213/7593.431171tok/s. Fresh setup sums452.754184→580.152701s (+28.14%); this is measured full build/load, not a isolated host-packing timer. CPU packing/refit cost is therefore a real lifecycle tradeoff. Sampled peak is not exhaustive allocation tracing; the measured28.5GiB reduction is not identical to the analytical28.365GiB raw quantized payload saving because other TensorRT/context allocations may differ. Full logical KV history7,238,320,128bytes/rank unchanged. Execution excludes setup/handoff; optimized vLLM first full7172.030 and median full7194.274tok/s still lead this arithmetic profile.
+
+**Decision / Analysis:** INCONCLUSIVE, opt-in memory improvement. Exact outputs and substantial measured capacity saving support the next resident/batch experiments. Prepacking alone does not improve execution speed, and slower fresh setup must be retained in the evaluation. Other pretrained prompts and paired resident admission remain pending. No accepted-history advance or full goal claim.
+
+**Next Step / Evidence:** Archive prepacked-a310066-arithmetic.tgz SHA2569e7fc5030bab1d9a3de63f40a74dcb15088ca753b81c3504f4b7b620806c7932 is locally downloaded/hash-verified/extracted. After actual terminal session1702 and idle GPUs, pull ec00d5d and build the core memory diagnostic; build completes. Sequential non-inference engine-budget probe launched as unified session66289, work/engine-memory-ec00d5d, root same stem.log. This probe does not establish paired residency. Preserve every native statistic/phase sample and derive a budget including shared KV, both contexts, graph/external allocations and reserve before a resident experiment.
