@@ -17,22 +17,28 @@ model, result_path, expected_path, output_path = map(Path, sys.argv[1:])
 result = json.loads(result_path.read_text())
 expected = json.loads(expected_path.read_text())
 tokenizer = AutoTokenizer.from_pretrained(model, local_files_only=True)
+trials = result.get('decode_trials', [result])
+assert trials, 'no decode trials to validate'
 outcomes = []
-for slot, ids in enumerate(result['token_ids_by_request']):
-    text = tokenizer.decode(ids, skip_special_tokens=False)
-    decoded_path = output_path.with_name(output_path.stem + f'.slot{slot}.txt')
-    decoded_path.write_text(text)
-    matches = re.findall(r'<\|channel\|>final<\|message\|>\s*(\{.*?\})',
-                         text, re.DOTALL)
-    actual = None
-    if matches:
-        try:
-            actual = json.loads(matches[0])
-        except json.JSONDecodeError:
-            pass
-    outcomes.append({'slot': slot, 'pass': actual == expected,
-                     'decoded_path': str(decoded_path),
-                     'first_final_json': actual})
+for trial, data in enumerate(trials):
+    assert len(data['token_ids_by_request']) == result['batch'], 'missing batch slots'
+    for slot, ids in enumerate(data['token_ids_by_request']):
+        assert len(ids) == result['output_tokens_per_request'], 'wrong fixed output length'
+        text = tokenizer.decode(ids, skip_special_tokens=False)
+        suffix = f'.trial{trial}' if len(trials) > 1 else ''
+        decoded_path = output_path.with_name(output_path.stem + suffix + f'.slot{slot}.txt')
+        decoded_path.write_text(text)
+        matches = re.findall(r'<\|channel\|>final<\|message\|>\s*(\{.*?\})',
+                             text, re.DOTALL)
+        actual = None
+        if matches:
+            try:
+                actual = json.loads(matches[0])
+            except json.JSONDecodeError:
+                pass
+        outcomes.append({'trial': trial, 'slot': slot, 'pass': actual == expected,
+                         'decoded_path': str(decoded_path),
+                         'first_final_json': actual})
 
 output_path.write_text(json.dumps({'result': str(result_path),
                                    'all_pass': all(row['pass'] for row in outcomes),

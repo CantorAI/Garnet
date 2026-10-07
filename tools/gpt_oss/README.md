@@ -207,6 +207,13 @@ decode/full-request throughput. `GARNET_BATCH_CONTEXT_CAPACITY` selects the
 context limit; `GARNET_BATCH_PREFILL_CHUNK` selects an opt-in chunk size and
 budgets activation memory for that largest executed chunk. Match context,
 BF16 KV and generated-token limits with the vLLM runner for each comparison.
+Set `GARNET_BATCH_PREFILL_WARMUP=1` for a warmed prefill comparison; excluded
+warmup calls remain in the result. `GARNET_BATCH_DECODE_TRIALS=3` measures
+three decode windows from the same input KV prefix and validates every slot
+in every window. These are decode repeats, not repeated full requests.
+The continuous decode wall timer excludes progress logging and memory-query
+subprocesses. Execution throughput still excludes engine loading/handoff;
+consult its separate timing fields and measurement limitations.
 
 `GARNET_GPT_OSS_INLINE_BATCH_CONTROLS=1` opts into rank-thread vector updates
 for batches up to 64. The generic native bridge
