@@ -439,3 +439,15 @@ Native numerical and pretrained quality/performance validation is required.
 Native benchmark label `tile=8` denotes FlashInfer, including conversions and
 KV write, rather than an eight-query scalar tile. The optional `make_fixture.py
 DEST --gqa8` fixture exercises head64/8:1 GQA through compiled_parity.py.
+
+The large-prefill BF16 router is independently opt-in through
+`GARNET_GPT_OSS_PREFILL_ROUTER_TENSORCORE=1`; it dispatches only for prefill
+with at least1024 flattened rows, leaving decode on the existing router.
+Reduction order can change scores and selected experts. After building,
+run `bash tools/gpt_oss/verify_prefill_router.sh NEW_EVIDENCE_DIRECTORY`
+on an idle two-GPU Linux target. It holds the benchmark lock, checks native
+scores/sorting/probabilities and Compute Sanitizer, runs full compatibility
+tests, then validates independent CPU-prefix logits cold/warm at a synthetic
+batch512. The cold trace must confirm the actual router kernel ran. This
+synthetic shape does not establish pretrained batch512 admission. Quality,
+throughput, KV/memory and engine lifecycle comparisons remain separate.
