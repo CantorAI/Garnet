@@ -116,7 +116,9 @@ cudaError_t RunGptOssFlashPrefill(const void* const* in,float* y,void* workspace
     p.rawTable=(const int*)in[3];p.tokens=tokens;p.logical=logical;p.physical=physical;p.pageSize=16;p.window=o.window;
     try {
         status=flashinfer::BatchPrefillWithPagedKVCacheDispatched<true,TileQ,64,64,
-            flashinfer::PosEncodingMode::kNone,false,flashinfer::MaskMode::kNone,SinkAttention,Params>(
+            // Custom mode invokes our complete mask on every KV tile;
+            // ordinary mode skips masks on interior tiles, including holes.
+            flashinfer::PosEncodingMode::kNone,false,flashinfer::MaskMode::kCustom,SinkAttention,Params>(
             p,nullptr,nullptr,false,stream);
     }catch(const std::exception& error){
         std::fprintf(stderr,"GPT-OSS FlashInfer prefill rejected: %s\n",error.what());

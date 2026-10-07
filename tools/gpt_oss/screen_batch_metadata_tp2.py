@@ -1,6 +1,6 @@
-"""Replay a recorded shape for exact-order metadata or batch-router candidates.
+"""Replay a recorded shape for metadata, batch-router or FlashInfer prefill candidates.
 
-Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router].
+Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill].
 Uses the vLLM environment for validation; preserves all logs and token evidence.
 """
 import json
@@ -10,12 +10,15 @@ import statistics
 import subprocess
 import sys
 
-if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5]!='router'):
-    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router]')
+if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5] not in ('router','flash-prefill')):
+    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill]')
 request_path, expected_path, reference_path, directory = map(Path, sys.argv[1:5])
-router = len(sys.argv)==6
-flag = 'GARNET_GPT_OSS_ROUTER_QUERY_TILE' if router else 'GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA'
-label = 'router' if router else 'parallel'
+mode=sys.argv[5] if len(sys.argv)==6 else 'metadata'
+router = mode=='router'
+flash = mode=='flash-prefill'
+flag = ('GARNET_GPT_OSS_PREFILL_FLASHINFER' if flash else
+        'GARNET_GPT_OSS_ROUTER_QUERY_TILE' if router else 'GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA')
+label = 'flash' if flash else 'router' if router else 'parallel'
 choices = (0,2,4) if router else (0,1)
 reference = json.loads(reference_path.read_text())
 request = json.loads(request_path.read_text())
@@ -77,6 +80,7 @@ for value in choices:
 baseline = results[0]['decode_trials'][0]['token_ids_by_request']
 comparison = {'reference_result': str(reference_path.resolve()),
               'flag': flag,
+              'require_exact_trajectories': not flash,
               'batch': batch, 'input': len(request['input_ids']), 'output': output,
               'context': reference['max_context_tokens_per_request'], 'modes': []}
 for value, measured in zip(choices,results):
@@ -88,6 +92,7 @@ for value, measured in zip(choices,results):
         'prefill_s': measured['prefill_seconds'],
         'full_tok_s': measured['full_request_output_tokens_per_second']})
 (directory / 'comparison.json').write_text(json.dumps(comparison, indent=2))
-if any(count != batch for mode in comparison['modes'] for count in mode['exact_baseline_slots_per_trial']):
+if not flash and any(count != batch for mode in comparison['modes'] for count in mode['exact_baseline_slots_per_trial']):
     raise AssertionError('Exact-order candidate altered token trajectories; evidence retained')
-print('All baseline/candidate token trajectories match exactly', flush=True)
+print('All expected answers passed; FlashInfer trajectory comparison retained' if flash else
+      'All baseline/candidate token trajectories match exactly', flush=True)
