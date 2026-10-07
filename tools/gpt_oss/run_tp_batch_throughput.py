@@ -24,13 +24,18 @@ ids = request['input_ids']
 assert 1 <= batch <= 128 and 16 <= output_tokens <= 512
 capacity = int(os.environ.get('GARNET_BATCH_CONTEXT_CAPACITY', '4096'))
 assert ids and len(ids) + output_tokens <= capacity <= 4096
+configured_chunk = int(os.environ.get('GARNET_BATCH_PREFILL_CHUNK', '0'))
+assert 0 <= configured_chunk <= 4096
+chunk_limit = configured_chunk or len(ids)
+prefill_chunks = [(offset, min(chunk_limit, len(ids) - offset))
+                  for offset in range(0, len(ids), chunk_limit)]
 
 available = json.loads(G.cuda_devices_json())
 selected = request.get('device_ids', [d['id'] for d in available[:2]])
 assert len(selected) == 2 and len(set(selected)) == 2
 devices = [next(d for d in available if d['id'] == device_id) for device_id in selected]
 plan = make_tensor_parallel_plan(weights, devices, batch=batch,
-    capacity=capacity, tokens=len(ids),
+    capacity=capacity, tokens=min(chunk_limit, len(ids)),
     reserve_bytes=int(request.get('reserve_mb', 1024)) << 20,
     memory_fraction=float(request.get('memory_fraction', .9)))
 print('TP2 batch plan', json.dumps({k: plan[k] for k in
@@ -57,11 +62,6 @@ table_data = [batch_index * pages_per_request + page
               for page in range(pages_per_request)]
 table = tensor(table_data, 'int32', [batch, pages_per_request])
 active = tensor([1] * batch, 'int32', [batch])
-configured_chunk = int(os.environ.get('GARNET_BATCH_PREFILL_CHUNK', '0'))
-assert 0 <= configured_chunk <= 4096
-chunk_limit = configured_chunk or len(ids)
-prefill_chunks = [(offset, min(chunk_limit, len(ids) - offset))
-                  for offset in range(0, len(ids), chunk_limit)]
 prefill_build_seconds = prefill_seconds = 0.
 prefill_step_seconds = []
 prefill_engine_memory_samples_mib = []
