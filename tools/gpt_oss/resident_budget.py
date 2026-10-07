@@ -64,7 +64,7 @@ def plan_identity(plan):
     return {key: plan[key] for key in ('schema', 'mode', 'cache_key', 'hardware',
         'batch', 'capacity', 'max_tokens', 'kv_pages', 'config', 'local_kv_heads',
         'expert_weight_shards', 'moe_intermediate_shards', 'marlin_prepacked',
-        'compact_vocab_greedy', 'marlin_workspace_layout')}
+        'compact_vocab_greedy', 'marlin_workspace_layout', 'collective_workspace_layout')}
 
 
 def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environment,

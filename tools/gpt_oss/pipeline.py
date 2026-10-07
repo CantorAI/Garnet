@@ -194,6 +194,7 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     # These options change getWorkspaceSize()/buffer offsets. A serialized
     # engine built with a smaller layout cannot safely serve the larger one.
     identity['marlin_workspace_layout'] = marlin_workspace_profile()
+    identity['collective_workspace_layout'] = collective_workspace_profile()
     compact_greedy = os.environ.get('GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY') == '1'
     if compact_greedy:
         if config['vocab_size'] % 2 or not (0 < config['vocab_size'] <= (1 << 24)):
@@ -214,7 +215,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'marlin_prepacked': marlin_prepacked,
             'compact_vocab_greedy': compact_greedy,
             'weight_storage_estimate': weight_storage,
-            'marlin_workspace_layout': identity['marlin_workspace_layout']}
+            'marlin_workspace_layout': identity['marlin_workspace_layout'],
+            'collective_workspace_layout': identity['collective_workspace_layout']}
 
 
 def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_logits=False):
@@ -337,10 +339,17 @@ def estimate_tp2_moe_workspace_bytes(config, rows):
     return scratch
 
 
+def collective_workspace_profile():
+    # V10 two-BF16-buffer contract; runtime flags do not change allocation.
+    return 'v10-bf16-pair-prefill128-decode128-512-s1'
+
+
 def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                           last_token_logits=False, padded_prefill=False):
     """Build paired engines with sharded attention heads and rank-local MoE."""
     import garnet as G
+    if plan.get('collective_workspace_layout') != collective_workspace_profile():
+        raise ValueError('Collective workspace layout changed; regenerate the TP2 profile')
     if padded_prefill and not (prefill and last_token_logits):
         raise ValueError('Padded prefill requires last-valid-token logits')
     compact_greedy = plan.get('compact_vocab_greedy', False)
@@ -365,6 +374,8 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
     rows = batch * tokens
     scratch = max(estimate_tp2_moe_workspace_bytes(moe_config, rows),
                   estimate_tp2_marlin_workspace_bytes(moe_config, rows, prefill))
+    if (prefill and rows >= 128) or (not prefill and tokens == 1 and 128 <= batch <= 512):
+        scratch = max(scratch, rows * config['hidden_size'] * 4)
     if not prefill:
         scratch = max(scratch, batch * (config['num_attention_heads'] // 2) * 64 * 130 * 4)
     needed_mb = (scratch + (1 << 20) - 1) >> 20

@@ -11,7 +11,7 @@ struct GptOssOptions {
     int layer = 0, pageSize = 16, window = 0, prefill = 0;
     int hidden = 0, intermediate = 0, experts = 0, topK = 0;
     int tpRank = -1; // -1: unsharded; 0/1: GPT-OSS tensor-parallel rank
-    int bf16Communication = 0; // attention-only prefill all-reduce candidate
+    int bf16Communication = 0; // already BF16-rounded TP input; expert MoE partials are ineligible
     int expertWeightsSharded = 0; // original-layout expert axis contains only this TP2 rank
     int marlinPrepacked = 0; // engine-owned Marlin block/scale constants; no original-layout fallback
     float theta = 150000, factor = 32, initialContext = 4096;

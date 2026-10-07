@@ -5,7 +5,8 @@ import subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools/gpt_oss'))
 from pipeline import (make_tensor_parallel_plan, estimate_tp2_moe_workspace_bytes,
-                      estimate_tp2_marlin_workspace_bytes, marlin_workspace_profile)
+                      estimate_tp2_marlin_workspace_bytes, marlin_workspace_profile,
+                      collective_workspace_profile, build_tensor_parallel)
 
 fixture = Path(sys.argv[1])
 devices = [dict(id=i, name='synthetic', total_bytes=1 << 30,
@@ -16,6 +17,25 @@ os.environ.pop('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_PREPACKED', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', None)
 full = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+assert full['collective_workspace_layout'] == collective_workspace_profile()
+# Old collective layouts reject before any native builder/allocation, even
+# with a correct Marlin layout. Candidate flag cannot change engine allocation.
+from unittest.mock import patch
+import types
+for layout in (None, 'v9-prefill-only'):
+    stale=dict(full)
+    if layout is None: stale.pop('collective_workspace_layout')
+    else: stale['collective_workspace_layout']=layout
+    with patch.dict(sys.modules, {'garnet':types.SimpleNamespace()}):
+        try:
+            build_tensor_parallel(fixture,'unused-cache',stale,1,False)
+            raise AssertionError('Old collective workspace admitted')
+        except ValueError as error:
+            assert 'Collective workspace' in str(error)
+with patch.dict(os.environ, {'GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE':'1'}):
+    assert make_tensor_parallel_plan(fixture,devices,reserve_bytes=0)['cache_key']==full['cache_key']
+with patch('pipeline.collective_workspace_profile',return_value='v9-prefill-only'):
+    assert make_tensor_parallel_plan(fixture,devices,reserve_bytes=0)['cache_key']!=full['cache_key']
 os.environ['GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS'] = '1'
 sharded = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
 assert sharded['expert_weight_shards'] and not full['expert_weight_shards']

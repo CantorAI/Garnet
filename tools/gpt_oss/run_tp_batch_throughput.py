@@ -269,6 +269,7 @@ result_path.write_text(json.dumps({
     'compact_vocab_greedy': plan.get('compact_vocab_greedy', False),
     'weight_storage_estimate': plan.get('weight_storage_estimate'),
     'marlin_workspace_layout': plan.get('marlin_workspace_layout'),
+    'collective_workspace_layout': plan.get('collective_workspace_layout'),
     'memory_budget_per_gpu_bytes': [stage['budget_bytes'] for stage in plan['stages']],
     'token_ids_by_request': generated,
     'identical_output_across_duplicate_requests':

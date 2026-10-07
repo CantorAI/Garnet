@@ -16,6 +16,7 @@ plan = dict(schema=3, mode='gpt-oss-tensor-parallel-tp2', cache_key='measured',
     kv_pages=16384, config=dict(num_hidden_layers=36, head_dim=64), local_kv_heads=4,
     expert_weight_shards=False, moe_intermediate_shards=True, marlin_prepacked=True,
     compact_vocab_greedy=False, marlin_workspace_layout={'max_tokens': 4096},
+    collective_workspace_layout='fixture-v10',
     weight_storage_estimate={'prepacked_marlin_constant_bytes': 30_457_036_800})
 identity = dict(binaries={'core': 'a', 'plugin': 'b'}, hardware_csv='gpu UUIDs+driver',
     environment={'GARNET_GPT_OSS_MARLIN_PREPACKED': '1'}, checkpoint={'header': 'same'},
@@ -46,8 +47,10 @@ for key in ('native_binaries', 'hardware_csv', 'kernel_environment', 'checkpoint
     candidate[key] = None
     rejected(candidate)
 rejected(placement=dict(plan, marlin_prepacked=False))
+rejected(placement=dict(plan, collective_workspace_layout='v9-prefill-only'))
 for key,value in [('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K','64'),
-                  ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM','2')]:
+                  ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM','2'),
+                  ('GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE','1')]:
     with patch.dict(os.environ,{key:value}):
         assert kernel_environment()[key]==value
     environment=dict(identity['environment'],**{key:value})

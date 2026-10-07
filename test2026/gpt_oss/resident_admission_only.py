@@ -15,6 +15,7 @@ with tempfile.TemporaryDirectory() as temporary:
         config=dict(num_hidden_layers=1,head_dim=32,vocab_size=64),
         expert_weight_shards=False,moe_intermediate_shards=True,marlin_prepacked=True,
         compact_vocab_greedy=True,marlin_workspace_layout='fixture',
+        collective_workspace_layout='fixture-v10',
         weight_storage_estimate=dict(prepacked_marlin_constant_bytes=96<<20))
     env=dict(GARNET_BATCH_CONTEXT_CAPACITY='64',GARNET_BATCH_PREFILL_CHUNK='2',
         GARNET_BATCH_PLAN_ONLY='1',GARNET_RESIDENT_PROFILE=str(root/'profile.json'),

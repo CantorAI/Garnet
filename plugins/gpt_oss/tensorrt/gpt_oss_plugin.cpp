@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_plugin.h"
+#include "gpt_oss_tp_workspace.h"
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
 #include "gpt_oss_flash_prefill.h"
 #endif
@@ -22,8 +23,9 @@ void reportMarlinFallback(bool initialized, int tokens) {
     if (std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") && count.fetch_add(1) < 16)
         std::fprintf(stderr, "GPT-OSS Marlin: fallback (plugin initialized=%d, rows=%d)\n", initialized, tokens);
 }
-// Version9 adds engine-owned prepacked Marlin constants; old engines rebuild.
-constexpr const char* kVersion = "9";
+// Version10 reserves eligible decode BF16 scratch independently of runtime flags.
+// V9 decode engines have no such reservation and must rebuild.
+constexpr const char* kVersion = "10";
 bool valid(const GptOssOptions& o) {
     if (o.kind < 0 || o.kind > 7) return false;
     if(o.marlinPrepacked!=0&&(o.marlinPrepacked!=1||o.kind!=2||
@@ -178,15 +180,12 @@ size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
             return std::max(flash,size_t(in[0].dims.d[0])*m_options.qHeads*64*130*sizeof(float));
     }
 #endif
-    if (m_options.kind == 3 && m_options.bf16Communication && m_options.prefill && in &&
-        in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 &&
-        in[0].dims.d[1] > 0 && in[0].dims.d[2] > 0 && in[0].dims.d[2] == m_options.hidden) {
-        // Match enqueue's flattened batch*sequence threshold. TRT can pass a
-        // shared non-null workspace even if this plugin reserved zero bytes.
-        const size_t tokens = rows(in[0].dims);
-        const size_t bytesPerToken = size_t(m_options.hidden) * 2 * sizeof(uint16_t);
-        return tokens >= 128 && tokens <= std::numeric_limits<size_t>::max() / bytesPerToken
-            ? tokens * bytesPerToken : 0;
+    if (m_options.kind == 3) {
+        if (!in || in[0].dims.nbDims != 3) return 0;
+        const auto& d = in[0].dims;
+        return GptOssTpBf16Workspace(m_options.kind, m_options.bf16Communication,
+            m_options.prefill, m_options.tpRank, m_options.hidden, d.nbDims,
+            d.d[0], d.d[1], d.d[2]);
     }
     if (m_options.kind == 1 && !m_options.prefill && in &&
         in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 && in[0].dims.d[1] == 1)
@@ -214,11 +213,22 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
         d[0].dims.d[0], d[0].dims.d[1], d[3].dims.d[1], d[1].dims.d[1], m_options, stream);
     else if (m_options.kind == 3) {
         const size_t elements = size_t(d[0].dims.d[0]) * d[0].dims.d[1] * d[0].dims.d[2];
-        static const bool useBf16 = [] {
+        static const bool useBf16Prefill = [] {
             const char* flag = std::getenv("GARNET_GPT_OSS_BF16_PREFILL_ALLREDUCE");
             return flag && std::strcmp(flag, "1") == 0;
         }();
-        if (useBf16 && m_options.bf16Communication && m_options.prefill && n >= 128 && workspace)
+        static const bool useBf16Decode = [] {
+            const char* flag = std::getenv("GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE");
+            return flag && std::strcmp(flag, "1") == 0;
+        }();
+        const auto& dims = d[0].dims;
+        if (dims.d[2] != m_options.hidden) return 1;
+        const size_t scratch = GptOssTpBf16Workspace(m_options.kind,
+            m_options.bf16Communication, m_options.prefill, m_options.tpRank,
+            m_options.hidden, dims.nbDims, dims.d[0], dims.d[1], dims.d[2]);
+        const bool useBf16 = m_options.prefill ? useBf16Prefill : useBf16Decode;
+        if (useBf16 && scratch && !workspace) return 1;
+        if (useBf16 && scratch)
             status = GptOssTpAllReduceBf16(static_cast<const float*>(in[0]),
                 static_cast<float*>(out[0]), workspace, elements,
                 m_options.tpRank, stream);
@@ -336,9 +346,9 @@ bool EnsureGptOssPluginRegistered() {
 #endif
 extern "C" GPT_OSS_EXPORT const char* GarnetOperatorPluginManifest() {
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.10.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.11.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
 #else
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.10.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.11.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
 #endif
 }
 extern "C" GPT_OSS_EXPORT int GarnetRegisterOperatorPlugin() { return Garnet::EnsureGptOssPluginRegistered() ? 1 : 0; }
