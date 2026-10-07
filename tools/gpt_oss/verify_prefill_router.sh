@@ -66,14 +66,16 @@ for bf16 in 0 1; do
         if [[ $bf16 == 1 && $phase == cold ]]; then
             # The substring selects both packBf16 and unpackBf16. NCCL and
             # reference kernels execute without instrumentation in this check.
-            command=(compute-sanitizer --tool memcheck --error-exitcode 99 --target-processes all
+            # Preserve the application's exit code, then reject every saved
+            # report except the exact documented NCCL initialization statuses.
+            command=(compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all
                 --kernel-name kns=packBf16 --print-session-details --report-api-errors explicit
-                --suppressions "$repo/tools/gpt_oss/nccl_initialization_api_suppressions.xml"
                 --xml --save "$directory/$label.memcheck.xml" --print-limit 0 "${command[@]}")
         fi
         "${command[@]}" >"$directory/$label.log" 2>&1
         if [[ $bf16 == 1 && $phase == cold ]]; then
-            grep -Fq 'ERROR SUMMARY: 0 errors' "$directory/$label.log"
+            "$python" "$repo/tools/gpt_oss/validate_sanitizer_xml.py" \
+                "$directory/$label.memcheck.xml" "$directory/$label.memcheck-audit.json"
         fi
         echo "Full-model batch512 teacher-forced BF16=$bf16 $phase gate passed"
     done

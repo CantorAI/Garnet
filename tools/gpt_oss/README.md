@@ -469,14 +469,16 @@ can expose attention costs that the first chunk misses; an invalid index fails
 before execution. The index and instrumentation flag are recorded in the raw
 result. Profiled timings stay separate from throughput comparisons.
 
-The BF16 pack/unpack memcheck retains explicit CUDA API reporting and uses
-`nccl_initialization_api_suppressions.xml` only for observed NCCL initialization
-backtraces: unavailable-kernel209 attribute probes and already-enabled-peer704
-clearing. Every suppression requires the specific API, error code and NCCL
-caller frames. Device-memory errors and Garnet callers are not suppressed.
-Full unsuppressed diagnostic XML remains in the research evidence; the final
-run also saves XML. New errors must be investigated rather than broadening
-these exclusions to make a gate pass.
+The BF16 pack/unpack memcheck retains explicit CUDA API reporting, unlimited
+unsuppressed XML and the application's exit status. `validate_sanitizer_xml.py`
+then rejects every record except three observed NCCL initialization cases:
+attribute-probe209 and already-enabled-peer704 clearing, each requiring the
+exact API, code and specific caller frames inside libnccl.so.2. It records all
+excluded counts, unexpected records and the XML hash. Device-memory errors,
+Garnet callers and other codes are fatal. This is zero unexpected errors,
+not a claim that the tool printed zero total errors. Kernel coverage and
+actual prefill/decode dispatch still require separate checks. Historical
+nonmatching tool suppression attempts remain in Git and research evidence.
 
 The `prefill-router` screen mode runs just router0/1 with BF16 communication
 explicitly off. It can isolate router quality/performance after its own native,
