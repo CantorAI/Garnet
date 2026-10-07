@@ -5185,8 +5185,7 @@ namespace Garnet {
         const bool isTextRope =
             isMultimodalTextRope || opName == "qwen3_apply_text_rope_packed";
         const bool isTextAttention = opName == "paged_attention_packed";
-        const bool isGptOssBinary = opName == "gpt_oss_apply_yarn_rope_packed" ||
-            opName == "gpt_oss_add_rms_norm";
+        const bool isGptOssRope = opName == "gpt_oss_apply_yarn_rope_packed";
         const bool isDeepstackAdd = opName == "qwen3_vl_deepstack_add";
         const bool isPagedKVBinding =
             opName == "paged_kv_bind_key_pages" ||
@@ -5198,7 +5197,7 @@ namespace Garnet {
         if (!isElementwise && !isSequenceConcat && !isMatrix && !isVisionPositionInterpolate &&
             !isVisionRope && !isVisionAttention && !isVisualEmbeddingMerge &&
             !isAudioEmbeddingMerge && !isAudioTokenCompact &&
-            !isTextRope && !isTextAttention && !isGptOssBinary && !isDeepstackAdd && !isPagedKVBinding) {
+            !isTextRope && !isTextAttention && !isGptOssRope && !isDeepstackAdd && !isPagedKVBinding) {
             loweringError = "unsupported binary operation: " + opName;
             return X::Value();
         }
@@ -5208,7 +5207,7 @@ namespace Garnet {
             return X::Value();
         }
 
-        if (isGptOssBinary) {
+        if (isGptOssRope) {
             lastOutput = LowerGptOss(opName, left, right, kwParams);
         }
         else if (isPagedKVBinding) {
