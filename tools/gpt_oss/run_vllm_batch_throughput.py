@@ -14,9 +14,14 @@ from pathlib import Path
 
 
 assert len(sys.argv) == 6, 'expected model, request, result, batch, output tokens'
+profile_module_dir = str(Path(__file__).resolve().parent)
+os.environ['PYTHONPATH'] = profile_module_dir + os.pathsep + os.environ.get('PYTHONPATH', '')
 model = Path(sys.argv[1]).resolve()
 request = json.loads(Path(sys.argv[2]).read_text())
 result_path = Path(sys.argv[3])
+if result_path.exists():
+    raise FileExistsError(f'Refusing to overwrite benchmark evidence: {result_path}')
+result_path.parent.mkdir(parents=True, exist_ok=True)
 batch, output_tokens = int(sys.argv[4]), int(sys.argv[5])
 assert 1 <= batch <= 128 and 16 <= output_tokens <= 512
 capacity = int(os.environ.get('VLLM_BATCH_CONTEXT_CAPACITY', '4096'))
@@ -37,7 +42,8 @@ async def main():
                     max_model_len=capacity, max_num_seqs=batch,
                     max_num_batched_tokens=max_batched_tokens,
                     enable_prefix_caching=False, enable_chunked_prefill=True,
-                    gpu_memory_utilization=.8, seed=0)
+                    gpu_memory_utilization=.8, seed=0,
+                    worker_extension_cls='vllm_profile.GptOssBenchmarkProfile')
     engine = AsyncLLM.from_engine_args(AsyncEngineArgs(**settings))
     params = SamplingParams(temperature=0, max_tokens=output_tokens,
                             ignore_eos=True, seed=0)
@@ -49,6 +55,10 @@ async def main():
         return [int(value.strip()) for value in output.splitlines()]
 
     engine_memory_mib = gpu_memory_mib()
+    hardware_csv = subprocess.check_output(
+        ['nvidia-smi', '--query-gpu=index,name,uuid,pci.bus_id,memory.total,driver_version',
+         '--format=csv'], text=True)
+    topology = subprocess.check_output(['nvidia-smi', 'topo', '-m'], text=True)
 
     async def generate(index, prefix):
         result = None
@@ -70,6 +80,8 @@ async def main():
     try:
         await asyncio.gather(*(generate(i, 'warmup') for i in range(batch)))
         warmed_memory_mib = gpu_memory_mib()
+        kv_profile_after_warmup = await engine.collective_rpc(
+            'benchmark_kv_profile', args=(batch, len(request['input_ids']), output_tokens))
         for trial in range(trial_count):
             started = time.perf_counter()
             outputs = await asyncio.gather(*(generate(i, f'bench-{trial}') for i in range(batch)))
@@ -96,6 +108,8 @@ async def main():
             memory_samples.append(gpu_memory_mib())
             print('Decode trial', trial, 'aggregate output tok/s',
                   measurements[-1]['decode_aggregate_output_tokens_per_second'], flush=True)
+        kv_profile_after_trials = await engine.collective_rpc(
+            'benchmark_kv_profile', args=(batch, len(request['input_ids']), output_tokens))
     finally:
         engine.shutdown()
 
@@ -106,6 +120,13 @@ async def main():
         'input_token_ids': request['input_ids'],
         'output_tokens_per_request': output_tokens, 'batch': batch,
         'max_context_tokens_per_request': capacity,
+        'hardware_csv': hardware_csv, 'topology': topology,
+        'kv_profile_after_warmup': kv_profile_after_warmup,
+        'kv_profile_after_trials': kv_profile_after_trials,
+        'sampled_peak_gpu_memory_mib': [max(row[rank] for row in
+            [engine_memory_mib, warmed_memory_mib] + memory_samples)
+            for rank in range(len(engine_memory_mib))],
+        'measurement_limits': 'Inference windows exclude engine startup and profiling RPCs; every measured trial is a complete request. KV backing allocation is deduplicated physical storage; logical history is an estimate, not scheduler occupancy. Sampled device memory is not a guaranteed peak; PyTorch peak counters exclude external allocators.',
         'gpu_memory_mib_after_engine_start': engine_memory_mib,
         'gpu_memory_mib_after_warmup': warmed_memory_mib,
         'gpu_memory_mib_after_benchmark': memory_samples[-1],

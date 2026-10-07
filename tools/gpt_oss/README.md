@@ -274,6 +274,14 @@ matched input/output lengths; a repeated-prompt batch and a diverse batch
 can favor different tiles. This is an experimental override, not a measured
 default improvement.
 
+The vLLM batch runner uses a read-only worker extension to record physical
+KV backing bytes, block/layout settings and per-layer full/sliding history
+estimates outside timed inference. Shared tensor views are counted once by
+storage address. Logical retained history excludes page rounding and
+in-flight tokens; completed requests have already freed scheduler blocks
+when the RPC runs. Keep this estimate distinct from measured occupancy,
+and keep sampled device memory distinct from PyTorch allocator peaks.
+
 The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
 and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
 path shards attention heads and vocabulary rows, keeps rank-local MoE work,
