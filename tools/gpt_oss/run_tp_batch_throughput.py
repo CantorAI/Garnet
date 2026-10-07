@@ -84,6 +84,8 @@ prefill_warmup_step_seconds = []
 prefill_engine_memory_samples_mib = []
 prefill_completed_memory_samples_mib = []
 profile_prefill = os.environ.get('GARNET_GPT_OSS_PROFILE_PREFILL') == '1'
+profile_prefill_chunk = int(os.environ.get('GARNET_GPT_OSS_PROFILE_PREFILL_CHUNK', '0'))
+assert 0 <= profile_prefill_chunk < len(prefill_chunks)
 profile_steps = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_STEPS', '0'))
 profile_start = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_START', '10'))
 assert profile_steps >= 0
@@ -92,7 +94,7 @@ if profile_steps:
 profiler = ctypes.CDLL('libcudart.so') if profile_prefill or profile_steps else None
 model = kv = prefill = None
 loaded_tokens = None
-for offset, chunk_tokens in prefill_chunks:
+for chunk_index, (offset, chunk_tokens) in enumerate(prefill_chunks):
     if chunk_tokens != loaded_tokens:
         if model is not None:
             kv = [(stage['keys'], stage['values']) for stage in model.stages]
@@ -121,7 +123,8 @@ for offset, chunk_tokens in prefill_chunks:
         model.forward(input_ids, [positions, table, length, slot, active],
                       True, sample_batch=True)
         prefill_warmup_step_seconds.append(time.perf_counter() - warm_started)
-    if profile_prefill and profiler.cudaProfilerStart() != 0:
+    capture_prefill = profile_prefill and chunk_index == profile_prefill_chunk
+    if capture_prefill and profiler.cudaProfilerStart() != 0:
         raise RuntimeError('cudaProfilerStart failed for prefill')
     started = time.perf_counter()
     try:
@@ -129,7 +132,7 @@ for offset, chunk_tokens in prefill_chunks:
                                 True, sample_batch=True)
     finally:
         step = time.perf_counter() - started
-        if profile_prefill:
+        if capture_prefill:
             status = profiler.cudaProfilerStop()
             if status:
                 print('cudaProfilerStop failed for prefill:', status,
@@ -279,6 +282,7 @@ result_path.write_text(json.dumps({
     'prefill_warmup_step_seconds_excluded': prefill_warmup_step_seconds,
     'prefill_measurement': ('one identical-KV warmup per chunk before timed execution'
                             if warm_prefill else 'first execution after engine loading'),
+    'profile_prefill_chunk': profile_prefill_chunk if profile_prefill else None,
     'max_context_tokens_per_request': capacity,
     'kv_cache_allocated_bytes_per_gpu': (
         plan['config']['num_hidden_layers'] * 2 * plan['kv_pages'] * 16 *

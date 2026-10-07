@@ -461,3 +461,10 @@ matrices, memory/KV, prefill and decode timing. Router reduction-order changes
 are recorded; the wire-only comparison must retain identical trajectories.
 The saved reference must match input IDs and context, and measurements remain
 unprofiled. A new batch/length shape still needs optimized vLLM first.
+
+For a separate Nsight diagnostic, `GARNET_GPT_OSS_PROFILE_PREFILL=1` captures
+one timed prefill chunk after its optional warmup. Select its zero-based index
+with `GARNET_GPT_OSS_PROFILE_PREFILL_CHUNK` (default0). Later long-context chunks
+can expose attention costs that the first chunk misses; an invalid index fails
+before execution. The index and instrumentation flag are recorded in the raw
+result. Profiled timings stay separate from throughput comparisons.
