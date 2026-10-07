@@ -41,7 +41,8 @@ for batch, width in ((3, 7), (128, 100544)):
             model = G.load_model(str(root / 'tp_vocab_test.py'), runtime_mode='compiled_xmodel',
                 backend='tensorrt', precision='bf16', entry_function='GptOssVocabTest',
                 input_shapes=[[batch, 1, width]], input_dtypes=['float32'],
-                cache_dir=str(root / 'engine'))
+                cache_dir=str(root / 'engine'),
+                compile={'builder_workspace_mb': 128, 'builder_optimization_level': 1})
             assert model.runtime_status()['ready'], model.runtime_status()
             x = G.tensor_from_host([value for row in rows for value in row[rank * width:(rank + 1) * width]],
                                    dtype='float32', shape=[batch, 1, width], device='cuda')
