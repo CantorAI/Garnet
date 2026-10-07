@@ -1181,3 +1181,7 @@ The sequential engine profiler now embeds binary/GPU/cache/checkpoint/option ide
 #### OPT-0040 first target build failure
 
 Target1dbf2e0 core compilation fails before any gates/inference because IGatherLayer uses setGatherAxis(), not setAxis(). The exact installed SDK confirms the API; fix locally and push before retry. Failed build log work/resident-1dbf2e0-build.log is retained. This is an implementation/API error, not a numerical or memory result; no quality/performance claim. No remote source edits.
+
+#### OPT-0040 first compiled selection harness failure
+
+Core4b586c7 compiles successfully. First gate fails before compiling selection because the fixture requested unsupported runtime precision fp32; this backend accepts bf16 or int4_fp16. Selection inputs remain float32 and exact gather outputs remain required; correct only the fixture precision to bf16. Preserve work/resident-gather-fix-gates/full-parity.log and selection log. No numerical-bound change, no source edit on Vast and no speed result. Added explicit --resident-profile paired-suite integration: strict batch/context/chunk profile matching, one full warmup and three full trials, saved V references revalidated first, full-request median and TTFT recorded.

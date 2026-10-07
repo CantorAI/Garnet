@@ -24,6 +24,8 @@ parser.add_argument('--prefill-chunk', type=int, help='explicit Garnet query chu
 parser.add_argument('--context', type=int, help='explicit context reservation; reject shorter requests')
 parser.add_argument('--reuse-vllm-manifest', type=Path,
                     help='reuse and revalidate completed matched references on this hardware')
+parser.add_argument('--resident-profile', type=Path,
+                    help='explicit measured resident engine profile; full warmed Garnet requests')
 args = parser.parse_args()
 reference_path, directory = args.profile, args.directory
 names = args.cases or ['code-tracing', 'instruction-following', 'long-context-retrieval']
@@ -66,6 +68,22 @@ for key in ('GARNET_BENCH_NSYS_OUTPUT', 'GARNET_BENCH_REFERENCE_JSON', 'GARNET_B
     env.pop(key, None)
 env.update(GARNET_GPT_OSS_PROFILE_DECODE_STEPS='0', GARNET_GPT_OSS_PROFILE_PREFILL='0',
            GARNET_BATCH_DECODE_TRIALS='3')
+resident_profile = None
+if args.resident_profile is not None:
+    resident_profile = json.loads(args.resident_profile.read_text())
+    if resident_profile.get('resident_profile_schema') != 1:
+        raise ValueError('Resident profile lacks strict runtime identities')
+    for key in list(env):
+        if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_')) and key not in (
+                'GARNET_GPT_OSS_WEIGHTS', 'GARNET_GPT_OSS_CACHE', 'GARNET_GPT_OSS_TOKENIZER'):
+            del env[key]
+    for key, value in resident_profile['kernel_environment'].items():
+        if (not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_')) or
+                key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value,str)):
+            raise ValueError('Invalid resident kernel environment')
+        env[key] = value
+    env['GARNET_RESIDENT_PROFILE'] = str(args.resident_profile.resolve())
+    env['GARNET_RESIDENT_WARMUPS'] = '1'  # Existing V references have one complete warmup.
 tensorrt = Path(env.get('GARNET_TENSORRT_ROOT', root / 'ThirdPartySDK/TensorRT'))
 env.setdefault('XLANG3_PYTHON_LIB', str(root / 'ThirdPartySDK/Python-3.14.0/Lib'))
 env['PYTHONPATH'] = str(build / 'bin') + os.pathsep + env.get('PYTHONPATH', '')
@@ -80,6 +98,10 @@ manifest = {'garnet_profile': str(reference_path.resolve()), 'vllm_version': ver
             'explicit_profile_overrides': {'batch': args.batch, 'output': args.output,
                 'prefill_chunk': args.prefill_chunk, 'context': args.context},
             'measurement_limits': 'Garnet full_request_tok_s is execution only, excluding engine build/load and handoff. vLLM measures complete warmed requests. Garnet later decode trials reuse input KV. KV history is estimated, not live scheduler occupancy. See each raw result for timings and limits.'}
+if resident_profile is not None:
+    manifest['resident_profile'] = str(args.resident_profile.resolve())
+    manifest['resident_profile_sha256'] = hashlib.sha256(args.resident_profile.read_bytes()).hexdigest()
+    manifest['measurement_limits'] = 'Both engines measure three warmed complete requests after one complete warmup. Startup excluded and reported separately. Resident Garnet reruns full input in every trial and includes controls/sampling/handoff. Serial homogeneous batch only; sampled GPU memory is not exhaustive peak.'
 reused = {}
 if args.reuse_vllm_manifest is not None:
     previous = json.loads(args.reuse_vllm_manifest.read_text())
@@ -104,6 +126,12 @@ for name in names:
         raise ValueError('Saved request exceeds supported context profile')
     case = {'name': name, 'request': str(request.resolve()), 'expected': str(expected.resolve()),
             'input': len(ids), 'context': capacity, 'batch': batch, 'output': output}
+    if resident_profile is not None:
+        measured_plan = resident_profile['plan']
+        planned_chunk = int(env.get('GARNET_BATCH_PREFILL_CHUNK', '0')) or len(ids)
+        if (measured_plan['batch'] != batch or measured_plan['capacity'] != capacity or
+                measured_plan['max_tokens'] != min(planned_chunk,len(ids))):
+            raise ValueError('Resident batch/context/chunk must match measured profile')
     if args.reuse_vllm_manifest is not None:
         saved_case = reused[name]
         if 'vllm' not in saved_case:
@@ -190,6 +218,14 @@ for engine in ('vllm', 'garnet'):
                 decode_build_load_seconds=measured['decode_build_seconds'],
                 kv_allocated_bytes_per_gpu=measured['kv_cache_allocated_bytes_per_gpu'],
                 estimated_full_kv_history_bytes_per_gpu=measured['logical_kv_bytes_per_gpu_at_completion'])
+            if resident_profile is not None:
+                if (measured.get('complete_warmup_count') != 1 or len(measured['decode_trials']) != 3 or
+                        any(trial['prefill_kv_reused_for_decode_trial'] for trial in measured['decode_trials'])):
+                    raise AssertionError('Resident complete request/warmup contract differs')
+                case[engine].update(median_full_request_tok_s=statistics.median(
+                    trial['full_request_output_tokens_per_second'] for trial in measured['decode_trials']),
+                    full_request_wall_seconds=[trial['full_request_wall_seconds'] for trial in measured['decode_trials']],
+                    ttft_seconds=[trial['request_first_token_seconds'][0] for trial in measured['decode_trials']])
         else:
             if measured['vllm_version'] != version:
                 raise AssertionError('vLLM version differs from installed-version evidence')

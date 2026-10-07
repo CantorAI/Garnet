@@ -8,7 +8,7 @@ cache = Path(sys.argv[1])
 values = [float(i) for i in range(4 * 4 * 3)]
 for reload in range(2):
     model = G.load_model(str(source), runtime_mode='compiled_xmodel',
-        backend='tensorrt', precision='fp32', entry_function='SelectLastValid',
+        backend='tensorrt', precision='bf16', entry_function='SelectLastValid',
         cache_dir=str(cache), input_shapes=[[4, 4, 3], [4]],
         input_dtypes=['float32', 'int32'])
     if not model.runtime_status()['ready']:
