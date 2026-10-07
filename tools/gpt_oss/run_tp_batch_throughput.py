@@ -21,7 +21,7 @@ request = json.loads(Path(sys.argv[3]).read_text())
 result_path = Path(sys.argv[4])
 batch, output_tokens = int(sys.argv[5]), int(sys.argv[6])
 ids = request['input_ids']
-assert 1 <= batch <= 16 and 16 <= output_tokens <= 512
+assert 1 <= batch <= 32 and 16 <= output_tokens <= 512
 assert ids and len(ids) + output_tokens <= 4096
 
 available = json.loads(G.cuda_devices_json())
@@ -71,6 +71,7 @@ started = time.perf_counter()
 prefill = model.forward(input_ids, [positions, table, length, slot, active],
                         True, sample_batch=True)
 prefill_seconds = time.perf_counter() - started
+prefill_completed_memory_mib = gpu_memory_mib()
 generated = [[int(token)] for token in prefill['token_ids']]
 assert len(generated) == batch, (len(generated), batch)
 print('TP2 batch prefill complete', prefill_seconds, flush=True)
@@ -165,6 +166,7 @@ result_path.write_text(json.dumps({
         plan['local_kv_heads'] * plan['config']['head_dim'] * 2),
     'kv_pages_per_gpu': plan['kv_pages'],
     'gpu_memory_mib_after_prefill_engine': prefill_engine_memory_mib,
+    'gpu_memory_mib_after_prefill': prefill_completed_memory_mib,
     'gpu_memory_mib_after_decode_engine': decode_engine_memory_mib,
     'gpu_memory_mib_during_decode': memory_samples_mib,
     'prefill_build_seconds': prefill_build_seconds,

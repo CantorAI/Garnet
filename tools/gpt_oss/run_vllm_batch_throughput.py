@@ -17,7 +17,7 @@ model = Path(sys.argv[1]).resolve()
 request = json.loads(Path(sys.argv[2]).read_text())
 result_path = Path(sys.argv[3])
 batch, output_tokens = int(sys.argv[4]), int(sys.argv[5])
-assert 1 <= batch <= 16 and 16 <= output_tokens <= 512
+assert 1 <= batch <= 32 and 16 <= output_tokens <= 512
 assert request['input_ids'] and len(request['input_ids']) + output_tokens <= 4096
 
 
