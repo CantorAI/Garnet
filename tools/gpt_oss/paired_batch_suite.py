@@ -26,7 +26,11 @@ parser.add_argument('--reuse-vllm-manifest', type=Path,
                     help='reuse and revalidate completed matched references on this hardware')
 parser.add_argument('--resident-profile', type=Path,
                     help='explicit measured resident engine profile; full warmed Garnet requests')
+parser.add_argument('--vllm-only', action='store_true',
+                    help='fresh reference phase only; no Garnet inference or paired success claim')
 args = parser.parse_args()
+if args.vllm_only and args.reuse_vllm_manifest is not None:
+    raise ValueError('Fresh vLLM-only phase cannot reuse a prior manifest')
 reference_path, directory = args.profile, args.directory
 names = args.cases or ['code-tracing', 'instruction-following', 'long-context-retrieval']
 allowed = {'arithmetic', 'code-tracing', 'instruction-following', 'long-context-retrieval'}
@@ -100,10 +104,15 @@ manifest = {'garnet_profile': str(reference_path.resolve()), 'vllm_version': ver
             'explicit_profile_overrides': {'batch': args.batch, 'output': args.output,
                 'prefill_chunk': args.prefill_chunk, 'context': args.context},
             'measurement_limits': 'Garnet full_request_tok_s is execution only, excluding engine build/load and handoff. vLLM measures complete warmed requests. Garnet later decode trials reuse input KV. KV history is estimated, not live scheduler occupancy. See each raw result for timings and limits.'}
+if args.vllm_only:
+    manifest['phase_order'] = ['admission', 'vllm']
+    manifest['suite_scope'] = 'Fresh vLLM references only; Garnet inference has not run'
 if resident_profile is not None:
     manifest['resident_profile'] = str(args.resident_profile.resolve())
     manifest['resident_profile_sha256'] = hashlib.sha256(args.resident_profile.read_bytes()).hexdigest()
     manifest['measurement_limits'] = 'Both engines measure three warmed complete requests after one complete warmup. Startup excluded and reported separately. Resident Garnet reruns full input in every trial and includes controls/sampling/handoff. Serial homogeneous batch only; sampled GPU memory is not exhaustive peak.'
+if args.vllm_only:
+    manifest['measurement_limits'] = 'Only fresh vLLM warmed complete requests are measured; startup excluded and separately reported. Garnet admission is planning only, not resident inference or quality evidence. No paired comparison or performance win is claimed.'
 reused = {}
 if args.reuse_vllm_manifest is not None:
     previous = json.loads(args.reuse_vllm_manifest.read_text())
@@ -185,7 +194,7 @@ for case in manifest['cases']:
                     weights, cache, case['request'], admission, batch, output],
                    directory / (case['name'] + '.admission.log'), case_env)
 
-for engine in ('vllm', 'garnet'):
+for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
     for case in manifest['cases']:
         prefix = directory / (case['name'] + '.' + engine)
         result = Path(str(prefix) + '.json')
@@ -245,4 +254,7 @@ for engine in ('vllm', 'garnet'):
                      max(trial['request_first_token_seconds'])] for trial in measured['decode_trials']])
         print(case[engine], flush=True)
         manifest_path.write_text(json.dumps(manifest, indent=2))
-print('All saved cases passed matched batch validation. Performance target must be assessed separately.', flush=True)
+if args.vllm_only:
+    print('All fresh vLLM references passed validation; Garnet inference has not run.', flush=True)
+else:
+    print('All saved cases passed matched batch validation. Performance target must be assessed separately.', flush=True)
