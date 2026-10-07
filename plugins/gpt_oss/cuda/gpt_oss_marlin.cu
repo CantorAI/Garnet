@@ -2,6 +2,7 @@
 #define MARLIN_NAMESPACE_NAME GarnetMarlin
 #include "libtorch_stable/moe/marlin_moe_wna16/marlin_template.h"
 #include "gpt_oss_marlin.h"
+#include "gpt_oss_marlin_chunks.h"
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -63,13 +64,23 @@ struct Geometry {
         upN((2*o.intermediate+127)/128*128), downK((o.intermediate+127)/128*128),
         downN((o.hidden+63)/64*64) {}
 };
-bool supported(int tokens,const GptOssOptions& o) {
+int maximumNativeRows() {
     static const int maxTokens = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_MAX_TOKENS");
         const int parsed = value ? std::atoi(value) : 8;
         return parsed == 512 || parsed == 4096 ? parsed : 8;
     }();
-    return tokens>0 && tokens<=maxTokens && o.hidden>0 && o.hidden<=16384 && o.hidden%32==0 &&
+    return maxTokens;
+}
+bool boundedPrefill() {
+    static const bool enabled=[] {
+        const char* flag=std::getenv("GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL");
+        return flag && std::string(flag)=="1";
+    }();
+    return enabled;
+}
+bool supported(int tokens,const GptOssOptions& o) {
+    return tokens>0 && tokens<=maximumNativeRows() && o.hidden>0 && o.hidden<=16384 && o.hidden%32==0 &&
         o.intermediate>0 && o.intermediate<=65536 && o.intermediate%32==0 &&
         o.experts>0 && o.experts<=256 && o.topK>0 && o.topK<=8 && o.topK<=o.experts &&
         o.tpRank>=-1 && o.tpRank<2 && (o.expertWeightsSharded==0 ||
@@ -441,10 +452,26 @@ struct GptOssMarlin::State {
 GptOssMarlin::GptOssMarlin(const GptOssOptions& o):m_state(new State(o)) {}
 GptOssMarlin::~GptOssMarlin()=default;
 size_t GptOssMarlin::Workspace(int tokens,const GptOssOptions& o) {
-    return supported(tokens,o)?Layout(tokens,o).bytes:0;
+    const int bounded=GptOssMarlinBoundedPrefillRows(tokens,o.prefill,maximumNativeRows(),boundedPrefill());
+    const int rows=bounded?bounded:tokens;
+    return supported(rows,o)?Layout(rows,o).bytes:0;
 }
 cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int tokens,cudaStream_t stream) {
-    auto& s=*m_state;if(!supported(tokens,s.o)){reportMarlin("shape rejected", tokens, s.o.hidden);return cudaErrorNotSupported;}
+    auto& s=*m_state;
+    const int bounded=GptOssMarlinBoundedPrefillRows(tokens,s.o.prefill,maximumNativeRows(),boundedPrefill());
+    if(bounded && supported(bounded,s.o)) {
+        if(!in || !in[0] || !y || !workspace)return cudaErrorInvalidValue;
+        // Subcalls stay in the unchanged <=4096-row native path and queue on
+        // the SAME stream before scratch reuse. No larger kernel cutoff.
+        for(int row=0;row<tokens;row+=bounded) {
+            const auto inputs=GptOssMarlinChunkInputs(in,std::size_t(row),s.o.hidden);
+            const auto status=Run(inputs.data(),y+std::size_t(row)*s.o.hidden,workspace,
+                std::min(bounded,tokens-row),stream);
+            if(status!=cudaSuccess)return status;
+        }
+        return cudaSuccess;
+    }
+    if(!supported(tokens,s.o)){reportMarlin("shape rejected", tokens, s.o.hidden);return cudaErrorNotSupported;}
     reportMarlin("decode candidate", tokens, s.o.hidden);
     int device=-1;auto status=cudaGetDevice(&device);if(status!=cudaSuccess)return status;
     if(s.device>=0 && s.device!=device)return cudaErrorInvalidDevice;

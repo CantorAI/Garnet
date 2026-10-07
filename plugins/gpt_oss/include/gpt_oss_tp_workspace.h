@@ -5,7 +5,7 @@
 #include <limits>
 
 namespace Garnet {
-// V10 contract: the same predicate governs reservation and runtime dispatch.
+// V10/V11 contract: the same predicate governs reservation and runtime dispatch.
 // The caller's eligibility declaration means the input is already BF16-rounded.
 inline std::size_t GptOssTpBf16Workspace(int kind, int eligible, int phase,
     int rank, int hidden, int dimensions, std::int64_t batch,

@@ -580,6 +580,47 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
         Device<unsigned char> marlinWorkspace{std::vector<unsigned char>(marlinBytes)};
         check(marlin.Run(in, dy.p, marlinWorkspace.p, tokens, nullptr));
         compare(dy.read(), expected, .004f, "Marlin MXFP4 expert kernel parity");
+        if(tokens>4096) {
+            // Independent caller segmentation and a nondefault-stream graph
+            // verify offsets, tail, scratch reuse and actual capture lifetime.
+            const auto baseline=dy.read();
+            Device<float> manual{std::vector<float>(baseline.size())};
+            cudaStream_t stream;check(cudaStreamCreate(&stream));
+            for(int first=0;first<tokens;first+=4096) {
+                const void* segment[9];for(int i=0;i<9;++i)segment[i]=in[i];
+                segment[0]=dx.p+size_t(first)*h;
+                check(marlin.Run(segment,manual.p+size_t(first)*h,marlinWorkspace.p,
+                    std::min(4096,tokens-first),stream));
+            }
+            check(cudaStreamSynchronize(stream));
+            compare(manual.read(),baseline,0.f,"Bounded versus explicit native subcalls exact");
+            cudaGraph_t graph;cudaGraphExec_t executable;
+            check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeGlobal));
+            check(marlin.Run(in,manual.p,marlinWorkspace.p,tokens,stream));
+            check(cudaStreamEndCapture(stream,&graph));
+            check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
+            Device<float> changedGold{std::vector<float>(baseline.size())};
+            for(int family=0;family<2;++family) {
+                std::vector<float> changed=x;
+                if(family)for(size_t i=0;i<changed.size();++i)
+                    changed[i]=bf(-.5f*x[i]+float(int(i%7)-3)*.03125f);
+                check(cudaMemcpyAsync(dx.p,changed.data(),changed.size()*sizeof(float),
+                    cudaMemcpyHostToDevice,stream));
+                for(int first=0;first<tokens;first+=4096) {
+                    const void* segment[9];for(int i=0;i<9;++i)segment[i]=in[i];
+                    segment[0]=dx.p+size_t(first)*h;
+                    check(marlin.Run(segment,changedGold.p+size_t(first)*h,marlinWorkspace.p,
+                        std::min(4096,tokens-first),stream));
+                }
+                for(int replay=0;replay<2;++replay)check(cudaGraphLaunch(executable,stream));
+                check(cudaStreamSynchronize(stream));
+                compare(manual.read(),changedGold.read(),0.f,"Bounded graph changing input/scratch reuse exact");
+            }
+            check(cudaMemcpyAsync(dx.p,x.data(),x.size()*sizeof(float),cudaMemcpyHostToDevice,stream));
+            check(cudaStreamSynchronize(stream));
+            check(cudaGraphExecDestroy(executable));check(cudaGraphDestroy(graph));
+            check(cudaStreamDestroy(stream));
+        }
         testPrepackedMarlin(in,o,tokens,dy.read());
         std::vector<float> marlinShardSum(expected.size());
         for (int rank = 0; rank < 2; ++rank) {
@@ -972,7 +1013,7 @@ int main(int argc, char** argv) { try {
         GptOssOptions options;
         options.kind = 2; options.hidden = options.intermediate = 2880;
         options.experts = 128; options.topK = 8; options.tpRank = 0;
-        for (int rows : {1, 8, 32, 128, 513, 1023, 1024, 4096, 8020}) {
+        for (int rows : {1, 8, 32, 128, 513, 1023, 1024, 4096, 4097, 4608, 7168, 8020, 8192, 8193}) {
             options.prefill = 1;
             const auto prefillBytes = GptOssMarlin::Workspace(rows, options);
             options.prefill = 0;
@@ -996,6 +1037,21 @@ int main(int argc, char** argv) { try {
         check(cudaDeviceSynchronize());
         std::cout<<"Down-K64 CTA4 rejected before pointer access/repacking/launch, cold/cached PASS\n";
         return 0;
+    }
+    if(argc==3 && (std::strcmp(argv[1],"--bounded-prefill-parity")==0 ||
+                   std::strcmp(argv[1],"--bounded-prefill-tp-sized-parity")==0)) {
+        const int rows=std::stoi(argv[2]);
+        if(rows!=4097 && rows!=4608 && rows!=7168 && rows!=8020 && rows!=8192)return 2;
+        GptOssOptions probe;probe.kind=2;probe.hidden=96;probe.intermediate=256;
+        probe.experts=5;probe.topK=2;probe.prefill=1;
+        if(!GptOssMarlin::Workspace(rows,probe) ||
+            GptOssMarlin::Workspace(rows,probe)!=GptOssMarlin::Workspace(4096,probe))
+            throw std::runtime_error("Bounded gate requires4096-row subcall workspace");
+        probe.prefill=0;
+        if(GptOssMarlin::Workspace(rows,probe))
+            throw std::runtime_error("Bounded prefill changed decode support");
+        testMoe(rows,96,std::strcmp(argv[1],"--bounded-prefill-tp-sized-parity")==0?2880:256,false);
+        check(cudaDeviceSynchronize());return 0;
     }
     if(argc==2 && std::strcmp(argv[1],"--tp-sized-prefill-down-parity")==0) {
         GptOssOptions probe;probe.kind=2;probe.hidden=96;probe.intermediate=2880;

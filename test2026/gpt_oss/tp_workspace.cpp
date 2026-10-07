@@ -38,7 +38,7 @@ int main() {
                 test.batch,test.sequence,test.phase,test.eligible,actual,test.expected);
             return 1;
         }
-        if (std::strcmp(plugin.getPluginVersion(),"10")) return 1;
+        if (std::strcmp(plugin.getPluginVersion(),"11")) return 1;
         std::vector<unsigned char> serialized(plugin.getSerializationSize());
         plugin.serialize(serialized.data());
         Garnet::GptOssPlugin restored(serialized.data(),serialized.size());

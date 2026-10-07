@@ -16,6 +16,7 @@ os.environ.pop('GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS', None)
 os.environ.pop('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_PREPACKED', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', None)
+os.environ.pop('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', None)
 full = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
 assert full['collective_workspace_layout'] == collective_workspace_profile()
 # Old collective layouts reject before any native builder/allocation, even
@@ -117,6 +118,16 @@ os.environ['GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK'] = '0'
 assert marlin_workspace_profile() == default_profile
 assert make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)['cache_key'] == decode_tile['cache_key']
 os.environ.pop('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK')
+os.environ['GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL']='1'
+bounded_plan=make_tensor_parallel_plan(fixture,devices,reserve_bytes=0)
+assert bounded_plan['cache_key']!=decode_tile['cache_key']
+assert bounded_plan['marlin_workspace_layout']['bounded_prefill_subcall_rows']==4096
+for rows in (4097,4608,7168,8020,8192):
+    assert estimate_tp2_marlin_workspace_bytes(config,rows)==estimate_tp2_marlin_workspace_bytes(config,4096)
+    assert estimate_tp2_marlin_workspace_bytes(config,rows,prefill=False)==0
+assert estimate_tp2_marlin_workspace_bytes(config,8193)==0
+os.environ['GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL']='0'
+assert make_tensor_parallel_plan(fixture,devices,reserve_bytes=0)['cache_key']==decode_tile['cache_key']
 if len(sys.argv) > 2:
     config = dict(hidden_size=2880, intermediate_size=2880, num_experts=128, experts_per_token=8)
     # The compiled plugin's actual allocation methods are the authority; this
@@ -134,6 +145,17 @@ if len(sys.argv) > 2:
                     assert estimate_tp2_marlin_workspace_bytes(config, rows) == marlin, (rows, marlin)
                     assert estimate_tp2_marlin_workspace_bytes(config, rows, prefill=False) == decode, (rows, decode)
     os.environ.pop('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK')
+    os.environ['GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL']='1'
+    for block in ('32','64'):
+        os.environ['GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK']=block
+        report=subprocess.check_output([sys.argv[2],'--workspace'],text=True)
+        for line in report.splitlines():
+            rows,grouped,marlin,decode=map(int,line.split())
+            assert estimate_tp2_moe_workspace_bytes(config,rows)==grouped
+            assert estimate_tp2_marlin_workspace_bytes(config,rows)==marlin,(rows,marlin)
+            assert estimate_tp2_marlin_workspace_bytes(config,rows,prefill=False)==decode,(rows,decode)
+    os.environ.pop('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK')
+    os.environ['GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL']='0'
 budget = sharded['estimated_per_gpu_bytes'] - 1
 for device in devices:
     device['free_bytes'] = budget

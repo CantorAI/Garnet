@@ -290,12 +290,21 @@ def marlin_workspace_profile():
             'decode_block_override': decode if decode in (8, 32) else 0}
     if large == 64:
         profile['large_prefill_block'] = 64
+    bounded = os.environ.get('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', '0')
+    if bounded not in ('0', '1'):
+        raise ValueError('Bounded Marlin prefill flag must be0 or1')
+    if bounded == '1':
+        profile['bounded_prefill_outer_rows'] = 8192
+        profile['bounded_prefill_subcall_rows'] = 4096
     return profile
 
 
 def estimate_tp2_marlin_workspace_bytes(config, rows, prefill=True):
     """Include every aligned buffer in the plugin's Marlin workspace layout."""
     profile = marlin_workspace_profile()
+    if (prefill and profile['max_tokens'] == 4096 and
+            4096 < rows <= profile.get('bounded_prefill_outer_rows',4096)):
+        rows = profile['bounded_prefill_subcall_rows']
     h, intermediate = config['hidden_size'], config['intermediate_size']
     experts, top_k = config['num_experts'], config['experts_per_token']
     if not (0 < rows <= profile['max_tokens'] and 0 < h <= 16384 and h % 32 == 0
@@ -340,8 +349,8 @@ def estimate_tp2_moe_workspace_bytes(config, rows):
 
 
 def collective_workspace_profile():
-    # V10 two-BF16-buffer contract; runtime flags do not change allocation.
-    return 'v10-bf16-pair-prefill128-decode128-512-s1'
+    # V11 retains the two-BF16-buffer contract and invalidates older engines.
+    return 'v11-bf16-pair-prefill128-decode128-512-s1'
 
 
 def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
