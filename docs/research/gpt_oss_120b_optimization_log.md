@@ -31,7 +31,8 @@ This is an append-only record of performance hypotheses, implementations, correc
 | OPT-0023 | Batched TP reduction | Peer reduction with CTA-count screen | NCCL b8/32/64: 9.19/22.64/32.66 µs/op; corrected b32 decode 2596–2623 tok/s | Direct16 plus inline controls: 2760–2792; all 96 trial/slot token sequences match | ~4.0% median decode gain over controls alone; full execution 961 → 974 tok/s; other shapes pending | INCONCLUSIVE, opt-in |
 | OPT-0024 | Batched decode controls | Inline integer-vector updates on rank threads | Corrected b32 decode 2596–2623 tok/s | 2637–2670; synthetic suite and all 96 trial/slot checks pass | ~1.8% median decode gain; full execution 959 → 961 tok/s; other shapes pending | INCONCLUSIVE, opt-in |
 | OPT-0025 | TP2 weight storage | Store only owned original-layout experts per rank | Full constants plus half-model Marlin repack; chunk128 b32 OOM | Full synthetic suite and96 arithmetic outputs/mode pass; sampled peak falls97095→68207MiB/GPU; chunk128 prefill0.828–0.842s | Memory fix enables chunked prefill; token trajectories differ and other workloads pending | INCONCLUSIVE, opt-in |
-| OPT-0026 | Batch128 expert scheduling | Separate decode8/32-row tile and screen CTAs1/2/4 | Legacy tile selected by flattened row count | Native128-row parity and workspace cross-checks pass; pretrained screen running | Full-model throughput/correctness pending | INCONCLUSIVE, opt-in |
+| OPT-0026 | Batch128 expert scheduling | Separate decode8/32-row tile and screen CTAs1/2/4 | Legacy tile selected by flattened row count | Six modes pass384 arithmetic checks each; best median3238.51 decode tok/s vs vLLM5394.05 | Best complete execution2821.48 tok/s; still behind reference | INCONCLUSIVE, opt-in |
+| OPT-0027 | GQA decode attention | Share paged KV tiles across eight query warps | Local36-layer baseline27.61ms | Local4/8 splits9.12/9.13ms, sampled parity passes | Blackwell/native full parity and model result pending | INCONCLUSIVE, opt-in |
 
 ## Cumulative accepted-stage history
 
@@ -551,3 +552,40 @@ Add attention_batch_benchmark.cu and its standalone CMake target to measure a36-
 The new benchmark passed a CUDA12/RTX4080 smoke check at batch2/context64 with zero sampled reference error. A first Windows-to-WSL shell-loop invocation accidentally passed empty split/warp environment values; five27.6-27.8ms medians all used the fallback16-split path and are INVALID as an A/B screen. Preserve the failure and add strict setting validation in the benchmark to reject blank/unsupported values before timing. Re-run each variant with direct env arguments (no shell-variable interpolation).
 
 The corrected, sequential RTX4080 batch128/processed-context767/repeats20 screen,36 independent KV layers (3623878656bytes,18full/18sliding128), gives GPU-event medians: split16=27.6077ms, split8=26.5630ms, unsplit4warps=27.8236ms, unsplit8warps=26.0817ms, unsplit16warps=38.9338ms. Sampled full/sliding double-reference maximum absolute error is zero in the first four modes and4.76837e-7 for unsplit16; all outputs finite and inactive slot zero. This is ~5.5% isolated improvement for unsplit8 and a41% regression for unsplit16 on another GPU, not a Blackwell or full-model result. Target compilation, full native parity and performance still pending. A large reduction in CTA count alone does not guarantee proportional speedup; the longer serial softmax walk can regress. Next collect the SM120 screen and full-model/kernel attribution before implementing a larger GQA reuse or expert-distribution redesign.
+
+#### OPT-0026 completed six-mode pretrained screen, 2026-10-07
+
+Sourceb28ad1a/native7272984, same batch128/input256/output512/context1024 arithmetic profile and chunk32. All384 expected answers per mode passed; this does not establish identical token trajectories or broader prompt correctness.
+
+| Decode block / CTAs per SM | Warm prefill s | Decode aggregate output tok/s, three trials | First complete-execution tok/s | Sampled peak MiB/GPU |
+|---|---:|---|---:|---|
+|8 /1|3.30221|2982.82 /2956.42 /2928.46|2597.50|68717 /68699|
+|8 /2|3.35355|2952.16 /2918.44 /2909.44|2569.08|68753 /68735|
+|8 /4|3.38830|2853.75 /2826.86 /2813.78|2491.07|68753 /68735|
+|32 /1|3.30244|3282.69 /3238.51 /3230.35|2821.48|68717 /68699|
+|32 /2|3.36538|3083.30 /3061.55 /3046.22|2666.34|68753 /68735|
+|32 /4|3.39621|2931.78 /2913.40 /2890.66|2549.43|68753 /68735|
+
+Block32/CTA1 is the next screening configuration; its median remains40.0% below vLLM5394.05 decode, and complete execution remains below vLLM5379.66 median full requests. Garnet trials reuse original input KV, and its execution rates exclude engine build/load/handoff. The initial block8/CTA1 cold prefill224.28s and decode engine setup220.14s are retained; cached block8/CTA2 setup42.12/40.62s and CTA4 setup42.25/40.82s also remain outside execution timing. This is a substantial production latency problem. Reserved KV4.5GiB/GPU versus3.37GiB logical history at767 processed positions remains explicit. Decision INCONCLUSIVE; no accepted-stage advancement. Local evidence: D:/CantorAI/work/vast-54543362/garnet-batch128-tile-screen and batch128-tile-evidence.tgz.
+
+#### OPT-0012 target isolated attention screen, 2026-10-07
+
+Targetd8206a4, SM120/CUDA13.4, batch128/processed context767,36 independent alternating full/sliding128 KV layers, five trials of20 replays after10 warmups. Full native kernel parity passed separately for each configuration. Sampled double-reference checks, finiteness and inactive zeros passed: split16 median21.9461ms; split8 20.3816ms; unsplit4warps19.4534ms; unsplit8warps19.3774ms; unsplit16warps21.6441ms. Maximum sampled absolute error0 except unsplit16=4.76837e-7. The best existing knob gives11.7% isolated improvement, not a measured model win; it cannot alone prove closure of the40% batch decode gap. Remote logs: /workspace/CantorAI/work/attention-{split16,split8,unsplit4,unsplit8,unsplit16}-{parity,benchmark}.log. Next test shared GQA KV staging rather than infer proportional gains from CTA reduction.
+
+### OPT-0027: Shared paged KV tiles for grouped-query decode
+
+**Date / Commit:** 2026-10-07, local candidate on feature/gpt-oss-120b. Files: plugins/gpt_oss/cuda/gpt_oss_kernels.cu, test2026/gpt_oss/kernel_parity.cpp, attention_batch_benchmark.cu.
+
+**System / Workload:** Initial CUDA12/SM89 RTX4080 local screen; batch128, processed context767, qHeads32/kvHeads4/headDim64,36 independent BF16 KV layers (18 full,18 sliding128). Five20-replay GPU-event trials,10 graph warmups. Target Blackwell results pending.
+
+**Baseline / Observed bottleneck:** Current attention launches one partial CTA per query head and split, repeatedly loading the same KV for eight query heads. Default16-split local36-layer timing27.6077ms; target21.9461ms. Best existing target unsplit8 is19.3774ms. These synthetic kernel times exclude projections/MoE/TP/host and are not additive model wall shares.
+
+**Hypothesis / Proposed implementation:** Stage16 paged KV positions once per KV head and split, sharing FP32-converted K/V across eight query warps. Reduce repeated global loads, page lookup and conversion; longer warp loops and barriers may erase gains. Keep FP32 scores/online softmax, ordinary expf, BF16 final output and sink added once.
+
+**Implementation:** Opt-in GARNET_GPT_OSS_DECODE_GQA_TILED=1, head64 and GQA8:1 only; other geometries fall back. GARNET_GPT_OSS_DECODE_GQA_SPLITS=4/8/16 defaults8. Eight warps per CTA; existing partial scratch stride130 and merge preserve workspace/ABI. No approximate exponential or quantized attention probabilities. Native parity now includes full output checks for8:1 and32:4 heads with301-position paged full/sliding histories, missing page, inactive slot and strong positive/negative sinks. Benchmark rejects invalid/blank GQA labels. Fix benchmark scratch from64x66 to64x130 floats/head so supported64 splits fit; previous8/16-split results stayed within allocation bounds.
+
+**Correctness validation:** Local smoke batch2/context64 passes; batch128/context767 sampled full/sliding double reference maximum error0 at4/8 splits,4.76837e-7 at16; all outputs finite and inactive slot zero. Full native target gate and pretrained quality pending. Local compilation passed.
+
+**Performance result:** Local medians9.11836/9.13295/9.7028ms at4/8/16 splits, compared with existing default27.6077ms. No target model gain claimed. Raw logs D:/CantorAI/work/vast-54543362/attention-gqa{4,8,16}-local.log.
+
+**Decision / Analysis / Next Step:** INCONCLUSIVE, opt-in. Validate full native parity for each exact setting on SM120, then target attention timing; only if those gates pass run best expert32/CTA1 pretrained profile sequentially against the saved optimized vLLM reference. Preserve all four prompts, batches, input/output lengths, KV/memory and complete-request boundaries; one arithmetic screen cannot complete the goal. Source is authored locally, with no Qwen edits or copied external attention source.

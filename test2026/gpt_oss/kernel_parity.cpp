@@ -249,13 +249,15 @@ void testLongPrefillAttention64() {
                      "Tiled prefill: paged full attention");
     }
 }
-void testLongDecodeAttention(int dimension) {
-    GptOssOptions o; o.kind=1; o.qHeads=4; o.kvHeads=2; o.headDim=dimension;
+void testLongDecodeAttention(int dimension, int qHeads = 4, int kvHeads = 2) {
+    GptOssOptions o; o.kind=1; o.qHeads=qHeads; o.kvHeads=kvHeads; o.headDim=dimension;
     o.layer=1; o.pageSize=16; o.prefill=0;
-    const int batch=2, logical=20, pages=40, width=8*dimension, queryWidth=4*dimension;
-    std::vector<float> input(batch*width), sinks{12.f,-12.f,2.f,-1.f};
+    const int batch=2, logical=20, pages=40, width=(qHeads+2*kvHeads)*dimension, queryWidth=qHeads*dimension;
+    std::vector<float> input(batch*width), sinks(qHeads);
+    const float sinkValues[]{12.f,-12.f,2.f,-1.f};
+    for (int h=0; h<qHeads; ++h) sinks[h]=sinkValues[h%4];
     for (size_t i=0; i<input.size(); ++i) input[i]=bf(std::sin(float(i)*.13f));
-    std::vector<uint16_t> keys(2*pages*16*2*dimension), values(keys.size());
+    std::vector<uint16_t> keys(2*pages*16*kvHeads*dimension), values(keys.size());
     for (size_t i=0; i<keys.size(); ++i) {
         keys[i]=bits(std::sin(float(i)*.019f)); values[i]=bits(std::cos(float(i)*.023f));
     }
@@ -273,11 +275,11 @@ void testLongDecodeAttention(int dimension) {
         auto actualKeys=dk.read(), actualValues=dv.read();
         auto value=[](uint16_t v) { uint32_t bits=uint32_t(v)<<16; float f; std::memcpy(&f,&bits,4); return f; };
         std::vector<float> expected(batch*queryWidth,0);
-        for (int h=0; h<4; ++h) {
+        for (int h=0; h<qHeads; ++h) {
             double sum=std::exp(double(sinks[h])); std::vector<double> accum(dimension);
             for (int p=window?301-window:0; p<301; ++p) {
                 const int page=table[p/16]; if (page<0) continue;
-                size_t offset=(((size_t(o.layer)*pages+page)*16+p%16)*2+h/2)*dimension;
+                size_t offset=(((size_t(o.layer)*pages+page)*16+p%16)*kvHeads+h/(qHeads/kvHeads))*dimension;
                 double score=0;
                 for (int d=0; d<dimension; ++d) score+=double(input[h*dimension+d])*value(actualKeys[offset+d]);
                 double weight=std::exp(score/std::sqrt(double(dimension))); sum+=weight;
@@ -286,11 +288,11 @@ void testLongDecodeAttention(int dimension) {
             for (int d=0; d<dimension; ++d) expected[h*dimension+d]=bf(float(accum[d]/sum));
         }
         compare(dy.read(),expected,.006f,"Split decode attention: long paged KV, sinks, missing page and inactive slot");
-        const size_t secondLayer=size_t(pages)*16*2*dimension;
+        const size_t secondLayer=size_t(pages)*16*kvHeads*dimension;
         for (int p=0; p<logical; ++p) {
             const int page=table[logical+p];
-            const size_t offset=secondLayer+size_t(page)*16*2*dimension;
-            for (int i=0; i<16*2*dimension; ++i)
+            const size_t offset=secondLayer+size_t(page)*16*kvHeads*dimension;
+            for (int i=0; i<16*kvHeads*dimension; ++i)
                 if (actualKeys[offset+i]!=keys[offset+i] || actualValues[offset+i]!=values[offset+i])
                     throw std::runtime_error("inactive long-decode cache was modified");
         }
@@ -450,5 +452,5 @@ int main(int argc, char** argv) { try {
             testDecodeGemvSharded(true, rank);
             testDecodeGemvSharded(false, rank);
         }
-        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); testMoe(128, 96, 64, false, true); check(cudaDeviceSynchronize()); return 0; }
+        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongDecodeAttention(64, 8, 1); testLongDecodeAttention(64, 32, 4); testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); testMoe(128, 96, 64, false, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

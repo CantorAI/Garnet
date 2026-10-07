@@ -337,6 +337,62 @@ __global__ void decodeAttentionPartial(const float* qkv, const __nv_bfloat16* ke
         state[2 + d] = value;
     }
 }
+// Eight query heads share one KV head. Stage each paged tile once and reuse
+// it across eight query warps, retaining FP32 scores/softmax and one sink.
+template<int Splits>
+__global__ void groupedDecodeAttention64(const float* qkv, const __nv_bfloat16* keys,
+    const __nv_bfloat16* values, const int* table, const int* lengths,
+    const int* active, float* scratch, int logicalPages, int physicalPages,
+    GptOssOptions o) {
+    constexpr int Tile = 16, Dim = 64, Stride = 130;
+    __shared__ float tileK[Tile][Dim], tileV[Tile][Dim];
+    __shared__ size_t offsets[Tile];
+    const int lane = threadIdx.x & 31, warp = threadIdx.x >> 5;
+    const int split = blockIdx.x % Splits;
+    const int kvHead = (blockIdx.x / Splits) % o.kvHeads;
+    const int b = blockIdx.x / (Splits * o.kvHeads), head = kvHead * 8 + warp;
+    const int packed = (o.qHeads + 2 * o.kvHeads) * Dim;
+    const int end = lengths[b], begin = o.window ? max(0, end - o.window) : 0;
+    const bool valid = active[b] && end > 0 && end <= logicalPages * o.pageSize;
+    const int chunk = (max(0, end - begin) + Splits - 1) / Splits;
+    const int first = begin + split * chunk, last = min(end, first + chunk);
+    float query[2] = {}, accum[2] = {}, maximum = -FLT_MAX, sum = 0;
+    if (valid) {
+        query[0] = qkv[size_t(b) * packed + head * Dim + lane];
+        query[1] = qkv[size_t(b) * packed + head * Dim + lane + 32];
+    }
+    if (valid) for (int p0 = first; p0 < last; p0 += Tile) {
+        if (threadIdx.x < Tile) {
+            const int p = p0 + threadIdx.x;
+            offsets[threadIdx.x] = p < last ? cacheOffset(table, logicalPages,
+                physicalPages, b, p, kvHead, 0, o) : SIZE_MAX;
+        }
+        __syncthreads();
+        for (int i = threadIdx.x; i < Tile * Dim; i += blockDim.x) {
+            const int k = i / Dim, d = i % Dim;
+            const size_t offset = offsets[k];
+            tileK[k][d] = offset == SIZE_MAX ? 0.f : __bfloat162float(keys[offset + d]);
+            tileV[k][d] = offset == SIZE_MAX ? 0.f : __bfloat162float(values[offset + d]);
+        }
+        __syncthreads();
+        for (int k = 0; k < Tile; ++k) {
+            if (p0 + k >= last || offsets[k] == SIZE_MAX) continue;
+            float score = query[0] * tileK[k][lane];
+            score += query[1] * tileK[k][lane + 32];
+            score = __shfl_sync(0xffffffff, warpSum(score), 0) * .125f;
+            const float next = fmaxf(maximum, score);
+            const float old = expf(maximum - next), weight = expf(score - next);
+            sum = sum * old + weight;
+            accum[0] = accum[0] * old + weight * tileV[k][lane];
+            accum[1] = accum[1] * old + weight * tileV[k][lane + 32];
+            maximum = next;
+        }
+        __syncthreads();
+    }
+    float* state = scratch + ((size_t(b) * o.qHeads + head) * Splits + split) * Stride;
+    if (!lane) { state[0] = maximum; state[1] = sum; }
+    state[2 + lane] = accum[0]; state[2 + lane + 32] = accum[1];
+}
 template<int Splits>
 __global__ void decodeAttentionMerge(const float* scratch, const float* sinks,
     float* output, GptOssOptions o) {
@@ -690,6 +746,29 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
         (const int*)in[5], (const int*)in[6], batch, tokens, logicalPages, physicalPages, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
     if (tokens == 1 && !o.prefill) {
+        static const bool grouped = [] {
+            const char* value = std::getenv("GARNET_GPT_OSS_DECODE_GQA_TILED");
+            return value && std::strcmp(value, "1") == 0;
+        }();
+        static const int groupSplits = [] {
+            const char* value = std::getenv("GARNET_GPT_OSS_DECODE_GQA_SPLITS");
+            const int requested = value ? std::atoi(value) : 8;
+            return requested == 4 || requested == 8 || requested == 16 ? requested : 8;
+        }();
+        if (grouped && o.headDim == 64 && o.qHeads == 8 * o.kvHeads) {
+            if (!workspace) return cudaErrorInvalidValue;
+#define GQA_CASE(S) if (groupSplits == S) { \
+            groupedDecodeAttention64<S><<<batch * o.kvHeads * S, 256, 0, stream>>>( \
+                (const float*)in[0], (const __nv_bfloat16*)in[1], (const __nv_bfloat16*)in[2], \
+                (const int*)in[3], (const int*)in[4], (const int*)in[6], \
+                (float*)workspace, logicalPages, physicalPages, o); \
+            status = cudaGetLastError(); if (status != cudaSuccess) return status; \
+            decodeAttentionMerge<S><<<batch * o.qHeads, 32, 0, stream>>>( \
+                (const float*)workspace, (const float*)in[7], y, o); \
+            return cudaGetLastError(); }
+            GQA_CASE(4) GQA_CASE(8) GQA_CASE(16)
+#undef GQA_CASE
+        }
         static const int splits = [] {
             const char* value = std::getenv("GARNET_GPT_OSS_DECODE_SPLITS");
             if (!value) return 16;

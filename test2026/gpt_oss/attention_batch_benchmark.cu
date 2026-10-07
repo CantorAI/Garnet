@@ -43,6 +43,12 @@ int main(int argc, char** argv) { try {
         throw std::runtime_error("Invalid split setting; refusing mislabeled timing");
     if (warpSetting != "1" && warpSetting != "2" && warpSetting != "4" && warpSetting != "8" && warpSetting != "16")
         throw std::runtime_error("Invalid warp setting; refusing mislabeled timing");
+    const std::string gqaSetting = std::getenv("GARNET_GPT_OSS_DECODE_GQA_TILED") ? std::getenv("GARNET_GPT_OSS_DECODE_GQA_TILED") : "0";
+    const std::string gqaSplits = std::getenv("GARNET_GPT_OSS_DECODE_GQA_SPLITS") ? std::getenv("GARNET_GPT_OSS_DECODE_GQA_SPLITS") : "8";
+    if (gqaSetting != "0" && gqaSetting != "1")
+        throw std::runtime_error("Invalid GQA setting; refusing mislabeled timing");
+    if (gqaSplits != "4" && gqaSplits != "8" && gqaSplits != "16")
+        throw std::runtime_error("Invalid GQA split setting; refusing mislabeled timing");
     constexpr int layers = 36, dimension = 64, qHeads = 32, kvHeads = 4;
     const int logical = (length + 15) / 16, pages = batch * logical;
     const int packed = (qHeads + 2 * kvHeads) * dimension;
@@ -50,7 +56,7 @@ int main(int argc, char** argv) { try {
     Buffer keys(cacheElements * 2), values(cacheElements * 2), input(size_t(batch) * packed * 4),
         output(size_t(batch) * qHeads * dimension * 4), sinks(qHeads * 4),
         table(size_t(batch) * logical * 4), lengths(batch * 4), starts(batch * 4), active(batch * 4),
-        scratch(size_t(batch) * qHeads * 64 * (dimension + 2) * 4);
+        scratch(size_t(batch) * qHeads * 64 * 130 * 4);
     fillKv<<<4096, 256>>>((__nv_bfloat16*)keys.p, (__nv_bfloat16*)values.p, cacheElements);
     check(cudaGetLastError());
     std::vector<float> x(size_t(batch) * packed), sink(qHeads);
@@ -133,6 +139,8 @@ int main(int argc, char** argv) { try {
     std::cout << "device=" << device.name << " batch=" << batch << " length=" << length
         << " KV_bytes=" << cacheElements * 4 << " layers=36 full=18 sliding=18"
         << " splits=" << splitSetting << " warps=" << warpSetting
+        << " gqa_tiled=" << (std::getenv("GARNET_GPT_OSS_DECODE_GQA_TILED") ? std::getenv("GARNET_GPT_OSS_DECODE_GQA_TILED") : "0")
+        << " gqa_splits=" << (std::getenv("GARNET_GPT_OSS_DECODE_GQA_SPLITS") ? std::getenv("GARNET_GPT_OSS_DECODE_GQA_SPLITS") : "8")
         << " sampled_reference_max_abs=" << maximumError << " parity=PASS gpu_ms_per_36_layers=";
     for (auto value : times) std::cout << ' ' << value;
     std::cout << " median=" << sorted[2] << '\n';
