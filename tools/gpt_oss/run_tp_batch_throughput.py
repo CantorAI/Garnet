@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import time
+import ctypes
 from pathlib import Path
 
 import garnet as G
@@ -96,7 +97,14 @@ for stage in model.stages:
 step_seconds = []
 memory_samples_mib = [decode_engine_memory_mib]
 inline_single = batch == 1 and os.environ.get('GARNET_GPT_OSS_INLINE_CONTROL_KERNEL') == '1'
+profile_steps = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_STEPS', '0'))
+profiler = ctypes.CDLL('libcudart.so') if profile_steps else None
+profiling = False
 for offset in range(1, output_tokens):
+    if profiler and offset == 10:
+        if profiler.cudaProfilerStart() != 0:
+            raise RuntimeError('cudaProfilerStart failed')
+        profiling = True
     tokens = [row[-1] for row in generated]
     index = len(ids) + offset - 1
     started = time.perf_counter()
@@ -118,10 +126,16 @@ for offset in range(1, output_tokens):
     for row, value in zip(generated, sampled):
         row.append(value)
     step_seconds.append(time.perf_counter() - started)
+    if profiling and offset == 9 + profile_steps:
+        if profiler.cudaProfilerStop() != 0:
+            raise RuntimeError('cudaProfilerStop failed')
+        profiling = False
     if offset % 32 == 0:
         memory_samples_mib.append(gpu_memory_mib())
         print('Decoded', offset, 'of', output_tokens - 1, 'batch steps', flush=True)
 memory_samples_mib.append(gpu_memory_mib())
+if profiling and profiler.cudaProfilerStop() != 0:
+    raise RuntimeError('cudaProfilerStop failed')
 model.release()
 
 warm_seconds = sum(step_seconds[1:])
@@ -145,6 +159,7 @@ result_path.write_text(json.dumps({
     'decode_build_seconds': decode_build_seconds,
     'decode_step_seconds': step_seconds,
     'inline_single_request_controls': inline_single,
+    'profile_decode_steps': profile_steps,
     'decode_output_tokens': decode_output_tokens,
     'decode_aggregate_output_tokens_per_second':
         decode_output_tokens / decode_seconds if decode_seconds > 0 else None,
