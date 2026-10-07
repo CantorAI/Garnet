@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 using namespace Garnet;
 static void check(cudaError_t status) {
@@ -36,6 +37,12 @@ int main(int argc, char** argv) { try {
     const int length = argc > 2 ? std::atoi(argv[2]) : 767;
     const int repeats = argc > 3 ? std::atoi(argv[3]) : 20;
     if (batch < 2 || batch > 128 || length < 64 || length > 4096 || repeats < 1 || repeats > 100) return 2;
+    const std::string splitSetting = std::getenv("GARNET_GPT_OSS_DECODE_SPLITS") ? std::getenv("GARNET_GPT_OSS_DECODE_SPLITS") : "16";
+    const std::string warpSetting = std::getenv("GARNET_GPT_OSS_DECODE_WARPS") ? std::getenv("GARNET_GPT_OSS_DECODE_WARPS") : "16";
+    if (splitSetting != "0" && splitSetting != "8" && splitSetting != "16" && splitSetting != "32" && splitSetting != "64")
+        throw std::runtime_error("Invalid split setting; refusing mislabeled timing");
+    if (warpSetting != "1" && warpSetting != "2" && warpSetting != "4" && warpSetting != "8" && warpSetting != "16")
+        throw std::runtime_error("Invalid warp setting; refusing mislabeled timing");
     constexpr int layers = 36, dimension = 64, qHeads = 32, kvHeads = 4;
     const int logical = (length + 15) / 16, pages = batch * logical;
     const int packed = (qHeads + 2 * kvHeads) * dimension;
@@ -125,8 +132,7 @@ int main(int argc, char** argv) { try {
     cudaDeviceProp device; check(cudaGetDeviceProperties(&device, 0));
     std::cout << "device=" << device.name << " batch=" << batch << " length=" << length
         << " KV_bytes=" << cacheElements * 4 << " layers=36 full=18 sliding=18"
-        << " splits=" << (std::getenv("GARNET_GPT_OSS_DECODE_SPLITS") ? std::getenv("GARNET_GPT_OSS_DECODE_SPLITS") : "16")
-        << " warps=" << (std::getenv("GARNET_GPT_OSS_DECODE_WARPS") ? std::getenv("GARNET_GPT_OSS_DECODE_WARPS") : "16")
+        << " splits=" << splitSetting << " warps=" << warpSetting
         << " sampled_reference_max_abs=" << maximumError << " parity=PASS gpu_ms_per_36_layers=";
     for (auto value : times) std::cout << ' ' << value;
     std::cout << " median=" << sorted[2] << '\n';
