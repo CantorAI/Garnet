@@ -319,20 +319,21 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
         moe_config['intermediate_size'] //= 2
     if plan.get('marlin_workspace_layout', marlin_workspace_profile()) != marlin_workspace_profile():
         raise ValueError('Marlin workspace settings changed after planning; regenerate the TP2 profile')
-    if prefill:
-        # Large batch × prompt shapes can exceed TensorRT's 256 MiB default
-        # even when the checkpoint and KV cache fit on both GPUs.
-        rows = batch * tokens
-        moe_scratch = max(estimate_tp2_moe_workspace_bytes(moe_config, rows),
-                          estimate_tp2_marlin_workspace_bytes(moe_config, rows))
-        needed_mb = (moe_scratch + (1 << 20) - 1) >> 20
-        auto_workspace_mb = 1 << max(0, needed_mb - 1).bit_length()
-        if auto_workspace_mb > 4096:
-            raise ValueError('GPT-OSS TP2 prefill MoE scratch exceeds 4 GiB builder workspace')
-        if auto_workspace_mb > workspace_mb:
-            workspace_mb = auto_workspace_mb
-            print('GPT-OSS TP2 prefill builder workspace', workspace_mb,
-                  'MiB for', rows, 'rows', flush=True)
+    # Match the actual plugin workspace contract in both phases. Batch256
+    # decode attention needs260MiB even though the MoE scratch is smaller.
+    rows = batch * tokens
+    scratch = max(estimate_tp2_moe_workspace_bytes(moe_config, rows),
+                  estimate_tp2_marlin_workspace_bytes(moe_config, rows, prefill))
+    if not prefill:
+        scratch = max(scratch, batch * (config['num_attention_heads'] // 2) * 64 * 130 * 4)
+    needed_mb = (scratch + (1 << 20) - 1) >> 20
+    auto_workspace_mb = 1 << max(0, needed_mb - 1).bit_length()
+    if auto_workspace_mb > 4096:
+        raise ValueError('GPT-OSS TP2 scratch exceeds 4 GiB builder workspace')
+    if auto_workspace_mb > workspace_mb:
+        workspace_mb = auto_workspace_mb
+        print('GPT-OSS TP2', 'prefill' if prefill else 'decode', 'builder workspace', workspace_mb,
+              'MiB for', rows, 'rows', flush=True)
     cache = Path(cache) / plan['cache_key']
     cache.mkdir(parents=True, exist_ok=True)
     (cache / 'placement.json').write_text(json.dumps(plan, indent=2))

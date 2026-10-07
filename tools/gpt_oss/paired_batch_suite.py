@@ -106,8 +106,8 @@ for name in names:
             'input': len(ids), 'context': capacity, 'batch': batch, 'output': output}
     if args.reuse_vllm_manifest is not None:
         saved_case = reused[name]
-        if 'garnet' not in saved_case or 'vllm' not in saved_case:
-            raise ValueError('Only completed paired references can be reused')
+        if 'vllm' not in saved_case:
+            raise ValueError('Only completed vLLM references can be reused')
         prior_path = Path(saved_case['vllm']['result'])
         prior = json.loads(prior_path.read_text())
         if (prior['hardware_csv'] != hardware or prior['input_token_ids'] != ids or
