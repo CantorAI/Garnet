@@ -24,6 +24,7 @@ This is an append-only record of performance hypotheses, implementations, correc
 | OPT-0016 | TP communication | BF16 attention-prefill all-reduce | 0.4622–0.4650 s | 0.4582–0.4589 s | ~4.2 ms paired median gain | ACCEPT, opt-in |
 | OPT-0017 | Layer fusion | Residual add + RMSNorm | 193–196 tok/s short | 193–195 tok/s short | No material gain | REJECT |
 | OPT-0018 | TensorRT | Builder level 5 | 193–196 tok/s short | 197–199 tok/s short | ~2% decode gain; changed token sequences | INCONCLUSIVE |
+| OPT-0019 | Dense decode | GPT-OSS BF16 GEMV plugin | TRT projection group ~1.07 ms/token, profiled | Isolated 72-projection CUDA graph 0.727 ms/replay | Full-model result pending | INCONCLUSIVE |
 
 ## Cumulative accepted-stage history
 
@@ -263,3 +264,15 @@ To reproduce the current Workstation comparison from the built runtime and stage
 #### OPT-0018 follow-up profile, 2026-10-06/07
 
 A matched 32-token arithmetic Nsight Systems capture on the same Workstation held all non-builder flags fixed. On GPU 0, level 1 recorded **27,936 kernels**, **120.36 ms** summed kernel time and a **188.31 ms** captured span; level 5 recorded **24,448 kernels**, **118.36 ms** summed time and a **183.44 ms** span. That is 3,488 fewer kernels, or 109 fewer per token, while summed GPU work fell only ~0.063 ms/token. The principal TensorRT BF16 GEMM group was **34.26 ms** at level 1 versus **34.38 ms** at level 5 over the window; level 5 selected a fused-named GEMM tactic and removed a separate ~1.56 ms split-K group plus some pointwise nodes. This suggests the end-to-end improvement mainly comes from graph-node/adjacent-operation fusion, not faster core GEMM math. Nsight profiling changes timing, so these captured spans are explanatory evidence, not a replacement for the unprofiled paired rates above. Raw trace and SQLite export: `D:/CantorAI/work/vast-54543362/profiles/garnet-trt-level5-arithmetic.*`. The changed generated token sequences and small remaining speedup leave the decision INCONCLUSIVE.
+
+### OPT-0019: Specialized BF16 decode projection GEMV
+
+**Date / Commit:** 2026-10-06/07, isolated screen `e99de89`, integrated candidate not yet measured, `feature/gpt-oss-120b`. Relevant files: `tools/gpt_oss/gemv_screen.cu`, `plugins/gpt_oss/cuda/gpt_oss_gemv.cu`, GPT-OSS TensorRT plugin/lowering.
+**System / Workload:** British Columbia Workstation, 2× RTX PRO 6000 Blackwell, BF16 dense/MXFP4 MoE, TP2. Isolated screen uses 36 pairs of QKV (2,560×2,880) and attention output (2,880×2,048) BF16 projections, 911.2 MiB distinct weights, batch 1; 20 CUDA-graph warmups and five sets of 100 replays. Full-model four-prompt result pending.
+**Baseline / Observed bottleneck:** In a 32-token Garnet arithmetic trace, TensorRT BF16 projection GEMMs summed 34.26 ms on GPU 0 (~1.07 ms/token); level 5 removed adjacent graph work but left the main GEMM group at 34.38 ms. This is profiled time and cannot be directly equated with unprofiled microbenchmarks.
+**Hypothesis / Proposed optimization:** A batch-1 matrix-vector kernel can stream BF16 weight rows, accumulate in FP32 and round to BF16 without TensorRT's general matrix-multiply tactic. Before: TRT matrix multiplication of 1×K by K×M. After: one warp per output row, four rows per block in a GPT-OSS-only native operator. Preserve existing FP32 cast, bias add, and following model-level BF16 rounding.
+**Implementation:** The isolated graph screen was written locally, committed/pushed, pulled and compiled on Vast. A four-row CUDA kernel and opt-in TensorRT plugin/lowering path are under local development; only GPT-OSS TP2 attention QKV/out decode projections are eligible. Prefill, MoE and Qwen are unchanged.
+**Correctness validation:** On the isolated screen, max absolute error against FP32 CPU reference over 16 sampled rows was 0.004859 and max relative error 0.002896 for four- and eight-row kernels. Integrated synthetic parity, full pretrained outputs and exact token comparisons are pending.
+**Performance result:** On Blackwell, graph replay of 72 distinct projections: four rows/block **0.7266 ms/decode**, eight rows/block **0.7536 ms/decode**. On local RTX 4080, 1.6594 and 1.6541 ms respectively. These exclude the full model and are not a measured speedup over TensorRT under identical instrumentation. TTFT, ITL, GPU memory delta and end-to-end tok/s pending.
+**Decision / Analysis:** INCONCLUSIVE. The screen is promising enough to test in the model, but no claim of serving gain is justified yet.
+**Next step:** Complete the opt-in plugin, run CUDA/TP2 parity and all four saved requests sequentially, compare token outputs and warm rates to level-1 TensorRT on the same machine; reject/revert if it does not produce a meaningful end-to-end gain.

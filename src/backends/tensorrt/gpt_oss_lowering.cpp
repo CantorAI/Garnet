@@ -33,6 +33,44 @@ ITensor* TRTBuilder::GetGptOssPackedWeight(const std::string& name) {
     auto* result = layer->getOutput(0); result->setName(name.c_str());
     weightTensorMap[name] = result; return result;
 }
+ITensor* TRTBuilder::LowerGptOssDecodeGemv(ITensor* input, ITensor* weight) {
+    if (!input || !weight || input->getType() != DataType::kBF16 ||
+        weight->getType() != DataType::kBF16) {
+        loweringError = "GPT-OSS decode GEMV requires BF16 input and weight";
+        return nullptr;
+    }
+    const Dims x = input->getDimensions();
+    const Dims w = weight->getDimensions();
+    if (x.nbDims != 3 || x.d[0] != 1 || x.d[1] != 1 ||
+        x.d[2] <= 0 || x.d[2] % 32 != 0 || w.nbDims != 2 ||
+        w.d[0] <= 0 || w.d[1] != x.d[2]) {
+        loweringError = "GPT-OSS decode GEMV has invalid static shape";
+        return nullptr;
+    }
+    if (!OperatorPluginSymbol("gpt_oss", "GarnetCreateOperatorPlugin", loweringError))
+        return nullptr;
+    GptOssOptions options;
+    options.kind = 6;
+    options.hidden = x.d[2];
+    options.intermediate = w.d[0];
+    auto* plugin = CreateGptOssPlugin(options, loweringError);
+    if (!plugin) return nullptr;
+    if (plugin->initialize() != 0) {
+        plugin->destroy();
+        loweringError = "GPT-OSS decode GEMV plugin initialization failed";
+        return nullptr;
+    }
+    ownedPlugins.push_back(plugin);
+    ITensor* inputs[]{input, weight};
+    auto* layer = network->addPluginV2(inputs, 2, *plugin);
+    if (!layer) {
+        loweringError = "GPT-OSS decode GEMV TensorRT lowering failed";
+        return nullptr;
+    }
+    layer->setName(("gpt_oss_decode_gemv_" +
+        std::to_string(network->getNbLayers())).c_str());
+    return layer->getOutput(0);
+}
 ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor* right, X::KWARGS& kw) {
     if (!OperatorPluginSymbol("gpt_oss", "GarnetCreateOperatorPlugin", loweringError)) return nullptr;
     auto item = [&](const char* key) -> X::Value* {

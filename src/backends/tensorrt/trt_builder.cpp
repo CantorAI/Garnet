@@ -6791,22 +6791,38 @@ namespace Garnet {
                 auto* cast = network->addCast(*source, projectionType);
                 projectionInput = cast ? cast->getOutput(0) : nullptr;
             }
-            weight = projectionInput
-                ? BroadcastMatrixWeight(
-                    weight, projectionInput->getDimensions().nbDims)
-                : nullptr;
-            auto* projection = weight
-                ? network->addMatrixMultiply(
-                    *projectionInput,
-                    MatrixOperation::kNONE,
-                    *weight,
-                    MatrixOperation::kTRANSPOSE)
-                : nullptr;
-            if (!projection) {
-                loweringError = opName + " matrix projection failed: " + loweringError;
-                return X::Value();
+            const char* gemvFlag = std::getenv("GARNET_GPT_OSS_DECODE_GEMV");
+            const bool gptOssGemv =
+                gemvFlag && std::strcmp(gemvFlag, "1") == 0 &&
+                bf16Compute && tpRank >= 0 &&
+                projectionWeightName.rfind("block.", 0) == 0 &&
+                (projectionWeightName.find(".attn.qkv.weight") != std::string::npos ||
+                 projectionWeightName.find(".attn.out.weight") != std::string::npos) &&
+                projectionInput && projectionInput->getType() == DataType::kBF16 &&
+                projectionInput->getDimensions().nbDims == 3 &&
+                projectionInput->getDimensions().d[0] == 1 &&
+                projectionInput->getDimensions().d[1] == 1;
+            if (gptOssGemv) {
+                lastOutput = LowerGptOssDecodeGemv(projectionInput, weight);
+                if (!lastOutput) return X::Value();
+            } else {
+                weight = projectionInput
+                    ? BroadcastMatrixWeight(
+                        weight, projectionInput->getDimensions().nbDims)
+                    : nullptr;
+                auto* projection = weight
+                    ? network->addMatrixMultiply(
+                        *projectionInput,
+                        MatrixOperation::kNONE,
+                        *weight,
+                        MatrixOperation::kTRANSPOSE)
+                    : nullptr;
+                if (!projection) {
+                    loweringError = opName + " matrix projection failed: " + loweringError;
+                    return X::Value();
+                }
+                lastOutput = projection->getOutput(0);
             }
-            lastOutput = projection->getOutput(0);
             if ((opName != "lm_head" || bf16Compute) && lastOutput->getType() != sourceType) {
                 auto* cast = network->addCast(*lastOutput, sourceType);
                 lastOutput = cast ? cast->getOutput(0) : nullptr;

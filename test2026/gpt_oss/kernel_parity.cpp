@@ -31,6 +31,32 @@ void compare(const std::vector<float>& actual, const std::vector<float>& expecte
     }
     std::cout << name << " passed; max absolute error " << maximum << "\n";
 }
+void testDecodeGemv(int outputs, int inputs) {
+    std::vector<uint16_t> x(inputs), weight(size_t(outputs) * inputs);
+    for (int col = 0; col < inputs; ++col)
+        x[col] = bits(std::sin(float(col) * .013f) * .1f);
+    for (size_t i = 0; i < weight.size(); ++i)
+        weight[i] = bits(std::cos(float(i) * .017f) * .1f);
+    Device<uint16_t> dx(x), dw(weight), dy(std::vector<uint16_t>(outputs));
+    check(RunGptOssDecodeGemv(dx.p, dw.p, dy.p, outputs, inputs, nullptr));
+    std::vector<float> expected(outputs), actual(outputs);
+    const auto result = dy.read();
+    for (int row = 0; row < outputs; ++row) {
+        float sum = 0;
+        for (int col = 0; col < inputs; ++col) {
+            uint32_t xb = uint32_t(x[col]) << 16, wb =
+                uint32_t(weight[size_t(row) * inputs + col]) << 16;
+            float xf, wf;
+            std::memcpy(&xf, &xb, sizeof(xf));
+            std::memcpy(&wf, &wb, sizeof(wf));
+            sum = std::fma(xf, wf, sum);
+        }
+        expected[row] = bf(sum);
+        uint32_t yb = uint32_t(result[row]) << 16;
+        std::memcpy(&actual[row], &yb, sizeof(float));
+    }
+    compare(actual, expected, .008f, "GPT-OSS BF16 decode GEMV");
+}
 void testRmsNorm() {
     constexpr int tokens = 19, hidden = 2880;
     constexpr float epsilon = 1.0e-5f;
@@ -326,5 +352,6 @@ int main() { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     testMxfp4Encoding();
 #endif
+        testDecodeGemv(2560, 2880); testDecodeGemv(2880, 2048);
         testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

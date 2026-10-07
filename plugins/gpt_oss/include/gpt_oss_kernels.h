@@ -6,7 +6,7 @@
 namespace Garnet {
 // Serialized by the TensorRT plugin; bump plugin version when this contract changes.
 struct GptOssOptions {
-    int kind = 0; // 0: YaRN, 1: attention, 2: MoE, 3/4: TP collectives, 5: RMSNorm
+    int kind = 0; // 0: YaRN, 1: attention, 2: MoE, 3/4: TP collectives, 5: RMSNorm, 6: decode GEMV
     int qHeads = 0, kvHeads = 0, headDim = 0;
     int layer = 0, pageSize = 16, window = 0, prefill = 0;
     int hidden = 0, intermediate = 0, experts = 0, topK = 0;
@@ -28,6 +28,8 @@ cudaError_t RunGptOssRope(const float*, const std::int64_t*, float*, int,
     const GptOssOptions&, cudaStream_t);
 cudaError_t RunGptOssRmsNorm(const float*, const float*, float*, int, int,
     float, int, cudaStream_t);
+cudaError_t RunGptOssDecodeGemv(const void*, const void*, void*, int, int,
+    cudaStream_t);
 cudaError_t RunGptOssAttention(const void* const*, float*, void*, int, int, int, int,
     const GptOssOptions&, cudaStream_t);
 size_t GptOssMoeWorkspace(int tokens, const GptOssOptions&);
