@@ -2,18 +2,23 @@
 // Experimental two-rank, small-message reduction for PCIe peer-access GPUs.
 #include "tp_direct.h"
 #include <cstdint>
+#include <cstdlib>
 
 namespace Garnet {
 namespace {
 constexpr size_t kCount = 2880; // GPT-OSS-120B hidden size, batch 1 decode.
+constexpr size_t kMaxCount = kCount * 64;
+constexpr int kMaxBlocks = 32;
 struct alignas(128) Signal {
-    alignas(128) unsigned start[2][2];
-    alignas(128) unsigned end[2][2];
-    alignas(128) unsigned seq[2];
+    alignas(128) unsigned start[kMaxBlocks][2];
+    alignas(128) unsigned end[kMaxBlocks][2];
+    alignas(128) unsigned seq[kMaxBlocks];
 };
 float* g_staging[2]{};
 Signal* g_signal[2]{};
 bool g_ready = false;
+bool g_batchEnabled = false;
+int g_batchBlocks = 0;
 
 __device__ __forceinline__ void storeRelease(unsigned* ptr, unsigned value) {
     asm volatile("st.release.sys.global.u32 [%1], %0;" :: "r"(value), "l"(ptr));
@@ -25,7 +30,7 @@ __device__ __forceinline__ unsigned loadAcquire(const unsigned* ptr) {
 }
 
 __global__ void directReduce(const float* rank0, const float* rank1,
-    float* output, Signal* mine, Signal* other, int rank) {
+    float* output, Signal* mine, Signal* other, int rank, int count) {
     const int block = blockIdx.x;
     const unsigned epoch = mine->seq[block] + 1;
     if (threadIdx.x < 2) {
@@ -39,7 +44,7 @@ __global__ void directReduce(const float* rank0, const float* rank1,
     const auto* a = reinterpret_cast<const float4*>(rank0);
     const auto* b = reinterpret_cast<const float4*>(rank1);
     auto* y = reinterpret_cast<float4*>(output);
-    for (int i = block * blockDim.x + threadIdx.x; i < int(kCount / 4);
+    for (int i = block * blockDim.x + threadIdx.x; i < count / 4;
          i += gridDim.x * blockDim.x) {
         const float4 x = a[i], z = b[i];
         y[i] = make_float4(x.x + z.x, x.y + z.y, x.z + z.z, x.w + z.w);
@@ -62,6 +67,8 @@ void cleanup() {
         g_signal[rank] = nullptr;
     }
     g_ready = false;
+    g_batchEnabled = false;
+    g_batchBlocks = 0;
 }
 }
 
@@ -85,7 +92,7 @@ cudaError_t GptOssTpDirectAcquire() {
             status = cudaSuccess;
         }
         if (status != cudaSuccess) break;
-        status = cudaMalloc(&g_staging[rank], kCount * sizeof(float));
+        status = cudaMalloc(&g_staging[rank], kMaxCount * sizeof(float));
         if (status != cudaSuccess) break;
         status = cudaMalloc(&g_signal[rank], sizeof(Signal));
         if (status != cudaSuccess) break;
@@ -93,7 +100,16 @@ cudaError_t GptOssTpDirectAcquire() {
         if (status != cudaSuccess) break;
     }
     if (status != cudaSuccess) cleanup();
-    else g_ready = true;
+    else {
+        g_ready = true;
+        const char* batch = std::getenv("GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE");
+        g_batchEnabled = batch && batch[0] == '1' && batch[1] == '\0';
+        if (const char* blocks = std::getenv("GARNET_GPT_OSS_DIRECT_BATCH_CTAS")) {
+            const int value = std::atoi(blocks);
+            if (value == 2 || value == 4 || value == 8 || value == 16 || value == 32)
+                g_batchBlocks = value;
+        }
+    }
     const auto restore = cudaSetDevice(original);
     return status == cudaSuccess ? restore : status;
 }
@@ -107,13 +123,25 @@ void GptOssTpDirectRelease() {
 
 cudaError_t GptOssTpDirectAllReduce(const float* input, float* output,
     size_t count, int rank, cudaStream_t stream) {
-    if (!g_ready || count != kCount) return cudaErrorNotSupported;
+    if (!g_ready || (count != kCount && (!g_batchEnabled || !count ||
+        count > kMaxCount || count % kCount))) return cudaErrorNotSupported;
     if (!input || !output || rank < 0 || rank > 1) return cudaErrorInvalidValue;
     auto status = cudaMemcpyAsync(g_staging[rank], input,
-        kCount * sizeof(float), cudaMemcpyDeviceToDevice, stream);
+        count * sizeof(float), cudaMemcpyDeviceToDevice, stream);
     if (status != cudaSuccess) return status;
-    directReduce<<<2, 512, 0, stream>>>(g_staging[0], g_staging[1], output,
-        g_signal[rank], g_signal[1 - rank], rank);
+    int blocks = 2;
+    if (count != kCount) {
+        if (g_batchBlocks) blocks = g_batchBlocks;
+        else while (blocks < kMaxBlocks && size_t(blocks * 512 * 4) < count)
+            blocks *= 2;
+    }
+    // The paired rank streams must serialize all collectives. This opt-in
+    // screen reuses communicator-wide staging and is not safe for overlapping
+    // independent model executions; the exclusive benchmark runner enforces
+    // that restriction. Each CTA's end handshake protects its staging reads
+    // before either rank may enqueue the next staging copy.
+    directReduce<<<blocks, 512, 0, stream>>>(g_staging[0], g_staging[1], output,
+        g_signal[rank], g_signal[1 - rank], rank, static_cast<int>(count));
     return cudaGetLastError();
 }
 }

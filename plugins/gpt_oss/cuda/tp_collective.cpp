@@ -78,7 +78,7 @@ cudaError_t GptOssTpAllReduce(const float* input, float* output, size_t count,
     auto status = cudaGetDevice(&device);
     if (status != cudaSuccess) return status;
     if (device != rank) return cudaErrorInvalidDevice;
-    if (g_directReady && count == 2880) {
+    if (g_directReady) {
         status = GptOssTpDirectAllReduce(input, output, count, rank, stream);
         if (status != cudaErrorNotSupported) return status;
     }
