@@ -30,7 +30,12 @@ fi
 export XLANG3_PYTHON_LIB=${XLANG3_PYTHON_LIB:-$root/ThirdPartySDK/Python-3.14.0/Lib}
 export PYTHONPATH="$build/bin${PYTHONPATH:+:$PYTHONPATH}"
 export LD_LIBRARY_PATH="$build/bin:$tensorrt/lib:/usr/local/nvidia/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-command=("$runtime" "$repo/tools/gpt_oss/run_tp_batch_throughput.py"
+runner="$repo/tools/gpt_oss/run_tp_batch_throughput.py"
+if [[ -n ${GARNET_RESIDENT_PROFILE:-} ]]; then
+    [[ -f $GARNET_RESIDENT_PROFILE && -z ${GARNET_BENCH_NSYS_OUTPUT:-} ]] || exit 2
+    runner="$repo/tools/gpt_oss/run_resident_batch_tp2.py"
+fi
+command=("$runtime" "$runner"
     "$weights" "$cache" "$1" "$2" "$3" "$4")
 if [[ -n ${GARNET_BENCH_NSYS_OUTPUT:-} ]]; then
     # Profiled results retain profile_decode_steps/profile_prefill in JSON and

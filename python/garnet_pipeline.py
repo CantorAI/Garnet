@@ -98,6 +98,67 @@ class Pipeline:
             G.cuda_set_device(previous)
 
 
+class ResidentTensorParallel:
+    """Own two serial TP models with shared rank-local KV and fenced handoff.
+
+    TensorParallel waits for rank stream completion before returning. This
+    owner serializes whole forward calls across the two phase executors.
+    """
+    def __init__(self, prefill, decode):
+        from threading import Lock
+        self._lock = Lock()
+        self._prefill, self._decode = prefill, decode
+        if len(prefill.stages) != len(decode.stages):
+            raise ValueError('Resident phase rank counts differ')
+        for first, second in zip(prefill.stages, decode.stages):
+            if (first['device_id'] != second['device_id'] or
+                    first['keys'] is not second['keys'] or first['values'] is not second['values']):
+                raise ValueError('Resident phases must share exact rank-local KV objects')
+        self.prefill_stages, self.decode_stages = prefill.stages, decode.stages
+
+    @classmethod
+    def build(cls, build_prefill, build_decode):
+        prefill = decode = None
+        try:
+            prefill = build_prefill()
+            kv = [(stage['keys'], stage['values']) for stage in prefill.stages]
+            decode = build_decode(kv)
+            return cls(prefill, decode)
+        except Exception:
+            try:
+                if decode is not None:
+                    decode.release()
+            finally:
+                if prefill is not None:
+                    prefill.release()
+            raise
+
+    def forward_prefill(self, rank_inputs, **kwargs):
+        with self._lock:
+            if self._prefill is None:
+                raise RuntimeError('Resident models were released')
+            return self._prefill.forward_rank_local(rank_inputs, **kwargs)
+
+    def forward_decode(self, rank_inputs, **kwargs):
+        with self._lock:
+            if self._decode is None:
+                raise RuntimeError('Resident models were released')
+            return self._decode.forward_rank_local(rank_inputs, **kwargs)
+
+    def release(self):
+        with self._lock:
+            try:
+                if self._decode is not None:
+                    self._decode.release()
+            finally:
+                self._decode = None
+                try:
+                    if self._prefill is not None:
+                        self._prefill.release()
+                finally:
+                    self._prefill = None
+
+
 class TensorParallel:
     """Lockstep two-rank TensorRT execution with NCCL collectives."""
     def __init__(self, stages, greedy_candidate_pairs=False):

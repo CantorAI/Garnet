@@ -5227,6 +5227,7 @@ namespace Garnet {
             opName == "sub" || opName == "mul" || opName == "div";
         const bool isSequenceConcat =
             opName == "concat_sequence" || opName == "concat_tokens";
+        const bool isSequenceSelection = opName == "select_last_valid_sequence";
         const bool isMatrix = opName == "matmul" || isLinear;
         const bool isVisionPositionInterpolate =
             opName == "qwen3_vl_pos_embed_interpolate";
@@ -5251,7 +5252,7 @@ namespace Garnet {
             opName == "paged_kv_bind_context_length" ||
             opName == "paged_kv_bind_slot_position" ||
             opName == "paged_kv_bind_active_mask";
-        if (!isElementwise && !isSequenceConcat && !isMatrix && !isVisionPositionInterpolate &&
+        if (!isElementwise && !isSequenceConcat && !isSequenceSelection && !isMatrix && !isVisionPositionInterpolate &&
             !isVisionRope && !isVisionAttention && !isVisualEmbeddingMerge &&
             !isAudioEmbeddingMerge && !isAudioTokenCompact &&
             !isTextRope && !isTextAttention && !isGptOssRope && !isDeepstackAdd && !isPagedKVBinding) {
@@ -5264,7 +5265,35 @@ namespace Garnet {
             return X::Value();
         }
 
-        if (isGptOssRope) {
+        if (isSequenceSelection) {
+            // The caller supplies one valid count in [1,S] per batch row.
+            // Gather shares the batch axis and keeps a single sequence row.
+            const auto data = left->getDimensions();
+            const auto counts = right->getDimensions();
+            if (data.nbDims != 3 || counts.nbDims != 1 ||
+                data.d[0] <= 0 || data.d[1] <= 0 || data.d[2] <= 0 ||
+                counts.d[0] != data.d[0] || right->getType() != DataType::kINT32) {
+                loweringError = "select_last_valid_sequence requires [B,S,H] and [B] INT32 counts";
+                return X::Value();
+            }
+            integerVectorWeights.emplace_back(1, 1);
+            auto* one = network->addConstant(Dims{1, {1}},
+                Weights{DataType::kINT32, integerVectorWeights.back().data(), 1});
+            auto* index = one ? network->addElementWise(*right, *one->getOutput(0),
+                ElementWiseOperation::kSUB) : nullptr;
+            auto* reshape = index ? network->addShuffle(*index->getOutput(0)) : nullptr;
+            if (reshape) reshape->setReshapeDimensions(Dims{2, {data.d[0], 1}});
+            auto* gather = reshape ? network->addGatherV2(*left, *reshape->getOutput(0),
+                GatherMode::kDEFAULT) : nullptr;
+            if (!gather) {
+                loweringError = "select_last_valid_sequence layer construction failed";
+                return X::Value();
+            }
+            gather->setAxis(1);
+            gather->setNbElementWiseDims(1);
+            lastOutput = gather->getOutput(0);
+        }
+        else if (isGptOssRope) {
             lastOutput = LowerGptOss(opName, left, right, kwParams);
         }
         else if (isPagedKVBinding) {

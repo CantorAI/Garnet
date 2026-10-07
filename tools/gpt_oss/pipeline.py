@@ -332,9 +332,11 @@ def estimate_tp2_moe_workspace_bytes(config, rows):
 
 
 def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
-                          last_token_logits=False):
+                          last_token_logits=False, padded_prefill=False):
     """Build paired engines with sharded attention heads and rank-local MoE."""
     import garnet as G
+    if padded_prefill and not (prefill and last_token_logits):
+        raise ValueError('Padded prefill requires last-valid-token logits')
     compact_greedy = plan.get('compact_vocab_greedy', False)
     if compact_greedy and prefill and not last_token_logits:
         raise ValueError('Compact greedy prefill requires one last-token row per request')
@@ -385,10 +387,21 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                 stage_cache = stage_cache / 'bf16-gemv-v2'
             if last_token_logits:
                 stage_cache = stage_cache / 'last-token-logits'
+            if padded_prefill:
+                stage_cache = stage_cache / 'padded-prefill-v1'
             model_root = stage_cache / 'xmodel'
             model_root.mkdir(parents=True, exist_ok=True)
             for name in ('__init__.py', 'tensor_compat.py', 'gpt_oss_llm.py', 'model.json'):
                 shutil.copy2(root / name, model_root / name)
+            if padded_prefill:
+                llm_path = model_root / 'gpt_oss_llm.py'
+                llm_source = llm_path.read_text()
+                original = 'x = x * T.unary_op("last_token")'
+                if llm_source.count(original) != 1:
+                    raise ValueError('Padded prefill source contract changed')
+                llm_path.write_text(llm_source.replace(original,
+                    'valid_count = context_length * T.binary_op("sub") * slot_position\n'
+                    '            x = x * T.binary_op("select_last_valid_sequence") * valid_count'))
             source = (root / 'stage.py').read_text()
             source = source.replace('STAGE_START = 0', 'STAGE_START = 0')
             source = source.replace('STAGE_END = 1', 'STAGE_END = ' + str(end))
