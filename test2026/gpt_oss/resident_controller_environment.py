@@ -64,6 +64,7 @@ with tempfile.TemporaryDirectory() as temporary:
                 'GARNET_RESIDENT_WARMUPS': '42',
                 'GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE': '1',
                 'GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE': '1',
+                'GARNET_GPT_OSS_HYBRID_KV': '1',
                 'GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL': '1'}), \
              patch.object(sys,'argv',[name]+list(map(str,args))), \
              patch('subprocess.check_output',return_value=''), \
@@ -95,6 +96,10 @@ with tempfile.TemporaryDirectory() as temporary:
                 'GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL':str(value),
                 'GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE':str(value),
                 'GARNET_RESIDENT_PROFILE':None,'GARNET_RESIDENT_WARMUPS':None})
+        execute('profile_tp_engine_memory.py',[
+            reference,root/f'hybrid-profile{value}','--padded-prefill','--hybrid-kv',str(value)],{
+                'GARNET_GPT_OSS_HYBRID_KV':str(value),
+                'GARNET_RESIDENT_PROFILE':None,'GARNET_RESIDENT_WARMUPS':None})
     execute('profile_tp_engine_memory.py',[
         reference,root/'larger-profile','--padded-prefill','--batch','448',
         '--context','768','--prefill-chunk','8','--output','512'],{
@@ -102,6 +107,7 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_BATCH_PREFILL_CHUNK':'8','GARNET_RESIDENT_PADDED_PREFILL':'1',
             'GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL':None,
             'GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE':None,
+            'GARNET_GPT_OSS_HYBRID_KV':None,
             'GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE':None},
         shape=dict(batch=448,input_tokens_per_request=256,output_tokens_per_request=512,
                    max_context_tokens_per_request=768,prefill_chunk_tokens=8))

@@ -224,6 +224,114 @@ void testAttention(int dimension) {
     if (dk.read() != savedK || dv.read() != savedV) throw std::runtime_error("decode cache mutation mismatch");
     for (size_t i = 0; i < keys.size() / 2; ++i) if (savedK[i] != keys[i]) throw std::runtime_error("wrong KV layer modified");
 }
+void testHybridRingAttention64() {
+    // Independent full-history physical storage plus FP64 sampled queries.
+    // Never form the oracle from the ring's potentially overwritten entries.
+    for(int window:{17,128})for(int tokens:{1,16,32})for(int start:{0,127,2005})
+      for(int heads:{8,32})for(int layer:{0,1}) {
+        GptOssOptions o;o.kind=1;o.qHeads=heads;o.kvHeads=heads/8;
+        o.headDim=64;o.pageSize=16;o.layer=layer;o.prefill=tokens>1;o.window=window;
+        constexpr int batch=3,logical=160,layers=2;
+        const int ring=(window+tokens-1+15)/16,fullPages=batch*logical,ringPages=batch*ring;
+        const int width=(heads+2*o.kvHeads)*64,queryWidth=heads*64;
+        const std::vector<int> starts{start,start+3,start},active{1,1,0};
+        const std::vector<int> lengths{start+tokens,start+3+std::max(1,tokens-3),0};
+        std::vector<int> fullTable(batch*logical),ringTable(batch*logical);
+        for(int b=0;b<batch;++b)for(int p=0;p<logical;++p) {
+            fullTable[b*logical+p]=b*logical+p;ringTable[b*logical+p]=b*ring+p%ring;
+        }
+        std::vector<uint16_t> fullK(size_t(layers)*fullPages*16*o.kvHeads*64,bits(7.f)),fullV(fullK);
+        std::vector<uint16_t> ringK(size_t(layers)*ringPages*16*o.kvHeads*64,bits(7.f)),ringV(ringK);
+        auto offset=[&](int l,int pages,int page,int p,int h,int d) {
+            return (((size_t(l)*pages+page)*16+p%16)*o.kvHeads+h)*64+d;
+        };
+        for(int l=0;l<layers;++l)for(int b=0;b<batch;++b)for(int p=0;p<starts[b];++p)
+          for(int h=0;h<o.kvHeads;++h)for(int d=0;d<64;++d) {
+            const float index=float(31*l+17*b+11*p+5*h+d);
+            const uint16_t k=bits(std::sin(index*.031f)*.75f),v=bits(std::cos(index*.021f)*.75f);
+            const auto a=offset(l,fullPages,b*logical+p/16,p,h,d);
+            const auto c=offset(l,ringPages,b*ring+(p/16)%ring,p,h,d);
+            fullK[a]=ringK[c]=k;fullV[a]=ringV[c]=v;
+        }
+        std::vector<float> x(size_t(batch)*tokens*width),sinks(heads);
+        for(int h=0;h<heads;++h)sinks[h]=(h%4==0)?12.f:(h%4==1)?-12.f:(h%4==2)?2.f:-1.f;
+        Device<float> dx(x),ds(sinks),fullOut{std::vector<float>(size_t(batch)*tokens*queryWidth)},
+            ringOut{std::vector<float>(fullOut.n)},scratch{std::vector<float>(size_t(batch)*heads*64*130)};
+        Device<uint16_t> dfk(fullK),dfv(fullV),drk(ringK),drv(ringV);
+        Device<int> dft(fullTable),drt(ringTable),dl(lengths),dp(starts),da(active);
+        const void* fullIn[]{dx.p,dfk.p,dfv.p,dft.p,dl.p,dp.p,da.p,ds.p};
+        const void* ringIn[]{dx.p,drk.p,drv.p,drt.p,dl.p,dp.p,da.p,ds.p};
+        cudaStream_t stream;check(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
+        // Gate script disables automatic FlashInfer selection for the exact
+        // storage comparison. Its independent explicit path is checked below.
+        check(RunGptOssAttention(ringIn,ringOut.p,scratch.p,batch,tokens,logical,ringPages,o,stream));
+        check(cudaStreamSynchronize(stream));
+        cudaGraph_t graph;cudaGraphExec_t execution;
+        check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeGlobal));
+        check(RunGptOssAttention(ringIn,ringOut.p,scratch.p,batch,tokens,logical,ringPages,o,stream));
+        check(cudaStreamEndCapture(stream,&graph));
+        check(cudaGraphInstantiate(&execution,graph,nullptr,nullptr,0));
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+        const auto bytes=GptOssFlashAttentionWorkspace(batch,tokens,logical,o);
+        if(!bytes)throw std::runtime_error("Hybrid ring requires actual FlashInfer coverage");
+        Device<unsigned char> flashWorkspace{std::vector<unsigned char>(bytes)};
+        Device<float> flashOut{std::vector<float>(fullOut.n)};
+        check(RunGptOssFlashAttention(ringIn,flashOut.p,flashWorkspace.p,batch,tokens,logical,ringPages,o,stream));
+        check(cudaStreamSynchronize(stream));
+        cudaGraph_t flashGraph;cudaGraphExec_t flashExecution;
+        check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeGlobal));
+        check(RunGptOssFlashAttention(ringIn,flashOut.p,flashWorkspace.p,batch,tokens,logical,ringPages,o,stream));
+        check(cudaStreamEndCapture(stream,&flashGraph));
+        check(cudaGraphInstantiate(&flashExecution,flashGraph,nullptr,nullptr,0));
+#endif
+        for(int change=0;change<2;++change) {
+            for(size_t i=0;i<x.size();++i)x[i]=bf(std::sin(float(i)*.019f+change*.125f)*.75f);
+            check(cudaMemcpy(dx.p,x.data(),x.size()*sizeof(float),cudaMemcpyHostToDevice));
+            check(RunGptOssAttention(fullIn,fullOut.p,scratch.p,batch,tokens,logical,fullPages,o,stream));
+            check(cudaGraphLaunch(execution,stream));
+            check(cudaStreamSynchronize(stream));
+            const auto expected=fullOut.read(),actual=ringOut.read();
+            compare(actual,expected,0.f,"Hybrid ring exact full-history outputs/changing graph");
+            const auto cachedK=dfk.read(),cachedV=dfv.read();
+            auto value=[](uint16_t v){uint32_t raw=uint32_t(v)<<16;float f;std::memcpy(&f,&raw,4);return f;};
+            for(int b=0;b<batch;++b)for(int t:{0,tokens/2,tokens-1})for(int h=0;h<heads;++h) {
+                const int end=o.prefill?starts[b]+t+1:lengths[b];
+                double denominator=std::exp(double(sinks[h])),accum[64]={};
+                if(active[b])for(int p=std::max(0,end-window);p<end;++p) {
+                    double score=0;
+                    for(int d=0;d<64;++d)score+=double(x[size_t(b*tokens+t)*width+h*64+d])*
+                        value(cachedK[offset(layer,fullPages,b*logical+p/16,p,h/8,d)]);
+                    const double weight=std::exp(score/8.);denominator+=weight;
+                    for(int d=0;d<64;++d)accum[d]+=weight*value(cachedV[offset(layer,fullPages,b*logical+p/16,p,h/8,d)]);
+                }
+                for(int d=0;d<64;++d) {
+                    const float wanted=bf(float(accum[d]/denominator));
+                    if(std::abs(actual[size_t(b*tokens+t)*queryWidth+h*64+d]-wanted)>.006f*(1+std::abs(wanted)))
+                        throw std::runtime_error("Hybrid ring differs from independent FP64 full history");
+                }
+            }
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+            check(cudaGraphLaunch(flashExecution,stream));
+            check(cudaStreamSynchronize(stream));
+            compare(flashOut.read(),expected,.006f,"Hybrid ring FlashInfer/changing graph vs full history");
+#endif
+        }
+        const auto savedK=drk.read(),savedV=drv.read();
+        const size_t perLayer=size_t(ringPages)*16*o.kvHeads*64;
+        for(size_t i=0;i<savedK.size();++i) {
+            const int l=int(i/perLayer),b=int((i%perLayer)/(size_t(ring)*16*o.kvHeads*64));
+            if((l!=layer||!active[b])&&(savedK[i]!=ringK[i]||savedV[i]!=ringV[i]))
+                throw std::runtime_error("Hybrid ring modified inactive request or other bank layer");
+        }
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+        check(cudaGraphExecDestroy(flashExecution));check(cudaGraphDestroy(flashGraph));
+#endif
+        check(cudaGraphExecDestroy(execution));check(cudaGraphDestroy(graph));
+        check(cudaStreamDestroy(stream));
+    }
+    std::cout<<"Hybrid ring repeated tables, both bank layers, FP64 sample, changing graphs and inactive storage PASS\n";
+}
+
 void testLongPrefillAttention64() {
     GptOssOptions o; o.kind = 1; o.qHeads = 4; o.kvHeads = 2;
     o.headDim = 64; o.pageSize = 16; o.layer = 1; o.prefill = 1;
@@ -1008,6 +1116,13 @@ void benchmarkMarlinMetadata() {
 }
 #endif
 int main(int argc, char** argv) { try {
+    if(argc==2&&std::strcmp(argv[1],"--hybrid-kv-attention-parity")==0) {
+#ifndef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+        throw std::runtime_error("Hybrid KV gate requires compiled FlashInfer adapter");
+#else
+        testHybridRingAttention64();check(cudaDeviceSynchronize());return 0;
+#endif
+    }
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
     if(argc==2&&std::strcmp(argv[1],"--flash-decode-parity")==0){testFlashDecode64();return 0;}
 #endif

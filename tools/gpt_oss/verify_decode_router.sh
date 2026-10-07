@@ -10,6 +10,7 @@ directory=$1
 mkdir -p "$directory"
 directory=$(cd "$directory" && pwd)
 export GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE=0
+export GARNET_GPT_OSS_HYBRID_KV=0
 export GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE=0 GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL=0
 bash "$repo/tools/gpt_oss/verify_resident_tp2.sh" "$directory/regressions"
 exec 9>"$root/work/gpu-benchmark.lock"

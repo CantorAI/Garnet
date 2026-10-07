@@ -21,6 +21,7 @@ from engine_profile_shape import candidate_shape, validate_candidate_shape
 if len(sys.argv) in (4,5) and sys.argv[1] == '--runtime':
     import garnet as G
     from pipeline import make_tensor_parallel_plan, build_tensor_parallel
+    from garnet_pipeline import ResidentTensorParallel
     reference_path, output = map(Path, sys.argv[2:4])
     reference_bytes = reference_path.read_bytes()
     reference = json.loads(reference_bytes)
@@ -57,7 +58,7 @@ if len(sys.argv) in (4,5) and sys.argv[1] == '--runtime':
             after = memory()
             samples.append(dict(phase='prefill' if prefill else 'decode',
                                 memory_before_mib=before, memory_after_load_mib=after))
-            kv = [(stage['keys'], stage['values']) for stage in model.stages]
+            kv = ResidentTensorParallel.shared_rank_resources(model)
             model.release()
             model = None
     finally:
@@ -98,6 +99,8 @@ parser.add_argument('--bounded-prefill', type=int, choices=(0,1),
     help='explicit V11 token-local bounded MoE candidate; native calls stay<=4096rows')
 parser.add_argument('--decode-router-tensorcore', type=int, choices=(0,1),
     help='explicit OPT49 BF16 tensor-core decode-router candidate; requires separate quality gates')
+parser.add_argument('--hybrid-kv', type=int, choices=(0,1),
+    help='explicit OPT50 full-history/window-bank candidate; GPU quality must be proved separately')
 args = parser.parse_args()
 reference_path, directory = args.reference, args.directory
 reference_bytes = reference_path.read_bytes()
@@ -136,7 +139,8 @@ overrides = {key: str(value) for key, value in (
     ('GARNET_GPT_OSS_DIRECT_BATCH_CTAS', args.direct_ctas),
     ('GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE', args.bf16_decode_allreduce),
     ('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', args.bounded_prefill),
-    ('GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE', args.decode_router_tensorcore)) if value is not None}
+    ('GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE', args.decode_router_tensorcore),
+    ('GARNET_GPT_OSS_HYBRID_KV', args.hybrid_kv)) if value is not None}
 if args.direct_max_batch is not None or args.direct_ctas is not None:
     if any(env.get(key) != '1' for key in ('GARNET_GPT_OSS_DIRECT_ALLREDUCE',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE', 'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE')):

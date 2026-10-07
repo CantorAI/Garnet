@@ -16,7 +16,7 @@ def bf(x):
     return struct.unpack('<f', struct.pack('<I', value))[0]
 
 
-def create(root,gqa8=False,intermediate=32):
+def create(root,gqa8=False,intermediate=32,input_ids=None,window=2,tp_gqa8=False):
     if intermediate < 32 or intermediate > 256 or intermediate % 32:
         raise ValueError('Fixture intermediate size must be a multiple of32 from32 to256')
     root.mkdir(parents=True, exist_ok=True)
@@ -27,6 +27,11 @@ def create(root,gqa8=False,intermediate=32):
                   rope_theta=150000, rope_scaling_factor=32, rope_ntk_alpha=1, rope_ntk_beta=32)
     if gqa8:
         config.update(head_dim=64,num_attention_heads=8,num_key_value_heads=1)
+    if tp_gqa8:
+        config.update(head_dim=64,num_attention_heads=16,num_key_value_heads=2)
+    if type(window) is not int or window <= 0:
+        raise ValueError('Fixture window must be positive')
+    config['sliding_window'] = window
     dim=config['head_dim'];heads=config['num_attention_heads'];kv_heads=config['num_key_value_heads']
     query_width=heads*dim;kv_width=kv_heads*dim;packed_width=query_width+2*kv_width
     entries, tensors, dense, data = {}, {}, {}, bytearray()
@@ -139,7 +144,7 @@ def create(root,gqa8=False,intermediate=32):
             for t, x in enumerate(xs):
                 attention = []
                 for head in range(heads):
-                    first = max(0, t - 1) if layer % 2 == 0 else 0
+                    first = max(0, t + 1 - window) if layer % 2 == 0 else 0
                     kv_head=head//(heads//kv_heads)
                     scores = [sum(qs[t][head * dim + d] * qs[s][query_width + kv_head * dim + d] for d in range(dim)) / math.sqrt(dim)
                               for s in range(first, t + 1)]
@@ -157,7 +162,10 @@ def create(root,gqa8=False,intermediate=32):
         return [linear(norm(x, 'norm.scale'), 'unembedding.weight') for x in xs]
 
     cases = [[1, 2, 3, 4], [6, 5, 4, 3]]
-    sequence, generated, generation_logits = cases[0][:3], [], []
+    request_ids = cases[0][:3] if input_ids is None else list(input_ids)
+    if not request_ids or any(type(i) is not int or not 0 <= i < 64 for i in request_ids):
+        raise ValueError('Invalid fixture input sequence')
+    sequence, generated, generation_logits = list(request_ids), [], []
     for _ in range(3):
         logits = reference(sequence)[-1]
         generation_logits.append(logits)
@@ -167,7 +175,7 @@ def create(root,gqa8=False,intermediate=32):
     (root / 'expected.json').write_text(json.dumps({'ids': cases, 'logits': [reference(ids) for ids in cases],
                                                   'generated': generated,
                                                   'generation_logits': generation_logits}))
-    (root / 'request.json').write_text(json.dumps({'input_ids': cases[0][:3], 'max_new_tokens': 3}))
+    (root / 'request.json').write_text(json.dumps({'input_ids': request_ids, 'max_new_tokens': 3}))
     model_root = Path(__file__).resolve().parents[2] / 'xModel' / 'gpt_oss' / '120b'
     normal = {'id': 'gpt_oss', 'module': 'garnet_gpt_oss', 'abi': 1, 'backend': 'tensorrt',
               'operators': ['gpt_oss_round_bf16', 'gpt_oss_apply_yarn_rope_packed',
@@ -196,5 +204,11 @@ if __name__ == '__main__':
     parser.add_argument('destination', type=Path)
     parser.add_argument('--gqa8',action='store_true',help='head64 and8:1 GQA for native tensor-core prefill coverage')
     parser.add_argument('--intermediate',type=int,default=32,help='original MoE intermediate width for TP fixtures')
+    parser.add_argument('--prompt-length',type=int,help='explicit long synthetic CPU-reference input')
+    parser.add_argument('--window',type=int,default=2)
+    parser.add_argument('--tp-gqa8',action='store_true',help='two KV heads,16 query heads,64 dimensions for TP2 FlashInfer coverage')
     args=parser.parse_args()
-    create(args.destination,args.gqa8,args.intermediate)
+    if args.prompt_length is not None and not 1 <= args.prompt_length <= 256:
+        raise ValueError('Synthetic prompt length must be1..256')
+    ids = None if args.prompt_length is None else [(i * 7 + 1) % 64 for i in range(args.prompt_length)]
+    create(args.destination,args.gqa8,args.intermediate,ids,args.window,args.tp_gqa8)

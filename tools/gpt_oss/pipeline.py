@@ -15,6 +15,7 @@ from pathlib import Path
 repo = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(repo / 'python'))
 from garnet_pipeline import Pipeline, plan_layers
+from kv_layout import hybrid_requested, hybrid_layout, checked_layout, window_page_table
 
 
 def weight_sizes(weights):
@@ -97,6 +98,10 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         raise ValueError('GPT-OSS TP2 requires an even KV head count')
     kv_bytes = (config['num_hidden_layers'] * 2 * pages * 16 *
                 local_kv_heads * config['head_dim'] * 2)
+    layout = (hybrid_layout(config, batch, capacity, tokens, local_kv_heads)
+              if hybrid_requested() else None)
+    if layout is not None:
+        kv_bytes = layout['shared_kv_bytes'] + layout['shared_auxiliary_bytes']
     activation_bytes = batch * tokens * (config['hidden_size'] * 64 +
         config['vocab_size'] * 4 + config['intermediate_size'] * config['experts_per_token'] * 4)
     # Dense BF16 constants are budgeted at FP32 size because TensorRT may
@@ -184,6 +189,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         'checkpoint': str(Path(weights).resolve()), 'capacity': capacity, 'batch': batch,
         'memory_fraction': memory_fraction, 'reserve_bytes': reserve_bytes,
         'layer_cuda_graph': True}
+    if layout is not None:
+        identity.update(schema=4, kv_layout=layout)
     if expert_weight_shards:
         # Weight storage changes serialized constants and the plugin contract.
         identity['expert_weight_shards'] = True
@@ -205,7 +212,7 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
                'end': config['num_hidden_layers'], 'estimated_bytes': required,
                'budget_bytes': budget}
               for rank, (d, budget) in enumerate(zip(devices, budgets))]
-    return {'schema': 3, 'mode': 'gpt-oss-tensor-parallel-tp2', 'cache_key': key,
+    result = {'schema': identity['schema'], 'mode': 'gpt-oss-tensor-parallel-tp2', 'cache_key': key,
             'hardware': hardware, 'stages': stages, 'batch': batch,
             'capacity': capacity, 'max_tokens': tokens, 'kv_pages': pages,
             'config': config, 'estimated_per_gpu_bytes': required,
@@ -217,6 +224,9 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'weight_storage_estimate': weight_storage,
             'marlin_workspace_layout': identity['marlin_workspace_layout'],
             'collective_workspace_layout': identity['collective_workspace_layout']}
+    if layout is not None:
+        result['kv_layout'] = layout
+    return result
 
 
 def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_logits=False):
@@ -357,6 +367,11 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                           last_token_logits=False, padded_prefill=False):
     """Build paired engines with sharded attention heads and rank-local MoE."""
     import garnet as G
+    layout = checked_layout(plan)
+    if (layout is not None) != hybrid_requested():
+        raise ValueError('Hybrid KV flag changed after planning; regenerate the TP2 profile')
+    if kv is not None and len(kv) != len(plan['stages']):
+        raise ValueError('Exactly one shared KV resource group per rank required')
     if plan.get('collective_workspace_layout') != collective_workspace_profile():
         raise ValueError('Collective workspace layout changed; regenerate the TP2 profile')
     if padded_prefill and not (prefill and last_token_logits):
@@ -419,7 +434,9 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
             model_root.mkdir(parents=True, exist_ok=True)
             for name in ('__init__.py', 'tensor_compat.py', 'gpt_oss_llm.py', 'model.json'):
                 shutil.copy2(root / name, model_root / name)
-            if padded_prefill:
+            if layout is not None:
+                shutil.copy2(root / 'gpt_oss_hybrid_llm.py', model_root / 'gpt_oss_hybrid_llm.py')
+            if padded_prefill and layout is None:
                 llm_path = model_root / 'gpt_oss_llm.py'
                 llm_source = llm_path.read_text()
                 original = 'x = x * T.unary_op("last_token")'
@@ -428,7 +445,7 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                 llm_path.write_text(llm_source.replace(original,
                     'valid_count = context_length * T.binary_op("sub") * slot_position\n'
                     '            x = x * T.binary_op("select_last_valid_sequence") * valid_count'))
-            source = (root / 'stage.py').read_text()
+            source = (root / ('stage_hybrid.py' if layout is not None else 'stage.py')).read_text()
             source = source.replace('STAGE_START = 0', 'STAGE_START = 0')
             source = source.replace('STAGE_END = 1', 'STAGE_END = ' + str(end))
             source = source.replace('STAGE_PREFILL = 1', 'STAGE_PREFILL = ' + str(int(prefill)))
@@ -442,28 +459,63 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                 'STAGE_MOE_INTERMEDIATE_SHARD = ' + str(int(plan.get('moe_intermediate_shards', False))))
             source = source.replace('STAGE_MARLIN_PREPACKED = 0',
                 'STAGE_MARLIN_PREPACKED = ' + str(int(plan.get('marlin_prepacked', False))))
+            if layout is not None:
+                source = source.replace('STAGE_PADDED_PREFILL = 0',
+                    'STAGE_PADDED_PREFILL = ' + str(int(padded_prefill)))
             (model_root / 'stage.py').write_text(source)
-            shape = [end, plan['kv_pages'], 16, plan['local_kv_heads'], config['head_dim']]
+            shape = (layout['global_shape'] if layout is not None else
+                [end, plan['kv_pages'], 16, plan['local_kv_heads'], config['head_dim']])
+            auxiliary = {}
             if kv is None:
                 keys = G.tensor_zeros(shape, 'bfloat16')
                 values = G.tensor_zeros(shape, 'bfloat16')
+                if layout is not None:
+                    auxiliary = dict(
+                        window_keys=G.tensor_zeros(layout['window_shape'], 'bfloat16'),
+                        window_values=G.tensor_zeros(layout['window_shape'], 'bfloat16'),
+                        window_table=G.tensor_from_host(window_page_table(layout), dtype='int32',
+                            shape=layout['window_table_shape'], device='cuda'))
             else:
-                keys, values = kv[rank]
+                shared = kv[rank]
+                if layout is not None:
+                    if (not isinstance(shared, dict) or
+                            shared.get('shared_resource_layout') != layout or
+                            shared.get('extra_input_names') != tuple(layout['extra_tensor_arguments']) or
+                            set(shared.get('shared_resources', {})) != set(layout['extra_tensor_arguments'])):
+                        raise ValueError('Hybrid KV phases need every bank/table with the exact layout')
+                    keys, values = shared['keys'], shared['values']
+                    auxiliary = dict(shared['shared_resources'])
+                else:
+                    keys, values = shared
             first_shape = [batch, tokens]
+            input_shapes = [first_shape, [batch, tokens], shape, shape,
+                [batch, math.ceil(plan['capacity'] / 16)], [batch], [batch], [batch]]
+            input_dtypes = ['int64', 'int64', 'bfloat16', 'bfloat16',
+                'int32', 'int32', 'int32', 'int32']
+            if layout is not None:
+                input_shapes += [layout['window_shape'], layout['window_shape'], layout['window_table_shape']]
+                input_dtypes += ['bfloat16', 'bfloat16', 'int32']
             model = G.load_model(str(model_root / 'stage.py'), runtime_mode='compiled_xmodel',
                 backend='tensorrt', precision='bf16', entry_function='GptOssStage', weights=str(weights),
                 cache_dir=str(stage_cache / 'engine'),
-                input_shapes=[first_shape, [batch, tokens], shape, shape,
-                              [batch, math.ceil(plan['capacity'] / 16)], [batch], [batch], [batch]],
-                input_dtypes=['int64', 'int64', 'bfloat16', 'bfloat16', 'int32', 'int32', 'int32', 'int32'],
+                input_shapes=input_shapes, input_dtypes=input_dtypes,
                 compile={'builder_workspace_mb': workspace_mb,
                          'builder_optimization_level': optimization_level,
                          'partition': {'enable_preferred_boundaries': False,
                                        'max_atomic_regions_per_partition': 0}})
-            status = model.runtime_status()
-            if not status['ready']:
-                raise RuntimeError(str(status))
-            stages.append(dict(placement, model=model, keys=keys, values=values))
+            try:
+                status = model.runtime_status()
+                if not status['ready']:
+                    raise RuntimeError(str(status))
+            except Exception:
+                model.release_runtime()
+                raise
+            stage = dict(placement, model=model, keys=keys, values=values)
+            if layout is not None:
+                stage.update(shared_resources=auxiliary,
+                    shared_resource_layout=json.loads(json.dumps(layout)),
+                    extra_input_names=tuple(layout['extra_tensor_arguments']))
+            stages.append(stage)
     except Exception:
         for stage in stages:
             G.cuda_set_device(stage['device_id'])

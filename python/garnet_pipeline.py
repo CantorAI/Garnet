@@ -111,9 +111,18 @@ class ResidentTensorParallel:
         if len(prefill.stages) != len(decode.stages):
             raise ValueError('Resident phase rank counts differ')
         for first, second in zip(prefill.stages, decode.stages):
+            _extra_stage_inputs(first)
+            _extra_stage_inputs(second)
             if (first['device_id'] != second['device_id'] or
                     first['keys'] is not second['keys'] or first['values'] is not second['values']):
                 raise ValueError('Resident phases must share exact rank-local KV objects')
+            extras = first.get('shared_resources', {})
+            other = second.get('shared_resources', {})
+            if (first.get('shared_resource_layout') != second.get('shared_resource_layout') or
+                    first.get('extra_input_names', ()) != second.get('extra_input_names', ()) or
+                    extras.keys() != other.keys() or
+                    any(value is not other[name] for name, value in extras.items())):
+                raise ValueError('Resident phases must share every auxiliary object and layout')
         self.prefill_stages, self.decode_stages = prefill.stages, decode.stages
 
     @classmethod
@@ -121,7 +130,7 @@ class ResidentTensorParallel:
         prefill = decode = None
         try:
             prefill = build_prefill()
-            kv = [(stage['keys'], stage['values']) for stage in prefill.stages]
+            kv = cls.shared_rank_resources(prefill)
             decode = build_decode(kv)
             return cls(prefill, decode)
         except Exception:
@@ -132,6 +141,21 @@ class ResidentTensorParallel:
                 if prefill is not None:
                     prefill.release()
             raise
+
+    @staticmethod
+    def shared_rank_resources(model):
+        """Old stages retain tuple K/V; explicit auxiliary layouts carry all tensors."""
+        result = []
+        for stage in model.stages:
+            _extra_stage_inputs(stage)
+            if stage.get('shared_resources'):
+                result.append(dict(keys=stage['keys'], values=stage['values'],
+                    shared_resources=dict(stage['shared_resources']),
+                    shared_resource_layout=json.loads(json.dumps(stage['shared_resource_layout'])),
+                    extra_input_names=stage['extra_input_names']))
+            else:
+                result.append((stage['keys'], stage['values']))
+        return result
 
     def forward_prefill(self, rank_inputs, **kwargs):
         with self._lock:
@@ -159,6 +183,18 @@ class ResidentTensorParallel:
                     self._prefill = None
 
 
+def _extra_stage_inputs(stage):
+    resources = stage.get('shared_resources', {})
+    names = stage.get('extra_input_names', ())
+    if any(key in stage for key in ('shared_resources', 'extra_input_names', 'shared_resource_layout')):
+        if (not isinstance(resources, dict) or not isinstance(names, tuple) or
+                not resources or any(not isinstance(name, str) or not name for name in names) or
+                len(set(names)) != len(names) or set(names) != set(resources) or
+                not stage.get('shared_resource_layout')):
+            raise ValueError('Auxiliary tensor inputs need an exact ordered resource/layout contract')
+    return [resources[name] for name in names]
+
+
 class TensorParallel:
     """Lockstep two-rank TensorRT execution with NCCL collectives."""
     def __init__(self, stages, greedy_candidate_pairs=False):
@@ -183,7 +219,7 @@ class TensorParallel:
                 local_activation = G.tensor_to_device(activation, stage['device_id'])
                 local = [G.tensor_to_device(t, stage['device_id']) for t in controls]
                 request = {'inputs': [local_activation, local[0], stage['keys'],
-                    stage['values'], local[1], local[2], local[3], local[4]]}
+                    stage['values'], local[1], local[2], local[3], local[4]] + _extra_stage_inputs(stage)}
                 if sample and stage['rank'] == 0 and not self.greedy_candidate_pairs:
                     request['sample'] = 'greedy_batch' if sample_batch else 'greedy'
                 prepared.append((stage, request))
@@ -207,7 +243,7 @@ class TensorParallel:
             if len(controls) != 5:
                 raise ValueError('rank-local controls must contain position, page table, length, slot and active')
             request = {'inputs': [activation, controls[0], stage['keys'], stage['values'],
-                controls[1], controls[2], controls[3], controls[4]]}
+                controls[1], controls[2], controls[3], controls[4]] + _extra_stage_inputs(stage)}
             if sample and stage['rank'] == 0 and not self.greedy_candidate_pairs:
                 request['sample'] = 'greedy_batch' if sample_batch else 'greedy'
             prepared.append((stage, request))

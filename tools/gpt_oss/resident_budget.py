@@ -9,6 +9,7 @@ import math
 import os
 from pathlib import Path
 import subprocess
+from kv_layout import kv_memory
 
 
 def file_sha256(path):
@@ -61,10 +62,15 @@ def checkpoint_identity(weights):
 
 
 def plan_identity(plan):
-    return {key: plan[key] for key in ('schema', 'mode', 'cache_key', 'hardware',
+    identity = {key: plan[key] for key in ('schema', 'mode', 'cache_key', 'hardware',
         'batch', 'capacity', 'max_tokens', 'kv_pages', 'config', 'local_kv_heads',
         'expert_weight_shards', 'moe_intermediate_shards', 'marlin_prepacked',
         'compact_vocab_greedy', 'marlin_workspace_layout', 'collective_workspace_layout')}
+    if 'kv_layout' in plan:
+        # Recompute/validate the bank contract before trusting a profile.
+        kv_memory(plan)
+        identity['kv_layout'] = plan['kv_layout']
+    return identity
 
 
 def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environment,
@@ -90,8 +96,7 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
     records = {(row['device'], row['phase']): row for row in rows}
     if len(records) != 4:
         raise ValueError('Duplicate resident engine statistic')
-    kv_bytes = (plan['config']['num_hidden_layers'] * 2 * plan['kv_pages'] * 16 *
-                plan['local_kv_heads'] * plan['config']['head_dim'] * 2)
+    kv_bytes, auxiliary_bytes = kv_memory(plan)
     packed_lower_bound = plan['weight_storage_estimate']['prepacked_marlin_constant_bytes']
     result = []
     for device in devices:
@@ -106,13 +111,15 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
                     type(context) is not int or context <= 0):
                 raise ValueError('Invalid resident weight/context bound')
             bounds.append((weight, context))
-        required = math.ceil(sum(w for w, _ in bounds) * 1.05) + sum(c for _, c in bounds) + kv_bytes + reserve_bytes
+        required = math.ceil(sum(w for w, _ in bounds) * 1.05) + sum(c for _, c in bounds) + kv_bytes + auxiliary_bytes + reserve_bytes
         budget = min(device['free_bytes'], int(device['total_bytes'] * memory_fraction))
         if required > budget:
             raise ValueError('Resident engines exceed memory budget on GPU' + str(device['id']))
         result.append(dict(device=device['id'], required_bytes=required, budget_bytes=budget,
             shared_kv_bytes=kv_bytes, runtime_graph_reserve_bytes=reserve_bytes,
             contexts_per_engine=1, weight_margin_fraction=.05))
+        if 'kv_layout' in plan:
+            result[-1]['shared_auxiliary_bytes'] = auxiliary_bytes
     return dict(ranks=result, concurrency='serial complete batches; one context per engine',
         limits='Measured engine bounds plus explicit reserve; execution peak validation still required')
 

@@ -11,6 +11,7 @@ import garnet as G
 repo = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(repo / 'tools/gpt_oss'))
 from pipeline import make_tensor_parallel_plan, build_tensor_parallel
+from garnet_pipeline import ResidentTensorParallel
 weights, cache, output = map(Path, sys.argv[1:4])
 batch = int(sys.argv[4]) if len(sys.argv)>4 else 1
 if not 1<=batch<=512:
@@ -57,7 +58,7 @@ try:
         if step:
             if step == 1:
                 if not resident:
-                    kv = [(s['keys'], s['values']) for s in model.stages]
+                    kv = ResidentTensorParallel.shared_rank_resources(model)
                     model.release()
                     model = build_tensor_parallel(weights, cache, plan, 1, False, kv)
             tokens = [expected['generated'][step - 1]]

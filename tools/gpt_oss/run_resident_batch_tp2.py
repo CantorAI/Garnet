@@ -16,6 +16,7 @@ import time
 import garnet as G
 from pipeline import build_tensor_parallel, make_tensor_parallel_plan
 from garnet_pipeline import ResidentTensorParallel
+from kv_layout import kv_memory, logical_retained_kv_bytes
 from resident_capture import ResidentCapture
 from resident_budget import (admit_resident, native_identity, hardware_identity,
     kernel_environment, checkpoint_identity, validate_engine_files, file_sha256)
@@ -219,6 +220,15 @@ if any(peak * (1 << 20) > admitted['budget_bytes'] for peak, admitted in zip(pea
     raise RuntimeError('Observed resident memory exceeds admitted budget')
 
 kv_per_token = plan['config']['num_hidden_layers'] * 2 * plan['local_kv_heads'] * plan['config']['head_dim'] * 2
+kv_allocated, auxiliary_allocated = kv_memory(plan)
+layout_report = (dict(kv_layout=plan['kv_layout'],
+    shared_kv_auxiliary_bytes_per_gpu=auxiliary_allocated,
+    kv_page_counts_per_bank=dict(global_bank=plan['kv_pages'],
+        window_bank=plan['kv_layout']['window_shape'][1]),
+    logical_retained_kv_bytes_per_gpu_after_prefill=logical_retained_kv_bytes(plan, len(ids)),
+    logical_retained_kv_bytes_per_gpu_at_completion=logical_retained_kv_bytes(plan, len(ids)+output_tokens-1),
+    logical_kv_description='Full-history equivalent token volume; window bank recycles expired history')
+    if 'kv_layout' in plan else {})
 result_path.write_text(json.dumps(dict(source_commit=source_commit,
     resident_profile=str(profile_path.resolve()), resident_profile_sha256=file_sha256(profile_path),
     resident_admission=admission, native_binaries=profile['native_binaries'],
@@ -230,7 +240,7 @@ result_path.write_text(json.dumps(dict(source_commit=source_commit,
     max_context_tokens_per_request=capacity, prefill_chunk_tokens=chunk,
     padded_prefill=padded, padded_tail_tokens=(-len(ids)) % chunk,
     kv_cache_dtype='bfloat16', kv_pages_per_gpu=plan['kv_pages'],
-    kv_cache_allocated_bytes_per_gpu=plan['kv_pages'] * 16 * kv_per_token,
+    kv_cache_allocated_bytes_per_gpu=kv_allocated,
     logical_kv_bytes_per_gpu_after_prefill=batch * len(ids) * kv_per_token,
     logical_kv_bytes_per_gpu_at_completion=batch * (len(ids) + output_tokens - 1) * kv_per_token,
     sampled_peak_gpu_memory_mib=peaks,
@@ -246,4 +256,4 @@ result_path.write_text(json.dumps(dict(source_commit=source_commit,
         'homogeneous fixed-size TP2 resident batch, greedy, no early stop; three complete warmed requests'),
     measurement_limits=('Nsight captures perturb timings; do not compare these rates to vLLM or accept them as an unprofiled reference. ' if capture.enabled else '') +
         'Cold engine startup and warmup excluded, as for vLLM; every trial rewrites full input KV and includes controls/input preparation, sampling and phase transition. Sampled memory is not exhaustive peak; serial batches only, no continuous scheduler.',
-    **capture.metadata()), indent=2))
+    **layout_report, **capture.metadata()), indent=2))
