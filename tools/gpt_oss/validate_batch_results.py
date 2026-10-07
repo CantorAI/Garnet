@@ -20,6 +20,8 @@ tokenizer = AutoTokenizer.from_pretrained(model, local_files_only=True)
 outcomes = []
 for slot, ids in enumerate(result['token_ids_by_request']):
     text = tokenizer.decode(ids, skip_special_tokens=False)
+    decoded_path = output_path.with_name(output_path.stem + f'.slot{slot}.txt')
+    decoded_path.write_text(text)
     matches = re.findall(r'<\|channel\|>final<\|message\|>\s*(\{.*?\})',
                          text, re.DOTALL)
     actual = None
@@ -29,6 +31,7 @@ for slot, ids in enumerate(result['token_ids_by_request']):
         except json.JSONDecodeError:
             pass
     outcomes.append({'slot': slot, 'pass': actual == expected,
+                     'decoded_path': str(decoded_path),
                      'first_final_json': actual})
 
 output_path.write_text(json.dumps({'result': str(result_path),
