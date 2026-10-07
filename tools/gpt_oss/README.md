@@ -240,6 +240,16 @@ overlapping independent executions must use NCCL. Screen it with
 `GARNET_GPT_OSS_DIRECT_BATCH_CTAS=2|4|8|16|32` before a pretrained comparison.
 The benchmark checks changing inputs on both GPUs as well as graph timing.
 
+`GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS=1` opts into rank-local original
+expert constants. Routing stays global; each rank stores only its even/odd
+experts and repacks those constants for Marlin. Derived refit weight names
+regenerate the same bytes from the original checkpoint on engine reload;
+no transformed checkpoint files are needed. This changes the engine/cache
+identity and uses GPT-OSS plugin serialization version8. Validate cold and
+cached graph execution, fallback kernels, Marlin and pretrained outputs
+before using this candidate for throughput. The generic TensorRT weight
+refitter recognizes only the explicit GPT-OSS derived-name protocol.
+
 The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
 and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
 path shards attention heads and vocabulary rows, keeps rank-local MoE work,

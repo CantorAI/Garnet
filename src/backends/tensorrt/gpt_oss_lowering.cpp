@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "trt_builder.h"
 #include "gpt_oss_extension.h"
+#include "gpt_oss_weight_shard.h"
 #include "operator_plugins.h"
 #include <algorithm>
 #include <limits>
@@ -8,6 +9,53 @@
 #include <vector>
 using namespace nvinfer1;
 namespace Garnet {
+ITensor* TRTBuilder::GetGptOssExpertWeight(const std::string& source, int rank, int experts) {
+    const std::string name = GptOssExpertShardName(source, rank);
+    const auto existing = weightTensorMap.find(name);
+    if (existing != weightTensorMap.end()) return existing->second;
+    const auto* m = capturedWeightIndex ? capturedWeightIndex->Find(source) : nullptr;
+    if (!m || (rank != 0 && rank != 1) || experts < 2 ||
+        m->shape.empty() || m->shape.size() > Dims::MAX_DIMS || m->shape[0] != experts) {
+        loweringError = "invalid GPT-OSS expert-axis weight: " + source; return nullptr;
+    }
+    DataType dtype;
+    size_t elementBytes = 0;
+    if (m->dataType == "U8") { dtype = DataType::kINT8; elementBytes = 1; }
+    else if (m->dataType == "BF16") { dtype = DataType::kBF16; elementBytes = 2; }
+    else if (m->dataType == "F16") { dtype = DataType::kHALF; elementBytes = 2; }
+    else if (m->dataType == "F32") { dtype = DataType::kFLOAT; elementBytes = 4; }
+    else { loweringError = "unsupported GPT-OSS expert weight dtype: " + source; return nullptr; }
+    Dims dims{}; dims.nbDims = int(m->shape.size());
+    int64_t elements = 1;
+    for (int axis = 0; axis < dims.nbDims; ++axis) {
+        const auto extent = m->shape[axis];
+        if (extent <= 0 || extent > INT_MAX || elements > INT64_MAX / extent) {
+            loweringError = "invalid GPT-OSS expert weight shape: " + source; return nullptr;
+        }
+        dims.d[axis] = int(extent); elements *= extent;
+    }
+    if (uint64_t(elements) > UINT64_MAX / elementBytes ||
+        uint64_t(elements) * elementBytes != m->dataSize) {
+        loweringError = "GPT-OSS expert weight byte count mismatch: " + source; return nullptr;
+    }
+    auto& file = capturedWeightFiles[m->filePath.string()];
+    if (!file) { file = std::make_unique<SafeTensorsMappedFile>();
+        if (!file->Open(m->filePath, loweringError)) return nullptr; }
+    const void* original = file->DataAt(m->dataOffset, m->dataSize);
+    booleanVectorWeights.emplace_back();
+    auto& shard = booleanVectorWeights.back();
+    if (!GatherGptOssExpertShard(original, m->dataSize, experts, rank, shard, loweringError))
+        return nullptr;
+    dims.d[0] = (experts + 1 - rank) / 2;
+    Weights weights{dtype, shard.data(), int64_t(shard.size() / elementBytes)};
+    auto* layer = network->addConstant(dims, weights);
+    if (!layer || !network->setWeightsName(weights, name.c_str()) ||
+        !network->markWeightsRefittable(name.c_str())) {
+        loweringError = "GPT-OSS expert shard constant creation failed: " + source; return nullptr;
+    }
+    auto* result = layer->getOutput(0); result->setName(name.c_str());
+    weightTensorMap[name] = result; return result;
+}
 ITensor* TRTBuilder::GetGptOssPackedWeight(const std::string& name) {
     auto found = weightTensorMap.find(name); if (found != weightTensorMap.end()) return found->second;
     const auto* m = capturedWeightIndex ? capturedWeightIndex->Find(name) : nullptr;
@@ -155,10 +203,20 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
         o.kind = 2; o.hidden = integer("hidden_size", 0); o.intermediate = integer("intermediate_size", 0);
         o.experts = integer("num_experts", 0); o.topK = integer("experts_per_token", 0); o.limit = real("swiglu_limit", 7);
         o.tpRank = integer("tp_rank", -1);
+        o.expertWeightsSharded = integer("expert_weight_shard", 0);
+        if (o.expertWeightsSharded != 0 &&
+            (o.expertWeightsSharded != 1 || o.tpRank < 0 || o.tpRank > 1)) {
+            loweringError = "GPT-OSS expert weight sharding requires TP2 rank 0/1"; return nullptr;
+        }
+        auto expertWeight = [&](const char* key, bool packed = false) -> ITensor* {
+            if (!o.expertWeightsSharded) return weight(key, packed);
+            auto* value = GetGptOssExpertWeight(text(key), o.tpRank, o.experts);
+            return packed ? value : asFloat(value);
+        };
         inputs.push_back(weight("router_weight_name")); inputs.push_back(weight("router_bias_name"));
-        inputs.push_back(weight("gate_up_blocks_name", true)); inputs.push_back(weight("gate_up_scales_name", true));
-        inputs.push_back(weight("gate_up_bias_name")); inputs.push_back(weight("down_blocks_name", true));
-        inputs.push_back(weight("down_scales_name", true)); inputs.push_back(weight("down_bias_name"));
+        inputs.push_back(expertWeight("gate_up_blocks_name", true)); inputs.push_back(expertWeight("gate_up_scales_name", true));
+        inputs.push_back(expertWeight("gate_up_bias_name")); inputs.push_back(expertWeight("down_blocks_name", true));
+        inputs.push_back(expertWeight("down_scales_name", true)); inputs.push_back(expertWeight("down_bias_name"));
     } else if (op == "gpt_oss_tp_all_reduce") {
         o.kind = 3; o.hidden = integer("hidden_size", 0); o.tpRank = integer("tp_rank", -1);
         o.bf16Communication = integer("bf16_communication", 0);

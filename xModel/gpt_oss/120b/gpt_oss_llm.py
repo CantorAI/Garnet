@@ -39,7 +39,7 @@ def tp_all_gather_logits(x, rank, config):
 @T.fusion(role="decoder_layer", atomic=True, cuda_graph=True)
 def layer(x, position_ids, key_pages, value_pages, page_table,
           context_length, slot_position, active_mask, config, layer_idx, prefill,
-          kv_layer_idx=None, tp_rank=-1):
+          kv_layer_idx=None, tp_rank=-1, expert_weight_shard=0):
     prefix = "block." + str(layer_idx)
     residual = x
     x = norm(x, prefix + ".attn.norm.scale", config['hidden_size'])
@@ -93,7 +93,7 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         "gpt_oss_moe_mxfp4", hidden_size=config['hidden_size'],
         intermediate_size=config['intermediate_size'], num_experts=config['num_experts'],
         experts_per_token=config['experts_per_token'], swiglu_limit=config['swiglu_limit'],
-        tp_rank=tp_rank,
+        tp_rank=tp_rank, expert_weight_shard=expert_weight_shard,
         router_weight_name=prefix + ".mlp.gate.weight", router_bias_name=prefix + ".mlp.gate.bias",
         gate_up_blocks_name=prefix + ".mlp.mlp1_weight.blocks",
         gate_up_scales_name=prefix + ".mlp.mlp1_weight.scales",
@@ -116,13 +116,14 @@ def forward(input_ids, position_ids, key_pages, value_pages, page_table,
 
 def forward_stage(x, position_ids, key_pages, value_pages, page_table,
                   context_length, slot_position, active_mask, weights, config,
-                  start, end, prefill, last_token_logits=False, tp_rank=-1):
+                  start, end, prefill, last_token_logits=False, tp_rank=-1,
+                  expert_weight_shard=0):
     if start == 0:
         x = rounded(x * T.unary_op("embedding", weight_name="embedding.weight"))
     for layer_idx in range(start, end):
         x = layer(x, position_ids, key_pages, value_pages, page_table,
                   context_length, slot_position, active_mask, config, layer_idx,
-                  prefill, layer_idx - start, tp_rank)
+                  prefill, layer_idx - start, tp_rank, expert_weight_shard)
     if end == config['num_hidden_layers']:
         if last_token_logits:
             x = x * T.unary_op("last_token")

@@ -43,7 +43,8 @@ bool supported(int tokens,const GptOssOptions& o) {
     return tokens>0 && tokens<=maxTokens && o.hidden>0 && o.hidden<=16384 && o.hidden%32==0 &&
         o.intermediate>0 && o.intermediate<=65536 && o.intermediate%32==0 &&
         o.experts>0 && o.experts<=256 && o.topK>0 && o.topK<=8 && o.topK<=o.experts &&
-        o.tpRank>=-1 && o.tpRank<2;
+        o.tpRank>=-1 && o.tpRank<2 && (o.expertWeightsSharded==0 ||
+        (o.expertWeightsSharded==1 && o.tpRank>=0));
 }
 int marlinBlockSize(int tokens) {
     static const bool largePrefill = [] {
@@ -140,7 +141,8 @@ __global__ void activation(const nv_bfloat16* up,const float* bias,const int* se
     int slot=index/paddedWidth,i=index%paddedWidth;
     if(i>=o.intermediate){output[index]=__float2bfloat16(0);return;}
     if(o.tpRank>=0 && selected[slot]%2!=o.tpRank){output[index]=__float2bfloat16(0);return;}
-    int row=selected[slot]*2*o.intermediate+2*i;
+    int storedExpert=o.expertWeightsSharded?selected[slot]/2:selected[slot];
+    int row=storedExpert*2*o.intermediate+2*i;
     float gate=fminf(rounded(__bfloat162float(up[size_t(slot)*upWidth+2*i])+bias[row]),o.limit);
     float u=fminf(o.limit,fmaxf(-o.limit,rounded(__bfloat162float(up[size_t(slot)*upWidth+2*i+1])+bias[row+1])));
     float glu=rounded(gate*rounded(1.f/(1.f+expf(-rounded(1.702f*gate)))));
@@ -153,7 +155,8 @@ __global__ void combine(const nv_bfloat16* down,const float* bias,const int* sel
     for(int k=0;k<o.topK;++k) {
         int slot=token*o.topK+k,expert=selected[slot];
         if(o.tpRank>=0 && expert%2!=o.tpRank)continue;
-        value+=rounded(__bfloat162float(down[size_t(slot)*width+d])+bias[expert*o.hidden+d])*probabilities[slot];
+        int storedExpert=o.expertWeightsSharded?expert/2:expert;
+        value+=rounded(__bfloat162float(down[size_t(slot)*width+d])+bias[storedExpert*o.hidden+d])*probabilities[slot];
     }
     y[index]=o.tpRank<0?rounded(value):value;
 }
@@ -197,8 +200,11 @@ struct GptOssMarlin::State {
         sms=prop.multiProcessorCount;computeMajor=prop.major;
         int* invalid=nullptr;status=cudaMalloc((void**)&invalid,4);if(status!=cudaSuccess)return status;
         status=cudaMemsetAsync(invalid,0,4,stream);
-        const size_t upScales=size_t(o.experts)*2*o.intermediate*(o.hidden/32);
-        const size_t downScales=size_t(o.experts)*o.hidden*(o.intermediate/32);
+        const int localExperts=o.tpRank<0?o.experts:(o.experts+1-o.tpRank)/2;
+        const int storedExperts=o.expertWeightsSharded?localExperts:o.experts;
+        const int sourceRank=o.expertWeightsSharded?-1:o.tpRank;
+        const size_t upScales=size_t(storedExperts)*2*o.intermediate*(o.hidden/32);
+        const size_t downScales=size_t(storedExperts)*o.hidden*(o.intermediate/32);
         if(status==cudaSuccess) {
             checkScales<<<(upScales+255)/256,256,0,stream>>>((const unsigned char*)in[4],upScales,invalid);
             status=cudaGetLastError();
@@ -212,14 +218,13 @@ struct GptOssMarlin::State {
         if(status==cudaSuccess)status=cudaStreamSynchronize(stream);
         cudaFree(invalid);if(status!=cudaSuccess)return status;
         if(result){blocked=true;blockedReason=2;reportMarlin("MXFP4 scales rejected", result, device);return cudaErrorNotSupported;}
-        const int localExperts=o.tpRank<0?o.experts:(o.experts+1-o.tpRank)/2;
         const size_t sizes[]{size_t(localExperts)*g.upN*g.upK/2,size_t(localExperts)*g.upN*g.upK/32,
             size_t(localExperts)*g.downN*g.downK/2,size_t(localExperts)*g.downN*g.downK/32};
         for(int i=0;i<4;++i){status=cudaMalloc(&weights[i],sizes[i]);if(status!=cudaSuccess){release();return status;}}
-        repackOriginal<<<(sizes[0]/4+255)/256,256,0,stream>>>((const unsigned char*)in[3],(unsigned*)weights[0],o.experts,o.tpRank,o.hidden,2*o.intermediate,g.upK,g.upN);
-        repackScales<<<(sizes[1]+255)/256,256,0,stream>>>((const unsigned char*)in[4],(unsigned char*)weights[1],o.experts,o.tpRank,o.hidden,2*o.intermediate,g.upK,g.upN);
-        repackOriginal<<<(sizes[2]/4+255)/256,256,0,stream>>>((const unsigned char*)in[6],(unsigned*)weights[2],o.experts,o.tpRank,o.intermediate,o.hidden,g.downK,g.downN);
-        repackScales<<<(sizes[3]+255)/256,256,0,stream>>>((const unsigned char*)in[7],(unsigned char*)weights[3],o.experts,o.tpRank,o.intermediate,o.hidden,g.downK,g.downN);
+        repackOriginal<<<(sizes[0]/4+255)/256,256,0,stream>>>((const unsigned char*)in[3],(unsigned*)weights[0],storedExperts,sourceRank,o.hidden,2*o.intermediate,g.upK,g.upN);
+        repackScales<<<(sizes[1]+255)/256,256,0,stream>>>((const unsigned char*)in[4],(unsigned char*)weights[1],storedExperts,sourceRank,o.hidden,2*o.intermediate,g.upK,g.upN);
+        repackOriginal<<<(sizes[2]/4+255)/256,256,0,stream>>>((const unsigned char*)in[6],(unsigned*)weights[2],storedExperts,sourceRank,o.intermediate,o.hidden,g.downK,g.downN);
+        repackScales<<<(sizes[3]+255)/256,256,0,stream>>>((const unsigned char*)in[7],(unsigned char*)weights[3],storedExperts,sourceRank,o.intermediate,o.hidden,g.downK,g.downN);
         status=cudaGetLastError();if(status==cudaSuccess)status=cudaStreamSynchronize(stream);
         if(status==cudaSuccess)status=cudaFuncSetAttribute(upKernel(),cudaFuncAttributeMaxDynamicSharedMemorySize,27136);
         if(status==cudaSuccess)status=cudaFuncSetAttribute(downKernel(),cudaFuncAttributeMaxDynamicSharedMemorySize,35200);

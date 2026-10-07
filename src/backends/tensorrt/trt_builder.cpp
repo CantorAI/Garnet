@@ -5,6 +5,7 @@
 #include "trt_context_pool.h"
 #include "weight_quantization.h"
 #include "paged_kv_plugin.h"
+#include "gpt_oss_weight_shard.h"
 #include "cuda_lib.h"
 #include "garnet_tensor.h"
 #include "tensor_helper.h"
@@ -317,8 +318,13 @@ namespace Garnet {
                         std::string,
                         std::unique_ptr<Garnet::SafeTensorsMappedFile>> mappedWeights;
                     std::string mappingError;
+                    std::deque<std::vector<unsigned char>> expertShardStorage;
                     for (const char* weightName : weightNames) {
                         const Garnet::SafeTensorMetadata* metadata = weightIndex->Find(weightName);
+                        std::string originalName;
+                        int expertRank = -1;
+                        if (!metadata && Garnet::ParseGptOssExpertShardName(weightName, originalName, expertRank))
+                            metadata = weightIndex->Find(originalName);
                         if (!metadata) {
                             std::cout << "[TRTBuilder] refit weight absent: " << weightName << std::endl;
                             return nullptr;
@@ -357,7 +363,20 @@ namespace Garnet {
                         const void* data = mappedFile->DataAt(
                             metadata->dataOffset,
                             metadata->dataSize);
-                        const int64_t elementCount = static_cast<int64_t>(metadata->dataSize / elementBytes);
+                        size_t refitBytes = metadata->dataSize;
+                        if (expertRank >= 0) {
+                            expertShardStorage.emplace_back();
+                            auto& shard = expertShardStorage.back();
+                            if (metadata->shape.empty() || !Garnet::GatherGptOssExpertShard(
+                                    data, metadata->dataSize, metadata->shape[0], expertRank,
+                                    shard, mappingError)) {
+                                std::cout << "[TRTBuilder] expert shard refit failed: " << weightName
+                                    << " " << mappingError << std::endl;
+                                return nullptr;
+                            }
+                            data = shard.data(); refitBytes = shard.size();
+                        }
+                        const int64_t elementCount = static_cast<int64_t>(refitBytes / elementBytes);
                         if (!data || !refitter->setNamedWeights(
                                 weightName,
                                 Weights{dataType, data, elementCount})) {

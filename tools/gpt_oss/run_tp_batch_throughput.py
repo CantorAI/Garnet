@@ -249,6 +249,8 @@ result_path.write_text(json.dumps({
     'optimization_environment': optimization_environment,
     'hardware': plan['hardware'],
     'estimated_per_gpu_bytes': plan['estimated_per_gpu_bytes'],
+    'expert_weight_shards': plan.get('expert_weight_shards', False),
+    'weight_storage_estimate': plan.get('weight_storage_estimate'),
     'memory_budget_per_gpu_bytes': [stage['budget_bytes'] for stage in plan['stages']],
     'token_ids_by_request': generated,
     'identical_output_across_duplicate_requests':

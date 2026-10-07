@@ -507,7 +507,8 @@ __global__ void gateUp(const float* x, const unsigned char* blocks, const unsign
         if (!lane) hidden[index] = 0.f;
         return;
     }
-    const size_t row = size_t(expert) * 2 * o.intermediate + 2 * i;
+    const int storedExpert = o.expertWeightsSharded ? expert / 2 : expert;
+    const size_t row = size_t(storedExpert) * 2 * o.intermediate + 2 * i;
     float gate = 0, up = 0;
     for (int d = lane; d < o.hidden; d += 32) {
         const float v = x[size_t(token) * o.hidden + d];
@@ -533,7 +534,8 @@ __global__ void down(const float* hidden, const unsigned char* blocks, const uns
     for (int k = 0; k < o.topK; ++k) {
         const int slot = token * o.topK + k, expert = selected[slot];
         if (o.tpRank >= 0 && expert % 2 != o.tpRank) continue;
-        const size_t row = size_t(expert) * o.hidden + d;
+        const int storedExpert = o.expertWeightsSharded ? expert / 2 : expert;
+        const size_t row = size_t(storedExpert) * o.hidden + d;
         float value = 0;
         for (int i = lane; i < o.intermediate; i += 32)
             value += hidden[size_t(slot) * o.intermediate + i] * fp4(blocks, scales, row, i, o.intermediate);
@@ -579,6 +581,7 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
     int tokens, GptOssOptions o) {
     if (blockIdx.x >= *taskCount) return;
     const int expert = tasks[2 * blockIdx.x], first = tasks[2 * blockIdx.x + 1];
+    const int storedExpert = o.expertWeightsSharded ? expert / 2 : expert;
     const int nStart = blockIdx.y * 32;
     const int width = Up ? o.hidden : o.intermediate;
     const int outputs = Up ? 2 * o.intermediate : o.hidden;
@@ -604,7 +607,7 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
         for (int index = threadIdx.x; index < 32 * 32; index += blockDim.x) {
             const int k = index % 32, n = index / 32;
             const float value = nStart + n < outputs && kStart + k < width
-                ? fp4(blocks, scales, size_t(expert) * outputs + nStart + n,
+                ? fp4(blocks, scales, size_t(storedExpert) * outputs + nStart + n,
                     kStart + k, width) : 0;
             b[index] = __float2bfloat16(value);
         }
@@ -624,7 +627,7 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
         const int m = index / 32, n = index % 32;
         if (first + m >= counts[expert] || nStart + n >= outputs) continue;
         const int slot = slots[size_t(expert) * tokens * o.topK + first + m];
-        const size_t weightRow = size_t(expert) * outputs + nStart + n;
+        const size_t weightRow = size_t(storedExpert) * outputs + nStart + n;
         if constexpr (Up) {
             if (n & 1) continue;
             const float gate = fminf(bf(bf(c[index]) + bias[weightRow]), o.limit);

@@ -39,6 +39,8 @@ def run(command, label, env=environment):
 fixture = work / 'fixture'
 run([sys.executable, repo / 'test2026/gpt_oss/make_fixture.py', fixture], 'fixture')
 run([sys.executable, repo / 'test2026/gpt_oss/placement.py'], 'placement')
+run([sys.executable, repo / 'test2026/gpt_oss/tp_weight_placement.py', fixture], 'tp-weight-placement')
+run([runtime / ('garnet_gpt_oss_expert_weight_shard' + suffix)], 'expert-weight-shard-bytes')
 run([runtime / ('garnet_gpt_oss_kernel_parity' + suffix)], 'kernel-parity')
 run([executable, repo / 'test2026/gpt_oss/tensor_update_int_scalars.py'], 'batched-scalar-updates')
 run([executable, repo / 'test2026/gpt_oss/compiled_parity.py', fixture, work / 'cache'], 'compiled-parity-cold')
@@ -53,6 +55,9 @@ if args.multi_gpu:
     run([runtime / ('garnet_gpt_oss_tp_collective_test' + suffix)], 'tp-collectives')
     run([executable, repo / 'test2026/gpt_oss/tp_moe_graph.py', fixture,
          work / 'tp-moe-graph-cache'], 'tp-moe-graph')
+    for phase in ('cold', 'warm'):
+        run([executable, repo / 'test2026/gpt_oss/tp_moe_graph.py', fixture,
+             work / 'tp-moe-graph-cache', '1'], 'tp-moe-expert-shards-' + phase)
     for phase in ('cold', 'warm'):
         run([executable, repo / 'test2026/gpt_oss/multi_gpu.py', fixture, work / 'pipeline-cache'],
             'multi-gpu-' + phase)

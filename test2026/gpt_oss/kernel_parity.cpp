@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_kernels.h"
 #include "gpt_oss_marlin.h"
+#include "gpt_oss_weight_shard.h"
 #include <vector>
 #include <cmath>
 #include <cstring>
@@ -19,6 +20,15 @@ template<class T> struct Device {
     ~Device() { cudaFree(p); }
     std::vector<T> read() { std::vector<T> v(n); check(cudaMemcpy(v.data(), p, n * sizeof(T), cudaMemcpyDeviceToHost)); return v; }
 };
+template<class T> std::vector<T> shardExpertRows(const std::vector<T>& original, int experts, int rank) {
+    std::vector<unsigned char> bytes;
+    std::string error;
+    if (!GatherGptOssExpertShard(original.data(), original.size() * sizeof(T),
+            experts, rank, bytes, error)) throw std::runtime_error(error);
+    std::vector<T> result(bytes.size() / sizeof(T));
+    std::memcpy(result.data(), bytes.data(), bytes.size());
+    return result;
+}
 void compare(const std::vector<float>& actual, const std::vector<float>& expected, float tolerance, const char* name) {
     if (actual.size() != expected.size()) throw std::runtime_error("size mismatch");
     float maximum = 0;
@@ -365,6 +375,16 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
         check(RunGptOssMoe(in, partial.p, shardWorkspace.p, tokens, shard, nullptr));
         const auto values = partial.read();
         for (size_t i = 0; i < values.size(); ++i) shardedSum[i] += values[i];
+        shard.expertWeightsSharded = 1;
+        Device<unsigned char> lu(shardExpertRows(up, o.experts, rank)),
+            lus(shardExpertRows(us, o.experts, rank)),
+            ld(shardExpertRows(down, o.experts, rank)),
+            lds(shardExpertRows(ds, o.experts, rank));
+        Device<float> lub(shardExpertRows(ub, o.experts, rank)),
+            ldb(shardExpertRows(db, o.experts, rank));
+        const void* localInputs[]{dx.p, dr.p, drb.p, lu.p, lus.p, lub.p, ld.p, lds.p, ldb.p};
+        check(RunGptOssMoe(localInputs, partial.p, shardWorkspace.p, tokens, shard, nullptr));
+        compare(partial.read(), values, 0.f, "Rank-local original expert constants, warp/grouped paths");
     }
     for (float& value : shardedSum) value = bf(value);
     compare(shardedSum, expected, .002f, "Two-rank expert-parallel MoE sum");
@@ -372,7 +392,7 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
     Device<unsigned char> groupedWorkspace(std::vector<unsigned char>(TestGptOssMoeWorkspace(tokens,o,true)));
     check(TestGptOssMoe(in, dy.p, groupedWorkspace.p, tokens, o, nullptr, true));
     compare(dy.read(), expected, .002f, "Forced grouped MoE, including partial row tiles");
-    if (tokens <= 8) {
+    if (GptOssMarlin::Workspace(tokens, o)) {
         GptOssMarlin marlin(o);
         const size_t marlinBytes = GptOssMarlin::Workspace(tokens, o);
         if (!marlinBytes) throw std::runtime_error("Marlin workspace unexpectedly unsupported");
@@ -389,6 +409,17 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
             check(shardMarlin.Run(in, partial.p, shardWorkspace.p, tokens, nullptr));
             const auto values = partial.read();
             for (size_t i = 0; i < values.size(); ++i) marlinShardSum[i] += values[i];
+            shard.expertWeightsSharded = 1;
+            Device<unsigned char> lu(shardExpertRows(up, o.experts, rank)),
+                lus(shardExpertRows(us, o.experts, rank)),
+                ld(shardExpertRows(down, o.experts, rank)),
+                lds(shardExpertRows(ds, o.experts, rank));
+            Device<float> lub(shardExpertRows(ub, o.experts, rank)),
+                ldb(shardExpertRows(db, o.experts, rank));
+            const void* localInputs[]{dx.p, dr.p, drb.p, lu.p, lus.p, lub.p, ld.p, lds.p, ldb.p};
+            GptOssMarlin localMarlin(shard);
+            check(localMarlin.Run(localInputs, partial.p, shardWorkspace.p, tokens, nullptr));
+            compare(partial.read(), values, 0.f, "Rank-local original expert constants, Marlin path");
         }
         for (float& value : marlinShardSum) value = bf(value);
         compare(marlinShardSum, expected, .004f, "Two-rank Marlin expert-parallel MoE sum");

@@ -19,10 +19,13 @@ void reportMarlinFallback(bool initialized, int tokens) {
     if (std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") && count.fetch_add(1) < 16)
         std::fprintf(stderr, "GPT-OSS Marlin: fallback (plugin initialized=%d, rows=%d)\n", initialized, tokens);
 }
-// The serialized options layout remains compatible with version 7 engines.
-constexpr const char* kVersion = "7";
+// Version 8 adds the expert-weight storage layout; old engines must rebuild.
+constexpr const char* kVersion = "8";
 bool valid(const GptOssOptions& o) {
     if (o.kind < 0 || o.kind > 6) return false;
+    if (o.expertWeightsSharded != 0 &&
+        (o.expertWeightsSharded != 1 || o.kind != 2 || o.tpRank < 0 || o.tpRank > 1 || o.experts < 2))
+        return false;
     if (o.bf16Communication < 0 || o.bf16Communication > 1 ||
         (o.bf16Communication && o.kind != 3)) return false;
     if (o.kind == 3 || o.kind == 4) return o.hidden > 0 && o.tpRank >= 0 && o.tpRank < 2;
@@ -98,6 +101,10 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
          (m_options.kind == 5 || m_options.kind == 6) ? 2 : 1);
     if (!m_valid) return;
     const auto& o = m_options; const Dims d = in[0].desc.dims;
+    if (o.expertWeightsSharded != 0 &&
+        (o.expertWeightsSharded != 1 || o.kind != 2 || o.tpRank < 0 || o.tpRank > 1)) {
+        m_valid = false; return;
+    }
     m_valid = rows(d) > 0;
     if (!m_valid) return;
     const int batch = d.d[0], tokens = d.d[1];
@@ -116,14 +123,15 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
             shape(in[6].desc.dims, {batch}) && shape(in[7].desc.dims, {o.qHeads}) &&
             (o.prefill || tokens == 1);
     } else if (o.kind == 2) {
+        const int storedExperts = o.expertWeightsSharded ? (o.experts + 1 - o.tpRank) / 2 : o.experts;
         m_valid = d.d[2] == o.hidden && shape(in[1].desc.dims, {o.experts, o.hidden}) &&
             shape(in[2].desc.dims, {o.experts}) &&
-            shape(in[3].desc.dims, {o.experts, 2 * o.intermediate, o.hidden / 32, 16}) &&
-            shape(in[4].desc.dims, {o.experts, 2 * o.intermediate, o.hidden / 32}) &&
-            shape(in[5].desc.dims, {o.experts, 2 * o.intermediate}) &&
-            shape(in[6].desc.dims, {o.experts, o.hidden, o.intermediate / 32, 16}) &&
-            shape(in[7].desc.dims, {o.experts, o.hidden, o.intermediate / 32}) &&
-            shape(in[8].desc.dims, {o.experts, o.hidden});
+            shape(in[3].desc.dims, {storedExperts, 2 * o.intermediate, o.hidden / 32, 16}) &&
+            shape(in[4].desc.dims, {storedExperts, 2 * o.intermediate, o.hidden / 32}) &&
+            shape(in[5].desc.dims, {storedExperts, 2 * o.intermediate}) &&
+            shape(in[6].desc.dims, {storedExperts, o.hidden, o.intermediate / 32, 16}) &&
+            shape(in[7].desc.dims, {storedExperts, o.hidden, o.intermediate / 32}) &&
+            shape(in[8].desc.dims, {storedExperts, o.hidden});
     } else if (o.kind == 3) {
         m_valid = d.d[2] == o.hidden;
     } else if (o.kind == 5) {

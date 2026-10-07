@@ -5,12 +5,18 @@ from pathlib import Path
 import garnet as G
 
 fixture, cache = Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve()
+expert_weight_shards = len(sys.argv) > 3 and sys.argv[3] == '1'
+if expert_weight_shards:
+    cache = cache / 'expert-weight-shards'
 source = Path(__file__).resolve().parents[2] / 'xModel/gpt_oss/120b/tp_moe_test.py'
 models = {}
 for rank in (-1, 0, 1):
     root = cache / f'rank{rank}'
     root.mkdir(parents=True, exist_ok=True)
-    (root / 'tp_moe_test.py').write_text(source.read_text().replace('TP_RANK = -1', f'TP_RANK = {rank}'))
+    text = source.read_text().replace('TP_RANK = -1', f'TP_RANK = {rank}')
+    text = text.replace('EXPERT_WEIGHT_SHARD = 0',
+                        'EXPERT_WEIGHT_SHARD = ' + str(int(expert_weight_shards and rank >= 0)))
+    (root / 'tp_moe_test.py').write_text(text)
     G.cuda_set_device(0 if rank < 0 else rank)
     model = G.load_model(str(root / 'tp_moe_test.py'), runtime_mode='compiled_xmodel',
         backend='tensorrt', precision='bf16', entry_function='GptOssTpMoe',

@@ -101,8 +101,32 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         config['vocab_size'] * 4 + config['intermediate_size'] * config['experts_per_token'] * 4)
     # Dense BF16 constants are budgeted at FP32 size because TensorRT may
     # promote some projections during engine construction.
-    full_weights = sum(weight_sizes(weights).values())
-    required = math.ceil(full_weights * 1.05) + kv_bytes + activation_bytes + reserve_bytes
+    sizes = weight_sizes(weights)
+    full_weights = sum(sizes.values())
+    expert_weight_shards = os.environ.get('GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS') == '1'
+    weight_estimate = full_weights
+    weight_storage = {'original_constants_estimated_bytes': full_weights,
+        'includes_lazy_marlin_repacking': False}
+    if expert_weight_shards:
+        experts = config['num_experts']
+        local_experts = (experts + 1) // 2  # worst rank for odd expert counts
+        suffixes = ('.mlp.mlp1_weight.blocks', '.mlp.mlp1_weight.scales',
+                    '.mlp.mlp2_weight.blocks', '.mlp.mlp2_weight.scales',
+                    '.mlp.mlp1_bias', '.mlp.mlp2_bias')
+        expert_weights = sum(size for name, size in sizes.items() if name.endswith(suffixes))
+        if expert_weights % experts:
+            raise ValueError('expert weight storage is not divisible by expert count')
+        original_constants = full_weights - expert_weights + expert_weights // experts * local_experts
+        h, intermediate = config['hidden_size'], config['intermediate_size']
+        up_k, up_n = (h + 63) // 64 * 64, (2 * intermediate + 127) // 128 * 128
+        down_k, down_n = (intermediate + 127) // 128 * 128, (h + 63) // 64 * 64
+        packed_elements = config['num_hidden_layers'] * local_experts * (up_k * up_n + down_k * down_n)
+        repacked = packed_elements // 2 + packed_elements // 32
+        weight_estimate = original_constants + repacked
+        weight_storage = {'original_constants_estimated_bytes': original_constants,
+            'lazy_marlin_repacked_bytes': repacked, 'includes_lazy_marlin_repacking': True,
+            'worst_rank_local_experts': local_experts}
+    required = math.ceil(weight_estimate * 1.05) + kv_bytes + activation_bytes + reserve_bytes
     hardware = [{k: d[k] for k in ('id', 'name', 'total_bytes', 'compute_major',
                 'compute_minor', 'pci_bus_id', 'peer_access')} for d in devices]
     budgets = [int(min(d['free_bytes'], d['total_bytes'] * memory_fraction)) for d in devices]
@@ -112,6 +136,9 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         'checkpoint': str(Path(weights).resolve()), 'capacity': capacity, 'batch': batch,
         'memory_fraction': memory_fraction, 'reserve_bytes': reserve_bytes,
         'layer_cuda_graph': True}
+    if expert_weight_shards:
+        # Weight storage changes serialized constants and the plugin contract.
+        identity['expert_weight_shards'] = True
     key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:24]
     stages = [{'device_id': d['id'], 'rank': rank, 'start': 0,
                'end': config['num_hidden_layers'], 'estimated_bytes': required,
@@ -121,7 +148,9 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'hardware': hardware, 'stages': stages, 'batch': batch,
             'capacity': capacity, 'max_tokens': tokens, 'kv_pages': pages,
             'config': config, 'estimated_per_gpu_bytes': required,
-            'local_kv_heads': local_kv_heads}
+            'local_kv_heads': local_kv_heads,
+            'expert_weight_shards': expert_weight_shards,
+            'weight_storage_estimate': weight_storage}
 
 
 def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_logits=False):
@@ -249,6 +278,8 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
             source = source.replace('STAGE_PREFILL = 1', 'STAGE_PREFILL = ' + str(int(prefill)))
             source = source.replace('STAGE_LAST_TOKEN = 0', 'STAGE_LAST_TOKEN = ' + str(int(last_token_logits)))
             source = source.replace('STAGE_TP_RANK = -1', 'STAGE_TP_RANK = ' + str(rank))
+            source = source.replace('STAGE_EXPERT_WEIGHT_SHARD = 0',
+                'STAGE_EXPERT_WEIGHT_SHARD = ' + str(int(plan.get('expert_weight_shards', False))))
             (model_root / 'stage.py').write_text(source)
             shape = [end, plan['kv_pages'], 16, plan['local_kv_heads'], config['head_dim']]
             if kv is None:

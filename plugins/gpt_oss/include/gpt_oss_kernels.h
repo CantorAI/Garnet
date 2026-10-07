@@ -12,6 +12,7 @@ struct GptOssOptions {
     int hidden = 0, intermediate = 0, experts = 0, topK = 0;
     int tpRank = -1; // -1: unsharded; 0/1: GPT-OSS tensor-parallel rank
     int bf16Communication = 0; // attention-only prefill all-reduce candidate
+    int expertWeightsSharded = 0; // original-layout expert axis contains only this TP2 rank
     float theta = 150000, factor = 32, initialContext = 4096;
     float betaFast = 32, betaSlow = 1, limit = 7, epsilon = 1.0e-5f;
 };

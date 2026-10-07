@@ -145,6 +145,7 @@ namespace Garnet {
         nvinfer1::ITensor* LowerGptOssDecodeGemv(nvinfer1::ITensor*,
             nvinfer1::ITensor*, int, bool, int, int, int);
         nvinfer1::ITensor* GetGptOssPackedWeight(const std::string&);
+        nvinfer1::ITensor* GetGptOssExpertWeight(const std::string&, int, int);
         nvinfer1::IBuilder* builder = nullptr;
         nvinfer1::INetworkDefinition* network = nullptr;
         nvinfer1::IBuilderConfig* config = nullptr;
