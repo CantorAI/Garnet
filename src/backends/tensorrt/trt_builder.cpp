@@ -418,6 +418,18 @@ namespace Garnet {
                     }
                 }
             }
+#if NV_TENSORRT_MAJOR >= 11
+            const char* memoryProfile = std::getenv("GARNET_TRT_LOG_ENGINE_MEMORY");
+            if (memoryProfile && std::strcmp(memoryProfile, "1") == 0) {
+                // Immutable engine statistics, outside enqueue/timed execution.
+                // Context bytes are an upper bound, not process peak usage;
+                // external tensors, graphs and private plugin buffers are extra.
+                std::cout << "[TRTEngineMemory] device=" << device
+                    << " total_weights_bytes=" << cached.engine->getEngineStat(EngineStat::kTOTAL_WEIGHTS_SIZE)
+                    << " context_device_memory_upper_bound_bytes=" << cached.engine->getDeviceMemorySizeV2()
+                    << " engine=" << enginePath << std::endl;
+            }
+#endif
             cached.contexts = std::make_unique<TRTContextPool>(cached.engine);
 
             std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
