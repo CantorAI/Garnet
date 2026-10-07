@@ -74,10 +74,15 @@ parser.add_argument('directory', type=Path)
 parser.add_argument('--padded-prefill', action='store_true')
 parser.add_argument('--prepacked-candidate', action='store_true',
     help='explicitly profile packed engines for a completed original-layout workload; no quality claim')
+parser.add_argument('--large-prefill-block', type=int, choices=(0,64),
+    help='explicit OPT42 large-prefill tile override; not a validated model result')
+parser.add_argument('--prefill-ctas', type=int, choices=(1,2,4))
+parser.add_argument('--direct-max-batch', type=int, choices=(128,256,512))
+parser.add_argument('--direct-ctas', type=int, choices=(2,4,8,16,32))
 args = parser.parse_args()
 reference_path, directory = args.reference, args.directory
 reference = json.loads(reference_path.read_text())
-if reference.get('profile_decode_steps') or reference.get('profile_prefill'):
+if reference.get('profiled_diagnostic') or reference.get('profile_decode_steps') or reference.get('profile_prefill'):
     raise ValueError('Expected unprofiled completed reference')
 if directory.exists():
     raise FileExistsError(directory)
@@ -94,6 +99,16 @@ if args.prepacked_candidate:
     env['GARNET_GPT_OSS_MARLIN_PREPACKED'] = '1'
 if env.get('GARNET_GPT_OSS_MARLIN_PREPACKED') != '1':
     raise ValueError('Reference must be from a completed prepacked workload')
+overrides = {key: str(value) for key, value in (
+    ('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', args.large_prefill_block),
+    ('GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM', args.prefill_ctas),
+    ('GARNET_GPT_OSS_DIRECT_MAX_BATCH', args.direct_max_batch),
+    ('GARNET_GPT_OSS_DIRECT_BATCH_CTAS', args.direct_ctas)) if value is not None}
+if args.direct_max_batch is not None or args.direct_ctas is not None:
+    if any(env.get(key) != '1' for key in ('GARNET_GPT_OSS_DIRECT_ALLREDUCE',
+            'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE', 'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE')):
+        raise ValueError('Direct screen requires explicitly enabled recorded direct batch flags')
+env.update(overrides)
 build = Path(env.get('GARNET_BUILD_DIR', root / 'out/build/gpt-oss'))
 tensorrt = Path(env.get('GARNET_TENSORRT_ROOT', root / 'ThirdPartySDK/TensorRT'))
 env['GARNET_TRT_LOG_ENGINE_MEMORY'] = '1'
@@ -138,6 +153,8 @@ result['engine_statistics'] = statistics
 result['source_commit'] = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip()
 result['reference_result'] = str(reference_path.resolve())
 result['explicit_prepacked_candidate_override'] = args.prepacked_candidate
+result['explicit_kernel_candidate_overrides'] = overrides
+result['reference_result_sha256'] = file_sha256(reference_path)
 report.write_text(json.dumps(result, indent=2))
 print(json.dumps(statistics, indent=2))
 print('Sequential engine statistics recorded; paired resident admission remains unproven')
