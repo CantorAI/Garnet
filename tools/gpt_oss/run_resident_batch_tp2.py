@@ -62,8 +62,10 @@ validate_engine_files(profile)
 print('Resident admission', json.dumps(admission), flush=True)
 
 def memory():
-    return [int(x.strip()) for x in subprocess.check_output(['nvidia-smi',
-        '--query-gpu=memory.used', '--format=csv,noheader,nounits'], text=True).splitlines()]
+    rows = subprocess.check_output(['nvidia-smi', '--query-gpu=index,memory.used',
+        '--format=csv,noheader,nounits'], text=True).splitlines()
+    by_device = {int(index.strip()): int(value.strip()) for index,value in (row.split(',') for row in rows)}
+    return [by_device[device['id']] for device in devices]
 
 samples = [memory()]
 load_seconds = {}
@@ -172,6 +174,13 @@ try:
 finally:
     pair.release()
 
+peaks = [max(row[rank] for row in samples) for rank in range(2)]
+if any(peak * (1 << 20) > admitted['budget_bytes'] for peak, admitted in zip(peaks, admission['ranks'])):
+    # Preserve failure evidence without writing a successful result artifact.
+    result_path.with_suffix('.memory-failure.json').write_text(json.dumps(
+        dict(admission=admission, samples_mib=samples, peaks_mib=peaks), indent=2))
+    raise RuntimeError('Observed resident memory exceeds admitted budget')
+
 kv_per_token = plan['config']['num_hidden_layers'] * 2 * plan['local_kv_heads'] * plan['config']['head_dim'] * 2
 result_path.write_text(json.dumps(dict(source_commit=subprocess.check_output(
     ['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip(),
@@ -188,7 +197,7 @@ result_path.write_text(json.dumps(dict(source_commit=subprocess.check_output(
     kv_cache_allocated_bytes_per_gpu=plan['kv_pages'] * 16 * kv_per_token,
     logical_kv_bytes_per_gpu_after_prefill=batch * len(ids) * kv_per_token,
     logical_kv_bytes_per_gpu_at_completion=batch * (len(ids) + output_tokens - 1) * kv_per_token,
-    sampled_peak_gpu_memory_mib=[max(row[rank] for row in samples) for rank in range(2)],
+    sampled_peak_gpu_memory_mib=peaks,
     gpu_memory_samples_mib=samples, prefill_build_seconds=load_seconds['prefill'],
     decode_build_seconds=load_seconds['decode'], complete_warmup_count=warmup_count,
     complete_warmups=warmups, decode_trials=trials, token_ids_by_request=trials[0]['token_ids_by_request'],
