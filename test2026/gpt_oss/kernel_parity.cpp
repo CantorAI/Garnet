@@ -471,7 +471,90 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
     }
 #endif
 }
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+std::vector<int> metadataRoutes(int slots,int experts,int pattern,int layer=0) {
+    std::vector<int> selected(slots);
+    for(int s=0;s<slots;++s)selected[s]=pattern==0 ? (s%4+layer)%experts
+        : ((s*17+s/11+layer*7)%experts);
+    return selected;
+}
+void testMarlinMetadata() {
+    int cases=0;
+    for(int slots : {1,63,68,512,2052,16384})for(int count : {1,5,128,256})
+    for(int rank : {-1,0,1})for(int block : {8,32})for(int pattern : {0,1}) {
+        const auto selected=metadataRoutes(slots,count,pattern);
+        const int capacity=slots+count*block,blocks=(capacity+block-1)/block;
+        std::vector<int> expectedSorted(capacity,-99),expectedExperts(blocks,-99);
+        int total=0;
+        const int local=rank<0?count:(count+1-rank)/2;
+        for(int e=0;e<local;++e) {
+            const int global=rank<0?e:2*e+rank,start=total;
+            for(int s=0;s<slots;++s)if(selected[s]==global)expectedSorted[total++]=s;
+            const int used=total-start,padded=(used+block-1)/block*block;
+            while(total<start+padded)expectedSorted[total++]=slots;
+            for(int row=0;row<used;row+=block)expectedExperts[(start+row)/block]=e;
+        }
+        Device<int> input(selected),scratch{std::vector<int>(count*2)};
+        for(bool parallel : {false,true}) {
+            Device<int> sorted{std::vector<int>(capacity,-99)},experts{std::vector<int>(blocks,-99)},padded{std::vector<int>(1,-99)};
+            check(TestGptOssMarlinMetadata(input.p,sorted.p,experts.p,padded.p,scratch.p,
+                slots,count,rank,block,parallel,nullptr));
+            if(sorted.read()!=expectedSorted || experts.read()!=expectedExperts || padded.read()[0]!=total)
+                throw std::runtime_error("Marlin stable metadata differs from integer CPU oracle");
+        }
+        ++cases;
+    }
+    std::cout << "Marlin stable metadata exact CPU/legacy/parallel parity passed: " << cases << " cases\n";
+}
+void benchmarkMarlinMetadata() {
+    constexpr int layers=36,expertCount=128,block=32;
+    cudaStream_t stream;check(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
+    for(int slots : {512,16384})for(int pattern : {0,1}) {
+        const int capacity=slots+expertCount*block,blocks=(capacity+block-1)/block;
+        std::vector<int> routes;
+        for(int layer=0;layer<layers;++layer) {
+            const auto values=metadataRoutes(slots,expertCount,pattern,layer);
+            routes.insert(routes.end(),values.begin(),values.end());
+        }
+        Device<int> selected(routes),sorted{std::vector<int>(layers*capacity)},
+            experts{std::vector<int>(layers*blocks)},padded{std::vector<int>(layers)},
+            scratch{std::vector<int>(layers*expertCount*2)};
+        for(bool parallel : {false,true}) {
+            cudaGraph_t graph;cudaGraphExec_t executable;
+            check(cudaStreamBeginCapture(stream,cudaStreamCaptureModeGlobal));
+            for(int layer=0;layer<layers;++layer)check(TestGptOssMarlinMetadata(
+                selected.p+layer*slots,sorted.p+layer*capacity,experts.p+layer*blocks,
+                padded.p+layer,scratch.p+layer*expertCount*2,slots,expertCount,0,block,parallel,stream));
+            check(cudaStreamEndCapture(stream,&graph));
+            check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
+            for(int i=0;i<5;++i)check(cudaGraphLaunch(executable,stream));
+            check(cudaStreamSynchronize(stream));
+            cudaEvent_t begin,end;check(cudaEventCreate(&begin));check(cudaEventCreate(&end));
+            std::vector<float> samples;
+            for(int trial=0;trial<15;++trial) {
+                check(cudaEventRecord(begin,stream));
+                for(int replay=0;replay<10;++replay)check(cudaGraphLaunch(executable,stream));
+                check(cudaEventRecord(end,stream));check(cudaEventSynchronize(end));
+                float ms;check(cudaEventElapsedTime(&ms,begin,end));samples.push_back(ms/10);
+            }
+            std::sort(samples.begin(),samples.end());
+            std::cout << "metadata graph slots=" << slots << " pattern=" << pattern
+                << " layers=" << layers << " rank=0 experts=128 block=32 parallel=" << parallel
+                << " median_ms=" << samples[7] << " min_ms=" << samples.front()
+                << " max_ms=" << samples.back() << '\n';
+            check(cudaEventDestroy(begin));check(cudaEventDestroy(end));
+            check(cudaGraphExecDestroy(executable));check(cudaGraphDestroy(graph));
+        }
+    }
+    check(cudaStreamDestroy(stream));
+}
+#endif
 int main(int argc, char** argv) { try {
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+    if(argc==2 && std::strcmp(argv[1],"--metadata-benchmark")==0) {
+        testMarlinMetadata();benchmarkMarlinMetadata();return 0;
+    }
+#endif
     if (argc == 2 && std::strcmp(argv[1], "--workspace") == 0) {
         GptOssOptions options;
         options.kind = 2; options.hidden = options.intermediate = 2880;
@@ -486,6 +569,7 @@ int main(int argc, char** argv) { try {
         return 0;
     }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+    testMarlinMetadata();
     testMxfp4Encoding();
 #endif
         testDecodeGemv(2560, 2880); testDecodeGemv(2880, 2048);

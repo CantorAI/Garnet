@@ -371,3 +371,19 @@ input IDs, preserves output length/context and validates outputs after the
 capture. Use the vLLM Python environment for tokenizer validation. It reduces
 repeats to one diagnostic trial and refuses existing reports/results. For
 input256/output512, `START=480 STEPS=32` captures processed context736..767.
+
+`GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA=1` is an opt-in batch candidate.
+At 16 or more rows, it counts and stably scatters expert assignments with
+one warp per expert, preserving ascending row order and padding. It reuses
+router-logit scratch after routing; workspace and small-batch paths stay the
+same. Run the native parity executable with `--metadata-benchmark` for exact
+CPU/legacy/parallel checks and separate 36-layer CUDA graph timing. This is
+an isolated diagnostic, not evidence of model throughput.
+
+Use `screen_batch_metadata_tp2.py REQUEST EXPECTED UNPROFILED_GARNET_RESULT
+NEW_RESULT_DIR` with the vLLM Python environment to replay a recorded shape.
+It runs legacy metadata first and parallel metadata second, three decode
+trials each, validates all answers, and requires every output token sequence
+to match the legacy run. It records prefill, decode, complete-request rates,
+memory and KV fields through the ordinary exclusive launcher. It refuses
+existing result directories and keeps failed logs and comparisons.

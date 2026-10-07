@@ -143,6 +143,56 @@ __global__ void metadata(const int* selected,int* sorted,int* experts,int* padde
         for(int i=0;i<count;i+=block)experts[(starts[e]+i)/block]=e;
     }
 }
+// A warp scans one expert's slots in parallel. Keep the ascending slot order:
+// Marlin's floating-point reductions must see the same rows as the old path.
+__global__ void metadataCounts(const int* selected,int* counts,int slots,int expertCount,int rank) {
+    const int e=blockIdx.x*8+threadIdx.x/32,lane=threadIdx.x%32;
+    const int localCount=rank<0?expertCount:(expertCount+1-rank)/2;
+    if(e>=localCount)return;
+    const int globalExpert=rank<0?e:2*e+rank;
+    int count=0;
+    for(int s=lane;s<slots;s+=32)count+=selected[s]==globalExpert;
+    for(int offset=16;offset;offset/=2)count+=__shfl_down_sync(0xffffffff,count,offset);
+    if(!lane)counts[e]=count;
+}
+__global__ void metadataStarts(const int* counts,int* starts,int* experts,int* padded,
+    int expertCount,int rank,int block) {
+    const int localCount=rank<0?expertCount:(expertCount+1-rank)/2;
+    if(!threadIdx.x) {
+        int total=0;
+        for(int e=0;e<localCount;++e){starts[e]=total;total+=(counts[e]+block-1)/block*block;}
+        *padded=total;
+    }
+    __syncthreads();
+    const int e=threadIdx.x;
+    if(e<localCount)for(int row=0;row<counts[e];row+=block)experts[(starts[e]+row)/block]=e;
+}
+__global__ void metadataScatter(const int* selected,const int* counts,const int* starts,
+    int* sorted,int slots,int expertCount,int rank,int block) {
+    const int e=blockIdx.x*8+threadIdx.x/32,lane=threadIdx.x%32;
+    const int localCount=rank<0?expertCount:(expertCount+1-rank)/2;
+    if(e>=localCount)return;
+    const int globalExpert=rank<0?e:2*e+rank,start=starts[e],count=counts[e];
+    int row=0;
+    for(int base=0;base<slots;base+=32) {
+        const int slot=base+lane;
+        const bool match=slot<slots && selected[slot]==globalExpert;
+        const unsigned mask=__ballot_sync(0xffffffff,match);
+        if(match)sorted[start+row+__popc(mask&((1u<<lane)-1))]=slot;
+        row+=__popc(mask);
+    }
+    const int paddedCount=(count+block-1)/block*block;
+    for(int i=count+lane;i<paddedCount;i+=32)sorted[start+i]=slots;
+}
+void launchMetadata(const int* selected,int* sorted,int* experts,int* padded,int* scratch,
+    int slots,int expertCount,int rank,int block,bool parallel,cudaStream_t stream) {
+    if(!parallel){metadata<<<1,256,0,stream>>>(selected,sorted,experts,padded,slots,expertCount,rank,block);return;}
+    const int localCount=rank<0?expertCount:(expertCount+1-rank)/2;
+    int* starts=scratch+expertCount;
+    if(localCount)metadataCounts<<<(localCount+7)/8,256,0,stream>>>(selected,scratch,slots,expertCount,rank);
+    metadataStarts<<<1,256,0,stream>>>(scratch,starts,experts,padded,expertCount,rank,block);
+    if(localCount)metadataScatter<<<(localCount+7)/8,256,0,stream>>>(selected,scratch,starts,sorted,slots,expertCount,rank,block);
+}
 __global__ void activation(const nv_bfloat16* up,const float* bias,const int* selected,
     nv_bfloat16* output,int slots,int upWidth,int paddedWidth,GptOssOptions o) {
     int index=blockIdx.x*blockDim.x+threadIdx.x;if(index>=slots*paddedWidth)return;
@@ -184,6 +234,15 @@ UpKernel downKernel32() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloa
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE8M0fnu.id(),128,2,4,8,false,4,2,false>;}
 }
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssMarlinMetadata(const int* selected,int* sorted,int* experts,int* padded,
+    int* scratch,int slots,int expertCount,int rank,int block,bool parallel,cudaStream_t stream) {
+    if(slots<=0 || expertCount<=0 || expertCount>256 || rank<-1 || rank>1 ||
+        (block!=8 && block!=32))return cudaErrorInvalidValue;
+    launchMetadata(selected,sorted,experts,padded,scratch,slots,expertCount,rank,block,parallel,stream);
+    return cudaGetLastError();
+}
+#endif
 struct GptOssMarlin::State {
     GptOssOptions o;Geometry g;int device=-1,sms=0,computeMajor=0,blockedReason=0;bool ready=false,blocked=false;
     std::array<void*,4> weights{};std::array<const void*,4> sources{};
@@ -276,7 +335,15 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     if(status!=cudaSuccess)return status;
     if(!fused) {
         convertInput<<<(tokens*g.upK+255)/256,256,0,stream>>>((const float*)in[0],at<nv_bfloat16>(workspace,l.a),tokens,o.hidden,g.upK);
-        metadata<<<1,256,0,stream>>>(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),slots,o.experts,o.tpRank,block);
+        static const bool parallelMetadata=[] {
+            const char* value=std::getenv("GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA");
+            return value && value[0]=='1' && value[1]=='\0';
+        }();
+        // Routing is finished, so its logits can hold integer counts/starts.
+        // tokens>=16 both reserves sufficient scratch and avoids tiny batches.
+        launchMetadata(selected,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),
+            at<int>(workspace,l.padded),at<int>(workspace,l.routeLogits),slots,o.experts,
+            o.tpRank,block,parallelMetadata && tokens>=16,stream);
     }
     if(!fusedLocks) {
         status=cudaMemsetAsync(at<int>(workspace,l.locks),0,size_t(o.experts)*(std::max(g.upN,g.downN)/64)*16*4,stream);
