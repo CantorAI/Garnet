@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # V11 regressions/BF16 decode first, then bounded token-local outer prefill.
 set -euo pipefail
-[[ $# == 1 && ! -e $1 ]] || exit 2
+[[ ( $# == 1 || $# == 2 ) && ! -e $1 ]] || exit 2
 repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 root=${CANTORAI_ROOT:-$(dirname "$repo")}
 build=${GARNET_BUILD_DIR:-$root/out/build/gpt-oss}
@@ -9,7 +9,28 @@ python=${GARNET_VERIFY_PYTHON:-$root/venv-vllm/bin/python}
 directory=$1
 mkdir -p "$directory"
 directory=$(cd "$directory" && pwd)
-bash "$repo/tools/gpt_oss/verify_bf16_decode.sh" "$directory/regressions"
+previous=${2:-}
+if [[ -z $previous ]]; then
+    bash "$repo/tools/gpt_oss/verify_bf16_decode.sh" "$directory/regressions"
+    regressions=$directory/regressions
+else
+    previous=$(cd "$previous" && pwd)
+    # Resume only a completed BF/default prefix on identical native libraries.
+    sha256sum --check "$previous/native.sha256"
+    "$python" - "$previous" <<'PY'
+import json,sys
+from pathlib import Path
+root=Path(sys.argv[1]);report=json.loads((root/'regressions/compiled-decode-parity.json').read_text())
+assert all(report[p]['exact_all_matrices'] and report[p]['runs']==16 for p in ('expert','intermediate'))
+for name in ('resident-bf16.memcheck-audit','regressions/native.memcheck-audit','regressions/selection.memcheck-audit'):
+    audit=json.loads((root/'regressions'/f'{name}.json').read_text())
+    assert audit['passed'] and not audit['unexpected']
+trace=(root/'regressions/decode-kernels.csv').read_text()
+assert 'packBf16' in trace and 'unpackBf16' in trace
+PY
+    regressions=$previous/regressions
+    printf '%s\n' "$previous" >"$directory/reused-prefix.txt"
+fi
 exec 9>"$root/work/gpu-benchmark.lock"
 flock -n 9 || exit 1
 [[ -z $(nvidia-smi --query-compute-apps=pid --format=csv,noheader) ]] || exit 1
@@ -29,12 +50,30 @@ for spec in '4097 small' '4608 small' '7168 small' '8020 small' '4608 tp' '7168 
     option=--bounded-prefill-parity
     [[ $extent != tp ]] || option=--bounded-prefill-tp-sized-parity
     label=native-$rows-$extent
-    "$build/bin/garnet_gpt_oss_kernel_parity" "$option" "$rows" >"$directory/$label.log" 2>&1
-    compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all \
+    if [[ -n $previous && $label != native-7168-tp ]]; then
+        # Five already-attached native checks are retained, not rerun.
+        grep -Fq "$label independent CPU/shards/packing/changing-graph/full memory gates passed" "$previous.log"
+        grep -Fq 'ERROR SUMMARY: 0 errors' "$previous/$label.memcheck.log"
+        ! grep -Eq 'No attachable process|timed-out|========= Error:' "$previous/$label.memcheck.log"
+        "$python" "$repo/tools/gpt_oss/validate_sanitizer_xml.py" \
+            "$previous/$label.memcheck.xml" "$directory/$label.reused-audit.json"
+        echo "$label prior attached native check revalidated"
+        continue
+    fi
+    if [[ -n $previous ]]; then
+        # Original set-e controller reached memcheck only after this app exit0.
+        grep -Fq 'Two-rank Marlin expert-parallel MoE sum passed' "$previous/$label.log"
+        cp "$previous/$label.log" "$directory/$label.prior-normal.log"
+    else
+        "$build/bin/garnet_gpt_oss_kernel_parity" "$option" "$rows" >"$directory/$label.log" 2>&1
+    fi
+    compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all --launch-timeout 0 \
         --report-api-errors explicit --xml --print-limit 0 --print-session-details \
         --backtrace-short no --strip-paths no --save "$directory/$label.memcheck.xml" \
         "$build/bin/garnet_gpt_oss_kernel_parity" "$option" "$rows" \
         >"$directory/$label.memcheck.log" 2>&1
+    grep -Eq 'ERROR SUMMARY: [0-9]+ errors' "$directory/$label.memcheck.log"
+    ! grep -Eq 'No attachable process|timed-out|========= Error:' "$directory/$label.memcheck.log"
     "$python" "$repo/tools/gpt_oss/validate_sanitizer_xml.py" \
         "$directory/$label.memcheck.xml" "$directory/$label.memcheck-audit.json"
     echo "$label independent CPU/shards/packing/changing-graph/full memory gates passed"
@@ -43,7 +82,7 @@ export GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS=0 GARNET_GPT_OSS_TP_MOE_INTERMEDIA
 export GARNET_GPT_OSS_TEACHER_RESIDENT=1 GARNET_GPT_OSS_TEACHER_PADDED_TOKENS=16
 export GARNET_GPT_OSS_BF16_PREFILL_ALLREDUCE=1
 export GARNET_GPT_OSS_PROFILE_TEACHER_STEP=-1
-fixture=$directory/regressions/regressions/fixture64
+fixture=$regressions/regressions/fixture64
 for packed in 0 1; do
     export GARNET_GPT_OSS_MARLIN_PREPACKED=$packed
     for wire in 0 1; do
@@ -58,12 +97,14 @@ for packed in 0 1; do
 done
 # Instrument the compiled outer8192-row resident path without kernel filters.
 export GARNET_GPT_OSS_MARLIN_PREPACKED=1 GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE=1
-compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all \
+compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all --launch-timeout 0 \
     --report-api-errors explicit --xml --print-limit 0 --print-session-details \
     --backtrace-short no --strip-paths no --save "$directory/resident-bounded.memcheck.xml" \
     "$build/bin/xlang3" "$repo/test2026/gpt_oss/tp_teacher_forced.py" "$fixture" \
     "$directory/resident-packed1-cache" "$directory/resident-bounded.json" 512 \
     >"$directory/resident-bounded.memcheck.log" 2>&1
+grep -Eq 'ERROR SUMMARY: [0-9]+ errors' "$directory/resident-bounded.memcheck.log"
+! grep -Eq 'No attachable process|timed-out|========= Error:' "$directory/resident-bounded.memcheck.log"
 "$python" "$repo/tools/gpt_oss/validate_sanitizer_xml.py" \
     "$directory/resident-bounded.memcheck.xml" "$directory/resident-bounded.memcheck-audit.json"
 export GARNET_GPT_OSS_PROFILE_TEACHER_STEP=0
@@ -74,11 +115,11 @@ nsys profile --force-overwrite=false --trace=cuda --sample=none --cuda-graph-tra
     >"$directory/prefill-trace.log" 2>&1
 nsys stats --report cuda_gpu_kern_sum --format csv --output - "$directory/prefill-trace.nsys-rep" \
     >"$directory/prefill-kernels.csv" 2>"$directory/prefill-kernels.log"
-"$python" - "$directory" <<'PY'
+"$python" - "$directory" "$regressions" <<'PY'
 import csv,json,sys
 from pathlib import Path
-root=Path(sys.argv[1])
-base=json.loads((root/'regressions/intermediate-packed1-pad8-wire0-warm.json').read_text())
+root=Path(sys.argv[1]);regressions=Path(sys.argv[2])
+base=json.loads((regressions/'intermediate-packed1-pad8-wire0-warm.json').read_text())
 results=[json.loads((root/f'resident-packed{p}-wire{w}-{phase}.json').read_text())
          for p in (0,1) for w in (0,1) for phase in ('cold','warm')]
 results += [json.loads((root/f'{name}.json').read_text())
@@ -86,7 +127,7 @@ results += [json.loads((root/f'{name}.json').read_text())
 assert all(all(s['within_existing_tolerance'] for s in r['steps']) for r in results)
 matrix=[s['tp_logits'] for s in base['steps']]
 assert all([s['tp_logits'] for s in r['steps']]==matrix for r in results)
-config=json.loads((root/'regressions/regressions/fixture64/config.json').read_text())
+config=json.loads((regressions/'regressions/fixture64/config.json').read_text())
 rows=list(csv.reader((root/'prefill-kernels.csv').read_text().splitlines()))
 header=next(row for row in rows if 'Name' in row and 'Instances' in row)
 name_index=header.index('Name');count_index=header.index('Instances')
