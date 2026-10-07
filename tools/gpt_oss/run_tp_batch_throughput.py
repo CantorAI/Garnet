@@ -21,15 +21,16 @@ request = json.loads(Path(sys.argv[3]).read_text())
 result_path = Path(sys.argv[4])
 batch, output_tokens = int(sys.argv[5]), int(sys.argv[6])
 ids = request['input_ids']
-assert 1 <= batch <= 32 and 16 <= output_tokens <= 512
-assert ids and len(ids) + output_tokens <= 4096
+assert 1 <= batch <= 128 and 16 <= output_tokens <= 512
+capacity = int(os.environ.get('GARNET_BATCH_CONTEXT_CAPACITY', '4096'))
+assert ids and len(ids) + output_tokens <= capacity <= 4096
 
 available = json.loads(G.cuda_devices_json())
 selected = request.get('device_ids', [d['id'] for d in available[:2]])
 assert len(selected) == 2 and len(set(selected)) == 2
 devices = [next(d for d in available if d['id'] == device_id) for device_id in selected]
 plan = make_tensor_parallel_plan(weights, devices, batch=batch,
-    capacity=4096, tokens=len(ids),
+    capacity=capacity, tokens=len(ids),
     reserve_bytes=int(request.get('reserve_mb', 1024)) << 20,
     memory_fraction=float(request.get('memory_fraction', .9)))
 print('TP2 batch plan', json.dumps({k: plan[k] for k in
@@ -161,6 +162,7 @@ result_path.write_text(json.dumps({
         all(row == generated[0] for row in generated),
     'input_tokens_per_request': len(ids), 'output_tokens_per_request': output_tokens,
     'batch': batch, 'prefill_seconds': prefill_seconds,
+    'max_context_tokens_per_request': capacity,
     'kv_cache_allocated_bytes_per_gpu': (
         plan['config']['num_hidden_layers'] * 2 * plan['kv_pages'] * 16 *
         plan['local_kv_heads'] * plan['config']['head_dim'] * 2),

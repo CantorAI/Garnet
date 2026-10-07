@@ -16,6 +16,8 @@ The user also requires **maximum aggregate output throughput under batching**. S
 
 For 4 × 2,005-token prefill, the grouped MoE fallback requests 759,916,596 bytes of TensorRT scratch, exceeding the former 256 MiB builder cap. The TP2 builder now estimates that plugin scratch from the combined input rows and rounds its workspace cap to 1 GiB for this shape; this affects engine construction, not the persistent KV allocation. It was verified against the exact failure and a successful Vast run. The shape remains slow: about 3.03 s prefill, versus a full vLLM batch request of about 1.09 s. The append-only research log records matched decode/full-request numbers and answer checks. The next prefill candidate should avoid the large grouped-MoE fallback or chunk the prompt while preserving paged-KV correctness; profile before choosing between those approaches.
 
+For higher batch sizes, the benchmark runners accept `GARNET_BATCH_CONTEXT_CAPACITY` and `VLLM_BATCH_CONTEXT_CAPACITY` so both engines can be measured with the same smaller maximum context when the 4,096-token KV reservation would exceed Garnet's memory budget. Keep input plus output within that context and compare only pairs with the same capacity; the reduced-context results are a separate series from the 4,096-token profile.
+
 ## October 6 rerun setup
 
 The original Japan instance 54383358 could not regain its two GPUs after restart and stayed `Scheduling`. It is now stopped as a backup; its 300 GB disk, with 281 GB used, costs about $0.084/hour. Vast accepted a copy request from that instance to the new one, but the source-side rsync failed (`No user exists for uid 0`), so no copied data has been accepted as valid.

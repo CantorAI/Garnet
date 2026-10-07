@@ -6,6 +6,7 @@ Requires a vLLM environment; this script does not install vLLM.
 import asyncio
 import fcntl
 import json
+import os
 import subprocess
 import sys
 import time
@@ -17,8 +18,9 @@ model = Path(sys.argv[1]).resolve()
 request = json.loads(Path(sys.argv[2]).read_text())
 result_path = Path(sys.argv[3])
 batch, output_tokens = int(sys.argv[4]), int(sys.argv[5])
-assert 1 <= batch <= 32 and 16 <= output_tokens <= 512
-assert request['input_ids'] and len(request['input_ids']) + output_tokens <= 4096
+assert 1 <= batch <= 128 and 16 <= output_tokens <= 512
+capacity = int(os.environ.get('VLLM_BATCH_CONTEXT_CAPACITY', '4096'))
+assert request['input_ids'] and len(request['input_ids']) + output_tokens <= capacity <= 4096
 
 
 async def main():
@@ -29,7 +31,7 @@ async def main():
 
     settings = dict(model=str(model), tensor_parallel_size=2,
                     dtype='bfloat16', kv_cache_dtype='auto',
-                    max_model_len=4096, max_num_seqs=batch,
+                    max_model_len=capacity, max_num_seqs=batch,
                     max_num_batched_tokens=4096,
                     enable_prefix_caching=False, enable_chunked_prefill=True,
                     gpu_memory_utilization=.8, seed=0)
@@ -81,6 +83,7 @@ async def main():
         'measurement': 'homogeneous fixed-size TP2 batch, greedy, no early stop',
         'input_tokens_per_request': len(request['input_ids']),
         'output_tokens_per_request': output_tokens, 'batch': batch,
+        'max_context_tokens_per_request': capacity,
         'gpu_memory_mib_after_engine_start': engine_memory_mib,
         'gpu_memory_mib_after_warmup': warmed_memory_mib,
         'gpu_memory_mib_after_benchmark': completed_memory_mib,
