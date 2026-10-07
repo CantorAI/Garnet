@@ -2,6 +2,15 @@
 import math
 
 
+def existing_capture_artifacts(prefix):
+    from pathlib import Path
+    prefix = Path(prefix)
+    # The invoking shell may open PREFIX.log before this controller starts.
+    # Keep overwrite protection on result/manifest and Nsight artifacts.
+    return [path for path in prefix.parent.glob(prefix.name + '*')
+            if path.suffix in ('.json', '.nsys-rep', '.sqlite', '.qdstrm')]
+
+
 class ResidentCapture:
     def __init__(self, environment, input_tokens, chunk, output_tokens, profiler=None):
         if min(input_tokens, chunk, output_tokens) <= 0:

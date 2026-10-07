@@ -3,7 +3,18 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools/gpt_oss'))
-from resident_capture import ResidentCapture
+from resident_capture import ResidentCapture, existing_capture_artifacts
+import tempfile
+
+with tempfile.TemporaryDirectory() as directory:
+    prefix = Path(directory) / 'capture'
+    prefix.with_suffix('.log').write_text('external shell log')
+    assert not existing_capture_artifacts(prefix)
+    for suffix in ('.json', '.capture-manifest.json', '_1.nsys-rep', '.sqlite', '.qdstrm'):
+        artifact = Path(str(prefix) + suffix)
+        artifact.write_text('existing evidence')
+        assert artifact in existing_capture_artifacts(prefix)
+        artifact.unlink()
 
 
 class Profiler:

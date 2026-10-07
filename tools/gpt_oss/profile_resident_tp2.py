@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 from resident_budget import file_sha256
-from resident_capture import ResidentCapture
+from resident_capture import ResidentCapture, existing_capture_artifacts
 
 parser = argparse.ArgumentParser(description=__doc__)
 for name in ('request', 'expected', 'reference', 'prefix'):
@@ -49,7 +49,7 @@ if decode_ranges is None:
     late = max(early + 3, min(output - 3, output - 32))
     decode_ranges = f'{early}:3,{late}:3'
 prefix = args.prefix.resolve()
-if list(prefix.parent.glob(prefix.name + '*')):
+if existing_capture_artifacts(prefix):
     raise FileExistsError('Refusing to overwrite resident diagnostic evidence')
 env = os.environ.copy()
 for key in list(env):
