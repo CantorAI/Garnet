@@ -4,12 +4,16 @@
 #include <memory>
 namespace Garnet {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssMarlinRepack(const unsigned char*,const unsigned char*,
+    unsigned char*,unsigned char*,int experts,int originalK,int originalN,
+    int paddedK,int paddedN,cudaStream_t);
 // Native parity/microbenchmark hook; scratch contains 2*expertCount integers.
 cudaError_t TestGptOssMarlinMetadata(const int*,int*,int*,int*,int*,int slots,
     int expertCount,int rank,int block,bool parallel,cudaStream_t);
 #endif
-// One object per execution context. Repacked weights belong to this object
-// and are released on its owning GPU, never cached by raw pointer globally.
+// One object per execution context. Legacy repacked weights are privately
+// owned; prepacked constants are borrowed from the engine. Never cache raw
+// pointers globally or free engine-owned constants during context teardown.
 class GptOssMarlin {
     struct State;
     std::unique_ptr<State> m_state;

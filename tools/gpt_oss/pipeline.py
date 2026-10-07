@@ -105,6 +105,12 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     full_weights = sum(sizes.values())
     expert_weight_shards = os.environ.get('GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS') == '1'
     intermediate_shards = os.environ.get('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS') == '1'
+    prepacked_flag = os.environ.get('GARNET_GPT_OSS_MARLIN_PREPACKED', '0')
+    if prepacked_flag not in ('0', '1'):
+        raise ValueError('Marlin prepacking flag must be0/1')
+    marlin_prepacked = prepacked_flag == '1'
+    if marlin_prepacked and not (intermediate_shards or expert_weight_shards):
+        raise ValueError('TP2 prepacking requires explicit expert/intermediate partitioning')
     if intermediate_shards and (expert_weight_shards or config['intermediate_size'] % 64):
         raise ValueError('Intermediate TP2 needs intermediate divisible by64 and expert-axis sharding disabled')
     weight_estimate = full_weights
@@ -146,6 +152,28 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'lazy_marlin_repacked_bytes': repacked, 'includes_lazy_marlin_repacking': True,
             'all_experts_per_rank': config['num_experts'], 'intermediate_per_rank': local_i,
             'down_bias_owner_rank': 0}
+    if marlin_prepacked:
+        # Packed storage can remove only validated original quantized tensors.
+        # Refuse malformed/missing tensors instead of underestimating admission.
+        h, intermediate = config['hidden_size'], config['intermediate_size']
+        for layer in range(config['num_hidden_layers']):
+            for projection, n, k in ((1, 2 * intermediate, h), (2, h, intermediate)):
+                for suffix, divisor in (('blocks', 2), ('scales', 32)):
+                    name = f'block.{layer}.mlp.mlp{projection}_weight.{suffix}'
+                    expected = config['num_experts'] * n * k // divisor
+                    if k % 32 or sizes.get(name) != expected:
+                        raise ValueError('Invalid original Marlin checkpoint storage: ' + name)
+        quantized = sum(size for name, size in sizes.items() if name.endswith(
+            ('.mlp.mlp1_weight.blocks', '.mlp.mlp1_weight.scales',
+             '.mlp.mlp2_weight.blocks', '.mlp.mlp2_weight.scales')))
+        removed = (quantized // config['num_experts'] * local_experts
+                   if expert_weight_shards else quantized // 2)
+        weight_estimate -= removed
+        weight_storage['original_constants_estimated_bytes'] -= removed
+        weight_storage['prepacked_marlin_constant_bytes'] = weight_storage.pop('lazy_marlin_repacked_bytes')
+        weight_storage['includes_lazy_marlin_repacking'] = False
+        weight_storage['original_quant_constants_eliminated_bytes'] = removed
+        weight_storage['marlin_prepacked_layout_version'] = 1
     required = math.ceil(weight_estimate * 1.05) + kv_bytes + activation_bytes + reserve_bytes
     hardware = [{k: d[k] for k in ('id', 'name', 'total_bytes', 'compute_major',
                 'compute_minor', 'pci_bus_id', 'peer_access')} for d in devices]
@@ -161,6 +189,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         identity['expert_weight_shards'] = True
     if intermediate_shards:
         identity['moe_intermediate_shards'] = True
+    if marlin_prepacked:
+        identity['marlin_prepacked_layout_version'] = 1
     # These options change getWorkspaceSize()/buffer offsets. A serialized
     # engine built with a smaller layout cannot safely serve the larger one.
     identity['marlin_workspace_layout'] = marlin_workspace_profile()
@@ -181,6 +211,7 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'local_kv_heads': local_kv_heads,
             'expert_weight_shards': expert_weight_shards,
             'moe_intermediate_shards': intermediate_shards,
+            'marlin_prepacked': marlin_prepacked,
             'compact_vocab_greedy': compact_greedy,
             'weight_storage_estimate': weight_storage,
             'marlin_workspace_layout': identity['marlin_workspace_layout']}
@@ -315,6 +346,8 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
         raise ValueError('token shape exceeds TP2 placement profile')
     config, batch = plan['config'], plan['batch']
     moe_config = dict(config)
+    if plan.get('marlin_prepacked', False) != (os.environ.get('GARNET_GPT_OSS_MARLIN_PREPACKED') == '1'):
+        raise ValueError('Marlin storage flag changed after planning; regenerate the TP2 profile')
     if plan.get('moe_intermediate_shards', False):
         moe_config['intermediate_size'] //= 2
     if plan.get('marlin_workspace_layout', marlin_workspace_profile()) != marlin_workspace_profile():
@@ -368,6 +401,8 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                 'STAGE_COMPACT_GREEDY = ' + str(int(compact_greedy)))
             source = source.replace('STAGE_MOE_INTERMEDIATE_SHARD = 0',
                 'STAGE_MOE_INTERMEDIATE_SHARD = ' + str(int(plan.get('moe_intermediate_shards', False))))
+            source = source.replace('STAGE_MARLIN_PREPACKED = 0',
+                'STAGE_MARLIN_PREPACKED = ' + str(int(plan.get('marlin_prepacked', False))))
             (model_root / 'stage.py').write_text(source)
             shape = [end, plan['kv_pages'], 16, plan['local_kv_heads'], config['head_dim']]
             if kv is None:

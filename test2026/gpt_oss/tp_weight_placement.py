@@ -12,6 +12,8 @@ devices = [dict(id=i, name='synthetic', total_bytes=1 << 30,
                free_bytes=1 << 30, compute_major=12, compute_minor=0,
                pci_bus_id=str(i), peer_access=[True, True]) for i in range(2)]
 os.environ.pop('GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS', None)
+os.environ.pop('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS', None)
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREPACKED', None)
 full = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
 os.environ['GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS'] = '1'
 sharded = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
@@ -23,6 +25,45 @@ storage = sharded['weight_storage_estimate']
 assert storage['lazy_marlin_repacked_bytes'] == 2 * 3 * (64 * 128 + 128 * 64) * 17 // 32
 assert storage['original_constants_estimated_bytes'] < full['weight_storage_estimate']['original_constants_estimated_bytes']
 assert storage['includes_lazy_marlin_repacking']
+# Independent fixture byte count: E5, H32, I32, two layers. Rank0 owns3
+# experts; biases/dense constants remain and must not be subtracted.
+os.environ['GARNET_GPT_OSS_MARLIN_PREPACKED'] = '1'
+prepacked = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+packed_storage = prepacked['weight_storage_estimate']
+removed = 2 * 3 * (64 * 32 + 32 * 32) * 17 // 32
+assert packed_storage['original_quant_constants_eliminated_bytes'] == removed
+assert packed_storage['original_constants_estimated_bytes'] == storage['original_constants_estimated_bytes'] - removed
+assert packed_storage['prepacked_marlin_constant_bytes'] == storage['lazy_marlin_repacked_bytes']
+assert not packed_storage['includes_lazy_marlin_repacking']
+assert prepacked['estimated_per_gpu_bytes'] < sharded['estimated_per_gpu_bytes']
+assert prepacked['cache_key'] != sharded['cache_key']
+for device in devices:
+    device['free_bytes'] = prepacked['estimated_per_gpu_bytes']
+make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+os.environ['GARNET_GPT_OSS_MARLIN_PREPACKED'] = '0'
+try:
+    make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+    raise AssertionError('Original plus lazy-packed storage exceeded the available budget')
+except ValueError:
+    pass
+for device in devices:
+    device['free_bytes'] = device['total_bytes']
+os.environ['GARNET_GPT_OSS_MARLIN_PREPACKED'] = 'invalid'
+try:
+    make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+    raise AssertionError('Unsupported storage flag was accepted')
+except ValueError:
+    pass
+os.environ['GARNET_GPT_OSS_MARLIN_PREPACKED'] = '1'
+os.environ['GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS'] = '0'
+try:
+    make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+    raise AssertionError('Unpartitioned TP2 prepacking was accepted')
+except ValueError:
+    pass
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREPACKED', None)
+os.environ['GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS'] = '1'
+print('Prepacked/original byte accounting, cache separation and admission gates passed')
 os.environ['GARNET_GPT_OSS_MARLIN_MAX_TOKENS'] = '8'
 os.environ['GARNET_GPT_OSS_MARLIN_PREFILL_BLOCK'] = '8'
 os.environ.pop('GARNET_GPT_OSS_MARLIN_DECODE_BLOCK', None)

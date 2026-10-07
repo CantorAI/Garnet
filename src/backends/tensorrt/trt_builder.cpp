@@ -6,6 +6,7 @@
 #include "weight_quantization.h"
 #include "paged_kv_plugin.h"
 #include "gpt_oss_weight_shard.h"
+#include "gpt_oss_marlin_pack.h"
 #include "cuda_lib.h"
 #include "garnet_tensor.h"
 #include "tensor_helper.h"
@@ -324,6 +325,9 @@ namespace Garnet {
                         std::string originalName;
                         int expertRank = -1;
                         int intermediateRank=-1,intermediateMode=0;
+                        Garnet::GptOssMarlinPackSpec marlinPack;
+                        const bool marlinPacked=!metadata&&Garnet::ParseGptOssMarlinPackName(weightName,originalName,marlinPack);
+                        if(marlinPacked)metadata=weightIndex->Find(originalName);
                         if (!metadata && Garnet::ParseGptOssExpertShardName(weightName, originalName, expertRank))
                             metadata = weightIndex->Find(originalName);
                         if (!metadata && Garnet::ParseGptOssIntermediateShardName(
@@ -368,7 +372,18 @@ namespace Garnet {
                             metadata->dataOffset,
                             metadata->dataSize);
                         size_t refitBytes = metadata->dataSize;
-                        if (expertRank >= 0) {
+                        if(marlinPacked) {
+                            if(metadata->dataType!="U8")return nullptr;
+                            expertShardStorage.emplace_back();auto& packed=expertShardStorage.back();
+                            std::vector<int64_t> packedShape;
+                            if(!Garnet::PackGptOssMarlinWeight(data,metadata->dataSize,metadata->shape,
+                                    marlinPack,packed,packedShape,mappingError)) {
+                                std::cout<<"[TRTBuilder] Marlin prepacked refit failed: "<<weightName
+                                    <<" "<<mappingError<<std::endl;return nullptr;
+                            }
+                            data=packed.data();refitBytes=packed.size();
+                        }
+                        else if (expertRank >= 0) {
                             expertShardStorage.emplace_back();
                             auto& shard = expertShardStorage.back();
                             if (metadata->shape.empty() || !Garnet::GatherGptOssExpertShard(

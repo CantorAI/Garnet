@@ -44,7 +44,8 @@ bool supported(int tokens,const GptOssOptions& o) {
         o.intermediate>0 && o.intermediate<=65536 && o.intermediate%32==0 &&
         o.experts>0 && o.experts<=256 && o.topK>0 && o.topK<=8 && o.topK<=o.experts &&
         o.tpRank>=-1 && o.tpRank<2 && (o.expertWeightsSharded==0 ||
-        (o.expertWeightsSharded==1 && o.tpRank>=0));
+        (o.expertWeightsSharded==1 && o.tpRank>=0)) &&
+        (o.marlinPrepacked==0||(o.marlinPrepacked==1&&(o.tpRank<0||o.expertWeightsSharded==1)));
 }
 int marlinBlockSize(int tokens, const GptOssOptions& options) {
     static const bool largePrefill = [] {
@@ -123,6 +124,20 @@ __global__ void checkScales(const unsigned char* scales,size_t size,int* invalid
     // Extreme/subnormal/reserved scales retain the exact original kernel path.
     if(i<size && (scales[i]<2 || scales[i]>249)) atomicExch(invalid,1);
 }
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t testMarlinRepackImpl(const unsigned char* blocks,const unsigned char* scales,
+    unsigned char* packedBlocks,unsigned char* packedScales,int experts,int originalK,int originalN,
+    int paddedK,int paddedN,cudaStream_t stream) {
+    if(experts<=0||originalK<=0||originalK%32||originalN<=0||paddedK<originalK||
+       paddedK%64||paddedN<originalN||paddedN%64)return cudaErrorInvalidValue;
+    const size_t words=size_t(experts)*paddedK*paddedN/8,scaleBytes=size_t(experts)*paddedK*paddedN/32;
+    repackOriginal<<<(words+255)/256,256,0,stream>>>(blocks,reinterpret_cast<unsigned*>(packedBlocks),
+        experts,-1,originalK,originalN,paddedK,paddedN);
+    repackScales<<<(scaleBytes+255)/256,256,0,stream>>>(scales,packedScales,
+        experts,-1,originalK,originalN,paddedK,paddedN);
+    return cudaGetLastError();
+}
+#endif
 __global__ void convertInput(const float* x,nv_bfloat16* a,int tokens,int width,int paddedWidth) {
     int i=blockIdx.x*blockDim.x+threadIdx.x;if(i>=tokens*paddedWidth)return;
     int row=i/paddedWidth,d=i%paddedWidth;a[i]=__float2bfloat16(d<width?x[row*width+d]:0);
@@ -235,6 +250,12 @@ UpKernel downKernel32() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloa
     garnet_marlin_types::kFE8M0fnu.id(),128,2,4,8,false,4,2,false>;}
 }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssMarlinRepack(const unsigned char* blocks,const unsigned char* scales,
+    unsigned char* packedBlocks,unsigned char* packedScales,int experts,int originalK,int originalN,
+    int paddedK,int paddedN,cudaStream_t stream) {
+    return testMarlinRepackImpl(blocks,scales,packedBlocks,packedScales,
+        experts,originalK,originalN,paddedK,paddedN,stream);
+}
 cudaError_t TestGptOssMarlinMetadata(const int* selected,int* sorted,int* experts,int* padded,
     int* scratch,int slots,int expertCount,int rank,int block,bool parallel,cudaStream_t stream) {
     if(slots<=0 || expertCount<=0 || expertCount>256 || rank<-1 || rank>1 ||
@@ -244,14 +265,14 @@ cudaError_t TestGptOssMarlinMetadata(const int* selected,int* sorted,int* expert
 }
 #endif
 struct GptOssMarlin::State {
-    GptOssOptions o;Geometry g;int device=-1,sms=0,computeMajor=0,blockedReason=0;bool ready=false,blocked=false;
+    GptOssOptions o;Geometry g;int device=-1,sms=0,computeMajor=0,blockedReason=0;bool ready=false,blocked=false,borrowed=false;
     std::array<void*,4> weights{};std::array<const void*,4> sources{};
     explicit State(const GptOssOptions& options):o(options),g(options) {}
     ~State(){release();}
     void release() {
         if(device<0)return;int previous=0;cudaGetDevice(&previous);cudaSetDevice(device);
-        for(auto& p:weights){if(p)cudaFree(p);p=nullptr;}
-        cudaSetDevice(previous);ready=false;
+        for(auto& p:weights){if(p&&!borrowed)cudaFree(p);p=nullptr;}
+        cudaSetDevice(previous);ready=false;borrowed=false;
     }
     cudaError_t prepare(const void* const* in,cudaStream_t stream) {
         std::array<const void*,4> pointers{in[3],in[4],in[6],in[7]};
@@ -270,8 +291,10 @@ struct GptOssMarlin::State {
         const int localExperts=o.tpRank<0?o.experts:(o.experts+1-o.tpRank)/2;
         const int storedExperts=o.expertWeightsSharded?localExperts:o.experts;
         const int sourceRank=o.expertWeightsSharded?-1:o.tpRank;
-        const size_t upScales=size_t(storedExperts)*2*o.intermediate*(o.hidden/32);
-        const size_t downScales=size_t(storedExperts)*o.hidden*(o.intermediate/32);
+        const size_t upScales=o.marlinPrepacked?size_t(localExperts)*g.upN*g.upK/32
+            :size_t(storedExperts)*2*o.intermediate*(o.hidden/32);
+        const size_t downScales=o.marlinPrepacked?size_t(localExperts)*g.downN*g.downK/32
+            :size_t(storedExperts)*o.hidden*(o.intermediate/32);
         if(status==cudaSuccess) {
             checkScales<<<(upScales+255)/256,256,0,stream>>>((const unsigned char*)in[4],upScales,invalid);
             status=cudaGetLastError();
@@ -287,12 +310,19 @@ struct GptOssMarlin::State {
         if(result){blocked=true;blockedReason=2;reportMarlin("MXFP4 scales rejected", result, device);return cudaErrorNotSupported;}
         const size_t sizes[]{size_t(localExperts)*g.upN*g.upK/2,size_t(localExperts)*g.upN*g.upK/32,
             size_t(localExperts)*g.downN*g.downK/2,size_t(localExperts)*g.downN*g.downK/32};
-        for(int i=0;i<4;++i){status=cudaMalloc(&weights[i],sizes[i]);if(status!=cudaSuccess){release();return status;}}
-        repackOriginal<<<(sizes[0]/4+255)/256,256,0,stream>>>((const unsigned char*)in[3],(unsigned*)weights[0],storedExperts,sourceRank,o.hidden,2*o.intermediate,g.upK,g.upN);
-        repackScales<<<(sizes[1]+255)/256,256,0,stream>>>((const unsigned char*)in[4],(unsigned char*)weights[1],storedExperts,sourceRank,o.hidden,2*o.intermediate,g.upK,g.upN);
-        repackOriginal<<<(sizes[2]/4+255)/256,256,0,stream>>>((const unsigned char*)in[6],(unsigned*)weights[2],storedExperts,sourceRank,o.intermediate,o.hidden,g.downK,g.downN);
-        repackScales<<<(sizes[3]+255)/256,256,0,stream>>>((const unsigned char*)in[7],(unsigned char*)weights[3],storedExperts,sourceRank,o.intermediate,o.hidden,g.downK,g.downN);
-        status=cudaGetLastError();if(status==cudaSuccess)status=cudaStreamSynchronize(stream);
+        if(o.marlinPrepacked) {
+            // TensorRT owns these constants; this context borrows them and
+            // must not free them at teardown or on a failed attribute setup.
+            borrowed=true;
+            for(int i=0;i<4;++i)weights[i]=const_cast<void*>(pointers[i]);
+        } else {
+            for(int i=0;i<4;++i){status=cudaMalloc(&weights[i],sizes[i]);if(status!=cudaSuccess){release();return status;}}
+            repackOriginal<<<(sizes[0]/4+255)/256,256,0,stream>>>((const unsigned char*)in[3],(unsigned*)weights[0],storedExperts,sourceRank,o.hidden,2*o.intermediate,g.upK,g.upN);
+            repackScales<<<(sizes[1]+255)/256,256,0,stream>>>((const unsigned char*)in[4],(unsigned char*)weights[1],storedExperts,sourceRank,o.hidden,2*o.intermediate,g.upK,g.upN);
+            repackOriginal<<<(sizes[2]/4+255)/256,256,0,stream>>>((const unsigned char*)in[6],(unsigned*)weights[2],storedExperts,sourceRank,o.intermediate,o.hidden,g.downK,g.downN);
+            repackScales<<<(sizes[3]+255)/256,256,0,stream>>>((const unsigned char*)in[7],(unsigned char*)weights[3],storedExperts,sourceRank,o.intermediate,o.hidden,g.downK,g.downN);
+            status=cudaGetLastError();if(status==cudaSuccess)status=cudaStreamSynchronize(stream);
+        }
         if(status==cudaSuccess)status=cudaFuncSetAttribute(upKernel(),cudaFuncAttributeMaxDynamicSharedMemorySize,27136);
         if(status==cudaSuccess)status=cudaFuncSetAttribute(downKernel(),cudaFuncAttributeMaxDynamicSharedMemorySize,35200);
         if(status==cudaSuccess)status=cudaFuncSetAttribute(upKernel32(),cudaFuncAttributeMaxDynamicSharedMemorySize,35584);

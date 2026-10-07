@@ -55,6 +55,11 @@ if(GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL)
     target_compile_definitions(garnet_gpt_oss_ops PRIVATE GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL=1)
 endif()
 if(GARNET_GPT_OSS_BUILD_TESTS)
+    find_package(Threads REQUIRED)
+    add_executable(garnet_gpt_oss_marlin_weight_pack ../../test2026/gpt_oss/marlin_weight_pack.cpp)
+    target_include_directories(garnet_gpt_oss_marlin_weight_pack PRIVATE include)
+    target_link_libraries(garnet_gpt_oss_marlin_weight_pack PRIVATE Threads::Threads)
+    add_test(NAME garnet_gpt_oss_marlin_weight_pack COMMAND garnet_gpt_oss_marlin_weight_pack)
     add_executable(garnet_gpt_oss_expert_weight_shard
         ../../test2026/gpt_oss/expert_weight_shard.cpp)
     target_include_directories(garnet_gpt_oss_expert_weight_shard PRIVATE

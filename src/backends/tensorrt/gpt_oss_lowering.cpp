@@ -2,6 +2,7 @@
 #include "trt_builder.h"
 #include "gpt_oss_extension.h"
 #include "gpt_oss_weight_shard.h"
+#include "gpt_oss_marlin_pack.h"
 #include "operator_plugins.h"
 #include <algorithm>
 #include <limits>
@@ -9,6 +10,28 @@
 #include <vector>
 using namespace nvinfer1;
 namespace Garnet {
+ITensor* TRTBuilder::GetGptOssMarlinWeight(const std::string& source,int partition,int rank,bool up,bool scales) {
+    const GptOssMarlinPackSpec spec{int(up),partition,rank,scales};
+    const auto name=GptOssMarlinPackName(source,spec);
+    const auto existing=weightTensorMap.find(name);
+    if(existing!=weightTensorMap.end())return existing->second;
+    const auto* m=capturedWeightIndex?capturedWeightIndex->Find(source):nullptr;
+    if(!m||m->dataType!="U8") {loweringError="missing original U8 Marlin source: "+source;return nullptr;}
+    auto& file=capturedWeightFiles[m->filePath.string()];
+    if(!file){file=std::make_unique<SafeTensorsMappedFile>();if(!file->Open(m->filePath,loweringError))return nullptr;}
+    booleanVectorWeights.emplace_back();auto& packed=booleanVectorWeights.back();
+    std::vector<int64_t> shape;
+    if(!PackGptOssMarlinWeight(file->DataAt(m->dataOffset,m->dataSize),m->dataSize,
+        m->shape,spec,packed,shape,loweringError))return nullptr;
+    Dims dims{};dims.nbDims=int(shape.size());
+    for(int i=0;i<dims.nbDims;++i)dims.d[i]=int(shape[i]);
+    Weights weights{DataType::kINT8,packed.data(),int64_t(packed.size())};
+    auto* layer=network->addConstant(dims,weights);
+    if(!layer||!network->setWeightsName(weights,name.c_str())||!network->markWeightsRefittable(name.c_str())) {
+        loweringError="Marlin prepacked constant creation failed: "+source;return nullptr;
+    }
+    auto* result=layer->getOutput(0);result->setName(name.c_str());weightTensorMap[name]=result;return result;
+}
 ITensor* TRTBuilder::GetGptOssExpertWeight(const std::string& source, int rank, int experts) {
     const std::string name = GptOssExpertShardName(source, rank);
     const auto existing = weightTensorMap.find(name);
@@ -239,6 +262,7 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
         o.tpRank = integer("tp_rank", -1);
         o.prefill = integer("prefill", 0);
         o.expertWeightsSharded = integer("expert_weight_shard", 0);
+        o.marlinPrepacked = integer("marlin_prepacked", 0);
         const int intermediateShard=integer("expert_intermediate_shard",0);
         const int intermediateRank=o.tpRank;
         if(intermediateShard && (intermediateShard!=1||o.tpRank<0||o.tpRank>1||
@@ -251,7 +275,17 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
             (o.expertWeightsSharded != 1 || o.tpRank < 0 || o.tpRank > 1)) {
             loweringError = "GPT-OSS expert weight sharding requires TP2 rank 0/1"; return nullptr;
         }
+        if(o.marlinPrepacked!=0&&(o.marlinPrepacked!=1||
+            (o.tpRank>=0&&!o.expertWeightsSharded))) {
+            loweringError="Marlin prepacking requires unsharded or explicitly partitioned expert constants";return nullptr;
+        }
         auto expertWeight = [&](const char* key, bool packed = false) -> ITensor* {
+            if(packed&&o.marlinPrepacked) {
+                const std::string name=key;const bool up=name.find("gate_up_")==0;
+                const int partition=intermediateShard?(up?2:3):(o.expertWeightsSharded?1:0);
+                const int rank=intermediateShard?intermediateRank:(o.expertWeightsSharded?o.tpRank:-1);
+                return GetGptOssMarlinWeight(text(key),partition,rank,up,name.find("scales")!=std::string::npos);
+            }
             if(intermediateShard) {
                 const std::string name=key;
                 const int mode=name.find("gate_up_")==0?1:name=="down_bias_name"?3:2;

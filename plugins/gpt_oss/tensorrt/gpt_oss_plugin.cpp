@@ -22,10 +22,12 @@ void reportMarlinFallback(bool initialized, int tokens) {
     if (std::getenv("GARNET_GPT_OSS_DEBUG_MARLIN") && count.fetch_add(1) < 16)
         std::fprintf(stderr, "GPT-OSS Marlin: fallback (plugin initialized=%d, rows=%d)\n", initialized, tokens);
 }
-// Version 8 adds the expert-weight storage layout; old engines must rebuild.
-constexpr const char* kVersion = "8";
+// Version9 adds engine-owned prepacked Marlin constants; old engines rebuild.
+constexpr const char* kVersion = "9";
 bool valid(const GptOssOptions& o) {
     if (o.kind < 0 || o.kind > 7) return false;
+    if(o.marlinPrepacked!=0&&(o.marlinPrepacked!=1||o.kind!=2||
+       o.hidden>16384||o.intermediate>65536||(o.tpRank>=0&&!o.expertWeightsSharded)))return false;
     if (o.expertWeightsSharded != 0 &&
         (o.expertWeightsSharded != 1 || o.kind != 2 || o.tpRank < 0 || o.tpRank > 1 || o.experts < 2))
         return false;
@@ -132,13 +134,21 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
             (o.prefill || tokens == 1);
     } else if (o.kind == 2) {
         const int storedExperts = o.expertWeightsSharded ? (o.experts + 1 - o.tpRank) / 2 : o.experts;
+        const int upK=(o.hidden+63)/64*64,upN=(2*o.intermediate+127)/128*128;
+        const int downK=(o.intermediate+127)/128*128,downN=(o.hidden+63)/64*64;
+        const bool quantShapes=o.marlinPrepacked
+            ? shape(in[3].desc.dims,{storedExperts,upK/32,upN,16}) &&
+              shape(in[4].desc.dims,{storedExperts,upK/32,upN}) &&
+              shape(in[6].desc.dims,{storedExperts,downK/32,downN,16}) &&
+              shape(in[7].desc.dims,{storedExperts,downK/32,downN})
+            : shape(in[3].desc.dims,{storedExperts,2*o.intermediate,o.hidden/32,16}) &&
+              shape(in[4].desc.dims,{storedExperts,2*o.intermediate,o.hidden/32}) &&
+              shape(in[6].desc.dims,{storedExperts,o.hidden,o.intermediate/32,16}) &&
+              shape(in[7].desc.dims,{storedExperts,o.hidden,o.intermediate/32});
         m_valid = d.d[2] == o.hidden && shape(in[1].desc.dims, {o.experts, o.hidden}) &&
             shape(in[2].desc.dims, {o.experts}) &&
-            shape(in[3].desc.dims, {storedExperts, 2 * o.intermediate, o.hidden / 32, 16}) &&
-            shape(in[4].desc.dims, {storedExperts, 2 * o.intermediate, o.hidden / 32}) &&
+            quantShapes &&
             shape(in[5].desc.dims, {storedExperts, 2 * o.intermediate}) &&
-            shape(in[6].desc.dims, {storedExperts, o.hidden, o.intermediate / 32, 16}) &&
-            shape(in[7].desc.dims, {storedExperts, o.hidden, o.intermediate / 32}) &&
             shape(in[8].desc.dims, {storedExperts, o.hidden});
     } else if (o.kind == 3) {
         m_valid = d.d[2] == o.hidden;
@@ -249,7 +259,7 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
         status = m_marlin
             ? m_marlin->Run(in, (float*)out[0], workspace, n, stream)
                           : cudaErrorNotSupported;
-        if (status == cudaErrorNotSupported) {
+        if (status == cudaErrorNotSupported && !m_options.marlinPrepacked) {
             reportMarlinFallback(m_marlin != nullptr, n);
             status = RunGptOssMoe(in, (float*)out[0], workspace, n, m_options, stream);
         }
@@ -326,9 +336,9 @@ bool EnsureGptOssPluginRegistered() {
 #endif
 extern "C" GPT_OSS_EXPORT const char* GarnetOperatorPluginManifest() {
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.9.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.10.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
 #else
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.9.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.10.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
 #endif
 }
 extern "C" GPT_OSS_EXPORT int GarnetRegisterOperatorPlugin() { return Garnet::EnsureGptOssPluginRegistered() ? 1 : 0; }

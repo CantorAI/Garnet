@@ -5,6 +5,7 @@
 #endif
 #include "gpt_oss_marlin.h"
 #include "gpt_oss_weight_shard.h"
+#include "gpt_oss_marlin_pack.h"
 #include <vector>
 #include <cmath>
 #include <cstring>
@@ -425,6 +426,47 @@ void testMxfp4Encoding() {
     std::cout << "All MXFP4 nibbles and E8M0 scales passed exactly\n";
 }
 #endif
+void testPrepackedMarlin(const void* const* inputs,const GptOssOptions& options,int tokens,
+    const std::vector<float>& legacy) {
+    const int e=options.expertWeightsSharded?(options.experts+1-options.tpRank)/2:options.experts;
+    auto pack=[&](int input,bool up,bool scales) {
+        const int n=up?2*options.intermediate:options.hidden,k=up?options.hidden:options.intermediate;
+        std::vector<unsigned char> original(size_t(e)*n*k/(scales?32:2));
+        check(cudaMemcpy(original.data(),inputs[input],original.size(),cudaMemcpyDeviceToHost));
+        std::vector<int64_t> shape{e,n,k/32};if(!scales)shape.push_back(16);
+        std::vector<unsigned char> output;std::vector<int64_t> packedShape;std::string error;
+        if(!PackGptOssMarlinWeight(original.data(),original.size(),shape,
+            GptOssMarlinPackSpec{int(up),0,-1,scales},output,packedShape,error))throw std::runtime_error(error);
+        return output;
+    };
+    const auto up=pack(3,true,false),us=pack(4,true,true),down=pack(6,false,false),ds=pack(7,false,true);
+    Device<unsigned char> pu(up),pus(us),pd(down),pds(ds);
+    // Byte equality against the ACTUAL existing GPU repack kernels.
+    for(bool gate:{true,false}) {
+        const int k=gate?options.hidden:options.intermediate,n=gate?2*options.intermediate:options.hidden;
+        const int pk=(k+(gate?63:127))/(gate?64:128)*(gate?64:128);
+        const int pn=(n+(gate?127:63))/(gate?128:64)*(gate?128:64);
+        Device<unsigned char> rb{std::vector<unsigned char>(size_t(e)*pk*pn/2)},
+            rs{std::vector<unsigned char>(size_t(e)*pk*pn/32)};
+        check(TestGptOssMarlinRepack(static_cast<const unsigned char*>(inputs[gate?3:6]),
+            static_cast<const unsigned char*>(inputs[gate?4:7]),rb.p,rs.p,e,k,n,pk,pn,nullptr));
+        if(rb.read()!=(gate?up:down)||rs.read()!=(gate?us:ds))throw std::runtime_error("Host/actual GPU Marlin bytes differ");
+    }
+    const void* packedInputs[]{inputs[0],inputs[1],inputs[2],pu.p,pus.p,inputs[5],pd.p,pds.p,inputs[8]};
+    auto packedOptions=options;packedOptions.marlinPrepacked=1;
+    Device<float> output{std::vector<float>(legacy.size())};
+    Device<unsigned char> scratch{std::vector<unsigned char>(GptOssMarlin::Workspace(tokens,packedOptions))};
+    {
+        GptOssMarlin packed(packedOptions);
+        for(int repeat=0;repeat<2;++repeat) {
+            check(packed.Run(packedInputs,output.p,scratch.p,tokens,nullptr));
+            compare(output.read(),legacy,0.f,"Prepacked versus runtime-repacked Marlin exact output");
+        }
+    }
+    // Context teardown must not free borrowed engine constants.
+    if(pu.read()!=up||pus.read()!=us||pd.read()!=down||pds.read()!=ds)
+        throw std::runtime_error("Borrowed packed constants changed or were freed");
+}
 void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = false,
              bool batchedDecode = false) {
     GptOssOptions o; o.kind = 2; o.hidden = h; o.intermediate = intermediate; o.experts = 5; o.topK = 2;
@@ -509,6 +551,7 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
                 Device<unsigned char> scratch{std::vector<unsigned char>(GptOssMarlin::Workspace(tokens,local))};
                 check(marlin.Run(localInputs,partial.p,scratch.p,tokens,nullptr));
                 values=partial.read();for(size_t i=0;i<values.size();++i)marlinInnerSum[i]+=values[i];
+                testPrepackedMarlin(localInputs,local,tokens,values);
             }
 #endif
         }
@@ -536,6 +579,7 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
         Device<unsigned char> marlinWorkspace{std::vector<unsigned char>(marlinBytes)};
         check(marlin.Run(in, dy.p, marlinWorkspace.p, tokens, nullptr));
         compare(dy.read(), expected, .004f, "Marlin MXFP4 expert kernel parity");
+        testPrepackedMarlin(in,o,tokens,dy.read());
         std::vector<float> marlinShardSum(expected.size());
         for (int rank = 0; rank < 2; ++rank) {
             GptOssOptions shard = o; shard.tpRank = rank;
@@ -557,6 +601,7 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
             GptOssMarlin localMarlin(shard);
             check(localMarlin.Run(localInputs, partial.p, shardWorkspace.p, tokens, nullptr));
             compare(partial.read(), values, 0.f, "Rank-local original expert constants, Marlin path");
+            testPrepackedMarlin(localInputs,shard,tokens,partial.read());
         }
         for (float& value : marlinShardSum) value = bf(value);
         compare(marlinShardSum, expected, .004f, "Two-rank Marlin expert-parallel MoE sum");
