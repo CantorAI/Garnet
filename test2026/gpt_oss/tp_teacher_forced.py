@@ -3,6 +3,7 @@
 This does not replace exact free-generation or compact/full equivalence gates.
 """
 import json
+import ctypes
 import os
 from pathlib import Path
 import sys
@@ -17,6 +18,10 @@ if not 1<=batch<=512:
 if output.exists():
     raise FileExistsError(output)
 expected = json.loads((weights / 'expected.json').read_text())
+profile_step = int(os.environ.get('GARNET_GPT_OSS_PROFILE_TEACHER_STEP', '-1'))
+if not -1<=profile_step<len(expected['generation_logits']):
+    raise ValueError('Invalid teacher-forced profiler step')
+profiler = ctypes.CDLL('libcudart.so') if profile_step>=0 else None
 ids = json.loads((weights / 'request.json').read_text())['input_ids']
 os.environ.pop('GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY', None)
 plan = make_tensor_parallel_plan(weights, json.loads(G.cuda_devices_json())[:2],
@@ -41,9 +46,16 @@ try:
         else:
             tokens, positions, start = ids, list(range(len(ids))), 0
         length = len(ids) + step
-        reply = model.forward(tensor(tokens*batch, 'int64', [batch, len(tokens)]),
-            [tensor(positions*batch, 'int64', [batch, len(tokens)]), table,
-             tensor([length]*batch, 'int32', [batch]), tensor([start]*batch, 'int32', [batch]), active])
+        activation=tensor(tokens*batch, 'int64', [batch, len(tokens)])
+        controls=[tensor(positions*batch, 'int64', [batch, len(tokens)]), table,
+                  tensor([length]*batch, 'int32', [batch]), tensor([start]*batch, 'int32', [batch]), active]
+        if step==profile_step and profiler.cudaProfilerStart()!=0:
+            raise RuntimeError('Could not start teacher-forced profiler range')
+        try:
+            reply = model.forward(activation,controls)
+        finally:
+            if step==profile_step and profiler.cudaProfilerStop()!=0:
+                raise RuntimeError('Could not stop teacher-forced profiler range')
         G.cuda_set_device(0)
         actual = G.tensor_to_cpu(reply['output']).tolist()
         assert len(actual) == batch*len(wanted)
@@ -61,6 +73,7 @@ try:
 finally:
     model.release()
 output.parent.mkdir(parents=True, exist_ok=True)
-output.write_text(json.dumps(dict(measurement='teacher-forced CPU prefixes, diagnostic only', batch=batch, steps=steps), indent=2))
+output.write_text(json.dumps(dict(measurement='teacher-forced CPU prefixes, diagnostic only', batch=batch,
+                                 profile_step=profile_step, steps=steps), indent=2))
 if not all(s['within_existing_tolerance'] for s in steps):
     raise RuntimeError('TP teacher-forced logits exceed the established compiled parity tolerance')

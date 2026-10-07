@@ -35,6 +35,7 @@ export GARNET_GPT_OSS_PREFILL_ROUTER_TENSORCORE=1
 export GARNET_GPT_OSS_ROUTER_QUERY_TILE=2 GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA=1
 export GARNET_GPT_OSS_MARLIN_MAX_TOKENS=4096 GARNET_GPT_OSS_MARLIN_PREFILL_BLOCK=32
 export GARNET_GPT_OSS_MARLIN_DECODE_BLOCK=32
+export GARNET_GPT_OSS_BF16_PREFILL_ALLREDUCE=0
 git -C "$repo" rev-parse HEAD >"$directory/source-commit.txt"
 nvidia-smi --query-gpu=index,name,uuid,driver_version --format=csv >"$directory/hardware.csv"
 "$parity" --tensorcore-router-parity >"$directory/router-parity.log" 2>&1
@@ -52,18 +53,47 @@ echo 'Full native and compiled multi-GPU gates passed'
 export GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS=1
 # Three CPU-prefix tokens times512requests exercises the>=1024-row router.
 # It does not establish pretrained batch512 admission or throughput.
-for phase in cold warm; do
-    command=("$runtime" "$repo/test2026/gpt_oss/tp_teacher_forced.py" "$directory/fixture64"
-        "$directory/teacher-cache" "$directory/teacher-$phase.json" 512)
-    if [[ $phase == cold ]]; then
-        command=(nsys profile --force-overwrite=false --trace=cuda --sample=none
-            --cuda-graph-trace=node --output="$directory/teacher-cold" "${command[@]}")
-    fi
-    "${command[@]}" >"$directory/teacher-$phase.log" 2>&1
-    echo "Full-model batch512 teacher-forced $phase gate passed"
+for bf16 in 0 1; do
+    export GARNET_GPT_OSS_BF16_PREFILL_ALLREDUCE=$bf16
+    for phase in cold warm; do
+        label=teacher-bf$bf16-$phase
+        command=("$runtime" "$repo/test2026/gpt_oss/tp_teacher_forced.py" "$directory/fixture64"
+            "$directory/teacher-cache" "$directory/$label.json" 512)
+        export GARNET_GPT_OSS_PROFILE_TEACHER_STEP=-1
+        if [[ $bf16 == 1 ]]; then
+            if [[ $phase == warm ]]; then
+                export GARNET_GPT_OSS_PROFILE_TEACHER_STEP=1
+                command=(nsys profile --force-overwrite=false --trace=cuda --sample=none
+                    --cuda-graph-trace=node --capture-range=cudaProfilerApi --capture-range-end=stop
+                    --output="$directory/$label" "${command[@]}")
+            else
+                command=(nsys profile --force-overwrite=false --trace=cuda --sample=none
+                    --cuda-graph-trace=node --output="$directory/$label" "${command[@]}")
+            fi
+        fi
+        "${command[@]}" >"$directory/$label.log" 2>&1
+        echo "Full-model batch512 teacher-forced BF16=$bf16 $phase gate passed"
+    done
 done
-nsys stats --report cuda_gpu_kern_sum --format csv --output - "$directory/teacher-cold.nsys-rep" \
-    >"$directory/teacher-kernels.csv" 2>"$directory/teacher-kernels.log"
-grep -Fq 'routeScoresTensorCore' "$directory/teacher-kernels.csv"
-echo 'Compiled-model trace confirms the tensor-core router executed'
+"$python" - "$directory" <<'PY'
+import json,sys
+from pathlib import Path
+root=Path(sys.argv[1])
+results=[json.loads((root/f'teacher-bf{mode}-{phase}.json').read_text())
+         for mode in (0,1) for phase in ('cold','warm')]
+baseline=[step['tp_logits'] for step in results[0]['steps']]
+assert all([step['tp_logits'] for step in result['steps']]==baseline for result in results), 'BF16 wire or reload changed compiled logits'
+print('Every batch512 CPU-prefix logit matches across FP32/BF16 wire and reload')
+PY
+for phase in cold warm; do
+    nsys stats --report cuda_gpu_kern_sum --format csv --output - "$directory/teacher-bf1-$phase.nsys-rep" \
+        >"$directory/teacher-kernels-$phase.csv" 2>"$directory/teacher-kernels-$phase.log"
+done
+grep -Fq 'routeScoresTensorCore' "$directory/teacher-kernels-cold.csv"
+grep -Fq '::packBf16(' "$directory/teacher-kernels-cold.csv"
+if grep -Fq 'routeScoresTensorCore' "$directory/teacher-kernels-warm.csv" || \
+   grep -Fq '::packBf16(' "$directory/teacher-kernels-warm.csv"; then
+    echo 'Prefill-only router or BF16 wire ran during batch512 decode' >&2; exit 1
+fi
+echo 'Traces confirm tensor-core router/BF16 wire in prefill and neither in batch512 decode'
 echo 'All prefill-router gates passed; pretrained quality/performance remains separate'

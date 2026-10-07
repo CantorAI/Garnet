@@ -31,6 +31,7 @@ bool valid(const GptOssOptions& o) {
         return false;
     if (o.bf16Communication < 0 || o.bf16Communication > 1 ||
         (o.bf16Communication && o.kind != 3)) return false;
+    if (o.kind == 3 && o.prefill != 0 && o.prefill != 1) return false;
     if (o.kind == 3 || o.kind == 4) return o.hidden > 0 && o.tpRank >= 0 && o.tpRank < 2;
     if (o.kind == 5) return o.hidden > 0 && o.epsilon > 0.f;
     if (o.kind == 7) return o.hidden > 0 && o.hidden <= (1 << 23) &&
@@ -204,7 +205,7 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
             const char* flag = std::getenv("GARNET_GPT_OSS_BF16_PREFILL_ALLREDUCE");
             return flag && std::strcmp(flag, "1") == 0;
         }();
-        if (useBf16 && m_options.bf16Communication && n >= 128 && workspace)
+        if (useBf16 && m_options.bf16Communication && m_options.prefill && n >= 128 && workspace)
             status = GptOssTpAllReduceBf16(static_cast<const float*>(in[0]),
                 static_cast<float*>(out[0]), workspace, elements,
                 m_options.tpRank, stream);

@@ -24,11 +24,12 @@ def linear(x, name, bias=None, op="linear", tp_mode=None, tp_rank=-1,
     return rounded(x * T.unary_op(op, **attributes))
 
 
-def tp_all_reduce(x, rank, config, bf16_communication=False):
+def tp_all_reduce(x, rank, config, bf16_communication=False, prefill=False):
     """Sum a rank-local partial hidden state across both GPT-OSS TP ranks."""
     return x * T.unary_op("gpt_oss_tp_all_reduce",
                           hidden_size=config['hidden_size'], tp_rank=rank,
-                          bf16_communication=1 if bf16_communication else 0)
+                          bf16_communication=1 if bf16_communication else 0,
+                          prefill=1 if prefill else 0)
 
 
 def tp_all_gather_logits(x, rank, config):
@@ -83,7 +84,7 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         attention_output = linear(attention, prefix + ".attn.out.weight",
                                   prefix + ".attn.out.bias", tp_mode='row', tp_rank=tp_rank)
         attention_output = rounded(tp_all_reduce(
-            attention_output, tp_rank, config, bf16_communication=True))
+            attention_output, tp_rank, config, bf16_communication=True, prefill=prefill))
     else:
         attention_output = linear(attention, prefix + ".attn.out.weight", prefix + ".attn.out.bias")
     x = rounded(residual + attention_output)
@@ -102,7 +103,10 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         down_blocks_name=prefix + ".mlp.mlp2_weight.blocks",
         down_scales_name=prefix + ".mlp.mlp2_weight.scales", down_bias_name=prefix + ".mlp.mlp2_bias")
     if tp_rank >= 0:
-        x = rounded(tp_all_reduce(x, tp_rank, config))
+        # Intermediate-axis kernels round each rank's output to BF16 already;
+        # expert-axis partials remain FP32 and are not eligible for compression.
+        x = rounded(tp_all_reduce(x, tp_rank, config,
+            bf16_communication=bool(moe_intermediate_shard), prefill=prefill))
     return rounded(residual + x)
 
 
