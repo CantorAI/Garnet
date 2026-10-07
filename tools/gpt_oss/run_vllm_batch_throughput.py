@@ -103,6 +103,7 @@ async def main():
         'vllm_version': vllm.__version__, 'settings': settings,
         'measurement': 'homogeneous fixed-size TP2 batch, greedy, no early stop',
         'input_tokens_per_request': len(request['input_ids']),
+        'input_token_ids': request['input_ids'],
         'output_tokens_per_request': output_tokens, 'batch': batch,
         'max_context_tokens_per_request': capacity,
         'gpu_memory_mib_after_engine_start': engine_memory_mib,

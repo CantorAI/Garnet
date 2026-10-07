@@ -256,6 +256,7 @@ result_path.write_text(json.dumps({
     'identical_output_across_duplicate_requests':
         all(row == generated[0] for row in generated),
     'input_tokens_per_request': len(ids), 'output_tokens_per_request': output_tokens,
+    'input_token_ids': ids,
     'batch': batch, 'prefill_seconds': prefill_seconds,
     'prefill_chunk_tokens': configured_chunk,
     'prefill_chunks': prefill_chunks,

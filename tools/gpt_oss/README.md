@@ -249,6 +249,11 @@ identity and uses GPT-OSS plugin serialization version8. Validate cold and
 cached graph execution, fallback kernels, Marlin and pretrained outputs
 before using this candidate for throughput. The generic TensorRT weight
 refitter recognizes only the explicit GPT-OSS derived-name protocol.
+`screen_expert_shards_tp2.sh REQUEST EXPECTED VLLM_REFERENCE RESULT_DIR BATCH OUTPUT`
+tests unchunked prefill and chunk128 with1/2/4 Marlin CTAs per SM sequentially,
+validating every slot/trial before continuing. It requires a newly recorded
+vLLM reference with identical input token IDs, batch, output limit and context;
+it preserves failure logs and refuses to overwrite existing evidence.
 
 The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
 and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
