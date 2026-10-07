@@ -282,6 +282,14 @@ in-flight tokens; completed requests have already freed scheduler blocks
 when the RPC runs. Keep this estimate distinct from measured occupancy,
 and keep sampled device memory distinct from PyTorch allocator peaks.
 
+After a matched batch128 vLLM reference has completed and all outputs pass,
+`screen_batch_tiles_tp2.sh REQUEST EXPECTED REFERENCE RESULT_DIR 128 OUTPUT CHUNK`
+screens decode tiles8/32 and MoE CTAs1/2/4 sequentially. Input must divide
+evenly into chunks with at most4096 flattened rows. It preserves failed
+logs, validates every slot/trial before advancing, and inherits the exact
+context/IDs from the reference. The peer collective uses the separately
+gated128-row capacity and32 CTAs; this remains a serialized-stream experiment.
+
 The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
 and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
 path shards attention heads and vocabulary rows, keeps rank-local MoE work,
