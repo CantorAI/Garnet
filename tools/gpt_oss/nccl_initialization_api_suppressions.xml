@@ -8,7 +8,7 @@
 <ComputeSanitizerOutput>
   <record>
     <kind>Api</kind>
-    <what><api>cudaFuncGetAttributes</api><result>209</result></what>
+    <what><text>.*</text><api>cudaFuncGetAttributes</api><error>.*</error><message>.*</message><result>209</result></what>
     <hostStack>
       <saveLocation>error</saveLocation>
       <frame><module>.*libcuda\.so\.1</module></frame>
@@ -18,7 +18,7 @@
   </record>
   <record>
     <kind>Api</kind>
-    <what><api>cudaGetLastError</api><result>209</result></what>
+    <what><text>.*</text><api>cudaGetLastError</api><error>.*</error><message>.*</message><result>209</result></what>
     <hostStack>
       <saveLocation>error</saveLocation>
       <frame><module>.*libcuda\.so\.1</module></frame>
@@ -28,7 +28,7 @@
   </record>
   <record>
     <kind>Api</kind>
-    <what><api>cudaGetLastError</api><result>704</result></what>
+    <what><text>.*</text><api>cudaGetLastError</api><error>.*</error><message>.*</message><result>704</result></what>
     <hostStack>
       <saveLocation>error</saveLocation>
       <frame><module>.*libcuda\.so\.1</module></frame>
