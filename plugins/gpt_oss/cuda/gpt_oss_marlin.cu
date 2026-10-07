@@ -313,6 +313,22 @@ constexpr int kDownShared32K64 = (sharedPrefill(2,4,4) + 2048 + 255) / 256 * 256
 constexpr int kDownShared64K64 = (sharedPrefill(4,4,4) + 2048 + 255) / 256 * 256;
 static_assert(sharedPrefill(4,8,4) == 52224 && sharedPrefill(4,4,8) == 83968);
 static_assert(sharedPrefill(2,4,4) == 25600 && sharedPrefill(4,4,4) == 43520);
+cudaError_t downK64LaunchLimit(int block,int device,int& limit,int& computeMajor) {
+    if(block!=32 && block!=64)return cudaErrorInvalidValue;
+    const auto kernel=block==64?downKernel64K64():downKernel32K64();
+    const int shared=block==64?kDownShared64K64:kDownShared32K64;
+    auto status=cudaDeviceGetAttribute(&computeMajor,cudaDevAttrComputeCapabilityMajor,device);
+    if(status==cudaSuccess)
+        status=cudaFuncSetAttribute(kernel,cudaFuncAttributeMaxDynamicSharedMemorySize,shared);
+    int active=0;
+    if(status==cudaSuccess)
+        status=cudaOccupancyMaxActiveBlocksPerMultiprocessor(&active,kernel,kDownK64Threads,shared);
+    if(status!=cudaSuccess)return status;
+    // CTA4 hung on this experimental geometry. Keep unvalidated larger grids
+    // out of the predecessor-lock pipeline even on higher-occupancy devices.
+    limit=std::min(active,2);
+    return cudaSuccess;
+}
 }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
 cudaError_t TestGptOssMarlinRepack(const unsigned char* blocks,const unsigned char* scales,
@@ -331,6 +347,7 @@ cudaError_t TestGptOssMarlinMetadata(const int* selected,int* sorted,int* expert
 #endif
 struct GptOssMarlin::State {
     GptOssOptions o;Geometry g;int device=-1,sms=0,computeMajor=0,blockedReason=0;bool ready=false,blocked=false,borrowed=false;
+    int downGridDevice=-1,downGridBlock=0,downGridLimit=0,downGridComputeMajor=0;
     std::array<void*,4> weights{};std::array<const void*,4> sources{};
     explicit State(const GptOssOptions& options):o(options),g(options) {}
     ~State(){release();}
@@ -431,9 +448,21 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     reportMarlin("decode candidate", tokens, s.o.hidden);
     int device=-1;auto status=cudaGetDevice(&device);if(status!=cudaSuccess)return status;
     if(s.device>=0 && s.device!=device)return cudaErrorInvalidDevice;
+    const int block=marlinBlockSize(tokens,s.o);
+    const bool downCandidate=s.o.prefill && tokens>=1024 && block>=32 && prefillDownK64();
+    if(downCandidate) {
+        if(s.downGridDevice!=device || s.downGridBlock!=block) {
+            status=downK64LaunchLimit(block,device,s.downGridLimit,s.downGridComputeMajor);
+            if(status!=cudaSuccess)return status;
+            s.downGridDevice=device;s.downGridBlock=block;
+        }
+        if(downCtasPerSm(s.downGridComputeMajor)>s.downGridLimit) {
+            reportMarlin("prefill down grid rejected",downCtasPerSm(s.downGridComputeMajor),s.downGridLimit);
+            return cudaErrorInvalidConfiguration;
+        }
+    }
     status=s.prepare(in,stream);if(status!=cudaSuccess)return status;
     const auto& o=s.o;const auto& g=s.g;const Layout l(tokens,o);int slots=tokens*o.topK;
-    const int block=marlinBlockSize(tokens,o);
     auto selected=at<int>(workspace,l.selected);auto probabilities=at<float>(workspace,l.probabilities);
     static const bool fuseDecodeRoute=[] {
         const char* value=std::getenv("GARNET_GPT_OSS_FUSED_DECODE_ROUTE");
@@ -475,7 +504,6 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
         nullptr,nullptr,(const int4*)s.weights[1],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,o.topK,false,tokens,g.upN,g.upK,at<int>(workspace,l.locks),false,false,true);
     activation<<<(slots*g.downK+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.up),(const float*)in[5],selected,at<nv_bfloat16>(workspace,l.activation),slots,g.upN,g.downK,o);
-    const bool downCandidate=o.prefill && tokens>=1024 && block>=32 && prefillDownK64();
     auto down=downCandidate ? (block==64?downKernel64K64():downKernel32K64())
         : (block==64?downKernel64():(block==32?downKernel32():downKernel()));
     const int downShared=downCandidate ? (block==64?kDownShared64K64:kDownShared32K64)

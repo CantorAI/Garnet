@@ -27,11 +27,21 @@ sha256sum "$build/bin/libgarnet.so" "$build/bin/libgarnet_gpt_oss.so" \
 export GARNET_GPT_OSS_DEBUG_MARLIN=1 GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K=64
 for tile in 0 64; do
     export GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK=$tile
-    for ctas in 1 2 4; do
+    export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM=4
+    label=prefill-down-tile$tile-cta4-rejection
+    timeout --signal=TERM --kill-after=15s 120s "$build/bin/garnet_gpt_oss_kernel_parity" --prefill-down-grid-rejection >"$directory/$label.log" 2>&1
+    timeout --signal=TERM --kill-after=15s 300s compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all \
+        --report-api-errors explicit --xml --print-limit 0 --print-session-details \
+        --save "$directory/$label.memcheck.xml" "$build/bin/garnet_gpt_oss_kernel_parity" \
+        --prefill-down-grid-rejection >"$directory/$label.memcheck.log" 2>&1
+    "$python" "$repo/tools/gpt_oss/validate_sanitizer_xml.py" \
+        "$directory/$label.memcheck.xml" "$directory/$label.memcheck-audit.json"
+    echo "$label UNSUPPORTED grid rejected before memory access"
+    for ctas in 1 2; do
         export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM=$ctas
         label=prefill-down-tile$tile-cta$ctas
-        "$build/bin/garnet_gpt_oss_kernel_parity" --prefill-down-parity >"$directory/$label.log" 2>&1
-        compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all \
+        timeout --signal=TERM --kill-after=15s 120s "$build/bin/garnet_gpt_oss_kernel_parity" --prefill-down-parity >"$directory/$label.log" 2>&1
+        timeout --signal=TERM --kill-after=15s 300s compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all \
             --report-api-errors explicit --xml --print-limit 0 --print-session-details \
             --save "$directory/$label.memcheck.xml" "$build/bin/garnet_gpt_oss_kernel_parity" \
             --prefill-down-parity >"$directory/$label.memcheck.log" 2>&1
@@ -55,14 +65,14 @@ for partition in expert intermediate; do
     for tile in 0 64; do
         export GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK=$tile
         # Reference128 has no independent down-grid override; up remains CTA1.
-        for setting in 128/1 64/1 64/2 64/4; do
+        for setting in 128/1 64/1 64/2; do
             export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K=${setting%/*}
             export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM=${setting#*/}
             for tokens in 4 8; do
                 export GARNET_GPT_OSS_TEACHER_PADDED_TOKENS=$tokens
                 for phase in cold warm; do
                     label=down-resident-$partition-tile$tile-k${setting%/*}-cta${setting#*/}-pad$tokens-$phase
-                    "$build/bin/xlang3" "$repo/test2026/gpt_oss/tp_teacher_forced.py" "$fixture" \
+                    timeout --signal=TERM --kill-after=15s 600s "$build/bin/xlang3" "$repo/test2026/gpt_oss/tp_teacher_forced.py" "$fixture" \
                         "$directory/down-$partition-tile$tile-k${setting%/*}-cta${setting#*/}-pad$tokens-cache" \
                         "$directory/$label.json" "$batch" >"$directory/$label.log" 2>&1
                     echo "$label passed"
@@ -78,7 +88,7 @@ root=Path(sys.argv[1]); report={}
 for partition in ('expert','intermediate'):
     rows={}
     for tile in (0,64):
-        for k,ctas in ((128,1),(64,1),(64,2),(64,4)):
+        for k,ctas in ((128,1),(64,1),(64,2)):
             for pad in (4,8):
                 pair=[json.loads((root/f'down-resident-{partition}-tile{tile}-k{k}-cta{ctas}-pad{pad}-{p}.json').read_text()) for p in ('cold','warm')]
                 assert all(s['within_existing_tolerance'] for r in pair for s in r['steps'])

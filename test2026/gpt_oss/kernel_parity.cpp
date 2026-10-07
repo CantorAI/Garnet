@@ -8,6 +8,7 @@
 #include "gpt_oss_marlin_pack.h"
 #include <vector>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -978,6 +979,22 @@ int main(int argc, char** argv) { try {
             std::cout << rows << ' ' << GptOssMoeWorkspace(rows, options) << ' '
                 << prefillBytes << ' ' << GptOssMarlin::Workspace(rows, options) << '\n';
         }
+        return 0;
+    }
+    if(argc==2 && std::strcmp(argv[1],"--prefill-down-grid-rejection")==0) {
+        if(!std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K") ||
+           std::strcmp(std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K"),"64")!=0 ||
+           !std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM") ||
+           std::strcmp(std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM"),"4")!=0)return 2;
+        GptOssOptions probe;probe.kind=2;probe.hidden=96;probe.intermediate=256;
+        probe.experts=5;probe.topK=2;probe.prefill=1;
+        GptOssMarlin marlin(probe);
+        // No buffers exist: rejection must happen before pointer access/refit.
+        for(int rows:{1024,4096})for(int repeat=0;repeat<2;++repeat)
+            if(marlin.Run(nullptr,nullptr,nullptr,rows,nullptr)!=cudaErrorInvalidConfiguration)
+                throw std::runtime_error("Unsafe down-K64 grid was not rejected before memory access");
+        check(cudaDeviceSynchronize());
+        std::cout<<"Down-K64 CTA4 rejected before pointer access/repacking/launch, cold/cached PASS\n";
         return 0;
     }
     if (argc == 2 && (std::strcmp(argv[1], "--large-prefill-parity") == 0 ||

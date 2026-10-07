@@ -23,13 +23,13 @@ nvidia-smi --query-gpu=index,name,uuid,driver_version --format=csv >"$directory/
 for rows in 1024 4096; do
     for tile in 0 64; do
         export GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK=$tile
-        for setting in 128/1 64/1 64/2 64/4; do
+        for setting in 128/1 64/1 64/2; do
             export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K=${setting%/*}
             export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM=${setting#*/}
             for trial in 1 2 3; do
                 label=rows$rows-tile$tile-k${setting%/*}-cta${setting#*/}-trial$trial
                 output=(); [[ $trial != 1 ]] || output+=("$directory/$label.f32")
-                "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" "$rows" prefill "${output[@]}" \
+                timeout --signal=TERM --kill-after=15s 300s "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" "$rows" prefill "${output[@]}" \
                     >"$directory/$label.log" 2>&1
                 tail -2 "$directory/$label.log"
             done
@@ -37,11 +37,11 @@ for rows in 1024 4096; do
     done
 done
 # Candidate geometry/grid must leave decode results unchanged.
-for setting in 128/1 64/1 64/2 64/4; do
+for setting in 128/1 64/1 64/2; do
     export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K=${setting%/*}
     export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM=${setting#*/}
     label=decode256-k${setting%/*}-cta${setting#*/}
-    "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" 256 decode "$directory/$label.f32" \
+    timeout --signal=TERM --kill-after=15s 300s "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" 256 decode "$directory/$label.f32" \
         >"$directory/$label.log" 2>&1
 done
 "$python" - "$directory" <<'PY'
@@ -69,5 +69,7 @@ for path in sorted(root.glob('*.f32')):
             scope='Synthetic cross-mode difference, not independent CPU-oracle quality')
     rows[path.name]=row
 (root/'synthetic-matrix-comparison.json').write_text(json.dumps(rows,indent=2))
+(root/'unsupported-settings.json').write_text(json.dumps(dict(down_k64_cta4=
+    'Prior native4096-row hang; now rejected before access/launch. Not a passing or timed setting.'),indent=2))
 PY
 echo 'Synthetic screen complete; resident/pretrained quality and serving throughput remain separate'

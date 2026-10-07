@@ -20,10 +20,10 @@ nvidia-smi --query-gpu=index,name,uuid,driver_version --format=csv >"$directory/
 for batch in 128 256 512; do
     for mode in fp32 bf16; do
         for trial in 1 2 3; do
-            "$binary" "$batch" "$mode" 50 >"$directory/b$batch-$mode-trial$trial.log" 2>&1
+            timeout --signal=TERM --kill-after=15s 300s "$binary" "$batch" "$mode" 50 >"$directory/b$batch-$mode-trial$trial.log" 2>&1
         done
         label=b$batch-$mode-memcheck
-        compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all \
+        timeout --signal=TERM --kill-after=15s 900s compute-sanitizer --tool memcheck --error-exitcode 0 --target-processes all \
             --report-api-errors explicit --xml --print-limit 0 --print-session-details \
             --save "$directory/$label.xml" "$binary" "$batch" "$mode" 1 \
             >"$directory/$label.log" 2>&1
