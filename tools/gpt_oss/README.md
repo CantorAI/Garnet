@@ -451,3 +451,13 @@ tests, then validates independent CPU-prefix logits cold/warm at a synthetic
 batch512. The cold trace must confirm the actual router kernel ran. This
 synthetic shape does not establish pretrained batch512 admission. Quality,
 throughput, KV/memory and engine lifecycle comparisons remain separate.
+
+After these gates pass, append `prefill-router-wire` to
+`screen_batch_metadata_tp2.py REQUEST EXPECTED UNPROFILED_GARNET_RESULT NEW_DIR`
+to replay a recorded intermediate-axis TP2 profile sequentially with
+router/wire flags `0/0`, `1/0`, and `1/1`. Other recorded settings remain fixed.
+Each mode validates every expected answer and records all three complete token
+matrices, memory/KV, prefill and decode timing. Router reduction-order changes
+are recorded; the wire-only comparison must retain identical trajectories.
+The saved reference must match input IDs and context, and measurements remain
+unprofiled. A new batch/length shape still needs optimized vLLM first.

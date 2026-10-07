@@ -898,3 +898,7 @@ After the long job was terminal and GPU processes absent, generated TP caches oc
 #### OPT-0036 target memory-check scope, 2026-10-07
 
 The consolidated gate filters Compute Sanitizer instrumentation to routeScoresTensorCore and prints session details. All independent scalar score/sorting/probability references still execute, but scalar kernels are not instrumented in this focused check. A zero-error summary establishes only the new router's memory-check result, not coverage of every kernel or the full pretrained model. Target parity and compiled phase checks remain separate requirements.
+
+#### OPT-0036/0037 controlled pretrained screen protocol, 2026-10-07
+
+Extend screen_batch_metadata_tp2.py with prefill-router-wire mode, retaining the recorded intermediate-axis TP2 shape and all other flags. Sequential router/wire0/0,1/0,1/1 reruns the baseline on the same binary, isolates reduction-order routing from transport, validates384 answers/mode forbatch128, and retains three full output matrices plus memory/KV and prefill/decode/request execution. Router changes can alter trajectories; the wire-only pair must match all trajectories exactly. Three complete trials are mandatory and within-mode repeatability is reported. No performance result is available yet; target compiled/phase gates must pass before launch. Reuse the saved optimized vLLM reference only for the unchanged exact shape. Decision remains INCONCLUSIVE.
