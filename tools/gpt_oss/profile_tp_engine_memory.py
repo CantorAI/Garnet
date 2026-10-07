@@ -92,6 +92,8 @@ parser.add_argument('--prefill-down-k', type=int, choices=(64,128),
 parser.add_argument('--prefill-down-ctas', type=int, choices=(1,2,4))
 parser.add_argument('--direct-max-batch', type=int, choices=(128,256,512))
 parser.add_argument('--direct-ctas', type=int, choices=(2,4,8,16,32))
+parser.add_argument('--bf16-decode-allreduce', type=int, choices=(0,1),
+    help='explicit V10 eligible decode transport candidate; requires separate correctness gates')
 args = parser.parse_args()
 reference_path, directory = args.reference, args.directory
 reference_bytes = reference_path.read_bytes()
@@ -127,7 +129,8 @@ overrides = {key: str(value) for key, value in (
     ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K', args.prefill_down_k),
     ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM', args.prefill_down_ctas),
     ('GARNET_GPT_OSS_DIRECT_MAX_BATCH', args.direct_max_batch),
-    ('GARNET_GPT_OSS_DIRECT_BATCH_CTAS', args.direct_ctas)) if value is not None}
+    ('GARNET_GPT_OSS_DIRECT_BATCH_CTAS', args.direct_ctas),
+    ('GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE', args.bf16_decode_allreduce)) if value is not None}
 if args.direct_max_batch is not None or args.direct_ctas is not None:
     if any(env.get(key) != '1' for key in ('GARNET_GPT_OSS_DIRECT_ALLREDUCE',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE', 'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE')):
