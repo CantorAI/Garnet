@@ -387,3 +387,17 @@ trials each, validates all answers, and requires every output token sequence
 to match the legacy run. It records prefill, decode, complete-request rates,
 memory and KV fields through the ordinary exclusive launcher. It refuses
 existing result directories and keeps failed logs and comparisons.
+
+`paired_batch_suite.py UNPROFILED_GARNET_PROFILE NEW_RESULT_DIR [CASE ...]`
+runs memory admission without loading engines, then all requested vLLM cases,
+then all Garnet cases. Default cases are saved code tracing, instruction
+following and long context; the unchanged arithmetic reference can be reused.
+It replays the selected Garnet flags and batch/output profile, matches input
+IDs and BF16 KV, rounds longer context up to512-token capacity, validates every
+slot/trial, and retains separate logs, admission plans and a progress manifest.
+Use the vLLM Python environment; verify its installed version is the current
+supported stable release before launch. Both engines retain exclusive GPU
+access through their ordinary launchers. Setup/handoff costs are reported
+separately: Garnet's execution rate is not cold full-request wall throughput.
+`GARNET_BATCH_PLAN_ONLY=1` makes the Garnet batch runner write admission evidence
+and exit before creating tensors, engines or inference work.

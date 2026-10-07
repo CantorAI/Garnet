@@ -48,6 +48,15 @@ print('TP2 batch plan', json.dumps({k: plan[k] for k in
     ('cache_key', 'estimated_per_gpu_bytes', 'batch')}), flush=True)
 assert all(isinstance(token, int) and 0 <= token < plan['config']['vocab_size']
            for token in ids)
+if os.environ.get('GARNET_BATCH_PLAN_ONLY') == '1':
+    if result_path.exists():
+        raise FileExistsError('Refusing to overwrite admission evidence: ' + str(result_path))
+    result_path.write_text(json.dumps({'measurement': 'memory admission only; no engines loaded',
+        'source_commit': source_commit, 'plan': plan, 'batch': batch,
+        'input_tokens_per_request': len(ids), 'output_tokens_per_request': output_tokens,
+        'max_context_tokens_per_request': capacity, 'prefill_chunks': prefill_chunks}, indent=2))
+    print('TP2 admission passed without loading engines', flush=True)
+    sys.exit(0)
 
 
 def tensor(data, dtype, shape):
