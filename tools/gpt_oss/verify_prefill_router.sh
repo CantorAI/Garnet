@@ -41,9 +41,10 @@ nvidia-smi --query-gpu=index,name,uuid,driver_version --format=csv >"$directory/
 "$parity" --tensorcore-router-parity >"$directory/router-parity.log" 2>&1
 echo 'Independent router score/sorting/probability gates passed'
 compute-sanitizer --tool memcheck --error-exitcode 99 --target-processes all \
+    --kernel-name kns=routeScoresTensorCore --print-session-details \
     "$parity" --tensorcore-router-parity >"$directory/router-memcheck.log" 2>&1
 grep -Fq 'ERROR SUMMARY: 0 errors' "$directory/router-memcheck.log"
-echo 'Router memory-safety gate passed'
+echo 'Tensor-core router memory-safety gate passed (scalar references uninstrumented)'
 "$python" "$repo/tools/gpt_oss/verify.py" --runtime-dir "$build/bin" \
     --work-dir "$directory/full-parity" --tensorrt-root "$tensorrt" --multi-gpu \
     >"$directory/full-parity.log" 2>&1

@@ -894,3 +894,7 @@ After the long job was terminal and GPU processes absent, generated TP caches oc
 **Decision / Analysis:** INCONCLUSIVE. This repairs phase selection and creates a controlled communication experiment; correctness and model-level gain must be measured. Smaller messages and packing overhead may regress, while large prefill may benefit. The separately gated WMMA router also changes reduction order, so the model screen must isolate router and then wire rather than attribute their combined gain to either alone.
 
 **Next Step:** Commit/push locally, pull on the now-idle target, build core/plugin/native targets, and run the consolidated Linux gates. If all pass, screen long prefill with router0/wire0, router1/wire0 and router1/wire1 sequentially, retain all answers/trajectories and compare warmed complete execution with the same optimized vLLM reference. Then cover other prompts and the admitted batch256 short-input profile.
+
+#### OPT-0036 target memory-check scope, 2026-10-07
+
+The consolidated gate filters Compute Sanitizer instrumentation to routeScoresTensorCore and prints session details. All independent scalar score/sorting/probability references still execute, but scalar kernels are not instrumented in this focused check. A zero-error summary establishes only the new router's memory-check result, not coverage of every kernel or the full pretrained model. Target parity and compiled phase checks remain separate requirements.
