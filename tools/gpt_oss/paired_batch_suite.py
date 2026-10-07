@@ -55,9 +55,11 @@ model = Path(os.environ.get('GARNET_GPT_OSS_TOKENIZER', root / 'models/gpt-oss-1
 cache = Path(os.environ.get('GARNET_GPT_OSS_CACHE', work / 'gpt-oss-tp-cache'))
 env = os.environ.copy()
 for key in list(env):
-    if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')):
+    if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
+    if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS'):
+        continue  # New admission is selected only by --resident-profile.
     if (not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')) or
             key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value, str)):
         raise ValueError(f'Invalid recorded optimization setting: {key}')

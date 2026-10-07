@@ -88,9 +88,13 @@ if directory.exists():
     raise FileExistsError(directory)
 env = os.environ.copy()
 for key in list(env):
-    if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')):
+    if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
+    if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS'):
+        # Prior admission file/warmup controls are result provenance, not
+        # inputs to a new sequential engine profile on another binary.
+        continue
     if (not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')) or
             key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value, str)):
         raise ValueError('Invalid recorded optimization environment')
