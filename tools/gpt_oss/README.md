@@ -214,6 +214,10 @@ in every window. These are decode repeats, not repeated full requests.
 The continuous decode wall timer excludes progress logging and memory-query
 subprocesses. Execution throughput still excludes engine loading/handoff;
 consult its separate timing fields and measurement limitations.
+The vLLM runner supports `VLLM_BATCH_TRIALS=3` for three full-request trials
+and `VLLM_BATCH_MAX_BATCHED_TOKENS=8192` to screen the official recipe's
+larger prefill budget. Its repeats perform a fresh prefill without prefix
+caching; retain the fastest supported reference configuration.
 
 `GARNET_GPT_OSS_INLINE_BATCH_CONTROLS=1` opts into rank-thread vector updates
 for batches up to 64. The generic native bridge
