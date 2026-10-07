@@ -17,7 +17,7 @@ reference = json.loads(reference_path.read_text())
 request = json.loads(request_path.read_text())
 if reference['input_token_ids'] != request['input_ids']:
     raise ValueError('Profile request must exactly match recorded input IDs')
-if reference.get('profile_decode_steps') or reference.get('profile_prefill'):
+if reference.get('profiled_diagnostic') or reference.get('profile_decode_steps') or reference.get('profile_prefill'):
     raise ValueError('Reference must be an unprofiled benchmark')
 batch, output = reference['batch'], reference['output_tokens_per_request']
 if not (1 <= batch <= 512 and 16 <= output <= 2048 and

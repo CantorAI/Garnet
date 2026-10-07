@@ -32,7 +32,11 @@ export PYTHONPATH="$build/bin${PYTHONPATH:+:$PYTHONPATH}"
 export LD_LIBRARY_PATH="$build/bin:$tensorrt/lib:/usr/local/nvidia/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 runner="$repo/tools/gpt_oss/run_tp_batch_throughput.py"
 if [[ -n ${GARNET_RESIDENT_PROFILE:-} ]]; then
-    [[ -f $GARNET_RESIDENT_PROFILE && -z ${GARNET_BENCH_NSYS_OUTPUT:-} ]] || exit 2
+    [[ -f $GARNET_RESIDENT_PROFILE ]] || exit 2
+    if [[ -n ${GARNET_BENCH_NSYS_OUTPUT:-} ]]; then
+        [[ ${GARNET_BENCH_RESIDENT_DIAGNOSTIC:-0} == 1 &&
+           ${GARNET_BENCH_CAPTURE_RANGES:-0} =~ ^[1-8]$ ]] || exit 2
+    fi
     runner="$repo/tools/gpt_oss/run_resident_batch_tp2.py"
 fi
 command=("$runtime" "$runner"
@@ -41,13 +45,18 @@ if [[ -n ${GARNET_BENCH_NSYS_OUTPUT:-} ]]; then
     # Profiled results retain profile_decode_steps/profile_prefill in JSON and
     # must stay separate from uninstrumented throughput comparisons.
     command -v nsys >/dev/null
-    [[ ${GARNET_GPT_OSS_PROFILE_DECODE_STEPS:-0} != 0 || ${GARNET_GPT_OSS_PROFILE_PREFILL:-0} == 1 ]] || {
+    capture_end=stop
+    if [[ -n ${GARNET_RESIDENT_PROFILE:-} ]]; then
+        capture_end="repeat:${GARNET_BENCH_CAPTURE_RANGES}:defer"
+    fi
+    [[ ${GARNET_GPT_OSS_PROFILE_DECODE_STEPS:-0} != 0 || ${GARNET_GPT_OSS_PROFILE_PREFILL:-0} == 1 ||
+       ( -n ${GARNET_RESIDENT_PROFILE:-} && ${GARNET_BENCH_RESIDENT_DIAGNOSTIC:-0} == 1 ) ]] || {
         echo 'Nsight capture requires an explicit prefill or decode range' >&2
         exit 2
     }
     mkdir -p "$(dirname "$GARNET_BENCH_NSYS_OUTPUT")"
     command=(nsys profile --force-overwrite=false --trace=cuda,nvtx
         --sample=none --cuda-graph-trace=node --capture-range=cudaProfilerApi
-        --capture-range-end=stop --output="$GARNET_BENCH_NSYS_OUTPUT" "${command[@]}")
+        --capture-range-end="$capture_end" --output="$GARNET_BENCH_NSYS_OUTPUT" "${command[@]}")
 fi
 "${command[@]}"

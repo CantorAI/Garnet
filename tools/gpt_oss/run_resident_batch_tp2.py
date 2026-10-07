@@ -16,6 +16,7 @@ import time
 import garnet as G
 from pipeline import build_tensor_parallel, make_tensor_parallel_plan
 from garnet_pipeline import ResidentTensorParallel
+from resident_capture import ResidentCapture
 from resident_budget import (admit_resident, native_identity, hardware_identity,
     kernel_environment, checkpoint_identity, validate_engine_files, file_sha256)
 
@@ -41,9 +42,7 @@ profile = json.loads(profile_path.read_text())
 padded = bool(profile['padded_prefill'])
 if len(ids) % chunk and not padded:
     raise ValueError('Ragged tail requires validated padded prefill engine')
-if any(os.environ.get(key, '0') != '0' for key in
-       ('GARNET_GPT_OSS_PROFILE_PREFILL', 'GARNET_GPT_OSS_PROFILE_DECODE_STEPS')):
-    raise ValueError('Resident throughput runner requires unprofiled execution')
+capture = ResidentCapture(os.environ, len(ids), chunk, output_tokens)
 available = json.loads(G.cuda_devices_json())
 selected = request.get('device_ids', [d['id'] for d in available[:2]])
 if len(selected) != 2 or len(set(selected)) != 2:
@@ -129,7 +128,8 @@ def run_request(trial):
     start = time.perf_counter()
     prefill_steps = []
     reply = None
-    for offset in range(0, len(ids), chunk):
+    for chunk_index, offset in enumerate(range(0, len(ids), chunk)):
+        capture.prefill_begin(trial, chunk_index)
         step = time.perf_counter()
         real = min(chunk, len(ids) - offset)
         if not 1 <= real <= chunk:
@@ -140,6 +140,7 @@ def run_request(trial):
         positions = list(range(offset, offset + chunk)) * batch
         update(pair.prefill_stages, prefill_inputs, tokens, positions, offset + real, offset)
         reply = pair.forward_prefill(prefill_inputs, sample=True, sample_batch=True)
+        capture.prefill_end(trial, chunk_index)
         prefill_steps.append(time.perf_counter() - step)
     rows = [[int(value)] for value in reply['token_ids']]
     if len(rows) != batch:
@@ -147,6 +148,7 @@ def run_request(trial):
     first_token = time.perf_counter()
     decode_steps = []
     for offset in range(1, output_tokens):
+        capture.decode_begin(trial, offset)
         step = time.perf_counter()
         index = len(ids) + offset - 1
         update(pair.decode_stages, decode_inputs, [row[-1] for row in rows],
@@ -157,6 +159,7 @@ def run_request(trial):
             raise ValueError('Missing decode output requests')
         for row, token in zip(rows, tokens):
             row.append(int(token))
+        capture.decode_end(trial, offset)
         decode_steps.append(time.perf_counter() - step)
     finish = time.perf_counter()
     return dict(trial=trial, token_ids_by_request=rows, prefill_kv_reused_for_decode_trial=False,
@@ -185,10 +188,15 @@ try:
             batch=batch, input_token_ids=ids, input_tokens_per_request=len(ids),
             output_tokens_per_request=output_tokens, max_context_tokens_per_request=capacity,
             measurement='Incomplete resident run; preserve completed trial matrices, not a success claim',
-            complete_warmups=warmups, decode_trials=trials, gpu_memory_samples_mib=samples), indent=2))
+            complete_warmups=warmups, decode_trials=trials, gpu_memory_samples_mib=samples,
+            **capture.metadata()), indent=2))
         print('Complete trial', trial, 'output tok/s', trials[-1]['full_request_output_tokens_per_second'], flush=True)
+    capture.assert_complete()
 finally:
-    pair.release()
+    try:
+        capture.abort()
+    finally:
+        pair.release()
 
 peaks = [max(row[rank] for row in samples) for rank in range(2)]
 if any(peak * (1 << 20) > admitted['budget_bytes'] for peak, admitted in zip(peaks, admission['ranks'])):
@@ -221,5 +229,8 @@ result_path.write_text(json.dumps(dict(source_commit=source_commit,
     prefill_seconds=trials[0]['prefill_seconds'],
     full_request_output_tokens_per_second=trials[0]['full_request_output_tokens_per_second'],
     median_full_request_output_tokens_per_second=statistics.median(t['full_request_output_tokens_per_second'] for t in trials),
-    measurement='homogeneous fixed-size TP2 resident batch, greedy, no early stop; three complete warmed requests',
-    measurement_limits='Cold engine startup and warmup excluded, as for vLLM; every trial rewrites full input KV and includes controls/input preparation, sampling and phase transition. Sampled memory is not exhaustive peak; serial batches only, no continuous scheduler.'), indent=2))
+    measurement=('Instrumented resident diagnostic; timings are NOT benchmark evidence' if capture.enabled else
+        'homogeneous fixed-size TP2 resident batch, greedy, no early stop; three complete warmed requests'),
+    measurement_limits=('Nsight captures perturb timings; do not compare these rates to vLLM or accept them as an unprofiled reference. ' if capture.enabled else '') +
+        'Cold engine startup and warmup excluded, as for vLLM; every trial rewrites full input KV and includes controls/input preparation, sampling and phase transition. Sampled memory is not exhaustive peak; serial batches only, no continuous scheduler.',
+    **capture.metadata()), indent=2))

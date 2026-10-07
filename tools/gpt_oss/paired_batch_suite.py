@@ -33,7 +33,7 @@ allowed = {'arithmetic', 'code-tracing', 'instruction-following', 'long-context-
 if len(names) != len(set(names)) or any(name not in allowed for name in names):
     raise ValueError('Cases must be unique saved benchmark names')
 reference = json.loads(reference_path.read_text())
-if reference.get('profile_decode_steps') or reference.get('profile_prefill'):
+if reference.get('profiled_diagnostic') or reference.get('profile_decode_steps') or reference.get('profile_prefill'):
     raise ValueError('Profile must be an uninstrumented benchmark')
 batch = reference['batch'] if args.batch is None else args.batch
 output = reference['output_tokens_per_request'] if args.output is None else args.output
