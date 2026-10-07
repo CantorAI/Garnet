@@ -4,6 +4,7 @@ Repeat one saved prompt across a fixed decode batch. This measures aggregate
 output throughput with identical work in every slot and no early-stop bias.
 """
 import json
+import os
 import subprocess
 import sys
 import time
@@ -94,20 +95,24 @@ for stage in model.stages:
 
 step_seconds = []
 memory_samples_mib = [decode_engine_memory_mib]
+inline_single = batch == 1 and os.environ.get('GARNET_GPT_OSS_INLINE_CONTROL_KERNEL') == '1'
 for offset in range(1, output_tokens):
     tokens = [row[-1] for row in generated]
     index = len(ids) + offset - 1
     started = time.perf_counter()
-    for stage, (local_token, controls) in zip(model.stages, rank_inputs):
-        previous = G.cuda_set_device(stage['device_id'])
-        try:
-            G.tensor_update_from_host(local_token, tokens)
-            G.tensor_update_from_host(controls[0], [index] * batch)
-            G.tensor_update_from_host(controls[2], [index + 1] * batch)
-            G.tensor_update_from_host(controls[3], [index] * batch)
-        finally:
-            G.cuda_set_device(previous)
-    reply = model.forward_rank_local(rank_inputs, True, sample_batch=True)
+    if not inline_single:
+        for stage, (local_token, controls) in zip(model.stages, rank_inputs):
+            previous = G.cuda_set_device(stage['device_id'])
+            try:
+                G.tensor_update_from_host(local_token, tokens)
+                G.tensor_update_from_host(controls[0], [index] * batch)
+                G.tensor_update_from_host(controls[2], [index + 1] * batch)
+                G.tensor_update_from_host(controls[3], [index] * batch)
+            finally:
+                G.cuda_set_device(previous)
+    reply = model.forward_rank_local(rank_inputs, True,
+        scalar_values=[tokens[0], index, index + 1, index] if inline_single else None,
+        sample_batch=True)
     sampled = [int(value) for value in reply['token_ids']]
     assert len(sampled) == batch, (len(sampled), batch)
     for row, value in zip(generated, sampled):
@@ -137,6 +142,7 @@ result_path.write_text(json.dumps({
     'prefill_build_seconds': prefill_build_seconds,
     'decode_build_seconds': decode_build_seconds,
     'decode_step_seconds': step_seconds,
+    'inline_single_request_controls': inline_single,
     'decode_output_tokens': decode_output_tokens,
     'decode_aggregate_output_tokens_per_second':
         decode_output_tokens / decode_seconds if decode_seconds > 0 else None,
