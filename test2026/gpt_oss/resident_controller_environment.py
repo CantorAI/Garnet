@@ -42,6 +42,11 @@ with tempfile.TemporaryDirectory() as temporary:
         observed=[]
         def stop(command, **kwargs):
             environment=kwargs['env']
+            if name=='paired_batch_suite.py':
+                runner=('run_resident_batch_tp2.py' if '--resident-profile' in args
+                        else 'run_tp_batch_throughput.py')
+                assert str(command[1]).endswith(runner), command
+                assert environment['GARNET_BATCH_PLAN_ONLY']=='1'
             for key,value in expected.items():
                 assert environment.get(key)==value, (name,key,environment.get(key),value)
             assert '/old/binary/admission.json' not in environment.values()

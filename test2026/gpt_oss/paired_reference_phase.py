@@ -21,6 +21,8 @@ with tempfile.TemporaryDirectory() as temporary:
         commands=[]; validations=[]
         def fake_run(command,**kwargs):
             parts=list(map(str,command));commands.append(parts)
+            if any(x.endswith('run_resident_batch_tp2.py') for x in parts):
+                assert kwargs['env']['GARNET_BATCH_PLAN_ONLY']=='1'
             if parts[0]=='bash':
                 assert 'benchmark_batch_tp2.sh' in parts[1]
                 raise FirstGarnet
@@ -50,6 +52,7 @@ with tempfile.TemporaryDirectory() as temporary:
         manifest=json.loads((target/'manifest.json').read_text())
         inference=[c for c in commands if c[0]=='bash' or any(x.endswith('run_vllm_batch_throughput.py') for x in c)]
         assert len(validations)==2
+        assert all(c[1].endswith('run_resident_batch_tp2.py') for c in commands[:2])
         assert all('vllm' in c and 'garnet' not in c for c in manifest['cases'])
         assert len(inference)==(2 if flags else 3)
         assert all(any(x.endswith('run_vllm_batch_throughput.py') for x in c) for c in inference[:2])

@@ -69,6 +69,15 @@ admission = admit_resident(profile, plan, devices, binaries=native_identity(buil
 validate_engine_files(profile)
 admission_seconds = time.perf_counter() - startup_started
 print('Resident admission', json.dumps(admission), flush=True)
+if os.environ.get('GARNET_BATCH_PLAN_ONLY') == '1':
+    result_path.write_text(json.dumps(dict(
+        measurement='Strict resident admission only; no engines loaded or inference',
+        admission_only=True, source_commit=source_commit, plan=plan, admission=admission,
+        batch=batch, input_token_ids=ids, input_tokens_per_request=len(ids),
+        output_tokens_per_request=output_tokens, max_context_tokens_per_request=capacity,
+        prefill_chunk_tokens=chunk, admission_seconds=admission_seconds),indent=2))
+    print('Strict measured resident admission passed; paired residency and quality unproven',flush=True)
+    sys.exit(0)
 
 def memory():
     rows = subprocess.check_output(['nvidia-smi', '--query-gpu=index,memory.used',

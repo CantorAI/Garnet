@@ -190,7 +190,9 @@ for case in manifest['cases']:
     admission = directory / (case['name'] + '.admission.json')
     print('Checking admission', case['name'], 'batch', batch, 'input', case['input'],
           'output', output, 'context', case['context'], flush=True)
-    command_logged([runtime, repo / 'tools/gpt_oss/run_tp_batch_throughput.py',
+    admission_runner = ('run_resident_batch_tp2.py' if resident_profile is not None
+                        else 'run_tp_batch_throughput.py')
+    command_logged([runtime, repo / 'tools/gpt_oss' / admission_runner,
                     weights, cache, case['request'], admission, batch, output],
                    directory / (case['name'] + '.admission.log'), case_env)
 
