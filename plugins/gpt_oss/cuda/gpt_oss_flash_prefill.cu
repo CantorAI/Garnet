@@ -9,7 +9,9 @@
 namespace Garnet {
 namespace {
 using Bf16=nv_bfloat16;
-constexpr int TileQ=32;
+// FlashInfer's32-row specialization is reserved for wider value dimensions;
+// head64 uses the ordinary four-query-warp64-row packed GQA tile.
+constexpr int TileQ=64;
 struct Layout {
     size_t bytes=0,q=0,out=0,qptr=0,pptr=0,last=0,requests=0,tiles=0,kvTiles=0,chunk=0,indices=0;
     int tileCount=0;
