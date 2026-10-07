@@ -4,6 +4,7 @@
 #include "gpt_oss_flash_prefill.h"
 #endif
 #include "gpt_oss_marlin.h"
+#include "gpt_oss_router_dispatch.h"
 #include "gpt_oss_weight_shard.h"
 #include "gpt_oss_marlin_pack.h"
 #include <vector>
@@ -820,7 +821,7 @@ void testBatchRouter() {
 }
 void testTensorCoreBatchRouter() {
     int cases=0,changedTop4Rows=0;float maximum=0;
-    for(int tokens : {1,17,128,513,4096})for(int width : {96,97,2880,4096})
+    for(int tokens : {1,17,127,128,144,448,512,513,4096})for(int width : {96,97,2880,4096})
     for(int experts : {5,65,128})for(bool ties : {false,true}) {
         GptOssOptions o;o.hidden=width;o.experts=experts;o.topK=std::min(4,experts);
         std::vector<float> x(size_t(tokens)*width),weight(size_t(experts)*width),bias(experts);
@@ -832,6 +833,7 @@ void testTensorCoreBatchRouter() {
         Device<int> selected{std::vector<int>(tokens*o.topK)};
         check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,0,true,nullptr));
         const auto scalarSelected=selected.read();
+        const auto scalarScores=logits.read(),scalarProbability=probability.read();
         check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,16,false,nullptr));
         const auto scores=logits.read();
         // Sample every expert at eight or more rows against an independent
@@ -863,6 +865,8 @@ void testTensorCoreBatchRouter() {
         check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,16,true,nullptr));
         if(selected.read()!=expectedSelected)throw std::runtime_error("Tensor-core router top-K differs from independent score sorting");
         compare(probability.read(),expectedProbability,.006f,"Tensor-core router probabilities vs independent CPU");
+        const auto tensorCoreProbability=probability.read();
+        const auto tensorCorePostTopK=logits.read();
         const char* flag=std::getenv("GARNET_GPT_OSS_PREFILL_ROUTER_TENSORCORE");
         if(tokens>=1024 && flag && flag[0]=='1' && flag[1]=='\0') {
             o.prefill=1;
@@ -870,6 +874,21 @@ void testTensorCoreBatchRouter() {
             check(RunGptOssMoeRoute(in,selected.p,probability.p,logits.p,tokens,o,nullptr));
             if(selected.read()!=expectedSelected)throw std::runtime_error("Opt-in production prefill router differs from tensor-core score sorting");
             compare(probability.read(),expectedProbability,.006f,"Production prefill router probabilities vs independent CPU");
+        }
+        if(tokens>=127 && tokens<=513) {
+            o.prefill=0;
+            const char* decodeFlag=std::getenv("GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE");
+            const bool enabled=decodeFlag && decodeFlag[0]=='1' && decodeFlag[1]=='\0' &&
+                GptOssDecodeTensorCoreRouterSupported(o.prefill,tokens,width,experts,o.topK);
+            const void* in[]{dx.p,dw.p,db.p};
+            check(RunGptOssMoeRoute(in,selected.p,probability.p,logits.p,tokens,o,nullptr));
+            const auto observedScores=logits.read(),observedProbability=probability.read();
+            const auto& wantedScores=enabled?tensorCorePostTopK:scalarScores;
+            const auto& wantedProbability=enabled?tensorCoreProbability:scalarProbability;
+            if(selected.read()!=(enabled?expectedSelected:scalarSelected) ||
+                std::memcmp(observedScores.data(),wantedScores.data(),wantedScores.size()*sizeof(float)) ||
+                std::memcmp(observedProbability.data(),wantedProbability.data(),wantedProbability.size()*sizeof(float)))
+                throw std::runtime_error("Production decode router dispatch differs from selected native reference");
         }
         ++cases;
     }
@@ -879,7 +898,7 @@ void testTensorCoreBatchRouter() {
 void benchmarkBatchRouter() {
     constexpr int layers=36,width=2880,experts=128;
     cudaStream_t stream;check(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
-    for(int tokens : {128,4096}) {
+    for(int tokens : {128,144,256,448,512,4096}) {
         std::vector<float> x(size_t(layers)*tokens*width),weights(size_t(layers)*experts*width),bias(layers*experts);
         for(size_t i=0;i<x.size();++i)x[i]=bf(float(int(i%23)-11)*.015625f);
         for(size_t i=0;i<weights.size();++i)weights[i]=bf(float(int(i%31)-15)*.0078125f);

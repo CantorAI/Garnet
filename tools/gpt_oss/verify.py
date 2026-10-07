@@ -43,6 +43,7 @@ run([sys.executable, repo / 'test2026/gpt_oss/resident_admission.py'], 'resident
 run([sys.executable, repo / 'test2026/gpt_oss/resident_controller_environment.py'], 'resident-controller-environment')
 run([executable, repo / 'test2026/gpt_oss/sequence_selection.py', work / 'selection-cache'], 'sequence-selection')
 run([runtime / ('garnet_gpt_oss_marlin_weight_pack' + suffix)], 'marlin-weight-pack')
+run([runtime / ('garnet_gpt_oss_router_dispatch' + suffix)], 'router-dispatch')
 run([sys.executable, repo / 'test2026/gpt_oss/tp_weight_placement.py', fixture,
      runtime / ('garnet_gpt_oss_kernel_parity' + suffix)], 'tp-weight-placement')
 run([runtime / ('garnet_gpt_oss_expert_weight_shard' + suffix)], 'expert-weight-shard-bytes')

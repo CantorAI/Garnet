@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # V11 regressions/BF16 decode first, then bounded token-local outer prefill.
 set -euo pipefail
+export GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE=0
 [[ ( $# == 1 || $# == 2 ) && ! -e $1 ]] || exit 2
 repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 root=${CANTORAI_ROOT:-$(dirname "$repo")}

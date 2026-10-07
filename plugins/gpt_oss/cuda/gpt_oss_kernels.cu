@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_kernels.h"
+#include "gpt_oss_router_dispatch.h"
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
 #include "gpt_oss_flash_prefill.h"
 #endif
@@ -606,7 +607,7 @@ __global__ void routeScoresBatch(const float* x,const float* weight,const float*
         if(!lane && token<tokens)logits[size_t(token)*o.experts+expert]=bf(value+bias[expert]);
     }
 }
-// BF16 tensor-core router, intended for large prefill shapes only. Each CTA
+// Opt-in BF16 tensor-core router for prefill or supported decode batches. Each CTA
 // shares sixteen query rows across four warps, each owning sixteen experts.
 // GPT-OSS normalized inputs and original router weights are BF16-representable;
 // the accumulation order differs from the scalar path and remains opt-in.
@@ -1270,7 +1271,13 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
         const char* value=std::getenv("GARNET_GPT_OSS_PREFILL_ROUTER_TENSORCORE");
         return value && value[0]=='1' && value[1]=='\0';
     }();
-    if(tensorCorePrefill && o.prefill && tokens>=1024 && o.hidden<=4096 && o.experts<=128)
+    static const bool tensorCoreDecode=[] {
+        const char* value=std::getenv("GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE");
+        return value && value[0]=='1' && value[1]=='\0';
+    }();
+    if((tensorCorePrefill && o.prefill && tokens>=1024 && o.hidden<=4096 && o.experts<=128) ||
+        (tensorCoreDecode && GptOssDecodeTensorCoreRouterSupported(
+            o.prefill,tokens,o.hidden,o.experts,o.topK)))
         routeScoresTensorCore<<<dim3((tokens+15)/16,(o.experts+63)/64),128,0,stream>>>(
             (const float*)in[0],(const float*)in[1],(const float*)in[2],logits,tokens,o);
     else if(tiled && queryTile==4)
