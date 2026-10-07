@@ -4,6 +4,7 @@ Repeat one saved prompt across a fixed decode batch. This measures aggregate
 output throughput with identical work in every slot and no early-stop bias.
 """
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -39,6 +40,13 @@ def tensor(data, dtype, shape):
     return G.tensor_from_host(data, dtype=dtype, shape=shape, device='cuda')
 
 
+def gpu_memory_mib():
+    output = subprocess.check_output(
+        ['nvidia-smi', '--query-gpu=memory.used', '--format=csv,noheader,nounits'],
+        text=True)
+    return [int(value.strip()) for value in output.splitlines()]
+
+
 G.cuda_set_device(devices[0]['id'])
 pages_per_request = (plan['capacity'] + 15) // 16
 table_data = [batch_index * pages_per_request + page
@@ -56,6 +64,7 @@ print('Building TP2 batch prefill engines', flush=True)
 model = build_tensor_parallel(weights, cache, plan, len(ids), True,
                               last_token_logits=True)
 prefill_build_seconds = time.perf_counter() - started
+prefill_engine_memory_mib = gpu_memory_mib()
 started = time.perf_counter()
 prefill = model.forward(input_ids, [positions, table, length, slot, active],
                         True, sample_batch=True)
@@ -70,6 +79,7 @@ started = time.perf_counter()
 print('Building TP2 batch decode engines', flush=True)
 model = build_tensor_parallel(weights, cache, plan, 1, False, kv)
 decode_build_seconds = time.perf_counter() - started
+decode_engine_memory_mib = gpu_memory_mib()
 token = tensor([row[-1] for row in generated], 'int64', [batch, 1])
 position = tensor([len(ids)] * batch, 'int64', [batch, 1])
 rank_inputs = []
@@ -83,6 +93,7 @@ for stage in model.stages:
         G.cuda_set_device(previous)
 
 step_seconds = []
+memory_samples_mib = [decode_engine_memory_mib]
 for offset in range(1, output_tokens):
     tokens = [row[-1] for row in generated]
     index = len(ids) + offset - 1
@@ -103,7 +114,9 @@ for offset in range(1, output_tokens):
         row.append(value)
     step_seconds.append(time.perf_counter() - started)
     if offset % 32 == 0:
+        memory_samples_mib.append(gpu_memory_mib())
         print('Decoded', offset, 'of', output_tokens - 1, 'batch steps', flush=True)
+memory_samples_mib.append(gpu_memory_mib())
 model.release()
 
 warm_seconds = sum(step_seconds[1:])
@@ -114,6 +127,13 @@ result_path.write_text(json.dumps({
     'token_ids_by_request': generated,
     'input_tokens_per_request': len(ids), 'output_tokens_per_request': output_tokens,
     'batch': batch, 'prefill_seconds': prefill_seconds,
+    'kv_cache_allocated_bytes_per_gpu': (
+        plan['config']['num_hidden_layers'] * 2 * plan['kv_pages'] * 16 *
+        plan['local_kv_heads'] * plan['config']['head_dim'] * 2),
+    'kv_pages_per_gpu': plan['kv_pages'],
+    'gpu_memory_mib_after_prefill_engine': prefill_engine_memory_mib,
+    'gpu_memory_mib_after_decode_engine': decode_engine_memory_mib,
+    'gpu_memory_mib_during_decode': memory_samples_mib,
     'prefill_build_seconds': prefill_build_seconds,
     'decode_build_seconds': decode_build_seconds,
     'decode_step_seconds': step_seconds,
@@ -126,6 +146,7 @@ result_path.write_text(json.dumps({
         warm_output_tokens / warm_seconds if warm_seconds > 0 else None,
     'total_output_tokens': batch * output_tokens,
     'decode_wall_seconds': decode_seconds,
+    'request_completion_seconds': [prefill_seconds + decode_seconds] * batch,
     'full_request_output_tokens_per_second':
         batch * output_tokens / (prefill_seconds + decode_seconds),
     'measurement': 'homogeneous fixed-size TP2 batch, greedy, no early stop',

@@ -37,6 +37,14 @@ async def main():
     params = SamplingParams(temperature=0, max_tokens=output_tokens,
                             ignore_eos=True, seed=0)
 
+    def gpu_memory_mib():
+        output = subprocess.check_output(
+            ['nvidia-smi', '--query-gpu=memory.used', '--format=csv,noheader,nounits'],
+            text=True)
+        return [int(value.strip()) for value in output.splitlines()]
+
+    engine_memory_mib = gpu_memory_mib()
+
     async def generate(index, prefix):
         result = None
         async for event in engine.generate(
@@ -54,9 +62,11 @@ async def main():
 
     try:
         await asyncio.gather(*(generate(i, 'warmup') for i in range(batch)))
+        warmed_memory_mib = gpu_memory_mib()
         started = time.perf_counter()
         outputs = await asyncio.gather(*(generate(i, 'bench') for i in range(batch)))
         finished = time.perf_counter()
+        completed_memory_mib = gpu_memory_mib()
     finally:
         engine.shutdown()
 
@@ -71,9 +81,15 @@ async def main():
         'measurement': 'homogeneous fixed-size TP2 batch, greedy, no early stop',
         'input_tokens_per_request': len(request['input_ids']),
         'output_tokens_per_request': output_tokens, 'batch': batch,
+        'gpu_memory_mib_after_engine_start': engine_memory_mib,
+        'gpu_memory_mib_after_warmup': warmed_memory_mib,
+        'gpu_memory_mib_after_benchmark': completed_memory_mib,
         'token_ids_by_request': [row['token_ids'] for row in outputs],
+        'benchmark_started_ts': started,
         'request_timings': [{k: row[k] for k in ('first_token_ts', 'last_token_ts')}
                             for row in outputs],
+        'request_completion_seconds': [row['last_token_ts'] - started
+                                       for row in outputs],
         'decode_seconds': decode_seconds,
         'decode_output_tokens': aggregate_tokens,
         'decode_aggregate_output_tokens_per_second':
