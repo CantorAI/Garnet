@@ -35,7 +35,38 @@ def known_nccl_initialization(record):
     return None
 
 
+def known_nccl_graph_initialization(record):
+    # Exact observed VMM capability probe for cudaMalloc-backed native graph
+    # buffers. NCCL catches this status and clears unsupported registration.
+    if (record.findtext('kind'),record.findtext('what/api'),record.findtext('what/result'),
+            record.findtext('what/error'),record.findtext('what/message')) != (
+            'Api','cuMemRetainAllocationHandle','1','CUDA_ERROR_INVALID_VALUE','invalid argument'):
+        return None
+    stack=record.find('hostStack')
+    if stack is None or stack.findtext('saveLocation')!='error':
+        return None
+    frames=stack.findall('frame')
+    names=('cuMemRetainAllocationHandle','ipcRegisterBuffer','ncclIpcGraphRegisterBuffer',
+           'ncclRegisterCollBuffers','ncclTasksRegAndEnqueue','groupLaunch',
+           'ncclGroupEndInternal','ncclEnqueueCheck','pncclAllReduce','Garnet::GptOssTpAllReduce')
+    modules=('libcuda.so.1',)+('libnccl.so.2',)*8+('garnet_gpt_oss_tp_bf16_wire_benchmark',)
+    if len(frames)<len(names):
+        return None
+    for frame,name,module in zip(frames,names,modules):
+        if (Path(frame.findtext('module','')).name!=module or
+                not re.fullmatch(re.escape(name)+r'(?:\(.*\))?',frame.findtext('func',''))):
+            return None
+    for index,path,line in ((1,'transport/p2p.cc','1098'),(2,'transport/p2p.cc','1291'),
+                            (3,'register/coll_reg.cc','384')):
+        if (frames[index].findtext('path'),frames[index].findtext('line'))!=(path,line):
+            return None
+    return 'cuMemRetainAllocationHandle/1/NCCL-IPC-graph-init/benchmark-fp32'
+
+
 def known_initialization(record):
+    graph=known_nccl_graph_initialization(record)
+    if graph:
+        return graph
     known = known_nccl_initialization(record)
     if known:
         return known
@@ -92,7 +123,7 @@ def validate(source, output):
     audit = dict(xml=str(source.resolve()), sha256=hashlib.sha256(data).hexdigest(),
         records=len(records), excluded_known_initialization=dict(excluded),
         unexpected=unexpected, passed=not unexpected,
-        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, and the observed benchmark DirectAcquire reacquire stack are excluded; all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
+        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, the observed benchmark DirectAcquire reacquire stack, and the exact FP32 BF-wire benchmark IPC graph-initialization VMM probe are excluded; all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(audit, indent=2))
     if unexpected:
