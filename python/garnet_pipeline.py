@@ -107,7 +107,7 @@ class TensorParallel:
         self.stages = stages
         self.executor = ThreadPoolExecutor(max_workers=2)
 
-    def forward(self, activation, controls, sample=False):
+    def forward(self, activation, controls, sample=False, sample_batch=False):
         import garnet as G
         import os
 
@@ -123,14 +123,15 @@ class TensorParallel:
                 request = {'inputs': [local_activation, local[0], stage['keys'],
                     stage['values'], local[1], local[2], local[3], local[4]]}
                 if sample and stage['rank'] == 0:
-                    request['sample'] = 'greedy'
+                    request['sample'] = 'greedy_batch' if sample_batch else 'greedy'
                 prepared.append((stage, request))
             finally:
                 G.cuda_set_device(previous)
 
         return self._run_prepared(prepared)
 
-    def forward_rank_local(self, rank_inputs, sample=False, scalar_values=None):
+    def forward_rank_local(self, rank_inputs, sample=False, scalar_values=None,
+                           sample_batch=False):
         """Run tensors already resident on their corresponding rank device."""
         if len(rank_inputs) != len(self.stages):
             raise ValueError('one input group per tensor-parallel rank is required')
@@ -144,7 +145,7 @@ class TensorParallel:
             request = {'inputs': [activation, controls[0], stage['keys'], stage['values'],
                 controls[1], controls[2], controls[3], controls[4]]}
             if sample and stage['rank'] == 0:
-                request['sample'] = 'greedy'
+                request['sample'] = 'greedy_batch' if sample_batch else 'greedy'
             prepared.append((stage, request))
             if scalar_values is not None:
                 updates.append(([activation, controls[0], controls[2], controls[3]], scalar_values))
