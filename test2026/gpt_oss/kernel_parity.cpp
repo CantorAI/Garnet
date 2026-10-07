@@ -33,6 +33,13 @@ template<class T> std::vector<T> shardExpertRows(const std::vector<T>& original,
     std::memcpy(result.data(), bytes.data(), bytes.size());
     return result;
 }
+template<class T> std::vector<T> shardIntermediate(const std::vector<T>& original,
+    const std::vector<long long>& shape,int rank,int mode) {
+    std::vector<unsigned char> bytes;std::string error;
+    if(!GatherGptOssIntermediateShard(original.data(),original.size()*sizeof(T),shape,
+            sizeof(T),rank,mode,bytes,error))throw std::runtime_error(error);
+    std::vector<T> result(bytes.size()/sizeof(T));std::memcpy(result.data(),bytes.data(),bytes.size());return result;
+}
 void compare(const std::vector<float>& actual, const std::vector<float>& expected, float tolerance, const char* name) {
     if (actual.size() != expected.size()) throw std::runtime_error("size mismatch");
     float maximum = 0;
@@ -482,6 +489,42 @@ void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = f
     }
     for (float& value : shardedSum) value = bf(value);
     compare(shardedSum, expected, .002f, "Two-rank expert-parallel MoE sum");
+    if(intermediate%64==0) {
+        std::vector<float> innerSum(expected.size()),marlinInnerSum(expected.size());
+        for(int rank:{0,1}) {
+            GptOssOptions local=o;local.intermediate/=2;local.tpRank=-1;local.expertWeightsSharded=0;
+            Device<unsigned char> lu(shardIntermediate(up,{o.experts,2*intermediate,h/32,16},rank,1)),
+                lus(shardIntermediate(us,{o.experts,2*intermediate,h/32},rank,1)),
+                ld(shardIntermediate(down,{o.experts,h,intermediate/32,16},rank,2)),
+                lds(shardIntermediate(ds,{o.experts,h,intermediate/32},rank,2));
+            Device<float> lub(shardIntermediate(ub,{o.experts,2*intermediate},rank,1)),
+                ldb(shardIntermediate(db,{o.experts,h},rank,3)),partial(std::vector<float>(expected.size()));
+            const void* localInputs[]{dx.p,dr.p,drb.p,lu.p,lus.p,lub.p,ld.p,lds.p,ldb.p};
+            Device<unsigned char> localWorkspace{std::vector<unsigned char>(GptOssMoeWorkspace(tokens,local))};
+            check(RunGptOssMoe(localInputs,partial.p,localWorkspace.p,tokens,local,nullptr));
+            auto values=partial.read();for(size_t i=0;i<values.size();++i)innerSum[i]+=values[i];
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+            if(GptOssMarlin::Workspace(tokens,local)) {
+                GptOssMarlin marlin(local);
+                Device<unsigned char> scratch{std::vector<unsigned char>(GptOssMarlin::Workspace(tokens,local))};
+                check(marlin.Run(localInputs,partial.p,scratch.p,tokens,nullptr));
+                values=partial.read();for(size_t i=0;i<values.size();++i)marlinInnerSum[i]+=values[i];
+            }
+#endif
+        }
+        for(float& v:innerSum)v=bf(v);
+        // Partitioning the down reduction introduces BF16 partial rounding.
+        // Use the existing compiled TP-versus-unsharded CPU bound; all original
+        // single-device and expert-axis kernel bounds remain unchanged.
+        compare(innerSum,expected,.025f,"Intermediate TP2 MoE versus independent full CPU oracle (compiled TP bound)");
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+        GptOssOptions local=o;local.intermediate/=2;
+        if(GptOssMarlin::Workspace(tokens,local)) {
+            for(float& v:marlinInnerSum)v=bf(v);
+            compare(marlinInnerSum,expected,.025f,"Marlin intermediate TP2 versus independent full CPU oracle (compiled TP bound)");
+        }
+#endif
+    }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     Device<unsigned char> groupedWorkspace(std::vector<unsigned char>(TestGptOssMoeWorkspace(tokens,o,true)));
     check(TestGptOssMoe(in, dy.p, groupedWorkspace.p, tokens, o, nullptr, true));
@@ -845,5 +888,5 @@ int main(int argc, char** argv) { try {
             testDecodeGemvSharded(true, rank);
             testDecodeGemvSharded(false, rank);
         }
-        testVocabTop1(); testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongDecodeAttention(64, 8, 1); testLongDecodeAttention(64, 32, 4); testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); testMoe(128, 96, 64, false, true); check(cudaDeviceSynchronize()); return 0; }
+        testVocabTop1(); testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongDecodeAttention(64, 8, 1); testLongDecodeAttention(64, 32, 4); testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); testMoe(128, 96, 64, false, true); testMoe(3,96,2880); testMoe(513,96,64,true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

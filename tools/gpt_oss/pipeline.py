@@ -104,6 +104,9 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     sizes = weight_sizes(weights)
     full_weights = sum(sizes.values())
     expert_weight_shards = os.environ.get('GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS') == '1'
+    intermediate_shards = os.environ.get('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS') == '1'
+    if intermediate_shards and (expert_weight_shards or config['intermediate_size'] % 64):
+        raise ValueError('Intermediate TP2 needs intermediate divisible by64 and expert-axis sharding disabled')
     weight_estimate = full_weights
     weight_storage = {'original_constants_estimated_bytes': full_weights,
         'includes_lazy_marlin_repacking': False}
@@ -126,6 +129,23 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         weight_storage = {'original_constants_estimated_bytes': original_constants,
             'lazy_marlin_repacked_bytes': repacked, 'includes_lazy_marlin_repacking': True,
             'worst_rank_local_experts': local_experts}
+    if intermediate_shards:
+        suffixes = ('.mlp.mlp1_weight.blocks', '.mlp.mlp1_weight.scales',
+                    '.mlp.mlp2_weight.blocks', '.mlp.mlp2_weight.scales', '.mlp.mlp1_bias')
+        partitioned = sum(size for name, size in sizes.items() if name.endswith(suffixes))
+        if partitioned % 2:
+            raise ValueError('Intermediate TP2 checkpoint bytes must divide equally')
+        original_constants = full_weights - partitioned // 2
+        h, local_i = config['hidden_size'], config['intermediate_size'] // 2
+        up_k, up_n = (h + 63) // 64 * 64, (2 * local_i + 127) // 128 * 128
+        down_k, down_n = (local_i + 127) // 128 * 128, (h + 63) // 64 * 64
+        packed_elements = config['num_hidden_layers'] * config['num_experts'] * (up_k * up_n + down_k * down_n)
+        repacked = packed_elements // 2 + packed_elements // 32
+        weight_estimate = original_constants + repacked
+        weight_storage = {'original_constants_estimated_bytes': original_constants,
+            'lazy_marlin_repacked_bytes': repacked, 'includes_lazy_marlin_repacking': True,
+            'all_experts_per_rank': config['num_experts'], 'intermediate_per_rank': local_i,
+            'down_bias_owner_rank': 0}
     required = math.ceil(weight_estimate * 1.05) + kv_bytes + activation_bytes + reserve_bytes
     hardware = [{k: d[k] for k in ('id', 'name', 'total_bytes', 'compute_major',
                 'compute_minor', 'pci_bus_id', 'peer_access')} for d in devices]
@@ -139,6 +159,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     if expert_weight_shards:
         # Weight storage changes serialized constants and the plugin contract.
         identity['expert_weight_shards'] = True
+    if intermediate_shards:
+        identity['moe_intermediate_shards'] = True
     # These options change getWorkspaceSize()/buffer offsets. A serialized
     # engine built with a smaller layout cannot safely serve the larger one.
     identity['marlin_workspace_layout'] = marlin_workspace_profile()
@@ -158,6 +180,7 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'config': config, 'estimated_per_gpu_bytes': required,
             'local_kv_heads': local_kv_heads,
             'expert_weight_shards': expert_weight_shards,
+            'moe_intermediate_shards': intermediate_shards,
             'compact_vocab_greedy': compact_greedy,
             'weight_storage_estimate': weight_storage,
             'marlin_workspace_layout': identity['marlin_workspace_layout']}
@@ -291,14 +314,17 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
     if tokens < 1 or tokens > plan['max_tokens']:
         raise ValueError('token shape exceeds TP2 placement profile')
     config, batch = plan['config'], plan['batch']
+    moe_config = dict(config)
+    if plan.get('moe_intermediate_shards', False):
+        moe_config['intermediate_size'] //= 2
     if plan.get('marlin_workspace_layout', marlin_workspace_profile()) != marlin_workspace_profile():
         raise ValueError('Marlin workspace settings changed after planning; regenerate the TP2 profile')
     if prefill:
         # Large batch × prompt shapes can exceed TensorRT's 256 MiB default
         # even when the checkpoint and KV cache fit on both GPUs.
         rows = batch * tokens
-        moe_scratch = max(estimate_tp2_moe_workspace_bytes(config, rows),
-                          estimate_tp2_marlin_workspace_bytes(config, rows))
+        moe_scratch = max(estimate_tp2_moe_workspace_bytes(moe_config, rows),
+                          estimate_tp2_marlin_workspace_bytes(moe_config, rows))
         needed_mb = (moe_scratch + (1 << 20) - 1) >> 20
         auto_workspace_mb = 1 << max(0, needed_mb - 1).bit_length()
         if auto_workspace_mb > 4096:
@@ -339,6 +365,8 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                 'STAGE_EXPERT_WEIGHT_SHARD = ' + str(int(plan.get('expert_weight_shards', False))))
             source = source.replace('STAGE_COMPACT_GREEDY = 0',
                 'STAGE_COMPACT_GREEDY = ' + str(int(compact_greedy)))
+            source = source.replace('STAGE_MOE_INTERMEDIATE_SHARD = 0',
+                'STAGE_MOE_INTERMEDIATE_SHARD = ' + str(int(plan.get('moe_intermediate_shards', False))))
             (model_root / 'stage.py').write_text(source)
             shape = [end, plan['kv_pages'], 16, plan['local_kv_heads'], config['head_dim']]
             if kv is None:

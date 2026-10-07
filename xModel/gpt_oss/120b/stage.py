@@ -13,6 +13,7 @@ STAGE_LAST_TOKEN = 0
 STAGE_TP_RANK = -1
 STAGE_EXPERT_WEIGHT_SHARD = 0
 STAGE_COMPACT_GREEDY = 0
+STAGE_MOE_INTERMEDIATE_SHARD = 0
 STAGE_OPERATORS = ['gpt_oss_round_bf16', 'gpt_oss_apply_yarn_rope_packed',
                    'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4', 'gpt_oss_rms_norm']
 if STAGE_TP_RANK >= 0:
@@ -30,14 +31,15 @@ GARNET_MODEL_SPEC = {'arguments': [
     {'name': 'last_token_logits', 'kind': 'int', 'value': STAGE_LAST_TOKEN},
     {'name': 'tp_rank', 'kind': 'int', 'value': STAGE_TP_RANK},
     {'name': 'expert_weight_shard', 'kind': 'int', 'value': STAGE_EXPERT_WEIGHT_SHARD},
-    {'name': 'compact_greedy', 'kind': 'int', 'value': STAGE_COMPACT_GREEDY}],
+    {'name': 'compact_greedy', 'kind': 'int', 'value': STAGE_COMPACT_GREEDY},
+    {'name': 'moe_intermediate_shard', 'kind': 'int', 'value': STAGE_MOE_INTERMEDIATE_SHARD}],
     'requires': {'operator_plugins': [{'id': 'gpt_oss', 'module': 'garnet_gpt_oss',
     'abi': 1, 'backend': 'tensorrt', 'operators': STAGE_OPERATORS}]}}
 
 @T.fusion(name='gpt_oss_stage', role='transformer_stage', boundary='required')
 def GptOssStage(x, position_ids, keys, values, table, length, slot, active,
                 weights, config, start, end, prefill, last_token_logits, tp_rank,
-                expert_weight_shard, compact_greedy):
+                expert_weight_shard, compact_greedy, moe_intermediate_shard):
     return llm.forward_stage(x, position_ids, keys, values, table, length, slot,
                             active, weights, config, start, end, prefill, last_token_logits,
-                            tp_rank, expert_weight_shard, compact_greedy)
+                            tp_rank, expert_weight_shard, compact_greedy, moe_intermediate_shard)

@@ -1,6 +1,6 @@
 """Replay a recorded shape for metadata, batch-router or FlashInfer attention candidates.
 
-Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode].
+Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode|intermediate-tp].
 Uses the vLLM environment for validation; preserves all logs and token evidence.
 """
 import json
@@ -10,16 +10,18 @@ import statistics
 import subprocess
 import sys
 
-if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5] not in ('router','flash-prefill','flash-decode')):
-    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode]')
+if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5] not in ('router','flash-prefill','flash-decode','intermediate-tp')):
+    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode|intermediate-tp]')
 request_path, expected_path, reference_path, directory = map(Path, sys.argv[1:5])
 mode=sys.argv[5] if len(sys.argv)==6 else 'metadata'
 router = mode=='router'
 flash = mode in ('flash-prefill','flash-decode')
-flag = ('GARNET_GPT_OSS_DECODE_FLASHINFER' if mode=='flash-decode' else
+inner = mode=='intermediate-tp'
+flag = ('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS' if inner else
+        'GARNET_GPT_OSS_DECODE_FLASHINFER' if mode=='flash-decode' else
         'GARNET_GPT_OSS_PREFILL_FLASHINFER' if flash else
         'GARNET_GPT_OSS_ROUTER_QUERY_TILE' if router else 'GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA')
-label = 'flash' if flash else 'router' if router else 'parallel'
+label = 'inner' if inner else 'flash' if flash else 'router' if router else 'parallel'
 choices = (0,2,4) if router else (0,1)
 reference = json.loads(reference_path.read_text())
 request = json.loads(request_path.read_text())
@@ -54,6 +56,8 @@ tokenizer = env.get('GARNET_GPT_OSS_TOKENIZER', str(root / 'models/gpt-oss-120b-
 results = []
 for value in choices:
     env[flag] = str(value)
+    if inner:
+        env['GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS'] = str(1-value)
     prefix = directory / f'{label}{value}-b{batch}-o{output}'
     result, validation = Path(str(prefix) + '.json'), Path(str(prefix) + '.validation.json')
     print(f'Starting {flag}={value}, batch={batch}, input={len(request["input_ids"])}, '
@@ -81,7 +85,7 @@ for value in choices:
 baseline = results[0]['decode_trials'][0]['token_ids_by_request']
 comparison = {'reference_result': str(reference_path.resolve()),
               'flag': flag,
-              'require_exact_trajectories': not flash,
+              'require_exact_trajectories': not (flash or inner),
               'batch': batch, 'input': len(request['input_ids']), 'output': output,
               'context': reference['max_context_tokens_per_request'], 'modes': []}
 for value, measured in zip(choices,results):
@@ -93,7 +97,7 @@ for value, measured in zip(choices,results):
         'prefill_s': measured['prefill_seconds'],
         'full_tok_s': measured['full_request_output_tokens_per_second']})
 (directory / 'comparison.json').write_text(json.dumps(comparison, indent=2))
-if not flash and any(count != batch for mode in comparison['modes'] for count in mode['exact_baseline_slots_per_trial']):
+if not (flash or inner) and any(count != batch for mode in comparison['modes'] for count in mode['exact_baseline_slots_per_trial']):
     raise AssertionError('Exact-order candidate altered token trajectories; evidence retained')
-print('All expected answers passed; FlashInfer trajectory comparison retained' if flash else
+print('All expected answers passed; numerical-order trajectory comparison retained' if flash or inner else
       'All baseline/candidate token trajectories match exactly', flush=True)

@@ -323,8 +323,12 @@ namespace Garnet {
                         const Garnet::SafeTensorMetadata* metadata = weightIndex->Find(weightName);
                         std::string originalName;
                         int expertRank = -1;
+                        int intermediateRank=-1,intermediateMode=0;
                         if (!metadata && Garnet::ParseGptOssExpertShardName(weightName, originalName, expertRank))
                             metadata = weightIndex->Find(originalName);
+                        if (!metadata && Garnet::ParseGptOssIntermediateShardName(
+                                weightName,originalName,intermediateRank,intermediateMode))
+                            metadata=weightIndex->Find(originalName);
                         if (!metadata) {
                             std::cout << "[TRTBuilder] refit weight absent: " << weightName << std::endl;
                             return nullptr;
@@ -375,6 +379,15 @@ namespace Garnet {
                                 return nullptr;
                             }
                             data = shard.data(); refitBytes = shard.size();
+                        }
+                        else if(intermediateRank>=0) {
+                            expertShardStorage.emplace_back();auto& shard=expertShardStorage.back();
+                            if(!Garnet::GatherGptOssIntermediateShard(data,metadata->dataSize,
+                                    metadata->shape,elementBytes,intermediateRank,intermediateMode,shard,mappingError)) {
+                                std::cout<<"[TRTBuilder] intermediate shard refit failed: "<<weightName
+                                    <<" "<<mappingError<<std::endl;return nullptr;
+                            }
+                            data=shard.data();refitBytes=shard.size();
                         }
                         const int64_t elementCount = static_cast<int64_t>(refitBytes / elementBytes);
                         if (!data || !refitter->setNamedWeights(

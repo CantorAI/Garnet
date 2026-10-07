@@ -56,6 +56,40 @@ ITensor* TRTBuilder::GetGptOssExpertWeight(const std::string& source, int rank, 
     auto* result = layer->getOutput(0); result->setName(name.c_str());
     weightTensorMap[name] = result; return result;
 }
+ITensor* TRTBuilder::GetGptOssIntermediateWeight(const std::string& source,int rank,int mode) {
+    const auto name=GptOssIntermediateShardName(source,rank,mode);
+    const auto existing=weightTensorMap.find(name);
+    if(existing!=weightTensorMap.end())return existing->second;
+    const auto* m=capturedWeightIndex?capturedWeightIndex->Find(source):nullptr;
+    if(!m||m->shape.empty()||m->shape.size()>Dims::MAX_DIMS) {
+        loweringError="missing GPT-OSS intermediate shard weight: "+source;return nullptr;
+    }
+    DataType dtype;size_t elementBytes=0;
+    if(m->dataType=="U8"){dtype=DataType::kINT8;elementBytes=1;}
+    else if(m->dataType=="BF16"){dtype=DataType::kBF16;elementBytes=2;}
+    else if(m->dataType=="F16"){dtype=DataType::kHALF;elementBytes=2;}
+    else if(m->dataType=="F32"){dtype=DataType::kFLOAT;elementBytes=4;}
+    else {loweringError="unsupported GPT-OSS intermediate shard dtype: "+source;return nullptr;}
+    Dims dims{};dims.nbDims=int(m->shape.size());
+    for(int i=0;i<dims.nbDims;++i) {
+        if(m->shape[i]<=0||m->shape[i]>INT_MAX) {
+            loweringError="invalid GPT-OSS intermediate shard shape: "+source;return nullptr;
+        }
+        dims.d[i]=int(m->shape[i]);
+    }
+    auto& file=capturedWeightFiles[m->filePath.string()];
+    if(!file){file=std::make_unique<SafeTensorsMappedFile>();if(!file->Open(m->filePath,loweringError))return nullptr;}
+    booleanVectorWeights.emplace_back();auto& shard=booleanVectorWeights.back();
+    if(!GatherGptOssIntermediateShard(file->DataAt(m->dataOffset,m->dataSize),m->dataSize,
+        m->shape,elementBytes,rank,mode,shard,loweringError))return nullptr;
+    if(mode!=3)dims.d[mode==1?1:2]/=2;
+    Weights weights{dtype,shard.data(),int64_t(shard.size()/elementBytes)};
+    auto* layer=network->addConstant(dims,weights);
+    if(!layer||!network->setWeightsName(weights,name.c_str())||!network->markWeightsRefittable(name.c_str())) {
+        loweringError="GPT-OSS intermediate shard constant failed: "+source;return nullptr;
+    }
+    auto* result=layer->getOutput(0);result->setName(name.c_str());weightTensorMap[name]=result;return result;
+}
 ITensor* TRTBuilder::GetGptOssPackedWeight(const std::string& name) {
     auto found = weightTensorMap.find(name); if (found != weightTensorMap.end()) return found->second;
     const auto* m = capturedWeightIndex ? capturedWeightIndex->Find(name) : nullptr;
@@ -205,11 +239,25 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
         o.tpRank = integer("tp_rank", -1);
         o.prefill = integer("prefill", 0);
         o.expertWeightsSharded = integer("expert_weight_shard", 0);
+        const int intermediateShard=integer("expert_intermediate_shard",0);
+        const int intermediateRank=o.tpRank;
+        if(intermediateShard && (intermediateShard!=1||o.tpRank<0||o.tpRank>1||
+            o.expertWeightsSharded||o.intermediate<=0||o.intermediate%64)) {
+            loweringError="GPT-OSS intermediate TP2 requires rank0/1, intermediate divisible by64 and no expert-axis shard";
+            return nullptr;
+        }
+        if(intermediateShard){o.intermediate/=2;o.tpRank=-1;}
         if (o.expertWeightsSharded != 0 &&
             (o.expertWeightsSharded != 1 || o.tpRank < 0 || o.tpRank > 1)) {
             loweringError = "GPT-OSS expert weight sharding requires TP2 rank 0/1"; return nullptr;
         }
         auto expertWeight = [&](const char* key, bool packed = false) -> ITensor* {
+            if(intermediateShard) {
+                const std::string name=key;
+                const int mode=name.find("gate_up_")==0?1:name=="down_bias_name"?3:2;
+                auto* value=GetGptOssIntermediateWeight(text(key),intermediateRank,mode);
+                return packed?value:asFloat(value);
+            }
             if (!o.expertWeightsSharded) return weight(key, packed);
             auto* value = GetGptOssExpertWeight(text(key), o.tpRank, o.experts);
             return packed ? value : asFloat(value);
