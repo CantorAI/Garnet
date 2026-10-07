@@ -1177,3 +1177,7 @@ The new independent runner performs complete prefill and decode afresh in all th
 Correction to the proposal's warmup wording: inspection of the existing optimized vLLM runner shows ONE complete warmup and THREE measured complete requests, not three warmups. New Garnet runner defaults to the same one complete warmup and three complete measured requests; count is recorded. Historical claims of three vLLM complete warmups should be read as three measured trials. Reusing validated V references preserves this setting. No vLLM speed/settings are changed by this implementation.
 
 The sequential engine profiler now embeds binary/GPU/cache/checkpoint/option identities and engine hashes, with explicit padded-prefill and packed-candidate switches. A packed-candidate probe derived from an original-mode reference makes no new quality claim. All results remain INCONCLUSIVE until target gates, simultaneous residency and four-prompt full-request measurements.
+
+#### OPT-0040 first target build failure
+
+Target1dbf2e0 core compilation fails before any gates/inference because IGatherLayer uses setGatherAxis(), not setAxis(). The exact installed SDK confirms the API; fix locally and push before retry. Failed build log work/resident-1dbf2e0-build.log is retained. This is an implementation/API error, not a numerical or memory result; no quality/performance claim. No remote source edits.

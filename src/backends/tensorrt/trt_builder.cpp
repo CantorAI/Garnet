@@ -5289,7 +5289,7 @@ namespace Garnet {
                 loweringError = "select_last_valid_sequence layer construction failed";
                 return X::Value();
             }
-            gather->setAxis(1);
+            gather->setGatherAxis(1);
             gather->setNbElementWiseDims(1);
             lastOutput = gather->getOutput(0);
         }
