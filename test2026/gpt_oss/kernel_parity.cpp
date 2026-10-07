@@ -59,6 +59,31 @@ void testRmsNorm() {
         compare(dy.read(), expected, .008f, "GPT-OSS BF16 RMSNorm");
     }
 }
+void testAddRmsNorm() {
+    constexpr int rows = 19, hidden = 2880;
+    constexpr float epsilon = 1.0e-5f;
+    std::vector<float> residual(size_t(rows) * hidden), update(residual.size());
+    std::vector<float> weight(hidden), roundedSum(residual.size());
+    for (size_t i = 0; i < residual.size(); ++i) {
+        residual[i] = bf(std::sin(float(i) * .017f) * 1.7f);
+        update[i] = bf(std::cos(float(i) * .013f) * .3f);
+        roundedSum[i] = bf(residual[i] + update[i]);
+    }
+    for (int d = 0; d < hidden; ++d)
+        weight[d] = bf(.75f + .5f * std::sin(float(d) * .011f));
+    Device<float> dr(residual), du(update), dw(weight), ds(roundedSum);
+    Device<float> actualSum(std::vector<float>(residual.size()));
+    Device<float> actualNorm(std::vector<float>(residual.size()));
+    Device<float> referenceNorm(std::vector<float>(residual.size()));
+    check(RunGptOssRmsNorm(ds.p, dw.p, referenceNorm.p,
+        rows, hidden, epsilon, 1024, nullptr));
+    check(RunGptOssAddRmsNorm(dr.p, du.p, dw.p, actualSum.p, actualNorm.p,
+        rows, hidden, epsilon, nullptr));
+    compare(actualSum.read(), roundedSum, 0.f,
+        "Fused GPT-OSS residual BF16 rounding");
+    compare(actualNorm.read(), referenceNorm.read(), 0.f,
+        "Fused GPT-OSS residual RMSNorm parity");
+}
 void testRope() {
     GptOssOptions o; o.qHeads = 4; o.kvHeads = 2; o.headDim = 64;
     const int width = 512, tokens = 4;
@@ -326,5 +351,5 @@ int main() { try {
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     testMxfp4Encoding();
 #endif
-        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
+        testRmsNorm(); testAddRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

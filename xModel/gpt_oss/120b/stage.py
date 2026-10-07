@@ -12,7 +12,8 @@ STAGE_PREFILL = 1
 STAGE_LAST_TOKEN = 0
 STAGE_TP_RANK = -1
 STAGE_OPERATORS = ['gpt_oss_round_bf16', 'gpt_oss_apply_yarn_rope_packed',
-                   'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4', 'gpt_oss_rms_norm']
+                   'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4', 'gpt_oss_rms_norm',
+                   'gpt_oss_add_rms_norm']
 if STAGE_TP_RANK >= 0:
     STAGE_OPERATORS.extend(['gpt_oss_tp_all_reduce', 'gpt_oss_tp_all_gather'])
 GARNET_MODEL_SPEC = {'arguments': [

@@ -176,6 +176,16 @@ namespace Garnet {
         nvinfer1::ITensor* pendingKVActiveMask = nullptr;
         int pendingKVLayerIndex = -1;
         std::vector<nvinfer1::IPluginV2*> ownedPlugins;
+        struct GptOssAddNormPair {
+            nvinfer1::ITensor* residual = nullptr;
+            nvinfer1::ITensor* update = nullptr;
+            std::string weightName;
+            int hidden = 0;
+            float epsilon = 0.f;
+            nvinfer1::ITensor* roundedSum = nullptr;
+            nvinfer1::ITensor* normalized = nullptr;
+        };
+        std::vector<GptOssAddNormPair> gptOssAddNormPairs;
         std::string loweringError;
         bool loweringActive = true;
         bool analysisActive = false;

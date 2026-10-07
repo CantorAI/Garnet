@@ -4308,6 +4308,7 @@ namespace Garnet {
         pendingKVActiveMask = nullptr;
         for (auto* plugin : ownedPlugins) plugin->destroy();
         ownedPlugins.clear();
+        gptOssAddNormPairs.clear();
         loweringError.clear();
         loweringActive = true;
         branchParentActivity.clear();
@@ -4480,6 +4481,7 @@ namespace Garnet {
         builder = nullptr;
         for (auto* plugin : ownedPlugins) plugin->destroy();
         ownedPlugins.clear();
+        gptOssAddNormPairs.clear();
         tensorMap.clear();
         constantTensors.clear();
         capturedWeightFiles.clear();

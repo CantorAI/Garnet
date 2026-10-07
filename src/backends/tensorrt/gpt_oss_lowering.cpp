@@ -91,6 +91,47 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
         auto* c = network->addCast(*source, DataType::kBF16);
         return c ? asFloat(c->getOutput(0)) : nullptr;
     }
+    if (op == "gpt_oss_add_rms_norm") {
+        const int outputIndex = integer("output_index", -1);
+        const std::string weightName = text("weight_name");
+        const int hidden = integer("hidden_size", 0);
+        const float epsilon = real("eps", 1.0e-5f);
+        if (!source || !right || weightName.empty() ||
+            (outputIndex != 0 && outputIndex != 1)) {
+            loweringError = "GPT-OSS add/RMSNorm requires two tensors, a weight, and output 0 or 1";
+            return nullptr;
+        }
+        for (const auto& pair : gptOssAddNormPairs)
+            if (pair.residual == source && pair.update == right &&
+                pair.weightName == weightName && pair.hidden == hidden &&
+                pair.epsilon == epsilon)
+                return outputIndex == 0 ? pair.roundedSum : pair.normalized;
+        GptOssOptions options;
+        options.kind = 6;
+        options.hidden = hidden;
+        options.epsilon = epsilon;
+        ITensor* inputs[]{asFloat(source), asFloat(right), weight("weight_name")};
+        for (auto* tensor : inputs)
+            if (!tensor) { loweringError = "GPT-OSS add/RMSNorm is missing an input"; return nullptr; }
+        auto* plugin = CreateGptOssPlugin(options, loweringError);
+        if (!plugin) return nullptr;
+        if (plugin->initialize() != 0) {
+            plugin->destroy();
+            loweringError = "invalid GPT-OSS add/RMSNorm attributes";
+            return nullptr;
+        }
+        ownedPlugins.push_back(plugin);
+        auto* layer = network->addPluginV2(inputs, 3, *plugin);
+        if (!layer || layer->getNbOutputs() != 2) {
+            loweringError = "GPT-OSS add/RMSNorm two-output lowering failed";
+            return nullptr;
+        }
+        layer->setName(("gpt_oss_add_rms_norm_" +
+            std::to_string(network->getNbLayers())).c_str());
+        gptOssAddNormPairs.push_back({source, right, weightName, hidden, epsilon,
+            layer->getOutput(0), layer->getOutput(1)});
+        return outputIndex == 0 ? layer->getOutput(0) : layer->getOutput(1);
+    }
     GptOssOptions o;
     o.qHeads = integer("num_heads", 0); o.kvHeads = integer("num_kv_heads", 0); o.headDim = integer("head_dim", 0);
     o.theta = real("rope_theta", 150000); o.factor = real("rope_scaling_factor", 32);
