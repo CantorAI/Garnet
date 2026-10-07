@@ -121,14 +121,15 @@ for stage in model.stages:
     finally:
         G.cuda_set_device(previous)
 
-inline_single = batch == 1 and os.environ.get('GARNET_GPT_OSS_INLINE_CONTROL_KERNEL') == '1'
+inline_batch = batch <= 64 and os.environ.get('GARNET_GPT_OSS_INLINE_BATCH_CONTROLS') == '1'
+inline_single = not inline_batch and batch == 1 and os.environ.get('GARNET_GPT_OSS_INLINE_CONTROL_KERNEL') == '1'
 profile_steps = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_STEPS', '0'))
 profiler = ctypes.CDLL('libcudart.so') if profile_steps else None
 profiling = False
 
 
 def forward_decode_step(tokens, index):
-    if not inline_single:
+    if not inline_single and not inline_batch:
         for stage, (local_token, controls) in zip(model.stages, rank_inputs):
             previous = G.cuda_set_device(stage['device_id'])
             try:
@@ -139,7 +140,9 @@ def forward_decode_step(tokens, index):
             finally:
                 G.cuda_set_device(previous)
     return model.forward_rank_local(rank_inputs, True,
-        scalar_values=[tokens[0], index, index + 1, index] if inline_single else None,
+        scalar_values=[tokens[0], index, index + 1, index] if inline_single and not inline_batch else None,
+        vector_values=[tokens, [index] * batch, [index + 1] * batch, [index] * batch]
+            if inline_batch else None,
         sample_batch=True)
 
 
@@ -208,6 +211,7 @@ result_path.write_text(json.dumps({
     'decode_warmup_seconds_excluded': decode_warmup_seconds,
     'decode_step_seconds': step_seconds,
     'inline_single_request_controls': inline_single,
+    'inline_batch_controls': inline_batch,
     'profile_decode_steps': profile_steps,
     'decode_output_tokens': decode_output_tokens,
     'decode_aggregate_output_tokens_per_second':

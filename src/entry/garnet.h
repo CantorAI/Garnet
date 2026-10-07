@@ -186,6 +186,7 @@ namespace Garnet
 			APISET().AddVarFunc("tensor_update_from_host", &GarnetAPI::TensorUpdateFromHost);
 			APISET().AddVarFunc("tensor_update_int_scalars", &GarnetAPI::TensorUpdateIntScalars);
 			APISET().AddVarFunc("tensor_update_int_scalars_async", &GarnetAPI::TensorUpdateIntScalarsAsync);
+			APISET().AddVarFunc("tensor_update_int_vectors_async", &GarnetAPI::TensorUpdateIntVectorsAsync);
 			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
 			APISET().AddVarFunc("serve_model", &GarnetAPI::ServeModel);
 			APISET().AddVarFunc("list_available_models_json", &GarnetAPI::ListAvailableModelsJson);
@@ -261,6 +262,7 @@ namespace Garnet
 		X::Value TensorUpdateFromHost(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value TensorUpdateIntScalars(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value TensorUpdateIntScalarsAsync(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value TensorUpdateIntVectorsAsync(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value TensorToCPU(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ServeModel(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ListAvailableModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);

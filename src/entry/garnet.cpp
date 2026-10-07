@@ -3696,6 +3696,47 @@ namespace Garnet
         return X::Value(LaunchIntScalarUpdate4(updates, cudaStreamPerThread) == cudaSuccess);
     }
 
+    X::Value GarnetAPI::TensorUpdateIntVectorsAsync(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        (void)kwParams;
+        if (params.size() != 2 || !params[0].IsList() || !params[1].IsList())
+            return X::Value(false);
+        X::Value tensorList(params[0]), valueList(params[1]);
+        if (tensorList.Size() < 1 || tensorList.Size() > 4 ||
+            valueList.Size() != tensorList.Size()) return X::Value(false);
+        const int count = static_cast<int>(tensorList.Size());
+        IntVectorUpdate4 updates{};
+        updates.count = count;
+        std::vector<std::pair<X::Tensor, X3TensorAccess>> tensors;
+        tensors.reserve(count);
+        for (int index = 0; index < count; ++index) {
+            X::Value item = tensorList.Get(index), values = valueList.Get(index);
+            if (!X::Tensor::IsTensor(item) || !values.IsList()) return X::Value(false);
+            X::Tensor tensor(item);
+            ValidateDenseTensor(tensor, true);
+            const auto length = TensorCount(tensor);
+            if (tensor.Info().device_type != 1 || length < 1 ||
+                length > IntVectorUpdate4::kMaxElements || values.Size() != length ||
+                (tensor.Info().dtype != X3_TENSOR_INT32 && tensor.Info().dtype != X3_TENSOR_INT64))
+                return X::Value(false);
+            updates.destinations[index] = tensor.Info().data;
+            updates.lengths[index] = static_cast<int>(length);
+            updates.bytes[index] = tensor.Info().dtype == X3_TENSOR_INT32 ? 4 : 8;
+            for (int element = 0; element < length; ++element) {
+                const int64_t value = CheckedInt64(values.Get(element), "tensor vector value");
+                if (updates.bytes[index] == 4 && (value < INT32_MIN || value > INT32_MAX))
+                    return X::Value(false);
+                updates.values[index][element] = value;
+            }
+            tensors.emplace_back(tensor, X3_TENSOR_WRITE);
+        }
+        // Launch on the execution thread before its next model graph. Values
+        // are passed by value to CUDA, so no temporary host buffer outlives
+        // this call and no host-copy synchronization is required.
+        auto use = TensorHelper::AcquireGPU(tensors);
+        return X::Value(LaunchIntVectorUpdate4(updates, cudaStreamPerThread) == cudaSuccess);
+    }
+
     X::Value GarnetAPI::TensorAdd(const X::ARGS& params, const X::KWARGS& kwParams)
     {
         X::Value retValue;

@@ -27,6 +27,9 @@ This is an append-only record of performance hypotheses, implementations, correc
 | OPT-0019 | Dense decode | GPT-OSS BF16 GEMV plugin | 193–196 short, 170–171 long tok/s | First integration regressed; revised 195–198 short, 173–174 long tok/s | Revised path gave small gains, changed instruction tokens; far below vLLM | INCONCLUSIVE, opt-in |
 | OPT-0020 | Batch serving | Matched batch/input/output/KV profile | Batch 1 only | Warmed Garnet b8 989 vs vLLM 1226 decode tok/s; long b4 Garnet 574 vs vLLM 512 but full-request 131 vs 470 tok/s | Found batch and long-prefill gap; auto workspace fit added | MEASUREMENT IN PROGRESS |
 | OPT-0021 | Batched long prefill | Extend Marlin from 4096 to 8192 rows | 3.03 s long b4 prefill | 1.37 s, but 2/4 slots missed/wrong final answer | Correctness failure despite 55% prefill gain | REJECT, revert |
+| OPT-0022 | Batched prefill | Chunk long input below Marlin row cutoff | 3.030 s prefill, 130.8 full-request tok/s | 1.431 s, 202.2 tok/s; all four answers pass, token sequences differ | Faster complete request; decode regressed, repeat pending | INCONCLUSIVE, opt-in |
+| OPT-0023 | Batched TP reduction | Peer reduction with CTA-count screen | NCCL b8/32/64: 9.19/22.64/32.66 µs/op | Direct16: 6.91/13.85/23.17 µs/op, changing-input graph parity passes | Pretrained batch32 run pending | INCONCLUSIVE, opt-in |
+| OPT-0024 | Batched decode controls | Inline integer-vector updates on rank threads | Four host-copy waits per rank per step | Candidate compiled locally; target/model checks pending | Not measured | INCONCLUSIVE, opt-in |
 
 ## Cumulative accepted-stage history
 
@@ -377,3 +380,29 @@ The combined two-GPU CUDA kernel-duration sums in the 16-step report were **NCCL
 **Correctness validation / Performance result:** Target compilation, eager/changing-input graph parity and matched NCCL timing pending. No speedup is claimed.
 **Decision / Analysis:** EXPERIMENTAL SCREEN ONLY. Communicator-wide staging requires serialized execution; this does not establish concurrent-serving safety. Do not make it a default or claim general serving support without per-execution context isolation.
 **Next step:** Build and screen on Vast, reject slow or incorrect CTA variants, then evaluate any viable variant on the saved pretrained batch workloads sequentially.
+
+#### OPT-0023 target screen and regression validation, 2026-10-07
+
+Commit **`8b96f47`** compiled for SM120 with CUDA13.4 on the same British Columbia Workstation. The C++ benchmark captures **72 reductions per graph**, warms ten graph replays, then times **five trials of 50 replays**. Separate correctness graphs add exactly representable FP32 values to each rank's input before every reduction; five trials of three replays verify every output element on both GPUs with **zero absolute/relative error** against the exact host sum, covering 1,080 changing-input operations per configuration. The eager check and final outputs of every timed trial also match exactly. No overlapping independent executions were tested.
+
+| Batch / FP32 elements | NCCL median µs/op | Direct 2 CTAs | Direct 4 CTAs | Direct 8 CTAs | Direct 16 CTAs | Direct 32 CTAs |
+|---|---:|---:|---:|---:|---:|---:|
+| 8 / 23,040 | 9.192 | 10.116 | 7.558 | 7.419 | 6.913 | 6.970 |
+| 32 / 92,160 | 22.637 | 27.441 | 16.347 | 14.110 | 13.846 | 13.852 |
+| 64 / 184,320 | 32.657 | 50.037 | 27.230 | 23.719 | 23.166 | 23.254 |
+
+The earlier batch-8 NCCL trial was **8.302 µs/op**, so the exact size of that small-message gain varies with the run; retain both logs. NCCL batch1 was **6.218 µs/op**. Larger messages need more parallel peer reads: merely enlarging the two-CTA batch1 kernel regresses badly, whereas 16 CTAs is the best screened balance here. This is a kernel/graph screen and includes staging-copy and host graph launch costs; no full-model gain is established yet. Raw trial logs: `D:/CantorAI/work/vast-54543362/tp-direct-batch-screen/`. Reproduce with `GARNET_GPT_OSS_DIRECT_ALLREDUCE=1 GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE=1 GARNET_GPT_OSS_DIRECT_BATCH_CTAS=16 out/build/gpt-oss/bin/garnet_gpt_oss_tp_direct_benchmark <batch> 50`; set the existing direct flag to zero for NCCL.
+
+The complete synthetic verification suite passed with both direct flags and 16 CTAs: CUDA kernel parity, batched scalar updates, cold/warm compiled graph parity, TP collectives and MoE graph, two-GPU generation, native module bridge/API, and Qwen compatibility. Logs remain at `/workspace/CantorAI/work/tp-direct-batch-verification/`. The pretrained arithmetic **batch32/input256/output128/context4096** test is now running with the same saved optimized flags plus the new batch gate. Its baseline is Garnet **2,606.43 aggregate decode / 967.7 full-request tok/s** versus vLLM **2,832.10 / 2,785**. Decision remains **INCONCLUSIVE** until pretrained answer checks and matched model measurements complete.
+
+### OPT-0024: Inline batched decode-control updates
+
+**Date / Commit:** 2026-10-07, candidate under development, `feature/gpt-oss-120b`. Relevant files: `src/cuda/int_scalar_update.*`, `src/entry/garnet.*`, `python/garnet_pipeline.py`, `tools/gpt_oss/run_tp_batch_throughput.py`.
+**System / Workload:** British Columbia Workstation TP2, batched GPT-OSS-120B decode; first target batch32/input256/output128/context4096, BF16 KV, FP32 activations/MXFP4 experts.
+**Baseline / Observed bottleneck:** Code inspection shows the batched runner calls `tensor_update_from_host` separately for token, position, length and slot on each rank, synchronizing after every copy. The batch1 inline update cannot handle vectors. This creates eight host waits before the rank graphs on each step; the earlier single-request trace and OPT-0010 established a small end-to-end cost from this pattern.
+**Hypothesis / Proposed Optimization:** Pass up to four integer vectors as kernel parameters and write them with one CUDA kernel on each rank's execution thread before its graph. Eliminate temporary host copies and their synchronizations while preserving per-slot values for future heterogeneous lengths.
+**Implementation:** The generic backbone API `tensor_update_int_vectors_async(tensors, values)` accepts 1–4 dense CUDA INT32/INT64 tensors, each with 1–64 elements and a matching value list. It validates the complete group before writing; the by-value kernel parameter fits the local CUDA12.0 parameter limit. `forward_rank_local(..., vector_values=...)` schedules this on the same rank thread as the next graph, following the existing tensor lease/event mechanism. The benchmark enables it through `GARNET_GPT_OSS_INLINE_BATCH_CONTROLS=1`; larger batches keep the existing path. Qwen code is unchanged.
+**Correctness Validation:** Added both-device cases for batch1/8/64, mixed integer widths, distinct token/position/length/slot values, INT32 overflow, wrong group/list sizes, oversized vectors, and no partial mutation after rejection. Local CUDA12.0 compilation and Python syntax checks passed; target API/parity and pretrained checks pending.
+**Performance Result:** Not measured. Test this independently after the reduction-only run, retaining identical input/output/KV settings and raw per-step timings.
+**Decision / Analysis:** INCONCLUSIVE, opt-in. This is a synchronization hypothesis, not evidence of a full-model improvement.
+**Next Step:** Build remotely from the locally committed source, run API and model parity, then compare controls alone and controls plus direct batch reduction to the saved baseline.

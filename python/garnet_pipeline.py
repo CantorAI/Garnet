@@ -131,12 +131,14 @@ class TensorParallel:
         return self._run_prepared(prepared)
 
     def forward_rank_local(self, rank_inputs, sample=False, scalar_values=None,
-                           sample_batch=False):
+                           sample_batch=False, vector_values=None):
         """Run tensors already resident on their corresponding rank device."""
         if len(rank_inputs) != len(self.stages):
             raise ValueError('one input group per tensor-parallel rank is required')
         if scalar_values is not None and len(scalar_values) != 4:
             raise ValueError('rank-local scalar update requires token, position, length and slot')
+        if vector_values is not None and (len(vector_values) != 4 or scalar_values is not None):
+            raise ValueError('rank-local update requires either four scalars or four vectors')
         prepared = []
         updates = []
         for stage, (activation, controls) in zip(self.stages, rank_inputs):
@@ -149,9 +151,12 @@ class TensorParallel:
             prepared.append((stage, request))
             if scalar_values is not None:
                 updates.append(([activation, controls[0], controls[2], controls[3]], scalar_values))
-        return self._run_prepared(prepared, updates if scalar_values is not None else None)
+            elif vector_values is not None:
+                updates.append(([activation, controls[0], controls[2], controls[3]], vector_values))
+        return self._run_prepared(prepared, updates if updates else None,
+                                  vector_updates=vector_values is not None)
 
-    def _run_prepared(self, prepared, updates=None):
+    def _run_prepared(self, prepared, updates=None, vector_updates=False):
         import garnet as G
         import os
 
@@ -159,8 +164,11 @@ class TensorParallel:
             previous = G.cuda_set_device(stage['device_id'])
             try:
                 trace = os.environ.get('GARNET_TP_TRACE')
-                if update is not None and not G.tensor_update_int_scalars_async(*update):
-                    raise RuntimeError('rank-local scalar update failed')
+                if update is not None:
+                    updater = (G.tensor_update_int_vectors_async if vector_updates
+                               else G.tensor_update_int_scalars_async)
+                    if not updater(*update):
+                        raise RuntimeError('rank-local integer update failed')
                 if trace:
                     print('tp-rank', stage['rank'], 'enter model forward', flush=True)
                 result = stage['model'].forward(request)

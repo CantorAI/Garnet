@@ -201,6 +201,30 @@ fingerprints additionally validate source, weights, shapes and plugin binary.
 Changing available memory can change the placement; identical placement on
 identical hardware reuses the cache.
 
+The batched throughput runner records batch size, actual input/output token
+counts, maximum KV context, KV allocation, sampled GPU memory and separate
+decode/full-request throughput. `GARNET_BATCH_CONTEXT_CAPACITY` selects the
+context limit; `GARNET_BATCH_PREFILL_CHUNK` selects an opt-in chunk size and
+budgets activation memory for that largest executed chunk. Match context,
+BF16 KV and generated-token limits with the vLLM runner for each comparison.
+
+`GARNET_GPT_OSS_INLINE_BATCH_CONTROLS=1` opts into rank-thread vector updates
+for batches up to 64. The generic native bridge
+`garnet.tensor_update_int_vectors_async(tensors, values)` accepts 1–4 dense
+CUDA INT32/INT64 tensors with 1–64 elements each and matching nested integer
+lists. It validates all values before launching one kernel. Enqueue the next
+tensor use on the same execution thread/stream; use Garnet's tensor lease and
+completion-event path when transferring ownership to another thread.
+
+`GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE=1`, together with
+`GARNET_GPT_OSS_DIRECT_ALLREDUCE=1`, enables an experimental two-GPU peer
+reduction for hidden-state messages up to batch 64. The current scratch is
+communicator-wide, so only paired, serialized rank streams are supported;
+overlapping independent executions must use NCCL. Screen it with
+`garnet_gpt_oss_tp_direct_benchmark <batch> 50` and
+`GARNET_GPT_OSS_DIRECT_BATCH_CTAS=2|4|8|16|32` before a pretrained comparison.
+The benchmark checks changing inputs on both GPUs as well as graph timing.
+
 The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
 and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
 path shards attention heads and vocabulary rows, keeps rank-local MoE work,
