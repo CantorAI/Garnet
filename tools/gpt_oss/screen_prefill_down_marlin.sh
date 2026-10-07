@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # OPT43 isolated scheduling screen; keep cross-mode matrices, not only timings.
 set -euo pipefail
-[[ $# == 1 && ! -e $1 ]] || exit 2
+[[ ( $# == 1 || $# == 2 ) && ! -e $1 ]] || exit 2
+intermediate=${2:-2880}
+[[ $intermediate == 1440 || $intermediate == 2880 ]] || exit 2
 repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 root=${CANTORAI_ROOT:-$(dirname "$repo")}
 build=${GARNET_BUILD_DIR:-$root/out/build/gpt-oss}
@@ -20,6 +22,7 @@ export GARNET_GPT_OSS_DEBUG_MARLIN=1
 git -C "$repo" rev-parse HEAD >"$directory/source.txt"
 sha256sum "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" >"$directory/binary.sha256"
 nvidia-smi --query-gpu=index,name,uuid,driver_version --format=csv >"$directory/hardware.csv"
+echo "$intermediate" >"$directory/local-intermediate.txt"
 for rows in 1024 4096; do
     for tile in 0 64; do
         export GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK=$tile
@@ -28,8 +31,8 @@ for rows in 1024 4096; do
             export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM=${setting#*/}
             for trial in 1 2 3; do
                 label=rows$rows-tile$tile-k${setting%/*}-cta${setting#*/}-trial$trial
-                output=(); [[ $trial != 1 ]] || output+=("$directory/$label.f32")
-                timeout --signal=TERM --kill-after=15s 300s "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" "$rows" prefill "${output[@]}" \
+                output=-; [[ $trial != 1 ]] || output="$directory/$label.f32"
+                timeout --signal=TERM --kill-after=15s 300s "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" "$rows" prefill "$output" "$intermediate" \
                     >"$directory/$label.log" 2>&1
                 tail -2 "$directory/$label.log"
             done
@@ -41,7 +44,7 @@ for setting in 128/1 64/1 64/2; do
     export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K=${setting%/*}
     export GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM=${setting#*/}
     label=decode256-k${setting%/*}-cta${setting#*/}
-    timeout --signal=TERM --kill-after=15s 300s "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" 256 decode "$directory/$label.f32" \
+    timeout --signal=TERM --kill-after=15s 300s "$build/bin/garnet_gpt_oss_marlin_decode_benchmark" 256 decode "$directory/$label.f32" "$intermediate" \
         >"$directory/$label.log" 2>&1
 done
 "$python" - "$directory" <<'PY'
@@ -49,10 +52,11 @@ import hashlib,json,re,sys
 from pathlib import Path
 import numpy as np
 root=Path(sys.argv[1]); rows={}
+intermediate=int((root/'local-intermediate.txt').read_text())
 baseline_decode=(root/'decode256-k128-cta1.f32').read_bytes()
 for path in sorted(root.glob('*.f32')):
     data=path.read_bytes()
-    row=dict(sha256=hashlib.sha256(data).hexdigest(),bytes=len(data))
+    row=dict(sha256=hashlib.sha256(data).hexdigest(),bytes=len(data),local_intermediate=intermediate)
     values=np.frombuffer(data,dtype='<f4')
     assert np.isfinite(values).all(),path
     if path.name.startswith('decode'):

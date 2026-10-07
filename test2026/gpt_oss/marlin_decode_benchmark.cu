@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // One synthetic GPT-OSS-sized MoE invocation, captured as a CUDA graph.
-// Optional ROWS prefill|decode OUTPUT_BIN; separate processes per setting.
+// Optional ROWS prefill|decode OUTPUT_BIN|- LOCAL_INTERMEDIATE(1440|2880).
 #include "gpt_oss_marlin.h"
 #include <cuda_runtime.h>
 #include <algorithm>
@@ -38,18 +38,21 @@ __global__ void flushL2(unsigned* data, size_t count) {
 int main(int argc, char** argv) { try {
     const int tokens = argc > 1 ? std::stoi(argv[1]) : 1;
     const bool prefill = argc > 2 && std::strcmp(argv[2], "prefill") == 0;
-    if (argc > 4 || tokens < 1 || tokens > 4096 ||
+    const size_t intermediate = argc == 5 ? std::stoul(argv[4]) : 2880;
+    const bool saveOutput=argc>=4 && std::strcmp(argv[3],"-")!=0;
+    if (argc > 5 || tokens < 1 || tokens > 4096 ||
+        (intermediate!=1440 && intermediate!=2880) ||
         (argc > 2 && !prefill && std::strcmp(argv[2], "decode") != 0)) return 2;
-    if(argc==4 && std::filesystem::exists(argv[3]))
+    if(saveOutput && std::filesystem::exists(argv[3]))
         throw std::runtime_error("Synthetic output evidence already exists");
     GptOssOptions options;
     options.kind = 2;
     options.hidden = 2880;
-    options.intermediate = 2880;
+    options.intermediate = int(intermediate);
     options.experts = 128;
     options.topK = 8;
     options.prefill = prefill;
-    constexpr size_t h = 2880, intermediate = 2880, experts = 128;
+    constexpr size_t h = 2880, experts = 128;
     Buffer x(size_t(tokens) * h * 4), router(experts * h * 4), routerBias(experts * 4);
     // Diverse deterministic rows/router, rather than only tied zero routes.
     // This is synthetic scheduling evidence, not a pretrained benchmark.
@@ -121,7 +124,7 @@ int main(int argc, char** argv) { try {
     std::sort(milliseconds.begin(), milliseconds.end());
     check(cudaMemcpy(actual.data(),output.data,actual.size()*4,cudaMemcpyDeviceToHost));
     if(actual!=reference)throw std::runtime_error("Warm graph replay differs from eager output");
-    if(argc==4) {
+    if(saveOutput) {
         std::ofstream outputFile(argv[3],std::ios::binary);
         outputFile.write(reinterpret_cast<const char*>(actual.data()),actual.size()*sizeof(float));
         outputFile.close();
@@ -129,6 +132,7 @@ int main(int argc, char** argv) { try {
     }
     std::cout << "measurement=synthetic_single_moe device=" << device.name
               << " rows=" << tokens << " phase=" << (prefill?"prefill":"decode")
+              << " intermediate=" << intermediate
               << " workspace_bytes=" << workspaceBytes << " graph_replay_exact=PASS graph_nodes=" << graphNodes
               << " median_ms="
               << milliseconds[milliseconds.size() / 2]

@@ -997,6 +997,14 @@ int main(int argc, char** argv) { try {
         std::cout<<"Down-K64 CTA4 rejected before pointer access/repacking/launch, cold/cached PASS\n";
         return 0;
     }
+    if(argc==2 && std::strcmp(argv[1],"--tp-sized-prefill-down-parity")==0) {
+        GptOssOptions probe;probe.kind=2;probe.hidden=96;probe.intermediate=2880;
+        probe.experts=5;probe.topK=2;probe.prefill=1;
+        if(!GptOssMarlin::Workspace(1024,probe))
+            throw std::runtime_error("Representative TP gate requires enabled large-row Marlin support");
+        testMoe(1024,96,2880,false);
+        check(cudaDeviceSynchronize());return 0;
+    }
     if (argc == 2 && (std::strcmp(argv[1], "--large-prefill-parity") == 0 ||
                      std::strcmp(argv[1], "--prefill-down-parity") == 0)) {
         GptOssOptions probe; probe.kind=2; probe.hidden=probe.intermediate=32;
