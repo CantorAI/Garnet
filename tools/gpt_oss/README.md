@@ -239,6 +239,11 @@ overlapping independent executions must use NCCL. Screen it with
 `garnet_gpt_oss_tp_direct_benchmark <batch> 50` and
 `GARNET_GPT_OSS_DIRECT_BATCH_CTAS=2|4|8|16|32` before a pretrained comparison.
 The benchmark checks changing inputs on both GPUs as well as graph timing.
+The additional `GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE=1` gate permits
+batch65–128 messages for a separate capacity/throughput screen. Without it,
+messages above batch64 retain NCCL dispatch. Staging grows by720KiB/GPU;
+the serialized paired-stream restriction still applies. Validate changing-input
+graph parity and target timing at the larger size before pretrained use.
 
 `GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS=1` opts into rank-local original
 expert constants. Routing stays global; each rank stores only its even/odd

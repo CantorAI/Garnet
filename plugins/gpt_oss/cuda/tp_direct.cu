@@ -7,7 +7,7 @@
 namespace Garnet {
 namespace {
 constexpr size_t kCount = 2880; // GPT-OSS-120B hidden size, batch 1 decode.
-constexpr size_t kMaxCount = kCount * 64;
+constexpr size_t kMaxCount = kCount * 128;
 constexpr int kMaxBlocks = 32;
 struct alignas(128) Signal {
     alignas(128) unsigned start[kMaxBlocks][2];
@@ -18,6 +18,7 @@ float* g_staging[2]{};
 Signal* g_signal[2]{};
 bool g_ready = false;
 bool g_batchEnabled = false;
+bool g_largeBatchEnabled = false;
 int g_batchBlocks = 0;
 
 __device__ __forceinline__ void storeRelease(unsigned* ptr, unsigned value) {
@@ -68,6 +69,7 @@ void cleanup() {
     }
     g_ready = false;
     g_batchEnabled = false;
+    g_largeBatchEnabled = false;
     g_batchBlocks = 0;
 }
 }
@@ -104,6 +106,8 @@ cudaError_t GptOssTpDirectAcquire() {
         g_ready = true;
         const char* batch = std::getenv("GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE");
         g_batchEnabled = batch && batch[0] == '1' && batch[1] == '\0';
+        const char* largeBatch = std::getenv("GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE");
+        g_largeBatchEnabled = largeBatch && largeBatch[0] == '1' && largeBatch[1] == '\0';
         if (const char* blocks = std::getenv("GARNET_GPT_OSS_DIRECT_BATCH_CTAS")) {
             const int value = std::atoi(blocks);
             if (value == 2 || value == 4 || value == 8 || value == 16 || value == 32)
@@ -124,7 +128,8 @@ void GptOssTpDirectRelease() {
 cudaError_t GptOssTpDirectAllReduce(const float* input, float* output,
     size_t count, int rank, cudaStream_t stream) {
     if (!g_ready || (count != kCount && (!g_batchEnabled || !count ||
-        count > kMaxCount || count % kCount))) return cudaErrorNotSupported;
+        count > kMaxCount || count % kCount ||
+        (count > kCount * 64 && !g_largeBatchEnabled)))) return cudaErrorNotSupported;
     if (!input || !output || rank < 0 || rank > 1) return cudaErrorInvalidValue;
     auto status = cudaMemcpyAsync(g_staging[rank], input,
         count * sizeof(float), cudaMemcpyDeviceToDevice, stream);

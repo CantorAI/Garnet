@@ -23,10 +23,14 @@ int main(int argc, char** argv) {
     const int batch = argc > 1 ? std::atoi(argv[1]) : 8;
     const int repeats = argc > 2 ? std::atoi(argv[2]) : 50;
     constexpr int operations = 72;
-    if (batch < 1 || batch > 64 || repeats < 1 || repeats > 1000) return 2;
+    if (batch < 1 || batch > 128 || repeats < 1 || repeats > 1000) return 2;
     const int count = batch * 2880;
     const bool direct = std::getenv("GARNET_GPT_OSS_DIRECT_ALLREDUCE") &&
         std::atoi(std::getenv("GARNET_GPT_OSS_DIRECT_ALLREDUCE")) == 1;
+    if (direct && batch > 1 && (!std::getenv("GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE") ||
+        std::atoi(std::getenv("GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE")) != 1)) return 2;
+    if (direct && batch > 64 && (!std::getenv("GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE") ||
+        std::atoi(std::getenv("GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE")) != 1)) return 2;
     CUDA_OK(Garnet::GptOssTpAcquire());
     std::array<cudaStream_t, 2> streams{};
     std::array<float*, 2> inputs{}, outputs{};
