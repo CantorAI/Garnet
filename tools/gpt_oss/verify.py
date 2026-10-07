@@ -40,6 +40,7 @@ fixture = work / 'fixture'
 run([sys.executable, repo / 'test2026/gpt_oss/make_fixture.py', fixture], 'fixture')
 run([sys.executable, repo / 'test2026/gpt_oss/placement.py'], 'placement')
 run([sys.executable, repo / 'test2026/gpt_oss/resident_admission.py'], 'resident-admission')
+run([sys.executable, repo / 'test2026/gpt_oss/resident_controller_environment.py'], 'resident-controller-environment')
 run([executable, repo / 'test2026/gpt_oss/sequence_selection.py', work / 'selection-cache'], 'sequence-selection')
 run([runtime / ('garnet_gpt_oss_marlin_weight_pack' + suffix)], 'marlin-weight-pack')
 run([sys.executable, repo / 'test2026/gpt_oss/tp_weight_placement.py', fixture,
