@@ -343,6 +343,51 @@ void testLongDecodeAttention(int dimension, int qHeads = 4, int kvHeads = 2) {
         }
     }
 }
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+void testFlashDecode64() {
+    const int batch=4,logical=20,pages=batch*logical,dim=64;
+    int cases=0;
+    for(int heads:{8,32})for(int window:{0,128})for(int length:{-1,0,1,15,16,17,301,320,321}) {
+        GptOssOptions o;o.kind=1;o.qHeads=heads;o.kvHeads=heads/8;o.headDim=dim;
+        o.layer=1;o.pageSize=16;o.prefill=0;o.window=window;
+        const int width=(heads+2*o.kvHeads)*dim;
+        std::vector<float> x(batch*width),sinks(heads),expected(batch*heads*dim);
+        for(size_t i=0;i<x.size();++i)x[i]=bf(std::sin(float(i)*.13f));
+        for(int h=0;h<heads;++h)sinks[h]=h%4==0?12.f:h%4==1?-12.f:h%4==2?2.f:-1.f;
+        std::vector<uint16_t> keys(size_t(2)*pages*16*o.kvHeads*dim),values(keys.size());
+        for(size_t i=0;i<keys.size();++i){keys[i]=bits(std::sin(float(i)*.019f));values[i]=bits(std::cos(float(i)*.023f));}
+        std::vector<int> table(batch*logical),lengths{length,17,301,length},starts(batch,7),active{1,1,1,0};
+        for(int b=0;b<batch;++b)for(int p=0;p<logical;++p)
+            table[b*logical+p]=p==3?-1:p==7?pages+1:b*logical+logical-p-1;
+        // The private adapter receives already-written KV. Independent starts
+        // deliberately differ from lengths to catch use of write positions.
+        auto unpackBf=[](uint16_t v){uint32_t u=uint32_t(v)<<16;float f;std::memcpy(&f,&u,4);return f;};
+        for(int b=0;b<batch;++b)for(int h=0;h<heads;++h) {
+            const int end=lengths[b];
+            if(!active[b]||end<=0||end>logical*16)continue;
+            double sum=std::exp(double(sinks[h]));std::vector<double> accum(dim);
+            for(int p=window?std::max(0,end-window):0;p<end;++p) {
+                const int page=table[b*logical+p/16];if(page<0||page>=pages)continue;
+                const size_t offset=(((size_t(o.layer)*pages+page)*16+p%16)*o.kvHeads+h/8)*dim;
+                double score=0;for(int d=0;d<dim;++d)score+=double(x[b*width+h*dim+d])*unpackBf(keys[offset+d]);
+                const double weight=std::exp(score/8.);sum+=weight;
+                for(int d=0;d<dim;++d)accum[d]+=weight*unpackBf(values[offset+d]);
+            }
+            for(int d=0;d<dim;++d)expected[(b*heads+h)*dim+d]=bf(float(accum[d]/sum));
+        }
+        Device<float> dx(x),ds(sinks),dy(expected);
+        Device<uint16_t> dk(keys),dv(values);
+        Device<int> dt(table),dl(lengths),dp(starts),da(active);
+        Device<unsigned char> scratch{std::vector<unsigned char>(GptOssFlashAttentionWorkspace(batch,1,logical,o))};
+        const void* in[]{dx.p,dk.p,dv.p,dt.p,dl.p,dp.p,da.p,ds.p};
+        check(RunGptOssFlashAttention(in,dy.p,scratch.p,batch,1,logical,pages,o,nullptr));
+        compare(dy.read(),expected,.006f,"FlashInfer decode independent FP64 oracle");
+        if(dk.read()!=keys||dv.read()!=values)throw std::runtime_error("FlashInfer adapter modified external KV");
+        ++cases;
+    }
+    std::cout<<"FlashInfer decode "<<cases<<" FP64/mask/length/cache cases passed\n";
+}
+#endif
 float unpack(const std::vector<unsigned char>& blocks, const std::vector<unsigned char>& scales, size_t row, int col, int width) {
     unsigned char b = blocks[row * width / 2 + col / 2]; int c = col % 2 ? b >> 4 : b & 15;
     float lut[]{0, .5f, 1, 1.5f, 2, 3, 4, 6};
@@ -537,8 +582,8 @@ void testGqaPrefill64() {
                 throw std::runtime_error("GQA prefill2/4 output/cache differs bitwise from query16 baseline");
         }
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
-        Device<unsigned char> flashWorkspace{std::vector<unsigned char>(GptOssFlashPrefillWorkspace(batch,tokens,logical,o))};
-        check(RunGptOssFlashPrefill(in,dy.p,flashWorkspace.p,batch,tokens,logical,pages,o,nullptr));
+        Device<unsigned char> flashWorkspace{std::vector<unsigned char>(GptOssFlashAttentionWorkspace(batch,tokens,logical,o))};
+        check(RunGptOssFlashAttention(in,dy.p,flashWorkspace.p,batch,tokens,logical,pages,o,nullptr));
         const auto flash=dy.read();
         compare(flash,baseline,.006f,"FlashInfer prefill: full output vs scalar baseline");
         for(size_t i=0;i<flash.size();++i)if(std::isfinite(oracle[i])&&std::abs(flash[i]-oracle[i])>.006f*(1+std::abs(oracle[i])))
@@ -576,7 +621,7 @@ void benchmarkGqaPrefill64(int batch) {
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
         GptOssOptions flashOptions;flashOptions.prefill=1;flashOptions.headDim=dim;flashOptions.pageSize=16;
         flashOptions.qHeads=heads;flashOptions.kvHeads=kvHeads;
-        Device<unsigned char> flashWorkspace{std::vector<unsigned char>(GptOssFlashPrefillWorkspace(batch,tokens,logical,flashOptions))};
+        Device<unsigned char> flashWorkspace{std::vector<unsigned char>(GptOssFlashAttentionWorkspace(batch,tokens,logical,flashOptions))};
         modes.push_back(8); // Diagnostic label8 means FlashInfer, not a scalar query tile.
 #endif
         for(int tile : modes) {
@@ -589,7 +634,7 @@ void benchmarkGqaPrefill64(int batch) {
                 float* output=dy.p+size_t(layer)*batch*tokens*heads*dim;
                 check(TestGptOssGqaPrefill64(in,output,batch,tokens,logical,pages,o,tile==8?-1:tile,stream));
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
-                if(tile==8)check(RunGptOssFlashPrefill(in,output,flashWorkspace.p,batch,tokens,logical,pages,o,stream));
+                if(tile==8)check(RunGptOssFlashAttention(in,output,flashWorkspace.p,batch,tokens,logical,pages,o,stream));
 #endif
             }
             check(cudaStreamEndCapture(stream,&graph));check(cudaGraphInstantiate(&executable,graph,nullptr,nullptr,0));
@@ -756,6 +801,9 @@ void benchmarkMarlinMetadata() {
 }
 #endif
 int main(int argc, char** argv) { try {
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+    if(argc==2&&std::strcmp(argv[1],"--flash-decode-parity")==0){testFlashDecode64();return 0;}
+#endif
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     if(argc==2 && std::strcmp(argv[1],"--prefill-gqa-parity")==0) {
         testGqaPrefill64();return 0;
@@ -783,6 +831,9 @@ int main(int argc, char** argv) { try {
         }
         return 0;
     }
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+    testFlashDecode64();
+#endif
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
     testGqaPrefill64();
     testBatchRouter();

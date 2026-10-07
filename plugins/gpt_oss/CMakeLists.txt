@@ -45,7 +45,7 @@ install(TARGETS garnet_gpt_oss_ops
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_gpt_oss_ops
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_gpt_oss_ops)
 option(GARNET_GPT_OSS_BUILD_TESTS "Build GPT-OSS operator correctness tests" ON)
-option(GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL "Build experimental native FlashInfer prefill adapter" OFF)
+option(GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL "Build experimental native FlashInfer attention adapter" OFF)
 if(GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL)
     if(CUDAToolkit_VERSION VERSION_LESS "12.9")
         message(FATAL_ERROR "The optional pinned FlashInfer prefill headers require CUDA Toolkit12.9 or newer")
@@ -84,6 +84,12 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
     target_include_directories(garnet_gpt_oss_attention_batch_benchmark PRIVATE include)
     target_link_libraries(garnet_gpt_oss_attention_batch_benchmark PRIVATE CUDA::cudart)
     target_compile_definitions(garnet_gpt_oss_attention_batch_benchmark PRIVATE NOMINMAX)
+    if(GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL)
+        target_sources(garnet_gpt_oss_attention_batch_benchmark PRIVATE cuda/gpt_oss_flash_prefill.cu)
+        target_include_directories(garnet_gpt_oss_attention_batch_benchmark PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashinfer/include")
+        target_compile_definitions(garnet_gpt_oss_attention_batch_benchmark PRIVATE GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL=1)
+        target_compile_options(garnet_gpt_oss_attention_batch_benchmark PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+    endif()
     add_executable(garnet_gpt_oss_marlin_decode_benchmark
         ../../test2026/gpt_oss/marlin_decode_benchmark.cu
         cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)

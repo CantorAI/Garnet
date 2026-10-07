@@ -1,6 +1,6 @@
-"""Replay a recorded shape for metadata, batch-router or FlashInfer prefill candidates.
+"""Replay a recorded shape for metadata, batch-router or FlashInfer attention candidates.
 
-Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill].
+Python: REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode].
 Uses the vLLM environment for validation; preserves all logs and token evidence.
 """
 import json
@@ -10,13 +10,14 @@ import statistics
 import subprocess
 import sys
 
-if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5] not in ('router','flash-prefill')):
-    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill]')
+if len(sys.argv) not in (5,6) or (len(sys.argv)==6 and sys.argv[5] not in ('router','flash-prefill','flash-decode')):
+    raise SystemExit('Expected REQUEST EXPECTED GARNET_REFERENCE NEW_RESULT_DIR [router|flash-prefill|flash-decode]')
 request_path, expected_path, reference_path, directory = map(Path, sys.argv[1:5])
 mode=sys.argv[5] if len(sys.argv)==6 else 'metadata'
 router = mode=='router'
-flash = mode=='flash-prefill'
-flag = ('GARNET_GPT_OSS_PREFILL_FLASHINFER' if flash else
+flash = mode in ('flash-prefill','flash-decode')
+flag = ('GARNET_GPT_OSS_DECODE_FLASHINFER' if mode=='flash-decode' else
+        'GARNET_GPT_OSS_PREFILL_FLASHINFER' if flash else
         'GARNET_GPT_OSS_ROUTER_QUERY_TILE' if router else 'GARNET_GPT_OSS_PARALLEL_MARLIN_METADATA')
 label = 'flash' if flash else 'router' if router else 'parallel'
 choices = (0,2,4) if router else (0,1)

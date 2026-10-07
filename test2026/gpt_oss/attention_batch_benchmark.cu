@@ -36,7 +36,12 @@ int main(int argc, char** argv) { try {
     const int batch = argc > 1 ? std::atoi(argv[1]) : 128;
     const int length = argc > 2 ? std::atoi(argv[2]) : 767;
     const int repeats = argc > 3 ? std::atoi(argv[3]) : 20;
-    if (batch < 2 || batch > 128 || length < 64 || length > 4096 || repeats < 1 || repeats > 100) return 2;
+    if (batch < 2 || batch > 512 || length < 64 || length > 4096 || repeats < 1 || repeats > 100) return 2;
+    const std::string flashSetting=std::getenv("GARNET_GPT_OSS_DECODE_FLASHINFER")?std::getenv("GARNET_GPT_OSS_DECODE_FLASHINFER"):"0";
+    if(flashSetting!="0"&&flashSetting!="1")throw std::runtime_error("Invalid FlashInfer setting");
+#ifndef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+    if(flashSetting=="1")throw std::runtime_error("FlashInfer not compiled; refusing mislabeled timing");
+#endif
     const std::string splitSetting = std::getenv("GARNET_GPT_OSS_DECODE_SPLITS") ? std::getenv("GARNET_GPT_OSS_DECODE_SPLITS") : "16";
     const std::string warpSetting = std::getenv("GARNET_GPT_OSS_DECODE_WARPS") ? std::getenv("GARNET_GPT_OSS_DECODE_WARPS") : "16";
     if (splitSetting != "0" && splitSetting != "8" && splitSetting != "16" && splitSetting != "32" && splitSetting != "64")
@@ -141,6 +146,7 @@ int main(int argc, char** argv) { try {
         << " splits=" << splitSetting << " warps=" << warpSetting
         << " gqa_tiled=" << (std::getenv("GARNET_GPT_OSS_DECODE_GQA_TILED") ? std::getenv("GARNET_GPT_OSS_DECODE_GQA_TILED") : "0")
         << " gqa_splits=" << (std::getenv("GARNET_GPT_OSS_DECODE_GQA_SPLITS") ? std::getenv("GARNET_GPT_OSS_DECODE_GQA_SPLITS") : "8")
+        << " flashinfer_decode=" << flashSetting
         << " sampled_reference_max_abs=" << maximumError << " parity=PASS gpu_ms_per_36_layers=";
     for (auto value : times) std::cout << ' ' << value;
     std::cout << " median=" << sorted[2] << '\n';

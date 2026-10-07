@@ -930,6 +930,14 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
         (const int*)in[5], (const int*)in[6], batch, tokens, logicalPages, physicalPages, o);
     auto status = cudaGetLastError(); if (status != cudaSuccess) return status;
     if (tokens == 1 && !o.prefill) {
+#ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
+        static const bool flashDecode=[] {
+            const char* value=std::getenv("GARNET_GPT_OSS_DECODE_FLASHINFER");
+            return value&&std::strcmp(value,"1")==0;
+        }();
+        if(flashDecode&&GptOssFlashAttentionWorkspace(batch,tokens,logicalPages,o))
+            return RunGptOssFlashAttention(in,y,workspace,batch,tokens,logicalPages,physicalPages,o,stream);
+#endif
         static const bool grouped = [] {
             const char* value = std::getenv("GARNET_GPT_OSS_DECODE_GQA_TILED");
             return value && std::strcmp(value, "1") == 0;
@@ -1049,8 +1057,8 @@ cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
         const char* value=std::getenv("GARNET_GPT_OSS_PREFILL_FLASHINFER");
         return value && std::strcmp(value,"1")==0;
     }();
-    if(flashPrefill && GptOssFlashPrefillWorkspace(batch,tokens,logicalPages,o))
-        return RunGptOssFlashPrefill(in,y,workspace,batch,tokens,logicalPages,physicalPages,o,stream);
+    if(flashPrefill && GptOssFlashAttentionWorkspace(batch,tokens,logicalPages,o))
+        return RunGptOssFlashAttention(in,y,workspace,batch,tokens,logicalPages,physicalPages,o,stream);
 #endif
     static const bool tiledPrefill = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_PREFILL_TILED_64");

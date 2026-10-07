@@ -160,8 +160,12 @@ size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
     // Reserve independently of the runtime flag so baseline/candidate engines
     // share a safe workspace contract. Build identity includes plugin bytes.
-    if(m_options.kind==1 && m_options.prefill && in && in[0].dims.nbDims==3 && in[3].dims.nbDims==2)
-        return GptOssFlashPrefillWorkspace(in[0].dims.d[0],in[0].dims.d[1],in[3].dims.d[1],m_options);
+    if(m_options.kind==1 && in && in[0].dims.nbDims==3 && in[3].dims.nbDims==2) {
+        const auto flash=GptOssFlashAttentionWorkspace(in[0].dims.d[0],in[0].dims.d[1],in[3].dims.d[1],m_options);
+        if(m_options.prefill)return flash;
+        if(in[0].dims.d[1]==1)
+            return std::max(flash,size_t(in[0].dims.d[0])*m_options.qHeads*64*130*sizeof(float));
+    }
 #endif
     if (m_options.kind == 3 && m_options.bf16Communication && in &&
         in[0].dims.nbDims == 3 && in[0].dims.d[0] > 0 &&

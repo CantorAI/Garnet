@@ -757,3 +757,28 @@ Local CUDA12 cannot build the upstream headers (missing cuda/cmath); retain flas
 ### OPT-0033: Larger batch/output/length profile exploration
 
 Removed artificial128/512 runner limits: both engines now accept homogeneous batch1..512/output16..2048 with input+output<=context<=4096. paired_batch_suite.py accepts explicit batch/output/prefill-chunk/context overrides, retains them in the manifest, rejects undersized explicit context and runs actual admission before vLLMfirst/Garnetsecond. It never substitutes a smaller batch when admission fails. Compact greedy native cases expand to128/256/512rows atlocalwidth7/65/100544 with ties/NaN/Inf/signzero parity. Local full CUDA and Python syntax checks pass. Practical batch256/chunk16/context1024 is the next admission profile;512 may exceed conservative budgets. These are experiment limits, not a measured maximum or new serving capability claim; heterogeneous admission remains separate.
+
+#### OPT-0032 target native and compiled gates, 2026-10-07
+
+Source/native058e2a7 on CUDA13.4/SM120 passes all48 prefill numerical/cache cases, Compute Sanitizer memcheck with zero errors, and full verify.py --multi-gpu including Qwen compatibility. A separate actual head64/GQA8:1 fixture passes compiled cold prefill, cached decode and reload/refit; maximum absolute logit error0.015625 remains within the unchanged0.025*(1+abs(reference)) bound. Default fixture generation is byte-identical to the preceding generator for config, weights and expected results.
+
+Earlier failures remain evidence: b88bed4 used unsupported head64 TileQ32; bac2003 then dereferenced null output indptr (118 sanitizer errors); 566's ordinary mask mode skipped custom masks on interior tiles. Corrections were made locally, committed/pushed and pulled remotely: TileQ64, output indptr equal to query indptr, and custom mask mode on every KV tile. No tolerance or expected output was weakened. Full failure and success logs plus compiled fixtures/caches are backed up in D:/CantorAI/work/vast-54543362/flash-prefill-058e2a7-gates.tgz.
+
+Blackwell batch128/query32 isolated36-layer graph timings below include KV writes, query conversion, device schedule, attention and output conversion. Four cache layers are reused with distinct query/output tensors;3 warmups followed by9 samples of3 replays. This is an attention experiment, not pretrained request throughput.
+
+| Start position / window | Legacy ms | Shared-query2 ms | Shared-query4 ms | FlashInfer ms |
+|---|---:|---:|---:|---:|
+|224 / full|98.3678|90.8454|88.4004|7.6277|
+|224 /128|55.3748|50.0664|48.0668|6.81165|
+|1952 / full|781.824|733.010|714.474|37.3805|
+|1952 /128|56.5110|50.9375|48.9338|6.94066|
+
+FlashInfer's long full-attention gain is20.9x here; prefill also contains MoE, dense projections, routing and collectives. Decision remains INCONCLUSIVE until pretrained semantics, timing and broader profiles pass. Scalar shared-query options stay disabled given local regressions and much smaller target gains. The matched pretrained FlashInfer0/1 arithmetic screen started at09:51UTC with source058e2a7, router2, batch128/input256/output512/context1024/chunk32. Process985230 and xlang3 child985349 were confirmed live at09:52UTC, building the new prefill engine. No competing target inference; unchanged optimized vLLM reference is retained. Cold setup and engine handoff remain excluded from execution rates and must be reported separately.
+
+### OPT-0034: Optional native FlashInfer batch decode attention
+
+**Hypothesis / Implementation:** Reuse the pinned attention adapter for one-query decode to reduce the measured paged-GQA attention cost. Opt-in GARNET_GPT_OSS_DECODE_FLASHINFER=1 is independent of the prefill flag; both remain disabled by default. Decode uses TileQ16 (one query warp/four KV warps) instead of the prefill TileQ64, reads live sequence lengths rather than KV write positions, retains complete custom masks and counts the sink once without split-KV. Existing KV write precedes attention. Private helper names now say FlashAttention; the operator/options serialization is unchanged. Decode workspace is the larger of existing64-split scratch and adapter workspace, independently of runtime flags, preserving safe engine reuse. The existing build option name is retained for configuration compatibility.
+
+**Gates / Tradeoff:** New72 independent FP64/mask/cache cases span heads8/32 with8:1 GQA, full/window128, negative/zero/page-boundary/301/capacity320/over-capacity321 lengths, missing and out-of-range pages, inactive slots and write positions deliberately different from lengths. The36-distinct-layer decode benchmark now records the actual FlashInfer flag, refuses an unavailable build and supports batches through512; all cases retain the existing0.006 numerical bound. Few query CTAs or no split-KV may reduce occupancy at small batch/long context, so native timing precedes pretrained testing. Model screening supports sequential flash-decode0/1 with complete output/answer evidence; numerical trajectories may differ and exact matches are counted rather than assumed.
+
+Local CUDA12/SM89 default build and complete optimized native suite pass, including512-row compact vocabulary cases; Python syntax/diff checks pass. Optional FlashInfer compilation and target72-case/sanitizer/compiled/model gates remain pending because the target source058e2a7 is still running its prefill A/B. Do not pull/build until that process is terminal. No decode gain claim. Decision INCONCLUSIVE.
