@@ -326,8 +326,10 @@ void testMxfp4Encoding() {
     std::cout << "All MXFP4 nibbles and E8M0 scales passed exactly\n";
 }
 #endif
-void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = false) {
+void testMoe(int tokens, int h = 32, int intermediate = 32, bool tiedRouting = false,
+             bool batchedDecode = false) {
     GptOssOptions o; o.kind = 2; o.hidden = h; o.intermediate = intermediate; o.experts = 5; o.topK = 2;
+    o.prefill = tokens > 8 && !batchedDecode ? 1 : 0;
     std::vector<float> x(tokens * h), router(5 * h), rb{-.2f, .4f, -.1f, .3f, -.5f}, ub(5 * 2 * intermediate), db(5 * h);
     for (size_t i = 0; i < x.size(); ++i) x[i] = bf(std::cos(float(i) * .17f));
     for (size_t i = 0; i < router.size(); ++i) router[i] = bf(std::sin(float(i) * .37f) * .1f);
@@ -431,9 +433,13 @@ int main(int argc, char** argv) { try {
         GptOssOptions options;
         options.kind = 2; options.hidden = options.intermediate = 2880;
         options.experts = 128; options.topK = 8; options.tpRank = 0;
-        for (int rows : {1, 8, 32, 128, 513, 4096, 8020})
+        for (int rows : {1, 8, 32, 128, 513, 4096, 8020}) {
+            options.prefill = 1;
+            const auto prefillBytes = GptOssMarlin::Workspace(rows, options);
+            options.prefill = 0;
             std::cout << rows << ' ' << GptOssMoeWorkspace(rows, options) << ' '
-                << GptOssMarlin::Workspace(rows, options) << '\n';
+                << prefillBytes << ' ' << GptOssMarlin::Workspace(rows, options) << '\n';
+        }
         return 0;
     }
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
@@ -444,5 +450,5 @@ int main(int argc, char** argv) { try {
             testDecodeGemvSharded(true, rank);
             testDecodeGemvSharded(false, rank);
         }
-        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); check(cudaDeviceSynchronize()); return 0; }
+        testRmsNorm(); testRope(); for (int dimension : {8, 64, 128}) { testAttention(dimension); testLongDecodeAttention(dimension); } testLongPrefillAttention64(); for (int tokens : {1, 3, 17, 65}) { testMoe(tokens); testMoe(tokens, 96, 64); } testMoe(65, 96, 64, true); testMoe(513, 32, 32, true); testMoe(128, 96, 64, false, true); check(cudaDeviceSynchronize()); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; } }

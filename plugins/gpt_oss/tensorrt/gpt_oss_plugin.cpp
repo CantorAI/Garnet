@@ -37,6 +37,7 @@ bool valid(const GptOssOptions& o) {
          o.headDim > 0 && o.qHeads % 2 == 0 && o.kvHeads % 2 == 0 &&
          o.intermediate == (o.qHeads / 2 + o.kvHeads) * o.headDim));
     if (o.kind == 2) return o.hidden > 0 && o.intermediate > 0 &&
+        (o.prefill == 0 || o.prefill == 1) &&
         o.hidden % 32 == 0 && o.intermediate % 32 == 0 && o.experts > 0 &&
         o.experts <= 256 && o.topK > 0 && o.topK <= 8 && o.topK <= o.experts && o.limit > 0 &&
         o.tpRank >= -1 && o.tpRank < 2;

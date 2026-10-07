@@ -46,11 +46,19 @@ bool supported(int tokens,const GptOssOptions& o) {
         o.tpRank>=-1 && o.tpRank<2 && (o.expertWeightsSharded==0 ||
         (o.expertWeightsSharded==1 && o.tpRank>=0));
 }
-int marlinBlockSize(int tokens) {
+int marlinBlockSize(int tokens, const GptOssOptions& options) {
     static const bool largePrefill = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_BLOCK");
         return value && std::atoi(value)==32;
     }();
+    static const int decodeBlock = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_DECODE_BLOCK");
+        const int parsed = value ? std::atoi(value) : 0;
+        return parsed == 8 || parsed == 32 ? parsed : 0;
+    }();
+    if (!options.prefill && tokens>=128 && decodeBlock) return decodeBlock;
+    // Preserve the existing row-based choice unless a separate decode tile
+    // is requested. Homogeneous and diverse batches have different reuse.
     return largePrefill && tokens>=128 ? 32 : 8;
 }
 struct Layout {
@@ -61,7 +69,7 @@ struct Layout {
         selected=take(slots*4);probabilities=take(slots*4);
         routeLogits=take(size_t(tokens)*o.experts*4);a=take(size_t(tokens)*g.upK*2);
         up=take(slots*g.upN*2);activation=take(slots*g.downK*2);down=take(slots*g.downN*2);
-        const int block=marlinBlockSize(tokens);
+        const int block=marlinBlockSize(tokens,o);
         const size_t maxPadded=slots+size_t(o.experts)*block;
         sorted=take(maxPadded*4);experts=take(((maxPadded+block-1)/block)*4);padded=take(4);
         locks=take(size_t(o.experts)*(n/64)*16*4);
@@ -245,7 +253,7 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     if(s.device>=0 && s.device!=device)return cudaErrorInvalidDevice;
     status=s.prepare(in,stream);if(status!=cudaSuccess)return status;
     const auto& o=s.o;const auto& g=s.g;const Layout l(tokens,o);int slots=tokens*o.topK;
-    const int block=marlinBlockSize(tokens);
+    const int block=marlinBlockSize(tokens,o);
     auto selected=at<int>(workspace,l.selected);auto probabilities=at<float>(workspace,l.probabilities);
     static const bool fuseDecodeRoute=[] {
         const char* value=std::getenv("GARNET_GPT_OSS_FUSED_DECODE_ROUTE");

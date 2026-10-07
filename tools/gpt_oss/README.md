@@ -265,6 +265,15 @@ sizing uses the larger of grouped fallback and aligned Marlin scratch; at
 4096 GPT-OSS rows, Marlin needs more scratch than the grouped path. Generate
 a fresh profile if these layout settings change before loading an engine.
 
+`GARNET_GPT_OSS_MARLIN_DECODE_BLOCK=8` or `32` independently selects the
+expert tile for decode batches of at least128 rows. An unset/other value
+preserves the existing row-based tile choice. The xModel passes the prefill
+phase explicitly to the MoE plugin, and the override is part of the workspace
+profile/cache identity. Screen both choices with actual batch routing and
+matched input/output lengths; a repeated-prompt batch and a diverse batch
+can favor different tiles. This is an experimental override, not a measured
+default improvement.
+
 The Linux build can enable the experimental two-rank GPT-OSS NCCL collectives
 and run their two-GPU parity checks with `--enable-nccl`. The TP2 inference
 path shards attention heads and vocabulary rows, keeps rank-local MoE work,

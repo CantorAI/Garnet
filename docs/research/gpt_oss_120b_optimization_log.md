@@ -30,7 +30,7 @@ This is an append-only record of performance hypotheses, implementations, correc
 | OPT-0022 | Batched prefill | Chunk long input below Marlin row cutoff | 3.030 s prefill, 130.8 full-request tok/s | 1.431 s, 202.2 tok/s; all four answers pass, token sequences differ | Faster complete request; decode regressed, repeat pending | INCONCLUSIVE, opt-in |
 | OPT-0023 | Batched TP reduction | Peer reduction with CTA-count screen | NCCL b8/32/64: 9.19/22.64/32.66 µs/op; corrected b32 decode 2596–2623 tok/s | Direct16 plus inline controls: 2760–2792; all 96 trial/slot token sequences match | ~4.0% median decode gain over controls alone; full execution 961 → 974 tok/s; other shapes pending | INCONCLUSIVE, opt-in |
 | OPT-0024 | Batched decode controls | Inline integer-vector updates on rank threads | Corrected b32 decode 2596–2623 tok/s | 2637–2670; synthetic suite and all 96 trial/slot checks pass | ~1.8% median decode gain; full execution 959 → 961 tok/s; other shapes pending | INCONCLUSIVE, opt-in |
-| OPT-0025 | TP2 weight storage | Store only owned original-layout experts per rank | Full constants plus half-model Marlin repack; chunk128 b32 OOM | Candidate byte-mapping and memory-admission checks pass locally | Target parity, peak memory and serving measurements pending | INCONCLUSIVE, opt-in |
+| OPT-0025 | TP2 weight storage | Store only owned original-layout experts per rank | Full constants plus half-model Marlin repack; chunk128 b32 OOM | Full synthetic suite and96 arithmetic outputs/mode pass; sampled peak falls97095→68207MiB/GPU; chunk128 prefill0.828–0.842s | Memory fix enables chunked prefill; token trajectories differ and other workloads pending | INCONCLUSIVE, opt-in |
 
 ## Cumulative accepted-stage history
 
@@ -487,3 +487,20 @@ The first sharded run at **`58cd9fb`**, native build `84ecc3d`, preserves the pr
 #### OPT-0020 workspace-profile correction, 2026-10-07
 
 Code inspection found that Marlin's row-admission flag and block size change `getWorkspaceSize()` and internal buffer offsets, but were absent from the TP2 placement/cache identity. Builder auto-sizing also considered only grouped fallback scratch. Add normalized Marlin workspace settings to the profile/cache identity and record them in results; reject a settings change between planning and engine construction. The builder allowance now covers **max(grouped scratch, aligned Marlin scratch)**, retaining the exact16-byte allocation alignment. A native `--workspace` report exposes the actual C++ allocation methods for CPU cross-checks at1/8/32/128/513/4096/8020 rows and both8-/32-row tiles. Local cache-identity/admission and Python checks pass; target cross-checks pending. This is a cache/memory-contract correction, not evidence that the previously rejected8192-row experiment failed for this reason. Keep that experiment rejected unless its own numerical defect is resolved and validated.
+
+#### OPT-0025 sequential pretrained screen, 2026-10-07
+
+Source58cd9fb/native84ecc3d, TP2 BF16, homogeneous batch32/input256/output128/context4096, sharded original experts and direct16, inline controls, tiled16 attention, Marlin4096/block32. Fresh optimized vLLM0.31 ran first with8192 max batched tokens, prefix reuse disabled, three full requests: decode2998.45/2976.32/2945.51 and full2950.49/2919.83/2896.33 aggregate output tok/s. Both engines retain exact input IDs. Garnet's three trials per mode repeat decode from the original input KV, with one warmed prefill and engine loading/handoff excluded.
+
+| Mode | Warm prefill s | Decode aggregate output tok/s, three trials | First complete-execution tok/s | Sampled peak MiB/GPU |
+|---|---:|---|---:|---|
+| Unchunked, CTA1 |2.66277|2786.82 /2534.24 /2804.06|993.92|68207 /68189|
+| Chunk128, CTA1 |0.82795|2434.08 /2443.89 /2443.35|1639.99|68713 /68695|
+| Chunk128, CTA2 |0.83473|2522.26 /2540.68 /2493.45|1674.58|68749 /68731|
+| Chunk128, CTA4 |0.84205|2414.72 /2431.29 /2412.94|1622.14|68749 /68731|
+
+All96 expected arithmetic answers per mode passed. Chunking changes token trajectories: CTA1 matches the unchunked full128-token sequence in only1/32 slots in each trial, CTA2 in0/32; do not assume decode times represent identical expert routing. The low middle unchunked trial is retained without an invented cause. Peak memory falls about28888MiB (~28.2GiB) compared with the earlier full-original baseline. Chunk128 no longer OOMs and prefill falls about69%, but decode regresses and full execution throughput remains below vLLM. KV allocation is4608MiB/GPU; logically occupied KV is288MiB after input and430.875MiB after383 processed positions/slot. Sampled memory is not a guaranteed allocation maximum. Raw results, validation and logs are retained locally in D:/CantorAI/work/vast-54543362/garnet-expert-weight-shard-screen and remotely in /workspace/CantorAI/work/garnet-expert-weight-shard-screen. Decision remains INCONCLUSIVE pending broader prompt/length/batch correctness and serving measurements.
+
+#### Independent batch-decode tile candidate, 2026-10-07
+
+The existing Marlin prefill-block flag applies by flattened row count and therefore also selects32 for batch128 decode. Add an opt-in GARNET_GPT_OSS_MARLIN_DECODE_BLOCK=8/32, propagate the MoE prefill phase explicitly from xModel, and include the override in workspace/cache identity. Unset preserves existing dispatch. Homogeneous routing can favor larger expert tiles, while diverse routing may waste padded rows; neither tile is declared faster without matched model measurements. Add128-row decode parity and native workspace cross-checks for prefill8/32 and decode inherited/8/32 across dispatch boundaries. Local Python/cache-admission checks pass; target validation and performance pending.

@@ -203,6 +203,7 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
         o.kind = 2; o.hidden = integer("hidden_size", 0); o.intermediate = integer("intermediate_size", 0);
         o.experts = integer("num_experts", 0); o.topK = integer("experts_per_token", 0); o.limit = real("swiglu_limit", 7);
         o.tpRank = integer("tp_rank", -1);
+        o.prefill = integer("prefill", 0);
         o.expertWeightsSharded = integer("expert_weight_shard", 0);
         if (o.expertWeightsSharded != 0 &&
             (o.expertWeightsSharded != 1 || o.tpRank < 0 || o.tpRank > 1)) {
