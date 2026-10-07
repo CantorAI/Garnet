@@ -468,3 +468,12 @@ with `GARNET_GPT_OSS_PROFILE_PREFILL_CHUNK` (default0). Later long-context chunk
 can expose attention costs that the first chunk misses; an invalid index fails
 before execution. The index and instrumentation flag are recorded in the raw
 result. Profiled timings stay separate from throughput comparisons.
+
+The BF16 pack/unpack memcheck retains explicit CUDA API reporting and uses
+`nccl_initialization_api_suppressions.xml` only for observed NCCL initialization
+backtraces: unavailable-kernel209 attribute probes and already-enabled-peer704
+clearing. Every suppression requires the specific API, error code and NCCL
+caller frames. Device-memory errors and Garnet callers are not suppressed.
+Full unsuppressed diagnostic XML remains in the research evidence; the final
+run also saves XML. New errors must be investigated rather than broadening
+these exclusions to make a gate pass.

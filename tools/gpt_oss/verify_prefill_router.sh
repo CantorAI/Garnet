@@ -67,7 +67,9 @@ for bf16 in 0 1; do
             # The substring selects both packBf16 and unpackBf16. NCCL and
             # reference kernels execute without instrumentation in this check.
             command=(compute-sanitizer --tool memcheck --error-exitcode 99 --target-processes all
-                --kernel-name kns=packBf16 --print-session-details "${command[@]}")
+                --kernel-name kns=packBf16 --print-session-details --report-api-errors explicit
+                --suppressions "$repo/tools/gpt_oss/nccl_initialization_api_suppressions.xml"
+                --xml --save "$directory/$label.memcheck.xml" --print-limit 0 "${command[@]}")
         fi
         "${command[@]}" >"$directory/$label.log" 2>&1
         if [[ $bf16 == 1 && $phase == cold ]]; then
