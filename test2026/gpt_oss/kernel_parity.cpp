@@ -878,7 +878,7 @@ std::vector<int> metadataRoutes(int slots,int experts,int pattern,int layer=0) {
 void testMarlinMetadata() {
     int cases=0;
     for(int slots : {1,63,68,512,2052,16384})for(int count : {1,5,128,256})
-    for(int rank : {-1,0,1})for(int block : {8,32})for(int pattern : {0,1}) {
+    for(int rank : {-1,0,1})for(int block : {8,32,64})for(int pattern : {0,1}) {
         const auto selected=metadataRoutes(slots,count,pattern);
         const int capacity=slots+count*block,blocks=(capacity+block-1)/block;
         std::vector<int> expectedSorted(capacity,-99),expectedExperts(blocks,-99);
@@ -971,7 +971,7 @@ int main(int argc, char** argv) { try {
         GptOssOptions options;
         options.kind = 2; options.hidden = options.intermediate = 2880;
         options.experts = 128; options.topK = 8; options.tpRank = 0;
-        for (int rows : {1, 8, 32, 128, 513, 4096, 8020}) {
+        for (int rows : {1, 8, 32, 128, 513, 1023, 1024, 4096, 8020}) {
             options.prefill = 1;
             const auto prefillBytes = GptOssMarlin::Workspace(rows, options);
             options.prefill = 0;
@@ -979,6 +979,19 @@ int main(int argc, char** argv) { try {
                 << prefillBytes << ' ' << GptOssMarlin::Workspace(rows, options) << '\n';
         }
         return 0;
+    }
+    if (argc == 2 && std::strcmp(argv[1], "--large-prefill-parity") == 0) {
+        GptOssOptions probe; probe.kind=2; probe.hidden=probe.intermediate=32;
+        probe.experts=5; probe.topK=2; probe.prefill=1;
+        if(!GptOssMarlin::Workspace(4096,probe))
+            throw std::runtime_error("Large-prefill gate requires enabled 4096-row Marlin support");
+        // Independent full CPU oracle plus rank-local expert/intermediate
+        // shards and exact original/prepacked comparison at dispatch bounds.
+        testMoe(1023,32,32,true);
+        testMoe(1024,96,64,false);
+        testMoe(4096,32,32,true);
+        testMoe(1024,32,32,true,true); // Decode must retain its old tile.
+        check(cudaDeviceSynchronize()); return 0;
     }
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
     testFlashDecode64();

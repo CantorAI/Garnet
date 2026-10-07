@@ -280,11 +280,15 @@ def marlin_workspace_profile():
         maximum = int(os.environ.get('GARNET_GPT_OSS_MARLIN_MAX_TOKENS', '8'))
         block = int(os.environ.get('GARNET_GPT_OSS_MARLIN_PREFILL_BLOCK', '8'))
         decode = int(os.environ.get('GARNET_GPT_OSS_MARLIN_DECODE_BLOCK', '0'))
+        large = int(os.environ.get('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', '0'))
     except ValueError as error:
         raise ValueError('Marlin workspace profile must use integer settings') from error
-    return {'max_tokens': maximum if maximum in (512, 4096) else 8,
+    profile = {'max_tokens': maximum if maximum in (512, 4096) else 8,
             'prefill_block': 32 if block == 32 else 8,
             'decode_block_override': decode if decode in (8, 32) else 0}
+    if large == 64:
+        profile['large_prefill_block'] = 64
+    return profile
 
 
 def estimate_tp2_marlin_workspace_bytes(config, rows, prefill=True):
@@ -304,6 +308,8 @@ def estimate_tp2_marlin_workspace_bytes(config, rows, prefill=True):
         block = profile['prefill_block']
         if not prefill and profile['decode_block_override']:
             block = profile['decode_block_override']
+    if prefill and rows >= 1024 and profile.get('large_prefill_block') == 64:
+        block = 64
     padded = slots + experts * block
     buffers = (slots * 4, slots * 4, rows * experts * 4, rows * up_k * 2,
                slots * up_n * 2, slots * down_k * 2, slots * down_n * 2,

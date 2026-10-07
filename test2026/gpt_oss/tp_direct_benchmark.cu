@@ -19,11 +19,11 @@ __global__ void changeInput(float* input, int count, float increment) {
          i += blockDim.x * gridDim.x) input[i] += increment;
 }
 
-int main(int argc, char** argv) {
+int screen(int argc, char** argv) {
     const int batch = argc > 1 ? std::atoi(argv[1]) : 8;
     const int repeats = argc > 2 ? std::atoi(argv[2]) : 50;
     constexpr int operations = 72;
-    if (batch < 1 || batch > 128 || repeats < 1 || repeats > 1000) return 2;
+    if (batch < 1 || batch > 512 || repeats < 1 || repeats > 1000) return 2;
     const int count = batch * 2880;
     const bool direct = std::getenv("GARNET_GPT_OSS_DIRECT_ALLREDUCE") &&
         std::atoi(std::getenv("GARNET_GPT_OSS_DIRECT_ALLREDUCE")) == 1;
@@ -32,6 +32,14 @@ int main(int argc, char** argv) {
     if (direct && batch > 64 && (!std::getenv("GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE") ||
         std::atoi(std::getenv("GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE")) != 1)) return 2;
     CUDA_OK(Garnet::GptOssTpAcquire());
+    if (direct) {
+        const char* value = std::getenv("GARNET_GPT_OSS_DIRECT_MAX_BATCH");
+        const size_t capacity = value ? size_t(std::atoi(value)) : 128;
+        // Unsupported counts must reject before touching pointers or streams.
+        for (size_t rejected : {size_t(0), size_t(2881), (capacity + 1) * 2880})
+            if (Garnet::GptOssTpDirectAllReduce(nullptr, nullptr, rejected, 0, nullptr)
+                != cudaErrorNotSupported) return 4;
+    }
     std::array<cudaStream_t, 2> streams{};
     std::array<float*, 2> inputs{}, outputs{};
     std::array<cudaGraph_t, 2> graphs{};
@@ -152,4 +160,13 @@ int main(int argc, char** argv) {
         CUDA_OK(cudaStreamDestroy(streams[rank]));
     }
     Garnet::GptOssTpRelease();
+    return 0;
+}
+int main(int argc, char** argv) {
+    // Same-process release/reacquire resets capacity, epoch and staging state.
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        const int status = screen(argc, argv);
+        if (status) return status;
+    }
+    return 0;
 }

@@ -7,7 +7,6 @@
 namespace Garnet {
 namespace {
 constexpr size_t kCount = 2880; // GPT-OSS-120B hidden size, batch 1 decode.
-constexpr size_t kMaxCount = kCount * 128;
 constexpr int kMaxBlocks = 32;
 struct alignas(128) Signal {
     alignas(128) unsigned start[kMaxBlocks][2];
@@ -20,6 +19,7 @@ bool g_ready = false;
 bool g_batchEnabled = false;
 bool g_largeBatchEnabled = false;
 int g_batchBlocks = 0;
+size_t g_maxCount = kCount * 128;
 
 __device__ __forceinline__ void storeRelease(unsigned* ptr, unsigned value) {
     asm volatile("st.release.sys.global.u32 [%1], %0;" :: "r"(value), "l"(ptr));
@@ -71,6 +71,7 @@ void cleanup() {
     g_batchEnabled = false;
     g_largeBatchEnabled = false;
     g_batchBlocks = 0;
+    g_maxCount = kCount * 128;
 }
 }
 
@@ -79,6 +80,11 @@ cudaError_t GptOssTpDirectAcquire() {
     int original = -1;
     auto status = cudaGetDevice(&original);
     if (status != cudaSuccess) return status;
+    const char* capacity = std::getenv("GARNET_GPT_OSS_DIRECT_MAX_BATCH");
+    const int maximum = capacity ? std::atoi(capacity) : 128;
+    if (maximum != 128 && maximum != 256 && maximum != 512)
+        return cudaErrorInvalidValue;
+    g_maxCount = kCount * size_t(maximum);
     for (int rank = 0; rank < 2; ++rank) {
         status = cudaSetDevice(rank);
         if (status != cudaSuccess) break;
@@ -94,7 +100,7 @@ cudaError_t GptOssTpDirectAcquire() {
             status = cudaSuccess;
         }
         if (status != cudaSuccess) break;
-        status = cudaMalloc(&g_staging[rank], kMaxCount * sizeof(float));
+        status = cudaMalloc(&g_staging[rank], g_maxCount * sizeof(float));
         if (status != cudaSuccess) break;
         status = cudaMalloc(&g_signal[rank], sizeof(Signal));
         if (status != cudaSuccess) break;
@@ -128,7 +134,7 @@ void GptOssTpDirectRelease() {
 cudaError_t GptOssTpDirectAllReduce(const float* input, float* output,
     size_t count, int rank, cudaStream_t stream) {
     if (!g_ready || (count != kCount && (!g_batchEnabled || !count ||
-        count > kMaxCount || count % kCount ||
+        count > g_maxCount || count % kCount ||
         (count > kCount * 64 && !g_largeBatchEnabled)))) return cudaErrorNotSupported;
     if (!input || !output || rank < 0 || rank > 1) return cudaErrorInvalidValue;
     auto status = cudaMemcpyAsync(g_staging[rank], input,
