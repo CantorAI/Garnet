@@ -148,14 +148,16 @@ def create(root):
         return [linear(norm(x, 'norm.scale'), 'unembedding.weight') for x in xs]
 
     cases = [[1, 2, 3, 4], [6, 5, 4, 3]]
-    sequence, generated = cases[0][:3], []
+    sequence, generated, generation_logits = cases[0][:3], [], []
     for _ in range(3):
         logits = reference(sequence)[-1]
+        generation_logits.append(logits)
         token = max(range(len(logits)), key=lambda i: logits[i])
         generated.append(token)
         sequence.append(token)
     (root / 'expected.json').write_text(json.dumps({'ids': cases, 'logits': [reference(ids) for ids in cases],
-                                                  'generated': generated}))
+                                                  'generated': generated,
+                                                  'generation_logits': generation_logits}))
     (root / 'request.json').write_text(json.dumps({'input_ids': cases[0][:3], 'max_new_tokens': 3}))
     model_root = Path(__file__).resolve().parents[2] / 'xModel' / 'gpt_oss' / '120b'
     normal = {'id': 'gpt_oss', 'module': 'garnet_gpt_oss', 'abi': 1, 'backend': 'tensorrt',
