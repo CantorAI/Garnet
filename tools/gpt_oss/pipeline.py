@@ -182,6 +182,21 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_lo
     return Pipeline(stages)
 
 
+def estimate_tp2_moe_workspace_bytes(config, rows):
+    """Mirror the grouped fallback scratch in GptOssMoeWorkspace()."""
+    top_k = config['experts_per_token']
+    experts = config['num_experts']
+    slots = rows * top_k
+    scratch = (slots * (4 + 4) + rows * experts * 4 +
+               slots * config['intermediate_size'] * 4)
+    if rows >= 16:
+        tile_rows = 64 if rows > 512 else 32
+        tasks = (slots + tile_rows - 1) // tile_rows + experts
+        scratch += 4 * (experts + experts * slots + 1 + 2 * tasks)
+        scratch += 4 * slots * config['hidden_size']
+    return scratch
+
+
 def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                           last_token_logits=False):
     """Build paired engines with sharded attention heads and rank-local MoE."""
@@ -193,6 +208,19 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
     if tokens < 1 or tokens > plan['max_tokens']:
         raise ValueError('token shape exceeds TP2 placement profile')
     config, batch = plan['config'], plan['batch']
+    if prefill:
+        # Large batch × prompt shapes can exceed TensorRT's 256 MiB default
+        # even when the checkpoint and KV cache fit on both GPUs.
+        rows = batch * tokens
+        moe_scratch = estimate_tp2_moe_workspace_bytes(config, rows)
+        needed_mb = (moe_scratch + (1 << 20) - 1) >> 20
+        auto_workspace_mb = 1 << max(0, needed_mb - 1).bit_length()
+        if auto_workspace_mb > 4096:
+            raise ValueError('GPT-OSS TP2 prefill MoE scratch exceeds 4 GiB builder workspace')
+        if auto_workspace_mb > workspace_mb:
+            workspace_mb = auto_workspace_mb
+            print('GPT-OSS TP2 prefill builder workspace', workspace_mb,
+                  'MiB for', rows, 'rows', flush=True)
     cache = Path(cache) / plan['cache_key']
     cache.mkdir(parents=True, exist_ok=True)
     (cache / 'placement.json').write_text(json.dumps(plan, indent=2))

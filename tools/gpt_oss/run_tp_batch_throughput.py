@@ -94,20 +94,13 @@ for stage in model.stages:
     finally:
         G.cuda_set_device(previous)
 
-step_seconds = []
-memory_samples_mib = [decode_engine_memory_mib]
 inline_single = batch == 1 and os.environ.get('GARNET_GPT_OSS_INLINE_CONTROL_KERNEL') == '1'
 profile_steps = int(os.environ.get('GARNET_GPT_OSS_PROFILE_DECODE_STEPS', '0'))
 profiler = ctypes.CDLL('libcudart.so') if profile_steps else None
 profiling = False
-for offset in range(1, output_tokens):
-    if profiler and offset == 10:
-        if profiler.cudaProfilerStart() != 0:
-            raise RuntimeError('cudaProfilerStart failed')
-        profiling = True
-    tokens = [row[-1] for row in generated]
-    index = len(ids) + offset - 1
-    started = time.perf_counter()
+
+
+def forward_decode_step(tokens, index):
     if not inline_single:
         for stage, (local_token, controls) in zip(model.stages, rank_inputs):
             previous = G.cuda_set_device(stage['device_id'])
@@ -118,9 +111,28 @@ for offset in range(1, output_tokens):
                 G.tensor_update_from_host(controls[3], [index] * batch)
             finally:
                 G.cuda_set_device(previous)
-    reply = model.forward_rank_local(rank_inputs, True,
+    return model.forward_rank_local(rank_inputs, True,
         scalar_values=[tokens[0], index, index + 1, index] if inline_single else None,
         sample_batch=True)
+
+
+# Warm the decode engine and its rank-local expert preparation once, just as
+# the vLLM runner executes a warmup batch before its timed batch. This writes
+# the first decode KV slot; the timed first step overwrites that same slot.
+started = time.perf_counter()
+forward_decode_step([row[-1] for row in generated], len(ids))
+decode_warmup_seconds = time.perf_counter() - started
+step_seconds = []
+memory_samples_mib = [gpu_memory_mib()]
+for offset in range(1, output_tokens):
+    if profiler and offset == 10:
+        if profiler.cudaProfilerStart() != 0:
+            raise RuntimeError('cudaProfilerStart failed')
+        profiling = True
+    tokens = [row[-1] for row in generated]
+    index = len(ids) + offset - 1
+    started = time.perf_counter()
+    reply = forward_decode_step(tokens, index)
     sampled = [int(value) for value in reply['token_ids']]
     assert len(sampled) == batch, (len(sampled), batch)
     for row, value in zip(generated, sampled):
@@ -157,6 +169,7 @@ result_path.write_text(json.dumps({
     'gpu_memory_mib_during_decode': memory_samples_mib,
     'prefill_build_seconds': prefill_build_seconds,
     'decode_build_seconds': decode_build_seconds,
+    'decode_warmup_seconds_excluded': decode_warmup_seconds,
     'decode_step_seconds': step_seconds,
     'inline_single_request_controls': inline_single,
     'profile_decode_steps': profile_steps,
@@ -172,7 +185,7 @@ result_path.write_text(json.dumps({
     'request_completion_seconds': [prefill_seconds + decode_seconds] * batch,
     'full_request_output_tokens_per_second':
         batch * output_tokens / (prefill_seconds + decode_seconds),
-    'measurement': 'homogeneous fixed-size TP2 batch, greedy, no early stop',
+    'measurement': 'homogeneous fixed-size TP2 batch, greedy, no early stop; one decode warmup excluded',
 }, indent=2))
 print('Decode aggregate output tok/s', decode_output_tokens / decode_seconds,
       'warm after first decode tok/s', warm_output_tokens / warm_seconds,
