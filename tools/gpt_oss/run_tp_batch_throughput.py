@@ -130,6 +130,8 @@ decode_seconds = sum(step_seconds)
 decode_output_tokens = batch * len(step_seconds)
 result_path.write_text(json.dumps({
     'token_ids_by_request': generated,
+    'identical_output_across_duplicate_requests':
+        all(row == generated[0] for row in generated),
     'input_tokens_per_request': len(ids), 'output_tokens_per_request': output_tokens,
     'batch': batch, 'prefill_seconds': prefill_seconds,
     'kv_cache_allocated_bytes_per_gpu': (

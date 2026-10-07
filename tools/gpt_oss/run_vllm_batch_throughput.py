@@ -85,6 +85,8 @@ async def main():
         'gpu_memory_mib_after_warmup': warmed_memory_mib,
         'gpu_memory_mib_after_benchmark': completed_memory_mib,
         'token_ids_by_request': [row['token_ids'] for row in outputs],
+        'identical_output_across_duplicate_requests':
+            all(row['token_ids'] == outputs[0]['token_ids'] for row in outputs),
         'benchmark_started_ts': started,
         'request_timings': [{k: row[k] for k in ('first_token_ts', 'last_token_ts')}
                             for row in outputs],
