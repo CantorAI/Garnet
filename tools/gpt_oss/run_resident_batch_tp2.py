@@ -79,11 +79,14 @@ def memory():
 samples = [memory()]
 load_seconds = {}
 def load(prefill, kv=None):
+    print('Resident phase load start', 'prefill' if prefill else 'decode', flush=True)
     start = time.perf_counter()
     model = build_tensor_parallel(weights, cache, plan, chunk if prefill else 1,
         prefill, kv, last_token_logits=prefill, padded_prefill=prefill and padded)
     load_seconds['prefill' if prefill else 'decode'] = time.perf_counter() - start
     samples.append(memory())
+    print('Resident phase load complete', 'prefill' if prefill else 'decode',
+          'seconds', load_seconds['prefill' if prefill else 'decode'], flush=True)
     return model
 
 pair = ResidentTensorParallel.build(lambda: load(True), lambda kv: load(False, kv))
@@ -176,6 +179,7 @@ try:
     decode_inputs = tensors(pair.decode_stages, 1)
     cold_startup_seconds = time.perf_counter() - startup_started
     for warmup in range(warmup_count):
+        print('Complete warmup start', warmup, flush=True)
         measured = run_request(-1 - warmup)
         warmups.append(dict(seconds=measured['full_request_wall_seconds'],
             token_ids_by_request=measured['token_ids_by_request']))
