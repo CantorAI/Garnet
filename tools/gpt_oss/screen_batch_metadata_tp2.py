@@ -98,8 +98,8 @@ for value in choices:
           'full_tok_s', measured['full_request_output_tokens_per_second'], flush=True)
 baseline = results[0]['decode_trials'][0]['token_ids_by_request']
 comparison = {'reference_result': str(reference_path.resolve()),
-              'flag': 'prefill router then BF16 wire' if prefill_wire else 'prefill router' if prefill_router else flag,
-              'require_exact_trajectories': not (flash or inner or prefill_router),
+              'flag': 'BF16 prefill wire (router fixed on)' if wire_only else 'prefill router then BF16 wire' if prefill_wire else 'prefill router' if prefill_router else flag,
+              'require_exact_trajectories': wire_only or not (flash or inner or prefill_router),
               'batch': batch, 'input': len(request['input_ids']), 'output': output,
               'context': reference['max_context_tokens_per_request'], 'modes': []}
 for value, measured in zip(choices,results):

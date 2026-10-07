@@ -42,7 +42,7 @@ This is an append-only record of performance hypotheses, implementations, correc
 | OPT-0034 | Decode attention | Native FlashInfer one-query FA2 | Arithmetic5118.382decode/4170.562execution | 5854.964/4623.086;384 answers per saved case pass | +14.39% decode/+10.85% execution on arithmetic; complete execution still trails vLLM | INCONCLUSIVE, opt-in |
 | OPT-0035 | MoE TP2 | Split every expert's intermediate channels | Arithmetic5896.163decode/4668.401execution | 6084.620/4823.917;384 answers/mode pass | +3.20% decode/+3.33% execution; changed trajectories, broader cases pending | INCONCLUSIVE, opt-in |
 | OPT-0036 | Prefill router | BF16 WMMA16x64 score tiles | Long b128 execution2035.921tok/s, prefill20.777s | 2341.994tok/s, prefill17.071s;384 answers/mode pass | +15.03% execution; below vLLM2943.742, lifecycle excluded, trajectories change | INCONCLUSIVE, opt-in |
-| OPT-0037 | TP prefill communication | Explicit phase and flattened workspace guard; BF16 wire for already-BF16 intermediate partials | FP32 NCCL; old row-count-only flag also selects batched decode | Target numerical/reload/phase gates pass; zero unexpected sanitizer records with128 documented API statuses | Fixed-router long wire0/1 model screen running; no measured wire gain | INCONCLUSIVE, opt-in |
+| OPT-0037 | TP prefill communication | Explicit phase and flattened workspace guard; BF16 wire for already-BF16 intermediate partials | Long router1 execution2350.462tok/s, prefill16.989s | 2480.055tok/s, prefill15.491s;384 answers/mode and every trajectory match | +5.51% execution; below vLLM2943.742, lifecycle excluded, broader profiles pending | INCONCLUSIVE, opt-in |
 | OPT-0038 | Weight storage / engine lifecycle | Build-time Marlin prepacking proposal | 30,457,036,800 original +31,585,075,200 repacked quant bytes/rank | Analytical original-copy removal28.365GiB/rank; implementation pending | Potential larger batches/resident engines, no measured gain or memory saving | INCONCLUSIVE, proposed |
 
 ## Cumulative accepted-stage history
@@ -1008,3 +1008,28 @@ Archive prefill-router-wire-10af3a9-gates.tgz SHA25614243dd91fd2728bad67906992e3
 **Decision / Analysis:** INCONCLUSIVE, proposed. Directly targets measured lifecycle/memory constraints. CPU permutation may increase construction/refit time and host memory; old/new cache identity and lifetime correctness are essential. Reduced GPU footprint alone does not prove improved batch throughput or comparable vLLM serving latency. No accepted-history advance.
 
 **Next Step:** Finish the live wire screen and obtain fresh sequential vLLM/Garnet batch256 evidence. Implement and validate composed host packing locally with explicit layout/version/refit ownership, then target memory/model gates before measuring resident-engine lifecycle. Do not lower memory safeguards or silently shrink requested context/batch to force admission.
+
+#### OPT-0037 completed exact-trajectory long wire A/B, 2026-10-07 13:15 UTC
+
+**Date / Commit / Implementation:** Source10af3a9/native7ab17f9, feature/gpt-oss-120b. screen_batch_metadata_tp2.py ... prefill-wire fixes router1 and changes only BF16 prefill wire0/1. All other flags, exact input2005, batch128, output512, context2560, prefill chunk32, TP2 intermediate channels and BF16 KV match the preceding router profile. Same chunk warmup and three full decode trials. Native/compiled/phase gates are recorded above; default remains off. No Qwen change.
+
+**Baseline / Hypothesis:** Remaining long prefill16.988721s and execution2350.462245tok/s still trail optimizedvLLM2943.741694 full requests. Explicit-phase BF16 NCCL halves eligible prefill payload while preserving already-BF16 rank partials and unchanged decode dispatch. Packing/unpacking overhead may offset communication savings; this A/B measures the complete unprofiled model, not only payload or kernels.
+
+**Correctness:** All384 expected-answer checks per mode pass. All128 complete512-token trajectories match exactly across wire modes in each of three trials. Each mode also repeats all trajectories exactly within its trials. Comparison JSON's inherited require_exact_trajectories field is false even though its separate wire_only_exact_slots_per_trial and mandatory code assertion enforce128/128 matching; preserve original evidence, correct the metadata label for future screens. No tolerance or expected answer change.
+
+**Performance Result:**
+
+| Metric | FP32 wire | BF16 prefill wire | Change |
+|---|---:|---:|---:|
+| Warm prefill execution | 16.988721s | 15.491336s | -8.81% |
+| Median aggregate decode output | 5986.280089tok/s | 5962.543473tok/s | -0.40% |
+| Complete execution output | 2350.462245tok/s | 2480.054629tok/s | +5.51% |
+| Sampled peak GPU0/GPU1 | 76357/76335MiB | 76359/76337MiB | +2MiB each |
+| Cached prefill setup, excluded | 87.938782s | 87.967703s | Similar |
+| Cached decode setup, excluded | 42.119771s | 42.291161s | Similar |
+
+KV allocated12,079,595,520bytes/rank and logical full history11,871,977,472bytes/rank unchanged. Decode trials FP32:6004.340028/5986.280089/5962.829516; BF16:5982.135561/5962.543473/5937.768682. Kernel-level communication traffic/time, serving TTFT and maximum stable batch remain unmeasured here. Engine setup/handoff is excluded, so2480.055 is not a complete serving-throughput claim. Both remain below optimizedvLLM2943.742 full-request output tok/s.
+
+**Decision / Analysis:** INCONCLUSIVE, opt-in. Exact preserved outputs and a clear long execution gain support using this configuration in broader controlled experiments; they do not prove short-shape gains or the full goal. Decode phase trace has no BF16 packing, and the small decode decrease is not an intended communication benefit. Retain failures and accepted history unchanged.
+
+**Next Step / Evidence:** Archive prefill-wire-10af3a9-model.tgz SHA2569d2706f5c9acc6dae0c9338da46cded53f5387ae8806a232b029f1642c723b90 is downloaded/hash-verified/extracted under D:/CantorAI/work/vast-54543362. Root logs, validation text, complete matrices, settings and memory are preserved. Current fresh paired batch256 suite starts with passed admission for arithmetic/code/instruction, input256/output512/context1024/chunk16. It runs all optimizedvLLM0.31 references first, then matching Garnet, three full trials/case. Unified session60426, parent3100052/initial vLLM child3100079 verified live. Root work/paired-batch256-wire-10af3a9.log and manifest directory; no batch256 timing/correctness/capacity completion claimed yet. BF16 KV reservation is9,663,676,416bytes/rank (9GiB), logical full history at767positions7,238,320,128bytes/rank, both analytical until actual results. Long input is not silently shortened to fit this short-context profile; larger-context admission and engine lifecycle remain separate work.
