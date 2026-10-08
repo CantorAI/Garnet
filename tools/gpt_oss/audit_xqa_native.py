@@ -123,7 +123,7 @@ def audit(root,output):
         source_commit=metadata['source_commit'],logs=logs,inference_binaries=metadata['inference_binaries'],
         private_binary_sha256=metadata['private_binary_sha256'],generated_sha256=generated,
         sanitizer=dict(records=0,exclusions=0,unexpected=0,sha256=sha(xml)),dispatch=dict(counts))
-    output.write_text(json.dumps(report,indent=2)+'\n')
+    output.write_text(json.dumps(report,indent=2,sort_keys=True)+'\n',encoding='utf-8',newline='\n')
     print('INDEPENDENT_XQA_NATIVE_RAW_AUDIT_PASS',coverage(),flush=True)
     return report
 

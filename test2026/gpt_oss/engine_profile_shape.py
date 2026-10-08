@@ -45,4 +45,18 @@ long_raw = json.dumps(long).encode()
 long_shape = candidate_shape(long,long_raw,batch=144,prefill_chunk=16)
 assert long_shape['input_tokens_per_request'] == 2005
 assert long_shape['max_context_tokens_per_request'] == 2560
+for source,payload,batch,context,chunk,count,tail,pad in (
+        (reference,raw,448,768,9,29,4,5),
+        (long,long_raw,144,2560,28,72,17,11)):
+    candidate = candidate_shape(source,payload,batch=batch,context=context,prefill_chunk=chunk)
+    assert validate_candidate_shape(candidate,source,payload) == candidate
+    length = candidate['input_tokens_per_request']
+    assert candidate['input_ids_sha256'] == hashlib.sha256(
+        json.dumps(source['input_token_ids'],separators=(',',':')).encode()).hexdigest()
+    assert (batch*chunk,(length+chunk-1)//chunk,length%chunk,(-length)%chunk)==(4032,count,tail,pad)
+    assert candidate['output_tokens_per_request']==512 and length+512<=context
+    malformed=dict(candidate,input_tokens_per_request=length-pad)
+    try:validate_candidate_shape(malformed,source,payload)
+    except ValueError:pass
+    else:raise AssertionError('Irregular candidate silently shortened actual input')
 print('Candidate shapes preserve exact input/reference identity; malformed/shortened shapes reject PASS')

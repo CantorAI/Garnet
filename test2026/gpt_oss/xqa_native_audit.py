@@ -46,7 +46,9 @@ with tempfile.TemporaryDirectory() as temporary:
     for name in ('native','native-mem','native-trace'):(root/(name+'.log')).write_text(text+('ERROR SUMMARY: 0 errors\n' if name=='native-mem' else ''))
     (root/'native-mem.xml').write_text('<ComputeSanitizerOutput/>')
     (root/'native-kernels.csv').write_text('Name,Instances\nGarnetGptOssXqaKernel,144\ngptOssXqaPrepare,144\ngptOssXqaFinalize,144\n')
-    assert audit(root,root/'positive.json')['sanitizer']['records']==0
+    positive=audit(root,root/'positive.json')
+    assert positive['sanitizer']['records']==0
+    assert (root/'positive.json').read_bytes()==(json.dumps(positive,indent=2,sort_keys=True)+'\n').encode('utf-8')
     rejected=0
     def reject(name,change):
         global rejected

@@ -39,7 +39,7 @@ def rejects(function):
 # Independent integer page address simulation, not attention arithmetic.
 reads = 0
 for window in (17, 128):
-    for chunk in (1, 8, 16, 32):
+    for chunk in (1, 8, 9, 16, 28, 32):
         layout = hybrid_layout(dict(num_hidden_layers=6, head_dim=64,
             sliding_window=window, num_key_value_heads=8), 3, 2560, chunk, 4)
         table = window_page_table(layout)
@@ -69,13 +69,26 @@ for window in (17, 128):
         occupied = [address(layer, slot, p) for layer in range(3) for slot in range(3)
                     for p in range(layout['window_pages_per_request'] * 16)]
         assert len(set(occupied)) == len(occupied)
-assert reads == 13_124_892
+# Independent closed-form visible-token count, including padded queries and
+# the later overwrite of those future positions during complete decode.
+def visible_prefix(tokens, window):
+    if tokens <= window:
+        return tokens*(tokens+1)//2
+    return window*(window+1)//2+(tokens-window)*window
+expected_reads = 0
+for window in (17,128):
+    for chunk in (1,8,9,16,28,32):
+        for length in (129,256,2005):
+            padded = ((length+chunk-1)//chunk)*chunk
+            expected_reads += 2*3*(visible_prefix(padded,window)+
+                visible_prefix(length+511,window)-visible_prefix(length,window))
+assert reads == expected_reads
 
 # Separate independent counter covers the arbitrary non-page-aligned native
 # fixture starts/slot offsets, not just sequential aligned runner tiles.
 arbitrary_reads = 0
 for window in (17, 128):
-    for chunk in (1, 16, 32):
+    for chunk in (1, 9, 16, 28, 32):
         layout = hybrid_layout(dict(num_hidden_layers=6, head_dim=64,
             sliding_window=window, num_key_value_heads=8), 3, 2560, chunk, 4)
         table = window_page_table(layout)

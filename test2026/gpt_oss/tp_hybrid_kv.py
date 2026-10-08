@@ -35,8 +35,10 @@ provenance = dict(source_commit=subprocess.check_output(['git','rev-parse','HEAD
         ('model.safetensors','config.json','request.json','expected.json')})
 expected = json.loads((weights / 'expected.json').read_text())
 ids = json.loads((weights / 'request.json').read_text())['input_ids']
-if not (1 <= batch <= 512 and chunk in (4,8,16,32) and 32 < len(ids) <= 256):
+if not (1 <= batch <= 512 and chunk in (4,8,9,16,28,32) and 32 < len(ids) <= 256):
     raise ValueError('Expected wrap-covering input and bounded synthetic profile')
+if chunk in (9,28) and batch*chunk > 4096:
+    raise ValueError('Irregular prefill candidate exceeds verified native MoE row bound')
 os.environ.pop('GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY', None)
 capacity = ((len(ids) + max(chunk, len(expected['generated'])) + 15) // 16) * 16
 plan = make_tensor_parallel_plan(weights, json.loads(G.cuda_devices_json())[:2],

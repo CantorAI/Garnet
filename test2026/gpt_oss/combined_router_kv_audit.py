@@ -9,7 +9,11 @@ import xml.etree.ElementTree as ET
 
 repo=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(repo/'tools/gpt_oss'))
-from audit_combined_router_kv import audit
+from audit_combined_router_kv import audit as raw_audit
+
+candidate=len(sys.argv)==2 and sys.argv[1]=='--prefill-chunk-candidates'
+if len(sys.argv)!=1 and not candidate:raise SystemExit('Expected [--prefill-chunk-candidates]')
+def audit(root,output):return raw_audit(root,output,candidate)
 
 def save(path, value): path.write_text(json.dumps(value))
 def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -29,18 +33,28 @@ with tempfile.TemporaryDirectory() as temporary:
     common={'GARNET_TRT_SYNC_ALLOCATOR':'1','GARNET_GPT_OSS_MARLIN_PREPACKED':'1',
         'GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL':'0','GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE':'1',
         'GARNET_GPT_OSS_PREFILL_FLASHINFER':'1','GARNET_GPT_OSS_DECODE_FLASHINFER':'1'}
+    if candidate:
+        common.pop('GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE')
+        common['GARNET_GPT_OSS_MARLIN_MAX_TOKENS']='4096'
     metadata=dict(directory=str(root),source_commit='a'*40,native_binaries=binaries,
         hardware_csv='CPU MOCK hardware, NOT GPU',common_environment=common,
         fixture_sha256={n:sha(root/'fixture'/n) for n in ('model.safetensors','config.json','request.json','expected.json')})
+    if candidate:metadata['candidate_protocol']='gpt-oss-prefill-chunk-candidates-v1'
     save(root/'gate-metadata.json',metadata)
-    save(root/'terminal.json',dict(terminal=True,actual_exit=0,phase='complete-raw-combined'))
-    for axis in ('expert','intermediate'):
-        b,chunk=(128,16) if axis=='expert' else (512,8);pages=((65+chunk+15)//16)
+    save(root/'terminal.json',dict(terminal=True,actual_exit=0,
+        phase='complete-raw-prefill-chunks' if candidate else 'complete-raw-combined'))
+    workloads=(('expert-control','expert',128,16,1),('expert-candidate','expert',128,28,1),
+        ('short-control','intermediate',448,8,1),('short-candidate','intermediate',448,9,1),
+        ('long-control','intermediate',144,16,0),('long-candidate','intermediate',144,28,0)) if candidate else (
+        ('expert','expert',128,16,1),('intermediate','intermediate',512,8,1))
+    for tag,axis,b,chunk,bf_decode in workloads:
+        pages=((65+chunk+15)//16)
         for router in (0,1):
             for hybrid in (0,1):
                 env=dict(common,GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS=str(int(axis=='expert')),
                     GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS=str(int(axis=='intermediate')),
                     GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE=str(router),GARNET_GPT_OSS_HYBRID_KV=str(hybrid))
+                if candidate:env['GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE']=str(bf_decode)
                 plan=dict(config=config,mode='gpt-oss-tensor-parallel-tp2',schema=4 if hybrid else 3,
                     batch=b,capacity=pages*16,max_tokens=chunk,kv_pages=b*pages,local_kv_heads=1,
                     marlin_prepacked=True,expert_weight_shards=axis=='expert',moe_intermediate_shards=axis=='intermediate',
@@ -54,25 +68,30 @@ with tempfile.TemporaryDirectory() as temporary:
                     window_shape=[1,b*ring,16,1,64],window_table_shape=[b,pages],shared_kv_bytes=size,shared_auxiliary_bytes=table,
                     extra_tensor_arguments=['window_keys','window_values','window_table'])
                 r=dict(source_commit=metadata['source_commit'],native_binaries=binaries,hardware_csv=metadata['hardware_csv'],
-                    fixture_sha256=metadata['fixture_sha256'],kernel_environment=env,cache_root=str(root)+f'/{axis}-router{router}-hybrid{hybrid}-cache',
+                    fixture_sha256=metadata['fixture_sha256'],kernel_environment=env,cache_root=str(root)+f'/{tag}-router{router}-hybrid{hybrid}-cache',
                     measurement='Synthetic CPU-prefix KV diagnostic, not performance',passed=True,failure=None,profiled_diagnostic=False,
                     batch=b,chunk=chunk,input_tokens=65,padded_tail_tokens=(-65)%chunk,complete_generations=2,plan=plan,
                     shared_kv_bytes=size,shared_auxiliary_bytes=table,
                     steps=[dict(generation=i//3,step=i%3,cpu_logits=cpu[i%3],tp_logits=cpu[i%3]*b,
                         maximum_absolute_error=0,within_existing_tolerance=True) for i in range(6)])
-                for phase in ('cold','warm'):save(root/f'{axis}-router{router}-hybrid{hybrid}-{phase}.json',r)
-    baseline=json.loads((root/'intermediate-router1-hybrid1-warm.json').read_text())
-    save(root/'compiled-combined-mem.json',baseline)
-    trace=deepcopy(baseline);trace['profiled_diagnostic']=True;save(root/'combined-trace.json',trace)
+                for phase in ('cold','warm'):save(root/f'{tag}-router{router}-hybrid{hybrid}-{phase}.json',r)
+    diagnostics=[(tag,tag+'-mem',tag+'-trace',tag+'-kernels.csv') for tag in ('short-candidate','long-candidate')] if candidate else [
+        ('intermediate','compiled-combined-mem','combined-trace','combined-kernels.csv')]
+    for tag,mem,trace_name,csv_name in diagnostics:
+        baseline=json.loads((root/(tag+'-router1-hybrid1-warm.json')).read_text())
+        save(root/(mem+'.json'),baseline)
+        trace=deepcopy(baseline);trace['profiled_diagnostic']=True;save(root/(trace_name+'.json'),trace)
     xml='''<ComputeSanitizerOutput><record><kind>Api</kind><what><api>cudaFuncGetAttributes</api><result>209</result></what>
 <hostStack><saveLocation>error</saveLocation><frame><func>program</func><module>app</module></frame>
 <frame><func>cudaFuncGetAttributes</func><module>/lib/libnccl.so.2</module></frame>
 <frame><func>ncclInitKernelsForDevice(int)</func><module>/lib/libnccl.so.2</module></frame></hostStack></record></ComputeSanitizerOutput>'''
-    (root/'compiled-combined-mem.xml').write_text(xml)
-    (root/'compiled-combined-mem.log').write_text('ERROR SUMMARY: 1 errors\n')
-    (root/'combined-kernels.csv').write_text('Name,Instances\nSinkAttention,8\nrouteScoresTensorCore,8\n')
+    for tag,mem,trace_name,csv_name in diagnostics:
+        (root/(mem+'.xml')).write_text(xml)
+        (root/(mem+'.log')).write_text('ERROR SUMMARY: 1 errors\n')
+        (root/csv_name).write_text('Name,Instances\nSinkAttention,8\nrouteScoresTensorCore,8\n')
     positive=audit(root,root/'positive.json')
-    assert len(positive['compiled_files'])==18 and positive['max_cpu_abs']==0
+    assert (root/'positive.json').read_bytes()==(json.dumps(positive,indent=2,sort_keys=True)+'\n').encode('utf-8')
+    assert len(positive['compiled_files'])==(52 if candidate else 18) and positive['max_cpu_abs']==0
     hazards=0
     def reject_json(name, mutate):
         global hazards
@@ -85,7 +104,7 @@ with tempfile.TemporaryDirectory() as temporary:
             assert not output.exists()
             hazards+=1
         finally:path.write_bytes(original)
-    name='intermediate-router1-hybrid1-warm.json'
+    name=('short-candidate' if candidate else 'intermediate')+'-router1-hybrid1-warm.json'
     for mutation in (
         lambda r:r.update(source_commit='b'*40),lambda r:r.update(hardware_csv='other hardware'),
         lambda r:r.update(passed=False),lambda r:r.update(failure='failed native app'),
@@ -101,21 +120,31 @@ with tempfile.TemporaryDirectory() as temporary:
     def drift(r):
         for i,step in enumerate(r['steps']):
             step['tp_logits'][0]+=.001
-            step['maximum_absolute_error']=max(abs(a-b) for a,b in zip(step['tp_logits'],cpu[i%3]*512))
+            step['maximum_absolute_error']=max(abs(a-b) for a,b in zip(step['tp_logits'],cpu[i%3]*r['batch']))
     reject_json(name,drift) # passes numerical bound and replay equality, fails cross-mode exactness
     reject_json('terminal.json',lambda r:r.update(actual_exit=1))
     reject_json('terminal.json',lambda r:r.update(terminal=False))
     reject_json('gate-metadata.json',lambda r:r['common_environment'].update(GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL='1'))
     reject_json('fixture/expected.json',lambda r:r['generation_logits'][0].__setitem__(0,.101))
+    if candidate:
+        reject_json('gate-metadata.json',lambda r:r.update(candidate_protocol='other'))
+        reject_json('gate-metadata.json',lambda r:r['common_environment'].update(GARNET_GPT_OSS_MARLIN_MAX_TOKENS='8192'))
+        reject_json('long-candidate-router1-hybrid1-warm.json',lambda r:r['kernel_environment'].update(GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE='1'))
+        reject_json(name,lambda r:r.update(chunk=8))
+        try:raw_audit(root,root/'wrong-default.json')
+        except ValueError:hazards+=1
+        else:raise AssertionError('Legacy default accepted irregular protocol')
+        assert not (root/'wrong-default.json').exists()
     for mutate in (lambda e:e.find('record/kind').__setattr__('text','Memory'),
                    lambda e:e.find('record/what/result').__setattr__('text','719'),
                    lambda e:e.findall('record/hostStack/frame')[2].find('module').__setattr__('text','libunrelated.so')):
-        e=ET.fromstring(xml);mutate(e);(root/'compiled-combined-mem.xml').write_bytes(ET.tostring(e))
+        mem=diagnostics[-1][1];xml_path=root/(mem+'.xml')
+        e=ET.fromstring(xml);mutate(e);xml_path.write_bytes(ET.tostring(e))
         try:audit(root,root/'bad-xml.json')
         except ValueError:hazards+=1
         else:raise AssertionError('Memory/unrelated API accepted')
-        (root/'compiled-combined-mem.xml').write_text(xml)
-    (root/'combined-kernels.csv').write_text('Name,Instances\nSinkAttention,8\nrouteScoresTensorCore,4\n')
+        xml_path.write_text(xml)
+    (root/diagnostics[-1][3]).write_text('Name,Instances\nSinkAttention,8\nrouteScoresTensorCore,4\n')
     try:audit(root,root/'bad-dispatch.json')
     except ValueError:hazards+=1
     else:raise AssertionError('Missing decode TC dispatch accepted')
@@ -124,4 +153,5 @@ with tempfile.TemporaryDirectory() as temporary:
     except ValueError:hazards+=1
     else:raise AssertionError('Audit overwritten')
     assert (root/'positive.json').read_bytes()==before
-    print('CPU MOCK combined raw audit:',hazards,'scope/identity/matrix/byte/API/memory/dispatch/overwrite hazards rejected; no GPU proof')
+    print('CPU MOCK combined raw audit:', 'irregular' if candidate else 'legacy', hazards,
+        'scope/identity/matrix/byte/API/memory/dispatch/overwrite hazards rejected; no GPU proof')
