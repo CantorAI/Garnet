@@ -36,6 +36,7 @@ foreign_path.write_text("from .tensor_compat import tensor\nT = tensor()\n"
     "def Plain(x):\n    return x * T.unary_op('relu')\n")
 importlib.invalidate_caches()
 models, tensors, records, statuses = [], [], [], []
+released_responses = []
 group = foreign = None
 
 def load():
@@ -75,7 +76,8 @@ try:
         input_dtypes=['float32'], cache_dir=str(folder / 'plain-engine'))
     assert foreign.runtime_status()['ready'], foreign.runtime_status()
     control = foreign.forward(dict(inputs=[tensors[0][0]])); assert control['status'] == 'ok', control
-    assert G.tensor_to_cpu(control['output']).tolist() == [float(i % 7) for i in range(2 * hidden)]
+    control_actual = G.tensor_to_cpu(control['output']).tolist()
+    assert control_actual == [float(i % 7) for i in range(2 * hidden)]
     group = extension.peer_group(json.dumps(dict(ctas=64, phase_elements=[s * hidden for s in tokens])))
     rejected(foreign, tensors[0][0])
     for reload in range(2):
@@ -98,10 +100,23 @@ try:
                     assert actual == expected, (reload, phase, rank)
                     return dict(reload=reload, phase=phase, rank=rank, actual=actual, expected=expected)
                 records.extend(f.result() for f in [pool.submit(forward, rank) for rank in range(2)])
+                (folder / 'result.partial.json').write_text(json.dumps(dict(
+                    matrices=records, statuses=statuses, released_responses=released_responses,
+                    default_control_actual=control_actual, complete=False), indent=2))
         extension.peer_group_bind_phase(group, 0)
         for ranks in models:
             for model in ranks: model.release_runtime()
-        rejected(models[0][0], tensors[0][0])
+        # Model::ReleaseRuntime destroys the compiled runtime. Its established
+        # public contract returns this exact error before any group entry.
+        released = models[0][0].forward(dict(inputs=[tensors[0][0]],
+            operator_execution_group=group, operator_execution_rank=0,
+            operator_execution_phase=0))
+        assert (released['status'] == 'error' and
+            released['error_code'] == 'compiled_graph_not_ready' and 'output' not in released), released
+        released_responses.append(released)
+        (folder / 'result.partial.json').write_text(json.dumps(dict(
+            matrices=records, statuses=statuses, released_responses=released_responses,
+            default_control_actual=control_actual, complete=False), indent=2))
         models.clear()
     assert extension.peer_group_release(group)
     assert extension.peer_group_release(group)
@@ -111,6 +126,7 @@ try:
     assert extension.peer_group_release(group); group = None
     (folder / 'result.json').write_text(json.dumps(dict(protocol='operator-requirements-lifecycle-v1',
         statuses=statuses, matrices=records, negative_foreign=1, negative_released=2,
+        default_control_actual=control_actual, released_responses=released_responses,
         default_control_exact=True, passed=True), indent=2))
     print('OPERATOR_REQUIREMENTS_FRESH_CACHE_RELEASE_COMPLETE 8', flush=True)
 finally:
