@@ -6,17 +6,32 @@ not a throughput benchmark. Complete output rows are retained without tolerances
 import concurrent.futures
 import importlib
 import json
+import os
 from pathlib import Path
 import shutil
 import sys
 import garnet as G
 import garnet_gpt_oss as extension
 
+pattern_flag = os.environ.get('GARNET_RESIDENT_PATTERN_UPDATES', '0')
+if pattern_flag not in ('0', '1'):
+    raise ValueError('GARNET_RESIDENT_PATTERN_UPDATES must be 0 or 1')
+pattern_updates = pattern_flag == '1'
 folder = Path(sys.argv[1]).resolve()
 folder.mkdir(exist_ok=False, parents=True)
 repo = Path(__file__).resolve().parents[2]
 G.bind_operator_module(extension)
 template = (repo / 'xModel/gpt_oss/120b/tp_all_reduce_test.py').read_text()
+if pattern_updates:
+    # The compiled group must consume the new count on its own execution stream.
+    # Zero is deliberately invalid: a missing dependency cannot pass by luck.
+    template = template.replace("{'name': 'x', 'kind': 'tensor'},",
+        "{'name': 'x', 'kind': 'tensor'}, {'name': 'valid_count', 'kind': 'tensor'},")
+    template = template.replace('def GptOssTpCollective(x, tp_rank):',
+        'def GptOssTpCollective(x, valid_count, tp_rank):')
+    template = template.replace("    return x * T.unary_op('gpt_oss_tp_all_reduce', hidden_size=8, tp_rank=tp_rank)",
+        "    reduced = x * T.unary_op('gpt_oss_tp_all_reduce', hidden_size=8, tp_rank=tp_rank)\n"
+        "    return reduced * T.binary_op('select_last_valid_sequence') * valid_count")
 hidden, tokens = 2880, [2, 1]
 paths = []
 for phase, sequence in enumerate(tokens):
@@ -35,7 +50,7 @@ foreign_path.write_text("from .tensor_compat import tensor\nT = tensor()\n"
     "@T.fusion(name='plain_relu', role='decoder_layer', boundary='required')\n"
     "def Plain(x):\n    return x * T.unary_op('relu')\n")
 importlib.invalidate_caches()
-models, tensors, records, statuses = [], [], [], []
+models, tensors, counts, records, statuses = [], [], [], [], []
 released_responses = []
 group = foreign = None
 
@@ -46,7 +61,8 @@ def load():
             G.cuda_set_device(rank); path = paths[phase * 2 + rank]
             model = G.load_model(str(path), runtime_mode='compiled_xmodel', backend='tensorrt',
                 precision='bf16', entry_function='GptOssTpCollective',
-                input_shapes=[[1, sequence, hidden]], input_dtypes=['float32'],
+                input_shapes=([[1, sequence, hidden], [1]] if pattern_updates else [[1, sequence, hidden]]),
+                input_dtypes=(['float32', 'int32'] if pattern_updates else ['float32']),
                 cache_dir=str(path.parent / 'engine'))
             status = model.runtime_status(); assert status['ready'], status
             ranks.append(model)
@@ -70,6 +86,12 @@ try:
             ranks.append(G.tensor_from_host([float((i % 7) + rank) for i in range(sequence * hidden)],
                 shape=[1, sequence, hidden], dtype='float32', device='cuda'))
         tensors.append(ranks)
+        if pattern_updates:
+            count_ranks = []
+            for rank in range(2):
+                G.cuda_set_device(rank)
+                count_ranks.append(G.tensor_from_host([0], shape=[1], dtype='int32', device='cuda'))
+            counts.append(count_ranks)
     G.cuda_set_device(0)
     foreign = G.load_model(str(foreign_path), runtime_mode='compiled_xmodel', backend='tensorrt',
         precision='bf16', entry_function='Plain', input_shapes=[[1, 2, hidden]],
@@ -91,14 +113,25 @@ try:
                 extension.peer_group_bind_phase(group, phase)
                 def forward(rank):
                     G.cuda_set_device(rank)
-                    result = models[phase][rank].forward(dict(inputs=[tensors[phase][rank]],
+                    inputs = [tensors[phase][rank]]
+                    valid = sequence if reload == 0 else 1
+                    if pattern_updates:
+                        assert G.tensor_update_int_patterns_async([counts[phase][rank]], [[valid]])
+                        inputs.append(counts[phase][rank])
+                    result = models[phase][rank].forward(dict(inputs=inputs,
                         operator_execution_group=group, operator_execution_phase=phase,
                         operator_execution_rank=rank))
                     assert result['status'] == 'ok', result
                     G.cuda_synchronize(); actual = G.tensor_to_cpu(result['output']).tolist()
-                    expected = [float(2 * (i % 7) + 1) for i in range(sequence * hidden)]
+                    expected = ([float(2 * (((valid - 1) * hidden + i) % 7) + 1) for i in range(hidden)]
+                        if pattern_updates else [float(2 * (i % 7) + 1) for i in range(sequence * hidden)])
                     assert actual == expected, (reload, phase, rank)
-                    return dict(reload=reload, phase=phase, rank=rank, actual=actual, expected=expected)
+                    row = dict(reload=reload, phase=phase, rank=rank, actual=actual, expected=expected)
+                    if pattern_updates:
+                        count_actual = G.tensor_to_cpu(counts[phase][rank]).tolist()
+                        assert count_actual == [valid], count_actual
+                        row.update(valid_count=valid, count_actual=count_actual)
+                    return row
                 records.extend(f.result() for f in [pool.submit(forward, rank) for rank in range(2)])
                 (folder / 'result.partial.json').write_text(json.dumps(dict(
                     matrices=records, statuses=statuses, released_responses=released_responses,
@@ -125,6 +158,7 @@ try:
     group = extension.peer_group(json.dumps(dict(ctas=64, phase_elements=[s * hidden for s in tokens])))
     assert extension.peer_group_release(group); group = None
     (folder / 'result.json').write_text(json.dumps(dict(protocol='operator-requirements-lifecycle-v1',
+        pattern_updates=pattern_updates,
         statuses=statuses, matrices=records, negative_foreign=1, negative_released=2,
         default_control_actual=control_actual, released_responses=released_responses,
         default_control_exact=True, passed=True), indent=2))

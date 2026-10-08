@@ -32,6 +32,7 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_RESIDENT_REUSE_OUTPUT': '1',
             'GARNET_RESIDENT_NATIVE_GREEDY_MERGE': '1',
             'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY': '1',
+            'GARNET_RESIDENT_PATTERN_UPDATES': '1',
             'GARNET_BATCH_PREFILL_CHUNK': '16',
             'GARNET_GPT_OSS_MARLIN_PREPACKED': '1',
             'GARNET_GPT_OSS_DIRECT_ALLREDUCE': '1',
@@ -68,6 +69,7 @@ with tempfile.TemporaryDirectory() as temporary:
                 'GARNET_RESIDENT_REUSE_OUTPUT': '1',
                 'GARNET_RESIDENT_NATIVE_GREEDY_MERGE': '1',
                 'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY': '1',
+                'GARNET_RESIDENT_PATTERN_UPDATES': '1',
                 'GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE': '1',
                 'GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE': '1',
                 'GARNET_GPT_OSS_HYBRID_KV': '1',
@@ -130,14 +132,15 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_RESIDENT_REUSE_OUTPUT':'0',
             'GARNET_RESIDENT_NATIVE_GREEDY_MERGE':'0',
             'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY':'0',
+            'GARNET_RESIDENT_PATTERN_UPDATES':'0',
             'GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK':'64'})
-    for flags in range(8):
-        values=[str((flags >> index) & 1) for index in range(3)]
+    for flags in range(16):
+        values=[str((flags >> index) & 1) for index in range(4)]
         execute('paired_batch_suite.py',[reference,root/f'host-candidates{flags}','arithmetic',
             '--resident-profile',fresh,'--reuse-output',values[0],
-            '--native-greedy-merge',values[1],'--final-prefill-sample-only',values[2]],
+            '--native-greedy-merge',values[1],'--final-prefill-sample-only',values[2],'--pattern-updates',values[3]],
             dict(zip(('GARNET_RESIDENT_REUSE_OUTPUT','GARNET_RESIDENT_NATIVE_GREEDY_MERGE',
-                'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY'),values)))
+                'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY','GARNET_RESIDENT_PATTERN_UPDATES'),values)))
     with patch.object(sys,'argv',['paired_batch_suite.py',str(reference),str(root/'invalid-nonresident'),
             'arithmetic','--reuse-output','1']), patch('subprocess.run') as gpu_command:
         try:

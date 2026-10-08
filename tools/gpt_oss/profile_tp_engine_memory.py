@@ -124,7 +124,7 @@ for key in list(env):
         del env[key]
 for key, value in reference['optimization_environment'].items():
     if key in ('GARNET_RESIDENT_REUSE_OUTPUT', 'GARNET_RESIDENT_NATIVE_GREEDY_MERGE',
-               'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY'):
+               'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY', 'GARNET_RESIDENT_PATTERN_UPDATES'):
         if value not in ('0','1'):
             raise ValueError('Invalid recorded resident host flag')
         continue  # Host observation/sampling controls do not select engine-loading policy.

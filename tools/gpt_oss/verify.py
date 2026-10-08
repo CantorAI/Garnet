@@ -54,6 +54,8 @@ run([sys.executable, repo / 'test2026/gpt_oss/tp_weight_placement.py', fixture,
 run([runtime / ('garnet_gpt_oss_expert_weight_shard' + suffix)], 'expert-weight-shard-bytes')
 run([runtime / ('garnet_gpt_oss_kernel_parity' + suffix)], 'kernel-parity')
 run([executable, repo / 'test2026/gpt_oss/tensor_update_int_scalars.py'], 'batched-scalar-updates')
+run([executable, repo / 'test2026/gpt_oss/tensor_update_int_patterns.py',
+     work / 'integer-pattern-readbacks.json'], 'integer-pattern-updates')
 if args.multi_gpu:
     run([executable, repo / 'test2026/gpt_oss/compact_candidate_merge.py',
          work / 'compact-candidate-merge.json'], 'compact-candidate-merge')

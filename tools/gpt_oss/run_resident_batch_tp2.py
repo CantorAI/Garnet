@@ -35,6 +35,7 @@ def optional_flag(name):
 reuse_output = optional_flag('GARNET_RESIDENT_REUSE_OUTPUT')
 native_candidate_merge = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_MERGE')
 final_prefill_sample_only = optional_flag('GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY')
+pattern_updates = optional_flag('GARNET_RESIDENT_PATTERN_UPDATES')
 
 session_mode = len(sys.argv) > 1 and sys.argv[1] == '--session'
 arguments = sys.argv[2:] if session_mode else sys.argv[1:]
@@ -69,6 +70,8 @@ if not (1 <= batch <= 512 and 16 <= output_tokens <= 2048 and
     raise ValueError('Invalid fixed batch/input/output/context profile')
 if math.ceil(len(ids) / chunk) * chunk > capacity:
     raise ValueError('Padded final prefill chunk exceeds allocated KV context')
+if pattern_updates and (2 * chunk + 2 > 768 or batch + 3 > 768):
+    raise ValueError('Resident integer patterns exceed the bounded native payload')
 profile = json.loads(profile_path.read_text())
 padded = bool(profile['padded_prefill'])
 if len(ids) % chunk and not padded:
@@ -222,12 +225,20 @@ def run_request(trial, ids):
             raise ValueError('Last-valid count must be within prefill sequence')
         # Causal real rows never consume padded future KV, and subsequent
         # decode rewrites that future range. Selection uses true count.
-        tokens = (ids[offset:offset + real] + [0] * (chunk - real)) * batch
-        positions = list(range(offset, offset + chunk)) * batch
-        update(pair.prefill_stages, prefill_inputs, tokens, positions, offset + real, offset)
+        token_pattern = ids[offset:offset + real] + [0] * (chunk - real)
+        position_pattern = list(range(offset, offset + chunk))
+        patterns = None
+        if pattern_updates:
+            patterns = [token_pattern, position_pattern, [offset + real], [offset]]
+        else:
+            update(pair.prefill_stages, prefill_inputs, token_pattern * batch,
+                position_pattern * batch, offset + real, offset)
         need_sample = not final_prefill_sample_only or offset + real == len(ids)
-        reply = pair.forward_prefill(prefill_inputs, sample=need_sample, sample_batch=True,
+        options = dict(sample=need_sample, sample_batch=True,
             reuse_output=reuse_output, native_candidate_merge=native_candidate_merge)
+        if patterns is not None:
+            options['pattern_values'] = patterns
+        reply = pair.forward_prefill(prefill_inputs, **options)
         capture.prefill_end(trial, chunk_index)
         prefill_steps.append(time.perf_counter() - step)
     rows = [[int(value)] for value in reply['token_ids']]
@@ -239,10 +250,14 @@ def run_request(trial, ids):
         capture.decode_begin(trial, offset)
         step = time.perf_counter()
         index = len(ids) + offset - 1
-        update(pair.decode_stages, decode_inputs, [row[-1] for row in rows],
-            [index] * batch, index + 1, index)
-        reply = pair.forward_decode(decode_inputs, sample=True, sample_batch=True,
+        tokens = [row[-1] for row in rows]
+        options = dict(sample=True, sample_batch=True,
             reuse_output=reuse_output, native_candidate_merge=native_candidate_merge)
+        if pattern_updates:
+            options['pattern_values'] = [tokens, [index], [index + 1], [index]]
+        else:
+            update(pair.decode_stages, decode_inputs, tokens, [index] * batch, index + 1, index)
+        reply = pair.forward_decode(decode_inputs, **options)
         tokens = reply['token_ids']
         if len(tokens) != batch:
             raise ValueError('Missing decode output requests')

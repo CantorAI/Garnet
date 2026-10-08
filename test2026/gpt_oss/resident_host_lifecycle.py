@@ -57,7 +57,7 @@ finally:
 tree=ast.parse((repo/'tools/gpt_oss/run_resident_batch_tp2.py').read_text())
 defs=[node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name in ('optional_flag','run_request')]
 assert len(defs)==2
-namespace=dict(os=os,time=time,chunk=4,batch=3,output_tokens=4,prefill_inputs=[],decode_inputs=[])
+namespace=dict(os=os,time=time,chunk=4,batch=3,output_tokens=4,prefill_inputs=[],decode_inputs=[],pattern_updates=False)
 class Capture:
     def prefill_begin(self,*args):pass
     def prefill_end(self,*args):pass
@@ -104,3 +104,58 @@ for reuse in (False,True):
             assert len(result['prefill_step_seconds'])==2 and len(result['decode_step_seconds'])==3
             assert result['full_request_wall_seconds']>0 and not result['prefill_kv_reused_for_decode_trial']
 print('Resident host-lifecycle defaults, all opt-in combinations and true ragged tail passed')
+
+# The same true-tail request now reaches worker patterns without any main-thread
+# copy. Expand the recorded patterns independently and compare the old writes.
+for reuse in (False,True):
+    for native in (False,True):
+        for final_only in (False,True):
+            requests=[]
+            def forbidden_update(*args):raise AssertionError('Pattern mode copied on the main thread')
+            class PatternPair:
+                def forward_prefill(self,prepared,**kwargs):
+                    requests.append(dict(phase='prefill',**kwargs))
+                    return dict(token_ids=[100]*3) if kwargs['sample'] else dict(output='unobserved')
+                def forward_decode(self,prepared,**kwargs):
+                    requests.append(dict(phase='decode',**kwargs))
+                    return dict(token_ids=[100+sum(r['phase']=='decode' for r in requests)]*3)
+            namespace.update(pair=PatternPair(),update=forbidden_update,reuse_output=reuse,
+                native_candidate_merge=native,final_prefill_sample_only=final_only,pattern_updates=True)
+            value=namespace['run_request'](0,[11,12,13,14,15])
+            assert value['token_ids_by_request']==[[100,101,102,103]]*3
+            assert requests[0]['pattern_values']==[[11,12,13,14],[0,1,2,3],[4],[0]]
+            assert requests[1]['pattern_values']==[[15,0,0,0],[4,5,6,7],[5],[4]]
+            for index,request in enumerate(requests[2:]):
+                assert request['pattern_values']==[[100+index]*3,[5+index],[6+index],[5+index]]
+            assert all(r['reuse_output']==reuse and r['native_candidate_merge']==native for r in requests)
+            assert [r['sample'] for r in requests[:2]]==[not final_only,True]
+
+# Actual worker forwarding, device affinity and update-before-model ordering.
+worker=[]
+def pattern_update(tensors,values):
+    worker.append(('update',local.device,tensors,values));return True
+g.tensor_update_int_patterns_async=pattern_update
+class PatternModel:
+    def forward(self,request):
+        worker.append(('forward',local.device));return dict(status='ok',output='compact')
+stage_inputs=[('tokens0',['positions0','pages0','length0','slot0','active0']),
+              ('tokens1',['positions1','pages1','length1','slot1','active1'])]
+stages=[dict(rank=i,device_id=i,model=PatternModel(),keys='keys',values='values') for i in range(2)]
+pair=TensorParallel(stages);pair.greedy_candidate_pairs=True
+try:
+    patterns=[[3,4],[6],[7],[6]]
+    pair.forward_rank_local(stage_inputs,pattern_values=patterns)
+    for rank in range(2):
+        local_calls=[c for c in worker if c[1]==rank]
+        assert [c[0] for c in local_calls]==['update','forward']
+        assert local_calls[0][2]==[f'tokens{rank}',f'positions{rank}',f'length{rank}',f'slot{rank}']
+        assert local_calls[0][3]==patterns
+    for kwargs in (dict(pattern_values=patterns,scalar_values=[1]*4),
+                   dict(pattern_values=patterns,vector_values=[[1]]*4),dict(pattern_values=patterns[:3])):
+        before=len(worker)
+        try:pair.forward_rank_local(stage_inputs,**kwargs)
+        except ValueError:pass
+        else:raise AssertionError('Mixed/incomplete update mode accepted')
+        assert len(worker)==before
+finally:pair.executor.shutdown(wait=True)
+print('Resident patterns/all16 flags/true-tail/worker ordering and exclusive update modes passed')

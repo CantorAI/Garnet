@@ -3778,6 +3778,54 @@ namespace Garnet
         return X::Value(LaunchIntVectorUpdate4(updates, cudaStreamPerThread) == cudaSuccess);
     }
 
+    X::Value GarnetAPI::TensorUpdateIntPatternsAsync(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        if (!kwParams.empty() || params.size() != 2 || !params[0].IsList() || !params[1].IsList())
+            return X::Value(false);
+        X::Value tensorList(params[0]), patterns(params[1]);
+        if (tensorList.Size() < 1 || tensorList.Size() > 4 || patterns.Size() != tensorList.Size())
+            return X::Value(false);
+        IntPatternUpdate4 updates{};
+        updates.count = static_cast<int>(tensorList.Size());
+        int valueCount = 0;
+        std::vector<std::pair<X::Tensor, X3TensorAccess>> tensors;
+        std::array<std::pair<uintptr_t, uintptr_t>, 4> spans{};
+        for (int index = 0; index < updates.count; ++index) {
+            X::Value item = tensorList.Get(index), pattern = patterns.Get(index);
+            if (!X::Tensor::IsTensor(item) || !pattern.IsList() || pattern.Size() < 1 ||
+                pattern.Size() > IntPatternUpdate4::kMaxValues - valueCount) return X::Value(false);
+            X::Tensor tensor(item);
+            ValidateDenseTensor(tensor, true);
+            const auto info = tensor.Info();
+            const auto length = TensorCount(tensor);
+            if (info.device_type != TensorHelper::CudaDevice || length < 1 || length % pattern.Size() ||
+                (info.dtype != X3_TENSOR_INT32 && info.dtype != X3_TENSOR_INT64)) return X::Value(false);
+            const int bytes = info.dtype == X3_TENSOR_INT32 ? 4 : 8;
+            const uintptr_t begin = reinterpret_cast<uintptr_t>(info.data);
+            if (length > (UINTPTR_MAX - begin) / bytes) return X::Value(false);
+            const uintptr_t end = begin + length * bytes;
+            for (int previous = 0; previous < index; ++previous)
+                if (begin < spans[previous].second && spans[previous].first < end) return X::Value(false);
+            spans[index] = {begin, end};
+            updates.destinations[index] = info.data;
+            updates.lengths[index] = static_cast<int>(length);
+            updates.patternLengths[index] = static_cast<int>(pattern.Size());
+            updates.patternOffsets[index] = valueCount;
+            updates.bytes[index] = bytes;
+            for (int element = 0; element < pattern.Size(); ++element) {
+                const int64_t value = CheckedInt64(pattern.Get(element), "tensor pattern value");
+                if (value < INT32_MIN || value > INT32_MAX) return X::Value(false);
+                updates.values[valueCount++] = static_cast<int32_t>(value);
+            }
+            tensors.emplace_back(tensor, X3_TENSOR_WRITE);
+        }
+        // Validate every destination/value before any write. The combined lease
+        // records readiness on the exact stream used by this by-value launch.
+        const auto stream = CurrentExecutionStream();
+        auto use = TensorHelper::AcquireGPU(tensors, stream);
+        return X::Value(LaunchIntPatternUpdate4(updates, stream) == cudaSuccess);
+    }
+
     X::Value GarnetAPI::TensorAdd(const X::ARGS& params, const X::KWARGS& kwParams)
     {
         X::Value retValue;

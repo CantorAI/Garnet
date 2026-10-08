@@ -18,6 +18,12 @@ reuse_output_raw = os.environ.get('GARNET_RESIDENT_REUSE_OUTPUT', '0')
 if reuse_output_raw not in ('0', '1'):
     raise ValueError('GARNET_RESIDENT_REUSE_OUTPUT must be 0 or 1')
 reuse_output = reuse_output_raw == '1'
+pattern_updates_raw = os.environ.get('GARNET_RESIDENT_PATTERN_UPDATES', '0')
+if pattern_updates_raw not in ('0', '1'):
+    raise ValueError('GARNET_RESIDENT_PATTERN_UPDATES must be 0 or 1')
+pattern_updates = pattern_updates_raw == '1'
+if pattern_updates and os.environ.get('GARNET_GPT_OSS_TEACHER_RESIDENT') != '1':
+    raise ValueError('Worker pattern teacher checks require resident rank-local inputs')
 if not 1<=batch<=512:
     raise ValueError('Teacher-forced batch must be from1 to512')
 if output.exists():
@@ -88,12 +94,24 @@ try:
                 for stage in stages:
                     previous = G.cuda_set_device(stage['device_id'])
                     try:
-                        prepared.append((G.tensor_to_device(activation, stage['device_id']),
-                            [G.tensor_to_device(t, stage['device_id']) for t in controls]))
+                        if pattern_updates:
+                            # Wrong/zero controls must become the independently
+                            # specified CPU prefix through the worker update.
+                            prepared.append((tensor([0] * (batch * len(tokens)), 'int64', [batch,len(tokens)]),
+                                [tensor([0] * (batch * len(tokens)), 'int64', [batch,len(tokens)]),
+                                 G.tensor_to_device(table,stage['device_id']),
+                                 tensor([0] * batch,'int32',[batch]),tensor([0] * batch,'int32',[batch]),
+                                 G.tensor_to_device(active,stage['device_id'])]))
+                        else:
+                            prepared.append((G.tensor_to_device(activation, stage['device_id']),
+                                [G.tensor_to_device(t, stage['device_id']) for t in controls]))
                     finally:
                         G.cuda_set_device(previous)
-                reply = (resident_pair.forward_prefill(prepared, reuse_output=reuse_output) if step == 0
-                         else resident_pair.forward_decode(prepared, reuse_output=reuse_output))
+                options = dict(reuse_output=reuse_output)
+                if pattern_updates:
+                    options['pattern_values'] = [tokens, positions, [length], [start]]
+                reply = (resident_pair.forward_prefill(prepared, **options) if step == 0
+                         else resident_pair.forward_decode(prepared, **options))
             else:
                 reply = model.forward(activation, controls, reuse_output=reuse_output)
         finally:
@@ -121,6 +139,7 @@ finally:
 output.parent.mkdir(parents=True, exist_ok=True)
 output.write_text(json.dumps(dict(measurement='teacher-forced CPU prefixes, diagnostic only', batch=batch,
                                  profile_step=profile_step, padded_prefill_tokens=padded_tokens,
-                                 resident_phases=resident, reuse_output=reuse_output, steps=steps), indent=2))
+                                 resident_phases=resident, reuse_output=reuse_output,
+                                 pattern_updates=pattern_updates, steps=steps), indent=2))
 if not all(s['within_existing_tolerance'] for s in steps):
     raise RuntimeError('TP teacher-forced logits exceed the established compiled parity tolerance')
