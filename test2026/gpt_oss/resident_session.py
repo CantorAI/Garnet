@@ -53,7 +53,7 @@ with tempfile.TemporaryDirectory() as temporary:
     profile.write_text(json.dumps(dict(resident_profile_schema=1, padded_prefill=True,
         plan_identity=budget.plan_identity(plan), native_binaries=binaries,
         hardware_csv='fixture-hardware', checkpoint=checkpoint, cache_root=str(cache),
-        kernel_environment={}, engine_statistics=statistics)))
+        kernel_environment={'GARNET_TRT_SYNC_ALLOCATOR': '0'}, engine_statistics=statistics)))
     prompt_ids = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
     def specification(directory):

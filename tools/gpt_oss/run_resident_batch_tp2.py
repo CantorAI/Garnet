@@ -275,9 +275,10 @@ def measure_case(case, index, cold_startup_seconds):
     result_path.write_text(json.dumps(dict(source_commit=source_commit,
         resident_profile=str(profile_path.resolve()), resident_profile_sha256=file_sha256(profile_path),
         resident_admission=admission, native_binaries=profile['native_binaries'],
-        optimization_environment={key:value for key,value in os.environ.items()
+        optimization_environment={'GARNET_TRT_SYNC_ALLOCATOR': os.environ.get('GARNET_TRT_SYNC_ALLOCATOR', '0'),
+            **{key:value for key,value in os.environ.items()
             if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_'))
-            and not key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD'))},
+            and not key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD'))}},
         hardware=plan['hardware'], hardware_csv=profile['hardware_csv'], batch=batch,
         input_token_ids=ids, input_tokens_per_request=len(ids), output_tokens_per_request=output_tokens,
         max_context_tokens_per_request=capacity, prefill_chunk_tokens=chunk,

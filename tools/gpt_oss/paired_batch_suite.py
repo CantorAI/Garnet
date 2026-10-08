@@ -63,7 +63,7 @@ model = Path(os.environ.get('GARNET_GPT_OSS_TOKENIZER', root / 'models/gpt-oss-1
 cache = Path(os.environ.get('GARNET_GPT_OSS_CACHE', work / 'gpt-oss-tp-cache'))
 env = os.environ.copy()
 for key in list(env):
-    if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
+    if key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
     if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS', 'GARNET_RESIDENT_SESSION'):
@@ -84,7 +84,7 @@ if args.resident_profile is not None:
     if resident_profile.get('resident_profile_schema') != 1:
         raise ValueError('Resident profile lacks strict runtime identities')
     for key in list(env):
-        if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_')) and key not in (
+        if (key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_'))) and key not in (
                 'GARNET_GPT_OSS_WEIGHTS', 'GARNET_GPT_OSS_CACHE', 'GARNET_GPT_OSS_TOKENIZER'):
             del env[key]
     for key, value in resident_profile['kernel_environment'].items():

@@ -117,7 +117,7 @@ specification = (candidate_shape(reference,reference_bytes,**shape_overrides)
     if any(value is not None for value in shape_overrides.values()) else None)
 env = os.environ.copy()
 for key in list(env):
-    if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
+    if key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
     if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS', 'GARNET_RESIDENT_SESSION'):

@@ -28,10 +28,15 @@ def close(actual, expected):
 
 
 def kernel_environment(result):
-    return {key: value for key, value in result['optimization_environment'].items()
+    environment = {key: value for key, value in result['optimization_environment'].items()
         if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_')) and
         not key.startswith('GARNET_GPT_OSS_PROFILE_') and
         key not in ('GARNET_GPT_OSS_WEIGHTS', 'GARNET_GPT_OSS_CACHE', 'GARNET_GPT_OSS_TOKENIZER')}
+    policy = result['optimization_environment'].get('GARNET_TRT_SYNC_ALLOCATOR', '0')
+    if policy not in ('0', '1'):
+        raise ValueError('Invalid allocator policy in result')
+    environment['GARNET_TRT_SYNC_ALLOCATOR'] = policy
+    return environment
 
 
 def allocated_kv(plan):

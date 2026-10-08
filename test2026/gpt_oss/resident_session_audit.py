@@ -60,7 +60,7 @@ class Evidence:
         profile = dict(resident_profile_schema=1, source_commit='a' * 40,
             plan=plan, plan_identity={key: copy.deepcopy(plan[key]) for key in IDENTITY},
             native_binaries=native, hardware_csv='index,uuid,driver\n0,GPU-zero,595\n1,GPU-one,595\n',
-            kernel_environment={'GARNET_GPT_OSS_MARLIN_PREPACKED': '1'}, padded_prefill=True,
+            kernel_environment={'GARNET_GPT_OSS_MARLIN_PREPACKED': '1', 'GARNET_TRT_SYNC_ALLOCATOR': '0'}, padded_prefill=True,
             engine_statistics=[dict(device=i, phase=phase, total_weights_bytes=64 << 20,
                 context_device_memory_upper_bound_bytes=1 << 20) for i in range(2) for phase in ['prefill', 'decode']])
         if hybrid:
@@ -190,6 +190,8 @@ class RawAudit(unittest.TestCase):
             'hardware': change('arithmetic.control', 'hardware_csv', 'different GPU'),
             'native': change('arithmetic.control', 'native_binaries', {'libgarnet.so': 'd' * 64}),
             'kernel': change('arithmetic.control', 'optimization_environment', {}),
+            'allocator policy': change('arithmetic.control', 'optimization_environment',
+                {'GARNET_GPT_OSS_MARLIN_PREPACKED': '1', 'GARNET_TRT_SYNC_ALLOCATOR': '1'}),
             'profile binding': change('arithmetic.control', 'resident_profile', 'missing-file'),
             'request binding': change('arithmetic.result', 'request', 'missing-file'),
             'source profile': change('profile', 'source_commit', 'd' * 40),

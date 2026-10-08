@@ -23,6 +23,7 @@ source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=str(re
 optimization_environment = {name: value for name, value in os.environ.items()
     if name.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_'))
     and not name.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD'))}
+optimization_environment['GARNET_TRT_SYNC_ALLOCATOR'] = os.environ.get('GARNET_TRT_SYNC_ALLOCATOR', '0')
 request = json.loads(Path(sys.argv[3]).read_text())
 result_path = Path(sys.argv[4])
 batch, output_tokens = int(sys.argv[5]), int(sys.argv[6])
