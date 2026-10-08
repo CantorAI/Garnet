@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
+#pragma once
+#include <array>
+#include <cstddef>
+#include <string>
+namespace Garnet {
+bool ParseGptOssPeerGroupOptions(const char*, size_t, size_t,
+    std::array<size_t,2>&, size_t&);
+std::string GptOssPeerGroupDescription(const std::array<size_t,2>&,
+    size_t capacity, size_t ownedBytes, size_t mappedBytes);
+}

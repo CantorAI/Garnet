@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_peer_group.h"
 #include "tp_peer_owner.cuh"
-#include "nlohmann/json.hpp"
+#include "gpt_oss_peer_group_options.h"
 #include <atomic>
+#include <cstring>
+#include <exception>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <cstdlib>
@@ -68,18 +71,8 @@ cudaError_t GptOssCreatePeerGroup(const char* options,size_t bytes,void** result
     const char* flag=std::getenv("GARNET_GPT_OSS_BF16_PEER_GROUP");
     if(!flag || std::strcmp(flag,"1"))return cudaErrorNotSupported;
     std::array<size_t,2> counts{};size_t capacity=0;
-    try{
-        const auto v=nlohmann::json::parse(options,options+bytes);
-        if(!v.is_object() || v.size()!=2 || !v.contains("phase_elements") || !v.contains("ctas") ||
-           v.at("ctas")!=64 || !v.at("phase_elements").is_array() || v.at("phase_elements").size()!=2)
-            return cudaErrorInvalidValue;
-        for(int phase=0;phase<2;++phase){
-            const auto& n=v.at("phase_elements").at(phase);
-            if(!n.is_number_integer() || n.get<int64_t>()<=0 || uint64_t(n.get<int64_t>())>GptOssPeer::kMaximumPairElements || n.get<int64_t>()%8)
-                return cudaErrorInvalidValue;
-            counts[phase]=size_t(n.get<int64_t>());capacity=std::max(capacity,counts[phase]);
-        }
-    }catch(...){return cudaErrorInvalidValue;}
+    if(!ParseGptOssPeerGroupOptions(options,bytes,GptOssPeer::kMaximumPairElements,counts,capacity))
+        return cudaErrorInvalidValue;
     auto g=std::make_unique<Group>();auto e=cudaGetDevice(&g->original);if(e!=cudaSuccess)return e;
     // Retain the verified legacy peer-link owner, never probe/mask AlreadyEnabled.
     e=GptOssTpAcquire();if(e!=cudaSuccess)return e;g->tp=true;
@@ -88,10 +81,7 @@ cudaError_t GptOssCreatePeerGroup(const char* options,size_t bytes,void** result
         for(int phase=0;phase<2;++phase){e=cudaStreamCreateWithFlags(&g->streams[phase][r],cudaStreamNonBlocking);if(e!=cudaSuccess)return e;}}
     e=g->owner.initialize(capacity,64,-1,true,&g->streams);if(e!=cudaSuccess)return e;
     g->elements=counts;
-    g->description=nlohmann::json({{"schema",1},{"id","gpt_oss"},{"backend","tensorrt"},
-        {"protocol","owned-mapped-bf16-peer-v1"},{"ctas",64},{"phase_elements",counts},
-        {"capacity_elements",capacity},{"owned_bytes_per_rank",g->owner.ownedBytesPerRank()},
-        {"mapped_host_bytes",g->owner.mappedBytes()},{"concurrency","serial paired phases, one invocation per rank"}}).dump();
+    g->description=GptOssPeerGroupDescription(counts,capacity,g->owner.ownedBytesPerRank(),g->owner.mappedBytes());
     e=cudaSetDevice(g->original);if(e!=cudaSuccess)return e;*result=g.release();return cudaSuccess;
 }
 cudaError_t GptOssPeerGroupAllReduce(const float* x,float* y,size_t n,int rank,int prefill,cudaStream_t stream){

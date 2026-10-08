@@ -129,6 +129,19 @@ def run(pool, group, phase, family, offset, tag):
 group = None
 try:
     initialize()
+    if group_mode:
+        for invalid in [dict(ctas=64.0, phase_elements=elements),
+                dict(ctas=64, phase_elements=[0, elements[1]]),
+                dict(ctas=64, phase_elements=[elements[0] + 8, elements[1]]),
+                dict(ctas=64, phase_elements=[elements[0], 7]),
+                dict(ctas=64, phase_elements=elements, extra=True)]:
+            try:
+                extension.peer_group(json.dumps(invalid))
+            except Exception as e:
+                assert 'invalid' in str(e).lower(), str(e)
+            else:
+                raise AssertionError('Malformed native storage contract accepted')
+        print('COMPILED_PEER_OPTIONS_NEGATIVES_COMPLETE', 5, flush=True)
     group = extension.peer_group(options) if group_mode else None
     if group_mode:
         print('NATIVE_GROUP', extension.peer_group_status_json(group), flush=True)
