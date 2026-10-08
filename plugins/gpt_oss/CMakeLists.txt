@@ -11,6 +11,15 @@ option(GARNET_GPT_OSS_BUILD_XQA_PARITY "Build private XQA native parity test; in
 option(GARNET_GPT_OSS_BUILD_XQA_BENCHMARK "Build private native XQA cost comparison; no inference selection" OFF)
 option(GARNET_GPT_OSS_BUILD_BF16_PAIR_MATH_PARITY "Build private BF16 vector arithmetic test; no peer/inference selection" OFF)
 option(GARNET_GPT_OSS_BUILD_BF16_COLLECTIVE_SCREEN "Build private actual-size NCCL BF16 control; no inference selection" OFF)
+option(GARNET_GPT_OSS_BUILD_ROUTER_GEOMETRY_SCREEN "Build private router CTA geometry control; no inference selection" OFF)
+if(GARNET_GPT_OSS_BUILD_ROUTER_GEOMETRY_SCREEN)
+    add_executable(garnet_gpt_oss_router_geometry_screen
+        ../../test2026/gpt_oss/router_geometry_screen.cu cuda/gpt_oss_kernels.cu)
+    target_include_directories(garnet_gpt_oss_router_geometry_screen PRIVATE include)
+    target_compile_definitions(garnet_gpt_oss_router_geometry_screen PRIVATE
+        NOMINMAX GARNET_GPT_OSS_KERNEL_TEST)
+    target_link_libraries(garnet_gpt_oss_router_geometry_screen PRIVATE CUDA::cudart)
+endif()
 if(GARNET_GPT_OSS_BUILD_BF16_PAIR_MATH_PARITY)
     add_executable(garnet_gpt_oss_bf16_pair_math_parity
         ../../test2026/gpt_oss/bf16_pair_math.cu cuda/tp_bf16.cu)
