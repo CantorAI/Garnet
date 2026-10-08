@@ -23,7 +23,6 @@ void Validate(const GarnetOperatorExecutionPayload* p){
 }
 OperatorExecutionOwner::OperatorExecutionOwner(const GarnetOperatorExecutionServices* s,void* p):services_(s),owner_(p){s->retain(p);}
 OperatorExecutionOwner::~OperatorExecutionOwner(){services_->release(owner_);}
-cudaStream_t CurrentExecutionStream(){return current.owner?current.stream:cudaStreamPerThread;}
 std::shared_ptr<OperatorExecutionOwner> CurrentOperatorExecutionOwner(){return current.owner;}
 int CurrentOperatorExecutionPhase(){return current.phase;}
 int CurrentOperatorExecutionRank(){return current.rank;}
@@ -47,11 +46,12 @@ OperatorExecutionScope::OperatorExecutionScope(const X::Value& value,int rank,in
         throw std::runtime_error("operator execution enter failed: "+std::to_string(code));
     }
     current.owner=owner_;current.stream=static_cast<cudaStream_t>(stream);current.rank=rank;current.phase=phase;active_=true;
+    detail::operatorExecutionStream=current.stream;
 }
 void OperatorExecutionScope::Finish(){
     if(!active_)return;
     const auto* s=owner_->Services();const int code=s->leave(owner_->Identity(),uint32_t(rank_));
-    current=Current{};active_=false;
+    detail::operatorExecutionStream=nullptr;current=Current{};active_=false;
     if(code)throw std::runtime_error("operator execution completion/fault check failed: "+std::to_string(code));
 }
 OperatorExecutionScope::~OperatorExecutionScope(){

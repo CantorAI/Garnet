@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
 #include "operator_execution_bridge.h"
+#include "execution_stream.h"
 #include "xlang3/xlang3.h"
 #include <cuda_runtime.h>
 #include <memory>
@@ -17,7 +18,6 @@ public:
     const GarnetOperatorExecutionServices* Services()const{return services_;}
     void* Identity()const{return owner_;}
 };
-cudaStream_t CurrentExecutionStream();
 std::shared_ptr<OperatorExecutionOwner> CurrentOperatorExecutionOwner();
 int CurrentOperatorExecutionPhase();
 int CurrentOperatorExecutionRank();
