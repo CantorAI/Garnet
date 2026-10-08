@@ -71,6 +71,38 @@ for window in (17, 128):
         assert len(set(occupied)) == len(occupied)
 assert reads == 13_124_892
 
+# Separate independent counter covers the arbitrary non-page-aligned native
+# fixture starts/slot offsets, not just sequential aligned runner tiles.
+arbitrary_reads = 0
+for window in (17, 128):
+    for chunk in (1, 16, 32):
+        layout = hybrid_layout(dict(num_hidden_layers=6, head_dim=64,
+            sliding_window=window, num_key_value_heads=8), 3, 2560, chunk, 4)
+        table = window_page_table(layout)
+        logical = layout['logical_pages_per_request']
+        physical = layout['window_shape'][1]
+        for initial in (0, 127, 2005):
+            starts = (initial, initial + 3, initial)
+            for layer in range(3):
+                ring_memory, full_memory = {}, {}
+                def ring_address(slot, position):
+                    return (layer * physical + table[slot * logical + position // 16]) * 16 + position % 16
+                for slot, start in enumerate(starts):
+                    for position in range(start):
+                        value = ('prefix', layer, slot, position)
+                        ring_memory[ring_address(slot, position)] = full_memory[slot, position] = value
+                for generation in (0, 1):
+                    for slot, start in enumerate(starts[:2]):
+                        for position in range(start, start + chunk):
+                            value = (generation, layer, slot, position)
+                            ring_memory[ring_address(slot, position)] = full_memory[slot, position] = value
+                    for slot, start in enumerate(starts[:2]):
+                        for query in range(start, start + chunk):
+                            for position in range(max(0, query + 1 - window), query + 1):
+                                assert ring_memory[ring_address(slot, position)] == full_memory[slot, position]
+                                arbitrary_reads += 1
+print('Additional arbitrary native-start/slot-offset ring/full address checks:', arbitrary_reads)
+
 
 class Runtime:
     def __init__(self):

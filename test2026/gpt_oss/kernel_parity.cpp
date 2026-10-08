@@ -229,6 +229,8 @@ void testHybridRingAttention64() {
     // Never form the oracle from the ring's potentially overwritten entries.
     for(int window:{17,128})for(int tokens:{1,16,32})for(int start:{0,127,2005})
       for(int heads:{8,32})for(int layer:{0,1}) {
+        std::cout<<"Hybrid case window="<<window<<" tokens="<<tokens<<" start="<<start
+                 <<" heads="<<heads<<" layer="<<layer<<std::endl;
         GptOssOptions o;o.kind=1;o.qHeads=heads;o.kvHeads=heads/8;
         o.headDim=64;o.pageSize=16;o.layer=layer;o.prefill=tokens>1;o.window=window;
         constexpr int batch=3,logical=160,layers=2;
@@ -261,6 +263,9 @@ void testHybridRingAttention64() {
         Device<int> dft(fullTable),drt(ringTable),dl(lengths),dp(starts),da(active);
         const void* fullIn[]{dx.p,dfk.p,dfv.p,dft.p,dl.p,dp.p,da.p,ds.p};
         const void* ringIn[]{dx.p,drk.p,drv.p,drt.p,dl.p,dp.p,da.p,ds.p};
+        // Device constructors upload on the default stream. Complete those
+        // initial transfers before a nonblocking execution stream can read.
+        check(cudaStreamSynchronize(nullptr));
         cudaStream_t stream;check(cudaStreamCreateWithFlags(&stream,cudaStreamNonBlocking));
         // Gate script disables automatic FlashInfer selection for the exact
         // storage comparison. Its independent explicit path is checked below.
@@ -286,13 +291,30 @@ void testHybridRingAttention64() {
 #endif
         for(int change=0;change<2;++change) {
             for(size_t i=0;i<x.size();++i)x[i]=bf(std::sin(float(i)*.019f+change*.125f)*.75f);
-            check(cudaMemcpy(dx.p,x.data(),x.size()*sizeof(float),cudaMemcpyHostToDevice));
+            // Pageable H2D return is not a cross-stream dependency. The input
+            // update must precede both full-history and ring graph execution.
+            check(cudaMemcpyAsync(dx.p,x.data(),x.size()*sizeof(float),cudaMemcpyHostToDevice,stream));
             check(RunGptOssAttention(fullIn,fullOut.p,scratch.p,batch,tokens,logical,fullPages,o,stream));
             check(cudaGraphLaunch(execution,stream));
             check(cudaStreamSynchronize(stream));
             const auto expected=fullOut.read(),actual=ringOut.read();
-            compare(actual,expected,0.f,"Hybrid ring exact full-history outputs/changing graph");
             const auto cachedK=dfk.read(),cachedV=dfv.read();
+            const auto ringKeys=drk.read(),ringValues=drv.read();
+            for(int b=0;b<batch;++b)if(active[b]) {
+                const int firstEnd=o.prefill?starts[b]+1:lengths[b];
+                const int lastEnd=o.prefill?starts[b]+tokens:lengths[b];
+                for(int p=std::max(0,firstEnd-window);p<lastEnd;++p)
+                  for(int h=0;h<o.kvHeads;++h)for(int d=0;d<64;++d) {
+                    const auto a=offset(layer,fullPages,b*logical+p/16,p,h,d);
+                    const auto c=offset(layer,ringPages,b*ring+(p/16)%ring,p,h,d);
+                    if(cachedK[a]!=ringKeys[c]||cachedV[a]!=ringValues[c]) {
+                        std::cerr<<"Hybrid visible KV mismatch change="<<change<<" slot="<<b
+                                 <<" position="<<p<<" head="<<h<<" dim="<<d<<std::endl;
+                        throw std::runtime_error("Hybrid ring visible KV differs from full history");
+                    }
+                }
+            }
+            compare(actual,expected,0.f,"Hybrid ring exact full-history outputs/changing graph");
             auto value=[](uint16_t v){uint32_t raw=uint32_t(v)<<16;float f;std::memcpy(&f,&raw,4);return f;};
             for(int b=0;b<batch;++b)for(int t:{0,tokens/2,tokens-1})for(int h=0;h<heads;++h) {
                 const int end=o.prefill?starts[b]+t+1:lengths[b];
