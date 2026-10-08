@@ -3395,7 +3395,7 @@ namespace Garnet
         result.SetItem("status", NativeValue(Host(), "ok"));
         result.SetItem("token_ids", NativeValue(Host(), ids));
         result.SetItem("token_values", NativeValue(Host(), values));
-        result.SetItem("token_id", NativeValue(Host(), ids.Get(0)));
+        result.SetItem("token_id", NativeValue(Host(), ids.Get(0LL)));
         return result;
     }
 
