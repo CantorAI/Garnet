@@ -156,12 +156,17 @@ try:
         peer_group_status = json.loads(extension.peer_group_status_json(group))
         if peer_group_status != layout:
             raise ValueError('Native peer resources differ from admitted contract')
-        pair.attach_operator_execution_group(group, extension.peer_group_bind_phase)
+        pair.attach_operator_execution_group(group, extension.peer_group_bind_phase,
+            extension.peer_group_release)
         print('Resident native execution group', json.dumps(peer_group_status), flush=True)
         samples.append(memory())
 except BaseException:
-    pair.release()
-    group = None
+    try:
+        pair.release()
+    finally:
+        if group is not None:
+            extension.peer_group_release(group)
+        group = None
     raise
 
 def tensors(stages, tokens):
@@ -378,6 +383,8 @@ finally:
         try:
             pair.release()
         finally:
+            if group is not None:
+                extension.peer_group_release(group)
             group = None
 if session_mode:
     session_report['session_complete'] = True

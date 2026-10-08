@@ -109,6 +109,7 @@ class ResidentTensorParallel:
         self._lock = Lock()
         self._prefill, self._decode = prefill, decode
         self._operator_phase_binder = None
+        self._operator_group_releaser = None
         if len(prefill.stages) != len(decode.stages):
             raise ValueError('Resident phase rank counts differ')
         for first, second in zip(prefill.stages, decode.stages):
@@ -158,17 +159,21 @@ class ResidentTensorParallel:
                 result.append((stage['keys'], stage['values']))
         return result
 
-    def attach_operator_execution_group(self, group, bind_phase):
+    def attach_operator_execution_group(self, group, bind_phase, release_group=None):
         with self._lock:
             if self._prefill is None or self._operator_phase_binder is not None:
                 raise RuntimeError('Released or already bound resident execution group')
             if not callable(bind_phase):
                 raise ValueError('Explicit phase binder required')
+            if release_group is not None and not callable(release_group):
+                raise ValueError('Explicit group releaser must be callable')
             self._prefill.operator_execution_group = group
             self._prefill.operator_execution_phase = 0
             self._decode.operator_execution_group = group
             self._decode.operator_execution_phase = 1
             self._operator_phase_binder = lambda phase: bind_phase(group, phase)
+            if release_group is not None:
+                self._operator_group_releaser = lambda: release_group(group)
 
     def forward_prefill(self, rank_inputs, **kwargs):
         with self._lock:
@@ -199,6 +204,10 @@ class ResidentTensorParallel:
                 finally:
                     self._prefill = None
                     self._operator_phase_binder = None
+                    release_group = self._operator_group_releaser
+                    self._operator_group_releaser = None
+                    if release_group is not None:
+                        release_group()
 
 
 def _extra_stage_inputs(stage):

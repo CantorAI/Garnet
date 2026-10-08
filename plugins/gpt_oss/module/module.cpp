@@ -44,13 +44,13 @@ GarnetOperatorModuleBridge bridge{1, sizeof(GarnetOperatorModuleBridge),
 class GptOssModule {
     static void CleanupGroup(void* pointer){
         auto* p=static_cast<GarnetOperatorExecutionPayload*>(pointer);
-        p->services->release(p->owner);delete p;
+        if(p->owner)p->services->release(p->owner);delete p;
     }
-    static GarnetOperatorExecutionPayload* Group(const X::Value& value){
+    static GarnetOperatorExecutionPayload* Group(const X::Value& value,bool allowReleased=false){
         auto* host=value.host();
         auto* p=host && host->instance_get_native_data?static_cast<GarnetOperatorExecutionPayload*>(
             host->instance_get_native_data(value.raw(),GarnetOperatorExecutionType)):nullptr;
-        if(!p || p->abi!=1 || p->size!=sizeof(*p) || !p->owner ||
+        if(!p || p->abi!=1 || p->size!=sizeof(*p) || (!allowReleased && !p->owner) ||
            p->services!=Garnet::GptOssPeerExecutionServices())throw X::Error("GPT-OSS native execution group required");
         return p;
     }
@@ -59,6 +59,7 @@ public:
         APISET().AddFunc<0>("operator_bridge", &GptOssModule::OperatorBridge);
         APISET().AddFunc<0>("manifest_json", &GptOssModule::Manifest);
         APISET().AddVarFunc("peer_group", &GptOssModule::PeerGroup);
+        APISET().AddVarFunc("peer_group_release", &GptOssModule::ReleaseGroup);
         APISET().AddVarFunc("peer_group_bind_phase", &GptOssModule::BindPhase);
         APISET().AddVarFunc("peer_group_status_json", &GptOssModule::GroupStatus);
     END_PACKAGE
@@ -77,6 +78,15 @@ public:
         if(host->instance_set_native_data(value.raw(),GarnetOperatorExecutionType,payload.get(),&CleanupGroup)!=X3_STATUS_OK){
             throw X::Error("cannot attach execution group payload");}
         hold.release();payload.release();return value;
+    }
+    X::Value ReleaseGroup(const X::ARGS& args,const X::KWARGS&){
+        if(args.size()!=1)throw X::Error("peer_group_release(group) expected");
+        auto* p=Group(args[0],true);
+        // Serialized with request submission. Scoped/cached native owners keep
+        // their own references; VM-frame temporaries no longer own this resource.
+        auto* owner=p->owner;p->owner=nullptr;
+        if(owner)p->services->release(owner);
+        return X::Value(true);
     }
     X::Value BindPhase(const X::ARGS& args,const X::KWARGS&){
         if(args.size()!=2 || !args[1].IsInt64())throw X::Error("peer_group_bind_phase(group, phase) expected");

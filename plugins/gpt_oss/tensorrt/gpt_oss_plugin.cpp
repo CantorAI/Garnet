@@ -27,7 +27,8 @@ void reportMarlinFallback(bool initialized, int tokens) {
 // Version11 adds opt-in bounded token-local prefill MoE scratch to V10 decode
 // BF16 reservation. Old workspace contracts must rebuild.
 // V12 adds an explicit runtime owner/stream contract; old engines rebuild.
-constexpr const char* kVersion = "12";
+// V13 requires deterministic script-handle release, independent of VM frames.
+constexpr const char* kVersion = "13";
 bool valid(const GptOssOptions& o) {
     if (o.kind < 0 || o.kind > 7) return false;
     if(o.marlinPrepacked!=0&&(o.marlinPrepacked!=1||o.kind!=2||
@@ -355,9 +356,9 @@ bool EnsureGptOssPluginRegistered() {
 #endif
 extern "C" GPT_OSS_EXPORT const char* GarnetOperatorPluginManifest() {
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.13.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.14.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_tp_all_reduce","gpt_oss_tp_all_gather","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
 #else
-    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.13.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
+    return R"({"id":"gpt_oss","module":"garnet_gpt_oss","abi":1,"version":"0.14.0","backend":"tensorrt","operators":["gpt_oss_round_bf16","gpt_oss_apply_yarn_rope_packed","gpt_oss_paged_attention","gpt_oss_moe_mxfp4","gpt_oss_rms_norm","gpt_oss_decode_gemv","gpt_oss_vocab_top1"]})";
 #endif
 }
 extern "C" GPT_OSS_EXPORT int GarnetRegisterOperatorPlugin() { return Garnet::EnsureGptOssPluginRegistered() ? 1 : 0; }

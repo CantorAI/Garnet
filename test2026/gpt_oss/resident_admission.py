@@ -124,9 +124,19 @@ assert first.operator_execution_group is second.operator_execution_group is reso
 pair.forward_prefill('prefill');pair.forward_decode('decode');pair.release()
 assert events==[('bind',0),('forward',0),('bind',1),('forward',1),('release',1),('release',0)]
 assert pair._operator_phase_binder is None
+assert pair._operator_group_releaser is None
 try: pair.forward_decode('released')
 except RuntimeError: pass
 else: raise AssertionError('Released pair accepted execution')
+# Explicit script-resource release follows both graph-owning model releases
+# and is invoked once even if the caller releases the pair again.
+events=[]
+first,second=BoundFake(0),BoundFake(1);pair=ResidentTensorParallel(first,second)
+pair.attach_operator_execution_group(resource,lambda owner,phase: events.append(('bind',phase)),
+    lambda owner: events.append(('resource-release',owner)))
+pair.release();pair.release()
+assert events==[('release',1),('release',0),('resource-release',resource)]
+assert pair._operator_group_releaser is pair._operator_phase_binder is None
 first = Fake(kv)
 def failure(shared): raise RuntimeError('decode failed')
 try: ResidentTensorParallel.build(lambda: first, failure)

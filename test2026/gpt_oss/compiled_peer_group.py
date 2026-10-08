@@ -174,8 +174,23 @@ try:
                     f'family{family}-phase{phase}')
     statuses = [[model.runtime_status() for model in phase] for phase in models]
     if group_mode:
+        closed_group = group
+        assert extension.peer_group_release(group)
+        assert extension.peer_group_release(group)
         group = None
         gc.collect()
+        for action in [lambda: extension.peer_group_status_json(closed_group),
+                lambda: extension.peer_group_bind_phase(closed_group, 0),
+                lambda: models[0][0].forward(dict(inputs=[prepared[0][0]],
+                    operator_execution_group=closed_group,
+                    operator_execution_rank=0, operator_execution_phase=0))]:
+            try:
+                action()
+            except Exception:
+                pass
+            else:
+                raise AssertionError('Released native handle accepted an operation')
+        print('COMPILED_PEER_RELEASE_NEGATIVES_COMPLETE', 3, flush=True)
         try:
             unexpected = extension.peer_group(options)
         except Exception as e:
@@ -191,6 +206,10 @@ try:
         group = extension.peer_group(options)
         extension.peer_group_bind_phase(group, 1)
         extension.peer_group_bind_phase(group, 0)
+        assert extension.peer_group_release(group)
+        assert extension.peer_group_release(group)
+        group = extension.peer_group(options)
+        assert extension.peer_group_release(group)
         group = None
         gc.collect()
     (folder / 'result.json').write_text(json.dumps(dict(protocol='compiled-bf16-peer-group-v1',
@@ -203,4 +222,6 @@ finally:
     for phase in models:
         for model in phase:
             model.release_runtime()
+    if group is not None:
+        extension.peer_group_release(group)
     group = None
