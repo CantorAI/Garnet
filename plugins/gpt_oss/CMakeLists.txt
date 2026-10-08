@@ -8,7 +8,8 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 endif()
 find_package(CUDAToolkit REQUIRED)
 option(GARNET_GPT_OSS_BUILD_XQA_PARITY "Build private XQA native parity test; inference remains unchanged" OFF)
-if(GARNET_GPT_OSS_BUILD_XQA_PARITY)
+option(GARNET_GPT_OSS_BUILD_XQA_BENCHMARK "Build private native XQA cost comparison; no inference selection" OFF)
+if(GARNET_GPT_OSS_BUILD_XQA_PARITY OR GARNET_GPT_OSS_BUILD_XQA_BENCHMARK)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     set(GARNET_XQA_UPSTREAM "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashinfer_xqa")
     set(GARNET_XQA_GENERATOR "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/gpt_oss/prepare_xqa_sources.py")
@@ -35,18 +36,31 @@ if(GARNET_GPT_OSS_BUILD_XQA_PARITY)
     add_custom_target(garnet_gpt_oss_xqa_generated_verified
         COMMAND "${Python3_EXECUTABLE}" "${GARNET_XQA_GENERATOR}" "${GARNET_XQA_UPSTREAM}" "${GARNET_XQA_GENERATED}" --verify-existing
         DEPENDS "${GARNET_XQA_GENERATED}/garnet-adaptation.json" VERBATIM)
-    add_executable(garnet_gpt_oss_xqa_attention_parity
-        ../../test2026/gpt_oss/xqa_attention_parity.cu
-        cuda/gpt_oss_xqa_attention.cu cuda/gpt_oss_xqa_bridge.cu)
-    add_dependencies(garnet_gpt_oss_xqa_attention_parity garnet_gpt_oss_xqa_generated_verified)
-    target_include_directories(garnet_gpt_oss_xqa_attention_parity PRIVATE include cuda "${GARNET_XQA_GENERATED}")
-    target_compile_options(garnet_gpt_oss_xqa_attention_parity PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
-    target_compile_definitions(garnet_gpt_oss_xqa_attention_parity PRIVATE NOMINMAX NDEBUG=1
-        BEAM_WIDTH=1 HEAD_ELEMS=64 HEAD_GRP_SIZE=8 INPUT_FP16=0 CACHE_ELEM_ENUM=0
-        TOKENS_PER_PAGE=16 SLIDING_WINDOW=1 LOW_PREC_OUTPUT=0 SPEC_DEC=0 USE_INPUT_KV=0
-        USE_CUSTOM_BARRIER=1 USE_SM90_MHA=0)
-    target_link_libraries(garnet_gpt_oss_xqa_attention_parity PRIVATE CUDA::cudart)
-    add_test(NAME garnet_gpt_oss_xqa_attention_parity COMMAND garnet_gpt_oss_xqa_attention_parity)
+    set(GARNET_XQA_NATIVE_TARGETS)
+    if(GARNET_GPT_OSS_BUILD_XQA_PARITY)
+        add_executable(garnet_gpt_oss_xqa_attention_parity
+            ../../test2026/gpt_oss/xqa_attention_parity.cu
+            cuda/gpt_oss_xqa_attention.cu cuda/gpt_oss_xqa_bridge.cu)
+        list(APPEND GARNET_XQA_NATIVE_TARGETS garnet_gpt_oss_xqa_attention_parity)
+        add_test(NAME garnet_gpt_oss_xqa_attention_parity COMMAND garnet_gpt_oss_xqa_attention_parity)
+    endif()
+    if(GARNET_GPT_OSS_BUILD_XQA_BENCHMARK)
+        add_executable(garnet_gpt_oss_xqa_attention_benchmark
+            ../../test2026/gpt_oss/xqa_attention_benchmark.cu cuda/gpt_oss_kernels.cu
+            cuda/gpt_oss_xqa_attention.cu cuda/gpt_oss_xqa_bridge.cu)
+        target_compile_definitions(garnet_gpt_oss_xqa_attention_benchmark PRIVATE GARNET_GPT_OSS_KERNEL_TEST=1)
+        list(APPEND GARNET_XQA_NATIVE_TARGETS garnet_gpt_oss_xqa_attention_benchmark)
+    endif()
+    foreach(GARNET_XQA_TARGET IN LISTS GARNET_XQA_NATIVE_TARGETS)
+        add_dependencies(${GARNET_XQA_TARGET} garnet_gpt_oss_xqa_generated_verified)
+        target_include_directories(${GARNET_XQA_TARGET} PRIVATE include cuda "${GARNET_XQA_GENERATED}")
+        target_compile_options(${GARNET_XQA_TARGET} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+        target_compile_definitions(${GARNET_XQA_TARGET} PRIVATE NOMINMAX NDEBUG=1
+            BEAM_WIDTH=1 HEAD_ELEMS=64 HEAD_GRP_SIZE=8 INPUT_FP16=0 CACHE_ELEM_ENUM=0
+            TOKENS_PER_PAGE=16 SLIDING_WINDOW=1 LOW_PREC_OUTPUT=0 SPEC_DEC=0 USE_INPUT_KV=0
+            USE_CUSTOM_BARRIER=1 USE_SM90_MHA=0)
+        target_link_libraries(${GARNET_XQA_TARGET} PRIVATE CUDA::cudart)
+    endforeach()
 endif()
 include(GNUInstallDirs)
 set(GARNET_TENSORRT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../ThirdPartySDK/TensorRT"
@@ -94,6 +108,11 @@ if(GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL)
     target_sources(garnet_gpt_oss_ops PRIVATE cuda/gpt_oss_flash_prefill.cu)
     target_include_directories(garnet_gpt_oss_ops PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashinfer/include")
     target_compile_definitions(garnet_gpt_oss_ops PRIVATE GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL=1)
+    if(TARGET garnet_gpt_oss_xqa_attention_benchmark)
+        target_sources(garnet_gpt_oss_xqa_attention_benchmark PRIVATE cuda/gpt_oss_flash_prefill.cu)
+        target_include_directories(garnet_gpt_oss_xqa_attention_benchmark PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashinfer/include")
+        target_compile_definitions(garnet_gpt_oss_xqa_attention_benchmark PRIVATE GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL=1)
+    endif()
 endif()
 if(GARNET_GPT_OSS_BUILD_TESTS)
     add_executable(garnet_gpt_oss_xqa_page_contract ../../test2026/gpt_oss/xqa_page_contract.cpp)

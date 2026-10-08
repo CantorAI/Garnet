@@ -53,6 +53,10 @@ cudaError_t RunGptOssMoeRoute(const void* const*, int*, float*, float*, int,
     const GptOssOptions&, cudaStream_t,
     const GptOssMarlinDecodeBuffers* = nullptr);
 #ifdef GARNET_GPT_OSS_KERNEL_TEST
+// Standalone cost comparisons must include the same KV-write work as the
+// production attention entry. This test entry never selects inference.
+cudaError_t TestGptOssWriteKV(const void* const*,int,int,int,int,
+    const GptOssOptions&,cudaStream_t);
 cudaError_t TestGptOssGqaPrefill64(const void* const*,float*,int,int,int,int,
     const GptOssOptions&,int queriesPerWarp,cudaStream_t);
 cudaError_t TestGptOssBatchRouter(const float*,const float*,const float*,float*,int*,

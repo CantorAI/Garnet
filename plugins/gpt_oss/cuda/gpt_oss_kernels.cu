@@ -974,6 +974,22 @@ cudaError_t TestGptOssGqaPrefill64(const void* const* in, float* y, int batch,
     return cudaGetLastError();
 }
 #endif
+#ifdef GARNET_GPT_OSS_KERNEL_TEST
+cudaError_t TestGptOssWriteKV(const void* const* in,int batch,int tokens,
+    int logicalPages,int physicalPages,const GptOssOptions& o,cudaStream_t stream) {
+    if (!in || batch<1 || batch>512 || tokens<1 || tokens>4096 ||
+        logicalPages<1 || logicalPages>256 || physicalPages<1 || physicalPages>batch*logicalPages || o.kind!=1 ||
+        o.pageSize!=16 || o.layer<0 || o.layer>=36 || o.kvHeads<1 || o.kvHeads>16 ||
+        o.qHeads!=8*o.kvHeads || o.headDim!=64)
+        return cudaErrorInvalidValue;
+    for (int i=0;i<7;++i) if (i!=4 && !in[i]) return cudaErrorInvalidValue;
+    const size_t n=size_t(batch)*tokens*o.kvHeads*o.headDim;
+    writeKV<<<(n+255)/256,256,0,stream>>>(static_cast<const float*>(in[0]),
+        (__nv_bfloat16*)in[1],(__nv_bfloat16*)in[2],(const int*)in[3],
+        (const int*)in[5],(const int*)in[6],batch,tokens,logicalPages,physicalPages,o);
+    return cudaGetLastError();
+}
+#endif
 cudaError_t RunGptOssAttention(const void* const* in, float* y, void* workspace,
     int batch, int tokens,
     int logicalPages, int physicalPages, const GptOssOptions& o, cudaStream_t stream) {
