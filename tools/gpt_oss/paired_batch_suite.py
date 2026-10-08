@@ -68,7 +68,7 @@ for key in list(env):
 for key, value in reference['optimization_environment'].items():
     if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS', 'GARNET_RESIDENT_SESSION'):
         continue  # New admission is selected only by --resident-profile.
-    if (not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')) or
+    if ((not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')) and key != 'GARNET_TRT_SYNC_ALLOCATOR') or
             key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value, str)):
         raise ValueError(f'Invalid recorded optimization setting: {key}')
     env[key] = value
@@ -88,7 +88,7 @@ if args.resident_profile is not None:
                 'GARNET_GPT_OSS_WEIGHTS', 'GARNET_GPT_OSS_CACHE', 'GARNET_GPT_OSS_TOKENIZER'):
             del env[key]
     for key, value in resident_profile['kernel_environment'].items():
-        if (not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_')) or
+        if ((not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_')) and key != 'GARNET_TRT_SYNC_ALLOCATOR') or
                 key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value,str)):
             raise ValueError('Invalid resident kernel environment')
         env[key] = value

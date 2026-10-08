@@ -101,6 +101,8 @@ parser.add_argument('--decode-router-tensorcore', type=int, choices=(0,1),
     help='explicit OPT49 BF16 tensor-core decode-router candidate; requires separate quality gates')
 parser.add_argument('--hybrid-kv', type=int, choices=(0,1),
     help='explicit OPT50 full-history/window-bank candidate; GPU quality must be proved separately')
+parser.add_argument('--sync-allocator', type=int, choices=(0,1),
+    help='explicit cached runtime allocator candidate; requires separate memory/quality gates')
 args = parser.parse_args()
 reference_path, directory = args.reference, args.directory
 reference_bytes = reference_path.read_bytes()
@@ -122,7 +124,7 @@ for key, value in reference['optimization_environment'].items():
         # Prior admission file/warmup controls are result provenance, not
         # inputs to a new sequential engine profile on another binary.
         continue
-    if (not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')) or
+    if ((not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')) and key != 'GARNET_TRT_SYNC_ALLOCATOR') or
             key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value, str)):
         raise ValueError('Invalid recorded optimization environment')
     env[key] = value
@@ -151,6 +153,7 @@ if args.prefill_down_ctas is not None:
     if selected_k!='64':
         raise ValueError('Independent down CTA override requires explicit large-prefill down-K64')
 env.update(overrides)
+env['GARNET_TRT_SYNC_ALLOCATOR'] = str(args.sync_allocator) if args.sync_allocator is not None else env.get('GARNET_TRT_SYNC_ALLOCATOR', '0')
 if specification is not None:
     env['GARNET_BATCH_PREFILL_CHUNK'] = str(specification['prefill_chunk_tokens'])
 build = Path(env.get('GARNET_BUILD_DIR', root / 'out/build/gpt-oss'))

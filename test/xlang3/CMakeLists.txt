@@ -52,6 +52,19 @@ if(EXISTS "${GARNET_TENSORRT_ROOT}/include/NvInfer.h")
         add_test(NAME garnet_trt_context_pool COMMAND garnet_trt_context_pool_tests)
     endif()
     set_tests_properties(garnet_trt_context_pool PROPERTIES TIMEOUT 120)
+    add_executable(garnet_trt_sync_allocator_tests trt_sync_allocator_tests.cpp)
+    target_compile_features(garnet_trt_sync_allocator_tests PRIVATE cxx_std_17)
+    target_include_directories(garnet_trt_sync_allocator_tests PRIVATE
+        ../../src/backends/tensorrt "${GARNET_TENSORRT_ROOT}/include")
+    target_link_libraries(garnet_trt_sync_allocator_tests PRIVATE CUDA::cudart)
+    if(WIN32)
+        add_test(NAME garnet_trt_sync_allocator COMMAND "${CMAKE_COMMAND}" -E env
+            "PATH=${CUDAToolkit_BIN_DIR};$ENV{PATH}"
+            "$<TARGET_FILE:garnet_trt_sync_allocator_tests>")
+    else()
+        add_test(NAME garnet_trt_sync_allocator COMMAND garnet_trt_sync_allocator_tests)
+    endif()
+    set_tests_properties(garnet_trt_sync_allocator PROPERTIES TIMEOUT 120)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

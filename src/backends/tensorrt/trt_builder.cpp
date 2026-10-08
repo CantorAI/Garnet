@@ -3,6 +3,7 @@
 
 #include "trt_builder.h"
 #include "trt_context_pool.h"
+#include "trt_sync_allocator.h"
 #include "weight_quantization.h"
 #include "paged_kv_plugin.h"
 #include "gpt_oss_weight_shard.h"
@@ -158,6 +159,8 @@ namespace Garnet {
 
         struct CachedTRTExecution {
             int device = -1;
+            // Destroyed after the destructor body has released every TRT user.
+            std::unique_ptr<TRTSyncAllocator> allocator;
             nvinfer1::IRuntime* runtime = nullptr;
             nvinfer1::ICudaEngine* engine = nullptr;
             std::unique_ptr<TRTContextPool> contexts;
@@ -166,16 +169,6 @@ namespace Garnet {
                 cudaGetDevice(&previous);
                 if (previous != device) cudaSetDevice(device);
                 contexts.reset();
-                // TensorRT owns engine allocations and may retire them on
-                // private streams. Slot events cover rank work, but unload
-                // must fence the entire device before those engine buffers
-                // disappear. This is a cold teardown boundary, never enqueue.
-                if (engine) {
-                    const auto status = cudaDeviceSynchronize();
-                    if (status != cudaSuccess)
-                        std::cerr << "[TRTBuilder] Engine retirement fence failed: "
-                            << cudaGetErrorString(status) << std::endl;
-                }
                 delete engine;
                 delete runtime;
                 if (previous >= 0 && previous != device) cudaSetDevice(previous);
@@ -268,13 +261,15 @@ namespace Garnet {
             const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
             int device = -1;
             if (cudaGetDevice(&device) != cudaSuccess) return nullptr;
+            const char* allocatorPolicy = std::getenv("GARNET_TRT_SYNC_ALLOCATOR");
+            const bool syncAllocator = allocatorPolicy && std::strcmp(allocatorPolicy, "1") == 0;
             std::shared_ptr<std::mutex> engineLoadMutex;
             {
                 std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
                 auto found = g_trtExecutionCache.find(enginePath);
                 if (found != g_trtExecutionCache.end()) {
                     if (auto owner = found->second.lock()) {
-                        if (owner->device != device) return nullptr;
+                        if (owner->device != device || bool(owner->allocator) != syncAllocator) return nullptr;
                         return owner;
                     }
                 }
@@ -289,7 +284,7 @@ namespace Garnet {
                 auto found = g_trtExecutionCache.find(enginePath);
                 if (found != g_trtExecutionCache.end()) {
                     if (auto owner = found->second.lock()) {
-                        if (owner->device != device) return nullptr;
+                        if (owner->device != device || bool(owner->allocator) != syncAllocator) return nullptr;
                         return owner;
                     }
                 }
@@ -308,6 +303,10 @@ namespace Garnet {
             if (!cached.runtime) {
                 std::cout << "[TRTBuilder] createInferRuntime failed for cached engine: " << enginePath << std::endl;
                 return nullptr;
+            }
+            if (syncAllocator) {
+                cached.allocator = std::make_unique<TRTSyncAllocator>(device);
+                cached.runtime->setGpuAllocator(cached.allocator.get());
             }
             cached.engine = cached.runtime->deserializeCudaEngine(engineStream);
             if (!cached.engine) {

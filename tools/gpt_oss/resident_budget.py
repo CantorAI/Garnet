@@ -32,12 +32,14 @@ def hardware_identity():
 
 
 def kernel_environment():
-    return {key: value for key, value in os.environ.items()
+    environment = {key: value for key, value in os.environ.items()
         if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_'))
         and not key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD'))
         and not key.startswith('GARNET_GPT_OSS_PROFILE_')
         and key not in ('GARNET_GPT_OSS_WEIGHTS', 'GARNET_GPT_OSS_CACHE',
                         'GARNET_GPT_OSS_TOKENIZER')}
+    environment['GARNET_TRT_SYNC_ALLOCATOR'] = os.environ.get('GARNET_TRT_SYNC_ALLOCATOR', '0')
+    return environment
 
 
 def checkpoint_identity(weights):
