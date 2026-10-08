@@ -27,7 +27,8 @@ std::shared_ptr<OperatorExecutionOwner> CurrentOperatorExecutionOwner(){return c
 int CurrentOperatorExecutionPhase(){return current.phase;}
 int CurrentOperatorExecutionRank(){return current.rank;}
 OperatorExecutionScope::OperatorExecutionScope(const X::Value& value,int rank,int phase,
-        const std::string& backend,const std::string& executionPlan){
+        const std::string& backend,
+        const std::vector<std::pair<std::string,std::string>>& requiredProviders){
     if(current.owner)throw std::invalid_argument("nested operator execution group is unsupported");
     auto* host=value.host();
     if(!host || !host->instance_get_native_data)throw std::invalid_argument("native operator execution group required");
@@ -35,9 +36,9 @@ OperatorExecutionScope::OperatorExecutionScope(const X::Value& value,int rank,in
     Validate(p);const auto* s=p->services;
     if(backend!=s->backend || rank<0 || uint32_t(rank)>=s->ranks || phase<0 || uint32_t(phase)>=s->phases)
         throw std::invalid_argument("operator execution backend/rank/phase mismatch");
-    const auto plan=nlohmann::json::parse(executionPlan);bool required=false;
-    for(const auto& plugin:plan.value("operator_plugins",nlohmann::json::array()))
-        if(plugin.at("id")==s->plugin_id && plugin.at("backend")==backend)required=true;
+    bool required=false;
+    for(const auto& plugin:requiredProviders)
+        if(plugin.first==s->plugin_id && plugin.second==backend)required=true;
     if(!required)throw std::invalid_argument("operator execution provider is not required by this compiled model");
     owner_=std::make_shared<OperatorExecutionOwner>(s,p->owner);rank_=rank;
     void* stream=nullptr;const int code=s->enter(p->owner,uint32_t(phase),uint32_t(rank),&stream);

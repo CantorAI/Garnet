@@ -6,6 +6,8 @@
 #include <cuda_runtime.h>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 namespace Garnet {
 class OperatorExecutionOwner {
     const GarnetOperatorExecutionServices* services_;
@@ -27,7 +29,8 @@ class OperatorExecutionScope {
     bool active_=false;
 public:
     OperatorExecutionScope(const X::Value& payload,int rank,int phase,
-        const std::string& backend,const std::string& executionPlan);
+        const std::string& backend,
+        const std::vector<std::pair<std::string,std::string>>& requiredProviders);
     OperatorExecutionScope(const OperatorExecutionScope&)=delete;
     OperatorExecutionScope& operator=(const OperatorExecutionScope&)=delete;
     void Finish();

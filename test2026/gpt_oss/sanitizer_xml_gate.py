@@ -17,7 +17,7 @@ for record in cases.values():
                        ('hostStack/frame[2]/func','cudaMemcpyPeer'),
                        ('hostStack/frame[2]/module','/tmp/libunrelated.so'),
                        ('hostStack/frame[3]/func','Garnet::GptOssTpPackBf16'),
-                       ('hostStack/frame[3]/module','/tmp/libgarnet_gpt_oss.so')]:
+                       ('hostStack/frame[3]/module','/tmp/libunrelated.so')]:
         hazard=deepcopy(record)
         field=hazard.find(path)
         assert field is not None
@@ -27,7 +27,7 @@ for record in cases.values():
     if 'GptOssTpDirectAcquire' in known_initialization(record):
         for path,value in [('what/error','cudaErrorLaunchFailure'),
                            ('hostStack/frame[4]/func','Garnet::UnrelatedAcquire'),
-                           ('hostStack/frame[4]/module','/tmp/libgarnet_gpt_oss.so')]:
+                           ('hostStack/frame[4]/module','/tmp/libunrelated.so')]:
             hazard=deepcopy(record); hazard.find(path).text=value
             assert known_initialization(hazard) is None, (path,value)
             hazards += 1

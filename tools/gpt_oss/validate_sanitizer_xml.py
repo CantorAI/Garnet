@@ -82,7 +82,38 @@ def known_nccl_graph_initialization(record):
     return f'cuMemRetainAllocationHandle/1/NCCL-IPC-graph-init/{label}'
 
 
+def known_plugin_peer_initialization(record):
+    # Observed compiled initialization/reacquisition, never a kernel report.
+    # tp_direct.cu clears only the checked already-enabled return from
+    # cudaDeviceEnablePeerAccess. Keep both immediate callers and origins bound.
+    if tuple(record.findtext('what/' + name) for name in ('api', 'result', 'error', 'message')) != (
+            'cudaGetLastError', '704', 'cudaErrorPeerAccessAlreadyEnabled', 'peer access is already enabled'):
+        return None
+    stack = record.find('hostStack')
+    if record.findtext('kind') != 'Api' or stack is None or stack.findtext('saveLocation') != 'error':
+        return None
+    frames = stack.findall('frame')
+    if len(frames) < 6 or any(not f.findtext('module') or not f.findtext('pc') for f in frames):
+        return None
+    modules = ('libcuda.so.1', 'libcudart.so.13') + ('libgarnet_gpt_oss.so',) * 3
+    if any(Path(f.findtext('module')).name != module for f, module in zip(frames, modules)):
+        return None
+    for frame, name in zip(frames[1:4], ('cudaGetLastError', 'Garnet::GptOssTpDirectAcquire', 'Garnet::GptOssTpAcquire')):
+        if not re.fullmatch(re.escape(name) + r'(?:\(.*\))?', frame.findtext('func', '')):
+            return None
+    for origin, next_module, label in (
+            ('Garnet::GptOssPlugin::initialize', 'libnvinfer.so.11', 'compiled-plugin-init'),
+            ('Garnet::GptOssCreatePeerGroup', 'libgarnet_gpt_oss.so', 'script-group-init')):
+        if (re.fullmatch(re.escape(origin) + r'(?:\(.*\))?', frames[4].findtext('func', '')) and
+                Path(frames[5].findtext('module')).name == next_module):
+            return 'cudaGetLastError/704/Garnet::GptOssTpDirectAcquire/' + label
+    return None
+
+
 def known_initialization(record):
+    plugin = known_plugin_peer_initialization(record)
+    if plugin:
+        return plugin
     graph=known_nccl_graph_initialization(record)
     if graph:
         return graph
@@ -102,7 +133,7 @@ def known_initialization(record):
                     re.fullmatch(r'Garnet::GptOssTpAcquire(?:\(.*\))?', frames[3].findtext('func',''))):
                 # Only the observed benchmark reacquire branch, after the
                 # exact already-enabled return from EnablePeerAccess. No
-                # plugin-library or other704 caller exception is inferred.
+                # plugin-library or other704 caller exception is inferred here.
                 return 'cudaGetLastError/704/Garnet::GptOssTpDirectAcquire/benchmark-init'
     # TensorToDevice checks EnablePeerAccess's return before clearing only704.
     # CUDA documents this as an already-established connection, not a failed copy.
@@ -142,7 +173,7 @@ def validate(source, output):
     audit = dict(xml=str(source.resolve()), sha256=hashlib.sha256(data).hexdigest(),
         records=len(records), excluded_known_initialization=dict(excluded),
         unexpected=unexpected, passed=not unexpected,
-        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, the observed benchmark DirectAcquire reacquire stack, and exact observed native wire-benchmark or original BF16 collective-control IPC graph-initialization VMM probes are excluded. The original BF16 control additionally requires its observed thread-origin frame; malformed stack metadata, all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
+        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, observed DirectAcquire benchmark/compiled-plugin/script-group initialization stacks, and exact observed native wire-benchmark or original BF16 collective-control IPC graph-initialization VMM probes are excluded. Plugin initialization binds API/code/error/message, full stack metadata, library, both acquire callers and exact initialization origin; the original BF16 control requires its observed thread-origin frame. Malformed stack metadata, all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(audit, indent=2))
     if unexpected:

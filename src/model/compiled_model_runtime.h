@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace Garnet
@@ -53,6 +54,8 @@ namespace Garnet
         X::Value m_graph;
         std::string m_graphSummary;
         std::string m_executionPlanJson;
+        using OperatorProviderRows = std::vector<std::pair<std::string,std::string>>;
+        std::shared_ptr<const OperatorProviderRows> m_operatorExecutionRequirements;
         std::string m_enginePath;
         std::vector<EnginePartitionSpec> m_enginePartitions;
         std::vector<std::shared_ptr<void>> m_trtExecutions;

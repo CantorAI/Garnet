@@ -658,6 +658,8 @@ namespace Garnet
     {
         std::lock_guard<std::mutex> guard(m_mutex);
         m_trtExecutions.clear();
+        std::atomic_store(&m_operatorExecutionRequirements,
+            std::shared_ptr<const OperatorProviderRows>{});
         m_enginesPrepared = false;
         ClearImportNamespace(m_host, m_importNamespace);
         m_module = X::Value();
@@ -751,6 +753,8 @@ namespace Garnet
         m_enginesPrepared = false;
         m_frontendPrepared = false;
         m_executionPlanJson.clear();
+        std::atomic_store(&m_operatorExecutionRequirements,
+            std::shared_ptr<const OperatorProviderRows>{});
         m_enginePartitions.clear();
         m_errorCode.clear();
         m_errorMessage.clear();
@@ -924,8 +928,21 @@ namespace Garnet
             }
             return {std::move(decodeRuntime), {}};
         };
-        auto prepareServingEngines = [&]() -> bool {
+        auto prepareServingEngines = [&](const nlohmann::json& operatorPlugins) -> bool {
             const auto start = std::chrono::steady_clock::now();
+            // Cache immutable provider membership once, using the same resolved
+            // metadata serialized into the plan. Native bindings are still
+            // validated for every scoped request. Defaults gain no new rejection.
+            auto providerRows = std::make_shared<OperatorProviderRows>();
+            for (const auto& plugin : operatorPlugins) {
+                if (plugin.is_object() && plugin.contains("id") && plugin["id"].is_string() &&
+                    plugin.contains("backend") && plugin["backend"].is_string()) {
+                    providerRows->emplace_back(
+                        plugin["id"].get<std::string>(), plugin["backend"].get<std::string>());
+                }
+            }
+            std::shared_ptr<const OperatorProviderRows> immutableRows = providerRows;
+            std::atomic_store(&m_operatorExecutionRequirements, std::move(immutableRows));
             const bool needsDecodeRuntime =
                 (m_frontend == "qwen3_vl" && m_inputShapes.size() == 15) ||
                 (m_frontend == "qwen3_text" && m_inputShapes.size() == 7) ||
@@ -1086,7 +1103,7 @@ namespace Garnet
                 ++m_diagnostics.graphCacheHits;
                 m_ready = true;
                 m_state = "engine_cache_loaded";
-                if (!prepareServingEngines()) {
+                if (!prepareServingEngines(resolvedOperatorPlugins)) {
                     m_ready = false;
                     m_state = "failed";
                     return false;
@@ -1438,7 +1455,7 @@ namespace Garnet
                 m_state = "compiled_engine_ready";
                 m_errorCode.clear();
                 m_errorMessage.clear();
-                if (!prepareServingEngines()) {
+                if (!prepareServingEngines(resolvedOperatorPlugins)) {
                     m_ready = false;
                     m_state = "failed";
                     return false;
@@ -1533,7 +1550,10 @@ namespace Garnet
         if(!m_frontend.empty())throw X::Error("operator execution groups require explicit compiled inputs");
         const auto rank=OperatorExecutionIndex(Lookup(request,"operator_execution_rank"),"operator_execution_rank");
         const auto phase=OperatorExecutionIndex(Lookup(request,"operator_execution_phase"),"operator_execution_phase");
-        OperatorExecutionScope scope(resource,rank,phase,m_backend,m_executionPlanJson);
+        const auto requiredProviders = std::atomic_load(&m_operatorExecutionRequirements);
+        static const OperatorProviderRows emptyProviders;
+        OperatorExecutionScope scope(resource,rank,phase,m_backend,
+            requiredProviders ? *requiredProviders : emptyProviders);
         auto result=ForwardImpl(request);scope.Finish();return result;
     }
 
