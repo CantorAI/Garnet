@@ -4,7 +4,6 @@
 #include "compiled_model_runtime.h"
 #include "operator_plugins.h"
 #include "operator_execution_group.h"
-#include "native_values.h"
 #include <climits>
 #include "compiled_graph_capture.h"
 #include "graph_capture.h"
@@ -55,6 +54,15 @@ namespace
             if (key.IsString() && key.ToString() == name) return value;
         }
         return {};
+    }
+    int OperatorExecutionIndex(const X::Value& value, const char* name) {
+        if ((!value.IsInt64() && !value.IsUInt64()) ||
+            (value.IsUInt64() && value.ToUInt64() > INT_MAX))
+            throw X::Error(std::string(name) + " requires a nonnegative int32 value");
+        const auto index = value.ToLongLong();
+        if (index < 0 || index > INT_MAX)
+            throw X::Error(std::string(name) + " out of range");
+        return static_cast<int>(index);
     }
     void ClearImportNamespace(X3PackageHost* host, std::string& name) {
         if (name.empty()) return;
@@ -1523,10 +1531,9 @@ namespace Garnet
         X::Value resource=request.IsDict()?Lookup(request,"operator_execution_group"):X::Value();
         if(!resource.IsValid())return ForwardImpl(request);
         if(!m_frontend.empty())throw X::Error("operator execution groups require explicit compiled inputs");
-        const auto rank=CheckedInt64(Lookup(request,"operator_execution_rank"),"operator_execution_rank");
-        const auto phase=CheckedInt64(Lookup(request,"operator_execution_phase"),"operator_execution_phase");
-        if(rank<0 || rank>INT_MAX || phase<0 || phase>INT_MAX)throw X::Error("operator execution rank/phase out of range");
-        OperatorExecutionScope scope(resource,int(rank),int(phase),m_backend,m_executionPlanJson);
+        const auto rank=OperatorExecutionIndex(Lookup(request,"operator_execution_rank"),"operator_execution_rank");
+        const auto phase=OperatorExecutionIndex(Lookup(request,"operator_execution_phase"),"operator_execution_phase");
+        OperatorExecutionScope scope(resource,rank,phase,m_backend,m_executionPlanJson);
         auto result=ForwardImpl(request);scope.Finish();return result;
     }
 
