@@ -107,7 +107,9 @@ public:
             if(e!=cudaSuccess)return fail(e);
             std::printf("PEER_CAPABILITY rank=%d SM=%d%d multiprocessors=%d mapped=%d UVA=%d cooperative=%d peer=%d native_atomic=%d MAPPED_U32_SIGNALS\n",
                 r,p.major,p.minor,p.multiProcessorCount,p.canMapHostMemory,p.unifiedAddressing,p.cooperativeLaunch,peer,atomics);
-            waitCycles_[r]=static_cast<unsigned long long>(p.clockRate)*1000*30;
+            int clockKHz=0;e=cudaDeviceGetAttribute(&clockKHz,cudaDevAttrClockRate,r);
+            if(e!=cudaSuccess)return fail(e);
+            waitCycles_[r]=static_cast<unsigned long long>(clockKHz)*1000*30;
             if(!waitCycles_[r])return fail(cudaErrorNotSupported);
         }
         e=cudaHostAlloc(&hostSignals_,mappedBytes(),cudaHostAllocPortable|cudaHostAllocMapped);
