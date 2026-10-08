@@ -38,6 +38,7 @@ int main() {
                 const int previous = devices > 1 ? 1 : 0;
                 Check(cudaSetDevice(previous));
                 for (int run = 0; run < 24; ++run) {
+                    Check(cudaSetDevice(previous));
                     void* memory = allocator.allocateAsync(4096, run % 2 ? 256 : 0, 0, nullptr);
                     Require(memory != nullptr, "allocation failed");
                     int current = -1;
