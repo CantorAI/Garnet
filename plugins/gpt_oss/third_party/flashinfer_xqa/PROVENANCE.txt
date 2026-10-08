@@ -1,0 +1,14 @@
+FlashInfer XQA native dependency subset, unmodified upstream bytes.
+Release: v0.7.0.post1
+Commit: 946200de1ae94fc93fdd0926f0a13afd1fa7f0f1
+Source: https://github.com/flashinfer-ai/flashinfer/tree/946200de1ae94fc93fdd0926f0a13afd1fa7f0f1/csrc/xqa
+License: Apache-2.0; retain LICENSE, NOTICE and original per-file copyright headers.
+SHA256SUMS covers LICENSE, NOTICE and every transitive quoted include of mha.cu,
+including conditionally compiled header branches. TVM/Python wrappers and
+other architecture launcher translation units are not part of this subset.
+No target currently links this dependency. The existing FA2 subset is separate.
+Any generated initialization/single-block/symbol adaptations must be identified
+in their generated source and audited against these immutable originals.
+Vendoring alone is not a build, GPU correctness, or performance result.
+Headerless upstream files follow the retained repository-root LICENSE:
+hostUtils.h, mha_components.cuh
