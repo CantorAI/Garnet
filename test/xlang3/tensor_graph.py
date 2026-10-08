@@ -4,7 +4,23 @@
 import tensor as T
 import garnet_capture_test as G
 
-P = G.tensor()
+class TensorCompat:
+    """Forward operator kwargs through the supported Python call path."""
+
+    def __init__(self, native_tensor):
+        self._native_tensor = native_tensor
+
+    def __getattr__(self, name):
+        return getattr(self._native_tensor, name)
+
+    def unary_op(self, name, **attributes):
+        return self._native_tensor.unary_op(name, **attributes)
+
+    def binary_op(self, name, **attributes):
+        return self._native_tensor.binary_op(name, **attributes)
+
+
+P = TensorCompat(G.tensor())
 
 
 @P.fusion(name="decoder_layer", role="layer", atomic=True)
