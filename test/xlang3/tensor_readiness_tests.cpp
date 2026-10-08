@@ -7,6 +7,7 @@
 #include <future>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 namespace {
 void Check(cudaError_t status) {
@@ -108,6 +109,49 @@ void Lifetime(X::Runtime& runtime) {
     Require(!freedEarly, "storage freed before pending alias use completes");
     Require(freed, "borrowed storage owner not released");
 }
+void AsyncAllocatorHostCopy(X::Runtime& runtime) {
+    // Match a TP rank's per-thread allocation/production followed by an
+    // observer on another thread. An alias must retain the entire allocation
+    // after the producer reference is dropped; every iteration changes data.
+    for (int iteration = 0; iteration < 32; ++iteration) {
+        std::vector<int32_t> expected(1024);
+        for (size_t index = 0; index < expected.size(); ++index)
+            expected[index] = iteration * 10007 + static_cast<int32_t>(index);
+        X::Tensor source;
+        std::exception_ptr failure;
+        std::thread producer([&] {
+            void* allocation = nullptr;
+            try {
+                Check(cudaSetDevice(0));
+                Check(cudaMallocAsync(&allocation, expected.size() * sizeof(int32_t), cudaStreamPerThread));
+                int64_t shape = static_cast<int64_t>(expected.size());
+                X3TensorInfo info{}; info.size = sizeof(info); info.dtype = X3_TENSOR_INT32;
+                info.rank = 1; info.shape = &shape; info.data = allocation;
+                info.byte_size = expected.size() * sizeof(int32_t);
+                source = Garnet::TensorHelper::WrapGPU(runtime.host(), info, allocation, 0);
+                allocation = nullptr;
+                auto write = Garnet::TensorHelper::AcquireGPU(source, X3_TENSOR_WRITE);
+                Check(cudaMemcpyAsync(source.Info().data, expected.data(), source.Info().byte_size,
+                    cudaMemcpyHostToDevice, cudaStreamPerThread));
+                write.Finish();
+                Check(cudaStreamSynchronize(cudaStreamPerThread));
+            } catch (...) {
+                if (allocation) { cudaStreamSynchronize(cudaStreamPerThread); cudaFree(allocation); }
+                failure = std::current_exception();
+            }
+        });
+        producer.join();
+        if (failure) std::rethrow_exception(failure);
+        auto view = source.View({512}, {4}, 256 * sizeof(int32_t));
+        source = X::Tensor();
+        auto cpu = Garnet::TensorHelper::CopyToCPU(view);
+        view = X::Tensor();
+        auto read = cpu.Acquire();
+        const auto* actual = static_cast<const int32_t*>(cpu.Info().data);
+        for (size_t index = 0; index < 512; ++index)
+            Require(actual[index] == expected[index + 256], "async cross-thread CPU view copy mismatch");
+    }
+}
 }
 int main() {
     try {
@@ -116,6 +160,7 @@ int main() {
         Delayed(runtime, false);
         Delayed(runtime, true);
         Lifetime(runtime);
+        AsyncAllocatorHostCopy(runtime);
         std::cout << "tensor-readiness-cuda-passed\n";
         return 0;
     } catch (const std::exception& error) {

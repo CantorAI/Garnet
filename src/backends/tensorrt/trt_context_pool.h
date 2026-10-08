@@ -6,6 +6,7 @@
 #include <cuda_runtime.h>
 #include <condition_variable>
 #include <memory>
+#include <limits>
 #include <mutex>
 #include <stdexcept>
 #include <vector>
@@ -28,6 +29,8 @@ public:
     struct Slot {
         int device = -1;
         nvinfer1::IExecutionContext* context = nullptr;
+        void* enqueueMemory = nullptr;
+        int64_t enqueueMemoryBytes = 0;
         cudaEvent_t completion = nullptr;
         cudaGraph_t graph = nullptr;
         cudaGraphExec_t executable = nullptr;
@@ -39,6 +42,9 @@ public:
             if (completion) cudaEventSynchronize(completion);
             ResetGraph();
             delete context;
+            // Captured graphs and the context borrow this slot's activation
+            // allocation. Neither may outlive it, including across threads.
+            if (enqueueMemory) cudaFree(enqueueMemory);
             if (completion) cudaEventDestroy(completion);
         }
         void ResetGraph() {
@@ -107,7 +113,21 @@ public:
             if (slots_.size() < capacity_) {
                 auto slot = std::make_unique<Slot>();
                 slot->device = device_;
-                slot->context = engine_->createExecutionContext();
+                // Own the full engine-reported upper bound explicitly. This
+                // storage stays at one address for every capture/replay and
+                // retires only after graphs and the context are destroyed.
+                slot->enqueueMemoryBytes = engine_->getDeviceMemorySizeV2();
+                if (slot->enqueueMemoryBytes < 0 ||
+                        static_cast<uint64_t>(slot->enqueueMemoryBytes) >
+                        std::numeric_limits<size_t>::max())
+                    throw std::runtime_error("invalid TensorRT context memory bound");
+                slot->context = engine_->createExecutionContext(
+                    nvinfer1::ExecutionContextAllocationStrategy::kUSER_MANAGED);
+                if (slot->enqueueMemoryBytes && cudaMalloc(&slot->enqueueMemory,
+                        static_cast<size_t>(slot->enqueueMemoryBytes)) != cudaSuccess)
+                    throw std::runtime_error("TensorRT context memory allocation failed");
+                if (slot->context)
+                    slot->context->setDeviceMemoryV2(slot->enqueueMemory, slot->enqueueMemoryBytes);
                 if (!slot->context || cudaEventCreateWithFlags(&slot->completion,
                         cudaEventDisableTiming) != cudaSuccess)
                     throw std::runtime_error("TensorRT context slot creation failed");

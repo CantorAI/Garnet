@@ -212,8 +212,15 @@ X::Tensor TensorHelper::CopyToCPU(const X::Tensor& tensor) {
     if (info.device_type != CudaDevice) throw std::invalid_argument("unknown tensor device");
     DeviceScope device(info.device_id);
     std::unique_ptr<unsigned char[]> memory(new unsigned char[static_cast<size_t>(info.byte_size)]);
-    if (info.byte_size)
-        Check(cudaMemcpy(memory.get(), info.data, static_cast<size_t>(info.byte_size), cudaMemcpyDeviceToHost));
+    if (info.byte_size) {
+        // Async-allocator storage may have been produced on another thread's
+        // stream. The retained host read lease has already waited for its
+        // producer; explicitly retire this copy on the observing thread's
+        // stream before the lease (and potentially its allocation) can die.
+        Check(cudaMemcpyAsync(memory.get(), info.data, static_cast<size_t>(info.byte_size),
+            cudaMemcpyDeviceToHost, cudaStreamPerThread));
+        Check(cudaStreamSynchronize(cudaStreamPerThread));
+    }
     info.data = memory.get(); info.device_type = 0; info.device_id = 0;
     auto output = X::Tensor::Wrap(tensor.host(), info, memory.get(),
         [](void* pointer) { delete[] static_cast<unsigned char*>(pointer); });
