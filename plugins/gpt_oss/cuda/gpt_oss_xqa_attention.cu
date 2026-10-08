@@ -106,18 +106,28 @@ std::size_t GptOssXqaAttentionWorkspace(int batch, int tokens, int logical, cons
 cudaError_t RunGptOssXqaAttention(const void* const* in, float* y, void* workspace,
     int batch, int tokens, int logical, int physical, const GptOssOptions& o,
     const GptOssXqaContextState& state, cudaStream_t stream) {
-    if (!GptOssXqaAttentionWorkspace(batch, tokens, logical, o) || physical <= 0 ||
+    if (o.kind != 1 || !GptOssXqaAttentionWorkspace(batch, tokens, logical, o) || physical <= 0 ||
         o.layer < 0 || !in || !y || !workspace || state.device < 0 || !state.dynamicSharedBytes)
         return cudaErrorInvalidValue;
     for (int i = 0; i < 8; ++i) if (!in[i]) return cudaErrorInvalidValue;
+    if (reinterpret_cast<uintptr_t>(workspace) % 256 || reinterpret_cast<uintptr_t>(y) % alignof(float))
+        return cudaErrorInvalidValue;
+    const std::size_t alignments[8] = {alignof(float), alignof(Bf16), alignof(Bf16),
+        alignof(int), alignof(int), alignof(int), alignof(int), alignof(float)};
+    for (int i = 0; i < 8; ++i)
+        if (reinterpret_cast<uintptr_t>(in[i]) % alignments[i]) return cudaErrorInvalidValue;
     int current = -1;
     auto status = cudaGetDevice(&current);
     if (status != cudaSuccess) return status;
     if (current != state.device) return cudaErrorInvalidDevice;
     // Tensor descriptors/caller own the full extent; guard arithmetic before
     // forming the current layer pointer. No allocation or initialization here.
-    const auto perLayer = std::size_t(physical) * 16 * o.kvHeads * 64;
-    if (std::size_t(o.layer) > std::numeric_limits<std::size_t>::max() / perLayer)
+    const auto limit = std::numeric_limits<std::size_t>::max();
+    const auto pageElements = std::size_t(16) * o.kvHeads * 64;
+    if (std::size_t(physical) > limit / (pageElements * sizeof(Bf16)))
+        return cudaErrorInvalidValue;
+    const auto perLayer = std::size_t(physical) * pageElements;
+    if (std::size_t(o.layer) + 1 > limit / (perLayer * sizeof(Bf16)))
         return cudaErrorInvalidValue;
     const auto layerOffset = std::size_t(o.layer) * perLayer;
     const auto* keys = static_cast<const Bf16*>(in[1]) + layerOffset;

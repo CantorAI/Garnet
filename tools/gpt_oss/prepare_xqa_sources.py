@@ -1,6 +1,6 @@
 """Generate a marked private XQA adaptation from immutable upstream bytes.
 
-No CMake target currently uses this staged dependency. The generated backend
+Only the opt-in standalone native test uses this staged dependency. Inference
 requires separate CUDA/native/compiled/default/memory/pretrained proof.
 """
 import argparse
@@ -8,6 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import tempfile
 
 PINNED_SUMS = 'e400f9df3446f52f3cb70f3fd0af812fa322bd25edf5c0c27e9070b23991bdb1'
 
@@ -90,7 +91,25 @@ static uint32_t const hostSmemSize = configureKernel();'''
     manifest = dict(upstream_commit='946200de1ae94fc93fdd0926f0a13afd1fa7f0f1', upstream_manifest_sha256=PINNED_SUMS,
         scope='Generated source only; backend is not linked or GPU validated',
         generated_sha256={name: hashlib.sha256((output / name).read_bytes()).hexdigest() for name in records})
-    (output / 'garnet-adaptation.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    (output / 'garnet-adaptation.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8', newline='\n')
+    return manifest
+
+
+def verify_generated(upstream, output):
+    """Reconstruct trusted bytes independently; never repair existing evidence."""
+    output = Path(output)
+    if output.is_symlink() or not output.is_dir():
+        raise ValueError('Missing or symlinked generated XQA directory')
+    with tempfile.TemporaryDirectory() as temporary:
+        expected = Path(temporary) / 'expected'
+        manifest = generate(upstream, expected)
+        entries = list(output.iterdir())
+        if (any(path.is_symlink() or not path.is_file() for path in entries) or
+                {path.name for path in entries} != {path.name for path in expected.iterdir()}):
+            raise ValueError('Generated XQA file set changed')
+        for path in expected.iterdir():
+            if (output / path.name).read_bytes() != path.read_bytes():
+                raise ValueError('Generated XQA bytes changed: ' + path.name)
     return manifest
 
 
@@ -98,5 +117,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('upstream', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument('--verify-existing', action='store_true',
+        help='Require exact reconstructed output bytes without modifying them')
     args = parser.parse_args()
-    print(json.dumps(generate(args.upstream, args.output), indent=2))
+    action = verify_generated if args.verify_existing else generate
+    print(json.dumps(action(args.upstream, args.output), indent=2))

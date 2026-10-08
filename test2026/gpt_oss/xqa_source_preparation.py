@@ -7,13 +7,16 @@ import tempfile
 
 repo=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(repo/'tools/gpt_oss'))
-from prepare_xqa_sources import generate
+from prepare_xqa_sources import generate, verify_generated
 
 upstream=repo/'plugins/gpt_oss/third_party/flashinfer_xqa'
 with tempfile.TemporaryDirectory() as temporary:
     root=Path(temporary)
     first=generate(upstream,root/'first')
     second=generate(upstream,root/'second')
+    assert verify_generated(upstream,root/'first') == first
+    assert (root/'first/garnet-adaptation.json').read_bytes() == (root/'second/garnet-adaptation.json').read_bytes()
+    assert b'\r' not in (root/'first/garnet-adaptation.json').read_bytes()
     assert first==second
     assert len(first['generated_sha256']) == 17
     original=(upstream/'mha.cu').read_bytes()
@@ -36,6 +39,51 @@ with tempfile.TemporaryDirectory() as temporary:
     try: generate(upstream,root/'first')
     except FileExistsError: pass
     else: raise AssertionError('Existing generated evidence was overwritten')
+    for name in ('mha.cu', 'mha.h', 'hostUtils.h', 'NOTICE', 'garnet-adaptation.json'):
+        output = root / ('tamper-' + name)
+        shutil.copytree(root/'first', output)
+        changed_bytes = (output/name).read_bytes() + b'\n// tampered generated evidence\n'
+        (output/name).write_bytes(changed_bytes)
+        try: verify_generated(upstream, output)
+        except ValueError: pass
+        else: raise AssertionError('Modified generated output accepted: ' + name)
+        assert (output/name).read_bytes() == changed_bytes
+    for extra in ('unexpected.cu', 'unexpected-directory'):
+        output = root / extra
+        shutil.copytree(root/'first', output)
+        if extra.endswith('.cu'): (output/extra).write_bytes(b'extra')
+        else: (output/extra).mkdir()
+        try: verify_generated(upstream, output)
+        except ValueError: pass
+        else: raise AssertionError('Extra generated entry accepted')
+        assert (output/extra).exists()
+    output = root/'missing'; shutil.copytree(root/'first', output)
+    (output/'mha.h').unlink()
+    try: verify_generated(upstream, output)
+    except ValueError: pass
+    else: raise AssertionError('Missing generated output accepted')
+    assert not (output/'mha.h').exists()
+    # Windows may lack symlink privilege. Linux must exercise this rejection.
+    output = root/'symlink'; shutil.copytree(root/'first', output)
+    (output/'mha.h').unlink()
+    try: (output/'mha.h').symlink_to(root/'first/mha.h')
+    except OSError:
+        if sys.platform != 'win32': raise
+        print('Windows symlink creation unavailable; Linux test requires this negative control')
+    else:
+        try: verify_generated(upstream, output)
+        except ValueError: pass
+        else: raise AssertionError('Symlinked generated output accepted')
+        assert (output/'mha.h').is_symlink()
+    root_link = root/'root-link'
+    try: root_link.symlink_to(root/'first', target_is_directory=True)
+    except OSError:
+        if sys.platform != 'win32': raise
+    else:
+        try: verify_generated(upstream, root_link)
+        except ValueError: pass
+        else: raise AssertionError('Symlinked generated root accepted')
+        assert root_link.is_symlink()
     changed=root/'changed';shutil.copytree(upstream,changed)
     (changed/'mha.cu').write_bytes(original+b'\n// changed upstream\n')
     try: generate(changed,root/'bad-source')
@@ -50,4 +98,4 @@ with tempfile.TemporaryDirectory() as temporary:
     try: generate(changed,root/'bad-manifest')
     except ValueError: assert not (root/'bad-manifest').exists()
     else: raise AssertionError('Unpinned source manifest accepted')
-print('Pinned17-file dependency, retained LICENSE/NOTICE, deterministic marked adaptation and source/notice/overwrite guards passed; no GPU proof')
+print('Pinned17-file dependency, retained LICENSE/NOTICE, deterministic LF adaptation and source/notice/overwrite/exact generated-byte/file-set/available symlink guards passed; no GPU proof')

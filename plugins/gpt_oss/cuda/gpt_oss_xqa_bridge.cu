@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Private native bridge to the marked single-block XQA adaptation. This staged
-// translation unit is not yet linked by CMake or selected by inference.
+// translation unit is linked only by the opt-in native test, never inference.
 #include "gpt_oss_xqa_bridge.h"
 #include "mha.cu" // Generated include directory from prepare_xqa_sources.py.
 #include <exception>
