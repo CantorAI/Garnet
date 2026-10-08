@@ -123,6 +123,11 @@ for key in list(env):
     if key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
+    if key in ('GARNET_RESIDENT_REUSE_OUTPUT', 'GARNET_RESIDENT_NATIVE_GREEDY_MERGE',
+               'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY'):
+        if value not in ('0','1'):
+            raise ValueError('Invalid recorded resident host flag')
+        continue  # Host observation/sampling controls do not select engine-loading policy.
     if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS', 'GARNET_RESIDENT_SESSION'):
         # Prior admission file/warmup controls are result provenance, not
         # inputs to a new sequential engine profile on another binary.

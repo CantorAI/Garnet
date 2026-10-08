@@ -29,6 +29,9 @@ with tempfile.TemporaryDirectory() as temporary:
         max_context_tokens_per_request=1024, optimization_environment={
             'GARNET_RESIDENT_PROFILE': '/old/binary/admission.json',
             'GARNET_RESIDENT_WARMUPS': '99',
+            'GARNET_RESIDENT_REUSE_OUTPUT': '1',
+            'GARNET_RESIDENT_NATIVE_GREEDY_MERGE': '1',
+            'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY': '1',
             'GARNET_BATCH_PREFILL_CHUNK': '16',
             'GARNET_GPT_OSS_MARLIN_PREPACKED': '1',
             'GARNET_GPT_OSS_DIRECT_ALLREDUCE': '1',
@@ -62,6 +65,9 @@ with tempfile.TemporaryDirectory() as temporary:
                 'CANTORAI_ROOT': str(root), 'GARNET_BENCH_WORK_DIR': str(work),
                 'GARNET_RESIDENT_PROFILE': '/inherited/stale-admission.json',
                 'GARNET_RESIDENT_WARMUPS': '42',
+                'GARNET_RESIDENT_REUSE_OUTPUT': '1',
+                'GARNET_RESIDENT_NATIVE_GREEDY_MERGE': '1',
+                'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY': '1',
                 'GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE': '1',
                 'GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE': '1',
                 'GARNET_GPT_OSS_HYBRID_KV': '1',
@@ -121,7 +127,26 @@ with tempfile.TemporaryDirectory() as temporary:
     execute('paired_batch_suite.py',[reference,root/'paired','arithmetic',
         '--resident-profile',fresh],{'GARNET_RESIDENT_PROFILE':str(fresh.resolve()),
             'GARNET_RESIDENT_WARMUPS':'1',
+            'GARNET_RESIDENT_REUSE_OUTPUT':'0',
+            'GARNET_RESIDENT_NATIVE_GREEDY_MERGE':'0',
+            'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY':'0',
             'GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK':'64'})
+    for flags in range(8):
+        values=[str((flags >> index) & 1) for index in range(3)]
+        execute('paired_batch_suite.py',[reference,root/f'host-candidates{flags}','arithmetic',
+            '--resident-profile',fresh,'--reuse-output',values[0],
+            '--native-greedy-merge',values[1],'--final-prefill-sample-only',values[2]],
+            dict(zip(('GARNET_RESIDENT_REUSE_OUTPUT','GARNET_RESIDENT_NATIVE_GREEDY_MERGE',
+                'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY'),values)))
+    with patch.object(sys,'argv',['paired_batch_suite.py',str(reference),str(root/'invalid-nonresident'),
+            'arithmetic','--reuse-output','1']), patch('subprocess.run') as gpu_command:
+        try:
+            runpy.run_path(str(repo/'tools/gpt_oss/paired_batch_suite.py'),run_name='__main__')
+        except ValueError as error:
+            assert str(error)=='Host lifecycle candidates require a resident Garnet comparison'
+        else:
+            raise AssertionError('Nonresident host candidate must fail before subprocess work')
+        gpu_command.assert_not_called()
     execute('paired_batch_suite.py',[reference,root/'nonresident','arithmetic'],{
         'GARNET_RESIDENT_PROFILE':None,'GARNET_RESIDENT_WARMUPS':None})
 print('Saved/inherited admission excluded; explicit fresh profile and candidate overrides reach only the intended subprocess PASS')

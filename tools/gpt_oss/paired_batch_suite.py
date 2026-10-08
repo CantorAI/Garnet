@@ -28,9 +28,20 @@ parser.add_argument('--resident-profile', type=Path,
                     help='explicit measured resident engine profile; full warmed Garnet requests')
 parser.add_argument('--resident-session', action='store_true',
                     help='reuse one admitted engine pair for identical-shape cases; validate each before advancing')
+parser.add_argument('--reuse-output', type=int, choices=(0,1), default=0,
+                    help='explicit resident per-model output reuse candidate; requires separate qualification')
+parser.add_argument('--native-greedy-merge', type=int, choices=(0,1), default=0,
+                    help='explicit resident native CPU greedy merge candidate; requires separate qualification')
+parser.add_argument('--final-prefill-sample-only', type=int, choices=(0,1), default=0,
+                    help='sample only the true final prefill chunk; every engine/KV chunk still executes')
 parser.add_argument('--vllm-only', action='store_true',
                     help='fresh reference phase only; no Garnet inference or paired success claim')
 args = parser.parse_args()
+host_candidates = dict(GARNET_RESIDENT_REUSE_OUTPUT=str(args.reuse_output),
+    GARNET_RESIDENT_NATIVE_GREEDY_MERGE=str(args.native_greedy_merge),
+    GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY=str(args.final_prefill_sample_only))
+if any(value == '1' for value in host_candidates.values()) and (args.resident_profile is None or args.vllm_only):
+    raise ValueError('Host lifecycle candidates require a resident Garnet comparison')
 if args.vllm_only and args.reuse_vllm_manifest is not None:
     raise ValueError('Fresh vLLM-only phase cannot reuse a prior manifest')
 if args.resident_session and (args.resident_profile is None or args.vllm_only):
@@ -66,6 +77,10 @@ for key in list(env):
     if key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
+    if key in host_candidates:
+        if value not in ('0','1'):
+            raise ValueError('Invalid recorded resident host flag')
+        continue  # Host candidates require the explicit CLI, never saved/inherited enablement.
     if key in ('GARNET_RESIDENT_PROFILE', 'GARNET_RESIDENT_WARMUPS', 'GARNET_RESIDENT_SESSION'):
         continue  # New admission is selected only by --resident-profile.
     if ((not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_')) and key != 'GARNET_TRT_SYNC_ALLOCATOR') or
@@ -94,6 +109,7 @@ if args.resident_profile is not None:
         env[key] = value
     env['GARNET_RESIDENT_PROFILE'] = str(args.resident_profile.resolve())
     env['GARNET_RESIDENT_WARMUPS'] = '1'  # Existing V references have one complete warmup.
+env.update(host_candidates)
 tensorrt = Path(env.get('GARNET_TENSORRT_ROOT', root / 'ThirdPartySDK/TensorRT'))
 env.setdefault('XLANG3_PYTHON_LIB', str(root / 'ThirdPartySDK/Python-3.14.0/Lib'))
 env['PYTHONPATH'] = str(build / 'bin') + os.pathsep + env.get('PYTHONPATH', '')
@@ -104,6 +120,7 @@ if subprocess.check_output(['nvidia-smi', '--query-compute-apps=pid', '--format=
     raise RuntimeError('Refusing suite: target GPUs are already busy')
 directory.mkdir(parents=True)
 manifest = {'garnet_profile': str(reference_path.resolve()), 'vllm_version': version,
+            'resident_host_candidates': host_candidates,
             'batch': batch, 'output': output, 'cases': [], 'phase_order': ['admission', 'vllm', 'garnet'],
             'explicit_profile_overrides': {'batch': args.batch, 'output': args.output,
                 'prefill_chunk': args.prefill_chunk, 'context': args.context},
