@@ -43,6 +43,7 @@ run([sys.executable, repo / 'test2026/gpt_oss/resident_admission.py'], 'resident
 run([sys.executable, repo / 'test2026/gpt_oss/resident_session.py'], 'resident-session-contract')
 run([sys.executable, repo / 'test2026/gpt_oss/resident_session_controller.py'], 'resident-session-controller')
 run([sys.executable, repo / 'test2026/gpt_oss/resident_session_audit.py'], 'resident-session-raw-audit')
+run([sys.executable, repo / 'test2026/gpt_oss/resident_host_lifecycle.py'], 'resident-host-lifecycle')
 run([sys.executable, repo / 'test2026/gpt_oss/hybrid_kv.py'], 'hybrid-kv-contract')
 run([sys.executable, repo / 'test2026/gpt_oss/resident_controller_environment.py'], 'resident-controller-environment')
 run([executable, repo / 'test2026/gpt_oss/sequence_selection.py', work / 'selection-cache'], 'sequence-selection')
@@ -53,6 +54,9 @@ run([sys.executable, repo / 'test2026/gpt_oss/tp_weight_placement.py', fixture,
 run([runtime / ('garnet_gpt_oss_expert_weight_shard' + suffix)], 'expert-weight-shard-bytes')
 run([runtime / ('garnet_gpt_oss_kernel_parity' + suffix)], 'kernel-parity')
 run([executable, repo / 'test2026/gpt_oss/tensor_update_int_scalars.py'], 'batched-scalar-updates')
+if args.multi_gpu:
+    run([executable, repo / 'test2026/gpt_oss/compact_candidate_merge.py',
+         work / 'compact-candidate-merge.json'], 'compact-candidate-merge')
 run([executable, repo / 'test2026/gpt_oss/compiled_parity.py', fixture, work / 'cache'], 'compiled-parity-cold')
 run([executable, repo / 'test2026/gpt_oss/compiled_parity.py', fixture, work / 'cache'], 'compiled-parity-warm')
 run([executable, repo / 'test2026/gpt_oss/plugin_requirements.py', fixture, work / 'cache'], 'plugin-requirements')

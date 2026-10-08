@@ -234,7 +234,8 @@ class TensorParallel:
         self.operator_execution_phase = 0
         self.executor = ThreadPoolExecutor(max_workers=2)
 
-    def forward(self, activation, controls, sample=False, sample_batch=False):
+    def forward(self, activation, controls, sample=False, sample_batch=False,
+                reuse_output=False, native_candidate_merge=False):
         import garnet as G
         import os
 
@@ -249,16 +250,20 @@ class TensorParallel:
                 local = [G.tensor_to_device(t, stage['device_id']) for t in controls]
                 request = {'inputs': [local_activation, local[0], stage['keys'],
                     stage['values'], local[1], local[2], local[3], local[4]] + _extra_stage_inputs(stage)}
+                if reuse_output:
+                    request['reuse_output'] = True
                 if sample and stage['rank'] == 0 and not self.greedy_candidate_pairs:
                     request['sample'] = 'greedy_batch' if sample_batch else 'greedy'
                 prepared.append((stage, request))
             finally:
                 G.cuda_set_device(previous)
 
-        return self._run_prepared(prepared, compact_sample=sample and self.greedy_candidate_pairs)
+        return self._run_prepared(prepared, compact_sample=sample and self.greedy_candidate_pairs,
+                                  native_candidate_merge=native_candidate_merge)
 
     def forward_rank_local(self, rank_inputs, sample=False, scalar_values=None,
-                           sample_batch=False, vector_values=None):
+                           sample_batch=False, vector_values=None, reuse_output=False,
+                           native_candidate_merge=False):
         """Run tensors already resident on their corresponding rank device."""
         if len(rank_inputs) != len(self.stages):
             raise ValueError('one input group per tensor-parallel rank is required')
@@ -273,6 +278,8 @@ class TensorParallel:
                 raise ValueError('rank-local controls must contain position, page table, length, slot and active')
             request = {'inputs': [activation, controls[0], stage['keys'], stage['values'],
                 controls[1], controls[2], controls[3], controls[4]] + _extra_stage_inputs(stage)}
+            if reuse_output:
+                request['reuse_output'] = True
             if sample and stage['rank'] == 0 and not self.greedy_candidate_pairs:
                 request['sample'] = 'greedy_batch' if sample_batch else 'greedy'
             prepared.append((stage, request))
@@ -282,9 +289,11 @@ class TensorParallel:
                 updates.append(([activation, controls[0], controls[2], controls[3]], vector_values))
         return self._run_prepared(prepared, updates if updates else None,
                                   vector_updates=vector_values is not None,
-                                  compact_sample=sample and self.greedy_candidate_pairs)
+                                  compact_sample=sample and self.greedy_candidate_pairs,
+                                  native_candidate_merge=native_candidate_merge)
 
-    def _run_prepared(self, prepared, updates=None, vector_updates=False, compact_sample=False):
+    def _run_prepared(self, prepared, updates=None, vector_updates=False, compact_sample=False,
+                      native_candidate_merge=False):
         import garnet as G
         import os
 
@@ -321,6 +330,8 @@ class TensorParallel:
         if compact_sample:
             previous = G.cuda_set_device(self.stages[0]['device_id'])
             try:
+                if native_candidate_merge:
+                    return G.merge_greedy_candidate_pairs(results[0]['output'])
                 pairs = G.tensor_to_cpu(results[0]['output']).tolist()
             finally:
                 G.cuda_set_device(previous)

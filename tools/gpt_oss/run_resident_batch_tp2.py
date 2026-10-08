@@ -24,6 +24,18 @@ from resident_budget import (admit_resident, native_identity, hardware_identity,
 
 startup_started = time.perf_counter()
 
+def optional_flag(name):
+    value = os.environ.get(name, '0')
+    if value not in ('0', '1'):
+        raise ValueError(name + ' must be 0 or 1')
+    return value == '1'
+
+# Host-lifecycle choices do not change graph math or the KV profile. A new
+# native binary still requires an exact matching measured resident profile.
+reuse_output = optional_flag('GARNET_RESIDENT_REUSE_OUTPUT')
+native_candidate_merge = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_MERGE')
+final_prefill_sample_only = optional_flag('GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY')
+
 session_mode = len(sys.argv) > 1 and sys.argv[1] == '--session'
 arguments = sys.argv[2:] if session_mode else sys.argv[1:]
 if len(arguments) != 6:
@@ -213,7 +225,9 @@ def run_request(trial, ids):
         tokens = (ids[offset:offset + real] + [0] * (chunk - real)) * batch
         positions = list(range(offset, offset + chunk)) * batch
         update(pair.prefill_stages, prefill_inputs, tokens, positions, offset + real, offset)
-        reply = pair.forward_prefill(prefill_inputs, sample=True, sample_batch=True)
+        need_sample = not final_prefill_sample_only or offset + real == len(ids)
+        reply = pair.forward_prefill(prefill_inputs, sample=need_sample, sample_batch=True,
+            reuse_output=reuse_output, native_candidate_merge=native_candidate_merge)
         capture.prefill_end(trial, chunk_index)
         prefill_steps.append(time.perf_counter() - step)
     rows = [[int(value)] for value in reply['token_ids']]
@@ -227,7 +241,8 @@ def run_request(trial, ids):
         index = len(ids) + offset - 1
         update(pair.decode_stages, decode_inputs, [row[-1] for row in rows],
             [index] * batch, index + 1, index)
-        reply = pair.forward_decode(decode_inputs, sample=True, sample_batch=True)
+        reply = pair.forward_decode(decode_inputs, sample=True, sample_batch=True,
+            reuse_output=reuse_output, native_candidate_merge=native_candidate_merge)
         tokens = reply['token_ids']
         if len(tokens) != batch:
             raise ValueError('Missing decode output requests')

@@ -14,6 +14,10 @@ from pipeline import make_tensor_parallel_plan, build_tensor_parallel
 from garnet_pipeline import ResidentTensorParallel
 weights, cache, output = map(Path, sys.argv[1:4])
 batch = int(sys.argv[4]) if len(sys.argv)>4 else 1
+reuse_output_raw = os.environ.get('GARNET_RESIDENT_REUSE_OUTPUT', '0')
+if reuse_output_raw not in ('0', '1'):
+    raise ValueError('GARNET_RESIDENT_REUSE_OUTPUT must be 0 or 1')
+reuse_output = reuse_output_raw == '1'
 if not 1<=batch<=512:
     raise ValueError('Teacher-forced batch must be from1 to512')
 if output.exists():
@@ -88,10 +92,10 @@ try:
                             [G.tensor_to_device(t, stage['device_id']) for t in controls]))
                     finally:
                         G.cuda_set_device(previous)
-                reply = (resident_pair.forward_prefill(prepared) if step == 0
-                         else resident_pair.forward_decode(prepared))
+                reply = (resident_pair.forward_prefill(prepared, reuse_output=reuse_output) if step == 0
+                         else resident_pair.forward_decode(prepared, reuse_output=reuse_output))
             else:
-                reply = model.forward(activation,controls)
+                reply = model.forward(activation, controls, reuse_output=reuse_output)
         finally:
             if step==profile_step and profiler.cudaProfilerStop()!=0:
                 raise RuntimeError('Could not stop teacher-forced profiler range')
@@ -117,6 +121,6 @@ finally:
 output.parent.mkdir(parents=True, exist_ok=True)
 output.write_text(json.dumps(dict(measurement='teacher-forced CPU prefixes, diagnostic only', batch=batch,
                                  profile_step=profile_step, padded_prefill_tokens=padded_tokens,
-                                 resident_phases=resident, steps=steps), indent=2))
+                                 resident_phases=resident, reuse_output=reuse_output, steps=steps), indent=2))
 if not all(s['within_existing_tolerance'] for s in steps):
     raise RuntimeError('TP teacher-forced logits exceed the established compiled parity tolerance')

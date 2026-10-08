@@ -3358,6 +3358,47 @@ namespace Garnet
         return retValue;
     }
 
+    X::Value GarnetAPI::MergeGreedyCandidatePairs(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        if (params.size() != 1 || !kwParams.empty() || !X::Tensor::IsTensor(params[0]))
+            throw X::Error("merge_greedy_candidate_pairs requires one FP32 tensor");
+        X::Tensor tensor(params[0]);
+        ValidateDenseTensor(tensor);
+        const long long count = TensorCount(tensor);
+        if (tensor.Info().dtype != X3_TENSOR_FLOAT32 || count <= 0 || count % 4 != 0)
+            throw X::Error("Greedy candidate output must contain two FP32 score/ID pairs per row");
+        // CopyToCPU keeps the source read lease until the observing stream's
+        // copy completes. Return lists have independent storage; no borrowed
+        // engine buffer or asynchronous host allocation escapes this call.
+        X::Tensor cpu = TensorHelper::CopyToCPU(tensor);
+        auto use = cpu.Acquire();
+        const auto* pairs = static_cast<const float*>(cpu.Info().data);
+        for (long long index = 0; index < count; index += 4) {
+            const float aId = pairs[index + 1], bId = pairs[index + 3];
+            if (!std::isfinite(aId) || !std::isfinite(bId) ||
+                !(0 <= aId && aId < (1 << 24) && 0 <= bId && bId < (1 << 24)) ||
+                std::trunc(aId) != aId || std::trunc(bId) != bId)
+                throw X::Error("Greedy candidate IDs must be exact nonnegative FP32 integers");
+        }
+        auto ids = X::Value::List(Host());
+        auto values = X::Value::List(Host());
+        for (long long index = 0; index < count; index += 4) {
+            const float a = pairs[index], b = pairs[index + 2];
+            const float aId = pairs[index + 1], bId = pairs[index + 3];
+            // Preserve the script comparator, including its NaN branch and
+            // exact minimum-ID tie rule. Scores are already FP32 engine values.
+            const bool takeB = b > a || (b == a && bId < aId);
+            ids.Append(NativeValue(Host(), static_cast<long long>(takeB ? bId : aId)));
+            values.Append(NativeValue(Host(), static_cast<double>(takeB ? b : a)));
+        }
+        auto result = X::Value::Dict(Host());
+        result.SetItem("status", NativeValue(Host(), "ok"));
+        result.SetItem("token_ids", NativeValue(Host(), ids));
+        result.SetItem("token_values", NativeValue(Host(), values));
+        result.SetItem("token_id", NativeValue(Host(), ids.Get(0)));
+        return result;
+    }
+
     X::Value GarnetAPI::TensorToGPU(const X::ARGS& params, const X::KWARGS& kwParams)
     {
         X::Value retValue;
