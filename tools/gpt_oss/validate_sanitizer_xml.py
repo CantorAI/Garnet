@@ -55,7 +55,18 @@ def known_nccl_graph_initialization(record):
     names=('cuMemRetainAllocationHandle','ipcRegisterBuffer','ncclIpcGraphRegisterBuffer',
            'ncclRegisterCollBuffers','ncclTasksRegAndEnqueue','groupLaunch',
            'ncclGroupEndInternal','ncclEnqueueCheck','pncclAllReduce',caller)
-    modules=('libcuda.so.1',)+('libnccl.so.2',)*8+('garnet_gpt_oss_tp_bf16_wire_benchmark',)
+    origin=Path(frames[9].findtext('module','')).name
+    if origin=='garnet_gpt_oss_bf16_collective_screen':
+        # Observed original BF16 control: same NCCL VMM capability probe,
+        # additionally bound to its exact rank-worker origin. FP32 and any
+        # missing/different caller remain fatal for this executable.
+        if (caller!='Garnet::GptOssTpAllReduceBf16' or len(frames)<11 or
+                Path(frames[10].findtext('module','')).name!=origin or
+                frames[10].findtext('func','')!='std::thread::_State_impl<std::thread::_Invoker<std::tuple<'):
+            return None
+    elif origin!='garnet_gpt_oss_tp_bf16_wire_benchmark':
+        return None
+    modules=('libcuda.so.1',)+('libnccl.so.2',)*8+(origin,)
     if len(frames)<len(names):
         return None
     for frame,name,module in zip(frames,names,modules):
@@ -67,7 +78,8 @@ def known_nccl_graph_initialization(record):
         if (frames[index].findtext('path'),frames[index].findtext('line'))!=(path,line):
             return None
     mode='bf16' if caller.endswith('Bf16') else 'fp32'
-    return f'cuMemRetainAllocationHandle/1/NCCL-IPC-graph-init/benchmark-{mode}'
+    label='original-bf16-control' if origin=='garnet_gpt_oss_bf16_collective_screen' else f'benchmark-{mode}'
+    return f'cuMemRetainAllocationHandle/1/NCCL-IPC-graph-init/{label}'
 
 
 def known_initialization(record):
@@ -130,7 +142,7 @@ def validate(source, output):
     audit = dict(xml=str(source.resolve()), sha256=hashlib.sha256(data).hexdigest(),
         records=len(records), excluded_known_initialization=dict(excluded),
         unexpected=unexpected, passed=not unexpected,
-        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, the observed benchmark DirectAcquire reacquire stack, and the exact observed FP32/BF16 native wire-benchmark IPC graph-initialization VMM probes are excluded; malformed stack metadata, all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
+        scope='Only exact NCCL initialization probes, documented704 clearing in Garnet TensorToDevice, the observed benchmark DirectAcquire reacquire stack, and exact observed native wire-benchmark or original BF16 collective-control IPC graph-initialization VMM probes are excluded. The original BF16 control additionally requires its observed thread-origin frame; malformed stack metadata, all device-memory and other API reports are fatal. Kernel instrumentation coverage is a separate requirement.')
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(audit, indent=2))
     if unexpected:
