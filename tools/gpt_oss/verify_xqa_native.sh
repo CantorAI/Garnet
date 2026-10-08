@@ -13,6 +13,7 @@ command -v nsys >/dev/null
 exec 9>"$root/work/gpu-benchmark.lock"
 flock -n 9 || exit 1
 [[ -z $(nvidia-smi --query-compute-apps=pid --format=csv,noheader) ]] || exit 1
+[[ -z $(git -C "$repo" status --porcelain) ]] || exit 1
 directory=$1
 mkdir -p "$directory"
 directory=$(cd "$directory" && pwd)
@@ -36,6 +37,37 @@ sha256sum "$binary" "$repo/test2026/gpt_oss/xqa_attention_parity.cu" \
     "$repo/plugins/gpt_oss/cuda/gpt_oss_xqa_attention.cu" \
     "$repo/plugins/gpt_oss/cuda/gpt_oss_xqa_bridge.cu" \
     "$repo/tools/gpt_oss/prepare_xqa_sources.py" >"$directory/native-source.sha256"
+sha256sum "$build/bin/libgarnet.so" "$build/bin/libgarnet_gpt_oss.so" \
+    "$build/bin/garnet_gpt_oss_kernel_parity" >>"$directory/native-source.sha256"
+"$python" - "$repo" "$build" "$binary" "$directory" <<'PY'
+import hashlib,json,shutil,subprocess,sys
+from pathlib import Path
+repo,build,binary,out=map(Path,sys.argv[1:])
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+source_names=['test2026/gpt_oss/xqa_attention_parity.cu','plugins/gpt_oss/cuda/gpt_oss_xqa_attention.cu',
+ 'plugins/gpt_oss/cuda/gpt_oss_xqa_bridge.cu','plugins/gpt_oss/include/gpt_oss_xqa_attention.h',
+ 'plugins/gpt_oss/include/gpt_oss_xqa_layout.h','plugins/gpt_oss/cuda/gpt_oss_xqa_bridge.h',
+ 'plugins/gpt_oss/include/gpt_oss_kernels.h','plugins/gpt_oss/CMakeLists.txt','tools/gpt_oss/prepare_xqa_sources.py']
+for name in source_names:
+ p=out/'source'/name;p.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(repo/name,p)
+vendor=repo/'plugins/gpt_oss/third_party/flashinfer_xqa'
+shutil.copytree(vendor,out/'vendor',symlinks=True)
+key=hashlib.sha256((sha(repo/'tools/gpt_oss/prepare_xqa_sources.py')+':'+sha(vendor/'SHA256SUMS')).encode()).hexdigest()
+# The saved target project imports Garnet through a wrapper subdirectory;
+# standalone and root builds have different binary-directory prefixes.
+candidates=list(build.glob('**/xqa-'+key))
+assert len(candidates)==1 and candidates[0].is_dir() and not candidates[0].is_symlink(), 'Ambiguous generated build closure'
+generated=candidates[0]
+subprocess.run([sys.executable,str(repo/'tools/gpt_oss/prepare_xqa_sources.py'),str(vendor),str(generated),'--verify-existing'],check=True)
+shutil.copytree(generated,out/'generated',symlinks=True)
+(out/'native-payload').mkdir();shutil.copy2(binary,out/'native-payload/xqa-parity')
+inference={}
+for name in ('libgarnet.so','libgarnet_gpt_oss.so','garnet_gpt_oss_kernel_parity'):
+ shutil.copy2(build/'bin'/name,out/'native-payload'/name);inference[name]=sha(build/'bin'/name)
+(out/'gate-metadata.json').write_text(json.dumps(dict(source_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=str(repo),text=True).strip(),
+ private_binary_sha256=sha(binary),inference_binaries=inference,source_sha256={n:sha(repo/n) for n in source_names},
+ generated_sha256={p.name:sha(p) for p in generated.iterdir()}),indent=2)+'\n')
+PY
 nvidia-smi --query-gpu=index,name,uuid,driver_version --format=csv >"$directory/hardware.csv"
 compute-sanitizer --version >"$directory/sanitizer-version.txt" 2>&1
 nsys --version >"$directory/nsys-version.txt" 2>&1
@@ -68,5 +100,6 @@ nsys stats --report cuda_gpu_kern_sum --format csv --output - "$directory/native
 grep -Fq 'GarnetGptOssXqaKernel' "$directory/native-kernels.csv"
 grep -Fq 'gptOssXqaPrepare' "$directory/native-kernels.csv"
 grep -Fq 'gptOssXqaFinalize' "$directory/native-kernels.csv"
+sha256sum --check "$directory/native-source.sha256"
 phase=complete-native-only
 echo 'XQA native prerequisite complete; no TensorRT/pretrained/throughput acceptance'
