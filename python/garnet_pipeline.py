@@ -108,6 +108,7 @@ class ResidentTensorParallel:
         from threading import Lock
         self._lock = Lock()
         self._prefill, self._decode = prefill, decode
+        self._operator_phase_binder = None
         if len(prefill.stages) != len(decode.stages):
             raise ValueError('Resident phase rank counts differ')
         for first, second in zip(prefill.stages, decode.stages):
@@ -157,16 +158,32 @@ class ResidentTensorParallel:
                 result.append((stage['keys'], stage['values']))
         return result
 
+    def attach_operator_execution_group(self, group, bind_phase):
+        with self._lock:
+            if self._prefill is None or self._operator_phase_binder is not None:
+                raise RuntimeError('Released or already bound resident execution group')
+            if not callable(bind_phase):
+                raise ValueError('Explicit phase binder required')
+            self._prefill.operator_execution_group = group
+            self._prefill.operator_execution_phase = 0
+            self._decode.operator_execution_group = group
+            self._decode.operator_execution_phase = 1
+            self._operator_phase_binder = lambda phase: bind_phase(group, phase)
+
     def forward_prefill(self, rank_inputs, **kwargs):
         with self._lock:
             if self._prefill is None:
                 raise RuntimeError('Resident models were released')
+            if self._operator_phase_binder is not None:
+                self._operator_phase_binder(0)
             return self._prefill.forward_rank_local(rank_inputs, **kwargs)
 
     def forward_decode(self, rank_inputs, **kwargs):
         with self._lock:
             if self._decode is None:
                 raise RuntimeError('Resident models were released')
+            if self._operator_phase_binder is not None:
+                self._operator_phase_binder(1)
             return self._decode.forward_rank_local(rank_inputs, **kwargs)
 
     def release(self):
@@ -181,6 +198,7 @@ class ResidentTensorParallel:
                         self._prefill.release()
                 finally:
                     self._prefill = None
+                    self._operator_phase_binder = None
 
 
 def _extra_stage_inputs(stage):
@@ -203,6 +221,8 @@ class TensorParallel:
             raise ValueError('TensorParallel requires exactly two rank stages')
         self.stages = stages
         self.greedy_candidate_pairs = greedy_candidate_pairs
+        self.operator_execution_group = None
+        self.operator_execution_phase = 0
         self.executor = ThreadPoolExecutor(max_workers=2)
 
     def forward(self, activation, controls, sample=False, sample_batch=False):
@@ -270,6 +290,9 @@ class TensorParallel:
                         raise RuntimeError('rank-local integer update failed')
                 if trace:
                     print('tp-rank', stage['rank'], 'enter model forward', flush=True)
+                if self.operator_execution_group is not None:
+                    request.update(operator_execution_group=self.operator_execution_group,
+                        operator_execution_rank=stage['rank'], operator_execution_phase=self.operator_execution_phase)
                 result = stage['model'].forward(request)
                 if trace:
                     print('tp-rank', stage['rank'], 'returned model forward', flush=True)
@@ -314,5 +337,6 @@ class TensorParallel:
             for stage in self.stages:
                 G.cuda_set_device(stage['device_id'])
                 stage['model'].release_runtime()
+            self.operator_execution_group = None
         finally:
             G.cuda_set_device(previous)

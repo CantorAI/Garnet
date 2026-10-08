@@ -34,6 +34,31 @@ result = admit_resident(profile, plan, devices, **identity)
 expected = (71_200_286_208 * 105 + 99) // 100 + 782_445_056 + 9_663_676_416 + 2_147_483_648
 assert all(row['required_bytes'] == expected for row in result['ranks'])
 
+# A budget that fits the original pair must reject external peer storage.
+from peer_group_layout import peer_group_layout
+with patch.dict(os.environ, {'GARNET_GPT_OSS_BF16_PEER_GROUP':'1'}):
+    storage = peer_group_layout(256,16,2880)
+assert storage['owned_bytes_per_rank'] == 23_601_408
+assert storage['mapped_host_bytes'] == 32_768
+group_plan = copy.deepcopy(plan)
+group_plan['config']['hidden_size'] = 2880
+group_plan['operator_execution_layout'] = storage
+group_profile = copy.deepcopy(profile)
+group_profile['plan_identity'] = plan_identity(group_plan)
+extra = 23_601_408 + 32_768
+group_result = admit_resident(group_profile,group_plan,devices,**identity)
+assert all(row['required_bytes']==expected+extra and row['operator_execution_storage_bytes']==extra
+           and row['runtime_graph_reserve_bytes']==2<<30 for row in group_result['ranks'])
+try:
+    admit_resident(group_profile,group_plan,[dict(d,free_bytes=expected+extra-1) for d in devices],**identity)
+except ValueError: pass
+else: raise AssertionError('External arena silently borrowed runtime reserve')
+for key in ('owned_bytes_per_rank','mapped_host_bytes','phase_elements','protocol'):
+    damaged=copy.deepcopy(group_plan);damaged['operator_execution_layout'][key]=None
+    try: plan_identity(damaged)
+    except ValueError: pass
+    else: raise AssertionError('Malformed peer resource profile accepted')
+
 def rejected(candidate=profile, placement=plan, hardware=devices, **changes):
     try:
         admit_resident(candidate, placement, hardware, **dict(identity, **changes))
@@ -84,6 +109,21 @@ assert pair.forward_prefill('prefill') == 'prefill'
 assert pair.forward_decode('decode') == 'decode'
 pair.release(); pair.release()
 assert first.releases == second.releases == 1
+
+# Phase binding precedes rank work, and the final group closure retires after
+# BOTH model releases (which own captured graphs). Default pairs need no binder.
+events=[]
+class BoundFake(Fake):
+    def __init__(self,phase):super().__init__(kv);self.phase=phase
+    def forward_rank_local(self, inputs, **kwargs):events.append(('forward',self.phase));return inputs
+    def release(self):events.append(('release',self.phase));super().release()
+first,second=BoundFake(0),BoundFake(1);pair=ResidentTensorParallel(first,second)
+resource=object()
+pair.attach_operator_execution_group(resource,lambda owner,phase: events.append(('bind',phase)))
+assert first.operator_execution_group is second.operator_execution_group is resource
+pair.forward_prefill('prefill');pair.forward_decode('decode');pair.release()
+assert events==[('bind',0),('forward',0),('bind',1),('forward',1),('release',1),('release',0)]
+assert pair._operator_phase_binder is None
 try: pair.forward_decode('released')
 except RuntimeError: pass
 else: raise AssertionError('Released pair accepted execution')

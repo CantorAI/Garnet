@@ -69,6 +69,11 @@ void GptOssTpRelease() {
 #endif
 }
 
+bool GptOssTpHasDirectPeerOwner() {
+    std::lock_guard<std::mutex> guard(g_tpMutex);
+    return g_tpReady && g_directReady;
+}
+
 cudaError_t GptOssTpAllReduce(const float* input, float* output, size_t count,
     int rank, cudaStream_t stream) {
 #ifdef GARNET_GPT_OSS_ENABLE_NCCL

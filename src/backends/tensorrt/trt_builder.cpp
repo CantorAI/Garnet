@@ -3,6 +3,7 @@
 
 #include "trt_builder.h"
 #include "trt_context_pool.h"
+#include "operator_execution_group.h"
 #include "trt_sync_allocator.h"
 #include "weight_quantization.h"
 #include "paged_kv_plugin.h"
@@ -197,13 +198,23 @@ namespace Garnet {
                 enableCudaGraph &&
                 !(enabled && enabled[0] == '0' && enabled[1] == '\0') &&
                 context->getProfiler() == nullptr;
+            const auto resource=CurrentOperatorExecutionOwner();
+            const bool same=(!resource && !state.operatorOwner) ||
+                (resource && state.operatorOwner && resource->Identity()==state.operatorOwner->Identity() &&
+                 resource->Services()==state.operatorOwner->Services() &&
+                 state.operatorPhase==CurrentOperatorExecutionPhase() && state.operatorRank==CurrentOperatorExecutionRank());
+            if(!same)state.ResetGraph();
+            state.operatorOwner=resource;state.operatorPhase=CurrentOperatorExecutionPhase();state.operatorRank=CurrentOperatorExecutionRank();
             if (!useCudaGraph) return context->enqueueV3(stream);
 
             if (state.bindings != bindingSignature) {
                 state.ResetGraph();
                 state.bindings = bindingSignature;
             }
+            state.operatorOwner=resource;state.operatorPhase=CurrentOperatorExecutionPhase();state.operatorRank=CurrentOperatorExecutionRank();
             if (state.executable) {
+                if(resource && std::getenv("GARNET_TRT_LOG_OPERATOR_GRAPH"))
+                    std::fprintf(stderr,"OPERATOR_GROUP_GRAPH_REPLAY phase=%d rank=%d\n",state.operatorPhase,state.operatorRank);
                 return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
             }
             if (!state.warmed) {
@@ -227,6 +238,8 @@ namespace Garnet {
                 state.executable = nullptr;
                 return context->enqueueV3(stream);
             }
+            if(resource && std::getenv("GARNET_TRT_LOG_OPERATOR_GRAPH"))
+                std::fprintf(stderr,"OPERATOR_GROUP_GRAPH_CAPTURE phase=%d rank=%d\n",state.operatorPhase,state.operatorRank);
             return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
         }
 
@@ -453,7 +466,7 @@ namespace Garnet {
             explicit CachedExecutionUse(const std::string& path,
                 const SafeTensorsIndex* weights = nullptr, bool enabled = true)
                 : owner(enabled ? GetCachedTRTEngine(path, weights) : nullptr),
-                  slot(owner ? owner->contexts->Acquire(cudaStreamPerThread) : TRTContextPool::Lease{}) {}
+                  slot(owner ? owner->contexts->Acquire(CurrentExecutionStream()) : TRTContextPool::Lease{}) {}
             nvinfer1::IExecutionContext* Context() const { return slot ? slot->context : nullptr; }
             nvinfer1::ICudaEngine* Engine() const { return owner ? owner->engine : nullptr; }
         };
@@ -479,7 +492,7 @@ namespace Garnet {
         // The stream is synchronized only at a CPU observation boundary.
         cudaError_t CreateExecutionStream(cudaStream_t* stream) {
             if (!stream) return cudaErrorInvalidValue;
-            *stream = cudaStreamPerThread;
+            *stream = CurrentExecutionStream();
             return cudaSuccess;
         }
 
@@ -488,7 +501,7 @@ namespace Garnet {
         }
 
         cudaError_t AllocateExecutionMemory(void** ptr, size_t bytes) {
-            cudaError_t err = cudaMallocAsync(ptr, bytes, cudaStreamPerThread);
+            cudaError_t err = cudaMallocAsync(ptr, bytes, CurrentExecutionStream());
             if (err == cudaErrorNotSupported) {
                 cudaGetLastError();
                 return cudaMalloc(ptr, bytes);
@@ -498,7 +511,7 @@ namespace Garnet {
 
         cudaError_t FreeExecutionMemory(void* ptr) {
             if (!ptr) return cudaSuccess;
-            cudaError_t err = cudaFreeAsync(ptr, cudaStreamPerThread);
+            cudaError_t err = cudaFreeAsync(ptr, CurrentExecutionStream());
             if (err == cudaErrorNotSupported) {
                 cudaGetLastError();
                 return cudaFree(ptr);
@@ -4941,7 +4954,7 @@ namespace Garnet {
         if (!cachedContext->setTensorAddress("output_0", outputDevicePointer) ||
             !EnqueueTRTWithOptionalCudaGraph(
                 enginePath, cachedContext, *cachedUse.slot.operator->(), bindingSignature, enableCudaGraph,
-                cudaStreamPerThread)) {
+                CurrentExecutionStream())) {
             if (profileDecodeLayers) {
                 cachedContext->setProfiler(nullptr);
                 cachedContext->setEnqueueEmitsProfile(false);
@@ -4956,7 +4969,7 @@ namespace Garnet {
         }
 
         errorMessage.clear();
-        return execution.Finish(X::Tensor(outputValue), cudaStreamPerThread, true);
+        return execution.Finish(X::Tensor(outputValue), CurrentExecutionStream(), true);
     }
 
     X::Value TRTBuilder::RunCapturedPartitions(
@@ -5139,13 +5152,13 @@ namespace Garnet {
             }
 
             execution.Acquire();
-            if (!context->enqueueV3(cudaStreamPerThread)) {
+            if (!context->enqueueV3(CurrentExecutionStream())) {
                 errorMessage = "TensorRT enqueue failed for partition " +
                     std::to_string(partition.id);
                 return X::Value();
             }
             if (profilePartitions) {
-                const cudaError_t syncStatus = cudaStreamSynchronize(cudaStreamPerThread);
+                const cudaError_t syncStatus = cudaStreamSynchronize(CurrentExecutionStream());
                 if (syncStatus != cudaSuccess) {
                     errorMessage = "partition profiling synchronization failed: " +
                         std::string(cudaGetErrorString(syncStatus));
@@ -5158,7 +5171,7 @@ namespace Garnet {
                     " complete_ms=" + std::to_string(elapsedMs));
             }
             for (auto& output : outputs) {
-                output.second = execution.Finish(X::Tensor(output.second), cudaStreamPerThread, true);
+                output.second = execution.Finish(X::Tensor(output.second), CurrentExecutionStream(), true);
                 intermediates[output.first.tensorId] = output.second;
                 if (output.first.terminalOutput) {
                     terminalOutput = output.second;

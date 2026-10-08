@@ -72,6 +72,7 @@ namespace Garnet
         void* m_sampleTokenDevice = nullptr;
         void* m_sampleValueDevice = nullptr;
         int m_sampleCapacity = 0;
+        X::Value ForwardImpl(X::Value request);
         X::Value m_reusableExecutionOutput;
         X::Value m_reusablePrefillKeyCache;
         X::Value m_reusablePrefillValueCache;

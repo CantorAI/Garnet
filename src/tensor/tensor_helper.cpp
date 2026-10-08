@@ -181,9 +181,9 @@ X::Tensor TensorHelper::CreateGPU(X3PackageHost* host, X3TensorDType dtype,
     if (bytes) Check(cudaMalloc(&memory, static_cast<size_t>(bytes)));
     try {
         if (bytes && hostData) {
-            Check(cudaMemcpyAsync(memory, hostData, static_cast<size_t>(bytes), cudaMemcpyHostToDevice, cudaStreamPerThread));
+            Check(cudaMemcpyAsync(memory, hostData, static_cast<size_t>(bytes), cudaMemcpyHostToDevice, CurrentExecutionStream()));
             // The caller owns hostData and may release it immediately on return.
-            Check(cudaStreamSynchronize(cudaStreamPerThread));
+            Check(cudaStreamSynchronize(CurrentExecutionStream()));
         }
         X3TensorInfo info{};
         info.size = sizeof(info); info.dtype = dtype;
@@ -194,7 +194,7 @@ X::Tensor TensorHelper::CreateGPU(X3PackageHost* host, X3TensorDType dtype,
         memory = nullptr;
         if (bytes && !hostData) {
             auto use = AcquireGPU(tensor, X3_TENSOR_WRITE);
-            Check(cudaMemsetAsync(info.data, 0, static_cast<size_t>(bytes), cudaStreamPerThread));
+            Check(cudaMemsetAsync(info.data, 0, static_cast<size_t>(bytes), CurrentExecutionStream()));
             use.Finish();
         }
         return tensor;
@@ -218,8 +218,8 @@ X::Tensor TensorHelper::CopyToCPU(const X::Tensor& tensor) {
         // producer; explicitly retire this copy on the observing thread's
         // stream before the lease (and potentially its allocation) can die.
         Check(cudaMemcpyAsync(memory.get(), info.data, static_cast<size_t>(info.byte_size),
-            cudaMemcpyDeviceToHost, cudaStreamPerThread));
-        Check(cudaStreamSynchronize(cudaStreamPerThread));
+            cudaMemcpyDeviceToHost, CurrentExecutionStream()));
+        Check(cudaStreamSynchronize(CurrentExecutionStream()));
     }
     info.data = memory.get(); info.device_type = 0; info.device_id = 0;
     auto output = X::Tensor::Wrap(tensor.host(), info, memory.get(),
@@ -240,8 +240,8 @@ X::Tensor TensorHelper::CopyToGPU(const X::Tensor& tensor) {
     if (info.byte_size) Check(cudaMalloc(&memory, static_cast<size_t>(info.byte_size)));
     try {
         if (info.byte_size) {
-            Check(cudaMemcpyAsync(memory, info.data, static_cast<size_t>(info.byte_size), cudaMemcpyHostToDevice, cudaStreamPerThread));
-            Check(cudaStreamSynchronize(cudaStreamPerThread));
+            Check(cudaMemcpyAsync(memory, info.data, static_cast<size_t>(info.byte_size), cudaMemcpyHostToDevice, CurrentExecutionStream()));
+            Check(cudaStreamSynchronize(CurrentExecutionStream()));
         }
         info.data = memory;
         return WrapGPU(tensor.host(), info, memory, device);

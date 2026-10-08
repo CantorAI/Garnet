@@ -179,7 +179,10 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         weight_storage['includes_lazy_marlin_repacking'] = False
         weight_storage['original_quant_constants_eliminated_bytes'] = removed
         weight_storage['marlin_prepacked_layout_version'] = 1
-    required = math.ceil(weight_estimate * 1.05) + kv_bytes + activation_bytes + reserve_bytes
+    from peer_group_layout import peer_group_layout, validate_peer_group_layout
+    execution_layout = peer_group_layout(batch, tokens, config['hidden_size'])
+    group_bytes = validate_peer_group_layout(execution_layout, batch, tokens, config['hidden_size'])
+    required = math.ceil(weight_estimate * 1.05) + kv_bytes + activation_bytes + reserve_bytes + group_bytes
     hardware = [{k: d[k] for k in ('id', 'name', 'total_bytes', 'compute_major',
                 'compute_minor', 'pci_bus_id', 'peer_access')} for d in devices]
     budgets = [int(min(d['free_bytes'], d['total_bytes'] * memory_fraction)) for d in devices]
@@ -202,6 +205,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     # engine built with a smaller layout cannot safely serve the larger one.
     identity['marlin_workspace_layout'] = marlin_workspace_profile()
     identity['collective_workspace_layout'] = collective_workspace_profile()
+    if execution_layout is not None:
+        identity['operator_execution_layout'] = execution_layout
     compact_greedy = os.environ.get('GARNET_GPT_OSS_COMPACT_VOCAB_GREEDY') == '1'
     if compact_greedy:
         if config['vocab_size'] % 2 or not (0 < config['vocab_size'] <= (1 << 24)):
@@ -224,6 +229,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
             'weight_storage_estimate': weight_storage,
             'marlin_workspace_layout': identity['marlin_workspace_layout'],
             'collective_workspace_layout': identity['collective_workspace_layout']}
+    if execution_layout is not None:
+        result['operator_execution_layout'] = execution_layout
     if layout is not None:
         result['kv_layout'] = layout
     return result

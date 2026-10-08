@@ -11,6 +11,7 @@
 #include <vector>
 
 namespace Garnet {
+class OperatorExecutionOwner;
 // Slots remain unavailable to a new invocation until all work using their
 // execution context has completed. Pool saturation waits for one slot only.
 class TRTContextPool {
@@ -34,6 +35,8 @@ public:
         std::vector<void*> bindings;
         bool warmed = false;
         bool busy = false;
+        std::shared_ptr<OperatorExecutionOwner> operatorOwner;
+        int operatorPhase=-1,operatorRank=-1;
         ~Slot() {
             DeviceScope deviceScope(device);
             if (completion) cudaEventSynchronize(completion);
@@ -46,6 +49,8 @@ public:
             if (executable) cudaGraphExecDestroy(executable);
             if (graph) cudaGraphDestroy(graph);
             executable = nullptr; graph = nullptr; warmed = false; bindings.clear();
+            // Captured pointers retire before the last provider buffer owner.
+            operatorOwner.reset();operatorPhase=-1;operatorRank=-1;
         }
     };
     class Lease {

@@ -3,6 +3,9 @@
 
 #include "compiled_model_runtime.h"
 #include "operator_plugins.h"
+#include "operator_execution_group.h"
+#include "native_values.h"
+#include <climits>
 #include "compiled_graph_capture.h"
 #include "graph_capture.h"
 #include "md5.h"
@@ -1517,6 +1520,18 @@ namespace Garnet
 
     X::Value CompiledModelRuntime::Forward(X::Value request)
     {
+        X::Value resource=request.IsDict()?Lookup(request,"operator_execution_group"):X::Value();
+        if(!resource.IsValid())return ForwardImpl(request);
+        if(!m_frontend.empty())throw X::Error("operator execution groups require explicit compiled inputs");
+        const auto rank=CheckedInt64(Lookup(request,"operator_execution_rank"),"operator_execution_rank");
+        const auto phase=CheckedInt64(Lookup(request,"operator_execution_phase"),"operator_execution_phase");
+        if(rank<0 || rank>INT_MAX || phase<0 || phase>INT_MAX)throw X::Error("operator execution rank/phase out of range");
+        OperatorExecutionScope scope(resource,int(rank),int(phase),m_backend,m_executionPlanJson);
+        auto result=ForwardImpl(request);scope.Finish();return result;
+    }
+
+    X::Value CompiledModelRuntime::ForwardImpl(X::Value request)
+    {
         auto* host = m_host;
         std::lock_guard<std::mutex> guard(m_mutex);
         const auto requestStart = std::chrono::steady_clock::now();
@@ -1806,7 +1821,7 @@ namespace Garnet
                 auto packedUse = TensorHelper::AcquireGPU({{packed, X3_TENSOR_READ}, {hidden, X3_TENSOR_WRITE}});
                 void* hiddenMemory = TensorHelper::GetGPUMemory(hidden);
                 if (cudaMemcpyAsync(hiddenMemory, rowMemory, hiddenSize * elementBytes,
-                        cudaMemcpyDeviceToDevice, cudaStreamPerThread) != cudaSuccess) {
+                        cudaMemcpyDeviceToDevice, CurrentExecutionStream()) != cudaSuccess) {
                     errorText = "talker hidden-state extraction failed";
                     return false;
                 }
@@ -1815,8 +1830,8 @@ namespace Garnet
                     static_cast<size_t>(vocabSize) * elementBytes);
                 cudaError_t status = cudaMemcpyAsync(
                     raw.data(), rowMemory + hiddenSize * elementBytes,
-                    raw.size(), cudaMemcpyDeviceToHost, cudaStreamPerThread);
-                const cudaError_t copyCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                    raw.size(), cudaMemcpyDeviceToHost, CurrentExecutionStream());
+                const cudaError_t copyCompletion = cudaStreamSynchronize(CurrentExecutionStream());
                 if (status == cudaSuccess) status = copyCompletion;
                 packedUse.Finish();
                 if (status != cudaSuccess) {
@@ -1906,8 +1921,8 @@ namespace Garnet
                 auto frameUse = TensorHelper::AcquireGPU(frameCodeTensor);
                 cudaError_t copyStatus = cudaMemcpyAsync(
                     hostCodes, TensorHelper::GetGPUMemory(frameCodeTensor),
-                    sizeof(hostCodes), cudaMemcpyDeviceToHost, cudaStreamPerThread);
-                const cudaError_t copyCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                    sizeof(hostCodes), cudaMemcpyDeviceToHost, CurrentExecutionStream());
+                const cudaError_t copyCompletion = cudaStreamSynchronize(CurrentExecutionStream());
                 if (copyStatus == cudaSuccess) copyStatus = copyCompletion;
                 frameUse.Finish();
                 if (copyStatus != cudaSuccess) {
@@ -1994,7 +2009,7 @@ namespace Garnet
             cudaError_t audioStatus = cudaMemcpyAsync(
                 audioMemory, TensorHelper::GetGPUMemory(fullAudio),
                 static_cast<size_t>(validSamples) * audioElementBytes,
-                cudaMemcpyDeviceToDevice, cudaStreamPerThread);
+                cudaMemcpyDeviceToDevice, CurrentExecutionStream());
             audioUse.Finish();
             if (audioStatus != cudaSuccess) {
                 result.SetItem("status", NativeValue(host, "error"));
@@ -2071,7 +2086,7 @@ namespace Garnet
                         static_cast<const float*>(logitsDevice),
                         static_cast<long long*>(m_sampleTokenDevice),
                         static_cast<float*>(m_sampleValueDevice),
-                        sampleRows, vocabSize, cudaStreamPerThread);
+                        sampleRows, vocabSize, CurrentExecutionStream());
                 }
                 else if (sampleStatus == cudaSuccess &&
                     logits.Info().dtype == X3_TENSOR_BFLOAT16) {
@@ -2079,7 +2094,7 @@ namespace Garnet
                         static_cast<const bfloat16*>(logitsDevice),
                         static_cast<long long*>(m_sampleTokenDevice),
                         static_cast<float*>(m_sampleValueDevice),
-                        sampleRows, vocabSize, cudaStreamPerThread);
+                        sampleRows, vocabSize, CurrentExecutionStream());
                 }
                 else if (sampleStatus == cudaSuccess) {
                     sampleStatus = cudaErrorInvalidValue;
@@ -2092,15 +2107,15 @@ namespace Garnet
                     sampleStatus = cudaMemcpyAsync(
                         tokenIds.data(), m_sampleTokenDevice,
                         tokenIds.size() * sizeof(long long),
-                        cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                        cudaMemcpyDeviceToHost, CurrentExecutionStream());
                 }
                 if (sampleStatus == cudaSuccess) {
                     sampleStatus = cudaMemcpyAsync(
                         tokenValues.data(), m_sampleValueDevice,
                         tokenValues.size() * sizeof(float),
-                        cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                        cudaMemcpyDeviceToHost, CurrentExecutionStream());
                 }
-                const cudaError_t sampleCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                const cudaError_t sampleCompletion = cudaStreamSynchronize(CurrentExecutionStream());
                 if (sampleStatus == cudaSuccess) sampleStatus = sampleCompletion;
                 logitsUse.Finish();
                 if (sampleStatus != cudaSuccess) {
@@ -2238,11 +2253,11 @@ namespace Garnet
                         static_cast<const float*>(logitsDevice) +
                             static_cast<size_t>(selectedRow) * vocabSize,
                         seenDevice, generationPenalty, deviceTokenId, deviceTokenValue,
-                        vocabSize, cudaStreamPerThread) : runLogitsTop1FP32(
+                        vocabSize, CurrentExecutionStream()) : runLogitsTop1FP32(
                         static_cast<const float*>(logitsDevice) +
                             static_cast<size_t>(selectedRow) * vocabSize,
                         deviceTokenId, deviceTokenValue, 1, vocabSize,
-                        cudaStreamPerThread);
+                        CurrentExecutionStream());
                 }
                 else if (sampleStatus == cudaSuccess &&
                     logits.Info().dtype == X3_TENSOR_BFLOAT16) {
@@ -2250,11 +2265,11 @@ namespace Garnet
                         reinterpret_cast<const __nv_bfloat16*>(logitsDevice) +
                             static_cast<size_t>(selectedRow) * vocabSize,
                         seenDevice, generationPenalty, deviceTokenId, deviceTokenValue,
-                        vocabSize, cudaStreamPerThread) : runLogitsTop1BF16(
+                        vocabSize, CurrentExecutionStream()) : runLogitsTop1BF16(
                         static_cast<const bfloat16*>(logitsDevice) +
                             static_cast<size_t>(selectedRow) * vocabSize,
                         deviceTokenId, deviceTokenValue, 1, vocabSize,
-                        cudaStreamPerThread);
+                        CurrentExecutionStream());
                 }
                 else if (sampleStatus == cudaSuccess) {
                     sampleStatus = cudaErrorInvalidValue;
@@ -2262,14 +2277,14 @@ namespace Garnet
                 if (sampleStatus == cudaSuccess) {
                     sampleStatus = cudaMemcpyAsync(
                         &tokenId, deviceTokenId, sizeof(tokenId),
-                        cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                        cudaMemcpyDeviceToHost, CurrentExecutionStream());
                 }
                 if (sampleStatus == cudaSuccess) {
                     sampleStatus = cudaMemcpyAsync(
                         &tokenValue, deviceTokenValue, sizeof(tokenValue),
-                        cudaMemcpyDeviceToHost, cudaStreamPerThread);
+                        cudaMemcpyDeviceToHost, CurrentExecutionStream());
                 }
-                const cudaError_t sampleCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                const cudaError_t sampleCompletion = cudaStreamSynchronize(CurrentExecutionStream());
                 if (sampleStatus == cudaSuccess) sampleStatus = sampleCompletion;
                 logitsUse.Finish();
                 if (sampleStatus != cudaSuccess) {
@@ -2443,20 +2458,20 @@ namespace Garnet
                     metadataStatus = cudaMemcpyAsync(
                         decodeTokenDevice, &decodeTokenValue,
                         sizeof(decodeTokenValue),
-                        cudaMemcpyHostToDevice, cudaStreamPerThread);
+                        cudaMemcpyHostToDevice, CurrentExecutionStream());
                     if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
                         decodePositionDevice,
                         decodeRopePositions,
                         static_cast<size_t>(positionComponents) * sizeof(int64_t),
-                        cudaMemcpyHostToDevice, cudaStreamPerThread);
+                        cudaMemcpyHostToDevice, CurrentExecutionStream());
                     if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
                         decodeContextDevice, &decodeContextLength, sizeof(decodeContextLength),
-                        cudaMemcpyHostToDevice, cudaStreamPerThread);
+                        cudaMemcpyHostToDevice, CurrentExecutionStream());
                     if (metadataStatus == cudaSuccess) metadataStatus = cudaMemcpyAsync(
                         decodeSlotDevice, &decodeSlotPosition, sizeof(decodeSlotPosition),
-                        cudaMemcpyHostToDevice, cudaStreamPerThread);
+                        cudaMemcpyHostToDevice, CurrentExecutionStream());
                     // The upload sources are mutable host locals, not retained tensor storage.
-                    const cudaError_t uploadCompletion = cudaStreamSynchronize(cudaStreamPerThread);
+                    const cudaError_t uploadCompletion = cudaStreamSynchronize(CurrentExecutionStream());
                     if (metadataStatus == cudaSuccess) metadataStatus = uploadCompletion;
                     metadataUse.Finish();
                 }
@@ -2491,7 +2506,7 @@ namespace Garnet
                     auto seenUse = TensorHelper::AcquireGPU(seen, X3_TENSOR_WRITE);
                     const auto markStatus = cudaMemsetAsync(
                         static_cast<unsigned char*>(TensorHelper::GetGPUMemory(seen)) + sampledTokenId,
-                        1, 1, cudaStreamPerThread);
+                        1, 1, CurrentExecutionStream());
                     seenUse.Finish();
                     if (markStatus != cudaSuccess) {
                         result.SetItem("status", NativeValue(host, "error"));
@@ -2667,7 +2682,7 @@ namespace Garnet
             cudaError_t status = runTextPagedKVWriteBF16(
                 qkvDevice, keyDevice, valueDevice, tableDevice,
                 tokenCount, startPosition, pageSize, qHeads, kvHeads, headDim,
-                cudaStreamPerThread);
+                CurrentExecutionStream());
             const bfloat16* lastQ = qkvDevice + static_cast<size_t>(tokenCount - 1) * qkvWidth;
             const std::string implementation = Lookup(options, "implementation").IsValid()
                 ? Lookup(options, "implementation").ToString()
@@ -2678,7 +2693,7 @@ namespace Garnet
                 status = runTextPagedKVCachedAttentionBF16(
                     lastQ, keyDevice, valueDevice, tableDevice,
                     static_cast<bfloat16*>(outputDevice), sequenceLength, pageSize,
-                    qHeads, kvHeads, headDim, cudaStreamPerThread);
+                    qHeads, kvHeads, headDim, CurrentExecutionStream());
             }
             else if (status == cudaSuccess &&
                      (implementation == "split" || implementation == "flash")) {
@@ -2692,7 +2707,7 @@ namespace Garnet
                 if (status == cudaSuccess) {
                     status = cudaMemcpyAsync(
                         metadataDevice, metadata, sizeof(metadata), cudaMemcpyHostToDevice,
-                        cudaStreamPerThread);
+                        CurrentExecutionStream());
                 }
                 if (status == cudaSuccess && implementation == "flash") {
                     status = runTextPagedKVDecodeFlashBF16DeviceMetadata(
@@ -2702,7 +2717,7 @@ namespace Garnet
                         static_cast<float*>(workspaceDevice),
                         static_cast<float*>(workspaceDevice) + scoreFloats,
                         1, maxSequenceLength, pageSize, qHeads, kvHeads, headDim,
-                        cudaStreamPerThread);
+                        CurrentExecutionStream());
                 }
                 else if (status == cudaSuccess) {
                     status = runTextPagedKVDecodeSplitKBF16DeviceMetadata(
@@ -2712,9 +2727,9 @@ namespace Garnet
                         static_cast<float*>(workspaceDevice),
                         static_cast<float*>(workspaceDevice) + scoreFloats,
                         maxSequenceLength, pageSize, qHeads, kvHeads, headDim, 1,
-                        cudaStreamPerThread);
+                        CurrentExecutionStream());
                 }
-                const cudaError_t completion = cudaStreamSynchronize(cudaStreamPerThread);
+                const cudaError_t completion = cudaStreamSynchronize(CurrentExecutionStream());
                 if (status == cudaSuccess) status = completion;
             }
             else if (status == cudaSuccess) {

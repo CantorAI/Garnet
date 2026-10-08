@@ -98,10 +98,11 @@ set(GARNET_TENSORRT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../ThirdPartySDK/Ten
     CACHE PATH "TensorRT SDK directory")
 add_library(garnet_gpt_oss_ops SHARED module/module.cpp tensorrt/gpt_oss_plugin.cpp
     cuda/gpt_oss_kernels.cu cuda/gpt_oss_gemv.cu cuda/gpt_oss_marlin.cu cuda/tp_collective.cpp
-    cuda/tp_bf16.cu
+    cuda/tp_bf16.cu cuda/tp_peer_group.cu
     cuda/tp_direct.cu)
 target_include_directories(garnet_gpt_oss_ops PRIVATE include "${GARNET_TENSORRT_ROOT}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party")
 target_compile_definitions(garnet_gpt_oss_ops PRIVATE NOMINMAX)
 target_compile_options(garnet_gpt_oss_ops PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 if(WIN32)

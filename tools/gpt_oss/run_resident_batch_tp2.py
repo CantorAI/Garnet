@@ -146,6 +146,24 @@ except BaseException as error:
         session_partial(session_result_path).write_text(json.dumps(session_report, indent=2))
     raise
 
+peer_group_status = None
+group = None
+try:
+    if 'operator_execution_layout' in plan:
+        import garnet_gpt_oss as extension
+        layout = plan['operator_execution_layout']
+        group = extension.peer_group(json.dumps(dict(phase_elements=layout['phase_elements'], ctas=layout['ctas'])))
+        peer_group_status = json.loads(extension.peer_group_status_json(group))
+        if peer_group_status != layout:
+            raise ValueError('Native peer resources differ from admitted contract')
+        pair.attach_operator_execution_group(group, extension.peer_group_bind_phase)
+        print('Resident native execution group', json.dumps(peer_group_status), flush=True)
+        samples.append(memory())
+except BaseException:
+    pair.release()
+    group = None
+    raise
+
 def tensors(stages, tokens):
     inputs = []
     for stage in stages:
@@ -264,6 +282,7 @@ def measure_case(case, index, cold_startup_seconds):
         raise RuntimeError('Observed resident memory exceeds admitted budget')
     layout_report = (dict(kv_layout=plan['kv_layout'],
         shared_kv_auxiliary_bytes_per_gpu=auxiliary_allocated,
+        operator_execution_resources=peer_group_status,
         kv_page_counts_per_bank=dict(global_bank=plan['kv_pages'],
             window_bank=plan['kv_layout']['window_shape'][1]),
         logical_retained_kv_bytes_per_gpu_after_prefill=logical_retained_kv_bytes(plan, len(ids)),
@@ -356,7 +375,10 @@ finally:
     try:
         capture.abort()
     finally:
-        pair.release()
+        try:
+            pair.release()
+        finally:
+            group = None
 if session_mode:
     session_report['session_complete'] = True
     session_report['phase'] = 'complete'

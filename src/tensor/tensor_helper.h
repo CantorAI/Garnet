@@ -3,6 +3,7 @@
 
 #pragma once
 #include "xlang3/xlang3.h"
+#include "operator_execution_group.h"
 #include <cuda_runtime.h>
 #include <memory>
 #include <string>
@@ -37,9 +38,9 @@ class TensorHelper {
 public:
     static constexpr int CudaDevice = 1;
     static CUDAUse AcquireGPU(const X::Tensor& tensor, X3TensorAccess access = X3_TENSOR_READ,
-        cudaStream_t stream = cudaStreamPerThread) { return CUDAUse(tensor, access, stream); }
+        cudaStream_t stream = CurrentExecutionStream()) { return CUDAUse(tensor, access, stream); }
     static CUDAUse AcquireGPU(const std::vector<std::pair<X::Tensor, X3TensorAccess>>& tensors,
-        cudaStream_t stream = cudaStreamPerThread) { return CUDAUse(tensors, stream); }
+        cudaStream_t stream = CurrentExecutionStream()) { return CUDAUse(tensors, stream); }
     static uint64_t ItemSize(X3TensorDType dtype);
     static X::Tensor CreateGPU(X3PackageHost* host, X3TensorDType dtype,
         const std::vector<int64_t>& shape, const void* hostData = nullptr);

@@ -19,6 +19,7 @@ struct GptOssOptions {
 };
 cudaError_t GptOssTpAcquire();
 void GptOssTpRelease();
+bool GptOssTpHasDirectPeerOwner();
 cudaError_t GptOssTpAllReduce(const float*, float*, size_t, int, cudaStream_t);
 cudaError_t GptOssTpAllReduceBf16(const float*, float*, void*, size_t,
     int, cudaStream_t);

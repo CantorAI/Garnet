@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 from kv_layout import kv_memory
+from peer_group_layout import validate_peer_group_layout
 
 
 def file_sha256(path):
@@ -72,6 +73,10 @@ def plan_identity(plan):
         # Recompute/validate the bank contract before trusting a profile.
         kv_memory(plan)
         identity['kv_layout'] = plan['kv_layout']
+    if 'operator_execution_layout' in plan:
+        validate_peer_group_layout(plan['operator_execution_layout'], plan['batch'],
+            plan['max_tokens'], plan['config']['hidden_size'])
+        identity['operator_execution_layout'] = plan['operator_execution_layout']
     return identity
 
 
@@ -100,6 +105,9 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
         raise ValueError('Duplicate resident engine statistic')
     kv_bytes, auxiliary_bytes = kv_memory(plan)
     packed_lower_bound = plan['weight_storage_estimate']['prepacked_marlin_constant_bytes']
+    group_bytes = (validate_peer_group_layout(plan['operator_execution_layout'],
+        plan['batch'], plan['max_tokens'], plan['config']['hidden_size'])
+        if 'operator_execution_layout' in plan else 0)
     result = []
     for device in devices:
         bounds = []
@@ -113,7 +121,7 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
                     type(context) is not int or context <= 0):
                 raise ValueError('Invalid resident weight/context bound')
             bounds.append((weight, context))
-        required = math.ceil(sum(w for w, _ in bounds) * 1.05) + sum(c for _, c in bounds) + kv_bytes + auxiliary_bytes + reserve_bytes
+        required = math.ceil(sum(w for w, _ in bounds) * 1.05) + sum(c for _, c in bounds) + kv_bytes + auxiliary_bytes + reserve_bytes + group_bytes
         budget = min(device['free_bytes'], int(device['total_bytes'] * memory_fraction))
         if required > budget:
             raise ValueError('Resident engines exceed memory budget on GPU' + str(device['id']))
@@ -122,6 +130,8 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
             contexts_per_engine=1, weight_margin_fraction=.05))
         if 'kv_layout' in plan:
             result[-1]['shared_auxiliary_bytes'] = auxiliary_bytes
+        if group_bytes:
+            result[-1]['operator_execution_storage_bytes'] = group_bytes
     return dict(ranks=result, concurrency='serial complete batches; one context per engine',
         limits='Measured engine bounds plus explicit reserve; execution peak validation still required')
 

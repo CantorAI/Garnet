@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "xlang3/xlang3.h"
 #include "operator_module_bridge.h"
+#include "gpt_oss_peer_group.h"
 #include "NvInfer.h"
 #include <cstring>
 #include <string>
+#include <memory>
 #if defined(_WIN32)
 #include <windows.h>
 #else
@@ -16,6 +18,8 @@ namespace {
 void* Resolve(const char* name) {
     if (name && std::strcmp(name, "GarnetCreateOperatorPlugin") == 0)
         return reinterpret_cast<void*>(&GarnetCreateOperatorPlugin);
+    if(name && std::strcmp(name,GarnetOperatorExecutionSymbol)==0)
+        return const_cast<GarnetOperatorExecutionServices*>(Garnet::GptOssPeerExecutionServices());
     return nullptr;
 }
 const char* BinaryPath() {
@@ -38,12 +42,53 @@ const char* BinaryPath() {
 GarnetOperatorModuleBridge bridge{1, sizeof(GarnetOperatorModuleBridge),
     &GarnetOperatorPluginManifest, &GarnetRegisterOperatorPlugin, &Resolve, &BinaryPath};
 class GptOssModule {
+    static void CleanupGroup(void* pointer){
+        auto* p=static_cast<GarnetOperatorExecutionPayload*>(pointer);
+        p->services->release(p->owner);delete p;
+    }
+    static GarnetOperatorExecutionPayload* Group(const X::Value& value){
+        auto* host=value.host();
+        auto* p=host && host->instance_get_native_data?static_cast<GarnetOperatorExecutionPayload*>(
+            host->instance_get_native_data(value.raw(),GarnetOperatorExecutionType)):nullptr;
+        if(!p || p->abi!=1 || p->size!=sizeof(*p) || !p->owner ||
+           p->services!=Garnet::GptOssPeerExecutionServices())throw X::Error("GPT-OSS native execution group required");
+        return p;
+    }
 public:
     BEGIN_PACKAGE(GptOssModule)
         APISET().AddFunc<0>("operator_bridge", &GptOssModule::OperatorBridge);
         APISET().AddFunc<0>("manifest_json", &GptOssModule::Manifest);
+        APISET().AddVarFunc("peer_group", &GptOssModule::PeerGroup);
+        APISET().AddVarFunc("peer_group_bind_phase", &GptOssModule::BindPhase);
+        APISET().AddVarFunc("peer_group_status_json", &GptOssModule::GroupStatus);
     END_PACKAGE
     std::string Manifest() { return GarnetOperatorPluginManifest(); }
+    X::Value PeerGroup(const X::ARGS& args,const X::KWARGS&){
+        if(args.size()!=1 || !args[0].IsString())throw X::Error("peer_group(options_json) expected");
+        const auto options=args[0].ToString();void* owner=nullptr;
+        const auto status=Garnet::GptOssCreatePeerGroup(options.data(),options.size(),&owner);
+        if(status!=cudaSuccess)throw X::Error(std::string("peer group creation failed: ")+cudaGetErrorString(status));
+        auto* services=Garnet::GptOssPeerExecutionServices();
+        std::unique_ptr<void,void(*)(void*)> hold(owner,services->release);
+        auto payload=std::make_unique<GarnetOperatorExecutionPayload>(GarnetOperatorExecutionPayload{1,sizeof(GarnetOperatorExecutionPayload),services,owner});
+        auto* host=Host();X3Value klass=x3_value_invalid();
+        if(host->create_class(host,"OperatorExecutionGroup",nullptr,0,&klass)!=X3_STATUS_OK)throw X::Error("cannot create execution group type");
+        X::Value type(host,klass,false),value(host,host->value_instance(host->runtime,klass),false);
+        if(host->instance_set_native_data(value.raw(),GarnetOperatorExecutionType,payload.get(),&CleanupGroup)!=X3_STATUS_OK){
+            throw X::Error("cannot attach execution group payload");}
+        hold.release();payload.release();return value;
+    }
+    X::Value BindPhase(const X::ARGS& args,const X::KWARGS&){
+        if(args.size()!=2 || !args[1].IsInt64())throw X::Error("peer_group_bind_phase(group, phase) expected");
+        const auto phase=args[1].ToLongLong();if(phase<0 || phase>1)throw X::Error("peer group phase out of range");
+        auto* p=Group(args[0]);const int status=p->services->bind_phase(p->owner,uint32_t(phase));
+        if(status)throw X::Error(std::string("peer group phase binding failed: ")+cudaGetErrorString(cudaError_t(status)));
+        return X::Value(true);
+    }
+    X::Value GroupStatus(const X::ARGS& args,const X::KWARGS&){
+        if(args.size()!=1)throw X::Error("peer_group_status_json(group) expected");
+        auto* p=Group(args[0]);return X::Value::String(Host(),p->services->status_json(p->owner));
+    }
     X::Value OperatorBridge() {
         auto* host = Host(); X3Value klass = x3_value_invalid();
         if (host->create_class(host, "OperatorBridge", nullptr, 0, &klass) != X3_STATUS_OK)
