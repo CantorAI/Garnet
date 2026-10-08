@@ -53,14 +53,22 @@ if existing_capture_artifacts(prefix):
     raise FileExistsError('Refusing to overwrite resident diagnostic evidence')
 env = os.environ.copy()
 for key in list(env):
-    if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_',
+    if key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_',
                        'GARNET_RESIDENT_', 'GARNET_BENCH_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
-    if (not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')) or
+    if ((key != 'GARNET_TRT_SYNC_ALLOCATOR' and
+            not key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_'))) or
             key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value, str)):
         raise ValueError('Invalid recorded optimization environment')
     env[key] = value
+allocator = env.get('GARNET_TRT_SYNC_ALLOCATOR', '0')
+if allocator not in ('0', '1'):
+    raise ValueError('Recorded synchronous allocator must be0/1')
+env['GARNET_TRT_SYNC_ALLOCATOR'] = allocator
+# Capturing a single case preserves the saved trajectories without replaying
+# the multi-case session protocol, which deliberately forbids instrumentation.
+source_session = env.pop('GARNET_RESIDENT_SESSION', '0')
 env.update(GARNET_RESIDENT_PROFILE=str(measured.resolve()), GARNET_RESIDENT_WARMUPS='1',
     GARNET_BATCH_CONTEXT_CAPACITY=str(capacity), GARNET_BATCH_PREFILL_CHUNK=str(chunk),
     GARNET_BENCH_NSYS_OUTPUT=str(prefix), GARNET_BENCH_RESIDENT_DIAGNOSTIC='1',
@@ -79,6 +87,8 @@ result = Path(str(prefix) + '.json')
 validation = Path(str(prefix) + '.validation.json')
 manifest_path = Path(str(prefix) + '.capture-manifest.json')
 manifest = dict(measurement='Resident Nsight diagnostic; no throughput/speed-goal claims',
+    source_reference_session=source_session, diagnostic_session_mode=False,
+    synchronous_allocator=allocator,
     source_reference=str(args.reference.resolve()), reference_sha256=file_sha256(args.reference),
     request=str(args.request.resolve()), request_sha256=file_sha256(args.request),
     expected=str(args.expected.resolve()), expected_sha256=file_sha256(args.expected),
