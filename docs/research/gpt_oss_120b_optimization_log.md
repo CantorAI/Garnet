@@ -2511,3 +2511,44 @@ Next exact obsolete generated-cache retirement follows the already documented me
 **Verified obsolete generated-cache retirement / all-four serving proposal BEFORE launch, October8 2026 19:27UTC:** Exact102 non-engine metadata members and manifest were independently verified locally before any removal: metadata archive4e20851f9bdd4335e8ee6923ff7758bdeccd4314d0479fa4ea7ad08fb5dd0feb /359,838B, manifest5b179a0be5e8e51506dbb3b7fc1fd3f47e00487ee839a8f8d9d81d39744d2f26. Second remote engineSHA/path/stat+source/native/qualification/idle check preceded removal of ONLY10 old generated model.engine files in the two explicitly named obsolete namespaces;23,397,170,792B (21.79GiB) recovered. Terminal0 result ee8ac71844f08af56b86dcc017a8c2f6078550f3ff3ea135156d542500f60614 downloaded actualSCP0/hash/allretiredrows matchmanifest; free38.33GiB. Model/source/prompts/profiles/raw evidence/currentFAST1 caches unchanged; original engine bytes require regeneration, all metadata/hash records retained.
 
 Launch source48d/nativece311 group1+fastpack1+syncallocator1 fresh shortprofile followed by allthree short full-request trials, then longprofile+long trial, with exact old optimizedV0.31 references revalidated FIRST and no competing inference. Explicit B/I/O/C/chunk reservations remain512/256/1024/1280/8 and224/2005/1024/3072/16 (pad11, true2005). Exact context override avoids automatic rounding short1280->1536. One complete warmup/three complete trials per case; all inputKV rewritten, preparation/updates/sampling/handoff included, startup separately logged. Guard full qualified proof35834c..., source48d/nativeSHA/hardware/freedmetadata proof and15GiB/cap before every phase. This isolates new group+immutable metadata-cache serving behavior, not a factorial kernel speed claim; preserve all answers/trajectories/timings/memory/cold and independently download/audit before any performance ACCEPT.
+
+
+### OPT-0068: Immutable provider requirements cache — qualification and live serving observation
+
+**Date / Commit**
+- Observation: October 8, 2026, 19:52 UTC. Runtime commit `8d01862`; fixture contract repair `48d136e`; branch `feature/gpt-oss-120b`. Remote source remains frozen at `48d136e` while controller 599257 runs. This entry consolidates the chronological proposal/implementation/failure entries above; it does not replace them.
+- Relevant files: `src/model/compiled_model_runtime.{h,cpp}`, `src/model/operator_execution_group.{h,cpp}`, `test2026/gpt_oss/operator_group_requirements.py`.
+
+**System**
+- GPT-OSS-120B, TP2, two 96GB RTX PRO 6000 Blackwell Workstation GPUs, SM120; driver 595.71.05, CUDA13.4, TensorRT11.2.1.2, NCCL2.30.7. MXFP4/prepacked Marlin weights, BF16 activations/hybrid KV, GPT-OSS pluginV13/module0.14.
+- Opt-in owned BF16 peer group, fast host packing and synchronous allocator enabled. Serial paired resident engines share each rank's KV. No competing GPU inference or remote pull/build.
+
+**Workload / Baseline**
+- Short: B512/I256/O1024/C1280/prefill chunk8. Long remains queued: B224/I2005/O1024/C3072/chunk16, pad11 but retain all2005 real tokens. One complete warmup and three complete measured requests per prompt; every trial rewrites input KV and includes controls, sampling and phase transition.
+- Prior FAST1 all-four full-request medians: arithmetic7841.161, code7972.161, instruction7848.130, long3587.171tok/s. Exact optimized vLLM0.31.0 references are revalidated FIRST, matching hardware/version/settings/input hashes/answers. All three short reference validations have passed. Cold load is excluded from warm rates and reported separately.
+
+**Observed Bottleneck / Hypothesis / Proposed Optimization**
+- The earlier read-only C++ parser screen found repeated full execution-plan parsing on each grouped forward: 157708/159835-byte plans,909/907 operations, local medians0.971508/0.975259ms. This measured a different CPU host; it is not target latency or predicted throughput.
+- The BEFORE-code proposal already logged above selected a small immutable provider id/backend snapshot from already resolved metadata. Cache fresh and serialized-load paths, clear on init/release, retain atomic shared ownership per request; preserve all native payload, ABI, closed-owner, service, backend, phase/rank and nesting validation.
+
+**Implementation / Correctness Validation**
+- C++17 atomic shared_ptr snapshots remove repeated unrelated plan parsing. No native permission is cached; default unscoped/Qwen behavior remains unchanged.
+- Complete downloaded qualification proof `35834c63dc5e9d6fd0ea04cbbb0f5686053bc5e14b642927f99302af1380c510` passes: fresh/cache-hit lifecycle and release/reacquisition; original/group/group-mem each24 full matrices (477757440 independently exact values total); default17, native/refit/Qwen/API/fourCTest, ASan/UBSan, five unrestricted XML scopes, zero memory/unexpected records. Unchanged components are explicitly stamped source8d rather than falsely rerun at48d. Existing maxCPUabs0.0078125 and bounds remain unchanged.
+- Retain first fixture failure: released compiled Model returns `compiled_graph_not_ready`, rather than throwing. Only the fixture expectation was repaired; foreign-provider rejection remains mandatory. No performance acceptance follows from these synthetic qualification gates.
+
+**Performance Result — live observation, full archive audit pending**
+
+| Prompt | Prior FAST1 full tok/s | Group/cache full tok/s | vs prior | Optimized vLLM full tok/s | vs vLLM | Median TTFT | Decode tok/s |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| arithmetic | 7841.161 | 7959.817 | +1.51% | 8766.220 | -9.20% | 6.982376s | 8894.978 |
+| code-tracing | 7972.161 | 8013.173 | +0.51% | 9505.078 | -15.70% | 7.132221s | 8983.977 |
+
+- Arithmetic full trial rates7972.733442/7959.817483/7919.242096; code8075.048507/8011.999282/8013.172504tok/s. Remote answer validation passes1536 checks per completed case. Instruction and long are unfinished; complete independent pretrained trajectory/source/native/profile/timing audit awaits actual controller termination and archive download.
+- Both completed cases sampled83157/83139MiB peaks and allocated13438550016 KV bytes/rank (12.515625GiB). Short profile actual0 after528.091s: analytical resident required91543420954/91542511335 versus91776142540 budget bytes/rank. This tight admission is not justification for increasing batch without a fresh measured profile.
+- Local read-only snapshot: `work/opt68-local/live-serving-20261008-1956.json`, actual observation19:52:13UTC. Arithmetic result SHA5f8a4aea08bc4f6c5fdc53aa68f3be2239568cc50848d8d3d7a402e0a60d8cf1; code8477cb0ac8de8a17015d51ea9aed6068814d860bea3e6b5fd8d1dd46d7d6b4df. Hashes identify observed remote files; they do not substitute for downloading/auditing full evidence.
+
+**Decision: INCONCLUSIVE**
+Native/cache/lifetime qualification succeeds, but serving evidence is still live and observed full rates remain below vLLM. No accepted-performance history advance and no goal-completion claim.
+
+**Analysis / Next Step**
+The two observed full-rate increases are small; this run combines owned peer execution with the metadata cache, so it cannot attribute a change to either alone. Arithmetic decode exceeds its vLLM decode reference, while full-request rate still trails; prefill/TTFT and complete lifecycle remain relevant. Finish the existing instruction/long phases, preserve partial failures, wait actual terminal/PID exit/archive completion, then download/hash/safe-extract and independently verify every answer/trajectory/timing/profile/native identity before choosing the next bottleneck experiment. Do not duplicate jobs or pull/build during controller599257.
