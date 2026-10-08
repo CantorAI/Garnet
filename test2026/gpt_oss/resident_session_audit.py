@@ -7,13 +7,14 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
 
 repo = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(repo / 'tools/gpt_oss'))
-from audit_resident_session import audit
+from audit_resident_session import ENGINE_SOURCE_PATHS, audit
 
 NAMES = ['arithmetic', 'code-tracing', 'instruction-following']
 IDENTITY = ('schema', 'mode', 'cache_key', 'hardware', 'batch', 'capacity', 'max_tokens',
@@ -155,13 +156,54 @@ class Evidence:
                     validation_sha256=digest(self.paths[name + '.validation']), expected_sha256=digest(self.paths[name + '.expected']))
         dump(self.paths['session'], session); dump(self.paths['controls'], self.data['controls'])
 
-    def audit(self):
+    def audit(self, source_repository=None):
         def decode(ids):
             return '<|channel|>final<|message|>' + json.dumps({'answer': ids[0] - 10})
-        return audit(self.paths['session'], self.paths['controls'], decode, self.root if self.archived else None)
+        return audit(self.paths['session'], self.paths['controls'], decode,
+            self.root if self.archived else None, source_repository)
 
 
 class RawAudit(unittest.TestCase):
+    def test_explicit_profile_origin_proof_with_complete_archived_session(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); repository = root / 'git'; repository.mkdir()
+            def git(*args):
+                return subprocess.check_output(['git', '-C', str(repository), *args], text=True).strip()
+            git('init', '-q'); git('config', 'user.name', 'CPU archive proof')
+            git('config', 'user.email', 'cpu-proof@example.invalid')
+            names = []
+            for selected in ENGINE_SOURCE_PATHS:
+                name = selected + '/fixture.py' if '.' not in Path(selected).name else selected
+                path = repository / name; path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('CPU immutable engine source\n', encoding='utf-8'); names.append(name)
+            git('add', '.'); git('commit', '-qm', 'CPU measured engine program')
+            measured = git('rev-parse', 'HEAD')
+            (repository / 'docs.txt').write_text('CPU reporting-only change\n', encoding='utf-8')
+            git('add', '.'); git('commit', '-qm', 'CPU execution reporting')
+            executed = git('rev-parse', 'HEAD')
+            archive = root / 'archive'; archive.mkdir()
+            evidence = Evidence(archive, archived=True)
+            evidence.data['profile']['source_commit'] = measured
+            evidence.data['session']['source_commit'] = executed
+            for name in NAMES:
+                for suffix in ('result', 'control'):
+                    evidence.data[name + '.' + suffix]['source_commit'] = executed
+            for name in names:
+                target = archive / 'Garnet' / name; target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes((repository / name).read_bytes())
+            evidence.refresh()
+            with self.assertRaisesRegex(ValueError, 'explicit engine-source Git proof'):
+                evidence.audit()
+            result = evidence.audit(repository)
+            proof = result['profile_source_identity']
+            self.assertEqual(proof['measured_source_commit'], measured)
+            self.assertEqual(proof['execution_source_commit'], executed)
+            self.assertTrue(proof['archived_execution_bytes_verified'])
+            self.assertEqual(sum(case['answer_checks'] for case in result['cases']), 18)
+            target.write_bytes(target.read_bytes() + b'changed archived program')
+            with self.assertRaisesRegex(ValueError, 'execution Git object'):
+                evidence.audit(repository)
+
     def test_positive_full_hybrid_and_archive_paths(self):
         for hybrid in [False, True]:
             for archived in [False, True]:

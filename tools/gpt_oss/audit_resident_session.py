@@ -10,6 +10,57 @@ import math
 from pathlib import Path
 import re
 import statistics
+import subprocess
+
+ENGINE_SOURCE_PATHS=('src','python','xModel','tools/gpt_oss/pipeline.py',
+    'tools/gpt_oss/kv_layout.py','tools/gpt_oss/engine_profile_shape.py',
+    'tools/gpt_oss/resident_budget.py','tools/gpt_oss/profile_tp_engine_memory.py')
+
+
+def profile_source_identity(profile, observed_commit, source_repository=None, archive_root=None):
+    """Explicit Git-object proof for reused measurements, never relabel a profile."""
+    measured_commit=profile['source_commit']
+    if not all(re.fullmatch('[0-9a-f]{40}',value) for value in (measured_commit,observed_commit)):
+        raise ValueError('Invalid immutable profile/execution source commit')
+    identity=dict(measured_source_commit=measured_commit,execution_source_commit=observed_commit)
+    if measured_commit==observed_commit:
+        return dict(identity,compatibility='same immutable commit')
+    if source_repository is None:
+        raise ValueError('Different profile origin requires explicit engine-source Git proof')
+    def blobs(commit):
+        raw=subprocess.check_output(['git','-C',str(source_repository),'ls-tree','-rz','--full-tree',commit,
+            '--',*ENGINE_SOURCE_PATHS])
+        entries={}
+        for item in raw.split(b'\0'):
+            if not item:continue
+            prefix,name=item.split(b'\t',1);mode,kind,object_id=prefix.decode().split()
+            path=name.decode('utf-8')
+            if (kind!='blob' or mode not in ('100644','100755') or
+                    not re.fullmatch('[0-9a-f]{40}',object_id)):
+                raise ValueError('Engine source requires regular immutable Git blobs')
+            entries[path]=dict(mode=mode,git_blob_sha1=object_id)
+        for selected in ENGINE_SOURCE_PATHS:
+            if not any(path==selected or path.startswith(selected+'/') for path in entries):
+                raise ValueError('Incomplete engine-program source closure')
+        return entries
+    measured,executed=blobs(measured_commit),blobs(observed_commit)
+    if measured!=executed:
+        raise ValueError('Measured engine-program source differs from execution commit')
+    if archive_root is not None:
+        root=Path(archive_root).resolve()
+        for name,entry in executed.items():
+            path=(root/'Garnet'/name).resolve()
+            if not path.is_relative_to(root) or not path.is_file():
+                raise ValueError('Missing actual archived execution-program source')
+            payload=path.read_bytes()
+            object_id=hashlib.sha1(b'blob '+str(len(payload)).encode()+b'\0'+payload).hexdigest()
+            if object_id!=entry['git_blob_sha1']:
+                raise ValueError('Actual archived source does not match execution Git object')
+    digest=hashlib.sha256(json.dumps(executed,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    return dict(identity,compatibility='identical immutable engine-program Git blobs',
+        engine_program_blobs=executed,engine_program_manifest_sha256=digest,
+        archived_execution_bytes_verified=archive_root is not None,
+        limits='Profile origin retained; runner/control identity and native/cache/hardware/math/timing guards remain separate')
 
 
 def sha(path):
@@ -135,7 +186,7 @@ def timed_trial(trial, batch, output, length, chunk):
     return batch * output / full
 
 
-def audit(session_path, controls_path, decode, archive_root=None):
+def audit(session_path, controls_path, decode, archive_root=None, source_repository=None):
     def locate(recorded):
         if archive_root is not None:
             prefix = '/workspace/CantorAI/'
@@ -193,10 +244,11 @@ def audit(session_path, controls_path, decode, archive_root=None):
     identity = {key: plan[key] for key in identity_keys}
     if 'kv_layout' in plan:
         identity['kv_layout'] = plan['kv_layout']
-    if (profile['plan_identity'] != identity or profile['source_commit'] != session['source_commit'] or
+    if (profile['plan_identity'] != identity or
             set(session['native_binaries']) != {'libgarnet.so', 'libgarnet_gpt_oss.so'} or
             any(not re.fullmatch('[0-9a-f]{64}', value) for value in session['native_binaries'].values())):
         raise ValueError('Measured plan/source/native identity is inconsistent')
+    source_identity=profile_source_identity(profile,session['source_commit'],source_repository,archive_root)
     kv, auxiliary = allocated_kv(plan)
     batch, output, capacity, chunk = (manifest[key] for key in ('batch', 'output', 'context', 'prefill_chunk'))
     if (any(type(value) is not int for value in (batch, output, capacity, chunk)) or
@@ -206,6 +258,7 @@ def audit(session_path, controls_path, decode, archive_root=None):
     report = dict(scope='Independent session equivalence and complete-request evidence; all-four speed goal unassessed',
         session_sha256=sha(session_path), controls_manifest_sha256=sha(controls_path),
         source_commit=session['source_commit'], native_binaries=session['native_binaries'],
+        profile_source_identity=source_identity,
         shared_cold_preparation_seconds_excluding_imports=cold, cases=[],
         limits=['CPU artifact verification, not runtime GPU instrumentation.',
                 'Sampled memory is not exhaustive peak; serial same-shape batches only.',
@@ -343,6 +396,8 @@ if __name__ == '__main__':
     parser.add_argument('single_case_manifest', type=Path)
     parser.add_argument('report', type=Path)
     parser.add_argument('--archive-root', type=Path)
+    parser.add_argument('--source-repository',type=Path,
+        help='Explicit trusted Git repository proving identical engine-program blobs for a reused historical profile')
     args = parser.parse_args()
     if args.report.exists():
         raise FileExistsError(args.report)
@@ -353,6 +408,6 @@ if __name__ == '__main__':
         tokenizer_path = args.archive_root / str(tokenizer_path).removeprefix('/workspace/CantorAI/')
     tokenizer = Tokenizer.from_file(str(tokenizer_path))
     report = audit(args.session, args.single_case_manifest,
-        lambda ids: tokenizer.decode(ids, skip_special_tokens=False), args.archive_root)
+        lambda ids: tokenizer.decode(ids, skip_special_tokens=False), args.archive_root,args.source_repository)
     args.report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     print('All three resident-session raw matrices and evidence match single-case controls; full speed goal unassessed')
