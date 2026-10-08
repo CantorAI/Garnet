@@ -37,14 +37,18 @@ def rejects(function):
 
 
 # Independent integer page address simulation, not attention arithmetic.
+# Cover the complete allowed2048-output runner envelope: first output is
+# sampled from prefill, followed by2047 writes of future decoded positions.
+address_capacity = 4096
+decode_overwrites = 2047
 reads = 0
 for window in (17, 128):
     for chunk in (1, 8, 9, 16, 28, 32):
         layout = hybrid_layout(dict(num_hidden_layers=6, head_dim=64,
-            sliding_window=window, num_key_value_heads=8), 3, 2560, chunk, 4)
+            sliding_window=window, num_key_value_heads=8), 3, address_capacity, chunk, 4)
         table = window_page_table(layout)
         physical_pages = layout['window_shape'][1]
-        logical_pages = (2560 + 15) // 16
+        logical_pages = (address_capacity + 15) // 16
         memory = {}
         def address(layer, slot, position):
             return (layer * physical_pages + table[slot * logical_pages + position // 16]) * 16 + position % 16
@@ -59,7 +63,8 @@ for window in (17, 128):
                             for position in range(max(0, query + 1 - window), query + 1):
                                 assert memory[address(layer, slot, position)] == (generation, layer, slot, position)
                                 reads += 1
-                for query in range(length, length + 511):
+                assert length + decode_overwrites <= address_capacity
+                for query in range(length, length + decode_overwrites):
                     for layer in range(3):
                         memory[address(layer, slot, query)] = (generation, layer, slot, query)
                     for layer in range(3):
@@ -81,7 +86,7 @@ for window in (17,128):
         for length in (129,256,2005):
             padded = ((length+chunk-1)//chunk)*chunk
             expected_reads += 2*3*(visible_prefix(padded,window)+
-                visible_prefix(length+511,window)-visible_prefix(length,window))
+                visible_prefix(length+decode_overwrites,window)-visible_prefix(length,window))
 assert reads == expected_reads
 
 # Separate independent counter covers the arbitrary non-page-aligned native
