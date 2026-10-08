@@ -85,11 +85,13 @@ int main(int argc,char** argv){
     const size_t count=size_t(rows)*2880;
     std::printf("ORIGINAL_NCCL_BF16_CONTROL rows=%ld mode=%s protocol=%s PACK_SUM_UNPACK NO_PEER_SELECTION\n",rows,mode.c_str(),proto?proto:"AUTO_UNSET");
     Control control(count);std::array<std::vector<float>,2> host{std::vector<float>(count),std::vector<float>(count)};std::vector<float> expected(count);
-    control.capture(1);
     for(int family=0;family<6;++family)for(int graph=0;graph<2;++graph){
         const int offset=graph?131:0;
         for(size_t i=0;i<count;++i){const auto pair=inputs(i,family,offset);host[0][i]=pair[0];host[1][i]=pair[1];volatile float sum=pair[0]+pair[1];expected[i]=rounded(sum);}
         control.upload(host);
+        // NCCL establishes its lazy connections on the preceding eager pair.
+        // Capture only after that pair has completed and passed the full check.
+        if(graph && family==0)control.capture(1);
         if(graph)control.replay(3);else control.paired([&](int r){control.reduce(r);CUDA_OK(cudaStreamSynchronize(control.streams[r]));});
         control.check(folder,"family"+std::to_string(family)+(graph?"-graph":"-eager"),expected);
     }
