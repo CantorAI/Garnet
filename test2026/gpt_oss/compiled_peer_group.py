@@ -5,6 +5,7 @@ All matrices survive before quality checks. No serving-throughput claim.
 """
 import concurrent.futures
 import gc
+import importlib
 import json
 import os
 from pathlib import Path
@@ -63,8 +64,8 @@ def period(family, offset):
 
 
 def initialize():
+    sources = []
     for phase, sequence in enumerate(tokens):
-        stages, tensors = [], []
         for rank in range(2):
             root = folder / f'phase{phase}-rank{rank}'
             root.mkdir(exist_ok=True)
@@ -76,6 +77,14 @@ def initialize():
             path.write_text(source)
             (root / '__init__.py').write_text('')
             shutil.copy2(repo / 'xModel/gpt_oss/120b/tensor_compat.py', root / 'tensor_compat.py')
+            sources.append(path)
+    # Refresh once after the complete package tree exists, before any import.
+    importlib.invalidate_caches()
+    for phase, sequence in enumerate(tokens):
+        stages, tensors = [], []
+        for rank in range(2):
+            path = sources[phase * 2 + rank]
+            root = path.parent
             G.cuda_set_device(rank)
             model = G.load_model(str(path), runtime_mode='compiled_xmodel', backend='tensorrt',
                 precision='bf16', entry_function='GptOssTpCollective',
