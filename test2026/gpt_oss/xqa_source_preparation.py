@@ -2,6 +2,7 @@
 import hashlib
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -18,6 +19,40 @@ with tempfile.TemporaryDirectory() as temporary:
     assert (root/'first/garnet-adaptation.json').read_bytes() == (root/'second/garnet-adaptation.json').read_bytes()
     assert b'\r' not in (root/'first/garnet-adaptation.json').read_bytes()
     assert first==second
+    empty=root/'build-empty';empty.mkdir()
+    try:generate(upstream,empty)
+    except FileExistsError:assert not list(empty.iterdir())
+    else:raise AssertionError('Default generator adopted an existing directory')
+    adopted=generate(upstream,empty,allow_empty_build_directory=True)
+    assert adopted==first and verify_generated(upstream,empty)==first
+    for name in ('first','build-empty'):
+        before={p.name:p.read_bytes() for p in (root/name).iterdir()}
+        try:generate(upstream,root/name,allow_empty_build_directory=True)
+        except FileExistsError:pass
+        else:raise AssertionError('Private build overwrote existing generated evidence')
+        assert {p.name:p.read_bytes() for p in (root/name).iterdir()}==before
+    partial=root/'partial';partial.mkdir();(partial/'retained.txt').write_bytes(b'retained partial evidence')
+    try:generate(upstream,partial,allow_empty_build_directory=True)
+    except FileExistsError:assert (partial/'retained.txt').read_bytes()==b'retained partial evidence'
+    else:raise AssertionError('Nonempty partial build directory accepted')
+    file_output=root/'file-output';file_output.write_bytes(b'retained file')
+    try:generate(upstream,file_output,allow_empty_build_directory=True)
+    except FileExistsError:assert file_output.read_bytes()==b'retained file'
+    else:raise AssertionError('File output accepted')
+    cli=root/'cli-empty';cli.mkdir()
+    command=[sys.executable,str(repo/'tools/gpt_oss/prepare_xqa_sources.py'),str(upstream),str(cli)]
+    result=subprocess.run(command+['--allow-empty-build-directory'],capture_output=True,text=True)
+    assert result.returncode==0 and verify_generated(upstream,cli)==first
+    result=subprocess.run(command+['--allow-empty-build-directory','--verify-existing'],capture_output=True,text=True)
+    assert result.returncode==2 and verify_generated(upstream,cli)==first
+    link=root/'empty-link';destination=root/'empty-destination';destination.mkdir()
+    try:link.symlink_to(destination,target_is_directory=True)
+    except OSError:
+        if sys.platform!='win32':raise
+    else:
+        try:generate(upstream,link,allow_empty_build_directory=True)
+        except FileExistsError:assert link.is_symlink() and not list(destination.iterdir())
+        else:raise AssertionError('Symlinked private-build directory accepted')
     assert len(first['generated_sha256']) == 17
     original=(upstream/'mha.cu').read_bytes()
     assert hashlib.sha256(original).hexdigest()=='fac9c9a116be125b800257c455ee3abe2a2a620b2816a3c254792d3a5033ace4'

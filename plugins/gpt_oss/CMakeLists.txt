@@ -28,7 +28,7 @@ if(GARNET_GPT_OSS_BUILD_XQA_PARITY)
     endforeach()
     add_custom_command(OUTPUT "${GARNET_XQA_GENERATED}/garnet-adaptation.json"
         BYPRODUCTS ${GARNET_XQA_GENERATED_FILES}
-        COMMAND "${Python3_EXECUTABLE}" "${GARNET_XQA_GENERATOR}" "${GARNET_XQA_UPSTREAM}" "${GARNET_XQA_GENERATED}"
+        COMMAND "${Python3_EXECUTABLE}" "${GARNET_XQA_GENERATOR}" "${GARNET_XQA_UPSTREAM}" "${GARNET_XQA_GENERATED}" --allow-empty-build-directory
         DEPENDS ${GARNET_XQA_DEPENDENCIES} VERBATIM)
     # Verification runs on every explicit native-test build. Existing damaged
     # evidence is rejected rather than silently regenerated or overwritten.

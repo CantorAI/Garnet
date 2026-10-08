@@ -19,7 +19,7 @@ def replace_once(text, old, new):
     return text.replace(old, new, 1)
 
 
-def generate(upstream, output):
+def generate(upstream, output, allow_empty_build_directory=False):
     upstream, output = Path(upstream), Path(output)
     sums = (upstream / 'SHA256SUMS').read_bytes()
     if hashlib.sha256(sums).hexdigest() != PINNED_SUMS:
@@ -33,9 +33,15 @@ def generate(upstream, output):
         if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             raise ValueError('Upstream XQA dependency changed: ' + name)
         records.append(name)
-    if output.exists():
-        raise FileExistsError(output)
-    output.mkdir(parents=True)
+    if output.is_symlink() or output.exists():
+        # Ninja precreates BYPRODUCT/OUTPUT parent directories. Only the
+        # explicit private-build path may adopt a real, completely empty one.
+        # Never repair or overwrite partial, corrupted or symlinked evidence.
+        if (not allow_empty_build_directory or output.is_symlink() or
+                not output.is_dir() or any(output.iterdir())):
+            raise FileExistsError(output)
+    else:
+        output.mkdir(parents=True)
     for name in records:
         shutil.copy2(upstream / name, output / name)
     prefix = '''// SPDX-License-Identifier: Apache-2.0
@@ -119,6 +125,11 @@ if __name__ == '__main__':
     parser.add_argument('output', type=Path)
     parser.add_argument('--verify-existing', action='store_true',
         help='Require exact reconstructed output bytes without modifying them')
+    parser.add_argument('--allow-empty-build-directory', action='store_true',
+        help='Private build only: accept a regular empty directory precreated by the build system')
     args = parser.parse_args()
-    action = verify_generated if args.verify_existing else generate
-    print(json.dumps(action(args.upstream, args.output), indent=2))
+    if args.verify_existing and args.allow_empty_build_directory:
+        parser.error('Verification cannot adopt or repair output directories')
+    result = (verify_generated(args.upstream, args.output) if args.verify_existing else
+        generate(args.upstream, args.output, args.allow_empty_build_directory))
+    print(json.dumps(result, indent=2))
