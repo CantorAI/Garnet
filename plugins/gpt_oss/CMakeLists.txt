@@ -10,6 +10,7 @@ find_package(CUDAToolkit REQUIRED)
 option(GARNET_GPT_OSS_BUILD_XQA_PARITY "Build private XQA native parity test; inference remains unchanged" OFF)
 option(GARNET_GPT_OSS_BUILD_XQA_BENCHMARK "Build private native XQA cost comparison; no inference selection" OFF)
 option(GARNET_GPT_OSS_BUILD_BF16_PAIR_MATH_PARITY "Build private BF16 vector arithmetic test; no peer/inference selection" OFF)
+option(GARNET_GPT_OSS_BUILD_BF16_COLLECTIVE_SCREEN "Build private actual-size NCCL BF16 control; no inference selection" OFF)
 if(GARNET_GPT_OSS_BUILD_BF16_PAIR_MATH_PARITY)
     add_executable(garnet_gpt_oss_bf16_pair_math_parity
         ../../test2026/gpt_oss/bf16_pair_math.cu cuda/tp_bf16.cu)
@@ -103,6 +104,21 @@ if(GARNET_GPT_OSS_ENABLE_NCCL)
         "/usr/lib/x86_64-linux-gnu")
     set_property(TARGET garnet_gpt_oss_ops APPEND PROPERTY INSTALL_RPATH
         "/usr/lib/x86_64-linux-gnu")
+endif()
+if(GARNET_GPT_OSS_BUILD_BF16_COLLECTIVE_SCREEN)
+    if(NOT GARNET_GPT_OSS_ENABLE_NCCL)
+        message(FATAL_ERROR "The private BF16 collective screen requires the real NCCL backend")
+    endif()
+    find_package(Threads REQUIRED)
+    add_executable(garnet_gpt_oss_bf16_collective_screen
+        ../../test2026/gpt_oss/bf16_collective_screen.cu cuda/tp_collective.cpp
+        cuda/tp_direct.cu cuda/tp_bf16.cu)
+    target_include_directories(garnet_gpt_oss_bf16_collective_screen PRIVATE include cuda
+        "${GARNET_NCCL_INCLUDE_DIR}")
+    target_link_libraries(garnet_gpt_oss_bf16_collective_screen PRIVATE CUDA::cudart
+        Threads::Threads "${GARNET_NCCL_LIBRARY}")
+    target_compile_definitions(garnet_gpt_oss_bf16_collective_screen PRIVATE
+        NOMINMAX GARNET_GPT_OSS_ENABLE_NCCL=1)
 endif()
 install(TARGETS garnet_gpt_oss_ops
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_gpt_oss_ops
