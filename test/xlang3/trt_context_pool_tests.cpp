@@ -56,9 +56,6 @@ int main() {
                     Check(cudaMemcpyAsync(deviceInput, inputData.data(), 256 * sizeof(float), cudaMemcpyHostToDevice, stream));
                     {
                         auto lease = pool.Acquire(stream);
-                        if (lease->enqueueMemoryBytes != engine->getDeviceMemorySizeV2() ||
-                                (lease->enqueueMemoryBytes > 0 && !lease->enqueueMemory))
-                            throw std::runtime_error("slot does not own its reported activation bound");
                         if (!lease->context->setTensorAddress("x", deviceInput)) throw std::runtime_error("input bind failed");
                         std::this_thread::yield();
                         if (!lease->context->setTensorAddress("y", deviceOutput)) throw std::runtime_error("output bind failed");

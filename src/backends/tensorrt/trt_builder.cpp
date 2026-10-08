@@ -166,6 +166,16 @@ namespace Garnet {
                 cudaGetDevice(&previous);
                 if (previous != device) cudaSetDevice(device);
                 contexts.reset();
+                // TensorRT owns engine allocations and may retire them on
+                // private streams. Slot events cover rank work, but unload
+                // must fence the entire device before those engine buffers
+                // disappear. This is a cold teardown boundary, never enqueue.
+                if (engine) {
+                    const auto status = cudaDeviceSynchronize();
+                    if (status != cudaSuccess)
+                        std::cerr << "[TRTBuilder] Engine retirement fence failed: "
+                            << cudaGetErrorString(status) << std::endl;
+                }
                 delete engine;
                 delete runtime;
                 if (previous >= 0 && previous != device) cudaSetDevice(previous);
