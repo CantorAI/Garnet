@@ -11,6 +11,10 @@ from pathlib import Path
 
 from transformers import AutoTokenizer
 
+if len(sys.argv)==3 and sys.argv[1]=='--preflight':
+    AutoTokenizer.from_pretrained(Path(sys.argv[2]), local_files_only=True)
+    print('Batch validator dependency/local-tokenizer preflight PASS',flush=True)
+    raise SystemExit(0)
 
 assert len(sys.argv) == 5, 'expected model, result, expected, output'
 model, result_path, expected_path, output_path = map(Path, sys.argv[1:])

@@ -8,6 +8,7 @@ import ctypes
 import os
 from pathlib import Path
 import sys
+import subprocess
 import garnet as G
 
 repo = Path(__file__).resolve().parents[2]
@@ -15,6 +16,7 @@ sys.path.insert(0, str(repo / 'tools/gpt_oss'))
 from pipeline import make_tensor_parallel_plan, build_tensor_parallel
 from garnet_pipeline import ResidentTensorParallel
 from kv_layout import kv_memory
+from resident_budget import file_sha256, native_identity, kernel_environment, hardware_identity
 
 weights, cache, output = map(Path, sys.argv[1:4])
 batch, chunk = map(int, sys.argv[4:6])
@@ -22,7 +24,15 @@ profile_flag = os.environ.get('GARNET_GPT_OSS_PROFILE_HYBRID_KV', '0')
 if profile_flag not in ('0','1'): raise ValueError('Invalid hybrid diagnostic profiler flag')
 profiler = ctypes.CDLL('libcudart.so') if profile_flag == '1' else None
 capturing = False
-if output.exists(): raise FileExistsError(output)
+partial_output = output.with_suffix('.partial.json')
+if output.exists() or partial_output.exists(): raise FileExistsError(output)
+root = Path(os.environ.get('CANTORAI_ROOT', repo.parent))
+build = Path(os.environ.get('GARNET_BUILD_DIR', root / 'out/build/gpt-oss'))
+provenance = dict(source_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=str(repo),text=True).strip(),
+    native_binaries=native_identity(build), kernel_environment=kernel_environment(),
+    hardware_csv=hardware_identity(), cache_root=str(cache.resolve()),
+    fixture_sha256={name:file_sha256(weights/name) for name in
+        ('model.safetensors','config.json','request.json','expected.json')})
 expected = json.loads((weights / 'expected.json').read_text())
 ids = json.loads((weights / 'request.json').read_text())['input_ids']
 if not (1 <= batch <= 512 and chunk in (4,8,16,32) and 32 < len(ids) <= 256):
@@ -58,6 +68,14 @@ def run(stages, values, positions, length, slot, prefill):
     finally: G.cuda_set_device(previous)
 
 records = []
+def result(passed, failure=None):
+    kv_bytes, table_bytes = kv_memory(plan)
+    return dict(measurement='Synthetic CPU-prefix KV diagnostic, not performance',
+        batch=batch,chunk=chunk,input_tokens=len(ids),padded_tail_tokens=(-len(ids))%chunk,
+        profiled_diagnostic=profiler is not None,
+        complete_generations=sum(r['step']==2 for r in records),plan=plan,
+        shared_kv_bytes=kv_bytes,shared_auxiliary_bytes=table_bytes,
+        passed=passed,failure=failure,steps=records,**provenance)
 try:
     for generation in range(2):
         for offset in range(0,len(ids),chunk):
@@ -72,26 +90,31 @@ try:
                 position = len(ids)+step-1
                 actual = run(pair.decode_stages,[expected['generated'][step-1]],
                     [position],position+1,position,False)
-            if len(actual) != batch*len(wanted): raise ValueError('Incomplete TP logits')
+            right_extent = len(actual) == batch*len(wanted)
             errors = [abs(a-b) for a,b in zip(actual,wanted*batch)]
-            if not all(error <= .025*(1+abs(b)) for error,b in zip(errors,wanted*batch)):
-                raise ValueError('Wrap/padded/phase output exceeds existing CPU-prefix bound')
+            within = right_extent and all(error <= .025*(1+abs(b)) for error,b in zip(errors,wanted*batch))
             records.append(dict(generation=generation,step=step,cpu_logits=wanted,
-                tp_logits=actual,maximum_absolute_error=max(errors),within_existing_tolerance=True))
+                tp_logits=actual,maximum_absolute_error=max(errors,default=0),within_existing_tolerance=within))
+            partial_output.write_text(json.dumps(result(False),indent=2))
+            if not within:
+                raise ValueError('Incomplete TP logits' if not right_extent else
+                    'Wrap/padded/phase output exceeds existing CPU-prefix bound')
             if capturing and step == 1:
                 if profiler.cudaProfilerStop() != 0: raise RuntimeError('Could not stop hybrid diagnostic capture')
                 capturing = False
+    if any(records[i]['tp_logits'] != records[i+3]['tp_logits'] for i in range(3)):
+        raise ValueError('Reused-request KV changes synthetic trajectories')
+except BaseException as failure:
+    partial_output.write_text(json.dumps(result(False, str(failure)),indent=2))
+    raise
 finally:
     try:
-        if capturing and profiler.cudaProfilerStop() != 0:
-            raise RuntimeError('Could not abort hybrid diagnostic capture')
-    finally: pair.release()
-if any(records[i]['tp_logits'] != records[i+3]['tp_logits'] for i in range(3)):
-    raise ValueError('Reused-request KV changes synthetic trajectories')
-kv_bytes,table_bytes = kv_memory(plan)
-output.write_text(json.dumps(dict(measurement='Synthetic CPU-prefix KV diagnostic, not performance',
-    batch=batch,chunk=chunk,input_tokens=len(ids),padded_tail_tokens=(-len(ids))%chunk,
-    profiled_diagnostic=profiler is not None,
-    complete_generations=2,plan=plan,shared_kv_bytes=kv_bytes,shared_auxiliary_bytes=table_bytes,
-    steps=records),indent=2))
+        try:
+            if capturing and profiler.cudaProfilerStop() != 0:
+                raise RuntimeError('Could not abort hybrid diagnostic capture')
+        finally: pair.release()
+    except BaseException as failure:
+        partial_output.write_text(json.dumps(result(False, 'Cleanup failed: '+str(failure)),indent=2))
+        raise
+output.write_text(json.dumps(result(True),indent=2))
 print('Synthetic repeated-request full-input/wrap/padded-tail/shared-bank CPU prefix PASS')

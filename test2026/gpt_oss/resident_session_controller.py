@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import runpy
+import subprocess
 import sys
 import tempfile
 from unittest.mock import patch
@@ -28,7 +29,7 @@ with tempfile.TemporaryDirectory() as temporary:
     profile.write_text(json.dumps(dict(resident_profile_schema=1, kernel_environment={},
         plan=dict(batch=2, capacity=64, max_tokens=2))))
 
-    def execute(label, mixed=False):
+    def execute(label, mixed=False, preflight_failure=False):
         directory = root / label
         events = []
         def run(command, **kwargs):
@@ -52,16 +53,25 @@ with tempfile.TemporaryDirectory() as temporary:
                         allocated_unique_backing_bytes=1, logical_full_history_bytes=1,
                         logical_retained_history_bytes=1)] * 2)))
             elif any(part.endswith('validate_batch_results.py') for part in parts):
+                if parts[2] == '--preflight':
+                    assert parts[0] == str(Path(sys.executable).absolute())
+                    assert parts[3] == str(model)
+                    assert not events, 'Validator preflight followed GPU/reference work'
+                    events.append('validation-preflight')
+                    if preflight_failure:
+                        raise subprocess.CalledProcessError(1, command)
+                    return
                 name = Path(parts[3]).name.split('.')[0]
                 events.append('validateV:' + name)
                 Path(parts[5]).write_text(json.dumps(dict(all_pass=True,
                     slots=[dict(trial=t, slot=s, **{'pass': True}) for t in range(3) for s in range(2)])))
             elif parts[0] == 'bash':
-                assert events == ['admission'] + [event for name in names for event in ('V:' + name, 'validateV:' + name)]
+                assert events == ['validation-preflight', 'admission'] + [event for name in names for event in ('V:' + name, 'validateV:' + name)]
                 assert kwargs['env']['GARNET_RESIDENT_SESSION'] == '1'
                 assert kwargs['env']['GARNET_RESIDENT_WARMUPS'] == '1'
                 events.append('G:session')
                 specification = json.loads(Path(parts[2]).read_text())
+                assert specification['validation_python'] == str(Path(sys.executable).absolute())
                 completed = []
                 for index, case in enumerate(specification['cases']):
                     ids = json.loads(Path(case['request']).read_text())['input_ids']
@@ -98,9 +108,15 @@ with tempfile.TemporaryDirectory() as temporary:
             try: runpy.run_path(str(repo / 'tools/gpt_oss/paired_batch_suite.py'), run_name='__main__')
             except ValueError as error:
                 assert mixed and 'must match' in str(error)
-            else: assert not mixed
+            except subprocess.CalledProcessError:
+                assert preflight_failure
+            else: assert not mixed and not preflight_failure
         if mixed:
             assert not events, 'Mixed input lengths started an admission/reference process'
+            return
+        if preflight_failure:
+            assert events == ['validation-preflight'], 'Failed validator started paid GPU work'
+            assert not (directory / 'manifest.json').exists()
             return
         assert events[-1] == 'G:session' and events.count('admission') == 1
         manifest = json.loads((directory / 'manifest.json').read_text())
@@ -115,5 +131,8 @@ with tempfile.TemporaryDirectory() as temporary:
                 assert case['admission_shared_with'] == names[0]
     execute('complete')
     execute('mixed', mixed=True)
+    # Restore the mixed request before testing dependency failure independently.
+    (work / 'prompt-benchmarks/code-tracing/request.json').write_text(json.dumps({'input_ids': [2] * 3}))
+    execute('failed-preflight', preflight_failure=True)
 
-print('Paired resident session: one admission, all optimized V validated first, one G process, shared startup only once; mixed shapes reject before subprocess PASS; CPU only')
+print('Paired resident session: preserved host Python, validator preflight before admission/V/G, early dependency failure, one admission, all V validated first, shared startup once and mixed-shape rejection PASS; CPU only')

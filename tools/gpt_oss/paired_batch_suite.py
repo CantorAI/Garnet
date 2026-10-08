@@ -180,7 +180,9 @@ if args.resident_session:
         raise ValueError('Resident session cannot mix context reservations')
     session_payload = dict(resident_session_schema=1, batch=batch, output=output,
         context=manifest['cases'][0]['context'], prefill_chunk=resident_profile['plan']['max_tokens'],
-        validation_python=str(Path(sys.executable).resolve()), tokenizer=str(model.resolve()),
+        # Keep the venv launcher path: resolving its symlink selects the base
+        # interpreter and discards the required validator site-packages.
+        validation_python=str(Path(sys.executable).absolute()), tokenizer=str(model.resolve()),
         cases=[dict(name=case['name'], request=case['request'], expected=case['expected'],
             result=str((directory / (case['name'] + '.garnet.json')).resolve()),
             validation=str((directory / (case['name'] + '.garnet.validation.json')).resolve()))
@@ -189,6 +191,10 @@ if args.resident_session:
     read_session(session_manifest_path, session_result_path, batch, output,
         session_payload['context'], session_payload['prefill_chunk'],
         protected_paths=[args.resident_profile, reference_path, manifest_path])
+    with (directory/'validation-preflight.log').open('x') as validation_log:
+        subprocess.run([session_payload['validation_python'],
+            str(repo/'tools/gpt_oss/validate_batch_results.py'), '--preflight', str(model)],
+            stdout=validation_log, stderr=subprocess.STDOUT, check=True)
     manifest['resident_session'] = dict(input=str(session_manifest_path.resolve()),
         input_sha256=hashlib.sha256(session_manifest_path.read_bytes()).hexdigest(),
         result=str(session_result_path.resolve()), scope='Serial identical-shape cases with shared cold preparation')

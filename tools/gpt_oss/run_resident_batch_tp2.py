@@ -41,6 +41,11 @@ if session_mode:
         raise ValueError('Session inference cannot be selected for admission-only mode')
     cases, session_metadata = read_session(request_path, session_result_path,
         batch, output_tokens, capacity, chunk, protected_paths=[profile_path])
+    # Fail on host-package/tokenizer problems before plan/checksum/engine load.
+    # The actual validator uses the caller's preserved venv path.
+    subprocess.run([session_metadata['validation_python'],
+        str(Path(__file__).resolve().parent/'validate_batch_results.py'),
+        '--preflight', session_metadata['tokenizer']], check=True)
     request = cases[0]['request']
 else:
     request = json.loads(request_path.read_text())

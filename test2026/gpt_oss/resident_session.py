@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory() as temporary:
                 result=str(directory / f'case{index}.json'), validation=str(directory / f'validation{index}.json')))
         manifest = directory / 'input.json'
         payload = dict(resident_session_schema=1, batch=2, output=16, context=64,
-            prefill_chunk=2, validation_python=str(Path(sys.executable).resolve()),
+            prefill_chunk=2, validation_python=str(Path(sys.executable).absolute()),
             tokenizer=str(tokenizer), cases=cases)
         manifest.write_text(json.dumps(payload))
         return manifest, directory / 'session.json', payload
@@ -82,6 +82,7 @@ with tempfile.TemporaryDirectory() as temporary:
             self.allocations = []; self.loads = []; self.releases = 0
             self.model_releases = []
             self.starts = []; self.steps = []; self.validation_calls = []
+            self.preflight_calls = 0
             self.prepared = {}; self.in_request = False
             self.kv = [[-999] * 64 for _ in range(2)]
             self.prefix = None; self.request_index = -1; self.failure = failure
@@ -180,6 +181,14 @@ with tempfile.TemporaryDirectory() as temporary:
 
         def validate(self, command, **kwargs):
             assert not self.in_request and kwargs['check'] is True
+            if command[2] == '--preflight':
+                assert command[0] == str(Path(sys.executable).absolute())
+                assert command[3] == str(tokenizer)
+                assert not self.loads and not self.allocations and not self.starts
+                self.preflight_calls += 1
+                if self.failure == 'preflight':
+                    raise subprocess.CalledProcessError(1, command)
+                return types.SimpleNamespace(returncode=0)
             self.clock += .7
             result, output = Path(command[3]), Path(command[5])
             data = json.loads(result.read_text())
@@ -243,6 +252,12 @@ with tempfile.TemporaryDirectory() as temporary:
                 assert failure
             else:
                 assert not failure
+        assert state.preflight_calls == (0 if single else 1)
+        if failure == 'preflight':
+            assert not state.loads and not state.allocations and not state.starts
+            assert state.releases == 0 and not state.model_releases and not state.validation_calls
+            assert not summary.exists() and not summary.with_suffix('.session.partial.json').exists()
+            return
         if failure == 'load-sample':
             assert state.loads == [True] and state.releases == 0 and state.model_releases == [True]
             partial = json.loads(summary.with_suffix('.session.partial.json').read_text())
@@ -307,6 +322,7 @@ with tempfile.TemporaryDirectory() as temporary:
     execute('failed-reporting', 'reporting')
     execute('failed-memory', 'memory')
     execute('failed-load-sample', 'load-sample')
+    execute('failed-preflight', 'preflight')
 
     # Fail closed before model construction for mixed shape/device/safety,
     # invalid IDs, aliased paths, and retained partial/decoded artifacts.
