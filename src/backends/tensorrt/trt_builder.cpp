@@ -384,9 +384,10 @@ namespace Garnet {
                         if(marlinPacked) {
                             if(metadata->dataType!="U8")return nullptr;
                             expertShardStorage.emplace_back();auto& packed=expertShardStorage.back();
-                            std::vector<int64_t> packedShape;
-                            if(!Garnet::PackGptOssMarlinWeight(data,metadata->dataSize,metadata->shape,
-                                    marlinPack,packed,packedShape,mappingError)) {
+                            std::vector<int64_t> packedShape;bool tiledCodes=false;
+                            if(!Garnet::GptOssMarlinFastHostPackingRequested(tiledCodes,mappingError)||
+                               !Garnet::PackGptOssMarlinWeight(data,metadata->dataSize,metadata->shape,
+                                    marlinPack,packed,packedShape,mappingError,tiledCodes)) {
                                 std::cout<<"[TRTBuilder] Marlin prepacked refit failed: "<<weightName
                                     <<" "<<mappingError<<std::endl;return nullptr;
                             }

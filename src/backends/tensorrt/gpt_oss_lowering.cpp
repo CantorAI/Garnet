@@ -20,9 +20,10 @@ ITensor* TRTBuilder::GetGptOssMarlinWeight(const std::string& source,int partiti
     auto& file=capturedWeightFiles[m->filePath.string()];
     if(!file){file=std::make_unique<SafeTensorsMappedFile>();if(!file->Open(m->filePath,loweringError))return nullptr;}
     booleanVectorWeights.emplace_back();auto& packed=booleanVectorWeights.back();
-    std::vector<int64_t> shape;
+    std::vector<int64_t> shape;bool tiledCodes=false;
+    if(!GptOssMarlinFastHostPackingRequested(tiledCodes,loweringError))return nullptr;
     if(!PackGptOssMarlinWeight(file->DataAt(m->dataOffset,m->dataSize),m->dataSize,
-        m->shape,spec,packed,shape,loweringError))return nullptr;
+        m->shape,spec,packed,shape,loweringError,tiledCodes))return nullptr;
     Dims dims{};dims.nbDims=int(shape.size());
     for(int i=0;i<dims.nbDims;++i)dims.d[i]=int(shape[i]);
     Weights weights{DataType::kINT8,packed.data(),int64_t(packed.size())};

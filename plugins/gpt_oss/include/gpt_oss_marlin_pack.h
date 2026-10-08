@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <string>
@@ -41,8 +42,9 @@ inline bool ParseGptOssMarlinPackName(const std::string& name,std::string& sourc
     }
     return false;
 }
-template<class F> inline void GptOssPackRanges(size_t count,F function) {
-    const unsigned workers=count>=size_t(1<<20)
+template<size_t OriginalUnits=1,class F> inline void GptOssPackRanges(size_t count,F function) {
+    static_assert(OriginalUnits==1||OriginalUnits==128,"unsupported host packing work unit");
+    const unsigned workers=count>=size_t(1<<20)/OriginalUnits
         ? std::min(16u,std::max(1u,std::thread::hardware_concurrency())) : 1u;
     if(workers==1){function(0,count);return;}
     std::vector<std::thread> threads;
@@ -59,9 +61,20 @@ template<class F> inline void GptOssPackRanges(size_t count,F function) {
     }
     for(auto& thread:threads)thread.join();
 }
+// CPU preparation choice only: identical v1 constants, names and CUDA layout.
+// Call once per construction/refit before dispatching CPU worker threads.
+inline bool GptOssMarlinFastHostPackingRequested(bool& tiledCodes,std::string& error) {
+    const char* flag=std::getenv("GARNET_GPT_OSS_MARLIN_FAST_HOST_PACK");
+    if(flag&&std::strcmp(flag,"0")!=0&&std::strcmp(flag,"1")!=0) {
+        error="GARNET_GPT_OSS_MARLIN_FAST_HOST_PACK must be0/1";return false;
+    }
+    tiledCodes=flag&&std::strcmp(flag,"1")==0;return true;
+}
+
 template<class Integer> inline bool PackGptOssMarlinWeight(const void* source,size_t bytes,
     const std::vector<Integer>& shape,const GptOssMarlinPackSpec& s,
-    std::vector<unsigned char>& output,std::vector<int64_t>& packedShape,std::string& error) {
+    std::vector<unsigned char>& output,std::vector<int64_t>& packedShape,std::string& error,
+    bool tiledCodes=false) {
     if(!source||!ValidGptOssMarlinPackSpec(s)||shape.size()!=size_t(s.scales?3:4)) {
         error="invalid GPT-OSS Marlin packing descriptor";return false;
     }
@@ -117,6 +130,39 @@ template<class Integer> inline bool PackGptOssMarlinWeight(const void* source,si
             }
         });
         if(invalid.load()){error="unsupported GPT-OSS Marlin UE8M0 scale";return false;}
+    } else if(tiledCodes) {
+        const size_t tilesPerExpert=perExpert/512;
+        const int nTiles=paddedN/64;
+        GptOssPackRanges<128>(output.size()/512,[&](size_t begin,size_t end) {
+            for(size_t tileIndex=begin;tileIndex<end;++tileIndex) {
+                const int e=int(tileIndex/tilesPerExpert),expert=s.partition==1?2*e+s.rank:e;
+                const size_t tile=tileIndex%tilesPerExpert;
+                const int tileN=int(tile%size_t(nTiles))*64;
+                const int tileK=int(tile/size_t(nTiles))*16;
+                const size_t rowStride=size_t(originalK)/2;
+                for(int lane=0;lane<32;++lane)for(int warp=0;warp<4;++warp) {
+                    const int n0=tileN+warp*16+lane/4,n1=n0+8;
+                    const int k0=tileK+(lane%4)*2;
+                    unsigned a=0,b=0,c=0,d=0;
+                    if(k0<localK) {
+                        if(n0<localN) {
+                            const size_t offset=(size_t(expert)*originalN+n0+nOffset)*rowStride+size_t(k0+kOffset)/2;
+                            a=raw[offset];if(k0+8<localK)b=raw[offset+4];
+                        }
+                        if(n1<localN) {
+                            const size_t offset=(size_t(expert)*originalN+n1+nOffset)*rowStride+size_t(k0+kOffset)/2;
+                            c=raw[offset];if(k0+8<localK)d=raw[offset+4];
+                        }
+                    }
+                    // k0/kOffset are even by validated32-code alignments.
+                    const uint32_t word=(a&15)|((b&15)<<4)|((c&15)<<8)|((d&15)<<12)|
+                        ((a>>4)<<16)|((b>>4)<<20)|((c>>4)<<24)|((d>>4)<<28);
+                    const size_t index=(tileIndex*128+size_t(lane)*4+warp)*4;
+                    for(int byte=0;byte<4;++byte)output[index+byte]=static_cast<unsigned char>(word>>(byte*8));
+                }
+            }
+        });
+
     } else {
         const size_t wordsPerExpert=perExpert/4;
         GptOssPackRanges(output.size()/4,[&](size_t begin,size_t end) {

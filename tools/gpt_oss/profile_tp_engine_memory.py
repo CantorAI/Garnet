@@ -101,6 +101,8 @@ parser.add_argument('--decode-router-tensorcore', type=int, choices=(0,1),
     help='explicit OPT49 BF16 tensor-core decode-router candidate; requires separate quality gates')
 parser.add_argument('--hybrid-kv', type=int, choices=(0,1),
     help='explicit OPT50 full-history/window-bank candidate; GPU quality must be proved separately')
+parser.add_argument('--fast-host-pack', type=int, choices=(0,1),
+    help='explicit OPT58 CPU packing candidate; target cold/refit verification remains required')
 parser.add_argument('--sync-allocator', type=int, choices=(0,1),
     help='explicit cached runtime allocator candidate; requires separate memory/quality gates')
 args = parser.parse_args()
@@ -142,7 +144,8 @@ overrides = {key: str(value) for key, value in (
     ('GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE', args.bf16_decode_allreduce),
     ('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', args.bounded_prefill),
     ('GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE', args.decode_router_tensorcore),
-    ('GARNET_GPT_OSS_HYBRID_KV', args.hybrid_kv)) if value is not None}
+    ('GARNET_GPT_OSS_HYBRID_KV', args.hybrid_kv),
+    ('GARNET_GPT_OSS_MARLIN_FAST_HOST_PACK', args.fast_host_pack)) if value is not None}
 if args.direct_max_batch is not None or args.direct_ctas is not None:
     if any(env.get(key) != '1' for key in ('GARNET_GPT_OSS_DIRECT_ALLREDUCE',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE', 'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE')):

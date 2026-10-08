@@ -7,7 +7,28 @@ static void require(bool ok){if(!ok)throw std::runtime_error("Marlin weight pack
 static uint32_t word(const std::vector<unsigned char>& packed,size_t index) {
     uint32_t value=0;for(int b=0;b<4;++b)value|=uint32_t(packed[index*4+b])<<(8*b);return value;
 }
+static void hostPolicy() {
+    constexpr const char* name="GARNET_GPT_OSS_MARLIN_FAST_HOST_PACK";
+    const char* previous=std::getenv(name);const bool present=previous!=nullptr;
+    const std::string saved=previous?previous:"";
+    auto set=[&](const char* value) {
+#ifdef _WIN32
+        require(_putenv_s(name,value?value:"")==0);
+#else
+        require((value?setenv(name,value,1):unsetenv(name))==0);
+#endif
+    };
+    bool tiled=true;std::string error;
+    set(nullptr);require(Garnet::GptOssMarlinFastHostPackingRequested(tiled,error)&&!tiled);
+    set("0");require(Garnet::GptOssMarlinFastHostPackingRequested(tiled,error)&&!tiled);
+    set("1");require(Garnet::GptOssMarlinFastHostPackingRequested(tiled,error)&&tiled);
+    for(const char* invalid:{"2","true","01","-1"}) {
+        set(invalid);require(!Garnet::GptOssMarlinFastHostPackingRequested(tiled,error)&&!error.empty());
+    }
+    set(present?saved.c_str():nullptr);
+}
 int main() {
+    hostPolicy();
     int cases=0;
     for(int hidden:{96,2880})for(int intermediate:{64,2880})for(int up:{0,1})for(int partition:{0,1,2,3}) {
         if((partition==2&&!up)||(partition==3&&up))continue;
@@ -20,6 +41,9 @@ int main() {
             for(size_t i=0;i<raw.size();++i)raw[i]=scales?(i*29+i/7)%248+2:(i*73+i/17+i/(K/2))%256;
             std::vector<unsigned char> packed;std::vector<int64_t> dims;std::string error;
             require(Garnet::PackGptOssMarlinWeight(raw.data(),raw.size(),shape,spec,packed,dims,error));
+            std::vector<unsigned char> tiled;std::vector<int64_t> tiledDims;
+            require(Garnet::PackGptOssMarlinWeight(raw.data(),raw.size(),shape,spec,tiled,tiledDims,error,true));
+            require(tiled==packed&&tiledDims==dims);
             const int localE=partition==1?(E+1-rank)/2:E;
             const int localN=partition==2?N/2:N,localK=partition==3?K/2:K;
             const int padN=(localN+(up?127:63))/(up?128:64)*(up?128:64);
@@ -58,6 +82,8 @@ int main() {
             std::vector<unsigned char> refit;std::vector<int64_t> refitShape;
             require(Garnet::PackGptOssMarlinWeight(raw.data(),raw.size(),shape,decoded,refit,refitShape,error));
             require(refit==packed&&refitShape==dims);
+            require(Garnet::PackGptOssMarlinWeight(raw.data(),raw.size(),shape,decoded,tiled,tiledDims,error,true));
+            require(tiled==refit&&tiledDims==refitShape);
             ++cases;
         }
     }
@@ -73,5 +99,14 @@ int main() {
     require(!Garnet::PackGptOssMarlinWeight(nullptr,source.size(),shape,spec,output,dims,error));
     require(!Garnet::ParseGptOssMarlinPackName(Garnet::GptOssMarlinPackName("",spec),name,decoded));
     spec.rank=0;require(!Garnet::PackGptOssMarlinWeight(source.data(),source.size(),shape,spec,output,dims,error));
-    std::cout<<cases<<" independent code/scale/padding/shard/refit packing cases passed; invalid inputs fail closed\n";
+    spec.rank=-1;
+    for(unsigned char bad:{0,1,250,255}) {
+        source[0]=bad;
+        require(!Garnet::PackGptOssMarlinWeight(source.data(),source.size(),shape,spec,output,dims,error,true));
+    }
+    source[0]=127;
+    require(!Garnet::PackGptOssMarlinWeight(source.data(),source.size()-1,shape,spec,output,dims,error,true));
+    require(!Garnet::PackGptOssMarlinWeight(nullptr,source.size(),shape,spec,output,dims,error,true));
+    spec.rank=0;require(!Garnet::PackGptOssMarlinWeight(source.data(),source.size(),shape,spec,output,dims,error,true));
+    std::cout<<cases<<" exact original/tiled cold/refit and independent code/scale/padding/shard packing cases passed; invalid inputs and host policy fail closed\n";
 }
