@@ -3,12 +3,16 @@
 #include "gpt_oss_xqa_layout.h"
 #include <algorithm>
 #include <array>
-#include <cassert>
+#include <stdexcept>
 #include <climits>
 #include <cstdint>
 #include <iostream>
 #include <random>
 #include <vector>
+
+static void require(bool condition) {
+    if (!condition) throw std::runtime_error("Independent XQA page/workspace contract violated");
+}
 
 int main() {
     using namespace Garnet;
@@ -49,15 +53,15 @@ int main() {
                     if (page < 0 || page >= physical) expected = 2;
                     ++visibleTokens;
                 }
-                assert(int(GptOssXqaClassifyRow(table.data(), logical, physical, end, active, window)) == expected);
+                require(int(GptOssXqaClassifyRow(table.data(), logical, physical, end, active, window)) == expected);
                 const uint32_t normalized = expected == 1 ? uint32_t(end) : 1U;
-                assert(normalized >= 1 && normalized <= uint32_t(capacity));
+                require(normalized >= 1 && normalized <= uint32_t(capacity));
                 for (int p = 0; p < logical; ++p) {
                     const bool safe = table[p] >= 0 && table[p] < physical;
-                    assert(GptOssXqaValidPage(table[p], physical) == safe);
+                    require(GptOssXqaValidPage(table[p], physical) == safe);
                     const int normalizedPage = GptOssXqaValidPage(table[p], physical) ? table[p] : 0;
-                    assert(normalizedPage >= 0 && normalizedPage < physical);
-                    if (safe) assert(normalizedPage == table[p]);
+                    require(normalizedPage >= 0 && normalizedPage < physical);
+                    if (safe) require(normalizedPage == table[p]);
                     ++allPages;
                 }
                 for (int position : positions) {
@@ -67,7 +71,7 @@ int main() {
                     // preserve the original NHD cache address exactly.
                     const auto originalAddress = std::size_t(original) * 16 + position % 16;
                     const auto normalizedAddress = std::size_t(GptOssXqaValidPage(original, physical) ? original : 0) * 16 + position % 16;
-                    assert(originalAddress == normalizedAddress);
+                    require(originalAddress == normalizedAddress);
                 }
                 ++rows;
             }
@@ -76,7 +80,7 @@ int main() {
     std::size_t layouts = 0;
     for (int batch = 1; batch <= 512; ++batch) for (int heads : {8, 32, 128})
     for (int logical : {1, 17, 256}) {
-        assert(GptOssXqaSupported(batch, 1, logical, heads, heads / 8, 64, 16, 17, 0));
+        require(GptOssXqaSupported(batch, 1, logical, heads, heads / 8, 64, 16, 17, 0));
         const GptOssXqaLayout layout(batch, heads, logical);
         const std::array<std::size_t, 5> offsets{layout.query, layout.output, layout.table, layout.lengths, layout.modes};
         const std::array<std::size_t, 5> counts{
@@ -86,25 +90,25 @@ int main() {
             std::size_t(batch) * sizeof(uint32_t), std::size_t(batch) * sizeof(int32_t)};
         std::size_t expectedBytes = 0;
         for (std::size_t i = 0; i < counts.size(); ++i) {
-            assert(offsets[i] % 256 == 0 && offsets[i] >= expectedBytes);
-            assert(offsets[i] + counts[i] <= layout.bytes);
+            require(offsets[i] % 256 == 0 && offsets[i] >= expectedBytes);
+            require(offsets[i] + counts[i] <= layout.bytes);
             expectedBytes += ((counts[i] + 255) / 256) * 256;
-            if (i + 1 < counts.size()) assert(offsets[i] + counts[i] <= offsets[i + 1]);
+            if (i + 1 < counts.size()) require(offsets[i] + counts[i] <= offsets[i + 1]);
         }
-        assert(layout.bytes == expectedBytes);
+        require(layout.bytes == expectedBytes);
         ++layouts;
     }
     for (int batch : {INT_MIN, -1, 0, 513, INT_MAX})
-        assert(!GptOssXqaSupported(batch, 1, 17, 32, 4, 64, 16, 0, 0) && !GptOssXqaLayout(batch, 32, 17).bytes);
+        require(!GptOssXqaSupported(batch, 1, 17, 32, 4, 64, 16, 0, 0) && !GptOssXqaLayout(batch, 32, 17).bytes);
     for (int logical : {INT_MIN, -1, 0, 257, INT_MAX})
-        assert(!GptOssXqaSupported(128, 1, logical, 32, 4, 64, 16, 0, 0) && !GptOssXqaLayout(128, 32, logical).bytes);
-    assert(!GptOssXqaSupported(128, 2, 17, 32, 4, 64, 16, 0, 0));
-    assert(!GptOssXqaSupported(128, 1, 17, 32, 4, 64, 16, 0, 1));
-    assert(!GptOssXqaSupported(128, 1, 17, 32, 4, 128, 16, 0, 0));
-    assert(!GptOssXqaSupported(128, 1, 17, 31, 4, 64, 16, 0, 0));
-    assert(!GptOssXqaSupported(128, 1, 17, 32, 4, 64, 16, -1, 0));
-    assert(GptOssXqaClassifyRow(nullptr, 17, 1, 0, 1, 0) == GptOssXqaRowMode::Zero);
-    assert(GptOssXqaClassifyRow(nullptr, 17, 1, 17, 0, 0) == GptOssXqaRowMode::Zero);
+        require(!GptOssXqaSupported(128, 1, logical, 32, 4, 64, 16, 0, 0) && !GptOssXqaLayout(128, 32, logical).bytes);
+    require(!GptOssXqaSupported(128, 2, 17, 32, 4, 64, 16, 0, 0));
+    require(!GptOssXqaSupported(128, 1, 17, 32, 4, 64, 16, 0, 1));
+    require(!GptOssXqaSupported(128, 1, 17, 32, 4, 128, 16, 0, 0));
+    require(!GptOssXqaSupported(128, 1, 17, 31, 4, 64, 16, 0, 0));
+    require(!GptOssXqaSupported(128, 1, 17, 32, 4, 64, 16, -1, 0));
+    require(GptOssXqaClassifyRow(nullptr, 17, 1, 0, 1, 0) == GptOssXqaRowMode::Zero);
+    require(GptOssXqaClassifyRow(nullptr, 17, 1, 17, 0, 0) == GptOssXqaRowMode::Zero);
     std::cout << "Independent XQA row/page oracle: " << rows << " rows, " << visibleTokens
               << " visible token checks, " << allPages << " sanitized entries; " << layouts
               << " layouts and negative shape guards passed. CPU only; no GPU proof.\n";
