@@ -13,6 +13,7 @@ from pathlib import Path
 import statistics
 import subprocess
 import sys
+from resident_runtime_scheduling import POLICY as runtime_switch_policy, parse_switch_us
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('profile', type=Path)
@@ -36,9 +37,13 @@ parser.add_argument('--final-prefill-sample-only', type=int, choices=(0,1), defa
                     help='sample only the true final prefill chunk; every engine/KV chunk still executes')
 parser.add_argument('--pattern-updates', type=int, choices=(0,1), default=0,
                     help='checked bounded integer row patterns enqueued by each rank worker')
+parser.add_argument('--runtime-switch-us', type=int, choices=(0,100,200,1000), default=0,
+                    help='explicit process-local scheduling interval experiment for serial resident requests')
 parser.add_argument('--vllm-only', action='store_true',
                     help='fresh reference phase only; no Garnet inference or paired success claim')
 args = parser.parse_args()
+if args.runtime_switch_us and (args.resident_profile is None or args.vllm_only):
+    raise ValueError('Runtime scheduling requires a resident Garnet comparison')
 host_candidates = dict(GARNET_RESIDENT_REUSE_OUTPUT=str(args.reuse_output),
     GARNET_RESIDENT_NATIVE_GREEDY_MERGE=str(args.native_greedy_merge),
     GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY=str(args.final_prefill_sample_only),
@@ -80,6 +85,9 @@ for key in list(env):
     if key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
+    if key == runtime_switch_policy:
+        parse_switch_us(value)
+        continue  # Select only the explicit CLI, never saved or inherited policy.
     if key in host_candidates:
         if value not in ('0','1'):
             raise ValueError('Invalid recorded resident host flag')
@@ -113,6 +121,7 @@ if args.resident_profile is not None:
     env['GARNET_RESIDENT_PROFILE'] = str(args.resident_profile.resolve())
     env['GARNET_RESIDENT_WARMUPS'] = '1'  # Existing V references have one complete warmup.
 env.update(host_candidates)
+env[runtime_switch_policy] = str(args.runtime_switch_us)
 tensorrt = Path(env.get('GARNET_TENSORRT_ROOT', root / 'ThirdPartySDK/TensorRT'))
 env.setdefault('XLANG3_PYTHON_LIB', str(root / 'ThirdPartySDK/Python-3.14.0/Lib'))
 env['PYTHONPATH'] = str(build / 'bin') + os.pathsep + env.get('PYTHONPATH', '')
@@ -124,6 +133,7 @@ if subprocess.check_output(['nvidia-smi', '--query-compute-apps=pid', '--format=
 directory.mkdir(parents=True)
 manifest = {'garnet_profile': str(reference_path.resolve()), 'vllm_version': version,
             'resident_host_candidates': host_candidates,
+            'resident_runtime_switch_us': args.runtime_switch_us,
             'batch': batch, 'output': output, 'cases': [], 'phase_order': ['admission', 'vllm', 'garnet'],
             'explicit_profile_overrides': {'batch': args.batch, 'output': args.output,
                 'prefill_chunk': args.prefill_chunk, 'context': args.context},

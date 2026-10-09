@@ -55,9 +55,9 @@ finally:
 # Exercise the actual runner function with a tiny no-GPU engine double. This
 # checks scheduling/true-length semantics, not numerical or timing performance.
 tree=ast.parse((repo/'tools/gpt_oss/run_resident_batch_tp2.py').read_text())
-defs=[node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name in ('optional_flag','run_request')]
-assert len(defs)==2
-namespace=dict(os=os,time=time,chunk=4,batch=3,output_tokens=4,prefill_inputs=[],decode_inputs=[],pattern_updates=False)
+defs=[node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name in ('optional_flag','run_request','run_request_body')]
+assert len(defs)==3
+namespace=dict(os=os,time=time,chunk=4,batch=3,output_tokens=4,prefill_inputs=[],decode_inputs=[],pattern_updates=False,runtime_switch_us=0)
 class Capture:
     def prefill_begin(self,*args):pass
     def prefill_end(self,*args):pass

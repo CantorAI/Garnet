@@ -52,6 +52,7 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_RESIDENT_NATIVE_GREEDY_MERGE': '1',
             'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY': '1',
             'GARNET_RESIDENT_PATTERN_UPDATES': '1',
+            'GARNET_RESIDENT_RUNTIME_SWITCH_US': '1000',
             'GARNET_BATCH_PREFILL_CHUNK': '16',
             'GARNET_GPT_OSS_MARLIN_PREPACKED': '1',
             'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM': '1',
@@ -95,6 +96,7 @@ with tempfile.TemporaryDirectory() as temporary:
                 'GARNET_RESIDENT_NATIVE_GREEDY_MERGE': '1',
                 'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY': '1',
                 'GARNET_RESIDENT_PATTERN_UPDATES': '1',
+                'GARNET_RESIDENT_RUNTIME_SWITCH_US': '1000',
                 'GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE': '1',
                 'GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE': '1',
                 'GARNET_GPT_OSS_HYBRID_KV': '1',
@@ -301,4 +303,23 @@ with tempfile.TemporaryDirectory() as temporary:
         gpu_command.assert_not_called()
     execute('paired_batch_suite.py',[reference,root/'nonresident','arithmetic'],{
         'GARNET_RESIDENT_PROFILE':None,'GARNET_RESIDENT_WARMUPS':None})
+    for value in (0,100,200,1000):
+        execute('paired_batch_suite.py',[reference,root/f'runtime-switch{value}','arithmetic',
+            '--resident-profile',fresh,'--runtime-switch-us',str(value)],
+            {'GARNET_RESIDENT_RUNTIME_SWITCH_US':str(value)})
+    execute('paired_batch_suite.py',[reference,root/'runtime-switch-default','arithmetic',
+        '--resident-profile',fresh],{'GARNET_RESIDENT_RUNTIME_SWITCH_US':'0'})
+    execute('profile_tp_engine_memory.py',[reference,root/'runtime-switch-profile'],
+        {'GARNET_RESIDENT_RUNTIME_SWITCH_US':None})
+    for extra in ([],['--resident-profile',str(fresh),'--vllm-only']):
+        with patch.object(sys,'argv',['paired_batch_suite.py',str(reference),
+                str(root/('invalid-runtime-switch'+str(len(extra)))),'arithmetic',
+                '--runtime-switch-us','200',*extra]),patch('subprocess.run') as gpu_command:
+            try:
+                runpy.run_path(str(repo/'tools/gpt_oss/paired_batch_suite.py'),run_name='__main__')
+            except ValueError as error:
+                assert str(error)=='Runtime scheduling requires a resident Garnet comparison'
+            else:
+                raise AssertionError('Nonresident/vLLM scheduling enablement must fail before subprocess')
+            gpu_command.assert_not_called()
 print('Saved/inherited admission excluded; explicit fresh profile and candidate overrides reach only the intended subprocess PASS')

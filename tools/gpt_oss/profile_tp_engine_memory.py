@@ -135,6 +135,10 @@ for key in list(env):
     if key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
+    if key == 'GARNET_RESIDENT_RUNTIME_SWITCH_US':
+        from resident_runtime_scheduling import parse_switch_us
+        parse_switch_us(value)
+        continue  # Host scheduling is not part of engine construction/admission.
     if key in ('GARNET_RESIDENT_REUSE_OUTPUT', 'GARNET_RESIDENT_NATIVE_GREEDY_MERGE',
                'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY', 'GARNET_RESIDENT_PATTERN_UPDATES'):
         if value not in ('0','1'):

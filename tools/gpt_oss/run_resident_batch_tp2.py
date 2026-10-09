@@ -19,6 +19,7 @@ from garnet_pipeline import ResidentTensorParallel
 from kv_layout import kv_memory, logical_retained_kv_bytes
 from resident_capture import ResidentCapture
 from resident_session import read_session, session_partial
+from resident_runtime_scheduling import POLICY as runtime_switch_policy, parse_switch_us, RuntimeSwitchScope
 from resident_budget import (admit_resident, native_identity, hardware_identity,
     kernel_environment, checkpoint_identity, validate_engine_files, file_sha256)
 
@@ -36,6 +37,7 @@ reuse_output = optional_flag('GARNET_RESIDENT_REUSE_OUTPUT')
 native_candidate_merge = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_MERGE')
 final_prefill_sample_only = optional_flag('GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY')
 pattern_updates = optional_flag('GARNET_RESIDENT_PATTERN_UPDATES')
+runtime_switch_us = parse_switch_us(os.environ.get(runtime_switch_policy, '0'))
 
 session_mode = len(sys.argv) > 1 and sys.argv[1] == '--session'
 arguments = sys.argv[2:] if session_mode else sys.argv[1:]
@@ -215,6 +217,25 @@ prefill_inputs = decode_inputs = None
 
 def run_request(trial, ids):
     start = time.perf_counter()
+    if not runtime_switch_us:
+        result = run_request_body(trial, ids, start)
+        result['runtime_scheduling'] = dict(requested_microseconds=0,
+            default_seconds=None, effective_seconds=None, restored_seconds=None, applied=False)
+        return result
+    with RuntimeSwitchScope(runtime_switch_us) as scheduling:
+        result = run_request_body(trial, ids, start)
+    # The full window includes interval set/verification/restoration as well
+    # as preparation, sampling and output assembly. Decode retains its own
+    # first-token-to-last-token window and is not the acceptance metric.
+    wall = time.perf_counter() - start
+    result.update(runtime_scheduling=dict(scheduling.metadata),
+        full_request_wall_seconds=wall,
+        full_request_output_tokens_per_second=batch * output_tokens / wall,
+        request_completion_seconds=[wall] * batch)
+    return result
+
+
+def run_request_body(trial, ids, start):
     prefill_steps = []
     reply = None
     for chunk_index, offset in enumerate(range(0, len(ids), chunk)):
