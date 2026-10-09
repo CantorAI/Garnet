@@ -103,6 +103,8 @@ parser.add_argument('--decode-router-tensorcore', type=int, choices=(0,1),
     help='explicit OPT49 BF16 tensor-core decode-router candidate; requires separate quality gates')
 parser.add_argument('--tensor-router-warps', type=int, choices=(2,4),
     help='explicit exact-arithmetic tensor-core router geometry candidate; requires separate quality gates')
+parser.add_argument('--prefill-gqa-query-tile', type=int, choices=(2,4),
+    help='explicit shared-query GQA attention tile; requires recorded tiled head64 prefill')
 parser.add_argument('--hybrid-kv', type=int, choices=(0,1),
     help='explicit OPT50 full-history/window-bank candidate; GPU quality must be proved separately')
 parser.add_argument('--fast-host-pack', type=int, choices=(0,1),
@@ -158,6 +160,7 @@ overrides = {key: str(value) for key, value in (
     ('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', args.bounded_prefill),
     ('GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE', args.decode_router_tensorcore),
     ('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS', args.tensor_router_warps),
+    ('GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE', args.prefill_gqa_query_tile),
     ('GARNET_GPT_OSS_HYBRID_KV', args.hybrid_kv),
     ('GARNET_GPT_OSS_MARLIN_FAST_HOST_PACK', args.fast_host_pack),
     ('GARNET_GPT_OSS_BF16_PEER_GROUP', args.bf16_peer_group)) if value is not None}
@@ -173,6 +176,10 @@ if args.prefill_down_ctas is not None:
 env.update(overrides)
 if env.get('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS','4') not in ('2','4'):
     raise ValueError('Invalid tensor-core router warp policy')
+if env.get('GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE') not in (None,'2','4'):
+    raise ValueError('Invalid shared-query GQA prefill tile')
+if args.prefill_gqa_query_tile is not None and env.get('GARNET_GPT_OSS_PREFILL_TILED_64') != '1':
+    raise ValueError('GQA query tile override requires recorded tiled head64 prefill')
 env['GARNET_TRT_SYNC_ALLOCATOR'] = str(args.sync_allocator) if args.sync_allocator is not None else env.get('GARNET_TRT_SYNC_ALLOCATOR', '0')
 if specification is not None:
     env['GARNET_BATCH_PREFILL_CHUNK'] = str(specification['prefill_chunk_tokens'])

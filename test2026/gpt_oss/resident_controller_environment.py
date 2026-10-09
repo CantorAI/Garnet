@@ -51,6 +51,8 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_GPT_OSS_MARLIN_PREPACKED': '1',
             'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM': '1',
             'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS': '4',
+            'GARNET_GPT_OSS_PREFILL_TILED_64': '1',
+            'GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE': '2',
             'GARNET_GPT_OSS_DIRECT_ALLREDUCE': '1',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE': '1',
             'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE': '1'})))
@@ -128,6 +130,39 @@ with tempfile.TemporaryDirectory() as temporary:
         execute('profile_tp_engine_memory.py',[
             reference,root/f'router-warps{value}','--tensor-router-warps',str(value)],{
                 'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS':str(value)})
+    for value in (2,4):
+        execute('profile_tp_engine_memory.py',[
+            reference,root/f'prefill-gqa-tile{value}','--prefill-gqa-query-tile',str(value)],{
+                'GARNET_GPT_OSS_PREFILL_TILED_64':'1',
+                'GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE':str(value)})
+    with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),
+            str(root/'invalid-gqa-prefill-tile'),'--prefill-gqa-query-tile','4']), \
+            patch('subprocess.run') as gpu_command, patch('subprocess.check_output') as gpu_observation:
+        unpadded=json.loads(reference.read_text())
+        unpadded['optimization_environment']['GARNET_GPT_OSS_PREFILL_TILED_64']='0'
+        reference.write_text(json.dumps(unpadded))
+        try:
+            runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+        except ValueError as error:
+            assert str(error)=='GQA query tile override requires recorded tiled head64 prefill'
+        else:
+            raise AssertionError('GQA query override without tiled prefill must fail before GPU subprocess')
+        gpu_command.assert_not_called();gpu_observation.assert_not_called()
+        reference.write_bytes(saved_reference)
+    with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),
+            str(root/'invalid-saved-gqa-prefill-tile')]), \
+            patch('subprocess.run') as gpu_command, patch('subprocess.check_output') as gpu_observation:
+        malformed=json.loads(reference.read_text())
+        malformed['optimization_environment']['GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE']='3'
+        reference.write_text(json.dumps(malformed))
+        try:
+            runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+        except ValueError as error:
+            assert str(error)=='Invalid shared-query GQA prefill tile'
+        else:
+            raise AssertionError('Malformed saved GQA query tile must fail before GPU subprocess')
+        gpu_command.assert_not_called();gpu_observation.assert_not_called()
+        reference.write_bytes(saved_reference)
     with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),str(root/'invalid-router-warps'),
             '--tensor-router-warps','1']), patch('subprocess.run') as gpu_command:
         try:
