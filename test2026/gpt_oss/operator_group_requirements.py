@@ -17,6 +17,13 @@ pattern_flag = os.environ.get('GARNET_RESIDENT_PATTERN_UPDATES', '0')
 if pattern_flag not in ('0', '1'):
     raise ValueError('GARNET_RESIDENT_PATTERN_UPDATES must be 0 or 1')
 pattern_updates = pattern_flag == '1'
+group_flag = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP', '1')
+if group_flag != '1':
+    raise ValueError('Operator-group lifecycle gate requires GARNET_GPT_OSS_BF16_PEER_GROUP=1')
+group_ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
+if group_ctas_text not in ('64', '128'):
+    raise ValueError('Peer-group CTA policy must be 64 or 128')
+group_ctas = int(group_ctas_text)
 folder = Path(sys.argv[1]).resolve()
 folder.mkdir(exist_ok=False, parents=True)
 repo = Path(__file__).resolve().parents[2]
@@ -100,7 +107,7 @@ try:
     control = foreign.forward(dict(inputs=[tensors[0][0]])); assert control['status'] == 'ok', control
     control_actual = G.tensor_to_cpu(control['output']).tolist()
     assert control_actual == [float(i % 7) for i in range(2 * hidden)]
-    group = extension.peer_group(json.dumps(dict(ctas=64, phase_elements=[s * hidden for s in tokens])))
+    group = extension.peer_group(json.dumps(dict(ctas=group_ctas, phase_elements=[s * hidden for s in tokens])))
     rejected(foreign, tensors[0][0])
     for reload in range(2):
         if reload:
@@ -155,10 +162,10 @@ try:
     assert extension.peer_group_release(group)
     group = None
     # The script release and all cached engine leases have actually retired.
-    group = extension.peer_group(json.dumps(dict(ctas=64, phase_elements=[s * hidden for s in tokens])))
+    group = extension.peer_group(json.dumps(dict(ctas=group_ctas, phase_elements=[s * hidden for s in tokens])))
     assert extension.peer_group_release(group); group = None
     (folder / 'result.json').write_text(json.dumps(dict(protocol='operator-requirements-lifecycle-v1',
-        pattern_updates=pattern_updates,
+        pattern_updates=pattern_updates, group_ctas=group_ctas,
         statuses=statuses, matrices=records, negative_foreign=1, negative_released=2,
         default_control_actual=control_actual, released_responses=released_responses,
         default_control_exact=True, passed=True), indent=2))

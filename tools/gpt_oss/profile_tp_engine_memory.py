@@ -110,6 +110,8 @@ parser.add_argument('--hybrid-kv', type=int, choices=(0,1),
 parser.add_argument('--fast-host-pack', type=int, choices=(0,1),
     help='explicit OPT58 CPU packing candidate; target cold/refit verification remains required')
 parser.add_argument('--bf16-peer-group', type=int, choices=(0,1), help='explicit owned native resource candidate; requires full correctness gates')
+parser.add_argument('--bf16-peer-group-ctas', type=int, choices=(64,128),
+    help='explicit owned BF16 peer-reduction grid candidate; requires peer group and fresh correctness/profile gates')
 parser.add_argument('--sync-allocator', type=int, choices=(0,1),
     help='explicit cached runtime allocator candidate; requires separate memory/quality gates')
 args = parser.parse_args()
@@ -164,6 +166,10 @@ overrides = {key: str(value) for key, value in (
     ('GARNET_GPT_OSS_HYBRID_KV', args.hybrid_kv),
     ('GARNET_GPT_OSS_MARLIN_FAST_HOST_PACK', args.fast_host_pack),
     ('GARNET_GPT_OSS_BF16_PEER_GROUP', args.bf16_peer_group)) if value is not None}
+if args.bf16_peer_group_ctas is not None:
+    if env.get('GARNET_GPT_OSS_BF16_PEER_GROUP') != '1':
+        raise ValueError('Peer-group CTA override requires the recorded owned peer group')
+    overrides['GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS'] = str(args.bf16_peer_group_ctas)
 if args.direct_max_batch is not None or args.direct_ctas is not None:
     if any(env.get(key) != '1' for key in ('GARNET_GPT_OSS_DIRECT_ALLREDUCE',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE', 'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE')):
@@ -180,6 +186,10 @@ if env.get('GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE') not in (None,'2','4'):
     raise ValueError('Invalid shared-query GQA prefill tile')
 if args.prefill_gqa_query_tile is not None and env.get('GARNET_GPT_OSS_PREFILL_TILED_64') != '1':
     raise ValueError('GQA query tile override requires recorded tiled head64 prefill')
+if env.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS','64') not in ('64','128'):
+    raise ValueError('Invalid owned peer-group CTA policy')
+if env.get('GARNET_GPT_OSS_BF16_PEER_GROUP','0') != '1' and env.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS','64') != '64':
+    raise ValueError('Peer-group CTA policy requires the owned peer group')
 env['GARNET_TRT_SYNC_ALLOCATOR'] = str(args.sync_allocator) if args.sync_allocator is not None else env.get('GARNET_TRT_SYNC_ALLOCATOR', '0')
 if specification is not None:
     env['GARNET_BATCH_PREFILL_CHUNK'] = str(specification['prefill_chunk_tokens'])

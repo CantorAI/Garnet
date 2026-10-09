@@ -19,14 +19,21 @@ folder = Path(sys.argv[1]).resolve()
 if folder.exists():
     raise FileExistsError(folder)
 folder.mkdir(parents=True)
-group_mode = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP', '0') == '1'
+group_flag = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP', '0')
+if group_flag not in ('0', '1'):
+    raise ValueError('GARNET_GPT_OSS_BF16_PEER_GROUP must be 0 or 1')
+group_mode = group_flag == '1'
+group_ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
+if group_ctas_text not in ('64', '128') or (not group_mode and group_ctas_text != '64'):
+    raise ValueError('Peer-group CTA policy must be 64/128 and enabled')
+group_ctas = int(group_ctas_text)
 G.bind_operator_module(extension)
 repo = Path(__file__).resolve().parents[2]
 template = (repo / 'xModel/gpt_oss/120b/tp_all_reduce_test.py').read_text()
 batch, hidden = 512, 2880
 tokens = [8, 1]
 elements = [batch * t * hidden for t in tokens]
-options = json.dumps(dict(ctas=64, phase_elements=elements))
+options = json.dumps(dict(ctas=group_ctas, phase_elements=elements))
 models = []
 prepared = []
 records = []
@@ -140,6 +147,8 @@ try:
     initialize()
     if group_mode:
         for invalid in [dict(ctas=64.0, phase_elements=elements),
+                dict(ctas=2**80, phase_elements=elements),
+                dict(ctas=32, phase_elements=elements),
                 dict(ctas=64, phase_elements=[0, elements[1]]),
                 dict(ctas=64, phase_elements=[elements[0] + 8, elements[1]]),
                 dict(ctas=64, phase_elements=[elements[0], 7]),
@@ -213,7 +222,7 @@ try:
         group = None
         gc.collect()
     (folder / 'result.json').write_text(json.dumps(dict(protocol='compiled-bf16-peer-group-v1',
-        group_mode=group_mode, batch=batch, tokens=tokens, hidden=hidden,
+        group_mode=group_mode, group_ctas=group_ctas if group_mode else None, batch=batch, tokens=tokens, hidden=hidden,
         matrices=records, all_complete=True,
         compiled_statuses=statuses,
         scope='Compiled transport and retained graph ownership only; no full pretrained/refit/serving qualification'), indent=2))

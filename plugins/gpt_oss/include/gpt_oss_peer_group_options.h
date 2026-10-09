@@ -5,7 +5,7 @@
 #include <string>
 namespace Garnet {
 bool ParseGptOssPeerGroupOptions(const char*, size_t, size_t,
-    std::array<size_t,2>&, size_t&);
+    std::array<size_t,2>&, size_t&, int&);
 std::string GptOssPeerGroupDescription(const std::array<size_t,2>&,
-    size_t capacity, size_t ownedBytes, size_t mappedBytes);
+    size_t capacity, int ctas, size_t ownedBytes, size_t mappedBytes);
 }

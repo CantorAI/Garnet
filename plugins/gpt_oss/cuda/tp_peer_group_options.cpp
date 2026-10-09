@@ -6,12 +6,15 @@
 #include <cstdint>
 namespace Garnet {
 bool ParseGptOssPeerGroupOptions(const char* options,size_t bytes,size_t maximum,
-        std::array<size_t,2>& counts,size_t& capacity){
+        std::array<size_t,2>& counts,size_t& capacity,int& ctas){
     try{
         const auto v=nlohmann::json::parse(options,options+bytes);
         if(!v.is_object() || v.size()!=2 || !v.contains("phase_elements") || !v.contains("ctas") ||
-           !v.at("ctas").is_number_integer() || v.at("ctas")!=64 ||
+           !v.at("ctas").is_number_integer() ||
            !v.at("phase_elements").is_array() || v.at("phase_elements").size()!=2)return false;
+        const auto requestedCtas=v.at("ctas").get<int64_t>();
+        if(requestedCtas!=64 && requestedCtas!=128)return false;
+        ctas=static_cast<int>(requestedCtas);
         for(int phase=0;phase<2;++phase){
             const auto& n=v.at("phase_elements").at(phase);
             if(!n.is_number_integer() || n.get<int64_t>()<=0 ||
@@ -22,9 +25,9 @@ bool ParseGptOssPeerGroupOptions(const char* options,size_t bytes,size_t maximum
     }catch(...){return false;}
 }
 std::string GptOssPeerGroupDescription(const std::array<size_t,2>& counts,
-        size_t capacity,size_t ownedBytes,size_t mappedBytes){
-    return nlohmann::json({{"schema",1},{"id","gpt_oss"},{"backend","tensorrt"},
-        {"protocol","owned-mapped-bf16-peer-v1"},{"ctas",64},{"phase_elements",counts},
+        size_t capacity,int ctas,size_t ownedBytes,size_t mappedBytes){
+    return nlohmann::json({{"schema",2},{"id","gpt_oss"},{"backend","tensorrt"},
+        {"protocol","owned-mapped-bf16-peer-v2"},{"ctas",ctas},{"phase_elements",counts},
         {"capacity_elements",capacity},{"owned_bytes_per_rank",ownedBytes},
         {"mapped_host_bytes",mappedBytes},{"concurrency","serial paired phases, one invocation per rank"}}).dump();
 }

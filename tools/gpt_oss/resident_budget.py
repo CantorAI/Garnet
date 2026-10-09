@@ -44,6 +44,9 @@ def kernel_environment():
     # the measured profile/cache identity. Otherwise an unset environment and
     # an explicit four-warp policy would produce indistinguishable profiles.
     environment.setdefault('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS', '4')
+    # Peer-group geometry is part of owned signal/sequence storage and runtime
+    # grid identity; preserve the legacy64-CTA behavior when absent.
+    environment.setdefault('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
     return environment
 
 
@@ -51,6 +54,7 @@ def normalize_kernel_environment(environment):
     """Interpret only the pre-OPT79 missing router key as legacy default4."""
     normalized = dict(environment)
     normalized.setdefault('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS', '4')
+    normalized.setdefault('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
     return normalized
 
 

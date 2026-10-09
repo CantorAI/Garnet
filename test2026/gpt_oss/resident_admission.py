@@ -40,6 +40,7 @@ with patch.dict(os.environ, {'GARNET_GPT_OSS_BF16_PEER_GROUP':'1'}):
     storage = peer_group_layout(256,16,2880)
 assert storage['owned_bytes_per_rank'] == 23_601_408
 assert storage['mapped_host_bytes'] == 32_768
+assert storage['ctas'] == 64 and storage['schema'] == 2
 group_plan = copy.deepcopy(plan)
 group_plan['config']['hidden_size'] = 2880
 group_plan['operator_execution_layout'] = storage
@@ -53,11 +54,43 @@ try:
     admit_resident(group_profile,group_plan,[dict(d,free_bytes=expected+extra-1) for d in devices],**identity)
 except ValueError: pass
 else: raise AssertionError('External arena silently borrowed runtime reserve')
+with patch.dict(os.environ, {'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
+                             'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS':'128'}):
+    storage128 = peer_group_layout(256,16,2880)
+assert storage128['ctas'] == 128
+assert storage128['owned_bytes_per_rank'] == 23_609_856
+assert storage128['mapped_host_bytes'] == 65_536
+group_plan128 = copy.deepcopy(plan)
+group_plan128['config']['hidden_size'] = 2880
+group_plan128['operator_execution_layout'] = storage128
+group_profile128 = copy.deepcopy(profile)
+group_profile128['plan_identity'] = plan_identity(group_plan128)
+extra128 = 23_609_856 + 65_536
+group_result128 = admit_resident(group_profile128, group_plan128, devices, **identity)
+assert all(row['required_bytes'] == expected + extra128 and
+           row['operator_execution_storage_bytes'] == extra128 and
+           row['runtime_graph_reserve_bytes'] == 2 << 30 for row in group_result128['ranks'])
+try:
+    admit_resident(group_profile128, group_plan128,
+        [dict(d, free_bytes=expected+extra128-1) for d in devices], **identity)
+except ValueError: pass
+else: raise AssertionError('CTA128 arena silently borrowed runtime reserve')
 for key in ('owned_bytes_per_rank','mapped_host_bytes','phase_elements','protocol'):
     damaged=copy.deepcopy(group_plan);damaged['operator_execution_layout'][key]=None
     try: plan_identity(damaged)
     except ValueError: pass
     else: raise AssertionError('Malformed peer resource profile accepted')
+for value in ('1','64x','', ' 128', '256'):
+    with patch.dict(os.environ, {'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
+                                 'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS':value}):
+        try: peer_group_layout(256,16,2880)
+        except ValueError: pass
+        else: raise AssertionError('Malformed peer CTA policy accepted')
+with patch.dict(os.environ, {'GARNET_GPT_OSS_BF16_PEER_GROUP':'0',
+                             'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS':'128'}):
+    try: peer_group_layout(256,16,2880)
+    except ValueError: pass
+    else: raise AssertionError('Non-default peer CTA policy accepted while disabled')
 
 def rejected(candidate=profile, placement=plan, hardware=devices, **changes):
     try:

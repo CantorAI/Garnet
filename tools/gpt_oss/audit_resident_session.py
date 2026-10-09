@@ -14,14 +14,18 @@ import subprocess
 
 ENGINE_SOURCE_PATHS=('src','python','xModel','tools/gpt_oss/pipeline.py',
     'tools/gpt_oss/kv_layout.py','tools/gpt_oss/engine_profile_shape.py',
-    'tools/gpt_oss/resident_budget.py','tools/gpt_oss/profile_tp_engine_memory.py')
+    'tools/gpt_oss/resident_budget.py','tools/gpt_oss/peer_group_layout.py',
+    'tools/gpt_oss/profile_tp_engine_memory.py','plugins/gpt_oss/include/gpt_oss_peer_group_options.h',
+    'plugins/gpt_oss/cuda/tp_peer_group_options.cpp','plugins/gpt_oss/cuda/tp_peer_group.cu',
+    'plugins/gpt_oss/cuda/tp_peer_owner.cuh')
 ROUTER_WARP_POLICY='GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS'
 
 
 def normalize_kernel_environment(environment):
-    """Map only a pre-OPT79 absent warp setting to the legacy geometry4."""
+    """Map only absent recorded router/peer geometry to its legacy default."""
     normalized=dict(environment)
     normalized.setdefault(ROUTER_WARP_POLICY,'4')
+    normalized.setdefault('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS','64')
     return normalized
 
 

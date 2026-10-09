@@ -17,15 +17,18 @@ from audit_resident_session import (kernel_environment as audit_kernel_environme
     normalize_kernel_environment as normalize_audit_environment)
 
 router_policy = 'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS'
-assert normalize_kernel_environment({}) == {router_policy:'4'}
-assert normalize_kernel_environment({router_policy:'4'}) == {router_policy:'4'}
+peer_cta_policy = 'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS'
+defaults = {router_policy:'4', peer_cta_policy:'64'}
+assert normalize_kernel_environment({}) == defaults
+assert normalize_kernel_environment({router_policy:'4'}) == defaults
 assert normalize_kernel_environment({}) != normalize_kernel_environment({router_policy:'2'})
-assert normalize_kernel_environment({router_policy:'1'}) == {router_policy:'1'}
-assert normalize_audit_environment({}) == {router_policy:'4'}
+assert normalize_kernel_environment({router_policy:'1'}) == {router_policy:'1', peer_cta_policy:'64'}
+assert normalize_audit_environment({}) == defaults
 assert audit_kernel_environment({'optimization_environment':{'GARNET_TRT_SYNC_ALLOCATOR':'0'}}) == {
-    'GARNET_TRT_SYNC_ALLOCATOR':'0',router_policy:'4'}
+    'GARNET_TRT_SYNC_ALLOCATOR':'0',**defaults}
 assert normalize_audit_environment({}) != normalize_audit_environment({router_policy:'2'})
-assert normalize_audit_environment({router_policy:'malformed'}) == {router_policy:'malformed'}
+assert normalize_audit_environment({router_policy:'malformed'}) == {
+    router_policy:'malformed', peer_cta_policy:'64'}
 
 class ObservedCommand(Exception):
     pass
@@ -55,7 +58,9 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE': '2',
             'GARNET_GPT_OSS_DIRECT_ALLREDUCE': '1',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE': '1',
-            'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE': '1'})))
+            'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE': '1',
+            'GARNET_GPT_OSS_BF16_PEER_GROUP': '1',
+            peer_cta_policy: '64'})))
     fresh = root / 'new-admission.json'
     fresh.write_text(json.dumps(dict(resident_profile_schema=1,
         kernel_environment={'GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK':'64'},
@@ -117,6 +122,21 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM':'1',
             'GARNET_GPT_OSS_DIRECT_MAX_BATCH':'256',
             'GARNET_GPT_OSS_DIRECT_BATCH_CTAS':'16'})
+    execute('profile_tp_engine_memory.py',[reference,root/'peer-group-cta128',
+        '--bf16-peer-group-ctas','128'],{
+            'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
+            peer_cta_policy:'128'})
+    with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),
+            str(root/'invalid-peer-group-cta-without-group'),
+            '--bf16-peer-group','0','--bf16-peer-group-ctas','128']), \
+            patch('subprocess.run') as gpu_command, patch('subprocess.check_output') as gpu_observation:
+        try:
+            runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+        except ValueError as error:
+            assert str(error)=='Peer-group CTA policy requires the owned peer group'
+        else:
+            raise AssertionError('CTA128 without peer-group owner must fail before GPU subprocess')
+        gpu_command.assert_not_called();gpu_observation.assert_not_called()
     execute('profile_tp_engine_memory.py',[reference,root/'default-router-warps'],{
         'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS':'4'})
     saved_reference=reference.read_bytes()
