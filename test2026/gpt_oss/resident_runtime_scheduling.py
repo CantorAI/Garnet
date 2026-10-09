@@ -85,6 +85,7 @@ namespace=dict(time=Timer(),runtime_switch_us=200,RuntimeSwitchScope=RuntimeSwit
 exec(compile(ast.Module(body=[node],type_ignores=[]),'actual-scheduling-wrapper','exec'),namespace)
 result=namespace['run_request'](0,[1])
 assert result['full_request_wall_seconds']==1. and result['full_request_output_tokens_per_second']==2.
+assert result['runtime_scheduling_finish_seconds']==.5
 assert result['request_completion_seconds']==[1.,1.] and result['request_first_token_seconds']==[.1,.1]
 assert result['runtime_scheduling']['restored_seconds']==original and result['runtime_scheduling']['applied']
 def failing(trial,ids,start):raise ValueError('request-failure')
@@ -96,4 +97,30 @@ try:namespace['run_request'](0,[1])
 except ValueError:pass
 else:raise AssertionError('Request failure lost')
 assert sys.getswitchinterval()==original
+from audit_resident_session import timed_trial
+import copy
+trial=dict(full_request_wall_seconds=2.1,decode_wall_seconds=1.,prefill_seconds=1.,
+    full_request_output_tokens_per_second=4/2.1,decode_aggregate_output_tokens_per_second=2.,
+    request_first_token_seconds=[1.,1.],request_completion_seconds=[2.1,2.1],
+    prefill_step_seconds=[.8],decode_step_seconds=[.8],runtime_scheduling_finish_seconds=.1,
+    runtime_scheduling=dict(requested_microseconds=200,default_seconds=.005,
+        effective_seconds=.0002,restored_seconds=.005,applied=True))
+assert timed_trial(trial,2,2,3,4)==4/2.1
+mutations=[('runtime_scheduling_finish_seconds',-.1),('runtime_scheduling_finish_seconds',float('nan')),
+    ('runtime_scheduling_finish_seconds',.2),('runtime_scheduling',None)]
+for key,value in mutations:
+    changed=copy.deepcopy(trial);changed[key]=value
+    try:timed_trial(changed,2,2,3,4)
+    except (ValueError,TypeError):pass
+    else:raise AssertionError('Corrupted scheduling accounting accepted')
+for key,value in [('requested_microseconds',5000),('effective_seconds',.001),
+        ('restored_seconds',.001),('default_seconds',float('nan')),('applied',False)]:
+    changed=copy.deepcopy(trial);changed['runtime_scheduling'][key]=value
+    try:timed_trial(changed,2,2,3,4)
+    except (ValueError,TypeError):pass
+    else:raise AssertionError('Corrupted scheduling metadata accepted')
+changed=copy.deepcopy(trial);del changed['runtime_scheduling_finish_seconds']
+try:timed_trial(changed,2,2,3,4)
+except ValueError:pass
+else:raise AssertionError('Missing finalization timing accepted')
 print('Resident runtime scheduling policy/concurrent workers/failure restoration/full timer PASS')

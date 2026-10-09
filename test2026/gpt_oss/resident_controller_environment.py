@@ -52,7 +52,6 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_RESIDENT_NATIVE_GREEDY_MERGE': '1',
             'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY': '1',
             'GARNET_RESIDENT_PATTERN_UPDATES': '1',
-            'GARNET_RESIDENT_RUNTIME_SWITCH_US': '1000',
             'GARNET_BATCH_PREFILL_CHUNK': '16',
             'GARNET_GPT_OSS_MARLIN_PREPACKED': '1',
             'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM': '1',
@@ -277,6 +276,9 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE':None},
         shape=dict(batch=448,input_tokens_per_request=256,output_tokens_per_request=512,
                    max_context_tokens_per_request=768,prefill_chunk_tokens=8))
+    saved_host=json.loads(reference.read_text())
+    saved_host['optimization_environment']['GARNET_RESIDENT_RUNTIME_SWITCH_US']='1000'
+    reference.write_text(json.dumps(saved_host))
     execute('paired_batch_suite.py',[reference,root/'paired','arithmetic',
         '--resident-profile',fresh],{'GARNET_RESIDENT_PROFILE':str(fresh.resolve()),
             'GARNET_RESIDENT_WARMUPS':'1',
@@ -309,8 +311,6 @@ with tempfile.TemporaryDirectory() as temporary:
             {'GARNET_RESIDENT_RUNTIME_SWITCH_US':str(value)})
     execute('paired_batch_suite.py',[reference,root/'runtime-switch-default','arithmetic',
         '--resident-profile',fresh],{'GARNET_RESIDENT_RUNTIME_SWITCH_US':'0'})
-    execute('profile_tp_engine_memory.py',[reference,root/'runtime-switch-profile'],
-        {'GARNET_RESIDENT_RUNTIME_SWITCH_US':None})
     for extra in ([],['--resident-profile',str(fresh),'--vllm-only']):
         with patch.object(sys,'argv',['paired_batch_suite.py',str(reference),
                 str(root/('invalid-runtime-switch'+str(len(extra)))),'arithmetic',

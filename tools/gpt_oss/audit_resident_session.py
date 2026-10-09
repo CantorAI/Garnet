@@ -184,7 +184,31 @@ def timed_trial(trial, batch, output, length, chunk):
         ('full_request_wall_seconds', 'decode_wall_seconds', 'prefill_seconds'))
     if not full > decode_time > 0 or not prefill > 0:
         raise ValueError('Invalid complete request timing')
-    close(full, prefill + decode_time)
+    scheduling = trial.get('runtime_scheduling')
+    overhead = trial.get('runtime_scheduling_finish_seconds', 0.)
+    if not math.isfinite(overhead) or overhead < 0:
+        raise ValueError('Invalid scheduling finalization duration')
+    if scheduling is not None:
+        requested = scheduling.get('requested_microseconds')
+        if type(requested) is not int or requested not in (0,100,200,1000):
+            raise ValueError('Invalid recorded runtime scheduling policy')
+        if requested:
+            if scheduling.get('applied') is not True or 'runtime_scheduling_finish_seconds' not in trial:
+                raise ValueError('Missing applied scheduling timing')
+            original = scheduling.get('default_seconds')
+            effective = scheduling.get('effective_seconds')
+            restored = scheduling.get('restored_seconds')
+            if any(type(x) not in (int,float) or not math.isfinite(x) or not 0 < x < 1
+                   for x in (original,effective,restored)):
+                raise ValueError('Invalid recorded scheduling intervals')
+            close(effective, requested/1000000.)
+            close(restored, original)
+        elif (overhead != 0 or scheduling.get('applied') is not False or
+                any(scheduling.get(k) is not None for k in ('default_seconds','effective_seconds','restored_seconds'))):
+            raise ValueError('Disabled scheduling has applied state or overhead')
+    elif overhead != 0:
+        raise ValueError('Scheduling overhead lacks its policy')
+    close(full, prefill + decode_time + overhead)
     close(trial['full_request_output_tokens_per_second'], batch * output / full)
     close(trial['decode_aggregate_output_tokens_per_second'], batch * (output - 1) / decode_time)
     if (len(trial['request_first_token_seconds']) != batch or len(trial['request_completion_seconds']) != batch or

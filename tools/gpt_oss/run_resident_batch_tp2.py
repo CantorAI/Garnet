@@ -229,6 +229,7 @@ def run_request(trial, ids):
     # first-token-to-last-token window and is not the acceptance metric.
     wall = time.perf_counter() - start
     result.update(runtime_scheduling=dict(scheduling.metadata),
+        runtime_scheduling_finish_seconds=wall - result['full_request_wall_seconds'],
         full_request_wall_seconds=wall,
         full_request_output_tokens_per_second=batch * output_tokens / wall,
         request_completion_seconds=[wall] * batch)
