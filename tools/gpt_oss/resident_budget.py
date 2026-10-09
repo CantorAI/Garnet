@@ -40,6 +40,10 @@ def kernel_environment():
         and key not in ('GARNET_GPT_OSS_WEIGHTS', 'GARNET_GPT_OSS_CACHE',
                         'GARNET_GPT_OSS_TOKENIZER')}
     environment['GARNET_TRT_SYNC_ALLOCATOR'] = os.environ.get('GARNET_TRT_SYNC_ALLOCATOR', '0')
+    # Bind the effective router geometry, including its legacy default, into
+    # the measured profile/cache identity. Otherwise an unset environment and
+    # an explicit four-warp policy would produce indistinguishable profiles.
+    environment.setdefault('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS', '4')
     return environment
 
 

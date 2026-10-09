@@ -36,6 +36,7 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_BATCH_PREFILL_CHUNK': '16',
             'GARNET_GPT_OSS_MARLIN_PREPACKED': '1',
             'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM': '1',
+            'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS': '4',
             'GARNET_GPT_OSS_DIRECT_ALLREDUCE': '1',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE': '1',
             'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE': '1'})))
@@ -76,6 +77,7 @@ with tempfile.TemporaryDirectory() as temporary:
                 'GARNET_GPT_OSS_HYBRID_KV': '1',
                 'GARNET_GPT_OSS_MARLIN_FAST_HOST_PACK': '1',
                 'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM': '2',
+                'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS': '2',
                 'GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL': '1'}), \
              patch.object(sys,'argv',[name]+list(map(str,args))), \
              patch('subprocess.check_output',return_value=''), \
@@ -99,6 +101,42 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM':'1',
             'GARNET_GPT_OSS_DIRECT_MAX_BATCH':'256',
             'GARNET_GPT_OSS_DIRECT_BATCH_CTAS':'16'})
+    execute('profile_tp_engine_memory.py',[reference,root/'default-router-warps'],{
+        'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS':'4'})
+    saved_reference=reference.read_bytes()
+    default_reference=json.loads(saved_reference)
+    del default_reference['optimization_environment']['GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS']
+    reference.write_text(json.dumps(default_reference))
+    execute('profile_tp_engine_memory.py',[reference,root/'unset-router-warps'],{
+        'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS':None})
+    reference.write_bytes(saved_reference)
+    for value in (2,4):
+        execute('profile_tp_engine_memory.py',[
+            reference,root/f'router-warps{value}','--tensor-router-warps',str(value)],{
+                'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS':str(value)})
+    with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),str(root/'invalid-router-warps'),
+            '--tensor-router-warps','1']), patch('subprocess.run') as gpu_command:
+        try:
+            runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+        except SystemExit as error:
+            assert error.code==2
+        else:
+            raise AssertionError('Unsupported router geometry must fail before subprocess')
+        gpu_command.assert_not_called()
+    original_reference=reference.read_bytes()
+    for malformed in ('1','2x','',' 2','04'):
+        bad=json.loads(original_reference);bad['optimization_environment']['GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS']=malformed
+        reference.write_text(json.dumps(bad))
+        with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),str(root/'malformed-router-policy')]), \
+                patch('subprocess.run') as gpu_command, patch('subprocess.check_output') as gpu_observation:
+            try:
+                runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+            except ValueError as error:
+                assert str(error)=='Invalid tensor-core router warp policy'
+            else:
+                raise AssertionError('Malformed recorded router policy must fail before GPU subprocess')
+            gpu_command.assert_not_called();gpu_observation.assert_not_called()
+    reference.write_bytes(original_reference)
     for value in (1,2):
         execute('profile_tp_engine_memory.py',[
             reference,root/f'decode-cta-profile{value}','--padded-prefill',

@@ -966,6 +966,11 @@ void testTensorCoreBatchRouter() {
         const auto scalarScores=logits.read(),scalarProbability=probability.read();
         check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,16,false,nullptr));
         const auto scores=logits.read();
+        check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,32,false,nullptr));
+        const auto geometryScores=logits.read();
+        if(geometryScores.size()!=scores.size() ||
+            std::memcmp(geometryScores.data(),scores.data(),scores.size()*sizeof(float)))
+            throw std::runtime_error("Two-warp tensor-core router scores differ bitwise from original four-warps");
         // Sample every expert at eight or more rows against an independent
         // FP64 dot product, rather than another GPU reduction implementation.
         for(int t=0;t<tokens;t+=std::max(1,tokens/8))for(int e=0;e<experts;++e) {
@@ -997,6 +1002,14 @@ void testTensorCoreBatchRouter() {
         compare(probability.read(),expectedProbability,.006f,"Tensor-core router probabilities vs independent CPU");
         const auto tensorCoreProbability=probability.read();
         const auto tensorCorePostTopK=logits.read();
+        check(TestGptOssBatchRouter(dx.p,dw.p,db.p,logits.p,selected.p,probability.p,tokens,o,32,true,nullptr));
+        const auto geometryProbability=probability.read(),geometryPostTopK=logits.read();
+        if(selected.read()!=expectedSelected ||
+            geometryProbability.size()!=tensorCoreProbability.size() ||
+            geometryPostTopK.size()!=tensorCorePostTopK.size() ||
+            std::memcmp(geometryProbability.data(),tensorCoreProbability.data(),tensorCoreProbability.size()*sizeof(float)) ||
+            std::memcmp(geometryPostTopK.data(),tensorCorePostTopK.data(),tensorCorePostTopK.size()*sizeof(float)))
+            throw std::runtime_error("Two-warp tensor-core router top-K/probabilities/post-scores differ bitwise from original");
         const char* flag=std::getenv("GARNET_GPT_OSS_PREFILL_ROUTER_TENSORCORE");
         if(tokens>=1024 && flag && flag[0]=='1' && flag[1]=='\0') {
             o.prefill=1;
@@ -1138,6 +1151,17 @@ void benchmarkMarlinMetadata() {
 }
 #endif
 int main(int argc, char** argv) { try {
+    if(argc==2 && std::strcmp(argv[1],"--invalid-router-warps")==0) {
+        const char* flag=std::getenv("GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS");
+        if(!flag || std::strcmp(flag,"2")==0 || std::strcmp(flag,"4")==0)
+            throw std::runtime_error("Negative router fixture requires malformed policy");
+        GptOssOptions o;o.hidden=96;o.experts=8;o.topK=4;
+        if(TestGptOssBatchRouter(nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,128,o,32,false,nullptr)!=cudaErrorInvalidValue ||
+            RunGptOssMoeRoute(nullptr,nullptr,nullptr,nullptr,128,o,nullptr)!=cudaErrorInvalidValue)
+            throw std::runtime_error("Malformed tensor router geometry must reject before pointer access/router work");
+        std::cout << "Invalid router warp policy rejected before router work PASS\n";
+        return 0;
+    }
     if(argc==2&&std::strcmp(argv[1],"--hybrid-kv-attention-parity")==0) {
 #ifndef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
         throw std::runtime_error("Hybrid KV gate requires compiled FlashInfer adapter");

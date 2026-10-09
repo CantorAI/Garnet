@@ -659,6 +659,25 @@ __global__ void routeScoresTensorCore(const float* x,const float* weight,const f
     }
 #endif
 }
+
+// Keep the original four-warp body/default path byte-for-byte above.
+#include "tensor_router_geometry.cuh"
+int tensorCoreRouterWarps() {
+    static const int count=[] {
+        const char* value=std::getenv("GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS");
+        if(!value || std::strcmp(value,"4")==0)return 4;
+        return std::strcmp(value,"2")==0?2:0;
+    }();
+    return count;
+}
+void launchTensorCoreRouter(const float* x,const float* weight,const float* bias,
+    float* logits,int tokens,GptOssOptions o,int warps,cudaStream_t stream) {
+    if(warps==2)
+        routeScoresTensorCoreGeometry<2><<<dim3((tokens+15)/16,(o.experts+31)/32),64,0,stream>>>(x,weight,bias,logits,tokens,o);
+    else
+        routeScoresTensorCore<<<dim3((tokens+15)/16,(o.experts+63)/64),128,0,stream>>>(x,weight,bias,logits,tokens,o);
+}
+
 template<bool FusedMarlinDecode>
 __global__ void routeTopK(float* logits, int* selected, float* probabilities,
     int tokens, GptOssOptions o, int* sorted, int* experts, int* padded,
@@ -1264,6 +1283,8 @@ size_t GptOssMoeWorkspace(int tokens, const GptOssOptions& o) {
 cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* probabilities,
     float* logits, int tokens, const GptOssOptions& o, cudaStream_t stream,
     const GptOssMarlinDecodeBuffers* fused) {
+    const int routerWarps=tensorCoreRouterWarps();
+    if(!routerWarps)return cudaErrorInvalidValue;
     const bool fuse = fused && tokens == 1 && o.experts <= 128;
     auto* converted = fuse ? static_cast<__nv_bfloat16*>(fused->convertedInput) : nullptr;
     const int paddedWidth = fuse ? fused->paddedWidth : 0;
@@ -1294,8 +1315,8 @@ cudaError_t RunGptOssMoeRoute(const void* const* in, int* selected, float* proba
     if((tensorCorePrefill && o.prefill && tokens>=1024 && o.hidden<=4096 && o.experts<=128) ||
         (tensorCoreDecode && GptOssDecodeTensorCoreRouterSupported(
             o.prefill,tokens,o.hidden,o.experts,o.topK)))
-        routeScoresTensorCore<<<dim3((tokens+15)/16,(o.experts+63)/64),128,0,stream>>>(
-            (const float*)in[0],(const float*)in[1],(const float*)in[2],logits,tokens,o);
+        launchTensorCoreRouter((const float*)in[0],(const float*)in[1],(const float*)in[2],
+            logits,tokens,o,routerWarps,stream);
     else if(tiled && queryTile==4)
         routeScoresBatch<4><<<((tokens+3)/4)*o.experts,1024,0,stream>>>(
             (const float*)in[0],(const float*)in[1],(const float*)in[2],logits,tokens,o);
@@ -1333,8 +1354,10 @@ cudaError_t TestGptOssBatchRouter(const float* x,const float* weight,const float
     int queryTile,bool topK,cudaStream_t stream) {
     if(tokens<=0 || o.hidden<=0 || o.hidden>4096 || o.experts<=0 || o.experts>128 ||
         o.topK<=0 || o.topK>8 || o.topK>o.experts ||
-        (queryTile!=0 && queryTile!=2 && queryTile!=4 && queryTile!=16))return cudaErrorInvalidValue;
-    if(queryTile==16)routeScoresTensorCore<<<dim3((tokens+15)/16,(o.experts+63)/64),128,0,stream>>>(x,weight,bias,logits,tokens,o);
+        (queryTile!=0 && queryTile!=2 && queryTile!=4 && queryTile!=16 && queryTile!=32))return cudaErrorInvalidValue;
+    if(!tensorCoreRouterWarps())return cudaErrorInvalidValue;
+    if(queryTile==32)launchTensorCoreRouter(x,weight,bias,logits,tokens,o,2,stream);
+    else if(queryTile==16)launchTensorCoreRouter(x,weight,bias,logits,tokens,o,4,stream);
     else if(queryTile==4)routeScoresBatch<4><<<((tokens+3)/4)*o.experts,1024,0,stream>>>(x,weight,bias,logits,tokens,o);
     else if(queryTile==2)routeScoresBatch<2><<<((tokens+1)/2)*o.experts,512,0,stream>>>(x,weight,bias,logits,tokens,o);
     else routeScores<256><<<tokens*o.experts,256,0,stream>>>(x,weight,bias,logits,tokens,o,nullptr,0,nullptr,0);
