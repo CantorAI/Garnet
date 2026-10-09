@@ -88,6 +88,20 @@ assert result['full_request_wall_seconds']==1. and result['full_request_output_t
 assert result['runtime_scheduling_finish_seconds']==.5
 assert result['request_completion_seconds']==[1.,1.] and result['request_first_token_seconds']==[.1,.1]
 assert result['runtime_scheduling']['restored_seconds']==original and result['runtime_scheduling']['applied']
+
+# Execute the actual runner's warmup persistence expression. Compressed legacy
+# records lost the scope evidence although measured trials retained it.
+warmup_append=next(n for n in ast.walk(tree) if isinstance(n,ast.Expr) and
+    isinstance(n.value,ast.Call) and isinstance(n.value.func,ast.Attribute) and
+    isinstance(n.value.func.value,ast.Name) and n.value.func.value.id=='warmups' and
+    n.value.func.attr=='append')
+persisted=dict(measured=result,warmups=[])
+exec(compile(ast.Module(body=[warmup_append],type_ignores=[]),
+    'actual-warmup-persistence','exec'),persisted)
+saved=persisted['warmups'][0]
+assert saved['seconds']==result['full_request_wall_seconds']
+assert {k:v for k,v in saved.items() if k!='seconds'}==result
+assert saved['runtime_scheduling']['applied'] and saved['runtime_scheduling_finish_seconds']==.5
 def failing(trial,ids,start):raise ValueError('request-failure')
 namespace['run_request_body']=failing
 # Rebind the actual wrapper after replacing its double. XLang3 exec retains

@@ -317,8 +317,9 @@ def measure_case(case, index, cold_startup_seconds):
     for warmup in range(warmup_count):
         print('Complete warmup start', warmup, flush=True)
         measured = run_request(-1 - warmup, ids)
-        warmups.append(dict(seconds=measured['full_request_wall_seconds'],
-            token_ids_by_request=measured['token_ids_by_request']))
+        # Preserve full request evidence, including set/restore verification and
+        # finalization costs. Keep the existing seconds alias for older readers.
+        warmups.append(dict(measured, seconds=measured['full_request_wall_seconds']))
         case_samples.append(memory())
         print('Complete warmup', warmup, 'seconds', warmups[-1]['seconds'], flush=True)
     for trial in range(3):
