@@ -47,6 +47,7 @@ def kernel_environment():
     # Peer-group geometry is part of owned signal/sequence storage and runtime
     # grid identity; preserve the legacy64-CTA behavior when absent.
     environment.setdefault('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
+    environment.setdefault('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS', '0')
     return environment
 
 
@@ -55,6 +56,7 @@ def normalize_kernel_environment(environment):
     normalized = dict(environment)
     normalized.setdefault('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS', '4')
     normalized.setdefault('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
+    normalized.setdefault('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS', '0')
     return normalized
 
 

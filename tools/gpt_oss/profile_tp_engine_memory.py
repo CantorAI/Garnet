@@ -112,6 +112,8 @@ parser.add_argument('--fast-host-pack', type=int, choices=(0,1),
 parser.add_argument('--bf16-peer-group', type=int, choices=(0,1), help='explicit owned native resource candidate; requires full correctness gates')
 parser.add_argument('--bf16-peer-group-ctas', type=int, choices=(64,128,188),
     help='explicit owned BF16 peer-reduction grid candidate; requires peer group and fresh correctness/profile gates')
+parser.add_argument('--bf16-peer-grid-signals', type=int, choices=(0,1),
+    help='explicit cooperative-grid handshake candidate; requires owned peer group and fresh correctness/profile gates')
 parser.add_argument('--sync-allocator', type=int, choices=(0,1),
     help='explicit cached runtime allocator candidate; requires separate memory/quality gates')
 args = parser.parse_args()
@@ -170,6 +172,11 @@ if args.bf16_peer_group_ctas is not None:
     if env.get('GARNET_GPT_OSS_BF16_PEER_GROUP') != '1':
         raise ValueError('Peer-group CTA override requires the recorded owned peer group')
     overrides['GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS'] = str(args.bf16_peer_group_ctas)
+if args.bf16_peer_grid_signals is not None:
+    if args.bf16_peer_grid_signals and overrides.get('GARNET_GPT_OSS_BF16_PEER_GROUP',
+            env.get('GARNET_GPT_OSS_BF16_PEER_GROUP')) != '1':
+        raise ValueError('Grid signaling requires the recorded owned peer group')
+    overrides['GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS'] = str(args.bf16_peer_grid_signals)
 if args.direct_max_batch is not None or args.direct_ctas is not None:
     if any(env.get(key) != '1' for key in ('GARNET_GPT_OSS_DIRECT_ALLREDUCE',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE', 'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE')):
@@ -180,6 +187,9 @@ if args.prefill_down_ctas is not None:
     if selected_k!='64':
         raise ValueError('Independent down CTA override requires explicit large-prefill down-K64')
 env.update(overrides)
+grid_flag = env.get('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS', '0')
+if grid_flag not in ('0','1') or (grid_flag == '1' and env.get('GARNET_GPT_OSS_BF16_PEER_GROUP') != '1'):
+    raise ValueError('Grid signaling must be0/1 and requires the owned peer group')
 if env.get('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS','4') not in ('2','4'):
     raise ValueError('Invalid tensor-core router warp policy')
 if env.get('GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE') not in (None,'2','4'):

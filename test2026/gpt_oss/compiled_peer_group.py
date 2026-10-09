@@ -27,6 +27,11 @@ group_ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
 if group_ctas_text not in ('64', '128', '188') or (not group_mode and group_ctas_text != '64'):
     raise ValueError('Peer-group CTA policy must be 64/128/188 and enabled')
 group_ctas = int(group_ctas_text)
+grid_flag = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS', '0')
+if grid_flag not in ('0','1') or (not group_mode and grid_flag != '0'):
+    raise ValueError('Grid signaling must be0/1 and requires owned peer group')
+grid_mode = grid_flag == '1'
+group_description = None
 G.bind_operator_module(extension)
 repo = Path(__file__).resolve().parents[2]
 template = (repo / 'xModel/gpt_oss/120b/tp_all_reduce_test.py').read_text()
@@ -162,7 +167,12 @@ try:
         print('COMPILED_PEER_OPTIONS_NEGATIVES_COMPLETE', 5, flush=True)
     group = extension.peer_group(options) if group_mode else None
     if group_mode:
-        print('NATIVE_GROUP', extension.peer_group_status_json(group), flush=True)
+        group_description = json.loads(extension.peer_group_status_json(group))
+        assert group_description['ctas'] == group_ctas
+        assert group_description['schema'] == (3 if grid_mode else 2)
+        assert group_description['protocol'] == ('owned-mapped-bf16-peer-grid-v3' if grid_mode else 'owned-mapped-bf16-peer-v2')
+        assert group_description.get('grid_signals',0) == int(grid_mode)
+        print('NATIVE_GROUP', json.dumps(group_description), flush=True)
         G.cuda_set_device(0)
         for rank, phase in [(-1, 0), (2, 0), (0, -1), (0, 2), (0, 1)]:
             try:
@@ -222,7 +232,8 @@ try:
         group = None
         gc.collect()
     (folder / 'result.json').write_text(json.dumps(dict(protocol='compiled-bf16-peer-group-v1',
-        group_mode=group_mode, group_ctas=group_ctas if group_mode else None, batch=batch, tokens=tokens, hidden=hidden,
+        group_mode=group_mode, group_ctas=group_ctas if group_mode else None,
+        grid_signals=grid_mode, native_group_description=group_description, batch=batch, tokens=tokens, hidden=hidden,
         matrices=records, all_complete=True,
         compiled_statuses=statuses,
         scope='Compiled transport and retained graph ownership only; no full pretrained/refit/serving qualification'), indent=2))

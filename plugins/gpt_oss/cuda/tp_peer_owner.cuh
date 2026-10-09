@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstring>
 #include <exception>
+#include <cooperative_groups.h>
 
 namespace Garnet { namespace GptOssPeer {
 namespace Bf16PeerPrivate {
@@ -59,6 +60,50 @@ __global__ void reduce(const uint4* first,const uint4* second,float4* output,
         sequence[block].value=epoch;if(failed)faults[block]=failed;
     }
 }
+
+// Explicit opt-in protocol: one system-scope handshake for the whole grid.
+// The cooperative launch/occupancy contract makes every grid barrier legal.
+__global__ void reduceGridSignals(const uint4* first,const uint4* second,float4* output,
+    Slot* signals,Word* sequence,unsigned* faults,int rank,size_t vectors,
+    unsigned long long maximumWaitCycles){
+    const auto grid=cooperative_groups::this_grid();
+    const bool leader=blockIdx.x==0 && threadIdx.x==0;
+    unsigned epoch=0;
+    if(leader){
+        epoch=sequence[0].value+1;
+        unsigned failed=epoch==0?2:0;
+        if(!failed){
+            // Same-stream pack has finished before this kernel can execute.
+            __threadfence_system();publish(&signals[0].start[rank].value,epoch);
+            const auto begin=clock64();
+            while(observe(&signals[0].start[1-rank].value)!=epoch){
+                if(clock64()-begin>maximumWaitCycles){failed=1;break;}__nanosleep(32);
+            }
+        }
+        if(failed)faults[0]=failed;
+    }
+    grid.sync();
+    // One uniform decision after the leader's failure is visible to all CTAs.
+    if(*reinterpret_cast<volatile unsigned*>(faults)!=0)return;
+    for(size_t i=size_t(blockIdx.x)*blockDim.x+threadIdx.x;i<vectors;i+=size_t(gridDim.x)*blockDim.x){
+        const uint4 a=readPacked(first+i),b=readPacked(second+i);
+        output[2*i]=make_float4(roundedPair(a.x,b.x),roundedPair(a.x>>16,b.x>>16),
+                              roundedPair(a.y,b.y),roundedPair(a.y>>16,b.y>>16));
+        output[2*i+1]=make_float4(roundedPair(a.z,b.z),roundedPair(a.z>>16,b.z>>16),
+                                roundedPair(a.w,b.w),roundedPair(a.w>>16,b.w>>16));
+    }
+    // Every CTA completes its peer reads before either rank can repack.
+    grid.sync();
+    if(leader){
+        __threadfence_system();publish(&signals[0].end[rank].value,epoch);
+        const auto begin=clock64();unsigned failed=0;
+        while(observe(&signals[0].end[1-rank].value)!=epoch){
+            if(clock64()-begin>maximumWaitCycles){failed=1;break;}__nanosleep(32);
+        }
+        sequence[0].value=epoch;if(failed)faults[0]=failed;
+    }
+    grid.sync();
+}
 }
 
 class Bf16PeerNative {
@@ -73,7 +118,7 @@ class Bf16PeerNative {
     Bf16PeerPrivate::Slot* hostSignals_=nullptr;
     std::array<Bf16PeerPrivate::Slot*,2> signals_{};
     std::array<unsigned long long,2> waitCycles_{};
-    bool borrowed_=false;
+    bool borrowed_=false,gridSignals_=false;
     int activePhase_=0;
     std::array<std::array<cudaStream_t,2>,2> phaseStreams_{};
     cudaError_t quiesce(){
@@ -109,7 +154,7 @@ public:
     // Optional two BORROWED phase/rank stream pairs. Caller keeps them alive,
     // serializes phase transitions, and destroys executable graphs before close.
     cudaError_t initialize(size_t capacity,int blocks,int simulateFailureAfterRank=-1,bool preEnabled=false,
-                           const PhaseStreams* borrowedStreams=nullptr){
+                           const PhaseStreams* borrowedStreams=nullptr,bool gridSignals=false){
         if(ready_ || leased_)return cudaErrorNotReady;
         if(!capacity || capacity%8 || capacity>kMaximumPairElements ||
             (blocks!=32 && blocks!=64 && blocks!=128 && blocks!=188) || simulateFailureAfterRank<-1 || simulateFailureAfterRank>1)
@@ -124,7 +169,7 @@ public:
 #endif
         if(leaseFlag_.test_and_set(std::memory_order_acquire))return cudaErrorNotReady;leased_=true;
         auto e=cudaGetDevice(&original_);if(e!=cudaSuccess){leased_=false;leaseFlag_.clear(std::memory_order_release);return e;}
-        capacity_=capacity;blocks_=blocks;int devices=0;
+        capacity_=capacity;blocks_=blocks;gridSignals_=gridSignals;int devices=0;
         e=cudaGetDeviceCount(&devices);if(e!=cudaSuccess)return fail(e);
         if(devices!=2)return fail(cudaErrorNotSupported);
         if(borrowedStreams){
@@ -165,7 +210,8 @@ public:
         if(reinterpret_cast<uintptr_t>(hostSignals_)%128)return fail(cudaErrorNotSupported);
         for(int r=0;r<2;++r){
             e=cudaSetDevice(r);if(e!=cudaSuccess)return fail(e);
-            int resident=0;e=cudaOccupancyMaxActiveBlocksPerMultiprocessor(&resident,Bf16PeerPrivate::reduce,256,0);
+            auto kernel=gridSignals_?Bf16PeerPrivate::reduceGridSignals:Bf16PeerPrivate::reduce;
+            int resident=0;e=cudaOccupancyMaxActiveBlocksPerMultiprocessor(&resident,kernel,256,0);
             if(e!=cudaSuccess)return fail(e);if(resident*properties[r].multiProcessorCount<blocks)return fail(cudaErrorNotSupported);
             if(!preEnabled){
                 e=cudaDeviceEnablePeerAccess(1-r,0);
@@ -206,7 +252,8 @@ public:
         auto* y=reinterpret_cast<float4*>(output);auto* s=signals_[rank];auto* q=sequence_[rank];auto* f=faults_[rank];
         size_t vectors=count/8;auto limit=waitCycles_[rank];
         void* args[]={&first,&second,&y,&s,&q,&f,&rank,&vectors,&limit};
-        return cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(Bf16PeerPrivate::reduce),dim3(blocks_),dim3(256),args,0,stream);
+        auto kernel=gridSignals_?Bf16PeerPrivate::reduceGridSignals:Bf16PeerPrivate::reduce;
+        return cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(kernel),dim3(blocks_),dim3(256),args,0,stream);
     }
     cudaError_t checkFaults(int rank,bool* clean){
         if(!ready_)return cudaErrorNotReady;if(!clean || rank<0 || rank>1)return cudaErrorInvalidValue;
@@ -239,7 +286,7 @@ public:
         }
         if(hostSignals_)keep(cudaFreeHost(hostSignals_));hostSignals_=nullptr;
         for(int r=0;r<2;++r)if(enabled_[r]){keep(cudaSetDevice(r));keep(cudaDeviceDisablePeerAccess(1-r));enabled_[r]=false;}
-        keep(cudaSetDevice(original_));ready_=false;capacity_=0;blocks_=0;borrowed_=false;phaseStreams_={};activePhase_=0;
+        keep(cudaSetDevice(original_));ready_=false;capacity_=0;blocks_=0;borrowed_=false;gridSignals_=false;phaseStreams_={};activePhase_=0;
         leased_=false;leaseFlag_.clear(std::memory_order_release);return first;
     }
     ~Bf16PeerNative(){const auto e=close();if(e!=cudaSuccess){std::fprintf(stderr,"PEER_OWNER_CLEANUP_FAILED: %s\n",cudaGetErrorString(e));std::terminate();}}

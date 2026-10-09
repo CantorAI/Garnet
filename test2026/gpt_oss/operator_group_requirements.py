@@ -24,6 +24,10 @@ group_ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
 if group_ctas_text not in ('64', '128', '188'):
     raise ValueError('Peer-group CTA policy must be 64, 128 or 188')
 group_ctas = int(group_ctas_text)
+grid_flag = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS', '0')
+if grid_flag not in ('0','1'):
+    raise ValueError('Grid signaling must be0/1')
+grid_mode = grid_flag == '1'
 folder = Path(sys.argv[1]).resolve()
 folder.mkdir(exist_ok=False, parents=True)
 repo = Path(__file__).resolve().parents[2]
@@ -108,6 +112,10 @@ try:
     control_actual = G.tensor_to_cpu(control['output']).tolist()
     assert control_actual == [float(i % 7) for i in range(2 * hidden)]
     group = extension.peer_group(json.dumps(dict(ctas=group_ctas, phase_elements=[s * hidden for s in tokens])))
+    group_description = json.loads(extension.peer_group_status_json(group))
+    assert group_description['schema'] == (3 if grid_mode else 2)
+    assert group_description['protocol'] == ('owned-mapped-bf16-peer-grid-v3' if grid_mode else 'owned-mapped-bf16-peer-v2')
+    assert group_description.get('grid_signals',0) == int(grid_mode)
     rejected(foreign, tensors[0][0])
     for reload in range(2):
         if reload:
@@ -166,6 +174,7 @@ try:
     assert extension.peer_group_release(group); group = None
     (folder / 'result.json').write_text(json.dumps(dict(protocol='operator-requirements-lifecycle-v1',
         pattern_updates=pattern_updates, group_ctas=group_ctas,
+        grid_signals=grid_mode,native_group_description=group_description,
         statuses=statuses, matrices=records, negative_foreign=1, negative_released=2,
         default_control_actual=control_actual, released_responses=released_responses,
         default_control_exact=True, passed=True), indent=2))

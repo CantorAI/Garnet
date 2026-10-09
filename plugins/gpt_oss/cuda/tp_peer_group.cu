@@ -70,6 +70,9 @@ cudaError_t GptOssCreatePeerGroup(const char* options,size_t bytes,void** result
     if(!options || !bytes || !result)return cudaErrorInvalidValue;*result=nullptr;
     const char* flag=std::getenv("GARNET_GPT_OSS_BF16_PEER_GROUP");
     if(!flag || std::strcmp(flag,"1"))return cudaErrorNotSupported;
+    const char* gridFlag=std::getenv("GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS");
+    if(gridFlag && std::strcmp(gridFlag,"0") && std::strcmp(gridFlag,"1"))return cudaErrorInvalidValue;
+    const bool gridSignals=gridFlag && !std::strcmp(gridFlag,"1");
     std::array<size_t,2> counts{};size_t capacity=0;int ctas=0;
     if(!ParseGptOssPeerGroupOptions(options,bytes,GptOssPeer::kMaximumPairElements,counts,capacity,ctas))
         return cudaErrorInvalidValue;
@@ -79,9 +82,9 @@ cudaError_t GptOssCreatePeerGroup(const char* options,size_t bytes,void** result
     if(!GptOssTpHasDirectPeerOwner())return cudaErrorNotSupported;
     for(int r=0;r<2;++r){e=cudaSetDevice(r);if(e!=cudaSuccess)return e;
         for(int phase=0;phase<2;++phase){e=cudaStreamCreateWithFlags(&g->streams[phase][r],cudaStreamNonBlocking);if(e!=cudaSuccess)return e;}}
-    e=g->owner.initialize(capacity,ctas,-1,true,&g->streams);if(e!=cudaSuccess)return e;
+    e=g->owner.initialize(capacity,ctas,-1,true,&g->streams,gridSignals);if(e!=cudaSuccess)return e;
     g->elements=counts;
-    g->description=GptOssPeerGroupDescription(counts,capacity,ctas,g->owner.ownedBytesPerRank(),g->owner.mappedBytes());
+    g->description=GptOssPeerGroupDescription(counts,capacity,ctas,g->owner.ownedBytesPerRank(),g->owner.mappedBytes(),gridSignals);
     e=cudaSetDevice(g->original);if(e!=cudaSuccess)return e;*result=g.release();return cudaSuccess;
 }
 cudaError_t GptOssPeerGroupAllReduce(const float* x,float* y,size_t n,int rank,int prefill,cudaStream_t stream){

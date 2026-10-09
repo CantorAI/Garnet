@@ -1,0 +1,36 @@
+"""Exact grid protocol identity, admission storage, and unsafe-mode rejection."""
+import copy
+import os
+from pathlib import Path
+import sys
+from unittest.mock import patch
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'tools/gpt_oss'))
+from peer_group_layout import peer_group_layout,validate_peer_group_layout
+from resident_budget import normalize_kernel_environment
+
+for ctas in (64,128,188):
+    env={'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
+         'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS':str(ctas)}
+    with patch.dict(os.environ,env,clear=True):old=peer_group_layout(512,8,2880)
+    with patch.dict(os.environ,dict(env,GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS='0'),clear=True):
+        assert peer_group_layout(512,8,2880)==old
+    with patch.dict(os.environ,dict(env,GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS='1'),clear=True):
+        new=peer_group_layout(512,8,2880)
+    assert new['schema']==3 and new['protocol']=='owned-mapped-bf16-peer-grid-v3' and new['grid_signals']==1
+    assert new['phase_elements']==old['phase_elements'] and new['capacity_elements']==old['capacity_elements']
+    assert validate_peer_group_layout(new,512,8,2880)==validate_peer_group_layout(old,512,8,2880)
+    for key,value in [('schema',2),('protocol',old['protocol']),('grid_signals',True),
+                      ('grid_signals',0),('grid_signals','1'),('mapped_host_bytes',0),('ctas',32)]:
+        bad=copy.deepcopy(new);bad[key]=value
+        try:validate_peer_group_layout(bad,512,8,2880)
+        except ValueError:pass
+        else:raise AssertionError((key,value))
+for group,grid in [('0','1'),('1','2'),('1','true'),('1',''),('invalid','1')]:
+    with patch.dict(os.environ,{'GARNET_GPT_OSS_BF16_PEER_GROUP':group,
+        'GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS':grid},clear=True):
+        try:peer_group_layout(512,8,2880)
+        except ValueError:pass
+        else:raise AssertionError((group,grid))
+assert normalize_kernel_environment({})['GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS']=='0'
+assert normalize_kernel_environment({'GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS':'1'})!=normalize_kernel_environment({})
+print('GRID_PROTOCOL_STORAGE_AND_REJECTION_PASS CTA64/128/188 DEFAULT_UNCHANGED')
