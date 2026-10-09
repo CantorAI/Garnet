@@ -89,6 +89,9 @@ assert result['request_completion_seconds']==[1.,1.] and result['request_first_t
 assert result['runtime_scheduling']['restored_seconds']==original and result['runtime_scheduling']['applied']
 def failing(trial,ids,start):raise ValueError('request-failure')
 namespace['run_request_body']=failing
+# Rebind the actual wrapper after replacing its double. XLang3 exec retains
+# resolved callable bindings; changing the input mapping alone is insufficient.
+exec(compile(ast.Module(body=[node],type_ignores=[]),'actual-scheduling-failure-wrapper','exec'),namespace)
 try:namespace['run_request'](0,[1])
 except ValueError:pass
 else:raise AssertionError('Request failure lost')
