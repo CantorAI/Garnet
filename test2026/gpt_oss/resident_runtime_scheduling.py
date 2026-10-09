@@ -75,18 +75,18 @@ tree=ast.parse((repo/'tools/gpt_oss/run_resident_batch_tp2.py').read_text())
 node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='run_request')
 clock=[0.]
 class Timer:
-    def perf_counter(self):clock[0]+=1.;return clock[0]
-def request(trial,ids,start):
+    def perf_counter(self):clock[0]+=.5;return clock[0]
+def request(trial,ids,start,state_handle=None):
     assert abs(sys.getswitchinterval()-.0002)<1e-12
-    return dict(full_request_wall_seconds=.5,request_first_token_seconds=[.1]*2,
-        decode_wall_seconds=.4,token_ids_by_request=[[7],[7]])
+    return dict(full_request_wall_seconds=.25,request_first_token_seconds=[.1]*2,
+        decode_wall_seconds=.15,token_ids_by_request=[[7],[7]])
 namespace=dict(time=Timer(),runtime_switch_us=200,RuntimeSwitchScope=RuntimeSwitchScope,
-    run_request_body=request,batch=2,output_tokens=1)
+    run_request_body=request,batch=2,output_tokens=1,native_greedy_state=False)
 exec(compile(ast.Module(body=[node],type_ignores=[]),'actual-scheduling-wrapper','exec'),namespace)
 result=namespace['run_request'](0,[1])
-assert result['full_request_wall_seconds']==1. and result['full_request_output_tokens_per_second']==2.
-assert result['runtime_scheduling_finish_seconds']==.5
-assert result['request_completion_seconds']==[1.,1.] and result['request_first_token_seconds']==[.1,.1]
+assert result['full_request_wall_seconds']==.5 and result['full_request_output_tokens_per_second']==4.
+assert result['runtime_scheduling_finish_seconds']==.25 and result['native_greedy_state_finish_seconds']==0.
+assert result['request_completion_seconds']==[.5,.5] and result['request_first_token_seconds']==[.1,.1]
 assert result['runtime_scheduling']['restored_seconds']==original and result['runtime_scheduling']['applied']
 
 # Execute the actual runner's warmup persistence expression. Compressed legacy
@@ -101,8 +101,29 @@ exec(compile(ast.Module(body=[warmup_append],type_ignores=[]),
 saved=persisted['warmups'][0]
 assert saved['seconds']==result['full_request_wall_seconds']
 assert {k:v for k,v in saved.items() if k!='seconds'}==result
-assert saved['runtime_scheduling']['applied'] and saved['runtime_scheduling_finish_seconds']==.5
-def failing(trial,ids,start):raise ValueError('request-failure')
+assert saved['runtime_scheduling']['applied'] and saved['runtime_scheduling_finish_seconds']==.25
+
+# The unmodified default avoids outer timing calls; the opt-in native state
+# accounts for release and wrapper time as explicit parts of full latency.
+def neutral_request(trial,ids,start,state_handle=None):
+    return dict(full_request_wall_seconds=.5,request_first_token_seconds=[.1]*2,
+        decode_wall_seconds=.4,token_ids_by_request=[[7],[7]])
+default_ns=dict(time=Timer(),runtime_switch_us=0,RuntimeSwitchScope=RuntimeSwitchScope,
+    run_request_body=neutral_request,batch=2,output_tokens=1,native_greedy_state=False)
+exec(compile(ast.Module(body=[node],type_ignores=[]),'actual-default-wrapper','exec'),default_ns)
+default_result=default_ns['run_request'](0,[1])
+assert default_result['full_request_wall_seconds']==.5
+assert default_result['request_wrapper_finish_seconds']==0.
+class StateAPI:
+    def greedy_batch_state_create(self,batch,outputs):return 17
+    def greedy_batch_state_release(self,handle):assert handle==17;return True
+state_ns=dict(time=Timer(),runtime_switch_us=0,RuntimeSwitchScope=RuntimeSwitchScope,
+    run_request_body=neutral_request,batch=2,output_tokens=1,native_greedy_state=True,G=StateAPI())
+exec(compile(ast.Module(body=[node],type_ignores=[]),'actual-native-state-wrapper','exec'),state_ns)
+state_result=state_ns['run_request'](0,[1])
+assert state_result['native_greedy_state'] and state_result['native_greedy_state_finish_seconds']==.5
+assert state_result['request_wrapper_finish_seconds']==.5
+def failing(trial,ids,start,state_handle=None):raise ValueError('request-failure')
 namespace['run_request_body']=failing
 # Rebind the actual wrapper after replacing its double. XLang3 exec retains
 # resolved callable bindings; changing the input mapping alone is insufficient.
@@ -111,8 +132,20 @@ try:namespace['run_request'](0,[1])
 except ValueError:pass
 else:raise AssertionError('Request failure lost')
 assert sys.getswitchinterval()==original
-from audit_resident_session import timed_trial
+from audit_resident_session import timed_trial, resident_host_candidates
 import copy
+assert not any(resident_host_candidates({}).values())
+candidate_result={'optimization_environment':{'GARNET_RESIDENT_NATIVE_GREEDY_STATE':'1'},
+    'resident_host_candidates':dict(reuse_output=False,native_candidate_merge=False,
+        final_prefill_sample_only=False,pattern_updates=False,native_greedy_state=True)}
+assert resident_host_candidates(candidate_result)['native_greedy_state']
+for bad in (
+    dict(candidate_result,resident_host_candidates=dict(candidate_result['resident_host_candidates'],native_greedy_state=False)),
+    {'optimization_environment':{'GARNET_RESIDENT_NATIVE_GREEDY_STATE':'1'}},
+    {'optimization_environment':{'GARNET_RESIDENT_NATIVE_GREEDY_STATE':'true'}}):
+    try:resident_host_candidates(bad)
+    except ValueError:pass
+    else:raise AssertionError('Host candidate provenance was weakened')
 trial=dict(full_request_wall_seconds=2.1,decode_wall_seconds=1.,prefill_seconds=1.,
     full_request_output_tokens_per_second=4/2.1,decode_aggregate_output_tokens_per_second=2.,
     request_first_token_seconds=[1.,1.],request_completion_seconds=[2.1,2.1],
@@ -120,6 +153,21 @@ trial=dict(full_request_wall_seconds=2.1,decode_wall_seconds=1.,prefill_seconds=
     runtime_scheduling=dict(requested_microseconds=200,default_seconds=.005,
         effective_seconds=.0002,restored_seconds=.005,applied=True))
 assert timed_trial(trial,2,2,3,4)==4/2.1
+native_trial=dict(trial,native_greedy_state=True,native_greedy_state_finish_seconds=.05,
+    request_wrapper_finish_seconds=.03,full_request_wall_seconds=2.18,
+    full_request_output_tokens_per_second=4/2.18,request_completion_seconds=[2.18,2.18])
+assert timed_trial(native_trial,2,2,3,4)==4/2.18
+for key,value in [('native_greedy_state_finish_seconds',-.01),
+        ('native_greedy_state_finish_seconds',float('nan')),('native_greedy_state','1'),
+        ('request_wrapper_finish_seconds',-.01),('request_wrapper_finish_seconds',float('nan'))]:
+    changed=copy.deepcopy(native_trial);changed[key]=value
+    try:timed_trial(changed,2,2,3,4)
+    except (ValueError,TypeError):pass
+    else:raise AssertionError('Corrupted native state accounting accepted')
+changed=copy.deepcopy(native_trial);changed['full_request_wall_seconds']=2.15
+try:timed_trial(changed,2,2,3,4)
+except ValueError:pass
+else:raise AssertionError('Unaccounted state-release time accepted')
 mutations=[('runtime_scheduling_finish_seconds',-.1),('runtime_scheduling_finish_seconds',float('nan')),
     ('runtime_scheduling_finish_seconds',.2),('runtime_scheduling',None)]
 for key,value in mutations:

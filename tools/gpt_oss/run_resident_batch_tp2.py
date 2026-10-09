@@ -37,6 +37,13 @@ reuse_output = optional_flag('GARNET_RESIDENT_REUSE_OUTPUT')
 native_candidate_merge = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_MERGE')
 final_prefill_sample_only = optional_flag('GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY')
 pattern_updates = optional_flag('GARNET_RESIDENT_PATTERN_UPDATES')
+native_greedy_state = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_STATE')
+if native_greedy_state and native_candidate_merge:
+    raise ValueError('Native greedy state replaces the independent native merge path')
+resident_host_candidates = dict(reuse_output=reuse_output,
+    native_candidate_merge=native_candidate_merge,
+    final_prefill_sample_only=final_prefill_sample_only,
+    pattern_updates=pattern_updates, native_greedy_state=native_greedy_state)
 runtime_switch_us = parse_switch_us(os.environ.get(runtime_switch_policy, '0'))
 
 session_mode = len(sys.argv) > 1 and sys.argv[1] == '--session'
@@ -217,26 +224,50 @@ prefill_inputs = decode_inputs = None
 
 def run_request(trial, ids):
     start = time.perf_counter()
-    if not runtime_switch_us:
+    state_handle = G.greedy_batch_state_create(batch, output_tokens) if native_greedy_state else None
+    # Keep the established default path's timing and call sequence unchanged.
+    if not runtime_switch_us and state_handle is None:
         result = run_request_body(trial, ids, start)
-        result['runtime_scheduling'] = dict(requested_microseconds=0,
-            default_seconds=None, effective_seconds=None, restored_seconds=None, applied=False)
+        result.update(runtime_scheduling=dict(requested_microseconds=0,
+            default_seconds=None, effective_seconds=None, restored_seconds=None, applied=False),
+            runtime_scheduling_finish_seconds=0., native_greedy_state=False,
+            native_greedy_state_finish_seconds=0., request_wrapper_finish_seconds=0.)
         return result
-    with RuntimeSwitchScope(runtime_switch_us) as scheduling:
-        result = run_request_body(trial, ids, start)
+    scheduling = None
+    try:
+        if runtime_switch_us:
+            with RuntimeSwitchScope(runtime_switch_us) as scheduling:
+                result = run_request_body(trial, ids, start, state_handle)
+        else:
+            result = run_request_body(trial, ids, start, state_handle)
+    finally:
+        if state_handle is not None:
+            release_started = time.perf_counter()
+            if not G.greedy_batch_state_release(state_handle):
+                raise RuntimeError('Native greedy batch state release failed')
+            release_seconds = time.perf_counter() - release_started
+        else:
+            release_seconds = 0.
+    wall = time.perf_counter() - start
+    body_wall = result['full_request_wall_seconds']
+    result['native_greedy_state'] = bool(native_greedy_state)
+    result['native_greedy_state_finish_seconds'] = release_seconds
+    result['full_request_wall_seconds'] = wall
+    result['full_request_output_tokens_per_second'] = batch * output_tokens / wall
+    result['request_completion_seconds'] = [wall] * batch
+    result['runtime_scheduling'] = dict(scheduling.metadata) if scheduling else dict(
+        requested_microseconds=0, default_seconds=None, effective_seconds=None,
+        restored_seconds=None, applied=False)
     # The full window includes interval set/verification/restoration as well
     # as preparation, sampling and output assembly. Decode retains its own
     # first-token-to-last-token window and is not the acceptance metric.
-    wall = time.perf_counter() - start
-    result.update(runtime_scheduling=dict(scheduling.metadata),
-        runtime_scheduling_finish_seconds=wall - result['full_request_wall_seconds'],
-        full_request_wall_seconds=wall,
-        full_request_output_tokens_per_second=batch * output_tokens / wall,
-        request_completion_seconds=[wall] * batch)
+    wrapper_residual = max(0., wall - body_wall - release_seconds)
+    result['runtime_scheduling_finish_seconds'] = wrapper_residual if scheduling else 0.
+    result['request_wrapper_finish_seconds'] = wrapper_residual if not scheduling else 0.
     return result
 
 
-def run_request_body(trial, ids, start):
+def run_request_body(trial, ids, start, state_handle=None):
     prefill_steps = []
     reply = None
     for chunk_index, offset in enumerate(range(0, len(ids), chunk)):
@@ -257,14 +288,15 @@ def run_request_body(trial, ids, start):
                 position_pattern * batch, offset + real, offset)
         need_sample = not final_prefill_sample_only or offset + real == len(ids)
         options = dict(sample=need_sample, sample_batch=True,
-            reuse_output=reuse_output, native_candidate_merge=native_candidate_merge)
+            reuse_output=reuse_output, native_candidate_merge=native_candidate_merge,
+            native_greedy_state=state_handle)
         if patterns is not None:
             options['pattern_values'] = patterns
         reply = pair.forward_prefill(prefill_inputs, **options)
         capture.prefill_end(trial, chunk_index)
         prefill_steps.append(time.perf_counter() - step)
-    rows = [[int(value)] for value in reply['token_ids']]
-    if len(rows) != batch:
+    rows = None if state_handle is not None else [[int(value)] for value in reply['token_ids']]
+    if rows is not None and len(rows) != batch:
         raise ValueError('Missing prefill output requests')
     first_token = time.perf_counter()
     decode_steps = []
@@ -272,9 +304,13 @@ def run_request_body(trial, ids, start):
         capture.decode_begin(trial, offset)
         step = time.perf_counter()
         index = len(ids) + offset - 1
-        tokens = [row[-1] for row in rows]
+        # Native state keeps its token history outside Python; feed the last
+        # selected batch directly from the preceding forward result.
+        tokens = (reply['token_ids'] if state_handle is not None else
+                  [row[-1] for row in rows])
         options = dict(sample=True, sample_batch=True,
-            reuse_output=reuse_output, native_candidate_merge=native_candidate_merge)
+            reuse_output=reuse_output, native_candidate_merge=native_candidate_merge,
+            native_greedy_state=state_handle)
         if pattern_updates:
             options['pattern_values'] = [tokens, [index], [index + 1], [index]]
         else:
@@ -283,10 +319,15 @@ def run_request_body(trial, ids, start):
         tokens = reply['token_ids']
         if len(tokens) != batch:
             raise ValueError('Missing decode output requests')
-        for row, token in zip(rows, tokens):
-            row.append(int(token))
+        if state_handle is None:
+            for row, token in zip(rows, tokens):
+                row.append(int(token))
         capture.decode_end(trial, offset)
         decode_steps.append(time.perf_counter() - step)
+    if state_handle is not None:
+        rows = G.greedy_batch_state_history(state_handle)
+        if len(rows) != batch or any(len(row) != output_tokens for row in rows):
+            raise ValueError('Native greedy history has an incomplete request')
     finish = time.perf_counter()
     return dict(trial=trial, token_ids_by_request=rows, prefill_kv_reused_for_decode_trial=False,
         prefill_step_seconds=prefill_steps, prefill_seconds=first_token - start,
@@ -361,6 +402,7 @@ def measure_case(case, index, cold_startup_seconds):
             **{key:value for key,value in os.environ.items()
             if key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_'))
             and not key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD'))}},
+        resident_host_candidates=resident_host_candidates,
         hardware=plan['hardware'], hardware_csv=profile['hardware_csv'], batch=batch,
         input_token_ids=ids, input_tokens_per_request=len(ids), output_tokens_per_request=output_tokens,
         max_context_tokens_per_request=capacity, prefill_chunk_tokens=chunk,

@@ -37,6 +37,8 @@ parser.add_argument('--final-prefill-sample-only', type=int, choices=(0,1), defa
                     help='sample only the true final prefill chunk; every engine/KV chunk still executes')
 parser.add_argument('--pattern-updates', type=int, choices=(0,1), default=0,
                     help='checked bounded integer row patterns enqueued by each rank worker')
+parser.add_argument('--native-greedy-state', type=int, choices=(0,1), default=0,
+                    help='resident native token-history and candidate feedback state')
 parser.add_argument('--runtime-switch-us', type=int, choices=(0,100,200,1000), default=0,
                     help='explicit process-local scheduling interval experiment for serial resident requests')
 parser.add_argument('--vllm-only', action='store_true',
@@ -47,7 +49,8 @@ if args.runtime_switch_us and (args.resident_profile is None or args.vllm_only):
 host_candidates = dict(GARNET_RESIDENT_REUSE_OUTPUT=str(args.reuse_output),
     GARNET_RESIDENT_NATIVE_GREEDY_MERGE=str(args.native_greedy_merge),
     GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY=str(args.final_prefill_sample_only),
-    GARNET_RESIDENT_PATTERN_UPDATES=str(args.pattern_updates))
+    GARNET_RESIDENT_PATTERN_UPDATES=str(args.pattern_updates),
+    GARNET_RESIDENT_NATIVE_GREEDY_STATE=str(args.native_greedy_state))
 if any(value == '1' for value in host_candidates.values()) and (args.resident_profile is None or args.vllm_only):
     raise ValueError('Host lifecycle candidates require a resident Garnet comparison')
 if args.vllm_only and args.reuse_vllm_manifest is not None:

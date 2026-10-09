@@ -235,7 +235,7 @@ class TensorParallel:
         self.executor = ThreadPoolExecutor(max_workers=2)
 
     def forward(self, activation, controls, sample=False, sample_batch=False,
-                reuse_output=False, native_candidate_merge=False):
+                reuse_output=False, native_candidate_merge=False, native_greedy_state=None):
         import garnet as G
         import os
 
@@ -259,11 +259,13 @@ class TensorParallel:
                 G.cuda_set_device(previous)
 
         return self._run_prepared(prepared, compact_sample=sample and self.greedy_candidate_pairs,
-                                  native_candidate_merge=native_candidate_merge)
+                                  native_candidate_merge=native_candidate_merge,
+                                  native_greedy_state=native_greedy_state)
 
     def forward_rank_local(self, rank_inputs, sample=False, scalar_values=None,
                            sample_batch=False, vector_values=None, reuse_output=False,
-                           native_candidate_merge=False, pattern_values=None):
+                           native_candidate_merge=False, pattern_values=None,
+                           native_greedy_state=None):
         """Run tensors already resident on their corresponding rank device."""
         if len(rank_inputs) != len(self.stages):
             raise ValueError('one input group per tensor-parallel rank is required')
@@ -296,10 +298,11 @@ class TensorParallel:
                                   vector_updates=vector_values is not None,
                                   pattern_updates=pattern_values is not None,
                                   compact_sample=sample and self.greedy_candidate_pairs,
-                                  native_candidate_merge=native_candidate_merge)
+                                  native_candidate_merge=native_candidate_merge,
+                                  native_greedy_state=native_greedy_state)
 
     def _run_prepared(self, prepared, updates=None, vector_updates=False, compact_sample=False,
-                      native_candidate_merge=False, pattern_updates=False):
+                      native_candidate_merge=False, pattern_updates=False, native_greedy_state=None):
         import garnet as G
         import os
 
@@ -335,6 +338,13 @@ class TensorParallel:
             for index, (stage, request) in enumerate(prepared)]
         results = [future.result() for future in futures]
         if compact_sample:
+            if native_greedy_state is not None:
+                previous = G.cuda_set_device(self.stages[0]['device_id'])
+                try:
+                    return {'status': 'ok', 'token_ids': G.greedy_batch_state_step(
+                        native_greedy_state, results[0]['output'])}
+                finally:
+                    G.cuda_set_device(previous)
             previous = G.cuda_set_device(self.stages[0]['device_id'])
             try:
                 if native_candidate_merge:

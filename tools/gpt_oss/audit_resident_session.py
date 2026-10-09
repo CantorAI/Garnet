@@ -19,6 +19,12 @@ ENGINE_SOURCE_PATHS=('src','python','xModel','tools/gpt_oss/pipeline.py',
     'plugins/gpt_oss/cuda/tp_peer_group_options.cpp','plugins/gpt_oss/cuda/tp_peer_group.cu',
     'plugins/gpt_oss/cuda/tp_peer_owner.cuh')
 ROUTER_WARP_POLICY='GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS'
+RESIDENT_HOST_FLAGS={
+    'GARNET_RESIDENT_REUSE_OUTPUT':'reuse_output',
+    'GARNET_RESIDENT_NATIVE_GREEDY_MERGE':'native_candidate_merge',
+    'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY':'final_prefill_sample_only',
+    'GARNET_RESIDENT_PATTERN_UPDATES':'pattern_updates',
+    'GARNET_RESIDENT_NATIVE_GREEDY_STATE':'native_greedy_state'}
 
 
 def normalize_kernel_environment(environment):
@@ -101,6 +107,25 @@ def kernel_environment(result):
         raise ValueError('Invalid allocator policy in result')
     environment['GARNET_TRT_SYNC_ALLOCATOR'] = policy
     return normalize_kernel_environment(environment)
+
+
+def resident_host_candidates(result):
+    environment=result.get('optimization_environment', {})
+    actual={}
+    for name,field in RESIDENT_HOST_FLAGS.items():
+        value=environment.get(name,'0')
+        if value not in ('0','1'):
+            raise ValueError('Invalid resident host candidate environment: '+name)
+        actual[field]=value=='1'
+    if actual['native_greedy_state'] and actual['native_candidate_merge']:
+        raise ValueError('Mutually exclusive native greedy paths were both enabled')
+    recorded=result.get('resident_host_candidates')
+    if recorded is None:
+        if any(actual.values()):
+            raise ValueError('Enabled host candidate lacks explicit result provenance')
+    elif recorded!=actual:
+        raise ValueError('Recorded resident host candidates differ from effective environment')
+    return actual
 
 
 def allocated_kv(plan):
@@ -186,8 +211,16 @@ def timed_trial(trial, batch, output, length, chunk):
         raise ValueError('Invalid complete request timing')
     scheduling = trial.get('runtime_scheduling')
     overhead = trial.get('runtime_scheduling_finish_seconds', 0.)
-    if not math.isfinite(overhead) or overhead < 0:
-        raise ValueError('Invalid scheduling finalization duration')
+    greedy_finish = trial.get('native_greedy_state_finish_seconds', 0.)
+    wrapper_finish = trial.get('request_wrapper_finish_seconds', 0.)
+    native_state = trial.get('native_greedy_state', False)
+    if (not math.isfinite(overhead) or overhead < 0 or
+            not math.isfinite(wrapper_finish) or wrapper_finish < 0):
+        raise ValueError('Invalid request finalization duration')
+    if (type(native_state) is not bool or not math.isfinite(greedy_finish) or greedy_finish < 0 or
+            ('native_greedy_state_finish_seconds' not in trial and native_state) or
+            (not native_state and greedy_finish != 0)):
+        raise ValueError('Invalid native greedy state finalization evidence')
     if scheduling is not None:
         requested = scheduling.get('requested_microseconds')
         if type(requested) is not int or requested not in (0,100,200,1000):
@@ -208,7 +241,7 @@ def timed_trial(trial, batch, output, length, chunk):
             raise ValueError('Disabled scheduling has applied state or overhead')
     elif overhead != 0:
         raise ValueError('Scheduling overhead lacks its policy')
-    close(full, prefill + decode_time + overhead)
+    close(full, prefill + decode_time + overhead + greedy_finish + wrapper_finish)
     close(trial['full_request_output_tokens_per_second'], batch * output / full)
     close(trial['decode_aggregate_output_tokens_per_second'], batch * (output - 1) / decode_time)
     if (len(trial['request_first_token_seconds']) != batch or len(trial['request_completion_seconds']) != batch or
@@ -346,10 +379,14 @@ def audit(session_path, controls_path, decode, archive_root=None, source_reposit
         if kernel_environment(result) != profile_environment or kernel_environment(control) != profile_environment:
             raise ValueError('Session/control kernel settings differ from measured profile')
         for value in (result, control):
+            host_candidates=resident_host_candidates(value)
             if (sha(locate(value['resident_profile'])) != session['resident_profile_sha256'] or
                     value['padded_prefill'] != profile['padded_prefill'] or
                     value['kv_pages_per_gpu'] != plan['kv_pages']):
                 raise ValueError('Actual profile/padding/page identity differs')
+            for item in value['complete_warmups']+value['decode_trials']:
+                if item.get('native_greedy_state',False) is not host_candidates['native_greedy_state']:
+                    raise ValueError('Request native-state flag differs from effective host environment')
             if (value['batch'] != batch or value['output_tokens_per_request'] != output or
                     value['input_token_ids'] != request['input_ids'] or
                     value['input_tokens_per_request'] != len(request['input_ids']) or

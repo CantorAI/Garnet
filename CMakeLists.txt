@@ -282,6 +282,13 @@ add_executable(garnet_model_catalog_test
     "${CMAKE_CURRENT_SOURCE_DIR}/src/model/model_catalog.cpp"
 )
 
+find_package(Threads REQUIRED)
+add_executable(garnet_greedy_batch_state_test
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/gpt_oss/greedy_batch_state.cpp")
+target_include_directories(garnet_greedy_batch_state_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/model")
+target_link_libraries(garnet_greedy_batch_state_test PRIVATE Threads::Threads)
+
 target_include_directories(garnet_model_catalog_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
@@ -351,11 +358,16 @@ add_test(NAME garnet_q4q8_linear COMMAND garnet_q4q8_linear_test)
 add_test(NAME garnet_model_catalog COMMAND garnet_model_catalog_test
     "${CMAKE_CURRENT_SOURCE_DIR}/xModel")
 add_test(NAME garnet_continuous_batch_scheduler COMMAND garnet_continuous_batch_scheduler_test)
+add_test(NAME garnet_greedy_batch_state COMMAND garnet_greedy_batch_state_test)
 add_test(NAME garnet_device_kv_cabi COMMAND garnet_device_kv_native_smoke "$<TARGET_FILE:garnet>")
 add_test(NAME garnet_logits_sampler_cabi COMMAND garnet_debug_logits_sampler_native_smoke "$<TARGET_FILE:garnet>")
 add_test(NAME garnet_native_api COMMAND "$<TARGET_FILE:xlang3>"
     "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/native_api.py")
 set_tests_properties(garnet_native_api PROPERTIES TIMEOUT 120
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:garnet>")
+add_test(NAME garnet_gpt_oss_greedy_batch_state_api COMMAND "$<TARGET_FILE:xlang3>"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test2026/gpt_oss/greedy_batch_state_api.py")
+set_tests_properties(garnet_gpt_oss_greedy_batch_state_api PROPERTIES TIMEOUT 120
     WORKING_DIRECTORY "$<TARGET_FILE_DIR:garnet>")
 add_test(NAME garnet_production_capture COMMAND "$<TARGET_FILE:xlang3>"
     "${CMAKE_CURRENT_SOURCE_DIR}/test/xlang3/models/run_production_capture.py")

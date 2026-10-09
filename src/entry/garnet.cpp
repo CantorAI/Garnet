@@ -3399,6 +3399,102 @@ namespace Garnet
         return result;
     }
 
+    X::Value GarnetAPI::GreedyBatchStateCreate(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        if (!kwParams.empty() || params.size()!=2)
+            throw X::Error("greedy_batch_state_create expects batch and output count");
+        const auto batch=CheckedInt64(params[0],"greedy batch size");
+        const auto outputs=CheckedInt64(params[1],"greedy output count");
+        std::shared_ptr<GreedyBatchState> state;
+        try {
+            state=std::make_shared<GreedyBatchState>(static_cast<std::size_t>(batch),
+                static_cast<std::size_t>(outputs));
+        } catch (const std::exception& error) {
+            throw X::Error(error.what());
+        }
+        std::lock_guard<std::mutex> hold(m_greedyBatchMutex);
+        if (m_greedyBatchStates.size()>=8 || m_nextGreedyBatchState<=0 ||
+            m_nextGreedyBatchState==LLONG_MAX)
+            throw X::Error("greedy batch state registry capacity exhausted");
+        const auto handle=m_nextGreedyBatchState++;
+        m_greedyBatchStates.emplace(handle,std::move(state));
+        return NativeValue(Host(),handle);
+    }
+
+    X::Value GarnetAPI::GreedyBatchStateStep(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        if (!kwParams.empty() || params.size()!=2 || !X::Tensor::IsTensor(params[1]))
+            throw X::Error("greedy_batch_state_step expects state handle and candidate tensor");
+        const auto handle=CheckedInt64(params[0],"greedy batch state handle");
+        std::shared_ptr<GreedyBatchState> state;
+        {
+            std::lock_guard<std::mutex> hold(m_greedyBatchMutex);
+            auto found=m_greedyBatchStates.find(handle);
+            if (found==m_greedyBatchStates.end()) throw X::Error("unknown or released greedy batch state");
+            state=found->second;
+        }
+        X::Tensor tensor(params[1]);
+        ValidateDenseTensor(tensor);
+        const auto info=tensor.Info();
+        const auto count=TensorCount(tensor);
+        if (info.dtype!=X3_TENSOR_FLOAT32 || count<=0 || count%4 ||
+            TensorHelper::GetGPUMemory(tensor)==nullptr)
+            throw X::Error("greedy batch candidate output must be dense GPU FP32 score/ID pairs");
+        X::Tensor cpu=TensorHelper::CopyToCPU(tensor);
+        auto use=cpu.Acquire();
+        std::vector<std::int32_t> ids;
+        try {
+            ids=state->Consume(static_cast<const float*>(cpu.Info().data),
+                static_cast<std::size_t>(count));
+        } catch (const std::exception& error) {
+            throw X::Error(error.what());
+        }
+        auto result=X::Value::List(Host());
+        for (const auto id:ids) result.Append(NativeValue(Host(),static_cast<long long>(id)));
+        return NativeValue(Host(),result);
+    }
+
+    X::Value GarnetAPI::GreedyBatchStateHistory(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        if (!kwParams.empty() || params.size()!=1)
+            throw X::Error("greedy_batch_state_history expects one state handle");
+        const auto handle=CheckedInt64(params[0],"greedy batch state handle");
+        std::shared_ptr<GreedyBatchState> state;
+        {
+            std::lock_guard<std::mutex> hold(m_greedyBatchMutex);
+            auto found=m_greedyBatchStates.find(handle);
+            if (found==m_greedyBatchStates.end()) throw X::Error("unknown or released greedy batch state");
+            state=found->second;
+        }
+        const auto status=state->GetStatus();
+        const auto flat=state->History();
+        auto rows=X::Value::List(Host());
+        for(std::size_t row=0;row<status.batch;++row) {
+            auto tokens=X::Value::List(Host());
+            for(std::size_t step=0;step<status.outputs;++step)
+                tokens.Append(NativeValue(Host(),static_cast<long long>(flat[row*status.outputs+step])));
+            rows.Append(NativeValue(Host(),tokens));
+        }
+        return NativeValue(Host(),rows);
+    }
+
+    X::Value GarnetAPI::GreedyBatchStateRelease(const X::ARGS& params, const X::KWARGS& kwParams)
+    {
+        if (!kwParams.empty() || params.size()!=1)
+            throw X::Error("greedy_batch_state_release expects one state handle");
+        const auto handle=CheckedInt64(params[0],"greedy batch state handle");
+        std::shared_ptr<GreedyBatchState> state;
+        {
+            std::lock_guard<std::mutex> hold(m_greedyBatchMutex);
+            auto found=m_greedyBatchStates.find(handle);
+            if (found==m_greedyBatchStates.end()) return X::Value(false);
+            state=std::move(found->second);
+            m_greedyBatchStates.erase(found);
+        }
+        state->Release();
+        return X::Value(true);
+    }
+
     X::Value GarnetAPI::TensorToGPU(const X::ARGS& params, const X::KWARGS& kwParams)
     {
         X::Value retValue;

@@ -5,6 +5,7 @@
 #include "xlang3/xlang3.h"
 #include "garnet_tensor.h"
 #include "model.h"
+#include "../model/greedy_batch_state.h"
 #include "log.h"
 #include <string>
 #include <deque>
@@ -140,6 +141,9 @@ namespace Garnet
 		std::unordered_map<std::string, std::shared_ptr<ServingInstance>> m_servingInstances;
 		std::string m_defaultServingModelId;
 		mutable std::mutex m_servingMutex;
+		mutable std::mutex m_greedyBatchMutex;
+		std::unordered_map<long long, std::shared_ptr<GreedyBatchState>> m_greedyBatchStates;
+		long long m_nextGreedyBatchState = 1;
 		std::shared_ptr<ServingInstance> FindServingInstance(
 			const std::string& modelId = std::string(),
 			const std::string& capability = std::string()) const;
@@ -190,6 +194,10 @@ namespace Garnet
 			APISET().AddVarFunc("tensor_update_int_patterns_async", &GarnetAPI::TensorUpdateIntPatternsAsync);
 			APISET().AddVarFunc("tensor_to_cpu", &GarnetAPI::TensorToCPU);
 			APISET().AddVarFunc("merge_greedy_candidate_pairs", &GarnetAPI::MergeGreedyCandidatePairs);
+			APISET().AddVarFunc("greedy_batch_state_create", &GarnetAPI::GreedyBatchStateCreate);
+			APISET().AddVarFunc("greedy_batch_state_step", &GarnetAPI::GreedyBatchStateStep);
+			APISET().AddVarFunc("greedy_batch_state_history", &GarnetAPI::GreedyBatchStateHistory);
+			APISET().AddVarFunc("greedy_batch_state_release", &GarnetAPI::GreedyBatchStateRelease);
 			APISET().AddVarFunc("serve_model", &GarnetAPI::ServeModel);
 			APISET().AddVarFunc("list_available_models_json", &GarnetAPI::ListAvailableModelsJson);
 			APISET().AddVarFunc("list_loaded_models_json", &GarnetAPI::ListLoadedModelsJson);
@@ -268,6 +276,10 @@ namespace Garnet
 		X::Value TensorUpdateIntPatternsAsync(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value TensorToCPU(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value MergeGreedyCandidatePairs(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value GreedyBatchStateCreate(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value GreedyBatchStateStep(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value GreedyBatchStateHistory(const X::ARGS& params, const X::KWARGS& kwParams);
+		X::Value GreedyBatchStateRelease(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ServeModel(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ListAvailableModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);
 		X::Value ListLoadedModelsJson(const X::ARGS& params, const X::KWARGS& kwParams);

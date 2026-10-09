@@ -30,6 +30,8 @@ class Model:
 
 g=types.ModuleType('garnet');g.cuda_set_device=set_device;g.cuda_synchronize=lambda:None
 g.tensor_to_cpu=lambda tensor:Host();g.merge_greedy_candidate_pairs=native_merge
+state_steps=[]
+g.greedy_batch_state_step=lambda state,tensor:(state_steps.append((state,tensor)) or [31,32])
 sys.modules['garnet']=g
 from garnet_pipeline import TensorParallel
 stages=[dict(rank=r,device_id=r,model=Model(),keys='K',values='V') for r in range(2)]
@@ -49,6 +51,10 @@ try:
             unsampled=pair.forward_rank_local(inputs,sample=False,
                 reuse_output=reuse,native_candidate_merge=native)
             assert unsampled['output']=='compact' and not sample_calls
+            reply=pair.forward_rank_local(inputs,sample=True,sample_batch=True,
+                reuse_output=reuse,native_greedy_state=73)
+            assert reply==dict(status='ok',token_ids=[31,32])
+            assert state_steps[-1]==(73,'compact') and not sample_calls
 finally:
     pair.executor.shutdown(wait=True)
 
@@ -57,7 +63,7 @@ finally:
 tree=ast.parse((repo/'tools/gpt_oss/run_resident_batch_tp2.py').read_text())
 defs=[node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name in ('optional_flag','run_request','run_request_body')]
 assert len(defs)==3
-namespace=dict(os=os,time=time,chunk=4,batch=3,output_tokens=4,prefill_inputs=[],decode_inputs=[],pattern_updates=False,runtime_switch_us=0)
+namespace=dict(os=os,time=time,chunk=4,batch=3,output_tokens=4,prefill_inputs=[],decode_inputs=[],pattern_updates=False,runtime_switch_us=0,native_greedy_state=False)
 class Capture:
     def prefill_begin(self,*args):pass
     def prefill_end(self,*args):pass
@@ -129,6 +135,31 @@ for reuse in (False,True):
                 assert request['pattern_values']==[[100+index]*3,[5+index],[6+index],[5+index]]
             assert all(r['reuse_output']==reuse and r['native_candidate_merge']==native for r in requests)
             assert [r['sample'] for r in requests[:2]]==[not final_only,True]
+
+# Opt-in native state owns history, supplies worker feedback and is released
+# after full-history materialization. The ordinary path above stays isolated.
+state_events=[]
+class NativeStateAPI:
+    def greedy_batch_state_create(self,batch,outputs):state_events.append(('create',batch,outputs));return 41
+    def greedy_batch_state_history(self,handle):
+        assert handle==41;state_events.append(('history',handle));return [[100,101,102,103]]*3
+    def greedy_batch_state_release(self,handle):
+        assert handle==41;state_events.append(('release',handle));return True
+namespace['G']=NativeStateAPI();namespace['native_greedy_state']=True
+requests=[]
+class NativePair:
+    def forward_prefill(self,prepared,**kwargs):
+        requests.append(('prefill',kwargs));return dict(token_ids=[100]*3) if kwargs['sample'] else dict(output='unobserved')
+    def forward_decode(self,prepared,**kwargs):
+        requests.append(('decode',kwargs));return dict(token_ids=[100+sum(r[0]=='decode' for r in requests)]*3)
+namespace.update(pair=NativePair(),final_prefill_sample_only=True,pattern_updates=True)
+result=namespace['run_request'](0,[11,12,13,14,15])
+assert result['token_ids_by_request']==[[100,101,102,103]]*3
+assert result['native_greedy_state'] is True and result['native_greedy_state_finish_seconds']>=0
+assert state_events[0]==('create',3,4) and state_events[-2][0]=='history' and state_events[-1]==('release',41)
+assert [r[0] for r in requests]==['prefill','prefill','decode','decode','decode']
+assert all(r[1]['native_greedy_state']==41 for r in requests)
+assert result['full_request_wall_seconds']>=result['prefill_seconds']+result['decode_wall_seconds']
 
 # Actual worker forwarding, device affinity and update-before-model ordering.
 worker=[]
