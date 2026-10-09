@@ -15,6 +15,14 @@ import subprocess
 ENGINE_SOURCE_PATHS=('src','python','xModel','tools/gpt_oss/pipeline.py',
     'tools/gpt_oss/kv_layout.py','tools/gpt_oss/engine_profile_shape.py',
     'tools/gpt_oss/resident_budget.py','tools/gpt_oss/profile_tp_engine_memory.py')
+ROUTER_WARP_POLICY='GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS'
+
+
+def normalize_kernel_environment(environment):
+    """Map only a pre-OPT79 absent warp setting to the legacy geometry4."""
+    normalized=dict(environment)
+    normalized.setdefault(ROUTER_WARP_POLICY,'4')
+    return normalized
 
 
 def profile_source_identity(profile, observed_commit, source_repository=None, archive_root=None):
@@ -87,8 +95,7 @@ def kernel_environment(result):
     if policy not in ('0', '1'):
         raise ValueError('Invalid allocator policy in result')
     environment['GARNET_TRT_SYNC_ALLOCATOR'] = policy
-    environment.setdefault('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS', '4')
-    return environment
+    return normalize_kernel_environment(environment)
 
 
 def allocated_kv(plan):
@@ -306,7 +313,8 @@ def audit(session_path, controls_path, decode, archive_root=None, source_reposit
         for field in ('source_commit', 'native_binaries', 'hardware_csv', 'resident_profile_sha256'):
             if result[field] != session[field] or control[field] != result[field]:
                 raise ValueError('Fresh single-case control identity differs: ' + field)
-        if kernel_environment(result) != profile['kernel_environment'] or kernel_environment(control) != profile['kernel_environment']:
+        profile_environment=normalize_kernel_environment(profile['kernel_environment'])
+        if kernel_environment(result) != profile_environment or kernel_environment(control) != profile_environment:
             raise ValueError('Session/control kernel settings differ from measured profile')
         for value in (result, control):
             if (sha(locate(value['resident_profile'])) != session['resident_profile_sha256'] or

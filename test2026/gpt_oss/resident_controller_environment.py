@@ -13,12 +13,19 @@ from unittest.mock import patch
 repo = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(repo / 'tools/gpt_oss'))
 from resident_budget import normalize_kernel_environment
+from audit_resident_session import (kernel_environment as audit_kernel_environment,
+    normalize_kernel_environment as normalize_audit_environment)
 
 router_policy = 'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS'
 assert normalize_kernel_environment({}) == {router_policy:'4'}
 assert normalize_kernel_environment({router_policy:'4'}) == {router_policy:'4'}
 assert normalize_kernel_environment({}) != normalize_kernel_environment({router_policy:'2'})
 assert normalize_kernel_environment({router_policy:'1'}) == {router_policy:'1'}
+assert normalize_audit_environment({}) == {router_policy:'4'}
+assert audit_kernel_environment({'optimization_environment':{'GARNET_TRT_SYNC_ALLOCATOR':'0'}}) == {
+    'GARNET_TRT_SYNC_ALLOCATOR':'0',router_policy:'4'}
+assert normalize_audit_environment({}) != normalize_audit_environment({router_policy:'2'})
+assert normalize_audit_environment({router_policy:'malformed'}) == {router_policy:'malformed'}
 
 class ObservedCommand(Exception):
     pass
