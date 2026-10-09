@@ -1657,3 +1657,8 @@ The original strict cross-run audit stopped on its exact-trajectory assertion at
 ### OPT81 / OPT82 prefill follow-up
 
 The K64 down-projection tile with two CTAs passed its native/resident correctness gates, but the short full-request test changed token trajectories and remained slower than vLLM. It is rejected for serving. The next controlled test compares the current large-prefill tile64 with the existing tile32 path on the same four full workloads; details, metrics, audit hashes, and stopping criteria are appended to the research log.
+
+
+### OPT82 tile-size result
+
+Tile32 did not meet the serving quality gate. On the three short batch-output tests it passed every saved-answer check, but changed generated trajectories across all requests and all measured trials compared with tile64. Its full-request medians were 8,337.78 / 8,662.67 / 8,582.42 tok/s for arithmetic, code tracing, and instruction following, versus tile64 at 8,302.40 / 8,540.04 / 8,367.23 and the latest fresh optimized vLLM0.31.0 references at 8,734.34 / 9,470.65 / 8,737.32. Tile32’s prefill and first-token latency were worse. Keep tile64; the small throughput increases are invalid as a win because outputs diverged. Long tile32 serving was not run: after its profile completed, free disk fell below the 15GiB safety floor and stopped the controller. The archive and independent audit are under `D:/CantorAI/work/vast-54543362/opt82-large-prefill-tile32-vs64/`; proof SHA256 `5147b480304cfc1fead6bea9ce2c235e8371c488339fcf00ea47dae61b40769f`. The two unused tile32 profile caches were removed after preserving the verified archive; the Vast VM remains available. The full measured comparison and failure details are appended to the research log. The optimization goal remains unmet.
