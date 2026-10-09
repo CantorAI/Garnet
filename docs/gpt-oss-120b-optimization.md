@@ -1708,3 +1708,14 @@ Tested a 188-CTA peer-reduction grid against 128 CTAs on two RTX PRO 6000 GPUs. 
 CTA188 did not beat CTA128 in complete-request throughput and still trails vLLM on every prompt. The default remains CTA64. Per-rank KV was 13.44 GB short and 13.28 GB long; measured GPU peaks were about 81.2 GiB short and 80.6 GiB long. Full details and verified evidence hashes are appended to the research log. The goal remains unmet.
 
 Next I am testing whether 2048-token outputs improve aggregate throughput by amortizing prefill/control costs at smaller admitted batches: short batch 256, context 2304; long batch 128, context 4096. Fresh vLLM runs come first for all four prompts, followed by fresh Garnet admission and sequential measurements. The original 1024-token results remain the primary comparison.
+## OPT87 update: 2048-token output sweep (short prompts)
+
+Fresh vLLM 0.31.0 runs came first, followed by a fresh Garnet profile and a sequential three-prompt resident run at batch 256, input 256, output 2048, context 2304. All 2,304 answer checks per engine passed. Garnet's warmup and three timed output trajectories matched exactly; vLLM's three measured trial matrices varied, while all passed the expected-answer checks.
+
+| Prompt | Garnet full tok/s | vLLM full tok/s | Difference |
+|---|---:|---:|---:|
+| Arithmetic | 6636.62 | 7183.92 | -7.62% |
+| Code tracing | 7093.71 | 7966.73 | -10.96% |
+| Instruction following | 6279.12 | 7017.44 | -10.52% |
+
+Garnet used 11.55 GB KV per GPU and peaked at 80,833/80,815 MiB. The independent audit passed (SHA-256 `7dc1bfae949f2be864690082d8e9d276edcea1c23843c00e2a866193aa2bc2cb`). I archived and verified the short-profile evidence, then retired only its four generated engine files and verified all 49 metadata files; 29.08 GB is now free. The long 2,048-token retrieval run remains pending, and the original 1,024-token goal is still unmet.
