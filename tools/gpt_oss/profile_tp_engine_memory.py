@@ -17,6 +17,7 @@ root = Path(os.environ.get('CANTORAI_ROOT', repo.parent))
 from resident_budget import (native_identity, hardware_identity, kernel_environment,
                              checkpoint_identity, plan_identity, file_sha256)
 from engine_profile_shape import candidate_shape, validate_candidate_shape
+from resident_runtime_scheduling import POLICY as runtime_switch_policy, parse_switch_us
 
 if len(sys.argv) in (4,5) and sys.argv[1] == '--runtime':
     import garnet as G
@@ -135,6 +136,9 @@ for key in list(env):
     if key == 'GARNET_TRT_SYNC_ALLOCATOR' or key.startswith(('GARNET_GPT_OSS_', 'GARNET_TP_', 'GARNET_BATCH_', 'GARNET_RESIDENT_')):
         del env[key]
 for key, value in reference['optimization_environment'].items():
+    if key == runtime_switch_policy:
+        parse_switch_us(value)
+        continue  # Scheduling is selected only by the later serving CLI, never saved provenance.
     if key in ('GARNET_RESIDENT_REUSE_OUTPUT', 'GARNET_RESIDENT_NATIVE_GREEDY_MERGE',
                'GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY', 'GARNET_RESIDENT_PATTERN_UPDATES',
                'GARNET_RESIDENT_NATIVE_GREEDY_STATE'):
