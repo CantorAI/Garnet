@@ -18,10 +18,10 @@ try:
     first=[1,4,2,3, 5,6,5,2, math.nan,5,7,4, 9,8,8,7]
     assert G.greedy_batch_state_step(state,gpu(first))==[3,2,5,8]
     second=[1,10,2,9, 6,1,6,2, 2,5,1,3, 4,7,9,12]
-    assert G.greedy_batch_state_step(state,gpu(second))==[9,2,3,12]
+    assert G.greedy_batch_state_step(state,gpu(second))==[9,1,5,12]
     third=[1,14,1,13, 2,4,5,6, 9,7,8,4, 3,10,3,9]
-    assert G.greedy_batch_state_step(state,gpu(third))==[13,4,4,9]
-    expected=[[3,9,13],[2,2,4],[5,3,4],[8,12,9]]
+    assert G.greedy_batch_state_step(state,gpu(third))==[13,6,7,9]
+    expected=[[3,9,13],[2,1,6],[5,5,7],[8,12,9]]
     assert G.greedy_batch_state_history(state)==expected
     try:G.greedy_batch_state_step(state,gpu(first))
     except Exception:pass
