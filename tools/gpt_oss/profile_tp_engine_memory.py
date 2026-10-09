@@ -88,6 +88,8 @@ parser.add_argument('--prepacked-candidate', action='store_true',
 parser.add_argument('--large-prefill-block', type=int, choices=(0,64),
     help='explicit OPT42 large-prefill tile override; not a validated model result')
 parser.add_argument('--prefill-ctas', type=int, choices=(1,2,4))
+parser.add_argument('--decode-ctas', type=int, choices=(1,2),
+    help='explicit decode scheduling candidate; requires an explicit prefill CTA count and separate correctness gates')
 parser.add_argument('--prefill-down-k', type=int, choices=(64,128),
     help='explicit OPT43 large-prefill down-projection K tile; no quality claim')
 parser.add_argument('--prefill-down-ctas', type=int, choices=(1,2,4))
@@ -107,6 +109,8 @@ parser.add_argument('--bf16-peer-group', type=int, choices=(0,1), help='explicit
 parser.add_argument('--sync-allocator', type=int, choices=(0,1),
     help='explicit cached runtime allocator candidate; requires separate memory/quality gates')
 args = parser.parse_args()
+if args.decode_ctas is not None and args.prefill_ctas is None:
+    raise ValueError('Decode CTA override requires an explicit prefill CTA count')
 reference_path, directory = args.reference, args.directory
 reference_bytes = reference_path.read_bytes()
 reference = json.loads(reference_bytes)
@@ -141,6 +145,7 @@ if args.prepacked_candidate:
 if env.get('GARNET_GPT_OSS_MARLIN_PREPACKED') != '1':
     raise ValueError('Reference must be from a completed prepacked workload')
 overrides = {key: str(value) for key, value in (
+    ('GARNET_GPT_OSS_MARLIN_CTAS_PER_SM', args.decode_ctas),
     ('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', args.large_prefill_block),
     ('GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM', args.prefill_ctas),
     ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K', args.prefill_down_k),

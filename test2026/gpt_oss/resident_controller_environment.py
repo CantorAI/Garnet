@@ -35,6 +35,7 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_RESIDENT_PATTERN_UPDATES': '1',
             'GARNET_BATCH_PREFILL_CHUNK': '16',
             'GARNET_GPT_OSS_MARLIN_PREPACKED': '1',
+            'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM': '1',
             'GARNET_GPT_OSS_DIRECT_ALLREDUCE': '1',
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE': '1',
             'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE': '1'})))
@@ -74,6 +75,7 @@ with tempfile.TemporaryDirectory() as temporary:
                 'GARNET_GPT_OSS_DECODE_ROUTER_TENSORCORE': '1',
                 'GARNET_GPT_OSS_HYBRID_KV': '1',
                 'GARNET_GPT_OSS_MARLIN_FAST_HOST_PACK': '1',
+                'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM': '2',
                 'GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL': '1'}), \
              patch.object(sys,'argv',[name]+list(map(str,args))), \
              patch('subprocess.check_output',return_value=''), \
@@ -91,11 +93,30 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_RESIDENT_PROFILE':None, 'GARNET_RESIDENT_WARMUPS':None,
             'GARNET_RESIDENT_PADDED_PREFILL':'1',
             'GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK':'64',
+            'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM':'1',
             'GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM':'2',
             'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K':'64',
             'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM':'1',
             'GARNET_GPT_OSS_DIRECT_MAX_BATCH':'256',
             'GARNET_GPT_OSS_DIRECT_BATCH_CTAS':'16'})
+    for value in (1,2):
+        execute('profile_tp_engine_memory.py',[
+            reference,root/f'decode-cta-profile{value}','--padded-prefill',
+            '--decode-ctas',str(value),'--prefill-ctas','1'],{
+                'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM':str(value),
+                'GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM':'1'})
+    for value in (2,4):
+        with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),str(root/f'invalid-decode-cta{value}'),
+                '--decode-ctas',str(value)]), patch('subprocess.run') as gpu_command:
+            try:
+                runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+            except ValueError as error:
+                assert value==2 and str(error)=='Decode CTA override requires an explicit prefill CTA count'
+            except SystemExit as error:
+                assert value==4 and error.code==2
+            else:
+                raise AssertionError('Unsafe decode override must fail before subprocess work')
+            gpu_command.assert_not_called()
     for value in (0,1):
         execute('profile_tp_engine_memory.py',[
             reference,root/f'bf16-profile{value}','--padded-prefill',
