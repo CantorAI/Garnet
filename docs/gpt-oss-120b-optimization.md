@@ -1694,3 +1694,17 @@ OPT84’s bounded current-source traces passed complete output-token and expecte
 OPT85 measured the BF16 peer-reduction grid at128 CTAs against the64 default on Vast's two RTX PRO 6000 GPUs. Fresh optimized vLLM0.31.0 ran first; Garnet then ran alone with matching saved prompts, sampling and output limits. All5,280 answers per engine passed and every Garnet warmup/trial token trajectory exactly matched the qualified64-grid run. Garnet's full-request rates remained below vLLM on every case: arithmetic8,494 vs8,728tok/s, code8,656 vs9,489, instruction8,571 vs8,737, long retrieval3,717 vs3,980. Decode was faster, but TTFT remained6.8–7.0s short and25.8s long. KV was13.44GiB/rank short and13.28GiB long; sampled peaks were83.2GiB and82.6GiB/GPU. Keep64 as default; no performance ACCEPT. Independent proof SHA256 `be0af24d7ac175ed8fee9366ed2ae185d29edb87ae25e4c76b2dbeb5b90c1f96`.
 
 OPT86 proposes testing exactly188 peer-reduction CTAs (the GPU's188 SMs) against64/128, to see whether one resident CTA per SM improves the repeated prefill collective. Before any serving test, add strict option/profile/accounting support and pass native parity, lifecycle and unrestricted sanitizer gates. Keep the numerical protocol, KV and defaults unchanged; revalidate the fresh same-shape vLLM references first, then run complete Garnet requests sequentially. The gain is unproven and the full goal remains unmet.
+## OPT86 update (2026-10-09)
+
+Tested a 188-CTA peer-reduction grid against 128 CTAs on two RTX PRO 6000 GPUs. Target build and parity/lifecycle gates passed; strict memcheck reported zero memory or unexpected API errors. All outputs and request trajectories matched the qualified CTA128 run.
+
+| Prompt | Garnet full-request tok/s | vLLM tok/s | Difference | Garnet decode tok/s |
+|---|---:|---:|---:|---:|
+| Arithmetic | 8494.42 | 8727.52 | -2.67% | 9545.64 |
+| Code tracing | 8571.16 | 9488.76 | -9.67% | 9663.79 |
+| Instruction following | 8530.48 | 8737.02 | -2.36% | 9616.89 |
+| Long retrieval | 3695.20 | 3979.75 | -7.15% | 6354.32 |
+
+CTA188 did not beat CTA128 in complete-request throughput and still trails vLLM on every prompt. The default remains CTA64. Per-rank KV was 13.44 GB short and 13.28 GB long; measured GPU peaks were about 81.2 GiB short and 80.6 GiB long. Full details and verified evidence hashes are appended to the research log. The goal remains unmet.
+
+Next I am testing whether 2048-token outputs improve aggregate throughput by amortizing prefill/control costs at smaller admitted batches: short batch 256, context 2304; long batch 128, context 4096. Fresh vLLM runs come first for all four prompts, followed by fresh Garnet admission and sequential measurements. The original 1024-token results remain the primary comparison.
