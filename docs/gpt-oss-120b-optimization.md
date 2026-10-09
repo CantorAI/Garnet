@@ -1611,3 +1611,6 @@ Add optional --tensor-router-warps2/4 profiling override/defaultNone preserving 
 
 
 **OPT79 cache capacity recovered, 2026-10-09 03:43 UTC:** Retired exactly eight regenerated engine files from two unreferenced namespaces after a locally verified 98-file metadata archive and repeated source/native/idle/hash guards. Independent post-check confirms the files are gone, metadata remains byte-matched, and free disk is34.82GB (up18.67GB); the15GiB reserve remains. This clears the blocker for fresh resident profiles. No inference-speed claim yet.
+
+
+**OPT79 CTest and A/B plan, 2026-10-09 03:45 UTC:** With the XLang runtime paths set as the profiling tools require,23/25 full tests pass. The workspace test now passes; catalog and the unchanged Qwen production-capture import count remain the only failures. The earlier five-failure run lacked those runtime paths and is preserved separately. Next, run vLLM0.31.0 first on all four saved batch inputs with the established short/long shapes, then profile and serve Garnet warp4 and warp2 sequentially against those fresh references. No model-quality or speed result is claimed yet.
