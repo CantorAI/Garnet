@@ -2041,3 +2041,28 @@ The runner first measures fresh optimized vLLM 0.31.0 complete requests on each 
 
 
 **OPT93 serving retry-2:** Preflight and incremental build passed, but short-profile argument validation rejected the saved scheduler metadata `GARNET_RESIDENT_RUNTIME_SWITCH_US=200` before any profiling or inference. The interval is orchestration provenance; the profile should validate it and ignore it, matching the paired-suite behavior, while using the explicit serving CLI setting. Archive `8f3d5232…` (13,789,399 bytes) was verified/extracted; independent audit `opt93-serving-retry2-profile-failure-audit.json` (`409ba22c…`) passed all 425 source files, controller, native binaries, and failure-stage checks. Retry-3 proposes this small profile-tool validation fix, followed by fresh profiles and the same vLLM-first comparison. No benchmark result is claimed.
+
+
+**OPT93 full serving result (2026-10-09, retry 3, independently audited):** The two RTX PRO 6000s ran optimized vLLM 0.31.0 first, then Garnet alone, using one complete warmup and three full requests per prompt. All 5,280 measured answers per engine passed, and every Garnet warmup/trial token trajectory matched its control exactly. Garnet still trails vLLM on all four full-request batch-throughput medians:
+
+
+
+| Prompt | Garnet full tok/s | vLLM full tok/s | Garnet change | Garnet decode tok/s | Garnet / vLLM median batch TTFT |
+
+|---|---:|---:|---:|---:|---:|
+
+| Arithmetic | 8,595.15 | 8,785.58 | -2.17% | 9,658.66 | 6.77 / 3.04 s |
+
+| Code tracing | 8,923.54 | 9,590.61 | -6.96% | 10,075.03 | 6.77 / 3.27 s |
+
+| Instruction following | 8,740.07 | 8,827.54 | -0.99% | 9,850.12 | 6.81 / 3.32 s |
+
+| Long retrieval | 3,750.54 | 4,050.27 | -7.40% | 6,432.88 | 25.54 / 10.64 s |
+
+
+
+Per-rank shared BF16 KV was 13,438,550,016 bytes for short prompts and 13,278,117,888 bytes for long; sampled peaks were 83,189/83,171 MiB and 82,569/82,551 MiB. Higher decode rates do not offset Garnet’s slower prefill and first-token time. K64/CTA-2 remains rejected based on its earlier trajectory and full-rate results. No performance acceptance or default change.
+
+
+
+**OPT94 proposed long-prefill chunk-18 test, before launch:** The long request currently uses 16 input tokens per prefill call: 2,005 real tokens pad to 2,016, or 126 calls at batch 224 (3,584 rows/call). Test only chunk 18, which retains the same 2,016 padded rows and 11-row tail but reduces this to 112 calls of 4,032 rows, below the existing 4,096-row native Marlin limit. Keep batch 224, input 2,005, output 1,024, context 3,072, hybrid KV, kernels, peer group, host flags and sampling fixed. Create a fresh measured profile/admission; run a fresh optimized vLLM reference first and Garnet second, alone, with one complete warmup and three full requests. Require all expected answers and exact token trajectories; record TTFT/prefill/decode/full throughput, cold setup, KV and sampled peaks. This targets the native row limit and call count; no speed gain is assumed. The current free disk is 20,964,532,224 bytes; the 15-GiB floor leaves about 4.86 GiB, less than the observed 9.33-GB engine-cache namespace. Before profiling, preserve and verify metadata for the completed OPT93 long engine files, then retire only those exact regenerable engine binaries if per-file hashes and idle state match the archived profile; stop if any identity or disk guard fails. The four-prompt goal remains unmet.
