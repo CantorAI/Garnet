@@ -13,7 +13,7 @@ bool ParseGptOssPeerGroupOptions(const char* options,size_t bytes,size_t maximum
            !v.at("ctas").is_number_integer() ||
            !v.at("phase_elements").is_array() || v.at("phase_elements").size()!=2)return false;
         const auto requestedCtas=v.at("ctas").get<int64_t>();
-        if(requestedCtas!=64 && requestedCtas!=128)return false;
+        if(requestedCtas!=64 && requestedCtas!=128 && requestedCtas!=188)return false;
         ctas=static_cast<int>(requestedCtas);
         for(int phase=0;phase<2;++phase){
             const auto& n=v.at("phase_elements").at(phase);

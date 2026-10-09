@@ -11,7 +11,7 @@
 
 namespace GarnetPrototype {
 namespace Bf16PeerPrivate {
-constexpr int kMaximumBlocks=128;
+constexpr int kMaximumBlocks=188;
 struct alignas(128) Word { unsigned value; char padding[124]; };
 struct Slot { Word start[2],end[2]; };
 static_assert(sizeof(Word)==128 && alignof(Word)==128);
@@ -112,7 +112,7 @@ public:
                            const PhaseStreams* borrowedStreams=nullptr){
         if(ready_ || leased_)return cudaErrorNotReady;
         if(!capacity || capacity%8 || capacity>kMaximumPairElements ||
-            (blocks!=32 && blocks!=64 && blocks!=128) || simulateFailureAfterRank<-1 || simulateFailureAfterRank>1)
+            (blocks!=32 && blocks!=64 && blocks!=128 && blocks!=188) || simulateFailureAfterRank<-1 || simulateFailureAfterRank>1)
             return cudaErrorInvalidValue;
         if(borrowedStreams)for(int r=0;r<2;++r)
             if(!(*borrowedStreams)[0][r] || !(*borrowedStreams)[1][r] ||

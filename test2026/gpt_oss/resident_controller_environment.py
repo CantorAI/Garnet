@@ -126,16 +126,20 @@ with tempfile.TemporaryDirectory() as temporary:
         '--bf16-peer-group-ctas','128'],{
             'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
             peer_cta_policy:'128'})
+    execute('profile_tp_engine_memory.py',[reference,root/'peer-group-cta188',
+        '--bf16-peer-group-ctas','188'],{
+            'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
+            peer_cta_policy:'188'})
     with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),
             str(root/'invalid-peer-group-cta-without-group'),
-            '--bf16-peer-group','0','--bf16-peer-group-ctas','128']), \
+            '--bf16-peer-group','0','--bf16-peer-group-ctas','188']), \
             patch('subprocess.run') as gpu_command, patch('subprocess.check_output') as gpu_observation:
         try:
             runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
         except ValueError as error:
             assert str(error)=='Peer-group CTA policy requires the owned peer group'
         else:
-            raise AssertionError('CTA128 without peer-group owner must fail before GPU subprocess')
+            raise AssertionError('CTA188 without peer-group owner must fail before GPU subprocess')
         gpu_command.assert_not_called();gpu_observation.assert_not_called()
     execute('profile_tp_engine_memory.py',[reference,root/'default-router-warps'],{
         'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS':'4'})

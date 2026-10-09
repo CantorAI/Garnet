@@ -21,8 +21,8 @@ group_flag = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP', '1')
 if group_flag != '1':
     raise ValueError('Operator-group lifecycle gate requires GARNET_GPT_OSS_BF16_PEER_GROUP=1')
 group_ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
-if group_ctas_text not in ('64', '128'):
-    raise ValueError('Peer-group CTA policy must be 64 or 128')
+if group_ctas_text not in ('64', '128', '188'):
+    raise ValueError('Peer-group CTA policy must be 64, 128 or 188')
 group_ctas = int(group_ctas_text)
 folder = Path(sys.argv[1]).resolve()
 folder.mkdir(exist_ok=False, parents=True)

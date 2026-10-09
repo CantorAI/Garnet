@@ -110,7 +110,7 @@ parser.add_argument('--hybrid-kv', type=int, choices=(0,1),
 parser.add_argument('--fast-host-pack', type=int, choices=(0,1),
     help='explicit OPT58 CPU packing candidate; target cold/refit verification remains required')
 parser.add_argument('--bf16-peer-group', type=int, choices=(0,1), help='explicit owned native resource candidate; requires full correctness gates')
-parser.add_argument('--bf16-peer-group-ctas', type=int, choices=(64,128),
+parser.add_argument('--bf16-peer-group-ctas', type=int, choices=(64,128,188),
     help='explicit owned BF16 peer-reduction grid candidate; requires peer group and fresh correctness/profile gates')
 parser.add_argument('--sync-allocator', type=int, choices=(0,1),
     help='explicit cached runtime allocator candidate; requires separate memory/quality gates')
@@ -186,7 +186,7 @@ if env.get('GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE') not in (None,'2','4'):
     raise ValueError('Invalid shared-query GQA prefill tile')
 if args.prefill_gqa_query_tile is not None and env.get('GARNET_GPT_OSS_PREFILL_TILED_64') != '1':
     raise ValueError('GQA query tile override requires recorded tiled head64 prefill')
-if env.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS','64') not in ('64','128'):
+if env.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS','64') not in ('64','128','188'):
     raise ValueError('Invalid owned peer-group CTA policy')
 if env.get('GARNET_GPT_OSS_BF16_PEER_GROUP','0') != '1' and env.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS','64') != '64':
     raise ValueError('Peer-group CTA policy requires the owned peer group')

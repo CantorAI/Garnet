@@ -77,7 +77,7 @@ struct Control {
 int main(int argc,char** argv){
     if(argc!=5)return 2;char* end=nullptr;const long rows=std::strtol(argv[1],&end,10);
     if(!end||*end||(rows!=224&&rows!=512&&rows!=3584&&rows!=4096))return 2;
-    end=nullptr;const long blocks=std::strtol(argv[2],&end,10);if(!end||*end||(blocks!=32&&blocks!=64&&blocks!=128))return 2;
+    end=nullptr;const long blocks=std::strtol(argv[2],&end,10);if(!end||*end||(blocks!=32&&blocks!=64&&blocks!=128&&blocks!=188))return 2;
     const std::string mode=argv[3];if(mode!="parity"&&mode!="cost")return 2;
     const std::filesystem::path folder=argv[4];if(!std::filesystem::is_directory(folder)||!std::filesystem::is_empty(folder))return 2;
     const size_t count=size_t(rows)*2880;

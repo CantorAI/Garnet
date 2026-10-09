@@ -7,8 +7,8 @@ def peer_group_layout(batch, tokens, hidden):
     if flag not in ('0', '1'):
         raise ValueError('Owned peer group flag must be0/1')
     ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
-    if ctas_text not in ('64', '128') or (flag == '0' and ctas_text != '64'):
-        raise ValueError('Owned peer group CTA policy must be64/128 and enabled')
+    if ctas_text not in ('64', '128', '188') or (flag == '0' and ctas_text != '64'):
+        raise ValueError('Owned peer group CTA policy must be64/128/188 and enabled')
     if flag == '0':
         return None
     ctas = int(ctas_text)
@@ -32,7 +32,7 @@ def validate_peer_group_layout(layout, batch, tokens, hidden):
         return 0
     counts = [batch * tokens * hidden, batch * hidden]
     ctas = layout.get('ctas') if isinstance(layout, dict) else None
-    if hidden != 2880 or not 0 < counts[0] <= 4096 * 2880 or ctas not in (64,128):
+    if hidden != 2880 or not 0 < counts[0] <= 4096 * 2880 or ctas not in (64,128,188):
         raise ValueError('Invalid stored peer capacity')
     expected = dict(schema=2, id='gpt_oss', backend='tensorrt',
         protocol='owned-mapped-bf16-peer-v2', ctas=ctas, phase_elements=counts,

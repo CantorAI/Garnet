@@ -24,8 +24,8 @@ if group_flag not in ('0', '1'):
     raise ValueError('GARNET_GPT_OSS_BF16_PEER_GROUP must be 0 or 1')
 group_mode = group_flag == '1'
 group_ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
-if group_ctas_text not in ('64', '128') or (not group_mode and group_ctas_text != '64'):
-    raise ValueError('Peer-group CTA policy must be 64/128 and enabled')
+if group_ctas_text not in ('64', '128', '188') or (not group_mode and group_ctas_text != '64'):
+    raise ValueError('Peer-group CTA policy must be 64/128/188 and enabled')
 group_ctas = int(group_ctas_text)
 G.bind_operator_module(extension)
 repo = Path(__file__).resolve().parents[2]
