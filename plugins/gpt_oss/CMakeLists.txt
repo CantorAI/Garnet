@@ -14,6 +14,15 @@ option(GARNET_GPT_OSS_BUILD_BF16_COLLECTIVE_SCREEN "Build private actual-size NC
 option(GARNET_GPT_OSS_BUILD_ROUTER_GEOMETRY_SCREEN "Build private router CTA geometry control; no inference selection" OFF)
 option(GARNET_GPT_OSS_BUILD_BF16_PEER_SCREEN "Build private owned mapped-signal BF16 peer screen; no inference selection" OFF)
 option(GARNET_GPT_OSS_BUILD_FP32_PEER_SCREEN "Build private exact FP32 peer comparison; no inference selection" OFF)
+option(GARNET_GPT_OSS_BUILD_TENSOR_ROUTER_WARPS_SCREEN "Build private tensor-router warp geometry comparison; no inference selection" OFF)
+if(GARNET_GPT_OSS_BUILD_TENSOR_ROUTER_WARPS_SCREEN)
+    find_package(ZLIB REQUIRED)
+    add_executable(garnet_gpt_oss_tensor_router_warps_screen
+        ../../test2026/gpt_oss/tensor_router_geometry_screen.cu)
+    target_include_directories(garnet_gpt_oss_tensor_router_warps_screen PRIVATE include)
+    target_compile_definitions(garnet_gpt_oss_tensor_router_warps_screen PRIVATE NOMINMAX)
+    target_link_libraries(garnet_gpt_oss_tensor_router_warps_screen PRIVATE CUDA::cudart ZLIB::ZLIB)
+endif()
 if(GARNET_GPT_OSS_BUILD_FP32_PEER_SCREEN)
     add_executable(garnet_gpt_oss_fp32_peer_screen
         ../../test2026/gpt_oss/fp32_peer_screen.cu cuda/tp_direct.cu)
