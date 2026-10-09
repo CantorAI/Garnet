@@ -1719,3 +1719,28 @@ Fresh vLLM 0.31.0 runs came first, followed by a fresh Garnet profile and a sequ
 | Instruction following | 6279.12 | 7017.44 | -10.52% |
 
 Garnet used 11.55 GB KV per GPU and peaked at 80,833/80,815 MiB. The independent audit passed (SHA-256 `7dc1bfae949f2be864690082d8e9d276edcea1c23843c00e2a866193aa2bc2cb`). I archived and verified the short-profile evidence, then retired only its four generated engine files and verified all 49 metadata files; 29.08 GB is now free. The long 2,048-token retrieval run remains pending, and the original 1,024-token goal is still unmet.
+
+## OPT87: 2048-output long-retrieval result (2026-10-09)
+
+The long batch was measured after the three fresh optimized vLLM 0.31.0 short references, using its own fresh vLLM long reference first and Garnet second. Both ran on the same two RTX PRO 6000 GPUs with batch128, the complete 2,005-token input, output cap2048, context4096 and prefill chunk16. The existing 11-row padded-prefill path selected the last valid token, retaining the true input length. Garnet used peer CTA128, the four explicitly enabled host lifecycle flags, prepacked resident TP2 engines and shared BF16/hybrid KV. One complete warmup preceded three complete timed requests; each request rewrote the input KV and included preparation, control updates, sampling, phase handoff and output assembly.
+
+| Metric | Garnet | vLLM 0.31.0 | Garnet change / note |
+|---|---:|---:|---:|
+| Full-request median aggregate output | 4,244.26 tok/s | 4,667.79 tok/s | -9.07% |
+| Full-request trial rates | 4,288.82 / 4,235.90 / 4,244.26 tok/s | 4,581.95 / 4,752.35 / 4,667.79 tok/s | all three retained |
+| Decode-only median aggregate output | 5,590.32 tok/s | 4,676.79 tok/s | Garnet +19.54%; does not include full-request prefill cost |
+| Median request first token | 14.848 s | 6.092 s | Garnet slower by 8.756 s |
+| KV reservation per GPU | 10,003,415,040 bytes | 42,573,201,408 bytes | Garnet reserves less |
+| Sampled peak per GPU | 79,167 / 79,149 MiB | 79,717 / 79,719 MiB | sampled, not exhaustive |
+| Garnet cold startup | 169.279 s | recorded in raw reference | excludes module imports |
+
+All384 generated responses per engine passed the saved long-retrieval answer check. Garnet's warmup and all three measured output matrices were byte-for-byte identical; vLLM's three measured matrices differed from each other under its recorded greedy/seeded settings, and each passed the answer check. This result has no cross-engine trajectory equality claim. Strict per-rank Garnet admission required87,329,566,592 and87,328,656,973 bytes against91,776,142,540-byte budgets, including one context per engine, 5% weight margin, 2-GiB graph/runtime reserve, 10,003,415,040 shared KV bytes, 131,072 auxiliary bytes and11,878,912 operator execution bytes.
+
+The independent audit `D:/CantorAI/work/opt86-local/output2048-long-independent-retry2.json` passed (SHA-256 `6ddad3af619e5ebaf74853a464cfc27ae6fe97db139cd6e74be4214800cd2855`). It binds source commit `14ab3f8` (documentation-only descendant of implementation `ffb9688`), the exact profile SHA-256 `c92da9b831627a823b95b0f5d88270391922ab045b35388692fc15c326b7a792`, both native binary hashes, all four generated engine hashes, hardware, flags, KV/admission and measured trajectories. The downloaded evidence archive was SHA-256 `1ea018432674252858f01a2ff8cfd806b301ade579c5d912a9b19ebf8bd3fa28` (8,780,399 bytes), transfer exit0 and safe extraction verified. The first independent audit attempt expected a 256-element TTFT vector; the long batch correctly has128 requests. That failed proof was retained, the local-only auditor was corrected to the recorded batch, and the succeeding audit used the unchanged measurements and checks.
+
+After the independent audit, only the four generated engine files for cache key `c8bf8d6ee8fc6a974af9ffda` were retired. Their9,329,670,256 bytes were removed after the 49 metadata files and manifest were downloaded and independently checked against archive member names, sizes and SHA-256 hashes. Metadata archive SHA-256 `b04858ed5c4e74990e3da9f35b4f0af9ba799f3fa06db92869608ece7856f973` (162,628 bytes); manifest SHA-256 `0e8ccd14d72917e7f4f70e8ef46b552712cce123f80051e610ec4e6919b2053a`. The target was GPU-idle before cleanup and now has29,021,409,280 free disk bytes. Results, prompts, model/tokenizer, profile, logs and non-engine cache metadata remain preserved.
+
+**Decision.** Output2048 did not beat vLLM on the long prompt: full-request throughput is9.07% lower despite a decode-only advantage, because first-token latency remains much higher. Together with the three short output2048 results, this rejects output-length amortization as a performance win. The overall goal remains unmet. Prior profiling points to both prefill work and the host-side request path; the next candidate must target those measured costs and retain full-request and answer/trajectory gates.
+
+
+A cache-retirement preflight initially stopped before creating its archive because the local helper pointed the long case at the short vLLM directory. The failed check made no target changes. A corrected local-only helper referenced the verified long directory and then completed the metadata archive and guarded retirement described above.
