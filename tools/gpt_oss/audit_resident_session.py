@@ -87,6 +87,7 @@ def kernel_environment(result):
     if policy not in ('0', '1'):
         raise ValueError('Invalid allocator policy in result')
     environment['GARNET_TRT_SYNC_ALLOCATOR'] = policy
+    environment.setdefault('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS', '4')
     return environment
 
 

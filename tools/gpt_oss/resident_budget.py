@@ -47,6 +47,13 @@ def kernel_environment():
     return environment
 
 
+def normalize_kernel_environment(environment):
+    """Interpret only the pre-OPT79 missing router key as legacy default4."""
+    normalized = dict(environment)
+    normalized.setdefault('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS', '4')
+    return normalized
+
+
 def checkpoint_identity(weights):
     # Engine refit reads the checkpoint. Header + size/mtime identity detects
     # replaced tensors without rescanning sixty GB before every admission.
@@ -99,7 +106,11 @@ def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environmen
     if profile.get('resident_profile_schema') != 1:
         raise ValueError('Regenerate resident profile with native/cache/checkpoint identities')
     for key, value in expected.items():
-        if profile.get(key) != value:
+        actual = profile.get(key)
+        if key == 'kernel_environment':
+            actual = normalize_kernel_environment(actual or {})
+            value = normalize_kernel_environment(value)
+        if actual != value:
             raise ValueError('Resident profile identity mismatch: ' + key)
     rows = profile['engine_statistics']
     if len(rows) != 4 or len(devices) != 2:
