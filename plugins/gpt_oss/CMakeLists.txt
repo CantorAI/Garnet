@@ -177,6 +177,8 @@ install(TARGETS garnet_gpt_oss_ops
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT garnet_gpt_oss_ops
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT garnet_gpt_oss_ops)
 option(GARNET_GPT_OSS_BUILD_TESTS "Build GPT-OSS operator correctness tests" ON)
+option(GARNET_GPT_OSS_BUILD_MARLIN_DECODE_BENCHMARK
+    "Build the private Marlin decode benchmark" OFF)
 option(GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL "Build experimental native FlashInfer attention adapter" OFF)
 if(GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL)
     if(CUDAToolkit_VERSION VERSION_LESS "12.9")
@@ -241,15 +243,17 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
         target_compile_definitions(garnet_gpt_oss_attention_batch_benchmark PRIVATE GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL=1)
         target_compile_options(garnet_gpt_oss_attention_batch_benchmark PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
     endif()
-    add_executable(garnet_gpt_oss_marlin_decode_benchmark
-        ../../test2026/gpt_oss/marlin_decode_benchmark.cu
-        cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
-    target_include_directories(garnet_gpt_oss_marlin_decode_benchmark PRIVATE include
-        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
-    target_link_libraries(garnet_gpt_oss_marlin_decode_benchmark PRIVATE CUDA::cudart)
-    target_compile_definitions(garnet_gpt_oss_marlin_decode_benchmark PRIVATE NOMINMAX)
-    target_compile_options(garnet_gpt_oss_marlin_decode_benchmark PRIVATE
-        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+    if(GARNET_GPT_OSS_BUILD_MARLIN_DECODE_BENCHMARK)
+        add_executable(garnet_gpt_oss_marlin_decode_benchmark
+            ../../test2026/gpt_oss/marlin_decode_benchmark.cu
+            cuda/gpt_oss_kernels.cu cuda/gpt_oss_marlin.cu)
+        target_include_directories(garnet_gpt_oss_marlin_decode_benchmark PRIVATE include
+            "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
+        target_link_libraries(garnet_gpt_oss_marlin_decode_benchmark PRIVATE CUDA::cudart)
+        target_compile_definitions(garnet_gpt_oss_marlin_decode_benchmark PRIVATE NOMINMAX)
+        target_compile_options(garnet_gpt_oss_marlin_decode_benchmark PRIVATE
+            $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+    endif()
     if(GARNET_GPT_OSS_ENABLE_NCCL)
         add_executable(garnet_gpt_oss_tp_workspace_test ../../test2026/gpt_oss/tp_workspace.cpp)
         target_include_directories(garnet_gpt_oss_tp_workspace_test PRIVATE
