@@ -2,6 +2,7 @@
 import os
 import garnet
 from .tensor_compat import tensor
+from .fusion_policy import select_moe_operator
 T = tensor()
 
 
@@ -92,14 +93,11 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
     residual = x
     x = norm(x, prefix + ".mlp.norm.scale", config['hidden_size'])
     fused_peer_reduce = os.environ.get('GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE', '0')
-    if fused_peer_reduce not in ('0', '1'):
-        raise ValueError('GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE must be 0 or 1')
     # Profile/build environments also compile decode engines. Keep those on
     # the existing path while limiting this candidate to prefill graphs.
-    fused_peer_reduce = fused_peer_reduce == '1' and bool(prefill)
-    if fused_peer_reduce and not (tp_rank >= 0 and moe_intermediate_shard == 1):
-        raise ValueError('Fused GPT-OSS MoE peer reduction requires intermediate-sharded TP2 prefill')
-    moe_operator = 'gpt_oss_moe_tp_reduce_bf16' if fused_peer_reduce else 'gpt_oss_moe_mxfp4'
+    moe_operator = select_moe_operator(
+        prefill, tp_rank, moe_intermediate_shard, fused_peer_reduce)
+    fused_peer_reduce = moe_operator == 'gpt_oss_moe_tp_reduce_bf16'
     x = x * T.unary_op(
         moe_operator, hidden_size=config['hidden_size'],
         intermediate_size=config['intermediate_size'], num_experts=config['num_experts'],
