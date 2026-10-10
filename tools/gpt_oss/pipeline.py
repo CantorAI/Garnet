@@ -256,7 +256,7 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_lo
                 stage_cache = stage_cache / 'last-token-logits'
             model_root = stage_cache / 'xmodel'
             model_root.mkdir(parents=True, exist_ok=True)
-            for name in ('__init__.py', 'tensor_compat.py', 'gpt_oss_llm.py', 'model.json'):
+            for name in ('__init__.py', 'tensor_compat.py', 'fusion_policy.py', 'gpt_oss_llm.py', 'model.json'):
                 shutil.copy2(root / name, model_root / name)
             source = (root / 'stage.py').read_text()
             source = source.replace('STAGE_START = 0', 'STAGE_START = ' + str(start))
@@ -452,7 +452,7 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                 stage_cache = stage_cache / 'padded-prefill-v1'
             model_root = stage_cache / 'xmodel'
             model_root.mkdir(parents=True, exist_ok=True)
-            for name in ('__init__.py', 'tensor_compat.py', 'gpt_oss_llm.py', 'model.json'):
+            for name in ('__init__.py', 'tensor_compat.py', 'fusion_policy.py', 'gpt_oss_llm.py', 'model.json'):
                 shutil.copy2(root / name, model_root / name)
             if layout is not None:
                 shutil.copy2(root / 'gpt_oss_hybrid_llm.py', model_root / 'gpt_oss_hybrid_llm.py')
