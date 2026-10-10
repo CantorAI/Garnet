@@ -97,7 +97,8 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
     # the existing path while limiting this candidate to prefill graphs.
     moe_operator = select_moe_operator(
         prefill, tp_rank, moe_intermediate_shard, fused_peer_reduce,
-        os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP', '0'))
+        os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP', '0'),
+        expert_weight_shard=expert_weight_shard)
     fused_peer_reduce = moe_operator == 'gpt_oss_moe_tp_reduce_bf16'
     x = x * T.unary_op(
         moe_operator, hidden_size=config['hidden_size'],

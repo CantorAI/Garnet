@@ -7,7 +7,7 @@ FUSED_PREFILL_OPERATOR = 'gpt_oss_moe_tp_reduce_bf16'
 
 
 def select_moe_operator(prefill, tp_rank, moe_intermediate_shard, enabled,
-                        peer_group_enabled):
+                        peer_group_enabled, expert_weight_shard=0):
     """Select fusion only for explicit intermediate-sharded TP2 prefill."""
     if enabled not in ('0', '1'):
         raise ValueError('GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE must be 0 or 1')
@@ -28,4 +28,7 @@ def select_moe_operator(prefill, tp_rank, moe_intermediate_shard, enabled,
             type(moe_intermediate_shard) is not int or moe_intermediate_shard != 1):
         raise ValueError(
             'Fused GPT-OSS MoE peer reduction requires intermediate-sharded TP2 prefill')
+    if type(expert_weight_shard) is not int or expert_weight_shard != 0:
+        raise ValueError(
+            'Fused GPT-OSS MoE peer reduction requires unsharded expert weights')
     return FUSED_PREFILL_OPERATOR

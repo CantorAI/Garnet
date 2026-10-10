@@ -16,6 +16,8 @@ for rank in (0, 1):
     assert select_moe_operator(0, rank, 1, '1', '0') == BASE_MOE_OPERATOR
 
 assert select_moe_operator(False, -1, 0, '0', '0') == BASE_MOE_OPERATOR
+assert select_moe_operator(True, 0, 1, '1', '1',
+                           expert_weight_shard=0) == FUSED_PREFILL_OPERATOR
 for prefill, rank, shard, enabled, peer_group in (
         (True, -1, 1, '1', '1'), (True, 0, 0, '1', '1'),
         (True, 2, 1, '1', '1'), (False, -1, 0, 'invalid', '0'),
@@ -30,5 +32,14 @@ for prefill, rank, shard, enabled, peer_group in (
         pass
     else:
         raise AssertionError((prefill, rank, shard, enabled))
+
+for expert_weight_shard in (1, -1, False, True, 0.0, '0', None):
+    try:
+        select_moe_operator(True, 0, 1, '1', '1',
+                            expert_weight_shard=expert_weight_shard)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(('expert_weight_shard', expert_weight_shard))
 
 print('GPT-OSS fused prefill selection/default/decode eligibility PASS')
