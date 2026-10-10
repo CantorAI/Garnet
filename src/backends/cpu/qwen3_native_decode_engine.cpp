@@ -11,7 +11,9 @@
 #include <chrono>
 #include <cmath>
 #include <cstring>
+#if !defined(__aarch64__)
 #include <immintrin.h>
+#endif
 #include <limits>
 #include <memory>
 #include <system_error>
@@ -101,6 +103,15 @@ namespace Garnet
             float epsilon,
             float* output)
         {
+#if defined(__aarch64__)
+            float squares = 0.0F;
+            for (size_t index = 0; index < weight.size(); ++index)
+                squares += source[index] * source[index];
+            const float multiplier = 1.0F / std::sqrt(
+                squares / weight.size() + epsilon);
+            for (size_t index = 0; index < weight.size(); ++index)
+                output[index] = source[index] * weight[index] * multiplier;
+#else
             __m256 sum = _mm256_setzero_ps();
             size_t index = 0;
             for (; index + 8 <= weight.size(); index += 8) {
@@ -129,8 +140,10 @@ namespace Garnet
             for (; index < weight.size(); ++index) {
                 output[index] = source[index] * weight[index] * multiplier;
             }
+#endif
         }
 
+#if !defined(__aarch64__)
         __m256 FastExp(__m256 value)
         {
             value = _mm256_min_ps(
@@ -198,6 +211,7 @@ namespace Garnet
             sum = _mm_hadd_ps(sum, sum);
             return _mm_cvtss_f32(sum);
         }
+#endif
 
         QuantizedWeight Concatenate(
             const std::vector<QuantizedWeight>& inputs)
@@ -965,6 +979,12 @@ namespace Garnet
                             kvHead) * engine.headDim;
                     const float* queryHead =
                         query + head * engine.headDim;
+#if defined(__aarch64__)
+                    float dot = 0.0F;
+                    for (int dimension = 0; dimension < engine.headDim; ++dimension)
+                        dot += queryHead[dimension] *
+                            BF16ToFloat(input.keyCache[cache + dimension]);
+#else
                     __m256 dotVector = _mm256_setzero_ps();
                     for (int dimension = 0;
                          dimension < engine.headDim; dimension += 8) {
@@ -976,6 +996,7 @@ namespace Garnet
                                     input.keyCache + cache + dimension)));
                     }
                     const float dot = HorizontalFloatSum(dotVector);
+#endif
                     scores[token] = dot * scoreScale;
                     maximum = std::max(maximum, scores[token]);
                 }
@@ -993,6 +1014,11 @@ namespace Garnet
                             kvHead) * engine.headDim;
                     float* attentionHead =
                         attention.data() + head * engine.headDim;
+#if defined(__aarch64__)
+                    for (int dimension = 0; dimension < engine.headDim; ++dimension)
+                        attentionHead[dimension] += probability *
+                            BF16ToFloat(input.valueCache[cache + dimension]);
+#else
                     const __m256 probabilityVector =
                         _mm256_set1_ps(probability);
                     for (int dimension = 0;
@@ -1007,6 +1033,7 @@ namespace Garnet
                                     LoadBF16(input.valueCache + cache +
                                         dimension))));
                     }
+#endif
                 }
             }
             const auto outputBegin = Clock::now();
@@ -1023,6 +1050,7 @@ namespace Garnet
                     engine.threads, errorMessage)) return false;
             if (profile) gateUpMilliseconds += elapsed(gateUpBegin);
             int item = 0;
+#if !defined(__aarch64__)
             const __m256 one = _mm256_set1_ps(1.0F);
             const __m256 sign = _mm256_set1_ps(-0.0F);
             for (; item + 8 <= engine.intermediate; item += 8) {
@@ -1036,6 +1064,7 @@ namespace Garnet
                     mlp.data() + item,
                     _mm256_mul_ps(_mm256_mul_ps(gate, sigmoid), up));
             }
+#endif
             for (; item < engine.intermediate; ++item) {
                 const float gate = gateUp[item];
                 mlp[item] = gate / (1.0F + std::exp(-gate)) *

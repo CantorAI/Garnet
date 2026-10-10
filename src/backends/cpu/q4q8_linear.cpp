@@ -7,7 +7,12 @@
 #include <cmath>
 #include <condition_variable>
 #include <functional>
+#include <cstring>
+#if defined(__aarch64__)
+#include <arm_neon.h>
+#else
 #include <immintrin.h>
+#endif
 #include <mutex>
 #include <thread>
 
@@ -127,6 +132,7 @@ namespace Garnet
             bool m_stop = false;
         };
 
+#if !defined(__aarch64__)
         int HorizontalSum(__m256i value)
         {
             __m128i sum = _mm_add_epi32(
@@ -164,6 +170,36 @@ namespace Garnet
             return HorizontalSum(total);
         }
 
+#else
+        int DotGroup(const std::uint8_t* packed,
+                     const std::int8_t* input, int groupSize)
+        {
+#if defined(__ARM_FEATURE_DOTPROD)
+            int32x4_t total = vdupq_n_s32(0);
+            for (int offset = 0; offset < groupSize; offset += 32) {
+                const uint8x16_t bytes = vld1q_u8(packed);
+                const int8x16_t low = vreinterpretq_s8_u8(
+                    vandq_u8(bytes, vdupq_n_u8(15)));
+                const int8x16_t high = vreinterpretq_s8_u8(vshrq_n_u8(bytes, 4));
+                total = vdotq_s32(total, low, vld1q_s8(input + offset));
+                total = vdotq_s32(total, high, vld1q_s8(input + offset + 16));
+                packed += 16;
+            }
+            return vaddvq_s32(total);
+#else
+            int total = 0;
+            for (int offset = 0; offset < groupSize; offset += 32) {
+                for (int lane = 0; lane < 16; ++lane) {
+                    total += (packed[lane] & 15) * input[offset + lane];
+                    total += (packed[lane] >> 4) * input[offset + lane + 16];
+                }
+                packed += 16;
+            }
+            return total;
+#endif
+        }
+#endif
+
         std::uint8_t Nibble(
             const std::vector<std::uint8_t>& values,
             std::size_t index)
@@ -175,7 +211,9 @@ namespace Garnet
 
     bool Q4Q8Linear::AVX2Supported()
     {
-#if defined(_MSC_VER)
+#if defined(__aarch64__)
+        return false;
+#elif defined(_MSC_VER)
         int registers[4] = {};
         __cpuid(registers, 0);
         if (registers[0] < 7) return false;
@@ -214,8 +252,14 @@ namespace Garnet
         std::transform(
             weight.fp16Scales.begin(), weight.fp16Scales.end(),
             m_scales.begin(), [](std::uint16_t scale) {
+#if defined(__aarch64__)
+                __fp16 half;
+                std::memcpy(&half, &scale, sizeof(scale));
+                return static_cast<float>(half);
+#else
                 return _mm_cvtss_f32(
                     _mm_cvtph_ps(_mm_cvtsi32_si128(scale)));
+#endif
             });
         for (int row = 0; row < m_rows; ++row) {
             for (int offset = 0; offset < m_columns; offset += 32) {
@@ -275,10 +319,16 @@ namespace Garnet
         std::string& errorMessage) const
     {
         if (!input || !output || m_rows <= 0 ||
-            !m_weightData || !m_scaleData || !AVX2Supported()) {
-            errorMessage = "Q4Q8 operator is unprepared or AVX2 is unavailable";
+            !m_weightData || !m_scaleData) {
+            errorMessage = "Q4Q8 operator is unprepared";
             return false;
         }
+#if !defined(__aarch64__)
+        if (!AVX2Supported()) {
+            errorMessage = "Q4Q8 AVX2 is unavailable";
+            return false;
+        }
+#endif
         const int groups = m_columns / m_groupSize;
         struct Scratch
         {
