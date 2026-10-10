@@ -307,6 +307,14 @@ def marlin_workspace_profile():
             'decode_block_override': decode if decode in (8, 32) else 0}
     if large == 64:
         profile['large_prefill_block'] = 64
+    for variable, field in (
+            ('GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM', 'prefill_up_ctas_per_sm'),
+            ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM', 'prefill_down_ctas_per_sm')):
+        value = os.environ.get(variable)
+        if value is not None:
+            if value not in ('1', '2', '4'):
+                raise ValueError('Marlin projection CTA policy must be1/2/4')
+            profile[field] = int(value)
     bounded = os.environ.get('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', '0')
     if bounded not in ('0', '1'):
         raise ValueError('Bounded Marlin prefill flag must be0 or1')

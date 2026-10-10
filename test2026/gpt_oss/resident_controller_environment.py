@@ -18,18 +18,20 @@ from audit_resident_session import (kernel_environment as audit_kernel_environme
 
 router_policy = 'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS'
 peer_cta_policy = 'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS'
+peer_thread_policy = 'GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS'
 grid_signal_policy = 'GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS'
-defaults = {router_policy:'4', peer_cta_policy:'64', grid_signal_policy:'0'}
+defaults = {router_policy:'4', peer_cta_policy:'64', peer_thread_policy:'256', grid_signal_policy:'0'}
 assert normalize_kernel_environment({}) == defaults
 assert normalize_kernel_environment({router_policy:'4'}) == defaults
 assert normalize_kernel_environment({}) != normalize_kernel_environment({router_policy:'2'})
-assert normalize_kernel_environment({router_policy:'1'}) == {router_policy:'1', peer_cta_policy:'64', grid_signal_policy:'0'}
+assert normalize_kernel_environment({router_policy:'1'}) == {
+    router_policy:'1', peer_cta_policy:'64', peer_thread_policy:'256', grid_signal_policy:'0'}
 assert normalize_audit_environment({}) == defaults
 assert audit_kernel_environment({'optimization_environment':{'GARNET_TRT_SYNC_ALLOCATOR':'0'}}) == {
     'GARNET_TRT_SYNC_ALLOCATOR':'0',**defaults}
 assert normalize_audit_environment({}) != normalize_audit_environment({router_policy:'2'})
 assert normalize_audit_environment({router_policy:'malformed'}) == {
-    router_policy:'malformed', peer_cta_policy:'64', grid_signal_policy:'0'}
+    router_policy:'malformed', peer_cta_policy:'64', peer_thread_policy:'256', grid_signal_policy:'0'}
 assert normalize_audit_environment({grid_signal_policy:'1'}) != defaults
 
 class ObservedCommand(Exception):
@@ -236,6 +238,11 @@ with tempfile.TemporaryDirectory() as temporary:
             '--decode-ctas',str(value),'--prefill-ctas','1'],{
                 'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM':str(value),
                 'GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM':'1'})
+    execute('profile_tp_engine_memory.py',[
+        reference,root/'projection-cta-profile','--padded-prefill',
+        '--prefill-up-ctas','2','--prefill-down-ctas','1'],{
+            'GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM':'2',
+            'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM':'1'})
     for value in (2,4):
         with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),str(root/f'invalid-decode-cta{value}'),
                 '--decode-ctas',str(value)]), patch('subprocess.run') as gpu_command:

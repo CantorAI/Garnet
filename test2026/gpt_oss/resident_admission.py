@@ -147,6 +147,8 @@ rejected(placement=dict(plan, marlin_prepacked=False))
 rejected(placement=dict(plan, collective_workspace_layout='v9-prefill-only'))
 for key,value in [('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K','64'),
                   ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM','2'),
+                  ('GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM','2'),
+                  ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM','1'),
                   ('GARNET_GPT_OSS_BF16_DECODE_ALLREDUCE','1')]:
     with patch.dict(os.environ,{key:value}):
         assert kernel_environment()[key]==value

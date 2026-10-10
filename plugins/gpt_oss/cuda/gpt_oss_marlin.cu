@@ -46,13 +46,28 @@ int marlinCtasPerSm(int computeMajor, bool prefill) {
     return prefill && prefillCount ? prefillCount :
         (overrideCount ? overrideCount : (computeMajor >= 12 ? 1 : 2));
 }
+int projectionCtasPerSm(const char* name, int computeMajor, bool prefill) {
+    if (!prefill) return marlinCtasPerSm(computeMajor, false);
+    static const int upOverride = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM");
+        const int parsed = value ? std::atoi(value) : 0;
+        return parsed == 1 || parsed == 2 || parsed == 4 ? parsed : 0;
+    }();
+    static const int downOverride = [] {
+        const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM");
+        const int parsed = value ? std::atoi(value) : 0;
+        return parsed == 1 || parsed == 2 || parsed == 4 ? parsed : 0;
+    }();
+    const int selected = std::strcmp(name, "up") == 0 ? upOverride : downOverride;
+    return selected ? selected : marlinCtasPerSm(computeMajor, true);
+}
 int downCtasPerSm(int computeMajor) {
     static const int overrideCount = [] {
         const char* value = std::getenv("GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM");
         const int parsed = value ? std::atoi(value) : 0;
         return parsed == 1 || parsed == 2 || parsed == 4 ? parsed : 0;
     }();
-    return overrideCount ? overrideCount : marlinCtasPerSm(computeMajor, true);
+    return overrideCount ? overrideCount : projectionCtasPerSm("down", computeMajor, true);
 }
 void reportMarlin(const char* message, int a = 0, int b = 0) {
     static std::atomic<int> count{0};
@@ -527,7 +542,7 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
         if(status!=cudaSuccess)return status;
     }
     auto up=block==64?upKernel64():(block==32?upKernel32():upKernel());
-    up<<<s.sms*marlinCtasPerSm(s.computeMajor,o.prefill),128,block==64?kUpShared64:(block==32?35584:27136),stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
+    up<<<s.sms*projectionCtasPerSm("up",s.computeMajor,o.prefill),128,block==64?kUpShared64:(block==32?35584:27136),stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[1],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,o.topK,false,tokens,g.upN,g.upK,at<int>(workspace,l.locks),false,false,true);
     activation<<<(slots*g.downK+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.up),(const float*)in[5],selected,at<nv_bfloat16>(workspace,l.activation),slots,g.upN,g.downK,o);
@@ -536,7 +551,7 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     const int downShared=downCandidate ? (block==64?kDownShared64K64:kDownShared32K64)
         : (block==64?kDownShared64:(block==32?51840:35200));
     const int downCtas=downCandidate ? downCtasPerSm(s.computeMajor)
-        : marlinCtasPerSm(s.computeMajor,o.prefill);
+        : projectionCtasPerSm("down",s.computeMajor,o.prefill);
     down<<<s.sms*downCtas,downCandidate?kDownK64Threads:128,downShared,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[3],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,1,false,slots,g.downN,g.downK,at<int>(workspace,l.locks),false,false,true);

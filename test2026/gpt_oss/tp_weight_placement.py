@@ -15,6 +15,8 @@ devices = [dict(id=i, name='synthetic', total_bytes=1 << 30,
 os.environ.pop('GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS', None)
 os.environ.pop('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_PREPACKED', None)
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM', None)
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', None)
 full = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
@@ -108,12 +110,32 @@ os.environ['GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK'] = '64'
 large64 = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
 assert large64['cache_key'] != decode_tile['cache_key']
 assert marlin_workspace_profile()['large_prefill_block'] == 64
+large64_workspaces = {(rows, phase): estimate_tp2_marlin_workspace_bytes(config, rows, prefill=phase)
+                      for rows in (128, 1024, 4096) for phase in (False, True)}
 for (rows, phase), size in default_workspaces.items():
     actual = estimate_tp2_marlin_workspace_bytes(config, rows, prefill=phase)
     if phase and rows in (1024, 4096):
         assert actual != size, (rows, phase)
     else:
         assert actual == size, (rows, phase)
+os.environ['GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM'] = '2'
+up_candidate = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+assert up_candidate['cache_key'] != large64['cache_key']
+assert up_candidate['marlin_workspace_layout']['prefill_up_ctas_per_sm'] == 2
+for key in ((128, False), (128, True), (1024, False), (1024, True), (4096, False), (4096, True)):
+    assert estimate_tp2_marlin_workspace_bytes(config, key[0], prefill=key[1]) == large64_workspaces[key]
+os.environ['GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM'] = '1'
+split_candidate = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+assert split_candidate['cache_key'] != up_candidate['cache_key']
+assert split_candidate['marlin_workspace_layout']['prefill_down_ctas_per_sm'] == 1
+os.environ['GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM'] = '3'
+try:
+    marlin_workspace_profile()
+    raise AssertionError('Malformed projection CTA policy was accepted')
+except ValueError:
+    pass
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM')
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM')
 os.environ['GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK'] = '0'
 assert marlin_workspace_profile() == default_profile
 assert make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)['cache_key'] == decode_tile['cache_key']

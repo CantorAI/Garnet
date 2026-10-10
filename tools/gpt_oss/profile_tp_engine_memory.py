@@ -89,6 +89,8 @@ parser.add_argument('--prepacked-candidate', action='store_true',
 parser.add_argument('--large-prefill-block', type=int, choices=(0,64),
     help='explicit OPT42 large-prefill tile override; not a validated model result')
 parser.add_argument('--prefill-ctas', type=int, choices=(1,2,4))
+parser.add_argument('--prefill-up-ctas', type=int, choices=(1,2,4),
+    help='explicit prefill up-projection CTA/SM override; defaults to the matched general prefill setting')
 parser.add_argument('--decode-ctas', type=int, choices=(1,2),
     help='explicit decode scheduling candidate; requires an explicit prefill CTA count and separate correctness gates')
 parser.add_argument('--prefill-down-k', type=int, choices=(64,128),
@@ -163,6 +165,7 @@ overrides = {key: str(value) for key, value in (
     ('GARNET_GPT_OSS_MARLIN_CTAS_PER_SM', args.decode_ctas),
     ('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', args.large_prefill_block),
     ('GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM', args.prefill_ctas),
+    ('GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM', args.prefill_up_ctas),
     ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K', args.prefill_down_k),
     ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM', args.prefill_down_ctas),
     ('GARNET_GPT_OSS_DIRECT_MAX_BATCH', args.direct_max_batch),
@@ -195,8 +198,8 @@ if args.direct_max_batch is not None or args.direct_ctas is not None:
 if args.prefill_down_ctas is not None:
     selected_k=overrides.get('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K',
         env.get('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K'))
-    if selected_k!='64':
-        raise ValueError('Independent down CTA override requires explicit large-prefill down-K64')
+    if selected_k not in (None,'64','128'):
+        raise ValueError('Independent down CTA override requires the supported K64 or K128 path')
 env.update(overrides)
 grid_flag = env.get('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS', '0')
 if grid_flag not in ('0','1') or (grid_flag == '1' and env.get('GARNET_GPT_OSS_BF16_PEER_GROUP') != '1'):
