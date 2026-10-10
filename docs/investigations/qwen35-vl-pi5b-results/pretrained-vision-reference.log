@@ -1,0 +1,14 @@
+vision reference max_abs_error 7.37607479095459e-06 relative_l2 1.8809825227230394e-05 worst_tolerance_ratio 1.2057956743914264
+Traceback (most recent call last):
+  File "/home/shawn/garnet-pi5b-investigation/source/test2026/pi5b/run_vision_graph.py", line 23, in <module>
+    assert not failures,str(failures)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+AssertionError: [[34, 0.00361992372199893, 0.0036136768758296967, 6.246846169233322e-06], [76, -0.0008920804248191416, -0.000897921621799469, 5.841196980327368e-06], [306, -0.004472206346690655, -0.004466135986149311, 6.070360541343689e-06], [658, -0.011766643263399601, -0.011772368103265762, 5.7248398661613464e-06]]
+Traceback (most recent call last):
+  File "/home/shawn/garnet-pi5b-investigation/source/test2026/pi5b/test_pretrained_vision_graph.py", line 25, in <module>
+    subprocess.run([sys.argv[1],str(Path(__file__).with_name('run_vision_graph.py')),str(path),sys.argv[2],sys.argv[4]],check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/home/shawn/cantorai-ci/out/build/linux-arm64-release/bin/xlang3', '/home/shawn/garnet-pi5b-investigation/source/test2026/pi5b/run_vision_graph.py', '/tmp/garnet-real-vision-txadkuz7/fixture.json', 'cpu-runtime-build', 'source']' returned non-zero exit status 1.

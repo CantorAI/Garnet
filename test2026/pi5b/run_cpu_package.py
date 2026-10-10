@@ -20,14 +20,33 @@ def forward(*args):
     if config['kind']=='linear':return decoder.Qwen35LinearDecoderLayer(*args,config,config['layer_idx'])
     return decoder.Qwen35FullDecoderLayer(*args,config,config['layer_idx'],config['capacity'])
 model=garnet.compiled_graph()
+io=garnet.tensor_io()
+assert io.zeros([2,3]).tolist()==[0,0,0,0,0,0]
+assert io.argmax(tensor.tensor([1,7,3,5,2,5],shape=[2,3],dtype=tensor.float32))==[1,0]
 assert model.build(forward(*symbols),symbols,fixture['checkpoint'])
 assert model.ready
+shutdown_rejected=False
+try:garnet.shutdown()
+except:shutdown_rejected=True
+assert shutdown_rejected
 times=[]
 for step in fixture['steps']:
     values=[tensor.tensor(data,shape=shapes[i],dtype=tensor.float32) for i,data in enumerate(step['inputs'])]
     result=model.run(values)
     observed=result.tolist()
     expected=step['expected']
+    # Native row-wise splits preserve each batch's state without script copies.
+    width=config['hidden_size'];offset=0
+    for shape in shapes[:3]:
+        segment=io.slice(result,offset,shape).tolist()
+        segment_width=1
+        for d in shape[1:]:segment_width*=d
+        wanted_segment=[]
+        packed_width=len(expected)//batch
+        for row in range(batch):wanted_segment+=expected[row*packed_width+offset:row*packed_width+offset+segment_width]
+        for actual,wanted in zip(segment,wanted_segment):
+            assert abs(actual-wanted)<=fixture.get('atol',5e-6)+fixture.get('rtol',5e-5)*abs(wanted)
+        offset+=segment_width
     assert len(observed)==len(expected)
     for actual,wanted in zip(observed,expected):
         assert math.isfinite(actual)
@@ -37,3 +56,4 @@ print(garnet.backend_info(),'actual CPU package decoder',config['kind'],'batch',
     'compile_ms',model.compile_ms,'inference_ms',times,flush=True)
 model.close()
 assert not model.ready
+garnet.shutdown()

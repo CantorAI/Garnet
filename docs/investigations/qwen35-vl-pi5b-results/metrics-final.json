@@ -1,0 +1,24 @@
+[
+  {
+    "batch": 1,
+    "decode_calls": 27,
+    "decode_total_seconds": 10.76596736907959,
+    "tokens_per_second_per_row": 2.5079028269717205,
+    "tokens_per_second_combined": 2.5079028269717205,
+    "peak_rss_gib": 4.65032958984375,
+    "wall_seconds": 53.83881899300468,
+    "prefill_record": "prefill_seconds 29.08115530014038 prompt_tokens [79] mrope_next_position 34 ttft_from_start_seconds 42.43623352050781",
+    "exit_code": 0
+  },
+  {
+    "batch": 2,
+    "decode_calls": 27,
+    "decode_total_seconds": 14.956034898757935,
+    "tokens_per_second_per_row": 1.8052913210467494,
+    "tokens_per_second_combined": 3.6105826420934988,
+    "peak_rss_gib": 4.80963134765625,
+    "wall_seconds": 67.58372344900272,
+    "prefill_record": "prefill_seconds 38.344531774520874 prompt_tokens [79, 79] mrope_next_position 34 ttft_from_start_seconds 51.97815704345703",
+    "exit_code": 0
+  }
+]

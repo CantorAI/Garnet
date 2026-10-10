@@ -56,6 +56,11 @@ namespace Garnet
             const std::string& enginePath,
             std::uint64_t sessionId);
         static bool IsAvailable();
+#if defined(GARNET_CPU_ONLY)
+        // Explicitly unload the CPU plugin before the host/ELF shutdown phase.
+        // Call after closing every compiled graph.
+        static void ShutdownCPUBackend();
+#endif
 
         X::Value HandleBinaryOp(
             const std::string& opName,

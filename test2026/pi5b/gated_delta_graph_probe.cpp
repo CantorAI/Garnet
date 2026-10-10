@@ -117,6 +117,8 @@ int main(int argc,char**argv){
   if(argc!=3)throw std::runtime_error("expected source root and script");
   DeltaGraphProbe probe;X::Runtime runtime;auto package=runtime.RegisterPackage("garnet",probe);
   runtime.AddImportRoot(argv[1]);runtime.EvalFile(argv[2]);
+  Garnet::OpenVINOBuilder::ReleaseCachedExecutions("");
+  Garnet::OpenVINOBuilder::ShutdownCPUBackend();
   std::cout<<"Garnet captured graph/OpenVINO recurrence PASS\n";return 0;
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}
 }

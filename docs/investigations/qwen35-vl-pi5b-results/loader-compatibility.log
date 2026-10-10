@@ -1,0 +1,30 @@
+Internal ctest changing into directory: /home/shawn/garnet-pi5b-investigation/cpu-build
+Test project /home/shawn/garnet-pi5b-investigation/cpu-build
+    Start 5: qwen35_linear_captured_checkpoint
+    Test #5: qwen35_linear_captured_checkpoint ......   Passed    3.44 sec
+    Start 5: qwen35_linear_captured_checkpoint
+    Test #5: qwen35_linear_captured_checkpoint ......   Passed    3.39 sec
+    Start 5: qwen35_linear_captured_checkpoint
+1/4 Test #5: qwen35_linear_captured_checkpoint ......   Passed    3.41 sec
+    Start 6: qwen35_attention_captured_checkpoint
+    Test #6: qwen35_attention_captured_checkpoint ...   Passed    2.89 sec
+    Start 6: qwen35_attention_captured_checkpoint
+    Test #6: qwen35_attention_captured_checkpoint ...   Passed    2.88 sec
+    Start 6: qwen35_attention_captured_checkpoint
+2/4 Test #6: qwen35_attention_captured_checkpoint ...   Passed    2.88 sec
+    Start 7: qwen35_decoder_captured_checkpoint
+    Test #7: qwen35_decoder_captured_checkpoint .....   Passed    0.84 sec
+    Start 7: qwen35_decoder_captured_checkpoint
+    Test #7: qwen35_decoder_captured_checkpoint .....   Passed    0.84 sec
+    Start 7: qwen35_decoder_captured_checkpoint
+3/4 Test #7: qwen35_decoder_captured_checkpoint .....   Passed    0.84 sec
+    Start 8: gated_delta_xmodel_graph
+    Test #8: gated_delta_xmodel_graph ...............   Passed    0.31 sec
+    Start 8: gated_delta_xmodel_graph
+    Test #8: gated_delta_xmodel_graph ...............   Passed    0.31 sec
+    Start 8: gated_delta_xmodel_graph
+4/4 Test #8: gated_delta_xmodel_graph ...............   Passed    0.31 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =  22.33 sec

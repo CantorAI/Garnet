@@ -1,0 +1,8 @@
+native CPU embedding/state split/tied head reference PASS
+vision reference max_abs_error 2.980232238769531e-07 relative_l2 2.1810430539035998e-07 worst_tolerance_ratio 0.018752576369585973
+vision reference max_abs_error 1.601874828338623e-07 relative_l2 1.5096052262526216e-07 worst_tolerance_ratio 0.02171911678474155
+actual Garnet vision graph batch 1 grid 2 2 PASS compile_ms 120.481739 inference_ms [0.830135, 0.373207]
+vision reference max_abs_error 5.364418029785156e-07 relative_l2 2.765710410297077e-07 worst_tolerance_ratio 0.035529746242573
+vision reference max_abs_error 5.960464477539062e-07 relative_l2 2.793433109512545e-07 worst_tolerance_ratio 0.05467288962138787
+actual Garnet vision graph batch 2 grid 4 6 PASS compile_ms 116.188764 inference_ms [1.119786, 0.562597]
+CPU RGB normalization/temporal duplication/merge patch layout PASS

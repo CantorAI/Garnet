@@ -91,6 +91,7 @@ int main(int argc,char**argv){
   if(argc!=4)throw std::runtime_error("expected source root, script, and fixture");
   GraphFixtureProbe probe;probe.fixturePath=argv[3];std::ifstream stream(probe.fixturePath);stream>>probe.fixture;
   X::Runtime runtime;auto package=runtime.RegisterPackage("garnet",probe);
-  runtime.AddImportRoot(argv[1]);runtime.EvalFile(argv[2]);return 0;
+  runtime.AddImportRoot(argv[1]);runtime.EvalFile(argv[2]);
+  Garnet::OpenVINOBuilder::ShutdownCPUBackend();return 0;
  }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
 }

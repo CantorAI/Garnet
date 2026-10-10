@@ -1,0 +1,49 @@
+{
+  "image_grid_thw": [
+    1,
+    18,
+    12
+  ],
+  "model": "Qwen/Qwen3.5-0.8B",
+  "cpu_threads": 2,
+  "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+  "prompt_tokens": 79,
+  "kv_capacity": 256,
+  "cases": [
+    {
+      "batch": 1,
+      "process_wall_seconds": 71.5058683410025,
+      "max_rss_kib": 4877904,
+      "mean_step_seconds": 0.48109421023616084,
+      "decode_seconds": 12.989543676376343,
+      "ttft_from_model_start_seconds": 57.89765691757202,
+      "prefill_seconds": 39.10076880455017,
+      "max_rss_gib": 4.6519317626953125,
+      "exit_code": 0,
+      "decode_steps": 27,
+      "tokens_per_second_combined": 2.0785949585822645,
+      "major_page_faults": 8191,
+      "tokens_per_second_per_row": 2.0785949585822645
+    },
+    {
+      "batch": 2,
+      "process_wall_seconds": 74.4021428920023,
+      "max_rss_kib": 5043472,
+      "mean_step_seconds": 0.5738953042913366,
+      "decode_seconds": 15.495173215866089,
+      "ttft_from_model_start_seconds": 58.260860443115234,
+      "prefill_seconds": 41.227057218551636,
+      "max_rss_gib": 4.8098297119140625,
+      "exit_code": 0,
+      "decode_steps": 27,
+      "tokens_per_second_combined": 3.484956202019567,
+      "major_page_faults": 9260,
+      "tokens_per_second_per_row": 1.7424781010097834
+    }
+  ],
+  "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "rows_use_same_image_and_prompt": true,
+  "image_sha256": "eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9",
+  "hardware": "Raspberry Pi 5B, 8 GB, ARM64 Cortex-A76",
+  "runtime": "Garnet CPU-only OpenVINO 2026.2.1 plus native BF16 output head"
+}

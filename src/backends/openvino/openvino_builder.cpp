@@ -32,6 +32,7 @@
 #include "causal_conv_lowering.h"
 #include "qwen35_linear_lowering.h"
 #include "qwen35_attention_lowering.h"
+#include "qwen35_vision_lowering.h"
 #endif
 
 namespace Garnet
@@ -39,6 +40,18 @@ namespace Garnet
 #if defined(GARNET_WITH_OPENVINO)
     namespace
     {
+#if defined(GARNET_CPU_ONLY)
+        // Keep the CPU plugin alive across graph compilation/import/release.
+        // Declare this before caches so requests/models are destroyed first.
+        std::mutex g_openVINOCoreMutex;
+        std::shared_ptr<ov::Core> g_openVINOCore;
+        std::shared_ptr<ov::Core> SharedCPUCore()
+        {
+            std::lock_guard<std::mutex> guard(g_openVINOCoreMutex);
+            if (!g_openVINOCore) g_openVINOCore = std::make_shared<ov::Core>();
+            return g_openVINOCore;
+        }
+#endif
         struct OpenVINOExecutionSession
         {
             std::unique_ptr<ov::InferRequest> request;
@@ -49,7 +62,13 @@ namespace Garnet
 
         struct CachedOpenVINOExecution
         {
+#if defined(GARNET_CPU_ONLY)
+            std::shared_ptr<ov::Core> core = SharedCPUCore();
+            ov::Core& Core() { return *core; }
+#else
             ov::Core core;
+            ov::Core& Core() { return core; }
+#endif
             ov::CompiledModel model;
             std::mutex sessionsMutex;
             std::unordered_map<
@@ -415,7 +434,7 @@ namespace Garnet
                     return nullptr;
                 }
                 auto execution = std::make_shared<CachedOpenVINOExecution>();
-                execution->model = execution->core.import_model(
+                execution->model = execution->Core().import_model(
                     stream,
                     OpenVINODevice(),
                     OpenVINOCPURuntimeProperties());
@@ -1056,7 +1075,12 @@ namespace Garnet
                         modelOutputs,
                         implementation.parameters,
                         "garnet_tensor_graph");
+#if defined(GARNET_CPU_ONLY)
+                auto sharedCore = SharedCPUCore();
+                auto& core = *sharedCore;
+#else
                 ov::Core core;
+#endif
                 ov::AnyMap compileProperties = OpenVINOCPURuntimeProperties();
                 if (implementation.computeType == ov::element::f16) {
                     compileProperties[
@@ -1595,6 +1619,19 @@ namespace Garnet
 #endif
     }
 
+#if defined(GARNET_CPU_ONLY)
+    void OpenVINOBuilder::ShutdownCPUBackend()
+    {
+#if defined(GARNET_WITH_OPENVINO)
+        std::lock_guard<std::mutex> cacheGuard(g_openVINOCacheMutex);
+        if (!g_openVINOCache.empty())
+            throw std::runtime_error("close all CPU compiled graphs before backend shutdown");
+        std::lock_guard<std::mutex> coreGuard(g_openVINOCoreMutex);
+        g_openVINOCore.reset();
+#endif
+    }
+#endif
+
     void OpenVINOBuilder::ReleaseCachedExecutions(const std::string& cacheRoot)
     {
 #if defined(GARNET_WITH_OPENVINO)
@@ -1927,6 +1964,18 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if(opName=="qwen35_vision_encoder") {
+            auto lookup=[&](const std::string& name)->ov::Output<ov::Node>{
+                auto value=m_implementation->GetWeight(name,m_error);
+                if(!m_error.empty())throw std::invalid_argument(m_error);return value;
+            };
+            auto* theta=FindKeyword(keywordParams,"rope_theta");
+            auto result=LowerQwen35Vision(source->second,lookup,keywordInt("grid_h",0),keywordInt("grid_w",0),
+                keywordInt("hidden_size",0),keywordInt("num_heads",0),keywordInt("depth",0),keywordInt("patch_size",0),
+                keywordInt("temporal_patch_size",0),keywordInt("in_channels",0),keywordInt("spatial_merge_size",0),
+                keywordInt("num_position_embeddings",0),keywordInt("out_hidden_size",0),theta?float(theta->second.ToDouble()):10000.f);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
         if(opName=="qwen35_attention_step") {
             auto* prefixItem=FindKeyword(keywordParams,"weight_prefix");
             if(!prefixItem) {m_error="Qwen3.5 full attention requires checkpoint prefix";return X::Value();}
@@ -2531,6 +2580,13 @@ namespace Garnet
                 normalized, scaleFloat);
             node = std::make_shared<ov::opset13::Convert>(
                 scaled, sourceType);
+        }
+        else if(opName=="qwen35_tied_head") {
+            auto weight=m_implementation->GetWeight("model.language_model.embed_tokens.weight",m_error);
+            if(!m_error.empty())return X::Value();
+            auto input=std::make_shared<ov::opset13::Convert>(source->second,ov::element::f32);
+            auto fpWeight=std::make_shared<ov::opset13::Convert>(weight,ov::element::f32);
+            node=std::make_shared<ov::opset13::MatMul>(input,fpWeight,false,true);
         }
         else if(opName=="qwen35_mlp") {
             auto* prefixItem=FindKeyword(keywordParams,"weight_prefix");

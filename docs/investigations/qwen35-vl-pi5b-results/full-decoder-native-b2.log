@@ -1,0 +1,43 @@
+compiled Garnet decoder layer 0 linear_attention ms 10258.514077
+compiled Garnet decoder layer 1 linear_attention ms 69031.643899
+compiled Garnet decoder layer 2 linear_attention ms 1122.291509
+compiled Garnet decoder layer 3 full_attention ms 1078.387259
+compiled Garnet decoder layer 4 linear_attention ms 969.421326
+compiled Garnet decoder layer 5 linear_attention ms 1892.586383
+compiled Garnet decoder layer 6 linear_attention ms 1046.649573
+compiled Garnet decoder layer 7 full_attention ms 53894.500807
+compiled Garnet decoder layer 8 linear_attention ms 12150.085201
+compiled Garnet decoder layer 9 linear_attention ms 966.198405
+compiled Garnet decoder layer 10 linear_attention ms 1130.144034
+compiled Garnet decoder layer 11 full_attention ms 1035.110288
+compiled Garnet decoder layer 12 linear_attention ms 901.155647
+compiled Garnet decoder layer 13 linear_attention ms 5226.717272
+compiled Garnet decoder layer 14 linear_attention ms 1722.644233
+compiled Garnet decoder layer 15 full_attention ms 871.401422
+compiled Garnet decoder layer 16 linear_attention ms 3727.120401
+compiled Garnet decoder layer 17 linear_attention ms 26975.83446
+compiled Garnet decoder layer 18 linear_attention ms 15293.663212
+compiled Garnet decoder layer 19 full_attention ms 2049.392091
+compiled Garnet decoder layer 20 linear_attention ms 923.082041
+compiled Garnet decoder layer 21 linear_attention ms 23396.124138
+compiled Garnet decoder layer 22 linear_attention ms 1110.383553
+compiled Garnet decoder layer 23 full_attention ms 885.806126
+full decoder compile_seconds 241.73275780677795
+prefill token 248045 next [846, 846] seconds 73.28096413612366
+prefill token 846 next [198, 198] seconds 0.7458393573760986
+prefill token 198 next [3710, 3710] seconds 0.6563959121704102
+prefill token 9419 next [248046, 248046] seconds 0.6745550632476807
+prefill token 248046 next [198, 198] seconds 0.6477756500244141
+prefill token 198 next [248045, 248045] seconds 0.6756646633148193
+prefill token 248045 next [74455, 74455] seconds 0.6319761276245117
+prefill token 74455 next [198, 198] seconds 0.679243803024292
+prefill token 198 next [248068, 248068] seconds 0.7473440170288086
+generated token [248068, 248068] decoded ['<think>', '<think>']
+decode seconds 0.7185380458831787 layer_ms [20.077777, 19.495143, 20.424872, 14.013449, 19.631199, 25.375747, 24.835761, 11.914413, 23.004079, 20.451743, 19.009212, 23.545677, 25.105763, 27.140742, 27.550413, 22.845448, 29.620967, 26.780295, 26.221199, 42.396369, 26.758685, 24.558684, 31.384629, 25.746953] head_ms 99.91618461535644
+generated token [198, 198] decoded ['\n', '\n']
+decode seconds 0.6274065971374512 layer_ms [19.126121, 20.327946, 17.995408, 11.20137, 17.382551, 16.712212, 18.711451, 11.442243, 20.011628, 24.544647, 26.241272, 15.249775, 20.348242, 25.406803, 29.925248, 21.793865, 29.151056, 21.090544, 23.279562, 24.11131, 20.30689, 21.527734, 20.032925, 17.675424] head_ms 99.38059149536133
+generated token [31248, 31248] decoded ['Okay', 'Okay']
+decode seconds 0.6308138370513916 layer_ms [20.819617, 20.414243, 18.868045, 11.151555, 16.453618, 20.993896, 17.657868, 14.68751, 20.806783, 16.725879, 20.369743, 19.832368, 21.573845, 24.882261, 29.93134, 20.733097, 25.961234, 26.611757, 24.837391, 24.571073, 22.422, 19.417272, 22.173406, 17.24068] head_ms 96.37098413964844
+generated token [11, 11] decoded [',', ',']
+decode seconds 0.6478896141052246 layer_ms [21.381454, 21.786976, 20.344723, 11.606262, 21.005896, 18.541264, 18.268725, 14.357156, 19.957406, 20.025295, 21.21012, 17.61872, 25.55684, 22.841208, 28.904942, 23.651954, 29.352409, 24.691111, 24.363701, 24.235589, 21.726735, 20.81732, 22.061034, 18.399707] head_ms 97.55783994665528
+process_metrics {"exit_code": 0, "wall_seconds": 325.3175577199945, "max_rss_kib": 4808496, "user_seconds": 23.966314, "system_seconds": 2.746475, "major_faults": 13589, "minor_faults": 319721}
