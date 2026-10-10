@@ -40,6 +40,14 @@ if(Python3_Interpreter_FOUND)
 endif()
 find_package(OpenVINO QUIET COMPONENTS Runtime)
 if(OpenVINO_FOUND)
+    add_executable(linear_attention_probe linear_attention_probe.cpp)
+    target_include_directories(linear_attention_probe PRIVATE
+        "${GARNET_ROOT}/src/backends/openvino" "${GARNET_ROOT}/third_party")
+    target_link_libraries(linear_attention_probe PRIVATE openvino::runtime)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME qwen35_linear_attention_reference COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_LIST_DIR}/test_linear_attention.py" "$<TARGET_FILE:linear_attention_probe>")
+    endif()
     add_executable(gated_delta_openvino_probe gated_delta_openvino_probe.cpp)
     target_include_directories(gated_delta_openvino_probe PRIVATE
         "${GARNET_ROOT}/src/backends/openvino" "${GARNET_ROOT}/third_party")

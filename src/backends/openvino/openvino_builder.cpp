@@ -29,6 +29,8 @@
 #include <openvino/openvino.hpp>
 #include <openvino/opsets/opset13.hpp>
 #include "gated_delta_lowering.h"
+#include "causal_conv_lowering.h"
+#include "qwen35_linear_lowering.h"
 #endif
 
 namespace Garnet
@@ -504,6 +506,7 @@ namespace Garnet
             ov::Output<ov::Node> key;
             ov::Output<ov::Node> value;
             ov::Output<ov::Node> deltaDecay, deltaBeta, deltaState, deltaActive;
+            ov::Output<ov::Node> convToken, convWeight, convState, convActive;
         };
 
         struct CacheWrite
@@ -1693,6 +1696,17 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if (opName.rfind("qwen35_conv_bind_", 0) == 0) {
+            if (!state.convToken.get_node_shared_ptr()) state.convToken = leftValue;
+            if (opName == "qwen35_conv_bind_weight") state.convWeight = rightValue;
+            else if (opName == "qwen35_conv_bind_state") state.convState = rightValue;
+            else if (opName == "qwen35_conv_bind_active") state.convActive = rightValue;
+            else { m_error = "unknown causal convolution binding"; return X::Value(); }
+            m_implementation->states[outputId] = state;
+            m_implementation->tensors[outputId] = leftValue;
+            m_implementation->lastOutput = leftValue;
+            return X::Value(true);
+        }
         if (opName.rfind("qwen35_delta_bind_", 0) == 0) {
             if (!state.query.get_node_shared_ptr()) state.query = leftValue;
             if (opName == "qwen35_delta_bind_key") state.key = rightValue;
@@ -1862,6 +1876,87 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if (opName == "qwen35_linear_output" || opName == "qwen35_linear_conv_state" ||
+            opName == "qwen35_linear_recurrent_state") {
+            const int hidden=keywordInt("hidden_dim",0),kh=keywordInt("key_heads",0),vh=keywordInt("value_heads",0);
+            const int kd=keywordInt("key_dim",0),vd=keywordInt("value_dim",0),kernel=keywordInt("kernel_size",0);
+            const auto shape=source->second.get_shape();
+            if(hidden<=0||kh<=0||vh<=0||kd<=0||vd<=0||kernel<=0||shape.size()!=2) {
+                m_error="Qwen3.5 linear packed dimensions are invalid";return X::Value();
+            }
+            const int64_t channels=2LL*kh*kd+int64_t(vh)*vd;
+            const int64_t convWidth=channels*kernel,stateWidth=int64_t(vh)*kd*vd;
+            if(shape[1]!=uint64_t(hidden+convWidth+stateWidth)) {
+                m_error="Qwen3.5 linear packed width does not match configuration";return X::Value();
+            }
+            int64_t start=0,end=hidden;
+            std::vector<int64_t> resultShape{int64_t(shape[0]),hidden};
+            if(opName=="qwen35_linear_conv_state") {
+                start=hidden;end=hidden+convWidth;
+                resultShape={int64_t(shape[0]),channels,kernel};
+            }else if(opName=="qwen35_linear_recurrent_state") {
+                start=hidden+convWidth;end=start+stateWidth;
+                resultShape={int64_t(shape[0]),vh,kd,vd};
+            }
+            auto slice=std::make_shared<ov::opset13::Slice>(source->second,I64Vector({start}),I64Vector({end}),I64Vector({1}),I64Vector({1}));
+            const auto result=Reshape(slice,resultShape);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if (opName == "qwen35_linear_step") {
+            auto* prefixItem=FindKeyword(keywordParams,"weight_prefix");
+            if(!prefixItem || !state.convState.get_node_shared_ptr() ||
+               !state.deltaState.get_node_shared_ptr() || !state.convActive.get_node_shared_ptr()) {
+                m_error="Qwen3.5 linear attention requires weight prefix and bound states";
+                return X::Value();
+            }
+            const auto prefix=prefixItem->second.ToString();
+            auto weight=[&](const char* suffix){return m_implementation->GetWeight(prefix+suffix,m_error);};
+            Qwen35LinearWeights weights{weight(".in_proj_qkv.weight"),weight(".in_proj_z.weight"),
+                weight(".in_proj_b.weight"),weight(".in_proj_a.weight"),weight(".conv1d.weight"),
+                weight(".A_log"),weight(".dt_bias"),weight(".norm.weight"),weight(".out_proj.weight")};
+            if(!m_error.empty())return X::Value();
+            auto* epsilonItem=FindKeyword(keywordParams,"eps");
+            const auto result=LowerQwen35LinearStep(source->second,state.convState,state.deltaState,state.convActive,
+                weights,keywordInt("key_heads",0),keywordInt("value_heads",0),keywordInt("key_dim",0),keywordInt("value_dim",0),
+                epsilonItem?float(epsilonItem->second.ToDouble()):1e-6f);
+            const auto shape=result.output.get_shape();
+            auto flatten=[&](ov::Output<ov::Node> tensor){return Reshape(tensor,{int64_t(shape[0]),-1});};
+            const auto packed=std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{result.output,flatten(result.convState),flatten(result.recurrentState)},-1);
+            m_implementation->tensors[outputId]=packed;
+            m_implementation->lastOutput=packed;
+            return X::Value(true);
+        }
+        if (opName == "qwen35_conv_step") {
+            for (auto operand : {state.convToken,state.convWeight,state.convState,state.convActive}) {
+                if (!operand.get_node_shared_ptr()) {
+                    m_error = "causal convolution is missing a bound input";
+                    return X::Value();
+                }
+            }
+            const auto result = LowerCausalConvStep(state.convToken,state.convWeight,state.convState,state.convActive);
+            const auto packed = std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{std::make_shared<ov::opset13::Unsqueeze>(result.output,I64Vector({-1})),result.state},-1);
+            m_implementation->tensors[outputId] = packed;
+            m_implementation->lastOutput = packed;
+            return X::Value(true);
+        }
+        if (opName == "qwen35_conv_output" || opName == "qwen35_conv_state") {
+            const int kernel = keywordInt("kernel_size",0);
+            const auto shape = source->second.get_shape();
+            if(kernel<=0 || shape.size()!=3 || shape[2]!=uint64_t(kernel)+1) {
+                m_error = "causal convolution packed shape is invalid";
+                return X::Value();
+            }
+            const bool wantState=opName=="qwen35_conv_state";
+            auto values=std::make_shared<ov::opset13::Slice>(source->second,
+                I64Vector({wantState?1:0}),I64Vector({wantState?kernel+1:1}),I64Vector({1}),I64Vector({-1}));
+            ov::Output<ov::Node> result=values;
+            if(!wantState) result=Reshape(values,{int64_t(shape[0]),int64_t(shape[1])});
+            m_implementation->tensors[outputId]=result;
+            m_implementation->lastOutput=result;
+            return X::Value(true);
+        }
         if (opName == "qwen35_delta_output" || opName == "qwen35_delta_state") {
             const int keyDim = keywordInt("key_dim", 0);
             const int valueDim = keywordInt("value_dim", 0);
