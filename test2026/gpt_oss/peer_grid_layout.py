@@ -44,4 +44,31 @@ for group,threads in [('1','128'),('1','512x'),('0','512')]:
         try:peer_group_layout(512,8,2880)
         except ValueError:pass
         else:raise AssertionError((group,threads))
+for ctas in (64,128,188):
+    for threads in (256,512):
+        for grid in (0,1):
+            with patch.dict(os.environ,{
+                'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
+                'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS':str(ctas),
+                'GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS':str(threads),
+                'GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS':str(grid)},clear=True):
+                layout=peer_group_layout(512,8,2880)
+            if threads==512:
+                assert layout['schema']==4 and layout['threads_per_cta']==512
+                assert layout['protocol']==('owned-mapped-bf16-peer-grid-threads-v1'
+                    if grid else 'owned-mapped-bf16-peer-threads-v1')
+            elif grid:
+                assert layout['schema']==3 and layout['protocol']=='owned-mapped-bf16-peer-grid-v3'
+            else:
+                assert layout['schema']==2 and layout['protocol']=='owned-mapped-bf16-peer-v2'
+            assert validate_peer_group_layout(layout,512,8,2880)==layout['owned_bytes_per_rank']+layout['mapped_host_bytes']
+            assert layout['owned_bytes_per_rank']==512*8*2880*2+ctas*132
+            assert layout['mapped_host_bytes']==ctas*512
+            wrong_schema=2 if layout['schema'] in (3,4) else 3
+            for key,value in [('schema',wrong_schema),('protocol','invalid-peer-protocol'),
+                              ('threads_per_cta',256),('threads_per_cta',1024)]:
+                bad=copy.deepcopy(layout);bad[key]=value
+                try:validate_peer_group_layout(bad,512,8,2880)
+                except ValueError:pass
+                else:raise AssertionError(('thread descriptor mutation',key,value,layout))
 print('GRID_PROTOCOL_STORAGE_AND_REJECTION_PASS CTA64/128/188 DEFAULT_UNCHANGED')

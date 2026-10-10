@@ -32,6 +32,11 @@ def peer_group_layout(batch, tokens, hidden):
         concurrency='serial paired phases, one invocation per rank')
     if grid_flag == '1':
         result.update(schema=3, protocol='owned-mapped-bf16-peer-grid-v3', grid_signals=1)
+    if threads_text == '512':
+        result.update(schema=4,
+            protocol=('owned-mapped-bf16-peer-grid-threads-v1' if grid_flag == '1'
+                      else 'owned-mapped-bf16-peer-threads-v1'),
+            threads_per_cta=512)
     return result
 
 
@@ -50,6 +55,15 @@ def validate_peer_group_layout(layout, batch, tokens, hidden):
         concurrency='serial paired phases, one invocation per rank')
     if layout.get('grid_signals') == 1 and type(layout.get('grid_signals')) is int:
         expected.update(schema=3, protocol='owned-mapped-bf16-peer-grid-v3', grid_signals=1)
+    threads = layout.get('threads_per_cta', 256)
+    if type(threads) is not int or threads not in (256, 512):
+        raise ValueError('Invalid stored peer thread geometry')
+    if threads == 512:
+        expected.update(schema=4,
+            protocol=('owned-mapped-bf16-peer-grid-threads-v1'
+                      if expected.get('grid_signals') == 1
+                      else 'owned-mapped-bf16-peer-threads-v1'),
+            threads_per_cta=512)
     if layout != expected:
         raise ValueError('Peer group storage/lifetime contract mismatch')
     # Conservatively charge the entire mapped amount against EACH GPU.
