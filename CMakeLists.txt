@@ -2,6 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.18)
+option(GARNET_CPU_ONLY "Build Garnet's GPU-free OpenVINO graph runtime" OFF)
+if(GARNET_CPU_ONLY)
+    project("garnet" LANGUAGES CXX)
+    include(cmake/GarnetCPU.cmake)
+    return()
+endif()
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES "80;86;89")
 endif()

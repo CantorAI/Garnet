@@ -84,6 +84,10 @@ if(OpenVINO_FOUND)
                 "${CMAKE_CURRENT_LIST_DIR}/test_attention_graph.py" "$<TARGET_FILE:graph_fixture_probe>" "${GARNET_ROOT}")
             set_tests_properties(qwen35_attention_captured_checkpoint PROPERTIES ENVIRONMENT
                 "GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f32;GARNET_OPENVINO_CPU_THREADS=2")
+            add_test(NAME qwen35_decoder_captured_checkpoint COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_LIST_DIR}/test_decoder_graph.py" "$<TARGET_FILE:graph_fixture_probe>" "${GARNET_ROOT}")
+            set_tests_properties(qwen35_decoder_captured_checkpoint PROPERTIES ENVIRONMENT
+                "GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f32;GARNET_OPENVINO_CPU_THREADS=2")
         endif()
         add_executable(gated_delta_graph_probe gated_delta_graph_probe.cpp
             "${GARNET_ROOT}/src/core/lowering_context.cpp"

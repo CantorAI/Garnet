@@ -170,3 +170,28 @@ Reproduce: use download_checkpoint_subset.py with checkpoint-header.json, output
 Built all current Pi targets and ran CTest: 7/7 passed, total 11.82 seconds. Final free root disk 2,259,992,576 bytes; temperature 56.2 C. Existing CI/build/service trees were not changed. Source changes remain in isolated Garnet-pi5b branch.
 
 Remaining end state: assemble complete decoder with Qwen3.5's offset RMS norms, MLPs, embeddings and final head; build a usable CPU-only Garnet entrypoint/profile; implement vision graph and CPU preprocessing; supply all pretrained weights without exhausting disk/cache/RAM; execute actual image-plus-text generation and measure complete performance/limits. No full image-plus-text inference has yet occurred. The active goal is unchanged.
+
+## CPU-only native package and complete decoder blocks
+
+Root CMake now supports GARNET_CPU_ONLY=ON through cmake/GarnetCPU.cmake. Built the real shared libgarnet.so on Pi with the existing XLang SDK/runtime, OpenVINO 2026.2.1, and Cortex-A76 instructions. Dependency inspection found OpenVINO, XLang, TBB, and normal system libraries; no CUDA or TensorRT dependency. The native module exposes tensor capture, backend_info(), and compiled_graph().build/run/close with compile and inference timings. This is a usable low-level graph runtime, not yet a complete VLM serving API.
+
+CPU-only graph precision defaults to FP32. A new optional memory-only compilation path preserves the existing export/import default and avoids writing a second large weight blob onto the SD card. It requires explicit caller-owned state tensors and rejects the legacy hidden-state decode cache heuristic. Close explicitly releases cached executions. During the first memory-only fixture run all numerical checks passed but process exit hit a glibc loader assertion; explicit cache release before exit eliminated the observed failure. The precise underlying loader cause is unproven; no system libraries or existing services were changed.
+
+Added complete linear and full-attention decoder blocks: input offset RMSNorm, attention, residual, post-attention offset RMSNorm, SwiGLU MLP, and residual. Inactive rows retain attention state and emit zero hidden output. Independent references cover batch 1/2, nonzero states, paused/resumed rows, and all outputs at the original rtol 5e-5/atol 5e-6. Actual public libgarnet.so loading and captured xModel execution passed synthetic blocks and official pretrained blocks 0 and 3, including their MLP and norm tensors.
+
+Pretrained complete-block timings, FP32/two CPU threads, four sequential steps:
+
+| Block | Batch | Compile ms | Run calls ms |
+| --- | --- | --- | --- |
+| Linear, layer 0 | 1 | 257.276 | 15.207, 13.916, 13.872, 14.022 |
+| Linear, layer 0 | 2 | 301.576 | 18.058, 17.328, 17.817, 17.406 |
+| Full attention, layer 3 | 1 | 228.147 | 10.915, 10.233, 10.208, 10.230 |
+| Full attention, layer 3 | 2 | 266.232 | 10.847, 10.292, 10.251, 10.495 |
+
+Full-attention test capacity remains eight tokens. These are block calls, not full-model token rates. Child cumulative maximum RSS reached 565,184 KiB and includes large fixtures and numerical validation; it is not isolated model memory. All eight component CTests passed in 12.68 seconds; the separate real-package synthetic and pretrained tests also passed.
+
+Reproduction from the investigation directory: configure source into cpu-runtime-build with GARNET_CPU_ONLY=ON, GARNET_CPU_DOTPROD=ON, XLANG3_SDK_ROOT=/home/shawn/cantorai-ci/xlang3/sdk, GARNET_XLANG3_RUNTIME_LIBRARY=/home/shawn/cantorai-ci/out/build/linux-arm64-release/bin/libxlang3_runtime.so, and OpenVINO_DIR=/home/shawn/garnet-pi5b-investigation/venv/lib/python3.13/site-packages/openvino/cmake. Build with one job. Run OPENBLAS_NUM_THREADS=2 GARNET_OPENVINO_CPU_THREADS=2 venv/bin/python source/test2026/pi5b/test_pretrained_decoder_graph.py /home/shawn/cantorai-ci/out/build/linux-arm64-release/bin/xlang3 source checkpoint cpu-runtime-build.
+
+The full official Qwen/Qwen3.5-0.8B checkpoint is now downloaded at models/Qwen3.5-0.8B/model.safetensors. Pinned revision 2fc06364715b967f1860aea9cf38778875588b17; 1,746,942,600 bytes; upstream LFS SHA256 verified as 04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696. download_full_checkpoint.py validates resumable byte ranges, disk reserve, full hash, and records garnet_checkpoint_revision.json; metadata includes config, tokenizer, processor config, and chat template. It does not log signed redirect URLs. After download root free space was 410,796,032 bytes, available RAM 5,779 MiB, temperature 51.25 C. In-memory compilation is necessary to avoid duplicating the checkpoint on this disk.
+
+Still outstanding: all 24 decoder layers, embeddings/final head, tokenizer and generation integration, vision encoder and CPU image preprocessing, actual image-plus-text inference, and complete memory/TTFT/tokens-per-second/batch measurements. No end-to-end inference success is claimed. The original goal remains active.

@@ -40,7 +40,9 @@ public:
   auto path=(fixturePath.parent_path()/"fixture.blob").string();
   Garnet::OpenVINOBuilder builder;
   const auto start=std::chrono::steady_clock::now();
-  if(!builder.BuildCapturedGraph(graph,X::Value(),arguments,symbolic,&weights,path,"bf16",error))throw X::Error(error);
+  const bool memoryOnly=fixture.value("memory_only",false);
+  if(!builder.BuildCapturedGraph(graph,X::Value(),arguments,symbolic,&weights,path,"bf16",error,memoryOnly))throw X::Error(error);
+  if(memoryOnly&&std::filesystem::exists(path))throw X::Error("memory-only graph unexpectedly wrote an engine file");
   const auto compileEnd=std::chrono::steady_clock::now();
   if(!builder.PrepareCapturedEngine(path,&weights,error))throw X::Error(error);
   int steps=0;
@@ -70,6 +72,7 @@ public:
    ++steps;
   }
   Garnet::OpenVINOBuilder::ReleaseCachedSession(path,501);
+  Garnet::OpenVINOBuilder::ReleaseCachedExecutions(fixturePath.parent_path().string());
   const auto end=std::chrono::steady_clock::now();
   std::cout<<"captured checkpoint graph PASS steps="<<steps
    <<" compile_ms="<<std::chrono::duration<double,std::milli>(compileEnd-start).count()

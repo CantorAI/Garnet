@@ -139,6 +139,10 @@ namespace Garnet
         {
             ov::AnyMap properties;
             if (OpenVINODevice().rfind("CPU", 0) != 0) return properties;
+#if defined(GARNET_CPU_ONLY)
+            // Establish an FP32 correctness baseline unless explicitly overridden.
+            properties[ov::hint::inference_precision.name()] = ov::element::f32;
+#endif
             if (const char* precision = std::getenv("GARNET_OPENVINO_CPU_INFERENCE_PRECISION");
                 precision && *precision) {
                 const std::string value(precision);
@@ -818,7 +822,8 @@ namespace Garnet
         const SafeTensorsIndex* weightIndex,
         const std::string& enginePath,
         const std::string& precision,
-        std::string& errorMessage)
+        std::string& errorMessage,
+        bool memoryOnly)
     {
 #if !defined(GARNET_WITH_OPENVINO)
         errorMessage = "Garnet was built without the OpenVINO SDK";
@@ -844,6 +849,11 @@ namespace Garnet
             IsTensor(symbolicInputs[3]) &&
             X::Tensor(symbolicInputs[2]).Info().rank == 5 &&
             X::Tensor(symbolicInputs[3]).Info().rank == 5;
+        if(memoryOnly&&implementation.statefulDecode) {
+            m_loweringActive=false;
+            errorMessage="memory-only compilation requires explicit request-owned cache inputs";
+            return false;
+        }
         m_implementation = &implementation;
         const char* stage = "symbolic inputs";
         try {
@@ -1090,6 +1100,13 @@ namespace Garnet
                 stage = "device compilation";
                 ov::CompiledModel compiled = core.compile_model(
                     model, device, compileProperties);
+                if(memoryOnly) {
+                    stage="memory cache publication";
+                    auto execution=std::make_shared<CachedOpenVINOExecution>();
+                    execution->model=std::move(compiled);
+                    std::lock_guard<std::mutex> cacheGuard(g_openVINOCacheMutex);
+                    g_openVINOCache[enginePath]=std::move(execution);
+                } else {
                 const std::filesystem::path outputPath(enginePath);
                 stage = "compiled model export";
                 std::filesystem::create_directories(outputPath.parent_path());
@@ -1118,6 +1135,7 @@ namespace Garnet
                     }
                     std::lock_guard<std::mutex> cacheGuard(g_openVINOCacheMutex);
                     g_openVINOCache.erase(enginePath);
+                }
                 }
             }
         }
@@ -1698,6 +1716,27 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if(opName=="qwen35_replace_packed_hidden") {
+            const int dim=keywordInt("hidden_dim",0);
+            const auto leftShape=leftValue.get_shape(),rightShape=rightValue.get_shape();
+            if(dim<=0||leftShape.size()!=2||leftShape[1]<size_t(dim)||
+               rightShape!=ov::Shape{leftShape[0],size_t(dim)}) {
+                m_error="Qwen3.5 packed hidden replacement dimensions mismatch";return X::Value();
+            }
+            auto suffix=std::make_shared<ov::opset13::Slice>(leftValue,I64Vector({dim}),I64Vector({int64_t(leftShape[1])}),I64Vector({1}),I64Vector({1}));
+            const auto result=std::make_shared<ov::opset13::Concat>(ov::OutputVector{rightValue,suffix},1);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if(opName=="qwen35_mask_rows") {
+            const auto shape=leftValue.get_shape();
+            if(shape.size()!=2||rightValue.get_shape()!=ov::Shape{shape[0]}) {
+                m_error="Qwen3.5 active row mask dimensions mismatch";return X::Value();
+            }
+            auto mask=std::make_shared<ov::opset13::Convert>(rightValue,ov::element::boolean);
+            auto result=std::make_shared<ov::opset13::Select>(Reshape(mask,{int64_t(shape[0]),1}),leftValue,
+                ov::opset13::Constant::create(leftValue.get_element_type(),ov::Shape{},std::vector<float>{0}));
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
         if (opName.rfind("qwen35_attention_bind_",0)==0) {
             if(opName=="qwen35_attention_bind_key")state.fullKey=rightValue;
             else if(opName=="qwen35_attention_bind_value")state.fullValue=rightValue;
@@ -2453,7 +2492,7 @@ namespace Garnet
                 node = projected;
             }
         }
-        else if (opName == "rms_norm") {
+        else if (opName == "rms_norm" || opName == "qwen35_rms_norm") {
             auto* weightName = FindKeyword(keywordParams, "weight_name");
             if (!weightName) {
                 m_error = "OpenVINO rms_norm requires weight_name";
@@ -2484,12 +2523,33 @@ namespace Garnet
             auto root = std::make_shared<ov::opset13::Sqrt>(variance);
             auto normalized = std::make_shared<ov::opset13::Divide>(
                 sourceFloat, root);
-            auto scaleFloat = std::make_shared<ov::opset13::Convert>(
+            ov::Output<ov::Node> scaleFloat = std::make_shared<ov::opset13::Convert>(
                 scale, ov::element::f32);
+            if(opName=="qwen35_rms_norm")scaleFloat=std::make_shared<ov::opset13::Add>(scaleFloat,
+                ov::opset13::Constant::create(ov::element::f32,ov::Shape{},std::vector<float>{1}));
             auto scaled = std::make_shared<ov::opset13::Multiply>(
                 normalized, scaleFloat);
             node = std::make_shared<ov::opset13::Convert>(
                 scaled, sourceType);
+        }
+        else if(opName=="qwen35_mlp") {
+            auto* prefixItem=FindKeyword(keywordParams,"weight_prefix");
+            if(!prefixItem){m_error="Qwen3.5 MLP requires checkpoint prefix";return X::Value();}
+            const auto prefix=prefixItem->second.ToString();
+            auto gate=m_implementation->GetWeight(prefix+".gate_proj.weight",m_error);
+            auto up=m_implementation->GetWeight(prefix+".up_proj.weight",m_error);
+            auto down=m_implementation->GetWeight(prefix+".down_proj.weight",m_error);
+            if(!m_error.empty())return X::Value();
+            const auto shape=source->second.get_shape(),gs=gate.get_shape();
+            if(shape.size()!=2||gs.size()!=2||gs[1]!=shape[1]||up.get_shape()!=gs||down.get_shape()!=ov::Shape{shape[1],gs[0]}) {
+                m_error="Qwen3.5 MLP weight dimensions mismatch";return X::Value();
+            }
+            auto fp=[](ov::Output<ov::Node> value)->ov::Output<ov::Node>{return std::make_shared<ov::opset13::Convert>(value,ov::element::f32);};
+            auto x=fp(source->second);
+            auto g=std::make_shared<ov::opset13::MatMul>(x,fp(gate),false,true);
+            auto u=std::make_shared<ov::opset13::MatMul>(x,fp(up),false,true);
+            auto product=std::make_shared<ov::opset13::Multiply>(std::make_shared<ov::opset13::Multiply>(g,std::make_shared<ov::opset13::Sigmoid>(g)),u);
+            node=std::make_shared<ov::opset13::MatMul>(product,fp(down),false,true);
         }
         else if (opName == "qwen3_mlp_gate_up_swiglu_packed") {
             auto* gateName = FindKeyword(keywordParams, "gate_weight_name");

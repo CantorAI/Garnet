@@ -34,7 +34,8 @@ namespace Garnet
             const SafeTensorsIndex* weightIndex,
             const std::string& enginePath,
             const std::string& precision,
-            std::string& errorMessage);
+            std::string& errorMessage,
+            bool memoryOnly = false);
 
         bool PrepareCapturedEngine(
             const std::string& enginePath,
