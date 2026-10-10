@@ -244,8 +244,10 @@ public:
     }
     int activePhase()const{return activePhase_;}
     cudaError_t packedBuffer(size_t count,int rank,cudaStream_t stream,void** result){
+        if(!result)return cudaErrorInvalidValue;
+        *result=nullptr;
         if(!ready_)return cudaErrorNotReady;
-        if(!result || !count || count%8 || count>capacity_ || rank<0 || rank>1 ||
+        if(!count || count%8 || count>capacity_ || rank<0 || rank>1 ||
             stream!=streams[rank])return cudaErrorInvalidValue;
         int device=-1;auto e=cudaGetDevice(&device);if(e!=cudaSuccess)return e;
         if(device!=rank)return cudaErrorInvalidDevice;

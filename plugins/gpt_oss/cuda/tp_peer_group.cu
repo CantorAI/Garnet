@@ -95,6 +95,8 @@ cudaError_t GptOssPeerGroupAllReduce(const float* x,float* y,size_t n,int rank,i
     return bound->owner.enqueue(x,y,n,rank,stream);
 }
 cudaError_t GptOssPeerGroupPackedBuffer(size_t n,int rank,int prefill,cudaStream_t stream,void** result){
+    if(!result)return cudaErrorInvalidValue;
+    *result=nullptr;
     if(!bound || rank!=boundRank || (prefill?0:1)!=boundPhase || n!=bound->elements[boundPhase])return cudaErrorInvalidValue;
     return bound->owner.packedBuffer(n,rank,stream,result);
 }
