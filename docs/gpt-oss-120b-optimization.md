@@ -2257,3 +2257,8 @@ All672 saved-answer checks passed per engine; all917,504 generated token IDs acr
 
 
 **OPT121 archive-hash correction:** The cache metadata archive SHA-256 recorded in the preceding OPT121 cleanup entry omitted the digits `411`. The verified full SHA-256 is `0ae8cecaf218d86ce11fe27cddb855ef23011efd7e6b9d591411425691e15ee6` (163,748 bytes), confirmed from the retained local archive.
+
+
+**OPT122 failed harness launch (2026-10-10 UTC):** The profile command exited1 before engine loading because the CLI validates a peer-thread override against inherited `GARNET_GPT_OSS_BF16_PEER_GROUP=1`; the initial controller passed `--bf16-peer-group 1` but did not export that environment variable to its subprocess. No inference or candidate measurements occurred. The failure log SHA-256 is `4886df781c3f6bb387d3694e595dad108fc7a917f62a73eb5c34f4a10ae654cf`; downloaded status SHA-256 `5e0630b1c03f00a5ab0285a169cb0bfd182c42988447a64c214383697fe75019`. Preserve this failed attempt.
+
+**OPT123 retry proposal:** Repeat only the OPT122 256→512 peer-reduction-thread experiment with new profile/result paths, explicitly exporting both peer-group enable and thread-count environment variables to the profile and serving subprocesses. Keep source, shape and all other measured settings fixed, and preserve the vLLM-first sequential order, answer and trajectory gates, disk reserve, and rental cap. This repairs harness setup only; no performance claim is made.

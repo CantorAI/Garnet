@@ -3639,3 +3639,6 @@ Audit procedure note: the first extraction invocation correctly failed its works
 
 
 **OPT121 archive-hash correction:** The cache metadata archive SHA-256 recorded in the preceding OPT121 cleanup entry omitted the digits `411`. The verified full SHA-256 is `0ae8cecaf218d86ce11fe27cddb855ef23011efd7e6b9d591411425691e15ee6` (163,748 bytes), confirmed from the retained local archive.
+
+
+**OPT122 harness failure / OPT123 retry proposal (2026-10-10 UTC):** The first 512-thread profile process exited1 immediately, before loading any engine: `profile_tp_engine_memory.py` checks the inherited peer-group environment before applying the CLI `--bf16-peer-group 1` override and raised `ValueError: Peer-group thread override requires the recorded owned peer group`. No inference occurred. Target status: `D:/CantorAI/work/opt117-local/opt122-thread512-failed-status.json`, SHA-256 `5e0630b1c03f00a5ab0285a169cb0bfd182c42988447a64c214383697fe75019`; profile log SHA-256 `4886df781c3f6bb387d3694e595dad108fc7a917f62a73eb5c34f4a10ae654cf`. Preserve the failed attempt and its distinct target paths. For OPT123, repeat only the same-source long peer-reduction threads256→512 control, using new paths and explicitly exporting `GARNET_GPT_OSS_BF16_PEER_GROUP=1` and `GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS=512` before starting child processes. Retain all previous controls and gates.
