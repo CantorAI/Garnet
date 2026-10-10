@@ -203,6 +203,13 @@ public:
             if(e!=cudaSuccess)return fail(e);
             std::printf("PEER_CAPABILITY rank=%d SM=%d%d multiprocessors=%d mapped=%d UVA=%d cooperative=%d peer=%d native_atomic=%d MAPPED_U32_SIGNALS\n",
                 r,p.major,p.minor,p.multiProcessorCount,p.canMapHostMemory,p.unifiedAddressing,p.cooperativeLaunch,peer,atomics);
+            auto kernel=gridSignals_?Bf16PeerPrivate::reduceGridSignals:Bf16PeerPrivate::reduce;
+            int resident=0;e=cudaOccupancyMaxActiveBlocksPerMultiprocessor(&resident,kernel,threads,0);
+            if(e!=cudaSuccess)return fail(e);
+            const int activeCtas=resident*p.multiProcessorCount;
+            std::printf("PEER_COOPERATIVE_OCCUPANCY rank=%d threads_per_cta=%d active_blocks_per_sm=%d multiprocessors=%d active_cta_capacity=%d required_ctas=%d\n",
+                r,threads,resident,p.multiProcessorCount,activeCtas,blocks);
+            if(activeCtas<blocks)return fail(cudaErrorNotSupported);
             int clockKHz=0;e=cudaDeviceGetAttribute(&clockKHz,cudaDevAttrClockRate,r);
             if(e!=cudaSuccess)return fail(e);
             waitCycles_[r]=static_cast<unsigned long long>(clockKHz)*1000*30;
@@ -213,9 +220,6 @@ public:
         if(reinterpret_cast<uintptr_t>(hostSignals_)%128)return fail(cudaErrorNotSupported);
         for(int r=0;r<2;++r){
             e=cudaSetDevice(r);if(e!=cudaSuccess)return fail(e);
-            auto kernel=gridSignals_?Bf16PeerPrivate::reduceGridSignals:Bf16PeerPrivate::reduce;
-            int resident=0;e=cudaOccupancyMaxActiveBlocksPerMultiprocessor(&resident,kernel,256,0);
-            if(e!=cudaSuccess)return fail(e);if(resident*properties[r].multiProcessorCount<blocks)return fail(cudaErrorNotSupported);
             if(!preEnabled){
                 e=cudaDeviceEnablePeerAccess(1-r,0);
                 if(e!=cudaSuccess)return fail(e);enabled_[r]=true;
