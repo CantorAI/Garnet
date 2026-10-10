@@ -16,6 +16,7 @@ os.environ.pop('GARNET_GPT_OSS_TP_EXPERT_WEIGHT_SHARDS', None)
 os.environ.pop('GARNET_GPT_OSS_TP_MOE_INTERMEDIATE_SHARDS', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_PREPACKED', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM', None)
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK', None)
 os.environ.pop('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', None)
@@ -124,6 +125,26 @@ assert up_candidate['cache_key'] != large64['cache_key']
 assert up_candidate['marlin_workspace_layout']['prefill_up_ctas_per_sm'] == 2
 for key in ((128, False), (128, True), (1024, False), (1024, True), (4096, False), (4096, True)):
     assert estimate_tp2_marlin_workspace_bytes(config, key[0], prefill=key[1]) == large64_workspaces[key]
+os.environ['GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES'] = '2'
+up_stage_candidate = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
+assert up_stage_candidate['cache_key'] != up_candidate['cache_key']
+assert up_stage_candidate['marlin_workspace_layout']['prefill_up_stages'] == 2
+os.environ['GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES'] = '3'
+try:
+    marlin_workspace_profile()
+    raise AssertionError('Malformed up-stage policy was accepted')
+except ValueError:
+    pass
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES')
+os.environ['GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK'] = '0'
+os.environ['GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES'] = '2'
+try:
+    marlin_workspace_profile()
+    raise AssertionError('Up-stage policy without large-prefill64 was accepted')
+except ValueError:
+    pass
+os.environ.pop('GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES')
+os.environ['GARNET_GPT_OSS_MARLIN_LARGE_PREFILL_BLOCK'] = '64'
 os.environ['GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM'] = '1'
 split_candidate = make_tensor_parallel_plan(fixture, devices, reserve_bytes=0)
 assert split_candidate['cache_key'] != up_candidate['cache_key']

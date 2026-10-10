@@ -119,6 +119,7 @@ with tempfile.TemporaryDirectory() as temporary:
     execute('profile_tp_engine_memory.py',[
         reference,root/'profile','--padded-prefill','--large-prefill-block','64',
         '--prefill-ctas','2','--prefill-down-k','64','--prefill-down-ctas','1',
+        '--prefill-up-stages','2',
         '--direct-max-batch','256','--direct-ctas','16'],{
             'GARNET_RESIDENT_PROFILE':None, 'GARNET_RESIDENT_WARMUPS':None,
             'GARNET_RESIDENT_PADDED_PREFILL':'1',
@@ -127,8 +128,20 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM':'2',
             'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_K':'64',
             'GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM':'1',
+            'GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES':'2',
             'GARNET_GPT_OSS_DIRECT_MAX_BATCH':'256',
             'GARNET_GPT_OSS_DIRECT_BATCH_CTAS':'16'})
+    with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),
+            str(root/'invalid-prefill-up-stages-without-large-tile'),
+            '--prefill-up-stages','2']), \
+            patch('subprocess.run') as gpu_command, patch('subprocess.check_output') as gpu_observation:
+        try:
+            runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+        except ValueError as error:
+            assert str(error)=='Prefill up-stage override requires the large-prefill64 path'
+        else:
+            raise AssertionError('Up-stage override without large-prefill64 must fail before GPU work')
+        gpu_command.assert_not_called();gpu_observation.assert_not_called()
     execute('profile_tp_engine_memory.py',[reference,root/'peer-group-cta128',
         '--bf16-peer-group-ctas','128'],{
             'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',

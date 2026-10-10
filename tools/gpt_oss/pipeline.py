@@ -307,6 +307,11 @@ def marlin_workspace_profile():
             'decode_block_override': decode if decode in (8, 32) else 0}
     if large == 64:
         profile['large_prefill_block'] = 64
+    up_stages = os.environ.get('GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES')
+    if up_stages is not None:
+        if large != 64 or up_stages not in ('2', '4'):
+            raise ValueError('Marlin prefill up stages require the large-prefill64 path and must be2/4')
+        profile['prefill_up_stages'] = int(up_stages)
     for variable, field in (
             ('GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM', 'prefill_up_ctas_per_sm'),
             ('GARNET_GPT_OSS_MARLIN_PREFILL_DOWN_CTAS_PER_SM', 'prefill_down_ctas_per_sm')):
