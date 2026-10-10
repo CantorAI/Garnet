@@ -594,6 +594,14 @@ void testPrepackedMarlin(const void* const* inputs,const GptOssOptions& options,
             check(packed.Run(packedInputs,output.p,scratch.p,tokens,nullptr));
             compare(output.read(),legacy,0.f,"Prepacked versus runtime-repacked Marlin exact output");
         }
+        // Compare a direct BF16 combine store against the existing FP32
+        // combine followed by the production peer-pack kernel.
+        Device<std::uint16_t> expectedWire(std::vector<std::uint16_t>(legacy.size()));
+        Device<std::uint16_t> directWire(std::vector<std::uint16_t>(legacy.size()));
+        check(GptOssTpPackBf16(output.p,expectedWire.p,legacy.size(),nullptr));
+        check(packed.Run(packedInputs,nullptr,scratch.p,tokens,nullptr,directWire.p));
+        if(directWire.read()!=expectedWire.read())
+            throw std::runtime_error("Direct Marlin BF16 output differs from FP32 combine plus production pack");
     }
     // Context teardown must not free borrowed engine constants.
     if(pu.read()!=up||pus.read()!=us||pd.read()!=down||pds.read()!=ds)

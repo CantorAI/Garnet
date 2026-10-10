@@ -213,7 +213,7 @@ if(GARNET_GPT_OSS_BUILD_TESTS)
     add_test(NAME garnet_gpt_oss_expert_weight_shard COMMAND garnet_gpt_oss_expert_weight_shard)
     add_executable(garnet_gpt_oss_kernel_parity
         ../../test2026/gpt_oss/kernel_parity.cpp cuda/gpt_oss_kernels.cu
-        cuda/gpt_oss_gemv.cu cuda/gpt_oss_marlin.cu)
+        cuda/gpt_oss_gemv.cu cuda/gpt_oss_marlin.cu cuda/tp_bf16.cu)
     target_include_directories(garnet_gpt_oss_kernel_parity PRIVATE include
         "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin" ../../src/backends/tensorrt)
     target_link_libraries(garnet_gpt_oss_kernel_parity PRIVATE CUDA::cudart)

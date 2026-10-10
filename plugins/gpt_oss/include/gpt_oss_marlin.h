@@ -23,6 +23,9 @@ public:
     GptOssMarlin(const GptOssMarlin&) = delete;
     GptOssMarlin& operator=(const GptOssMarlin&) = delete;
     static size_t Workspace(int tokens, const GptOssOptions&);
-    cudaError_t Run(const void* const*, float*, void*, int tokens, cudaStream_t);
+    // Optional direct BF16 partial output is a pre-fusion primitive. Existing
+    // callers leave it null and retain the original FP32 output path.
+    cudaError_t Run(const void* const*, float*, void*, int tokens, cudaStream_t,
+        void* packedBf16Output = nullptr);
 };
 }

@@ -288,7 +288,8 @@ __global__ void activation(const nv_bfloat16* up,const float* bias,const int* se
     output[index]=__float2bfloat16(glu*rounded(u+1));
 }
 __global__ void combine(const nv_bfloat16* down,const float* bias,const int* selected,
-    const float* probabilities,float* y,int tokens,int width,GptOssOptions o) {
+    const float* probabilities,float* y,nv_bfloat16* packedBf16Output,
+    int tokens,int width,GptOssOptions o) {
     int index=blockIdx.x*blockDim.x+threadIdx.x;if(index>=tokens*o.hidden)return;
     int token=index/o.hidden,d=index%o.hidden;float value=0;
     for(int k=0;k<o.topK;++k) {
@@ -297,7 +298,9 @@ __global__ void combine(const nv_bfloat16* down,const float* bias,const int* sel
         int storedExpert=o.expertWeightsSharded?expert/2:expert;
         value+=rounded(__bfloat162float(down[size_t(slot)*width+d])+bias[storedExpert*o.hidden+d])*probabilities[slot];
     }
-    y[index]=o.tpRank<0?rounded(value):value;
+    const float result=o.tpRank<0?rounded(value):value;
+    if(y)y[index]=result;
+    if(packedBf16Output)packedBf16Output[index]=__float2bfloat16(result);
 }
 using UpKernel = void(*)(const int4*,const int4*,int4*,int4*,const int4*,const float*,
     const int4*,const float*,const int4*,const int32_t*,const int32_t*,const int32_t*,
@@ -507,22 +510,25 @@ size_t GptOssMarlin::Workspace(int tokens,const GptOssOptions& o) {
     const int rows=bounded?bounded:tokens;
     return supported(rows,o)?Layout(rows,o).bytes:0;
 }
-cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int tokens,cudaStream_t stream) {
+cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int tokens,
+    cudaStream_t stream,void* packedBf16Output) {
     auto& s=*m_state;
     const int bounded=GptOssMarlinBoundedPrefillRows(tokens,s.o.prefill,maximumNativeRows(),boundedPrefill());
     if(bounded && supported(bounded,s.o)) {
-        if(!in || !in[0] || !y || !workspace)return cudaErrorInvalidValue;
+        if(!in || !in[0] || (!y && !packedBf16Output) || !workspace)return cudaErrorInvalidValue;
         // Subcalls stay in the unchanged <=4096-row native path and queue on
         // the SAME stream before scratch reuse. No larger kernel cutoff.
         for(int row=0;row<tokens;row+=bounded) {
             const auto inputs=GptOssMarlinChunkInputs(in,std::size_t(row),s.o.hidden);
-            const auto status=Run(inputs.data(),y+std::size_t(row)*s.o.hidden,workspace,
-                std::min(bounded,tokens-row),stream);
+            const auto status=Run(inputs.data(),y?y+std::size_t(row)*s.o.hidden:nullptr,workspace,
+                std::min(bounded,tokens-row),stream,packedBf16Output
+                    ?static_cast<nv_bfloat16*>(packedBf16Output)+std::size_t(row)*s.o.hidden:nullptr);
             if(status!=cudaSuccess)return status;
         }
         return cudaSuccess;
     }
     if(!supported(tokens,s.o)){reportMarlin("shape rejected", tokens, s.o.hidden);return cudaErrorNotSupported;}
+    if(!in || !in[0] || (!y && !packedBf16Output) || !workspace)return cudaErrorInvalidValue;
     reportMarlin("decode candidate", tokens, s.o.hidden);
     int device=-1;auto status=cudaGetDevice(&device);if(status!=cudaSuccess)return status;
     if(s.device>=0 && s.device!=device)return cudaErrorInvalidDevice;
@@ -593,7 +599,9 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
     down<<<s.sms*downCtas,downCandidate?kDownK64Threads:128,downShared,stream>>>(at<int4>(workspace,l.activation),(const int4*)s.weights[2],at<int4>(workspace,l.down),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[3],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,1,false,slots,g.downN,g.downK,at<int>(workspace,l.locks),false,false,true);
-    combine<<<(tokens*o.hidden+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.down),(const float*)in[8],selected,probabilities,y,tokens,g.downN,o);
+    combine<<<(tokens*o.hidden+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.down),
+        (const float*)in[8],selected,probabilities,y,
+        static_cast<nv_bfloat16*>(packedBf16Output),tokens,g.downN,o);
     return cudaGetLastError();
 }
 }
