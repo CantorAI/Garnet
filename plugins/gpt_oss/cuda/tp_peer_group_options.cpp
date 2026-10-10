@@ -25,12 +25,17 @@ bool ParseGptOssPeerGroupOptions(const char* options,size_t bytes,size_t maximum
     }catch(...){return false;}
 }
 std::string GptOssPeerGroupDescription(const std::array<size_t,2>& counts,
-        size_t capacity,int ctas,size_t ownedBytes,size_t mappedBytes,bool gridSignals){
+        size_t capacity,int ctas,size_t ownedBytes,size_t mappedBytes,bool gridSignals,int threadsPerCta){
     nlohmann::json description({{"schema",2},{"id","gpt_oss"},{"backend","tensorrt"},
         {"protocol","owned-mapped-bf16-peer-v2"},{"ctas",ctas},{"phase_elements",counts},
         {"capacity_elements",capacity},{"owned_bytes_per_rank",ownedBytes},
         {"mapped_host_bytes",mappedBytes},{"concurrency","serial paired phases, one invocation per rank"}});
     if(gridSignals){description["schema"]=3;description["protocol"]="owned-mapped-bf16-peer-grid-v3";description["grid_signals"]=1;}
+    if(threadsPerCta!=256){
+        description["schema"]=4;
+        description["protocol"]=gridSignals?"owned-mapped-bf16-peer-grid-threads-v1":"owned-mapped-bf16-peer-threads-v1";
+        description["threads_per_cta"]=threadsPerCta;
+    }
     return description.dump();
 }
 }

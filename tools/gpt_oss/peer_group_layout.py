@@ -12,6 +12,9 @@ def peer_group_layout(batch, tokens, hidden):
     ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
     if ctas_text not in ('64', '128', '188') or (flag == '0' and ctas_text != '64'):
         raise ValueError('Owned peer group CTA policy must be64/128/188 and enabled')
+    threads_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS', '256')
+    if threads_text not in ('256', '512') or (flag == '0' and threads_text != '256'):
+        raise ValueError('Owned peer group threads-per-CTA policy must be256/512 and enabled')
     if flag == '0':
         return None
     ctas = int(ctas_text)

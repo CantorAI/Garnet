@@ -27,6 +27,10 @@ group_ctas_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS', '64')
 if group_ctas_text not in ('64', '128', '188') or (not group_mode and group_ctas_text != '64'):
     raise ValueError('Peer-group CTA policy must be 64/128/188 and enabled')
 group_ctas = int(group_ctas_text)
+group_threads_text = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS', '256')
+if group_threads_text not in ('256', '512') or (not group_mode and group_threads_text != '256'):
+    raise ValueError('Peer-group threads-per-CTA policy must be 256/512 and enabled')
+group_threads = int(group_threads_text)
 grid_flag = os.environ.get('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS', '0')
 if grid_flag not in ('0','1') or (not group_mode and grid_flag != '0'):
     raise ValueError('Grid signaling must be0/1 and requires owned peer group')
@@ -169,8 +173,11 @@ try:
     if group_mode:
         group_description = json.loads(extension.peer_group_status_json(group))
         assert group_description['ctas'] == group_ctas
-        assert group_description['schema'] == (3 if grid_mode else 2)
-        assert group_description['protocol'] == ('owned-mapped-bf16-peer-grid-v3' if grid_mode else 'owned-mapped-bf16-peer-v2')
+        assert group_description.get('threads_per_cta', 256) == group_threads
+        expected_schema = 4 if group_threads == 512 else (3 if grid_mode else 2)
+        expected_protocol = ('owned-mapped-bf16-peer-grid-threads-v1' if grid_mode else 'owned-mapped-bf16-peer-threads-v1') if group_threads == 512 else ('owned-mapped-bf16-peer-grid-v3' if grid_mode else 'owned-mapped-bf16-peer-v2')
+        assert group_description['schema'] == expected_schema
+        assert group_description['protocol'] == expected_protocol
         assert group_description.get('grid_signals',0) == int(grid_mode)
         print('NATIVE_GROUP', json.dumps(group_description), flush=True)
         G.cuda_set_device(0)
@@ -233,6 +240,7 @@ try:
         gc.collect()
     (folder / 'result.json').write_text(json.dumps(dict(protocol='compiled-bf16-peer-group-v1',
         group_mode=group_mode, group_ctas=group_ctas if group_mode else None,
+        group_threads_per_cta=group_threads if group_mode else None,
         grid_signals=grid_mode, native_group_description=group_description, batch=batch, tokens=tokens, hidden=hidden,
         matrices=records, all_complete=True,
         compiled_statuses=statuses,

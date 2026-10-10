@@ -7,5 +7,6 @@ namespace Garnet {
 bool ParseGptOssPeerGroupOptions(const char*, size_t, size_t,
     std::array<size_t,2>&, size_t&, int&);
 std::string GptOssPeerGroupDescription(const std::array<size_t,2>&,
-    size_t capacity, int ctas, size_t ownedBytes, size_t mappedBytes, bool gridSignals=false);
+    size_t capacity, int ctas, size_t ownedBytes, size_t mappedBytes,
+    bool gridSignals=false, int threadsPerCta=256);
 }

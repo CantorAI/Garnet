@@ -110,7 +110,7 @@ class Bf16PeerNative {
     // Only the process lease is shared. All GPU/host arenas belong to this owner.
     inline static std::atomic_flag leaseFlag_=ATOMIC_FLAG_INIT;
     bool leased_=false;
-    int original_=0,blocks_=0;size_t capacity_=0;bool ready_=false;
+    int original_=0,blocks_=0,threads_=256;size_t capacity_=0;bool ready_=false;
     std::array<bool,2> enabled_{};
     std::array<void*,2> packed_{};
     std::array<Bf16PeerPrivate::Word*,2> sequence_{};
@@ -146,6 +146,7 @@ public:
     Bf16PeerNative& operator=(const Bf16PeerNative&)=delete;
     bool ready()const{return ready_;}
     int blocks()const{return blocks_;}
+    int threads()const{return threads_;}
     size_t ownedBytesPerRank()const{return capacity_*2+sizeof(Bf16PeerPrivate::Word)*blocks_+sizeof(unsigned)*blocks_;}
     size_t mappedBytes()const{return sizeof(Bf16PeerPrivate::Slot)*blocks_;}
     // preEnabled is an explicit caller contract: BOTH peer links already enabled.
@@ -154,10 +155,11 @@ public:
     // Optional two BORROWED phase/rank stream pairs. Caller keeps them alive,
     // serializes phase transitions, and destroys executable graphs before close.
     cudaError_t initialize(size_t capacity,int blocks,int simulateFailureAfterRank=-1,bool preEnabled=false,
-                           const PhaseStreams* borrowedStreams=nullptr,bool gridSignals=false){
+                           const PhaseStreams* borrowedStreams=nullptr,bool gridSignals=false,int threads=256){
         if(ready_ || leased_)return cudaErrorNotReady;
         if(!capacity || capacity%8 || capacity>kMaximumPairElements ||
-            (blocks!=32 && blocks!=64 && blocks!=128 && blocks!=188) || simulateFailureAfterRank<-1 || simulateFailureAfterRank>1)
+            (blocks!=32 && blocks!=64 && blocks!=128 && blocks!=188) ||
+            (threads!=256 && threads!=512) || simulateFailureAfterRank<-1 || simulateFailureAfterRank>1)
             return cudaErrorInvalidValue;
         if(borrowedStreams)for(int r=0;r<2;++r)
             if(!(*borrowedStreams)[0][r] || !(*borrowedStreams)[1][r] ||
@@ -169,7 +171,7 @@ public:
 #endif
         if(leaseFlag_.test_and_set(std::memory_order_acquire))return cudaErrorNotReady;leased_=true;
         auto e=cudaGetDevice(&original_);if(e!=cudaSuccess){leased_=false;leaseFlag_.clear(std::memory_order_release);return e;}
-        capacity_=capacity;blocks_=blocks;gridSignals_=gridSignals;int devices=0;
+        capacity_=capacity;blocks_=blocks;threads_=threads;gridSignals_=gridSignals;int devices=0;
         e=cudaGetDeviceCount(&devices);if(e!=cudaSuccess)return fail(e);
         if(devices!=2)return fail(cudaErrorNotSupported);
         if(borrowedStreams){
@@ -192,7 +194,8 @@ public:
         for(int r=0;r<2;++r){
             e=cudaGetDeviceProperties(&properties[r],r);if(e!=cudaSuccess)return fail(e);
             const auto& p=properties[r];
-            if(!p.canMapHostMemory || !p.unifiedAddressing || !p.cooperativeLaunch || p.major<8 || blocks>p.multiProcessorCount)
+            if(!p.canMapHostMemory || !p.unifiedAddressing || !p.cooperativeLaunch || p.major<8 ||
+               blocks>p.multiProcessorCount || threads>p.maxThreadsPerBlock)
                 return fail(cudaErrorNotSupported);
             int peer=0;e=cudaDeviceCanAccessPeer(&peer,r,1-r);if(e!=cudaSuccess)return fail(e);
             if(!peer)return fail(cudaErrorNotSupported);
@@ -253,7 +256,7 @@ public:
         size_t vectors=count/8;auto limit=waitCycles_[rank];
         void* args[]={&first,&second,&y,&s,&q,&f,&rank,&vectors,&limit};
         auto kernel=gridSignals_?Bf16PeerPrivate::reduceGridSignals:Bf16PeerPrivate::reduce;
-        return cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(kernel),dim3(blocks_),dim3(256),args,0,stream);
+        return cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(kernel),dim3(blocks_),dim3(threads_),args,0,stream);
     }
     cudaError_t checkFaults(int rank,bool* clean){
         if(!ready_)return cudaErrorNotReady;if(!clean || rank<0 || rank>1)return cudaErrorInvalidValue;
@@ -286,7 +289,7 @@ public:
         }
         if(hostSignals_)keep(cudaFreeHost(hostSignals_));hostSignals_=nullptr;
         for(int r=0;r<2;++r)if(enabled_[r]){keep(cudaSetDevice(r));keep(cudaDeviceDisablePeerAccess(1-r));enabled_[r]=false;}
-        keep(cudaSetDevice(original_));ready_=false;capacity_=0;blocks_=0;borrowed_=false;gridSignals_=false;phaseStreams_={};activePhase_=0;
+        keep(cudaSetDevice(original_));ready_=false;capacity_=0;blocks_=0;threads_=256;borrowed_=false;gridSignals_=false;phaseStreams_={};activePhase_=0;
         leased_=false;leaseFlag_.clear(std::memory_order_release);return first;
     }
     ~Bf16PeerNative(){const auto e=close();if(e!=cudaSuccess){std::fprintf(stderr,"PEER_OWNER_CLEANUP_FAILED: %s\n",cudaGetErrorString(e));std::terminate();}}

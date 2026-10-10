@@ -96,6 +96,13 @@ try:
         [dict(d, free_bytes=expected+extra188-1) for d in devices], **identity)
 except ValueError: pass
 else: raise AssertionError('CTA188 arena silently borrowed runtime reserve')
+threads512_environment=dict(identity['environment'],GARNET_GPT_OSS_BF16_PEER_GROUP='1',
+    GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS='188',GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS='512',
+    GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS='1')
+threads512_profile=copy.deepcopy(group_profile188)
+threads512_profile['kernel_environment']=threads512_environment
+threads512_result=admit_resident(threads512_profile,group_plan188,devices,**dict(identity,environment=threads512_environment))
+assert all(row['required_bytes']==expected+extra188 for row in threads512_result['ranks'])
 for key in ('owned_bytes_per_rank','mapped_host_bytes','phase_elements','protocol'):
     damaged=copy.deepcopy(group_plan);damaged['operator_execution_layout'][key]=None
     try: plan_identity(damaged)
@@ -107,6 +114,12 @@ for value in ('1','64x','', ' 128', '187', '189', '256'):
         try: peer_group_layout(256,16,2880)
         except ValueError: pass
         else: raise AssertionError('Malformed peer CTA policy accepted')
+for value in ('128','512x',' 512','1024'):
+    with patch.dict(os.environ, {'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
+                                 'GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS':value}):
+        try: peer_group_layout(256,16,2880)
+        except ValueError: pass
+        else: raise AssertionError('Malformed peer threads-per-CTA policy accepted')
 with patch.dict(os.environ, {'GARNET_GPT_OSS_BF16_PEER_GROUP':'0',
                              'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS':'128'}):
     try: peer_group_layout(256,16,2880)

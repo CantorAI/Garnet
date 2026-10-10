@@ -33,4 +33,15 @@ for group,grid in [('0','1'),('1','2'),('1','true'),('1',''),('invalid','1')]:
         else:raise AssertionError((group,grid))
 assert normalize_kernel_environment({})['GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS']=='0'
 assert normalize_kernel_environment({'GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS':'1'})!=normalize_kernel_environment({})
+assert normalize_kernel_environment({})['GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS']=='256'
+for threads in ('256','512'):
+    with patch.dict(os.environ,{'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
+        'GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS':threads},clear=True):
+        assert peer_group_layout(512,8,2880) is not None
+for group,threads in [('1','128'),('1','512x'),('0','512')]:
+    with patch.dict(os.environ,{'GARNET_GPT_OSS_BF16_PEER_GROUP':group,
+        'GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS':threads},clear=True):
+        try:peer_group_layout(512,8,2880)
+        except ValueError:pass
+        else:raise AssertionError((group,threads))
 print('GRID_PROTOCOL_STORAGE_AND_REJECTION_PASS CTA64/128/188 DEFAULT_UNCHANGED')
