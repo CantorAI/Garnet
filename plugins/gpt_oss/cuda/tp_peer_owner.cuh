@@ -102,7 +102,6 @@ __global__ void reduceGridSignals(const uint4* first,const uint4* second,float4*
         }
         sequence[0].value=epoch;if(failed)faults[0]=failed;
     }
-    grid.sync();
 }
 }
 
