@@ -31,6 +31,7 @@
 #include "gated_delta_lowering.h"
 #include "causal_conv_lowering.h"
 #include "qwen35_linear_lowering.h"
+#include "qwen35_attention_lowering.h"
 #endif
 
 namespace Garnet
@@ -507,6 +508,7 @@ namespace Garnet
             ov::Output<ov::Node> value;
             ov::Output<ov::Node> deltaDecay, deltaBeta, deltaState, deltaActive;
             ov::Output<ov::Node> convToken, convWeight, convState, convActive;
+            ov::Output<ov::Node> fullKey,fullValue,fullPositions,fullSlots,fullActive;
         };
 
         struct CacheWrite
@@ -1696,6 +1698,16 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if (opName.rfind("qwen35_attention_bind_",0)==0) {
+            if(opName=="qwen35_attention_bind_key")state.fullKey=rightValue;
+            else if(opName=="qwen35_attention_bind_value")state.fullValue=rightValue;
+            else if(opName=="qwen35_attention_bind_positions")state.fullPositions=rightValue;
+            else if(opName=="qwen35_attention_bind_slots")state.fullSlots=rightValue;
+            else if(opName=="qwen35_attention_bind_active")state.fullActive=rightValue;
+            else {m_error="unknown Qwen3.5 full attention binding";return X::Value();}
+            m_implementation->states[outputId]=state;m_implementation->tensors[outputId]=leftValue;
+            m_implementation->lastOutput=leftValue;return X::Value(true);
+        }
         if (opName.rfind("qwen35_conv_bind_", 0) == 0) {
             if (!state.convToken.get_node_shared_ptr()) state.convToken = leftValue;
             if (opName == "qwen35_conv_bind_weight") state.convWeight = rightValue;
@@ -1876,6 +1888,43 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if(opName=="qwen35_attention_step") {
+            auto* prefixItem=FindKeyword(keywordParams,"weight_prefix");
+            if(!prefixItem) {m_error="Qwen3.5 full attention requires checkpoint prefix";return X::Value();}
+            for(auto value:{state.fullKey,state.fullValue,state.fullPositions,state.fullSlots,state.fullActive})
+                if(!value.get_node_shared_ptr()){m_error="Qwen3.5 full attention is missing a bound input";return X::Value();}
+            auto prefix=prefixItem->second.ToString();
+            auto weight=[&](const char* suffix){return m_implementation->GetWeight(prefix+suffix,m_error);};
+            Qwen35AttentionWeights weights{weight(".q_proj.weight"),weight(".k_proj.weight"),weight(".v_proj.weight"),
+                weight(".o_proj.weight"),weight(".q_norm.weight"),weight(".k_norm.weight")};
+            if(!m_error.empty())return X::Value();
+            auto number=[&](const char* name,double fallback){auto* item=FindKeyword(keywordParams,name);return item?item->second.ToDouble():fallback;};
+            const auto result=LowerQwen35AttentionStep(source->second,state.fullKey,state.fullValue,state.fullPositions,state.fullSlots,state.fullActive,
+                weights,keywordInt("num_heads",0),keywordInt("num_kv_heads",0),keywordInt("head_dim",0),keywordInt("rotary_dim",0),
+                {keywordInt("mrope_t",0),keywordInt("mrope_h",0),keywordInt("mrope_w",0)},float(number("rope_theta",10000000)),float(number("eps",1e-6)));
+            const auto shape=result.output.get_shape();
+            const auto packed=std::make_shared<ov::opset13::Concat>(ov::OutputVector{result.output,
+                Reshape(result.keyCache,{int64_t(shape[0]),-1}),Reshape(result.valueCache,{int64_t(shape[0]),-1})},-1);
+            m_implementation->tensors[outputId]=packed;m_implementation->lastOutput=packed;return X::Value(true);
+        }
+        if(opName=="qwen35_attention_output"||opName=="qwen35_attention_key_cache"||opName=="qwen35_attention_value_cache") {
+            const int hidden=keywordInt("hidden_dim",0),kv=keywordInt("num_kv_heads",0),dim=keywordInt("head_dim",0),capacity=keywordInt("capacity",0);
+            const auto shape=source->second.get_shape();
+            const int64_t width=int64_t(kv)*dim*capacity;
+            if(hidden<=0||kv<=0||dim<=0||capacity<=0||shape.size()!=2||shape[1]!=uint64_t(hidden+2*width)) {
+                m_error="Qwen3.5 full attention packed dimensions mismatch";return X::Value();
+            }
+            int64_t start=0,end=hidden;
+            std::vector<int64_t> resultShape{int64_t(shape[0]),hidden};
+            if(opName!="qwen35_attention_output") {
+                start=hidden+(opName=="qwen35_attention_value_cache"?width:0);end=start+width;
+                resultShape={int64_t(shape[0]),kv,capacity,dim};
+            }
+            auto slice=std::make_shared<ov::opset13::Slice>(source->second,I64Vector({start}),I64Vector({end}),I64Vector({1}),I64Vector({1}));
+            auto result=std::make_shared<ov::opset13::Reshape>(slice,
+                ov::opset13::Constant::create(ov::element::i64,ov::Shape{resultShape.size()},resultShape),false);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
         if (opName == "qwen35_linear_output" || opName == "qwen35_linear_conv_state" ||
             opName == "qwen35_linear_recurrent_state") {
             const int hidden=keywordInt("hidden_dim",0),kh=keywordInt("key_heads",0),vh=keywordInt("value_heads",0);
@@ -1899,7 +1948,8 @@ namespace Garnet
                 resultShape={int64_t(shape[0]),vh,kd,vd};
             }
             auto slice=std::make_shared<ov::opset13::Slice>(source->second,I64Vector({start}),I64Vector({end}),I64Vector({1}),I64Vector({1}));
-            const auto result=Reshape(slice,resultShape);
+            const auto result=std::make_shared<ov::opset13::Reshape>(slice,
+                ov::opset13::Constant::create(ov::element::i64,ov::Shape{resultShape.size()},resultShape),false);
             m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
         }
         if (opName == "qwen35_linear_step") {

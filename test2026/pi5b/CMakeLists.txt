@@ -68,6 +68,23 @@ if(OpenVINO_FOUND)
     target_link_libraries(garnet_openvino_lowering PRIVATE openvino::runtime)
     set(XLANG3_RUNTIME_LIBRARY "" CACHE FILEPATH "Existing XLang3 runtime for graph execution validation")
     if(XLANG3_RUNTIME_LIBRARY)
+        add_executable(graph_fixture_probe graph_fixture_probe.cpp
+            "${GARNET_ROOT}/src/core/lowering_context.cpp"
+            "${GARNET_ROOT}/src/tensor/graph_capture.cpp"
+            "${GARNET_ROOT}/src/tensor/garnet_tensor.cpp"
+            "${GARNET_ROOT}/src/model/compiled_graph_capture.cpp")
+        target_link_libraries(graph_fixture_probe PRIVATE garnet_openvino_lowering
+            garnet_native_cpu openvino::runtime "${XLANG3_RUNTIME_LIBRARY}")
+        if(Python3_Interpreter_FOUND)
+            add_test(NAME qwen35_linear_captured_checkpoint COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_LIST_DIR}/test_linear_graph.py" "$<TARGET_FILE:graph_fixture_probe>" "${GARNET_ROOT}")
+            set_tests_properties(qwen35_linear_captured_checkpoint PROPERTIES ENVIRONMENT
+                "GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f32;GARNET_OPENVINO_CPU_THREADS=2")
+            add_test(NAME qwen35_attention_captured_checkpoint COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_LIST_DIR}/test_attention_graph.py" "$<TARGET_FILE:graph_fixture_probe>" "${GARNET_ROOT}")
+            set_tests_properties(qwen35_attention_captured_checkpoint PROPERTIES ENVIRONMENT
+                "GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f32;GARNET_OPENVINO_CPU_THREADS=2")
+        endif()
         add_executable(gated_delta_graph_probe gated_delta_graph_probe.cpp
             "${GARNET_ROOT}/src/core/lowering_context.cpp"
             "${GARNET_ROOT}/src/tensor/graph_capture.cpp"
