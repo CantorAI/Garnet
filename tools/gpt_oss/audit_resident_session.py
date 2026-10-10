@@ -34,6 +34,7 @@ def normalize_kernel_environment(environment):
     normalized.setdefault('GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS','64')
     normalized.setdefault('GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS','256')
     normalized.setdefault('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS','0')
+    normalized.setdefault('GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE','0')
     return normalized
 
 

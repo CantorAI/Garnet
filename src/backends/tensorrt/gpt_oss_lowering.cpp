@@ -257,8 +257,9 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
     if (op == "gpt_oss_apply_yarn_rope_packed") {
         o.kind = 0; inputs.push_back(right);
         if (!right || right->getType() != DataType::kINT64) { loweringError = "GPT-OSS YaRN requires INT64 positions"; return nullptr; }
-    } else if (op == "gpt_oss_moe_mxfp4") {
-        o.kind = 2; o.hidden = integer("hidden_size", 0); o.intermediate = integer("intermediate_size", 0);
+    } else if (op == "gpt_oss_moe_mxfp4" || op == "gpt_oss_moe_tp_reduce_bf16") {
+        const bool fusedPeerReduce=op=="gpt_oss_moe_tp_reduce_bf16";
+        o.kind = fusedPeerReduce?8:2; o.hidden = integer("hidden_size", 0); o.intermediate = integer("intermediate_size", 0);
         o.experts = integer("num_experts", 0); o.topK = integer("experts_per_token", 0); o.limit = real("swiglu_limit", 7);
         o.tpRank = integer("tp_rank", -1);
         o.prefill = integer("prefill", 0);
@@ -271,7 +272,15 @@ ITensor* TRTBuilder::LowerGptOss(const std::string& op, ITensor* source, ITensor
             loweringError="GPT-OSS intermediate TP2 requires rank0/1, intermediate divisible by64 and no expert-axis shard";
             return nullptr;
         }
-        if(intermediateShard){o.intermediate/=2;o.tpRank=-1;}
+        if(fusedPeerReduce && (!intermediateShard || o.prefill!=1)) {
+            loweringError="GPT-OSS fused MoE peer reduction is restricted to intermediate-sharded prefill";
+            return nullptr;
+        }
+        if(intermediateShard){
+            o.intermediate/=2;
+            if(fusedPeerReduce)o.peerRank=intermediateRank;
+            o.tpRank=-1;
+        }
         if (o.expertWeightsSharded != 0 &&
             (o.expertWeightsSharded != 1 || o.tpRank < 0 || o.tpRank > 1)) {
             loweringError = "GPT-OSS expert weight sharding requires TP2 rank 0/1"; return nullptr;

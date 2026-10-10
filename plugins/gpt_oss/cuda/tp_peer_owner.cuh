@@ -243,6 +243,30 @@ public:
         return cudaSetDevice(original_);
     }
     int activePhase()const{return activePhase_;}
+    cudaError_t packedBuffer(size_t count,int rank,cudaStream_t stream,void** result){
+        if(!ready_)return cudaErrorNotReady;
+        if(!result || !count || count%8 || count>capacity_ || rank<0 || rank>1 ||
+            stream!=streams[rank])return cudaErrorInvalidValue;
+        int device=-1;auto e=cudaGetDevice(&device);if(e!=cudaSuccess)return e;
+        if(device!=rank)return cudaErrorInvalidDevice;
+        *result=packed_[rank];return cudaSuccess;
+    }
+    cudaError_t enqueuePacked(const void* input,float* output,size_t count,int rank,cudaStream_t stream){
+        if(!ready_)return cudaErrorNotReady;
+        if(!input || !output || !count || count%8 || count>capacity_ || rank<0 || rank>1 ||
+            reinterpret_cast<uintptr_t>(input)%16 || reinterpret_cast<uintptr_t>(output)%16 ||
+            input!=packed_[rank] || stream!=streams[rank])return cudaErrorInvalidValue;
+        int device=0;auto e=cudaGetDevice(&device);if(e!=cudaSuccess)return e;
+        if(device!=rank)return cudaErrorInvalidDevice;
+        cudaPointerAttributes p{};e=cudaPointerGetAttributes(&p,output);if(e!=cudaSuccess)return e;
+        if(p.type!=cudaMemoryTypeDevice || p.device!=rank)return cudaErrorInvalidDevicePointer;
+        const uint4* first=static_cast<const uint4*>(packed_[0]);const uint4* second=static_cast<const uint4*>(packed_[1]);
+        auto* y=reinterpret_cast<float4*>(output);auto* s=signals_[rank];auto* q=sequence_[rank];auto* f=faults_[rank];
+        size_t vectors=count/8;auto limit=waitCycles_[rank];
+        void* args[]={&first,&second,&y,&s,&q,&f,&rank,&vectors,&limit};
+        auto kernel=gridSignals_?Bf16PeerPrivate::reduceGridSignals:Bf16PeerPrivate::reduce;
+        return cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(kernel),dim3(blocks_),dim3(threads_),args,0,stream);
+    }
     cudaError_t enqueue(const float* input,float* output,size_t count,int rank,cudaStream_t stream){
         if(!ready_)return cudaErrorNotReady;
         if(!input || !output || !count || count%8 || count>capacity_ || rank<0 || rank>1 ||
@@ -255,12 +279,7 @@ public:
             if(p.type!=cudaMemoryTypeDevice || p.device!=rank)return cudaErrorInvalidDevicePointer;
         }
         e=Garnet::GptOssTpPackBf16(input,packed_[rank],count,stream);if(e!=cudaSuccess)return e;
-        const uint4* first=static_cast<const uint4*>(packed_[0]);const uint4* second=static_cast<const uint4*>(packed_[1]);
-        auto* y=reinterpret_cast<float4*>(output);auto* s=signals_[rank];auto* q=sequence_[rank];auto* f=faults_[rank];
-        size_t vectors=count/8;auto limit=waitCycles_[rank];
-        void* args[]={&first,&second,&y,&s,&q,&f,&rank,&vectors,&limit};
-        auto kernel=gridSignals_?Bf16PeerPrivate::reduceGridSignals:Bf16PeerPrivate::reduce;
-        return cudaLaunchCooperativeKernel(reinterpret_cast<const void*>(kernel),dim3(blocks_),dim3(threads_),args,0,stream);
+        return enqueuePacked(packed_[rank],output,count,rank,stream);
     }
     cudaError_t checkFaults(int rank,bool* clean){
         if(!ready_)return cudaErrorNotReady;if(!clean || rank<0 || rank>1)return cudaErrorInvalidValue;

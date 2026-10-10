@@ -17,7 +17,8 @@ STAGE_MOE_INTERMEDIATE_SHARD = 0
 STAGE_MARLIN_PREPACKED = 0
 STAGE_PADDED_PREFILL = 0
 STAGE_OPERATORS = ['gpt_oss_round_bf16', 'gpt_oss_apply_yarn_rope_packed',
-                   'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4', 'gpt_oss_rms_norm',
+                   'gpt_oss_paged_attention', 'gpt_oss_moe_mxfp4',
+                   'gpt_oss_moe_tp_reduce_bf16', 'gpt_oss_rms_norm',
                    'gpt_oss_tp_all_reduce', 'gpt_oss_tp_all_gather']
 if STAGE_COMPACT_GREEDY:
     STAGE_OPERATORS.append('gpt_oss_vocab_top1')

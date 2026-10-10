@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
+import os
 import garnet
 from .tensor_compat import tensor
 T = tensor()
@@ -90,8 +91,17 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
     x = rounded(residual + attention_output)
     residual = x
     x = norm(x, prefix + ".mlp.norm.scale", config['hidden_size'])
+    fused_peer_reduce = os.environ.get('GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE', '0')
+    if fused_peer_reduce not in ('0', '1'):
+        raise ValueError('GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE must be 0 or 1')
+    # Profile/build environments also compile decode engines. Keep those on
+    # the existing path while limiting this candidate to prefill graphs.
+    fused_peer_reduce = fused_peer_reduce == '1' and bool(prefill)
+    if fused_peer_reduce and not (tp_rank >= 0 and moe_intermediate_shard == 1):
+        raise ValueError('Fused GPT-OSS MoE peer reduction requires intermediate-sharded TP2 prefill')
+    moe_operator = 'gpt_oss_moe_tp_reduce_bf16' if fused_peer_reduce else 'gpt_oss_moe_mxfp4'
     x = x * T.unary_op(
-        "gpt_oss_moe_mxfp4", hidden_size=config['hidden_size'],
+        moe_operator, hidden_size=config['hidden_size'],
         intermediate_size=config['intermediate_size'], num_experts=config['num_experts'],
         experts_per_token=config['experts_per_token'], swiglu_limit=config['swiglu_limit'],
         tp_rank=tp_rank, prefill=prefill, expert_weight_shard=expert_weight_shard,
@@ -103,7 +113,10 @@ def layer(x, position_ids, key_pages, value_pages, page_table,
         gate_up_bias_name=prefix + ".mlp.mlp1_bias",
         down_blocks_name=prefix + ".mlp.mlp2_weight.blocks",
         down_scales_name=prefix + ".mlp.mlp2_weight.scales", down_bias_name=prefix + ".mlp.mlp2_bias")
-    if tp_rank >= 0:
+    if fused_peer_reduce:
+        # The composite plugin already returns the exact BF16-rounded TP sum.
+        x = rounded(x)
+    elif tp_rank >= 0:
         # Intermediate-axis kernels round each rank's output to BF16 already;
         # expert-axis partials remain FP32 and are not eligible for compression.
         x = rounded(tp_all_reduce(x, tp_rank, config,

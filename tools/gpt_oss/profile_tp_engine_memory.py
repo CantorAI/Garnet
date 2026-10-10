@@ -121,6 +121,8 @@ parser.add_argument('--bf16-peer-group-threads', type=int, choices=(256,512),
     help='explicit owned BF16 peer-reduction threads-per-CTA candidate; requires peer group and fresh correctness/profile gates')
 parser.add_argument('--bf16-peer-grid-signals', type=int, choices=(0,1),
     help='explicit cooperative-grid handshake candidate; requires owned peer group and fresh correctness/profile gates')
+parser.add_argument('--fused-moe-tp-reduce', type=int, choices=(0,1),
+    help='explicit OPT135 MoE direct-BF16 composite prefill candidate; requires the owned peer group')
 parser.add_argument('--sync-allocator', type=int, choices=(0,1),
     help='explicit cached runtime allocator candidate; requires separate memory/quality gates')
 args = parser.parse_args()
@@ -159,6 +161,13 @@ for key, value in reference['optimization_environment'].items():
             key.endswith(('_TOKEN', '_KEY', '_SECRET', '_PASSWORD')) or not isinstance(value, str)):
         raise ValueError('Invalid recorded optimization environment')
     env[key] = value
+fused_key='GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE'
+saved_fused=env.get(fused_key,'0')
+if saved_fused not in ('0','1'):
+    raise ValueError('Invalid recorded fused MoE peer-reduction flag')
+if saved_fused=='1' and args.fused_moe_tp_reduce is None:
+    raise ValueError('Fused MoE peer reduction must be explicitly selected for each profile')
+env[fused_key]=str(args.fused_moe_tp_reduce) if args.fused_moe_tp_reduce is not None else '0'
 if args.prepacked_candidate:
     env['GARNET_GPT_OSS_MARLIN_PREPACKED'] = '1'
 if env.get('GARNET_GPT_OSS_MARLIN_PREPACKED') != '1':
@@ -209,6 +218,8 @@ if args.prefill_up_stages is not None and env.get('GARNET_GPT_OSS_MARLIN_LARGE_P
 grid_flag = env.get('GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS', '0')
 if grid_flag not in ('0','1') or (grid_flag == '1' and env.get('GARNET_GPT_OSS_BF16_PEER_GROUP') != '1'):
     raise ValueError('Grid signaling must be0/1 and requires the owned peer group')
+if env[fused_key]=='1' and env.get('GARNET_GPT_OSS_BF16_PEER_GROUP')!='1':
+    raise ValueError('Fused MoE peer reduction requires the owned peer group')
 if env.get('GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS','4') not in ('2','4'):
     raise ValueError('Invalid tensor-core router warp policy')
 if env.get('GARNET_GPT_OSS_PREFILL_GQA_QUERY_TILE') not in (None,'2','4'):

@@ -20,18 +20,22 @@ router_policy = 'GARNET_GPT_OSS_TENSOR_ROUTER_EXPERT_WARPS'
 peer_cta_policy = 'GARNET_GPT_OSS_BF16_PEER_GROUP_CTAS'
 peer_thread_policy = 'GARNET_GPT_OSS_BF16_PEER_GROUP_THREADS'
 grid_signal_policy = 'GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS'
-defaults = {router_policy:'4', peer_cta_policy:'64', peer_thread_policy:'256', grid_signal_policy:'0'}
+fused_moe_policy = 'GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE'
+defaults = {router_policy:'4', peer_cta_policy:'64', peer_thread_policy:'256',
+            grid_signal_policy:'0', fused_moe_policy:'0'}
 assert normalize_kernel_environment({}) == defaults
 assert normalize_kernel_environment({router_policy:'4'}) == defaults
 assert normalize_kernel_environment({}) != normalize_kernel_environment({router_policy:'2'})
 assert normalize_kernel_environment({router_policy:'1'}) == {
-    router_policy:'1', peer_cta_policy:'64', peer_thread_policy:'256', grid_signal_policy:'0'}
+    router_policy:'1', peer_cta_policy:'64', peer_thread_policy:'256',
+    grid_signal_policy:'0', fused_moe_policy:'0'}
 assert normalize_audit_environment({}) == defaults
 assert audit_kernel_environment({'optimization_environment':{'GARNET_TRT_SYNC_ALLOCATOR':'0'}}) == {
     'GARNET_TRT_SYNC_ALLOCATOR':'0',**defaults}
 assert normalize_audit_environment({}) != normalize_audit_environment({router_policy:'2'})
 assert normalize_audit_environment({router_policy:'malformed'}) == {
-    router_policy:'malformed', peer_cta_policy:'64', peer_thread_policy:'256', grid_signal_policy:'0'}
+    router_policy:'malformed', peer_cta_policy:'64', peer_thread_policy:'256',
+    grid_signal_policy:'0', fused_moe_policy:'0'}
 assert normalize_audit_environment({grid_signal_policy:'1'}) != defaults
 
 class ObservedCommand(Exception):
@@ -65,6 +69,7 @@ with tempfile.TemporaryDirectory() as temporary:
             'GARNET_GPT_OSS_DIRECT_BATCH_ALLREDUCE': '1',
             'GARNET_GPT_OSS_DIRECT_LARGE_BATCH_ALLREDUCE': '1',
             'GARNET_GPT_OSS_BF16_PEER_GROUP': '1',
+            fused_moe_policy: '0',
             peer_cta_policy: '64'})))
     fresh = root / 'new-admission.json'
     fresh.write_text(json.dumps(dict(resident_profile_schema=1,
@@ -154,6 +159,35 @@ with tempfile.TemporaryDirectory() as temporary:
         '--bf16-peer-grid-signals','1'],{
             'GARNET_GPT_OSS_BF16_PEER_GROUP':'1',
             'GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS':'1'})
+    execute('profile_tp_engine_memory.py',[reference,root/'fused-moe-prefill',
+        '--fused-moe-tp-reduce','1'],{fused_moe_policy:'1',
+            'GARNET_GPT_OSS_BF16_PEER_GROUP':'1'})
+    with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),
+            str(root/'invalid-fused-moe-without-group'), '--bf16-peer-group','0',
+            '--fused-moe-tp-reduce','1']), \
+            patch('subprocess.run') as gpu_command, patch('subprocess.check_output') as gpu_observation:
+        try:
+            runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+        except ValueError as error:
+            assert str(error)=='Fused MoE peer reduction requires the owned peer group'
+        else:
+            raise AssertionError('Fused MoE peer reduction without group must fail before GPU work')
+        gpu_command.assert_not_called();gpu_observation.assert_not_called()
+    saved_reference=reference.read_bytes()
+    fused_reference=json.loads(saved_reference)
+    fused_reference['optimization_environment'][fused_moe_policy]='1'
+    reference.write_text(json.dumps(fused_reference))
+    with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),
+            str(root/'invalid-inherited-fused-moe-without-explicit-selection')]), \
+            patch('subprocess.run') as gpu_command, patch('subprocess.check_output') as gpu_observation:
+        try:
+            runpy.run_path(str(repo/'tools/gpt_oss/profile_tp_engine_memory.py'),run_name='__main__')
+        except ValueError as error:
+            assert str(error)=='Fused MoE peer reduction must be explicitly selected for each profile'
+        else:
+            raise AssertionError('Saved fused flag must require explicit per-profile selection')
+        gpu_command.assert_not_called();gpu_observation.assert_not_called()
+    reference.write_bytes(saved_reference)
     with patch.object(sys,'argv',['profile_tp_engine_memory.py',str(reference),
             str(root/'invalid-grid-signals-without-group'),
             '--bf16-peer-group','0','--bf16-peer-grid-signals','1']), \

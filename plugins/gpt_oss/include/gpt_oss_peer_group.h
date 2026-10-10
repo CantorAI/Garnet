@@ -7,4 +7,6 @@ namespace Garnet {
 const GarnetOperatorExecutionServices* GptOssPeerExecutionServices();
 cudaError_t GptOssCreatePeerGroup(const char* options,size_t bytes,void** owner);
 cudaError_t GptOssPeerGroupAllReduce(const float*,float*,size_t,int,int,cudaStream_t);
+cudaError_t GptOssPeerGroupPackedBuffer(size_t,int,int,cudaStream_t,void**);
+cudaError_t GptOssPeerGroupAllReducePacked(const void*,float*,size_t,int,int,cudaStream_t);
 }

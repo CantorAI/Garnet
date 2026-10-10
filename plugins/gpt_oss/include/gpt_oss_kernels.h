@@ -6,11 +6,12 @@
 namespace Garnet {
 // Serialized by the TensorRT plugin; bump plugin version when this contract changes.
 struct GptOssOptions {
-    int kind = 0; // 0: YaRN, 1: attention, 2: MoE, 3/4: TP collectives, 5: RMSNorm, 6: GEMV, 7: vocab top1
+    int kind = 0; // 0: YaRN, 1: attention, 2: MoE, 3/4: TP collectives, 5: RMSNorm, 6: GEMV, 7: vocab top1, 8: fused prefill MoE + BF16 TP reduction
     int qHeads = 0, kvHeads = 0, headDim = 0;
     int layer = 0, pageSize = 16, window = 0, prefill = 0;
     int hidden = 0, intermediate = 0, experts = 0, topK = 0;
     int tpRank = -1; // -1: unsharded; 0/1: GPT-OSS tensor-parallel rank
+    int peerRank = -1; // composite prefill reduction rank; separate from MoE routing rank
     int bf16Communication = 0; // already BF16-rounded TP input; expert MoE partials are ineligible
     int expertWeightsSharded = 0; // original-layout expert axis contains only this TP2 rank
     int marlinPrepacked = 0; // engine-owned Marlin block/scale constants; no original-layout fallback

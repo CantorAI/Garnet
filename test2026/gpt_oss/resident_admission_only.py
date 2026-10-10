@@ -31,7 +31,9 @@ with tempfile.TemporaryDirectory() as temporary:
     profile=dict(resident_profile_schema=1,padded_prefill=True,
         plan_identity=budget.plan_identity(plan),native_binaries=binaries,
         hardware_csv='actual-hardware-fixture',checkpoint=checkpoint,cache_root=str(cache),
-        kernel_environment={'GARNET_GPT_OSS_MARLIN_PREPACKED':'1'},engine_statistics=rows)
+        kernel_environment=budget.normalize_kernel_environment({
+            'GARNET_GPT_OSS_MARLIN_PREPACKED':'1', 'GARNET_TRT_SYNC_ALLOCATOR':'0'}),
+        engine_statistics=rows)
     (root/'profile.json').write_text(json.dumps(profile))
     request=root/'request.json';request.write_text(json.dumps({'input_ids':[1,2,3]}))
     for mode in ('pass','free','binary','environment','checkpoint','engine'):
