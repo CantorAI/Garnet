@@ -7464,7 +7464,9 @@ namespace Garnet {
             lastOutput = layer ? layer->getOutput(0) : nullptr;
         }
         if (!lastOutput || !output.IsObject()) {
-            loweringError = "TensorRT unary lowering failed for " + opName;
+            if (loweringError.empty()) {
+                loweringError = "TensorRT unary lowering failed for " + opName;
+            }
             return X::Value();
         }
         tensorMap[TensorId(output)] = lastOutput;
