@@ -445,6 +445,9 @@ namespace
             material << "openvino_device:"
                      << (device && *device ? device : "CPU") << '\n';
             material << "openvino_precision:" << precision << '\n';
+            const char* inferencePrecision = std::getenv("GARNET_OPENVINO_CPU_INFERENCE_PRECISION");
+            material << "openvino_cpu_inference_precision:"
+                     << (inferencePrecision && *inferencePrecision ? inferencePrecision : "default") << '\n';
             const char* dynamicGroup = std::getenv(
                 "GARNET_OPENVINO_CPU_DQ_GROUP_SIZE");
             material << "GARNET_OPENVINO_CPU_DQ_GROUP_SIZE:"

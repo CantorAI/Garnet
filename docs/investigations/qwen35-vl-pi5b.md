@@ -120,3 +120,15 @@ Actual Pi build/test: gated_delta_openvino_probe compiles/runs the C++ lowering 
 Added xModel/qwen35/vl_0_8b/gated_delta.py component using backend-neutral tensor expressions, compatible with surrounding nested fusion. It is explicitly not a complete model manifest/entrypoint. Actual desktop xlang3.exe with native Garnet captured the source component and extraction operations for batches 1 and 2 (nine Garnet operations each); topological dependency checks passed. The first direct helper invocation outside the fusion returned a graph rather than tensor; the test was corrected to capture helpers inside an enclosing fusion. No mock Garnet module was used.
 
 Captured xModel execution through the Pi's full Garnet package is still unverified. Causal convolution, projections, gated norms, full attention, vision encoder/frontend, complete model loading/generation, and performance measurements remain outstanding.
+
+## Actual captured xModel execution on Pi
+
+Linked the real Garnet tensor factories, graph capture/replay, OpenVINO builder, CPU library, and the Pi's existing libxlang3_runtime.so in a narrow validation executable. This is a component integration harness, not the full Garnet serving entrypoint. It imports the actual xModel/qwen35/vl_0_8b/gated_delta.py source and captures seven symbolic inputs, then builds/exports/imports/runs the graph on OpenVINO CPU. Batches 1 and 2 execute four recurrent steps; output and updated state are compared with the native reference, with inactive second-row isolation. FP32 and two CPU threads are explicit.
+
+First execution failed with an invalid graph during capture. Diagnosis: GARNET_WITH_OPENVINO was private on the backend target, so the executable compiled a smaller OpenVINOBuilder class without its implementation pointer, causing memory corruption. Making the class-affecting definitions public resolved it. No XLang runtime modification was needed. Actual Pi integration CTest passed 1/1 in 0.26 seconds. This is total test time for a small component, not model latency or tokens/sec.
+
+CPU precision selection now applies both when compiling and importing the OpenVINO graph; the precision environment variable is included in the compiled-model cache fingerprint. Errors identify the failing compilation stage; graph capture errors identify output/replay access. The source runtime fingerprint change has not been compiled in the full CUDA-dependent serving package.
+
+Reproduction: configure the component build with XLANG3_RUNTIME_LIBRARY=/home/shawn/cantorai-ci/out/build/linux-arm64-release/bin/libxlang3_runtime.so and XLANG3_SDK_ROOT=/home/shawn/cantorai-ci/xlang3/sdk; build gated_delta_graph_probe; run ctest --test-dir /home/shawn/garnet-pi5b-investigation/cpu-build -R gated_delta_xmodel_graph --output-on-failure. Existing CI sources/runtime are reused read-only.
+
+The model weights, complete vision/text graph, image preprocessing, and real image-plus-text generation remain outstanding. No end-to-end inference success, memory footprint, first-token latency, or token throughput is claimed.

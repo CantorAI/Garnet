@@ -27,11 +27,11 @@ TensorGraphCapture::TensorGraphCapture(const X::Value& graph) : graph_(graph) {
         throw std::invalid_argument("Garnet graph capture requires a runtime graph");
     X3Value outputs = x3_value_invalid();
     if (x3_tensor_graph_outputs(graph_.runtime(), graph_.raw(), &outputs) != X3_STATUS_OK)
-        throw std::runtime_error(graph_.host()->runtime_last_error(graph_.runtime()));
+        throw std::runtime_error(std::string("Garnet graph outputs: ") + graph_.host()->runtime_last_error(graph_.runtime()));
     outputs_ = X::Value(graph_.host(), outputs, false);
     if (x3_tensor_graph_replay(graph_.runtime(), graph_.raw(), Visit, this) != X3_STATUS_OK)
-        throw std::runtime_error(error_.empty()
-            ? graph_.host()->runtime_last_error(graph_.runtime()) : error_);
+        throw std::runtime_error(std::string("Garnet graph replay: ") + (error_.empty()
+            ? graph_.host()->runtime_last_error(graph_.runtime()) : error_));
 }
 
 X3Status TensorGraphCapture::Visit(X3Runtime* runtime, void* context,

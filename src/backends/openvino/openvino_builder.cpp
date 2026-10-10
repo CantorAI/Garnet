@@ -136,6 +136,15 @@ namespace Garnet
         {
             ov::AnyMap properties;
             if (OpenVINODevice().rfind("CPU", 0) != 0) return properties;
+            if (const char* precision = std::getenv("GARNET_OPENVINO_CPU_INFERENCE_PRECISION");
+                precision && *precision) {
+                const std::string value(precision);
+                if (value != "f32" && value != "f16" && value != "bf16")
+                    throw std::invalid_argument("OpenVINO CPU inference precision must be f32, f16, or bf16");
+                properties[ov::hint::inference_precision.name()] =
+                    value == "f32" ? ov::element::f32 :
+                    value == "f16" ? ov::element::f16 : ov::element::bf16;
+            }
             if (const char* threads = std::getenv(
                     "GARNET_OPENVINO_CPU_THREADS");
                 threads && *threads) {
@@ -831,6 +840,7 @@ namespace Garnet
             X::Tensor(symbolicInputs[2]).Info().rank == 5 &&
             X::Tensor(symbolicInputs[3]).Info().rank == 5;
         m_implementation = &implementation;
+        const char* stage = "symbolic inputs";
         try {
             for (size_t index = 0; index < symbolicInputs.size(); ++index) {
                 X::Value value = symbolicInputs[index];
@@ -904,7 +914,9 @@ namespace Garnet
                 implementation.tensors[tensorId] = internalParameter;
             }
             if (m_error.empty()) {
+                stage = "captured constants";
                 TensorGraphCapture capture(graph);
+                stage = "constant lowering";
                 for (const auto& node : capture.Operations()) {
                     if (!node.provider.empty() || implementation.tensors.count(node.id)) continue;
                     if (node.name == "constant") {
@@ -931,11 +943,13 @@ namespace Garnet
                 }
             }
             if (m_error.empty()) {
+                stage = "graph replay";
                 std::string replayError;
                 if (!ReplayTensorGraph(graph, *this, replayError) && m_error.empty())
                     m_error = replayError;
             }
             if (m_error.empty()) {
+                stage = "graph outputs";
                 TensorGraphCapture capture(graph);
                 uint64_t outputId = 0;
                 const auto collect = [&outputId](const auto& self, const X::Value& value) -> void {
@@ -1028,7 +1042,7 @@ namespace Garnet
                         implementation.parameters,
                         "garnet_tensor_graph");
                 ov::Core core;
-                ov::AnyMap compileProperties;
+                ov::AnyMap compileProperties = OpenVINOCPURuntimeProperties();
                 if (implementation.computeType == ov::element::f16) {
                     compileProperties[
                         ov::hint::inference_precision.name()] =
@@ -1068,9 +1082,11 @@ namespace Garnet
                             std::string(hyperthreading) != "0";
                     }
                 }
+                stage = "device compilation";
                 ov::CompiledModel compiled = core.compile_model(
                     model, device, compileProperties);
                 const std::filesystem::path outputPath(enginePath);
+                stage = "compiled model export";
                 std::filesystem::create_directories(outputPath.parent_path());
                 const std::filesystem::path temporary =
                     outputPath.string() + ".tmp";
@@ -1101,7 +1117,7 @@ namespace Garnet
             }
         }
         catch (const std::exception& exception) {
-            m_error = std::string("OpenVINO graph compilation failed: ") +
+            m_error = std::string("OpenVINO graph compilation failed during ") + stage + ": " +
                 exception.what();
         }
         m_implementation = nullptr;

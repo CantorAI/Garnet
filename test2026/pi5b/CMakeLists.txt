@@ -52,10 +52,24 @@ endif()
 if(OpenVINO_FOUND)
     set(XLANG3_SDK_ROOT "${GARNET_ROOT}/../xlang3/sdk" CACHE PATH "XLang3 public SDK headers")
     add_library(garnet_openvino_lowering OBJECT "${GARNET_ROOT}/src/backends/openvino/openvino_builder.cpp")
-    target_compile_definitions(garnet_openvino_lowering PRIVATE GARNET_CPU_ONLY=1 GARNET_WITH_OPENVINO=1)
-    target_include_directories(garnet_openvino_lowering PRIVATE "${XLANG3_SDK_ROOT}"
+    target_compile_definitions(garnet_openvino_lowering PUBLIC GARNET_CPU_ONLY=1 GARNET_WITH_OPENVINO=1)
+    target_include_directories(garnet_openvino_lowering PUBLIC "${XLANG3_SDK_ROOT}"
         "${GARNET_ROOT}/src/backends/cpu" "${GARNET_ROOT}/src/backends/openvino"
         "${GARNET_ROOT}/src/model" "${GARNET_ROOT}/src/core"
         "${GARNET_ROOT}/src/tensor" "${GARNET_ROOT}/third_party")
     target_link_libraries(garnet_openvino_lowering PRIVATE openvino::runtime)
+    set(XLANG3_RUNTIME_LIBRARY "" CACHE FILEPATH "Existing XLang3 runtime for graph execution validation")
+    if(XLANG3_RUNTIME_LIBRARY)
+        add_executable(gated_delta_graph_probe gated_delta_graph_probe.cpp
+            "${GARNET_ROOT}/src/core/lowering_context.cpp"
+            "${GARNET_ROOT}/src/tensor/graph_capture.cpp"
+            "${GARNET_ROOT}/src/tensor/garnet_tensor.cpp"
+            "${GARNET_ROOT}/src/model/compiled_graph_capture.cpp")
+        target_link_libraries(gated_delta_graph_probe PRIVATE garnet_openvino_lowering
+            garnet_native_cpu openvino::runtime "${XLANG3_RUNTIME_LIBRARY}")
+        add_test(NAME gated_delta_xmodel_graph COMMAND gated_delta_graph_probe
+            "${GARNET_ROOT}" "${CMAKE_CURRENT_LIST_DIR}/run_gated_delta_graph.py")
+        set_tests_properties(gated_delta_xmodel_graph PROPERTIES ENVIRONMENT
+            "GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f32;GARNET_OPENVINO_CPU_THREADS=2")
+    endif()
 endif()
