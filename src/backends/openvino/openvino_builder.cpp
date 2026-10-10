@@ -6,7 +6,7 @@
 #include "garnet_tensor.h"
 #include "q4q8_linear.h"
 #include "qwen3_native_decode_engine.h"
-#include "tensor_helper.h"
+#include "host_tensor.h"
 #include "graph_capture.h"
 #include "weight_quantization.h"
 
@@ -28,6 +28,7 @@
 #if defined(GARNET_WITH_OPENVINO)
 #include <openvino/openvino.hpp>
 #include <openvino/opsets/opset13.hpp>
+#include "gated_delta_lowering.h"
 #endif
 
 namespace Garnet
@@ -493,6 +494,7 @@ namespace Garnet
             ov::Output<ov::Node> query;
             ov::Output<ov::Node> key;
             ov::Output<ov::Node> value;
+            ov::Output<ov::Node> deltaDecay, deltaBeta, deltaState, deltaActive;
         };
 
         struct CacheWrite
@@ -906,7 +908,7 @@ namespace Garnet
                 for (const auto& node : capture.Operations()) {
                     if (!node.provider.empty() || implementation.tensors.count(node.id)) continue;
                     if (node.name == "constant") {
-                        auto tensor = TensorHelper::CopyToCPU(X::Tensor(node.output));
+                        auto tensor = PrepareOpenVINOHostTensor(X::Tensor(node.output));
                         if (!IsContiguousTensor(tensor))
                             throw std::runtime_error("OpenVINO constants must be contiguous");
                         const auto type = ToOpenVINOType(tensor.Info().dtype);
@@ -1335,7 +1337,7 @@ namespace Garnet
                 }
                 X::Tensor input(inputValue);
                 if (input.Info().device_type != 0) {
-                    inputValue = TensorHelper::CopyToCPUTensor(input);
+                    inputValue = PrepareOpenVINOHostTensor(input);
                     if (!IsTensor(inputValue)) {
                         errorMessage = "failed to copy OpenVINO input to CPU";
                         return X::Value();
@@ -1675,6 +1677,20 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if (opName.rfind("qwen35_delta_bind_", 0) == 0) {
+            if (!state.query.get_node_shared_ptr()) state.query = leftValue;
+            if (opName == "qwen35_delta_bind_key") state.key = rightValue;
+            else if (opName == "qwen35_delta_bind_value") state.value = rightValue;
+            else if (opName == "qwen35_delta_bind_decay") state.deltaDecay = rightValue;
+            else if (opName == "qwen35_delta_bind_beta") state.deltaBeta = rightValue;
+            else if (opName == "qwen35_delta_bind_state") state.deltaState = rightValue;
+            else if (opName == "qwen35_delta_bind_active") state.deltaActive = rightValue;
+            else { m_error = "unknown gated delta binding"; return X::Value(); }
+            m_implementation->states[outputId] = state;
+            m_implementation->tensors[outputId] = leftValue;
+            m_implementation->lastOutput = leftValue;
+            return X::Value(true);
+        }
         if (opName == "qwen3_apply_text_rope_packed") {
             const int heads = keywordInt("num_heads", 0);
             const int kvHeads = keywordInt("num_kv_heads", 0);
@@ -1830,6 +1846,47 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if (opName == "qwen35_delta_output" || opName == "qwen35_delta_state") {
+            const int keyDim = keywordInt("key_dim", 0);
+            const int valueDim = keywordInt("value_dim", 0);
+            const auto shape = source->second.get_shape();
+            if (keyDim <= 0 || valueDim <= 0 || shape.size() != 3 ||
+                shape[2] != uint64_t(valueDim)*(uint64_t(keyDim)+1)) {
+                m_error = "gated delta packed output shape is invalid";
+                return X::Value();
+            }
+            const bool wantState = opName == "qwen35_delta_state";
+            auto values = std::make_shared<ov::opset13::Slice>(source->second,
+                I64Vector({wantState ? valueDim : 0}),
+                I64Vector({wantState ? int64_t(shape[2]) : valueDim}),
+                I64Vector({1}), I64Vector({-1}));
+            ov::Output<ov::Node> result = values;
+            if (wantState) result = Reshape(values,
+                {int64_t(shape[0]),int64_t(shape[1]),keyDim,valueDim});
+            m_implementation->tensors[outputId] = result;
+            m_implementation->lastOutput = result;
+            return X::Value(true);
+        }
+        if (opName == "qwen35_delta_step") {
+            for (auto operand : {state.query, state.key, state.value, state.deltaDecay,
+                                 state.deltaBeta, state.deltaState, state.deltaActive}) {
+                if (!operand.get_node_shared_ptr()) {
+                    m_error = "gated delta step is missing a bound input";
+                    return X::Value();
+                }
+            }
+            const auto result = LowerGatedDelta(state.query, state.key, state.value,
+                state.deltaDecay, state.deltaBeta, state.deltaState, state.deltaActive);
+            const auto shape = result.output.get_shape();
+            const auto stateShape = result.state.get_shape();
+            const auto flatState = Reshape(result.state,
+                {int64_t(shape[0]), int64_t(shape[1]), int64_t(stateShape[2]*shape[2])});
+            const auto packed = std::make_shared<ov::opset13::Concat>(
+                ov::OutputVector{result.output, flatState}, -1);
+            m_implementation->tensors[outputId] = packed;
+            m_implementation->lastOutput = packed;
+            return X::Value(true);
+        }
         if (opName == "qwen3_text_qkv_packed") {
             const int heads = keywordInt("num_heads", 0);
             const int kvHeads = keywordInt("num_kv_heads", 0);

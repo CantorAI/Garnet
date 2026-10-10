@@ -38,3 +38,24 @@ if(Python3_Interpreter_FOUND)
     add_test(NAME gated_delta_reference COMMAND "${Python3_EXECUTABLE}"
         "${CMAKE_CURRENT_LIST_DIR}/test_gated_delta.py" "$<TARGET_FILE:gated_delta_probe>")
 endif()
+find_package(OpenVINO QUIET COMPONENTS Runtime)
+if(OpenVINO_FOUND)
+    add_executable(gated_delta_openvino_probe gated_delta_openvino_probe.cpp)
+    target_include_directories(gated_delta_openvino_probe PRIVATE
+        "${GARNET_ROOT}/src/backends/openvino" "${GARNET_ROOT}/third_party")
+    target_link_libraries(gated_delta_openvino_probe PRIVATE openvino::runtime)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME gated_delta_openvino_reference COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_LIST_DIR}/test_gated_delta.py" "$<TARGET_FILE:gated_delta_openvino_probe>")
+    endif()
+endif()
+if(OpenVINO_FOUND)
+    set(XLANG3_SDK_ROOT "${GARNET_ROOT}/../xlang3/sdk" CACHE PATH "XLang3 public SDK headers")
+    add_library(garnet_openvino_lowering OBJECT "${GARNET_ROOT}/src/backends/openvino/openvino_builder.cpp")
+    target_compile_definitions(garnet_openvino_lowering PRIVATE GARNET_CPU_ONLY=1 GARNET_WITH_OPENVINO=1)
+    target_include_directories(garnet_openvino_lowering PRIVATE "${XLANG3_SDK_ROOT}"
+        "${GARNET_ROOT}/src/backends/cpu" "${GARNET_ROOT}/src/backends/openvino"
+        "${GARNET_ROOT}/src/model" "${GARNET_ROOT}/src/core"
+        "${GARNET_ROOT}/src/tensor" "${GARNET_ROOT}/third_party")
+    target_link_libraries(garnet_openvino_lowering PRIVATE openvino::runtime)
+endif()

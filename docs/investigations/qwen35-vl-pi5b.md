@@ -108,3 +108,15 @@ Added Garnet::GatedDeltaStep with caller-owned FP32 recurrent state [batch,heads
 Semantics checked against HF transformers Qwen3.5 recurrent fallback at https://raw.githubusercontent.com/huggingface/transformers/main/src/transformers/models/qwen3_5/modeling_qwen3_5.py (l2norm and torch_recurrent_gated_delta_rule). This primitive assumes Q/K already expanded to the same head count as V; raw projection/gate conversion is outside its contract.
 
 Added gated_delta_probe.cpp and independent vectorized NumPy test. Actual Pi CTest: 2/2 passed, total 0.84 s. Reference test: batches 1 and 2, two heads, key dimension 7/value dimension 5, five recurrent steps with random nonzero initial state, differing input/gate values, row inactivity, and zero Q/K. State/output tolerances rtol 2e-5 and atol 2e-6. Tests do not yet cover the complete production-size model or FP16/BF16 graph execution. Existing Q4/Q8 reference test also passed.
+
+## OpenVINO recurrent lowering and xModel component
+
+Added gated_delta_lowering.h using standard OpenVINO FP32 operations; it validates static tensor shapes, produces updated recurrent state/output, and preserves inactive rows through Select. openvino_builder.cpp now binds Qwen3.5 recurrent operands, lowers the step, packs output+state, and supports output/state extraction. No hidden process-wide request state is introduced.
+
+Added host_tensor.h so GARNET_CPU_ONLY builds can accept materialized host tensors and explicitly reject accelerator transfers without including CUDA headers; normal GPU builds retain the existing TensorHelper transfer path.
+
+Actual Pi build/test: gated_delta_openvino_probe compiles/runs the C++ lowering helper through OpenVINO 2026.2.1 with FP32 and two threads. Independent NumPy tests passed for batch 1/2 across recurrence, inactive row isolation, zero Q/K. Pi CTest: 3/3 passed (Q4/Q8, native recurrence, OpenVINO recurrence), total 1.38 s. Full openvino_builder.cpp also compiled on Pi as garnet_openvino_lowering with GARNET_CPU_ONLY=1, GARNET_WITH_OPENVINO=1, public XLang3 SDK at /home/shawn/cantorai-ci/xlang3/sdk, and no CUDA headers/libraries. This object is not yet a linked Garnet serving package.
+
+Added xModel/qwen35/vl_0_8b/gated_delta.py component using backend-neutral tensor expressions, compatible with surrounding nested fusion. It is explicitly not a complete model manifest/entrypoint. Actual desktop xlang3.exe with native Garnet captured the source component and extraction operations for batches 1 and 2 (nine Garnet operations each); topological dependency checks passed. The first direct helper invocation outside the fusion returned a graph rather than tensor; the test was corrected to capture helpers inside an enclosing fusion. No mock Garnet module was used.
+
+Captured xModel execution through the Pi's full Garnet package is still unverified. Causal convolution, projections, gated norms, full attention, vision encoder/frontend, complete model loading/generation, and performance measurements remain outstanding.
