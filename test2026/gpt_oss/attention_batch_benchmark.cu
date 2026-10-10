@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 using namespace Garnet;
+constexpr int kHeadDimension = 64;
 static void check(cudaError_t status) {
     if (status != cudaSuccess) throw std::runtime_error(cudaGetErrorString(status));
 }
@@ -54,7 +55,7 @@ int main(int argc, char** argv) { try {
         throw std::runtime_error("Invalid GQA setting; refusing mislabeled timing");
     if (gqaSplits != "4" && gqaSplits != "8" && gqaSplits != "16")
         throw std::runtime_error("Invalid GQA split setting; refusing mislabeled timing");
-    constexpr int layers = 36, dimension = 64, qHeads = 32, kvHeads = 4;
+    constexpr int layers = 36, dimension = kHeadDimension, qHeads = 32, kvHeads = 4;
     const int logical = (length + 15) / 16, pages = batch * logical;
     const int packed = (qHeads + 2 * kvHeads) * dimension;
     const size_t cacheElements = size_t(layers) * pages * 16 * kvHeads * dimension;
@@ -86,7 +87,8 @@ int main(int argc, char** argv) { try {
                 throw std::runtime_error("Inactive attention slot is nonzero");
         }
         for (int b : {0, batch / 2, batch - 1}) for (int h : {0, 7, 8, 31}) {
-            double sum = std::exp(double(sink[h])), accum[dimension] = {};
+            // MSVC's CUDA host parser rejects a captured local constexpr as an array bound.
+            double sum = std::exp(double(sink[h])), accum[kHeadDimension] = {};
             if (mask[b]) for (int p = window ? std::max(0, length - window) : 0; p < length; ++p) {
                 const int page = pageTable[b * logical + p / 16];
                 if (page < 0) continue;
