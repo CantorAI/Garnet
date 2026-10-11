@@ -4369,3 +4369,7 @@ The target base `239e7c4044312927ccff1ec541659780ee9442db` already contains the 
 
 ### OPT168 installed-binary name failure — 2026-10-11 UTC
 The next attempt failed in the initial artifact guard, before source sync, build, or GPU tests: the controller expected `libgpt_oss_core.so` and `libgpt_oss_plugin.so`, while the target installs `libgarnet.so` and `libgarnet_gpt_oss.so`. Direct SHA-256 checks showed those installed files match the already pinned core/plugin hashes exactly; `xlang3` also matches. Record this as another controller preflight defect, correct only the filenames, and retry with the same budget guard.
+
+
+### OPT168 provenance guard failure and reviewed rebind plan — 2026-10-11 UTC
+The runner fast-forwarded the docs-only bundle, verified the target was idle, then stopped before configure/build because `bf16_peer_push_provenance.json` pinned `tp_peer_owner.cuh` SHA `2b7899e7…`, while the target header SHA is `a26e15b6…`. The exact 528ef42-to-239e7c4 header diff adds a defaulted `threads=256` argument and factors packing through `enqueuePacked`; the private fixture includes the current header and retains the original four-argument default path, while push logic remains separate in the private fixture header. Proposal: update only the sidecar owner hash/scope after this review, then let the isolated CUDA build and original-first/push-second parity gates validate the current header; no production code or kernel edits. No GPU test or inference ran.
