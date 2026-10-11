@@ -2894,3 +2894,6 @@ Use the already-present `GARNET_PROFILE_DECODE_LAYERS` one-shot TensorRT `IProfi
 
 
 **OPT167 launch attempt 3 (2026-10-11):** With a fresh output path, the paired suite rejected the saved short resident profile because the implicit batch/context/chunk did not match the profile. This was still pre-inference and produced no GPU profile. Resolve the exact dimensions from the saved profile and pass them explicitly before the final retry.
+
+
+**OPT167 launch attempt 4 (2026-10-11):** With explicit B512/context1280/chunk8 and a fresh output directory, the paired suite entered code-tracing admission, then the XLang3 admission subprocess returned exit1. It did not start resident serving or emit the requested layer profile. Preserve `work/opt167-layer-diagnostic/short-retry2` and its logs as a failed preflight; abandon this profiler path rather than spending more target time on launcher repair. No timing or optimization conclusion follows.
