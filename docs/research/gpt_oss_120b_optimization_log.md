@@ -4377,3 +4377,7 @@ The runner fast-forwarded the docs-only bundle, verified the target was idle, th
 
 ### OPT168 target-base/snapshot preflight correction — 2026-10-11 UTC
 The current target is clean at `1f4cef6c8cdcf7aa89dc11aab5613bb1292bc87c`, the docs fast-forward from a previous runner. The next runner incorrectly expected base `239e7c4` and stopped at its first guard; no build or GPU test ran. Its finalization path then raised while comparing raw worktree bytes directly to Git blob IDs. Since the target checkout is clean with configured filters, compute canonical IDs through `git hash-object --stdin --path=<path>` and preserve raw SHA/byte counts separately. Proposal: rebind only the base commit, validate source paths through Git’s clean filters, retain current checkout and production files, then rerun the isolated screen.
+
+
+### OPT168 disk guard stopped before build — 2026-10-11 UTC
+The docs-only source fast-forward to `ad3bec3` completed; GPU-idle checks passed. The first configure did not launch because the guard required 15 GiB + 3 GiB, exceeding observed free space of 18,989,748,224 bytes (approximately 17.69 GiB). No CMake or GPU test ran. Proposal: reduce the per-phase projected growth guard to 1 GiB, retain an actual 15 GiB free-space floor and recheck before every phase; the qualified output plan remains bounded to about 1.2 GB of raw matrices plus compression.
