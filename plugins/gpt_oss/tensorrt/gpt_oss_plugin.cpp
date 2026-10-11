@@ -257,15 +257,45 @@ size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
 }
 int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
     const void* const* in, void* const* out, void* workspace, cudaStream_t stream) noexcept {
-    if (!m_valid || !d || !in || !out || rows(d[0].dims) <= 0) return 1;
+    static std::atomic<int> earlyRejectCount{0};
+    const bool debugReject = std::getenv("GARNET_TRT_DYNAMIC_PROFILE_DEBUG") != nullptr &&
+        earlyRejectCount.fetch_add(1, std::memory_order_relaxed) < 32;
+    const auto reject = [&](const char* reason) noexcept {
+        if (debugReject) {
+            std::fprintf(stderr,
+                "GPT-OSS enqueue rejected: kind=%d rank=%d prefill=%d reason=%s valid=%d workspace=%d\n",
+                m_options.kind, m_options.tpRank, m_options.prefill, reason,
+                m_valid ? 1 : 0, workspace ? 1 : 0);
+            const auto printDims = [](int index, const PluginTensorDesc* desc) noexcept {
+                if (!desc || index < 0 || index >= 9) return;
+                const auto& dims = desc[index].dims;
+                std::fprintf(stderr, "  input=%d dims[", index);
+                for (int axis = 0; axis < dims.nbDims; ++axis)
+                    std::fprintf(stderr, "%s%lld", axis ? "," : "",
+                        static_cast<long long>(dims.d[axis]));
+                std::fprintf(stderr, "]\n");
+            };
+            if (d) {
+                printDims(0, d);
+                if (m_options.kind == 1) {
+                    for (int index = 1; index <= 6; ++index) printDims(index, d);
+                }
+            }
+        }
+        return 1;
+    };
+    if (!m_valid) return reject("invalid_plugin_state");
+    if (!d || !in || !out) return reject("missing_tensor_pointer");
+    if (rows(d[0].dims) <= 0) return reject("invalid_input0_rows");
     if (m_options.kind == 1) {
         const int batch = d[0].dims.d[0];
         if (d[3].dims.nbDims != 2 || d[3].dims.d[0] != batch ||
             d[1].dims.nbDims != 5 || d[2].dims.nbDims != 5 ||
             d[1].dims.d[1] != d[2].dims.d[1] ||
-            d[3].dims.d[1] <= 0) return 1;
+            d[3].dims.d[1] <= 0) return reject("attention_kv_or_table_shape");
         for (int index = 4; index <= 6; ++index) {
-            if (d[index].dims.nbDims != 1 || d[index].dims.d[0] != batch) return 1;
+            if (d[index].dims.nbDims != 1 || d[index].dims.d[0] != batch)
+                return reject("attention_batch_vector_shape");
         }
     }
     const int n = rows(d[0].dims); cudaError_t status;
@@ -284,12 +314,12 @@ int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
             return flag && std::strcmp(flag, "1") == 0;
         }();
         const auto& dims = d[0].dims;
-        if (dims.d[2] != m_options.hidden) return 1;
+        if (dims.d[2] != m_options.hidden) return reject("tp_hidden_size");
         const size_t scratch = GptOssTpBf16Workspace(m_options.kind,
             m_options.bf16Communication, m_options.prefill, m_options.tpRank,
             m_options.hidden, dims.nbDims, dims.d[0], dims.d[1], dims.d[2]);
         const bool useBf16 = m_options.prefill ? useBf16Prefill : useBf16Decode;
-        if (useBf16 && scratch && !workspace) return 1;
+        if (useBf16 && scratch && !workspace) return reject("tp_bf16_workspace_missing");
         if (useBf16 && scratch)
         {
             static const bool ownedPeer=[] {
