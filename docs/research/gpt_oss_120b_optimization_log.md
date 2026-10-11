@@ -4635,3 +4635,11 @@ The saved vLLM reference again revalidated first (all answers passed; median ful
 Inspect only the existing peer-group execution-services hookup to determine why TensorRT's nonresident dynamic-profile runner invokes the plugin without `Enter`/thread-local `bound`. Keep source behavior and safety checks unchanged. To isolate the cause without integrating a new lifecycle, prepare a separate copied profile with only `GARNET_GPT_OSS_BF16_PEER_GROUP=0` while retaining BF16 prefill all-reduce and all other measured settings; run the same saved-reference-revalidated long correctness case only after recovering the 15-GiB free-space floor. This fallback comparison is diagnostic only and cannot qualify peer-group mode or claim a speedup. Preserve the `not_bound` failure and do not alter production defaults or Qwen.
 
 After the terminal archive was verified locally and the runner had exited, removed only its 14-GiB partial engine-cache directory (`25555613017ebed894b5ca59`), which was newly created for this failed profile. The target filesystem returned to 26,693,509,120 free bytes, above the 15-GiB floor; the output logs and locally verified archive were retained. No other cache or historical artifact was cleaned.
+
+##### OPT171 peer-group-disabled profile admission failure
+
+The first fallback attempt stopped at the existing pre-inference admission gate, before the saved-vLLM reference or GPU workload ran. Disabling `GARNET_GPT_OSS_BF16_PEER_GROUP` while leaving `GARNET_GPT_OSS_BF16_PEER_GRID_SIGNALS=1` is rejected by `peer_group_layout.py` because grid signaling requires the owned peer group. No source or engine code ran, and no inference result exists. Preserve the admission log in `/workspace/CantorAI/work/opt171-profiled-long-1-224-peer-fallback/`.
+
+###### OPT171 dependent peer-group profile flag correction proposal
+
+Prepare a fresh copied profile from the same validated base, changing only the peer-group enable from `1` to `0` and its dependent grid-signaling flag from `1` to `0`; preserve BF16 prefill all-reduce, all workload dimensions, cache-admission guards, and saved-reference validation. This is a profile-only diagnostic; rerun once after verifying target free space and idle state. Expect the paired suite to revalidate vLLM before any Garnet inference. Do not alter source or infer success from admission.
