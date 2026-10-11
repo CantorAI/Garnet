@@ -102,6 +102,33 @@ class DynamicBatchProfileTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(_dynamic_batch_profile([[8, 4]], [0], 8), {})
 
+    def test_sequence_tail_profile_changes_only_token_and_position_sequence_axes(self):
+        shapes = [[224, 18], [224, 18], [2, 43008, 16, 8, 64], [2, 43008, 16, 8, 64],
+                  [224, 192], [224], [224], [224]]
+        axes = [0, 0, 1, 1, 0, 0, 0, 0]
+        with patch.dict(os.environ, {}, clear=True):
+            result = _dynamic_batch_profile(shapes, axes, 224,
+                sequence_min_tokens=7)['input_shape_profiles']
+        self.assertEqual(result['min'][0], [224, 7])
+        self.assertEqual(result['min'][1], [224, 7])
+        self.assertEqual(result['opt'][0], [224, 18])
+        self.assertEqual(result['max'][0], [224, 18])
+        self.assertEqual(result['min'][2:], shapes[2:])
+        self.assertEqual(result['batch_axes'], axes)
+        self.assertEqual(result['batch_units'], [1, 1, 192, 192, 1, 1, 1, 1])
+
+    def test_sequence_tail_profile_rejects_malformed_or_unsafe_ranges(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(ValueError, r'matching \[B,S\]'):
+                _dynamic_batch_profile([[224, 18], [224, 17]], [0, 0], 224,
+                    sequence_min_tokens=7)
+            with self.assertRaisesRegex(ValueError, r'matching \[B,S\]'):
+                _dynamic_batch_profile([[224, 18], [224, 18]], [1, 0], 224,
+                    sequence_min_tokens=7)
+            with self.assertRaisesRegex(ValueError, r'matching \[B,S\]'):
+                _dynamic_batch_profile([[224, 18], [224, 18]], [0, 0], 224,
+                    sequence_min_tokens=19)
+
     def test_split_prefill_profile_keeps_kv_pool_extents_fixed(self):
         shapes = [[112, 36], [112, 36], [4, 43008, 16, 8, 64],
                   [4, 43008, 16, 8, 64], [112, 192], [112], [112], [112]]

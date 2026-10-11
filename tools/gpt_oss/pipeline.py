@@ -18,11 +18,12 @@ from garnet_pipeline import Pipeline, plan_layers
 from kv_layout import hybrid_requested, hybrid_layout, checked_layout, window_page_table
 
 
-def _dynamic_batch_profile(input_shapes, batch_axes, batch, *, phase_limit=None):
+def _dynamic_batch_profile(input_shapes, batch_axes, batch, *, phase_limit=None,
+                           sequence_min_tokens=None):
     minimum_text = os.environ.get('GARNET_GPT_OSS_BATCH_PROFILE_MIN')
-    if minimum_text is None:
+    if minimum_text is None and sequence_min_tokens is None:
         return {}
-    minimum_batch = int(minimum_text)
+    minimum_batch = int(minimum_text) if minimum_text is not None else batch
     maximum_batch = int(os.environ.get('GARNET_GPT_OSS_BATCH_PROFILE_MAX', batch))
     if phase_limit is not None:
         if type(phase_limit) is not int or phase_limit < batch:
@@ -32,6 +33,14 @@ def _dynamic_batch_profile(input_shapes, batch_axes, batch, *, phase_limit=None)
         raise ValueError('dynamic batch profile must contain the captured batch and have positive bounds')
     if len(input_shapes) != len(batch_axes):
         raise ValueError('dynamic batch profile axis count differs from stage inputs')
+    if sequence_min_tokens is not None and (
+            type(sequence_min_tokens) is not int or len(input_shapes) < 2 or
+            batch_axes[:2] != [0, 0] or
+            len(input_shapes[0]) != 2 or len(input_shapes[1]) != 2 or
+            input_shapes[0] != input_shapes[1] or
+            input_shapes[0][0] != batch or
+            not 1 <= sequence_min_tokens <= input_shapes[0][1]):
+        raise ValueError('dynamic prefill sequence range requires matching [B,S] token inputs')
     minimum, maximum, batch_units = [], [], []
     for shape, axis in zip(input_shapes, batch_axes):
         low, high = list(shape), list(shape)
@@ -48,6 +57,9 @@ def _dynamic_batch_profile(input_shapes, batch_axes, batch, *, phase_limit=None)
             raise ValueError('batch axis must be -1 or a valid tensor dimension')
         minimum.append(low)
         maximum.append(high)
+    if sequence_min_tokens is not None:
+        minimum[0][1] = sequence_min_tokens
+        minimum[1][1] = sequence_min_tokens
     return {'input_shape_profiles': {
         'min': minimum, 'opt': [list(shape) for shape in input_shapes],
         'max': maximum, 'batch_axes': list(batch_axes), 'batch_units': batch_units}}
@@ -620,9 +632,12 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                                'builder_optimization_level': optimization_level,
                                'partition': {'enable_preferred_boundaries': False,
                                              'max_atomic_regions_per_partition': 0}}
+            sequence_min_tokens = (int(os.environ['GARNET_GPT_OSS_PREFILL_SEQUENCE_MIN'])
+                if prefill and 'GARNET_GPT_OSS_PREFILL_SEQUENCE_MIN' in os.environ else None)
             compile_options.update(_dynamic_batch_profile(input_shapes, batch_axes, batch,
                 phase_limit=plan.get('phase_engine_batches', {}).get(
-                    'prefill' if prefill else 'decode', batch)))
+                    'prefill' if prefill else 'decode', batch),
+                sequence_min_tokens=sequence_min_tokens))
             model = G.load_model(str(model_root / 'stage.py'), runtime_mode='compiled_xmodel',
                 backend='tensorrt', precision='bf16', entry_function='GptOssStage', weights=str(weights),
                 cache_dir=str(stage_cache / 'engine'),
