@@ -429,6 +429,29 @@ def collective_workspace_profile():
     return 'v11-bf16-pair-prefill128-decode128-512-s1'
 
 
+def shared_kv_handoff(stages, layout):
+    """Retain the complete shared KV contract when rebuilding a phase engine."""
+    if layout is None:
+        return [(stage['keys'], stage['values']) for stage in stages]
+    expected_names = tuple(layout['extra_tensor_arguments'])
+    groups = []
+    for stage in stages:
+        resources = stage.get('shared_resources')
+        if (stage.get('shared_resource_layout') != layout or
+                stage.get('extra_input_names') != expected_names or
+                not isinstance(resources, dict) or
+                set(resources) != set(expected_names)):
+            raise ValueError('Hybrid KV handoff needs every bank/table with the exact layout')
+        groups.append({
+            'keys': stage['keys'],
+            'values': stage['values'],
+            'shared_resources': resources,
+            'shared_resource_layout': stage['shared_resource_layout'],
+            'extra_input_names': stage['extra_input_names'],
+        })
+    return groups
+
+
 def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
                           last_token_logits=False, padded_prefill=False):
     """Build paired engines with sharded attention heads and rank-local MoE."""
