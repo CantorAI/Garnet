@@ -4984,3 +4984,8 @@ The OPT214 source update fast-forwarded the idle, clean target from `f3e8650c5fd
 ### OPT216 proposal: preserve and retire the exact chunk5 profile cache before dynamic-tail profiling
 
 The completed OPT211 cache is 9,338,536,684 bytes, and its use leaves only 50,406,301,696 bytes free in `/dev/shm`; the next profile requires a conservative 40-GiB post-build reserve plus up to12GB of cache growth. Before freeing space, copy only `/dev/shm/opt211-long-b224-prefill224-chunk5-cache` into a fresh local archive, verify every file's path, byte size, and SHA-256 against the completed OPT211 status inventory, and preserve the run status/report. Delete that exact target cache only after the archive verifies, the profile process is terminal, source is clean at `bfea7df9617d97b51a07d7dedbbab110e80fddd9`, and GPU compute apps are absent; then verify the exact path is gone and shared-memory free space is at least52GiB. Do not remove any other cache or use this cleanup to infer a serving result.
+
+
+### OPT216 source-identity transcription correction
+
+The preceding proposal used a stale expected source revision and mistyped the subsequent documentation commit. The idle target was later fast-forwarded cleanly to the actual source revision `91a5838e92e92a4c8ccbf2f2ebff3e9a1d8d45fe`, which is also the local pushed branch head. The cache-retirement guard must require this exact current revision; no code or cache action is authorized by the earlier incorrect hash.

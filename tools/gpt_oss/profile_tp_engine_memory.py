@@ -79,7 +79,8 @@ if len(sys.argv) in (4,5) and sys.argv[1] == '--runtime':
         native_binaries=native_identity(build), hardware_csv=hardware_identity(),
         kernel_environment=kernel_environment(), checkpoint=checkpoint_identity(weights),
         cache_root=str(cache.resolve()), padded_prefill=os.environ.get('GARNET_RESIDENT_PADDED_PREFILL') == '1',
-        prefill_sequence_profile_min=(int(os.environ['GARNET_GPT_OSS_PREFILL_SEQUENCE_MIN'])
+        prefill_sequence_profile=(dict(min_tokens=int(os.environ['GARNET_GPT_OSS_PREFILL_SEQUENCE_MIN']),
+            opt_tokens=plan['max_tokens'], max_tokens=plan['max_tokens'])
             if 'GARNET_GPT_OSS_PREFILL_SEQUENCE_MIN' in os.environ else None),
         candidate_shape=specification, phase_engine_batches=phase_batches,
         measurement='Sequential engine loads only; no inference or paired residency',
