@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "gpt_oss_plugin.h"
 #include "gpt_oss_peer_group.h"
+#include "gpt_oss_profile_validation.h"
 #include "gpt_oss_tp_workspace.h"
 #ifdef GARNET_GPT_OSS_ENABLE_FLASHINFER_PREFILL
 #include "gpt_oss_flash_prefill.h"
@@ -18,6 +19,7 @@
 using namespace nvinfer1;
 namespace Garnet {
 namespace {
+using namespace GptOssProfileValidation;
 constexpr const char* kName = "GarnetGptOss";
 void reportMarlinFallback(bool initialized, int tokens) {
     static std::atomic<int> count{0};
@@ -67,43 +69,6 @@ int rows(const Dims& d) {
     if (d.nbDims != 3 || d.d[0] <= 0 || d.d[1] <= 0 || d.d[2] <= 0 ||
         d.d[0] > std::numeric_limits<int>::max() / d.d[1]) return 0;
     return d.d[0] * d.d[1];
-}
-bool shape(const Dims& d, std::initializer_list<int64_t> expected) {
-    if (d.nbDims != int(expected.size())) return false;
-    int i = 0; for (int64_t x : expected) { if (d.d[i++] != x) return false; }
-    return true;
-}
-bool validProfileRange(const DynamicPluginTensorDesc& input) {
-    const Dims& minimum = input.min;
-    const Dims& optimum = input.opt;
-    const Dims& maximum = input.max;
-    const Dims& descriptor = input.desc.dims;
-    if (minimum.nbDims <= 0 || minimum.nbDims != optimum.nbDims ||
-        optimum.nbDims != maximum.nbDims || descriptor.nbDims != optimum.nbDims) return false;
-    for (int dimension = 0; dimension < optimum.nbDims; ++dimension) {
-        if (minimum.d[dimension] <= 0 ||
-            minimum.d[dimension] > optimum.d[dimension] ||
-            optimum.d[dimension] > maximum.d[dimension] ||
-            (descriptor.d[dimension] != -1 &&
-                (descriptor.d[dimension] != optimum.d[dimension] ||
-                    minimum.d[dimension] != optimum.d[dimension] ||
-                    maximum.d[dimension] != optimum.d[dimension]))) return false;
-    }
-    return true;
-}
-bool proportionalPageRange(const DynamicPluginTensorDesc& pages,
-    int minBatch, int optBatch, int maxBatch) {
-    if (!validProfileRange(pages) || pages.opt.nbDims != 5 ||
-        minBatch <= 0 || optBatch <= 0 || maxBatch <= 0) return false;
-    const auto& minimum = pages.min;
-    const auto& optimum = pages.opt;
-    const auto& maximum = pages.max;
-    return int64_t(minimum.d[1]) * optBatch == int64_t(optimum.d[1]) * minBatch &&
-        int64_t(maximum.d[1]) * optBatch == int64_t(optimum.d[1]) * maxBatch &&
-        minimum.d[0] == optimum.d[0] && optimum.d[0] == maximum.d[0] &&
-        minimum.d[2] == optimum.d[2] && optimum.d[2] == maximum.d[2] &&
-        minimum.d[3] == optimum.d[3] && optimum.d[3] == maximum.d[3] &&
-        minimum.d[4] == optimum.d[4] && optimum.d[4] == maximum.d[4];
 }
 }
 GptOssPlugin::GptOssPlugin(const GptOssOptions& o) : m_options(o), m_valid(valid(o)) {}
@@ -164,7 +129,8 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
             };
             std::fprintf(stderr, "  input=%d type=%d format=%d", i,
                 static_cast<int>(in[i].desc.type), static_cast<int>(in[i].desc.format));
-            printDims("min", in[i].min); printDims("opt", in[i].opt); printDims("max", in[i].max);
+            printDims("desc", in[i].desc.dims); printDims("min", in[i].min);
+            printDims("max", in[i].max);
             std::fprintf(stderr, "\n");
         }
     };
@@ -176,81 +142,81 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
     for (int index = 0; index < count; ++index) {
         if (!validProfileRange(in[index])) { m_valid = false; reportDynamicProfile(); return; }
     }
-    const auto& o = m_options; const Dims d = in[0].opt;
+    const auto& o = m_options;
     if (o.expertWeightsSharded != 0 &&
         (o.expertWeightsSharded != 1 || o.kind != 2 || o.tpRank < 0 || o.tpRank > 1)) {
         m_valid = false; reportDynamicProfile(); return;
     }
-    m_valid = rows(d) > 0;
-    if (!m_valid) { reportDynamicProfile(); return; }
-    const int batch = d.d[0], tokens = d.d[1];
+    const int activationTokens = in[0].min.nbDims == 3 ?
+        static_cast<int>(in[0].min.d[1]) : 0;
+    const int activationWidth = in[0].min.nbDims == 3 ?
+        static_cast<int>(in[0].min.d[2]) : 0;
+    const auto activation = [&](int width) {
+        return in[0].min.nbDims == 3 && activationTokens > 0 &&
+            profileShape(in[0], {-1, activationTokens, width});
+    };
     if (o.kind == 0) {
-        m_valid = d.d[2] == (o.qHeads + 2 * o.kvHeads) * o.headDim &&
-            rows(in[0].opt) == [&] { int n = 1; const auto p = in[1].opt;
-                for (int i = 0; i < p.nbDims; ++i) n *= p.d[i]; return n; }();
+        const int width = (o.qHeads + 2 * o.kvHeads) * o.headDim;
+        m_valid = activation(width) && in[1].min.nbDims == 2 &&
+            profileShape(in[1], {-1, activationTokens}) &&
+            profileAxisEqual(in[0], 0, in[1], 0) &&
+            profileAxisEqual(in[0], 1, in[1], 1);
     } else if (o.kind == 1) {
-        const auto k = in[1].opt, v = in[2].opt, table = in[3].opt;
+        const int width = (o.qHeads + 2 * o.kvHeads) * o.headDim;
         const int minBatch = static_cast<int>(in[0].min.d[0]);
-        const int optBatch = d.d[0];
         const int maxBatch = static_cast<int>(in[0].max.d[0]);
-        const auto& minTable = in[3].min;
-        const auto& maxTable = in[3].max;
-        m_valid = d.d[2] == (o.qHeads + 2 * o.kvHeads) * o.headDim &&
-            in[0].min.d[2] == d.d[2] && in[0].max.d[2] == d.d[2] &&
-            in[0].min.d[1] == d.d[1] && in[0].max.d[1] == d.d[1] &&
-            k.nbDims == 5 && k.d[0] > o.layer && k.d[1] > 0 &&
-            shape(k, {k.d[0], k.d[1], o.pageSize, o.kvHeads, o.headDim}) &&
-            shape(v, {k.d[0], k.d[1], o.pageSize, o.kvHeads, o.headDim}) &&
-            proportionalPageRange(in[1], minBatch, optBatch, maxBatch) &&
-            proportionalPageRange(in[2], minBatch, optBatch, maxBatch) &&
-            in[3].min.nbDims == 2 && in[3].max.nbDims == 2 &&
-            minTable.d[0] == minBatch && table.d[0] == optBatch && maxTable.d[0] == maxBatch &&
-            minTable.d[1] == table.d[1] && maxTable.d[1] == table.d[1] &&
-            in[4].min.nbDims == 1 && in[4].opt.nbDims == 1 &&
-            in[4].max.nbDims == 1 && in[4].min.d[0] == minBatch &&
-            in[4].opt.d[0] == optBatch && in[4].max.d[0] == maxBatch &&
-            in[5].min.nbDims == 1 && in[5].opt.nbDims == 1 &&
-            in[5].max.nbDims == 1 && in[5].min.d[0] == minBatch &&
-            in[5].opt.d[0] == optBatch && in[5].max.d[0] == maxBatch &&
-            in[6].min.nbDims == 1 && in[6].opt.nbDims == 1 &&
-            in[6].max.nbDims == 1 && in[6].min.d[0] == minBatch &&
-            in[6].opt.d[0] == optBatch && in[6].max.d[0] == maxBatch &&
-            table.nbDims == 2 && table.d[0] == batch && table.d[1] > 0 &&
-            shape(in[4].opt, {batch}) && shape(in[5].opt, {batch}) &&
-            shape(in[6].opt, {batch}) && shape(in[7].opt, {o.qHeads}) &&
-            (o.prefill || tokens == 1);
+        const auto& tableMin = in[3].min;
+        const auto& tableMax = in[3].max;
+        const auto& kMin = in[1].min;
+        const auto& vMin = in[2].min;
+        m_valid = activation(width) &&
+            (o.prefill || activationTokens == 1) &&
+            profileShape(in[1], {kMin.d[0], -1, o.pageSize, o.kvHeads, o.headDim}) &&
+            profileShape(in[2], {vMin.d[0], -1, o.pageSize, o.kvHeads, o.headDim}) &&
+            kMin.d[0] > o.layer && vMin.d[0] == kMin.d[0] &&
+            profileAxisEqual(in[1], 1, in[2], 1) &&
+            profileAxisEqual(in[1], 0, in[2], 0) &&
+            proportionalPageRange(in[1], in[0]) && proportionalPageRange(in[2], in[0]) &&
+            profileShape(in[3], {-1, tableMin.d[1]}) &&
+            tableMin.nbDims == 2 && tableMax.nbDims == 2 &&
+            tableMin.d[0] == minBatch && tableMax.d[0] == maxBatch &&
+            tableMin.d[1] > 0 && tableMin.d[1] == tableMax.d[1] &&
+            profileAxisEqual(in[3], 0, in[0], 0) &&
+            profileShape(in[4], {-1}) && profileShape(in[5], {-1}) &&
+            profileShape(in[6], {-1}) &&
+            profileAxisEqual(in[4], 0, in[0], 0) &&
+            profileAxisEqual(in[5], 0, in[0], 0) &&
+            profileAxisEqual(in[6], 0, in[0], 0) &&
+            profileShape(in[7], {o.qHeads});
     } else if (o.kind == 2 || o.kind == 8) {
         const int storedExperts = o.expertWeightsSharded ? (o.experts + 1 - o.tpRank) / 2 : o.experts;
         const int upK=(o.hidden+63)/64*64,upN=(2*o.intermediate+127)/128*128;
         const int downK=(o.intermediate+127)/128*128,downN=(o.hidden+63)/64*64;
         const bool quantShapes=o.marlinPrepacked
-            ? shape(in[3].opt,{storedExperts,upK/32,upN,16}) &&
-              shape(in[4].opt,{storedExperts,upK/32,upN}) &&
-              shape(in[6].opt,{storedExperts,downK/32,downN,16}) &&
-              shape(in[7].opt,{storedExperts,downK/32,downN})
-            : shape(in[3].opt,{storedExperts,2*o.intermediate,o.hidden/32,16}) &&
-              shape(in[4].opt,{storedExperts,2*o.intermediate,o.hidden/32}) &&
-              shape(in[6].opt,{storedExperts,o.hidden,o.intermediate/32,16}) &&
-              shape(in[7].opt,{storedExperts,o.hidden,o.intermediate/32});
-        m_valid = d.d[2] == o.hidden && shape(in[1].opt, {o.experts, o.hidden}) &&
-            shape(in[2].opt, {o.experts}) &&
-            quantShapes &&
-            shape(in[5].opt, {storedExperts, 2 * o.intermediate}) &&
-            shape(in[8].opt, {storedExperts, o.hidden});
-    } else if (o.kind == 3) {
-        m_valid = d.d[2] == o.hidden;
-    } else if (o.kind == 7) {
-        m_valid = d.d[2] == o.hidden;
+            ? profileShape(in[3],{storedExperts,upK/32,upN,16}) &&
+              profileShape(in[4],{storedExperts,upK/32,upN}) &&
+              profileShape(in[6],{storedExperts,downK/32,downN,16}) &&
+              profileShape(in[7],{storedExperts,downK/32,downN})
+            : profileShape(in[3],{storedExperts,2*o.intermediate,o.hidden/32,16}) &&
+              profileShape(in[4],{storedExperts,2*o.intermediate,o.hidden/32}) &&
+              profileShape(in[6],{storedExperts,o.hidden,o.intermediate/32,16}) &&
+              profileShape(in[7],{storedExperts,o.hidden,o.intermediate/32});
+        m_valid = activation(o.hidden) && profileShape(in[1], {o.experts, o.hidden}) &&
+            profileShape(in[2], {o.experts}) && quantShapes &&
+            profileShape(in[5], {storedExperts, 2 * o.intermediate}) &&
+            profileShape(in[8], {storedExperts, o.hidden});
+    } else if (o.kind == 3 || o.kind == 7) {
+        m_valid = activation(o.hidden);
     } else if (o.kind == 5) {
-        m_valid = d.d[2] == o.hidden && shape(in[1].opt, {o.hidden});
+        m_valid = activation(o.hidden) && profileShape(in[1], {o.hidden});
     } else if (o.kind == 6) {
-        m_valid = rows(d) == 1 && d.d[2] == o.hidden &&
+        m_valid = profileShape(in[0], {1, 1, o.hidden}) &&
             (o.qHeads > 0
-                ? shape(in[1].opt,
+                ? profileShape(in[1],
                     {(o.qHeads + 2 * o.kvHeads) * o.headDim, o.hidden})
-                : shape(in[1].opt, {o.intermediate, 2 * o.hidden}));
+                : profileShape(in[1], {o.intermediate, 2 * o.hidden}));
     } else {
-        m_valid = d.nbDims == 3 && d.d[0] > 0 && d.d[1] > 0 && d.d[2] > 0;
+        m_valid = activationWidth > 0 && activation(activationWidth);
     }
     if (!m_valid) reportDynamicProfile();
 }
