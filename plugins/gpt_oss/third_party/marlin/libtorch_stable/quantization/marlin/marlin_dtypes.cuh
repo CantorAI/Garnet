@@ -70,7 +70,9 @@ class MarlinScalarType<garnet_marlin_types::kBFloat16.id()> {
   using FragS0 = Vec<__nv_fp8x2_e4m3, 1>;
   using FragZP = Vec<nv_bfloat162, 4>;
 
-#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
+  // Keep the value conversions available for SM75 builds as well. CUDA's
+  // bfloat16 header supplies software implementations below SM80; tensor
+  // core instructions remain guarded by the kernel's architecture paths.
   static __device__ float inline num2float(const nv_bfloat16 x) {
     return __bfloat162float(x);
   }
@@ -91,7 +93,6 @@ class MarlinScalarType<garnet_marlin_types::kBFloat16.id()> {
   static __host__ __device__ float2 inline num22float2(const nv_bfloat162 x) {
     return __bfloat1622float2(x);
   }
-#endif
 };
 
 template <>
