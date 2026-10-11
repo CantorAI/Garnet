@@ -2915,3 +2915,6 @@ A read-only preflight found that `/workspace/CantorAI/out/build/gpt-oss/source` 
 
 #### OPT168 source reconciliation (2026-10-11 UTC)
 The target base commit `239e7c4044312927ccff1ec541659780ee9442db` already contains the private peer-push implementation and fixtures. The current local candidate adds only the two optimization-document appends, so the guarded target sync is limited to those docs. The isolated build will compile only the two existing private fixture targets from the synchronized checkout; it will not change Garnet production code, installed libraries, or the existing wrapper.
+
+#### OPT168 installed-binary naming correction (2026-10-11 UTC)
+The second runner stopped in its initial guard before source sync/build/GPU tests because it looked for `libgpt_oss_core.so` and `libgpt_oss_plugin.so`. The installed files are `libgarnet.so` and `libgarnet_gpt_oss.so`; their observed SHA-256 values match the pinned core/plugin values exactly. No inference, build, or GPU test ran. Update only the artifact filenames in the controller, retain both hash checks, and retry under the same spend ceiling.

@@ -4365,3 +4365,7 @@ A read-only comparison showed the existing `/workspace/CantorAI/out/build/gpt-os
 
 ### OPT168 source reconciliation — 2026-10-11 UTC
 The target base `239e7c4044312927ccff1ec541659780ee9442db` already contains the private peer-push code and fixture sources. The source bundle advances only the two documentation files; the target sync must verify exactly those two paths. The isolated CMake build compiles the existing two fixture targets from the synchronized checkout without modifying production code, installed libraries, or the existing wrapper.
+
+
+### OPT168 installed-binary name failure — 2026-10-11 UTC
+The next attempt failed in the initial artifact guard, before source sync, build, or GPU tests: the controller expected `libgpt_oss_core.so` and `libgpt_oss_plugin.so`, while the target installs `libgarnet.so` and `libgarnet_gpt_oss.so`. Direct SHA-256 checks showed those installed files match the already pinned core/plugin hashes exactly; `xlang3` also matches. Record this as another controller preflight defect, correct only the filenames, and retry with the same budget guard.
