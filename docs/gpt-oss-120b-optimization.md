@@ -2996,3 +2996,53 @@ A local shape audit found an exception to the initial leading-axis-only assumpti
 ### OPT170 batch-axis map correction before pipeline wiring (2026-10-11 09:12 UTC)
 
 The full pipeline shapes refine the previous correction: both standard KV page tensors and hybrid global/window KV page tensors scale their page axis (axis 1) with cohort batch; the hybrid window bank does not introduce a different axis. `make_plan` sets standard `kv_pages = batch * logical_pages`, while `hybrid_layout` sets `global_shape` and `window_shape` to `[layers, batch * pages_per_request, page_size, heads, head_dim]`; only the hybrid page table adds a separate first-axis batch input. Therefore the correct current GPT-OSS axis vector is `[0,0,1,1,0,0,0,0]` for the eight standard inputs, with hybrid extras `[1,1,0]` for window K, window V, and window table. The preceding OPT170 axis proposal correctly required explicit per-input axes but its example about a static standard KV axis was wrong; this entry supersedes that example. Update the source profile map to this evidence-based vector, and keep all dimensions except those axes fixed. No target/build action occurred.
+
+
+#### OPT170 request-batch normalization correction before tests
+
+Reviewing the newly wired profile admission revealed that a batch-bearing axis does not always equal the request count: KV page dimensions are `batch * pages_per_request`, whereas token/control/table dimensions use `batch` directly. Comparing each declared axis extent to one shared extent would reject every profiled GPT-OSS request as soon as page-axis inputs are present. Before further source edits or tests, extend the explicit profile contract with a positive per-input `batch_units` scale (the captured extent divided by captured request batch); runtime must compare normalized cohort counts and reject nondivisible extents. Keep this scale in the cache fingerprint, retain only the declared axis as variable, and derive it from actual standard/hybrid layouts. This is a correctness correction to OPT170, not performance evidence; do not start target work until normalized profile validation, plugin-bound checks, static regression, and local build/test gates pass.
+
+
+#### OPT170 batch normalization implementation check
+
+The profile now carries a positive `batch_units` value per input; the pipeline derives it from each actual batch-bearing extent, so page tensors normalize by pages per request while token/control tensors normalize by one. Compiled-runtime initialization rejects nondivisible or inconsistent min/opt/max cohort bounds, cache identity includes the scale, and runtime admission compares normalized actual cohort sizes. Added a CPU-only test for standard and hybrid page axes, default-off behavior, invalid bounds, and invalid axis cardinality. All three tests pass; Python bytecode compilation and `git diff --check` also pass. The C++/TensorRT path remains uncompiled and unverified, no engine or GPU inference ran, and no speed claim is supported. Next gate is a local compile/API review, followed by plugin range checks and multi-batch target correctness only after source/native provenance and spend admission are current.
+
+
+#### OPT170 static-input optimization-profile correction before compile
+
+The builder currently calls `IOptimizationProfile::setDimensions` for every profiled input, including tensors whose network dimensions remain static (`batch_axis=-1` or equal min/max). Keep TensorRT profile setup scoped to actual dynamic inputs: only call min/opt/max setters where the declared axis varies, while retaining the existing empty-profile path for data-dependent outputs when no input varies. This avoids changing static tensor semantics and makes the profile contract match TensorRT's dynamic-dimension API. Apply this narrow correction before compile-only validation; no target or performance inference follows from it.
+
+
+#### OPT170 first local compile attempt: environment failure
+
+A local Ninja build reconfigured `out/build/x64-Release`, then MSVC failed immediately on unrelated XLang3 translation units because the shell did not expose the MSVC standard-library include path (`fatal error C1083: cannot open include file: 'atomic'`). No Garnet or TensorRT source diagnostic was reached; this is an environment failure, not a compile pass. Retry the same local targets from the installed Visual Studio developer environment so its compiler/include/library variables are initialized. No GPU inference or target access occurred.
+
+
+#### OPT170 full local build retry: unrelated XLang3 blocker
+
+Initializing the VS 2022 developer environment resolved the missing standard-header problem, but the full `garnet`/`garnet_gpt_oss_ops` build stopped in the external XLang3 checkout at `sre_module.cpp:5109`: this MSVC 14.44 standard library has no `std::regex_constants::multiline`. Garnet and GPT-OSS translation units were not reached, and no repository source workaround is justified. Continue with compile-only Ninja object targets for the changed Garnet/GPT-OSS translation units, using the same developer environment, to distinguish these edits from the unrelated dependency failure. No GPU inference ran.
+
+
+#### OPT170 targeted compile findings and correction proposal
+
+The local C++ compile reached the changed files: `garnet.cpp`, `compiled_model_runtime.cpp`, and `model.cpp` compiled, while `trt_builder.cpp` failed because the new runtime-shape block referenced a missing `info` binding. The plugin failed because this TensorRT SDK exposes profile min/max as `Dims64` directly, not as a nested `.dims` field; the optimization/desc shape remains `desc.dims`. These are concrete source errors. Correct the binding and use the SDK's actual descriptor types without narrowing profile dimensions, then rerun the five changed object targets. Keep the unrelated XLang3 `std::regex_constants::multiline` failure recorded separately. No complete binary, engine, or inference was produced.
+
+
+#### OPT170 TensorRT plugin descriptor correction before source edit
+
+The installed TensorRT 11.2.1.2 header documents `DynamicPluginTensorDesc::desc` as carrying `-1` for runtime dimensions and exposes the concrete tuning shape separately as `opt`; `min` and `max` are direct `Dims` fields. The first targeted compile confirmed our new `.dims` accesses are invalid, and source review shows treating `desc` as opt would also reject every dynamic profile. Update plugin profile validation to compare direct min/opt/max dimensions, require static descriptor axes to remain equal, and run existing opt-shape checks against `opt`. Keep enqueue checks on concrete runtime descriptors and retain explicit cross-input attention/page/control bounds. Recompile changed object targets after the correction. No target run or performance claim.
+
+
+#### OPT170 targeted C++ compile outcome
+
+Corrected the missing `input.Info()` binding and adapted plugin configuration to TensorRT 11.2.1.2's direct `min`/`opt`/`max` `Dims` fields, using `desc.dims` only to distinguish dynamic `-1` axes. The targeted Ninja object build then passed for all five changed C++ translation units: entry parser, compiled runtime, model forwarding, TensorRT builder, and GPT-OSS plugin. The plugin compile emitted only third-party TensorRT code-page warnings. Full linking remains blocked by the unrelated XLang3 regex/MSVC incompatibility described above. Python profile tests (3/3), Python bytecode compilation, and `git diff --check` pass. This establishes compile viability only: no engine was built and no target correctness or serving performance is established.
+
+
+#### OPT170 standalone plugin-library compile proposal
+
+The five modified C++ objects now compile, but the plugin has not been linked as its own target. Build only `garnet_gpt_oss_ops` in the existing local Release tree to validate its C++/CUDA translation units and link without depending on the unrelated XLang3 core target. This remains compile-only on the local machine, with no timing or inference.
+
+
+#### OPT170 standalone plugin target result
+
+Building `garnet_gpt_oss_ops` alone still pulled the XLang3 runtime dependency and stopped at the same `sre_module.cpp` MSVC regex-constant incompatibility before plugin link. The changed GPT-OSS plugin object itself had already compiled successfully in the explicit object-target build, as had all four changed Garnet C++ objects. No dependency source was edited and no full library or engine was produced. Proceed from the committed source to the supported Linux target build only after existing target ownership and provenance guards permit it; preserve the local source and the unrelated Windows-only build blocker.

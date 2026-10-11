@@ -609,13 +609,15 @@ namespace Garnet
         const std::vector<std::string>& inputDataTypes,
         const FusionPartitionOptions& partitionOptions,
         const std::string& backend,
-        const std::string& precision)
+        const std::string& precision,
+        const std::vector<TensorInputShapeRange>& inputShapeRanges)
     {
         mCompiledRuntime = std::make_shared<CompiledModelRuntime>(Host());
         mCompiledMode = true;
         return mCompiledRuntime->Initialize(
             rootXModel, cacheDirectory, weightsLocation, entryFunction, frontend,
-            inputShapes, inputDataTypes, partitionOptions, backend, precision);
+            inputShapes, inputDataTypes, partitionOptions, backend, precision,
+            inputShapeRanges);
     }
 
     X::Value Model::RuntimeStatus(const X::ARGS& params, const X::KWARGS& kwParams)

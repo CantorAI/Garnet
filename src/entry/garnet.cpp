@@ -4295,6 +4295,7 @@ namespace Garnet
         std::string compiledBackend = "tensorrt";
         std::string compiledPrecision;
         std::vector<std::vector<int>> compiledInputShapes;
+        std::vector<TensorInputShapeRange> compiledInputShapeRanges;
         std::vector<std::string> compiledInputDataTypes;
         FusionPartitionOptions compiledPartitionOptions;
         for (auto& item : kwParams) {
@@ -4340,6 +4341,39 @@ namespace Garnet
                 if (optimizationLevel.IsValid()) {
                     compiledPartitionOptions.builderOptimizationLevel = (std::max)(
                         0, (std::min)(5, static_cast<int>(optimizationLevel.ToLongLong())));
+                }
+                X::Value profilesValue = FindField(compileOptions, "input_shape_profiles");
+                if (profilesValue.IsValid()) {
+                  if (!profilesValue.IsDict()) {
+                    compiledInputShapeRanges.emplace_back();
+                  } else {
+                    X::Value profiles(profilesValue);
+                    auto parseMatrix = [&](const char* key) {
+                        std::vector<std::vector<int>> matrix;
+                        X::Value value = FindField(profiles, key);
+                        if (!value.IsList()) return matrix;
+                        X::Value rows(value);
+                        for (long long row = 0; row < rows.Size(); ++row)
+                            matrix.push_back(ReadIntList(rows.Get(row)));
+                        return matrix;
+                    };
+                    const auto minimum = parseMatrix("min");
+                    const auto optimum = parseMatrix("opt");
+                    const auto maximum = parseMatrix("max");
+                    X::Value axesValue = FindField(profiles, "batch_axes");
+                    const auto axes = axesValue.IsList() ? ReadIntList(axesValue) : std::vector<int>{};
+                    X::Value unitsValue = FindField(profiles, "batch_units");
+                    const auto units = unitsValue.IsList() ? ReadIntList(unitsValue) : std::vector<int>{};
+                    if (minimum.empty() || minimum.size() != optimum.size() ||
+                        optimum.size() != maximum.size() || axes.size() != optimum.size() ||
+                        units.size() != optimum.size()) {
+                        compiledInputShapeRanges.emplace_back();
+                    } else {
+                        for (size_t index = 0; index < optimum.size(); ++index)
+                            compiledInputShapeRanges.push_back(
+                                {minimum[index], optimum[index], maximum[index], axes[index], units[index]});
+                    }
+                  }
                 }
                 X::Value partitionValue = FindField(compileOptions, "partition");
                 if (partitionValue.IsDict()) {
@@ -4394,7 +4428,8 @@ namespace Garnet
                 compiledInputDataTypes,
                 compiledPartitionOptions,
                 compiledBackend,
-                compiledPrecision);
+                compiledPrecision,
+                compiledInputShapeRanges);
             retValue = NativeValue(Host(), varModel);
             return retValue;
         }

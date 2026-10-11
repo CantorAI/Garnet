@@ -73,6 +73,38 @@ bool shape(const Dims& d, std::initializer_list<int64_t> expected) {
     int i = 0; for (int64_t x : expected) { if (d.d[i++] != x) return false; }
     return true;
 }
+bool validProfileRange(const DynamicPluginTensorDesc& input) {
+    const Dims& minimum = input.min;
+    const Dims& optimum = input.opt;
+    const Dims& maximum = input.max;
+    const Dims& descriptor = input.desc.dims;
+    if (minimum.nbDims <= 0 || minimum.nbDims != optimum.nbDims ||
+        optimum.nbDims != maximum.nbDims || descriptor.nbDims != optimum.nbDims) return false;
+    for (int dimension = 0; dimension < optimum.nbDims; ++dimension) {
+        if (minimum.d[dimension] <= 0 ||
+            minimum.d[dimension] > optimum.d[dimension] ||
+            optimum.d[dimension] > maximum.d[dimension] ||
+            (descriptor.d[dimension] != -1 &&
+                (descriptor.d[dimension] != optimum.d[dimension] ||
+                    minimum.d[dimension] != optimum.d[dimension] ||
+                    maximum.d[dimension] != optimum.d[dimension]))) return false;
+    }
+    return true;
+}
+bool proportionalPageRange(const DynamicPluginTensorDesc& pages,
+    int minBatch, int optBatch, int maxBatch) {
+    if (!validProfileRange(pages) || pages.opt.nbDims != 5 ||
+        minBatch <= 0 || optBatch <= 0 || maxBatch <= 0) return false;
+    const auto& minimum = pages.min;
+    const auto& optimum = pages.opt;
+    const auto& maximum = pages.max;
+    return int64_t(minimum.d[1]) * optBatch == int64_t(optimum.d[1]) * minBatch &&
+        int64_t(maximum.d[1]) * optBatch == int64_t(optimum.d[1]) * maxBatch &&
+        minimum.d[0] == optimum.d[0] && optimum.d[0] == maximum.d[0] &&
+        minimum.d[2] == optimum.d[2] && optimum.d[2] == maximum.d[2] &&
+        minimum.d[3] == optimum.d[3] && optimum.d[3] == maximum.d[3] &&
+        minimum.d[4] == optimum.d[4] && optimum.d[4] == maximum.d[4];
+}
 }
 GptOssPlugin::GptOssPlugin(const GptOssOptions& o) : m_options(o), m_valid(valid(o)) {}
 GptOssPlugin::GptOssPlugin(const void* data, size_t size) {
@@ -119,7 +151,10 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
          (m_options.kind == 2 || m_options.kind == 8) ? 9 :
          (m_options.kind == 5 || m_options.kind == 6) ? 2 : 1);
     if (!m_valid) return;
-    const auto& o = m_options; const Dims d = in[0].desc.dims;
+    for (int index = 0; index < count; ++index) {
+        if (!validProfileRange(in[index])) { m_valid = false; return; }
+    }
+    const auto& o = m_options; const Dims d = in[0].opt;
     if (o.expertWeightsSharded != 0 &&
         (o.expertWeightsSharded != 1 || o.kind != 2 || o.tpRank < 0 || o.tpRank > 1)) {
         m_valid = false; return;
@@ -129,48 +164,69 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
     const int batch = d.d[0], tokens = d.d[1];
     if (o.kind == 0) {
         m_valid = d.d[2] == (o.qHeads + 2 * o.kvHeads) * o.headDim &&
-            rows(in[0].desc.dims) == [&] { int n = 1; const auto p = in[1].desc.dims;
+            rows(in[0].opt) == [&] { int n = 1; const auto p = in[1].opt;
                 for (int i = 0; i < p.nbDims; ++i) n *= p.d[i]; return n; }();
     } else if (o.kind == 1) {
-        const auto k = in[1].desc.dims, v = in[2].desc.dims, table = in[3].desc.dims;
+        const auto k = in[1].opt, v = in[2].opt, table = in[3].opt;
+        const int minBatch = static_cast<int>(in[0].min.d[0]);
+        const int optBatch = d.d[0];
+        const int maxBatch = static_cast<int>(in[0].max.d[0]);
+        const auto& minTable = in[3].min;
+        const auto& maxTable = in[3].max;
         m_valid = d.d[2] == (o.qHeads + 2 * o.kvHeads) * o.headDim &&
+            in[0].min.d[2] == d.d[2] && in[0].max.d[2] == d.d[2] &&
+            in[0].min.d[1] == d.d[1] && in[0].max.d[1] == d.d[1] &&
             k.nbDims == 5 && k.d[0] > o.layer && k.d[1] > 0 &&
             shape(k, {k.d[0], k.d[1], o.pageSize, o.kvHeads, o.headDim}) &&
             shape(v, {k.d[0], k.d[1], o.pageSize, o.kvHeads, o.headDim}) &&
+            proportionalPageRange(in[1], minBatch, optBatch, maxBatch) &&
+            proportionalPageRange(in[2], minBatch, optBatch, maxBatch) &&
+            in[3].min.nbDims == 2 && in[3].max.nbDims == 2 &&
+            minTable.d[0] == minBatch && table.d[0] == optBatch && maxTable.d[0] == maxBatch &&
+            minTable.d[1] == table.d[1] && maxTable.d[1] == table.d[1] &&
+            in[4].min.nbDims == 1 && in[4].opt.nbDims == 1 &&
+            in[4].max.nbDims == 1 && in[4].min.d[0] == minBatch &&
+            in[4].opt.d[0] == optBatch && in[4].max.d[0] == maxBatch &&
+            in[5].min.nbDims == 1 && in[5].opt.nbDims == 1 &&
+            in[5].max.nbDims == 1 && in[5].min.d[0] == minBatch &&
+            in[5].opt.d[0] == optBatch && in[5].max.d[0] == maxBatch &&
+            in[6].min.nbDims == 1 && in[6].opt.nbDims == 1 &&
+            in[6].max.nbDims == 1 && in[6].min.d[0] == minBatch &&
+            in[6].opt.d[0] == optBatch && in[6].max.d[0] == maxBatch &&
             table.nbDims == 2 && table.d[0] == batch && table.d[1] > 0 &&
-            shape(in[4].desc.dims, {batch}) && shape(in[5].desc.dims, {batch}) &&
-            shape(in[6].desc.dims, {batch}) && shape(in[7].desc.dims, {o.qHeads}) &&
+            shape(in[4].opt, {batch}) && shape(in[5].opt, {batch}) &&
+            shape(in[6].opt, {batch}) && shape(in[7].opt, {o.qHeads}) &&
             (o.prefill || tokens == 1);
     } else if (o.kind == 2 || o.kind == 8) {
         const int storedExperts = o.expertWeightsSharded ? (o.experts + 1 - o.tpRank) / 2 : o.experts;
         const int upK=(o.hidden+63)/64*64,upN=(2*o.intermediate+127)/128*128;
         const int downK=(o.intermediate+127)/128*128,downN=(o.hidden+63)/64*64;
         const bool quantShapes=o.marlinPrepacked
-            ? shape(in[3].desc.dims,{storedExperts,upK/32,upN,16}) &&
-              shape(in[4].desc.dims,{storedExperts,upK/32,upN}) &&
-              shape(in[6].desc.dims,{storedExperts,downK/32,downN,16}) &&
-              shape(in[7].desc.dims,{storedExperts,downK/32,downN})
-            : shape(in[3].desc.dims,{storedExperts,2*o.intermediate,o.hidden/32,16}) &&
-              shape(in[4].desc.dims,{storedExperts,2*o.intermediate,o.hidden/32}) &&
-              shape(in[6].desc.dims,{storedExperts,o.hidden,o.intermediate/32,16}) &&
-              shape(in[7].desc.dims,{storedExperts,o.hidden,o.intermediate/32});
-        m_valid = d.d[2] == o.hidden && shape(in[1].desc.dims, {o.experts, o.hidden}) &&
-            shape(in[2].desc.dims, {o.experts}) &&
+            ? shape(in[3].opt,{storedExperts,upK/32,upN,16}) &&
+              shape(in[4].opt,{storedExperts,upK/32,upN}) &&
+              shape(in[6].opt,{storedExperts,downK/32,downN,16}) &&
+              shape(in[7].opt,{storedExperts,downK/32,downN})
+            : shape(in[3].opt,{storedExperts,2*o.intermediate,o.hidden/32,16}) &&
+              shape(in[4].opt,{storedExperts,2*o.intermediate,o.hidden/32}) &&
+              shape(in[6].opt,{storedExperts,o.hidden,o.intermediate/32,16}) &&
+              shape(in[7].opt,{storedExperts,o.hidden,o.intermediate/32});
+        m_valid = d.d[2] == o.hidden && shape(in[1].opt, {o.experts, o.hidden}) &&
+            shape(in[2].opt, {o.experts}) &&
             quantShapes &&
-            shape(in[5].desc.dims, {storedExperts, 2 * o.intermediate}) &&
-            shape(in[8].desc.dims, {storedExperts, o.hidden});
+            shape(in[5].opt, {storedExperts, 2 * o.intermediate}) &&
+            shape(in[8].opt, {storedExperts, o.hidden});
     } else if (o.kind == 3) {
         m_valid = d.d[2] == o.hidden;
     } else if (o.kind == 7) {
         m_valid = d.d[2] == o.hidden;
     } else if (o.kind == 5) {
-        m_valid = d.d[2] == o.hidden && shape(in[1].desc.dims, {o.hidden});
+        m_valid = d.d[2] == o.hidden && shape(in[1].opt, {o.hidden});
     } else if (o.kind == 6) {
         m_valid = rows(d) == 1 && d.d[2] == o.hidden &&
             (o.qHeads > 0
-                ? shape(in[1].desc.dims,
+                ? shape(in[1].opt,
                     {(o.qHeads + 2 * o.kvHeads) * o.headDim, o.hidden})
-                : shape(in[1].desc.dims, {o.intermediate, 2 * o.hidden}));
+                : shape(in[1].opt, {o.intermediate, 2 * o.hidden}));
     } else {
         m_valid = d.nbDims == 3 && d.d[0] > 0 && d.d[1] > 0 && d.d[2] > 0;
     }
@@ -213,6 +269,16 @@ size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
 int GptOssPlugin::enqueue(const PluginTensorDesc* d, const PluginTensorDesc*,
     const void* const* in, void* const* out, void* workspace, cudaStream_t stream) noexcept {
     if (!m_valid || !d || !in || !out || rows(d[0].dims) <= 0) return 1;
+    if (m_options.kind == 1) {
+        const int batch = d[0].dims.d[0];
+        if (d[3].dims.nbDims != 2 || d[3].dims.d[0] != batch ||
+            d[1].dims.nbDims != 5 || d[2].dims.nbDims != 5 ||
+            d[1].dims.d[1] != d[2].dims.d[1] ||
+            d[3].dims.d[1] <= 0) return 1;
+        for (int index = 4; index <= 6; ++index) {
+            if (d[index].dims.nbDims != 1 || d[index].dims.d[0] != batch) return 1;
+        }
+    }
     const int n = rows(d[0].dims); cudaError_t status;
     if (m_options.kind == 0) status = RunGptOssRope((const float*)in[0], (const std::int64_t*)in[1],
         (float*)out[0], n, m_options, stream);

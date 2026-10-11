@@ -18,6 +18,37 @@ from garnet_pipeline import Pipeline, plan_layers
 from kv_layout import hybrid_requested, hybrid_layout, checked_layout, window_page_table
 
 
+def _dynamic_batch_profile(input_shapes, batch_axes, batch):
+    minimum_text = os.environ.get('GARNET_GPT_OSS_BATCH_PROFILE_MIN')
+    if minimum_text is None:
+        return {}
+    minimum_batch = int(minimum_text)
+    maximum_batch = int(os.environ.get('GARNET_GPT_OSS_BATCH_PROFILE_MAX', batch))
+    if minimum_batch <= 0 or minimum_batch > batch or maximum_batch < batch:
+        raise ValueError('dynamic batch profile must contain the captured batch and have positive bounds')
+    if len(input_shapes) != len(batch_axes):
+        raise ValueError('dynamic batch profile axis count differs from stage inputs')
+    minimum, maximum, batch_units = [], [], []
+    for shape, axis in zip(input_shapes, batch_axes):
+        low, high = list(shape), list(shape)
+        if axis >= 0:
+            if axis >= len(shape) or shape[axis] % batch:
+                raise ValueError('batch-bearing input extent is not divisible by the captured batch')
+            per_request = shape[axis] // batch
+            low[axis] = minimum_batch * per_request
+            high[axis] = maximum_batch * per_request
+            batch_units.append(per_request)
+        elif axis == -1:
+            batch_units.append(1)
+        else:
+            raise ValueError('batch axis must be -1 or a valid tensor dimension')
+        minimum.append(low)
+        maximum.append(high)
+    return {'input_shape_profiles': {
+        'min': minimum, 'opt': [list(shape) for shape in input_shapes],
+        'max': maximum, 'batch_axes': list(batch_axes), 'batch_units': batch_units}}
+
+
 def weight_sizes(weights):
     sizes = {}
     for path in sorted(Path(weights).rglob('*.safetensors')):
@@ -271,16 +302,20 @@ def build_pipeline(weights, cache, plan, tokens, prefill, kv=None, last_token_lo
             else:
                 keys, values = kv[rank]
             first_shape = [batch, tokens] if start == 0 else [batch, tokens, config['hidden_size']]
+            input_shapes = [first_shape, [batch, tokens], shape, shape,
+                            [batch, math.ceil(plan['capacity'] / 16)], [batch], [batch], [batch]]
+            batch_axes = [0, 0, 1, 1, 0, 0, 0, 0]
+            compile_options = {'builder_workspace_mb': 256, 'builder_optimization_level': 1,
+                               'partition': {'enable_preferred_boundaries': False,
+                                             'max_atomic_regions_per_partition': 0}}
+            compile_options.update(_dynamic_batch_profile(input_shapes, batch_axes, batch))
             model = G.load_model(str(model_root / 'stage.py'), runtime_mode='compiled_xmodel',
                 backend='tensorrt', precision='bf16', entry_function='GptOssStage', weights=str(weights),
                 cache_dir=str(stage_cache / 'engine'),
-                input_shapes=[first_shape, [batch, tokens], shape, shape,
-                              [batch, math.ceil(plan['capacity'] / 16)], [batch], [batch], [batch]],
+                input_shapes=input_shapes,
                 input_dtypes=['int64' if start == 0 else 'float32', 'int64', 'bfloat16', 'bfloat16',
                               'int32', 'int32', 'int32', 'int32'],
-                compile={'builder_workspace_mb': 256, 'builder_optimization_level': 1,
-                         'partition': {'enable_preferred_boundaries': False,
-                                       'max_atomic_regions_per_partition': 0}})
+                compile=compile_options)
             status = model.runtime_status()
             if not status['ready']:
                 raise RuntimeError(str(status))
@@ -526,14 +561,19 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
             if layout is not None:
                 input_shapes += [layout['window_shape'], layout['window_shape'], layout['window_table_shape']]
                 input_dtypes += ['bfloat16', 'bfloat16', 'int32']
+            batch_axes = [0, 0, 1, 1, 0, 0, 0, 0]
+            if layout is not None:
+                batch_axes += [1, 1, 0]
+            compile_options = {'builder_workspace_mb': workspace_mb,
+                               'builder_optimization_level': optimization_level,
+                               'partition': {'enable_preferred_boundaries': False,
+                                             'max_atomic_regions_per_partition': 0}}
+            compile_options.update(_dynamic_batch_profile(input_shapes, batch_axes, batch))
             model = G.load_model(str(model_root / 'stage.py'), runtime_mode='compiled_xmodel',
                 backend='tensorrt', precision='bf16', entry_function='GptOssStage', weights=str(weights),
                 cache_dir=str(stage_cache / 'engine'),
                 input_shapes=input_shapes, input_dtypes=input_dtypes,
-                compile={'builder_workspace_mb': workspace_mb,
-                         'builder_optimization_level': optimization_level,
-                         'partition': {'enable_preferred_boundaries': False,
-                                       'max_atomic_regions_per_partition': 0}})
+                compile=compile_options)
             try:
                 status = model.runtime_status()
                 if not status['ready']:

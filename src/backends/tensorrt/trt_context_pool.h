@@ -4,6 +4,7 @@
 #pragma once
 #include <NvInfer.h>
 #include <cuda_runtime.h>
+#include <cstdint>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -33,6 +34,8 @@ public:
         cudaGraph_t graph = nullptr;
         cudaGraphExec_t executable = nullptr;
         std::vector<void*> bindings;
+        std::vector<int64_t> shapeSignature;
+        int activeOptimizationProfile = -1;
         bool warmed = false;
         bool busy = false;
         std::shared_ptr<OperatorExecutionOwner> operatorOwner;
@@ -48,7 +51,7 @@ public:
             DeviceScope deviceScope(device);
             if (executable) cudaGraphExecDestroy(executable);
             if (graph) cudaGraphDestroy(graph);
-            executable = nullptr; graph = nullptr; warmed = false; bindings.clear();
+            executable = nullptr; graph = nullptr; warmed = false; bindings.clear(); shapeSignature.clear();
             // Captured pointers retire before the last provider buffer owner.
             operatorOwner.reset();operatorPhase=-1;operatorRank=-1;
         }
