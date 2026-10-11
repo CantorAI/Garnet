@@ -18,12 +18,16 @@ from garnet_pipeline import Pipeline, plan_layers
 from kv_layout import hybrid_requested, hybrid_layout, checked_layout, window_page_table
 
 
-def _dynamic_batch_profile(input_shapes, batch_axes, batch):
+def _dynamic_batch_profile(input_shapes, batch_axes, batch, *, phase_limit=None):
     minimum_text = os.environ.get('GARNET_GPT_OSS_BATCH_PROFILE_MIN')
     if minimum_text is None:
         return {}
     minimum_batch = int(minimum_text)
     maximum_batch = int(os.environ.get('GARNET_GPT_OSS_BATCH_PROFILE_MAX', batch))
+    if phase_limit is not None:
+        if type(phase_limit) is not int or phase_limit < batch:
+            raise ValueError('phase profile limit must contain the engine opt batch')
+        maximum_batch = min(maximum_batch, phase_limit)
     if minimum_batch <= 0 or minimum_batch > batch or maximum_batch < batch:
         raise ValueError('dynamic batch profile must contain the captured batch and have positive bounds')
     if len(input_shapes) != len(batch_axes):
@@ -112,13 +116,19 @@ def make_plan(weights, devices, batch=1, capacity=4096, tokens=1,
 
 
 def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1,
-                              reserve_bytes=1 << 30, memory_fraction=.9):
+                              reserve_bytes=1 << 30, memory_fraction=.9,
+                              prefill_engine_batch=None, decode_engine_batch=None):
     """Plan a two-rank GPT-OSS attention and expert tensor-parallel stage."""
     if len(devices) != 2 or len({d['id'] for d in devices}) != 2:
         raise ValueError('GPT-OSS TP2 requires exactly two distinct GPUs')
     config = json.loads((Path(weights) / 'config.json').read_text())
     if batch <= 0 or capacity <= 0 or tokens <= 0 or tokens > capacity:
         raise ValueError('invalid batch/context/token capacity')
+    prefill_engine_batch = batch if prefill_engine_batch is None else prefill_engine_batch
+    decode_engine_batch = batch if decode_engine_batch is None else decode_engine_batch
+    if (type(prefill_engine_batch) is not int or type(decode_engine_batch) is not int or
+            not 0 < prefill_engine_batch <= batch or not 0 < decode_engine_batch <= batch):
+        raise ValueError('phase engine batches must fit the shared KV-pool capacity')
     if config['num_experts'] < 2:
         raise ValueError('expert parallelism requires at least two experts')
     if not 0 < memory_fraction <= 1 or reserve_bytes < 0:
@@ -133,7 +143,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
               if hybrid_requested() else None)
     if layout is not None:
         kv_bytes = layout['shared_kv_bytes'] + layout['shared_auxiliary_bytes']
-    activation_bytes = batch * tokens * (config['hidden_size'] * 64 +
+    activation_rows = max(prefill_engine_batch * tokens, decode_engine_batch)
+    activation_bytes = activation_rows * (config['hidden_size'] * 64 +
         config['vocab_size'] * 4 + config['intermediate_size'] * config['experts_per_token'] * 4)
     # Dense BF16 constants are budgeted at FP32 size because TensorRT may
     # promote some projections during engine construction.
@@ -211,8 +222,11 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         weight_storage['original_quant_constants_eliminated_bytes'] = removed
         weight_storage['marlin_prepacked_layout_version'] = 1
     from peer_group_layout import peer_group_layout, validate_peer_group_layout
-    execution_layout = peer_group_layout(batch, tokens, config['hidden_size'])
-    group_bytes = validate_peer_group_layout(execution_layout, batch, tokens, config['hidden_size'])
+    execution_layout = peer_group_layout(batch, tokens, config['hidden_size'],
+        prefill_batch=prefill_engine_batch, decode_batch=decode_engine_batch)
+    group_bytes = validate_peer_group_layout(execution_layout, batch, tokens,
+        config['hidden_size'], prefill_batch=prefill_engine_batch,
+        decode_batch=decode_engine_batch)
     required = math.ceil(weight_estimate * 1.05) + kv_bytes + activation_bytes + reserve_bytes + group_bytes
     hardware = [{k: d[k] for k in ('id', 'name', 'total_bytes', 'compute_major',
                 'compute_minor', 'pci_bus_id', 'peer_access')} for d in devices]
@@ -223,6 +237,9 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
         'checkpoint': str(Path(weights).resolve()), 'capacity': capacity, 'batch': batch,
         'memory_fraction': memory_fraction, 'reserve_bytes': reserve_bytes,
         'layer_cuda_graph': True}
+    if prefill_engine_batch != batch or decode_engine_batch != batch:
+        identity['phase_engine_batches'] = dict(prefill=prefill_engine_batch,
+            decode=decode_engine_batch)
     if layout is not None:
         identity.update(schema=4, kv_layout=layout)
     if expert_weight_shards:
@@ -251,6 +268,8 @@ def make_tensor_parallel_plan(weights, devices, batch=1, capacity=4096, tokens=1
     result = {'schema': identity['schema'], 'mode': 'gpt-oss-tensor-parallel-tp2', 'cache_key': key,
             'hardware': hardware, 'stages': stages, 'batch': batch,
             'capacity': capacity, 'max_tokens': tokens, 'kv_pages': pages,
+            'phase_engine_batches': dict(prefill=prefill_engine_batch,
+                decode=decode_engine_batch),
             'config': config, 'estimated_per_gpu_bytes': required,
             'local_kv_heads': local_kv_heads,
             'expert_weight_shards': expert_weight_shards,
@@ -453,7 +472,8 @@ def shared_kv_handoff(stages, layout):
 
 
 def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
-                          last_token_logits=False, padded_prefill=False):
+                          last_token_logits=False, padded_prefill=False,
+                          engine_batch=None):
     """Build paired engines with sharded attention heads and rank-local MoE."""
     import garnet as G
     layout = checked_layout(plan)
@@ -474,7 +494,14 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
         raise ValueError('unsupported GPT-OSS TensorRT optimization or workspace setting')
     if tokens < 1 or tokens > plan['max_tokens']:
         raise ValueError('token shape exceeds TP2 placement profile')
-    config, batch = plan['config'], plan['batch']
+    config = plan['config']
+    batch = plan['batch'] if engine_batch is None else engine_batch
+    if type(batch) is not int or not 1 <= batch <= plan['batch']:
+        raise ValueError('Phase engine batch must fit the admitted KV-pool capacity')
+    expected_batch = plan.get('phase_engine_batches', {}).get(
+        'prefill' if prefill else 'decode', plan['batch'])
+    if batch != expected_batch:
+        raise ValueError('Phase engine batch differs from the immutable TP2 profile')
     moe_config = dict(config)
     if plan.get('marlin_prepacked', False) != (os.environ.get('GARNET_GPT_OSS_MARLIN_PREPACKED') == '1'):
         raise ValueError('Marlin storage flag changed after planning; regenerate the TP2 profile')
@@ -584,14 +611,18 @@ def build_tensor_parallel(weights, cache, plan, tokens, prefill, kv=None,
             if layout is not None:
                 input_shapes += [layout['window_shape'], layout['window_shape'], layout['window_table_shape']]
                 input_dtypes += ['bfloat16', 'bfloat16', 'int32']
-            batch_axes = [0, 0, 1, 1, 0, 0, 0, 0]
+            split_kv_pool = (batch != plan['batch'])
+            batch_axes = [0, 0, -1 if split_kv_pool else 1,
+                -1 if split_kv_pool else 1, 0, 0, 0, 0]
             if layout is not None:
-                batch_axes += [1, 1, 0]
+                batch_axes += ([-1, -1, 0] if split_kv_pool else [1, 1, 0])
             compile_options = {'builder_workspace_mb': workspace_mb,
                                'builder_optimization_level': optimization_level,
                                'partition': {'enable_preferred_boundaries': False,
                                              'max_atomic_regions_per_partition': 0}}
-            compile_options.update(_dynamic_batch_profile(input_shapes, batch_axes, batch))
+            compile_options.update(_dynamic_batch_profile(input_shapes, batch_axes, batch,
+                phase_limit=plan.get('phase_engine_batches', {}).get(
+                    'prefill' if prefill else 'decode', batch)))
             model = G.load_model(str(model_root / 'stage.py'), runtime_mode='compiled_xmodel',
                 backend='tensorrt', precision='bf16', entry_function='GptOssStage', weights=str(weights),
                 cache_dir=str(stage_cache / 'engine'),

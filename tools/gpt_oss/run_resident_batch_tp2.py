@@ -20,6 +20,7 @@ from kv_layout import kv_memory, logical_retained_kv_bytes
 from resident_capture import ResidentCapture
 from resident_session import read_session, session_partial
 from resident_runtime_scheduling import POLICY as runtime_switch_policy, parse_switch_us, RuntimeSwitchScope
+from decode_first_scheduler import QueuedPrefill, plan_decode_first_iteration
 from resident_budget import (admit_resident, native_identity, hardware_identity,
     kernel_environment, checkpoint_identity, validate_engine_files, file_sha256)
 
@@ -38,12 +39,14 @@ native_candidate_merge = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_MERGE')
 final_prefill_sample_only = optional_flag('GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY')
 pattern_updates = optional_flag('GARNET_RESIDENT_PATTERN_UPDATES')
 native_greedy_state = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_STATE')
+decode_first_scheduler = optional_flag('GARNET_RESIDENT_DECODE_FIRST_SCHEDULER')
 if native_greedy_state and native_candidate_merge:
     raise ValueError('Native greedy state replaces the independent native merge path')
 resident_host_candidates = dict(reuse_output=reuse_output,
     native_candidate_merge=native_candidate_merge,
     final_prefill_sample_only=final_prefill_sample_only,
-    pattern_updates=pattern_updates, native_greedy_state=native_greedy_state)
+    pattern_updates=pattern_updates, native_greedy_state=native_greedy_state,
+    decode_first_scheduler=decode_first_scheduler)
 runtime_switch_us = parse_switch_us(os.environ.get(runtime_switch_policy, '0'))
 
 session_mode = len(sys.argv) > 1 and sys.argv[1] == '--session'
@@ -83,9 +86,24 @@ if pattern_updates and (2 * chunk + 2 > 768 or batch + 3 > 768):
     raise ValueError('Resident integer patterns exceed the bounded native payload')
 profile = json.loads(profile_path.read_text())
 padded = bool(profile['padded_prefill'])
+phase_batches = profile.get('phase_engine_batches',
+    dict(prefill=batch, decode=batch))
+if (not isinstance(phase_batches, dict) or set(phase_batches) != {'prefill','decode'} or
+        any(type(value) is not int or not 1 <= value <= batch for value in phase_batches.values())):
+    raise ValueError('Resident profile has invalid phase engine batches')
+if decode_first_scheduler:
+    if (batch != 224 or chunk != 36 or phase_batches != dict(prefill=112, decode=224) or
+            not profile.get('candidate_shape') or not padded or
+            reuse_output or native_candidate_merge or final_prefill_sample_only or
+            pattern_updates or native_greedy_state or runtime_switch_us):
+        raise ValueError('Decode-first scheduler requires the exact qualified-shape candidate gates')
+elif phase_batches != dict(prefill=batch, decode=batch):
+    raise ValueError('Split phase profiles require explicit decode-first scheduler opt-in')
 if len(ids) % chunk and not padded:
     raise ValueError('Ragged tail requires validated padded prefill engine')
 capture = ResidentCapture(os.environ, len(ids), chunk, output_tokens)
+if decode_first_scheduler and capture.enabled:
+    raise ValueError('Decode-first scheduler cannot be combined with instrumented captures')
 if session_mode and (capture.enabled or os.environ.get('GARNET_BENCH_NSYS_OUTPUT')):
     raise ValueError('Session throughput requires uninstrumented requests')
 warmup_count = int(os.environ.get('GARNET_RESIDENT_WARMUPS', '1'))
@@ -98,7 +116,9 @@ if len(selected) != 2 or len(set(selected)) != 2:
 devices = [next(d for d in available if d['id'] == index) for index in selected]
 plan = make_tensor_parallel_plan(weights, devices, batch=batch, capacity=capacity,
     tokens=chunk, reserve_bytes=int(request.get('reserve_mb', 1024)) << 20,
-    memory_fraction=float(request.get('memory_fraction', .9)))
+    memory_fraction=float(request.get('memory_fraction', .9)),
+    prefill_engine_batch=phase_batches['prefill'],
+    decode_engine_batch=phase_batches['decode'])
 if any(not case['input_ids'] or any(type(token) is not int or
        not 0 <= token < plan['config']['vocab_size'] for token in case['input_ids']) for case in cases):
     raise ValueError('Invalid input token ID')
@@ -139,7 +159,8 @@ def load(prefill, kv=None):
     print('Resident phase load start', 'prefill' if prefill else 'decode', flush=True)
     start = time.perf_counter()
     model = build_tensor_parallel(weights, cache, plan, chunk if prefill else 1,
-        prefill, kv, last_token_logits=prefill, padded_prefill=prefill and padded)
+        prefill, kv, last_token_logits=prefill, padded_prefill=prefill and padded,
+        engine_batch=phase_batches['prefill' if prefill else 'decode'])
     try:
         load_seconds['prefill' if prefill else 'decode'] = time.perf_counter() - start
         samples.append(memory())
@@ -220,14 +241,124 @@ def update(stages, prepared, tokens, positions, length, slot):
         finally:
             G.cuda_set_device(previous)
 
+def phase_tensors(stages, tokens, slots):
+    """Create fixed-shape cohort inputs with page tables for global KV slots."""
+    inputs = []
+    page_table = [row * pages + page for row in slots for page in range(pages)]
+    for stage in stages:
+        previous = G.cuda_set_device(stage['device_id'])
+        try:
+            count = len(slots)
+            def tensor(data, dtype, shape):
+                return G.tensor_from_host(data, dtype=dtype, shape=shape, device='cuda')
+            inputs.append((tensor([0] * (count * tokens), 'int64', [count, tokens]),
+                [tensor([0] * (count * tokens), 'int64', [count, tokens]),
+                 tensor(page_table, 'int32', [count, pages]),
+                 tensor([1] * count, 'int32', [count]),
+                 tensor(list(slots), 'int32', [count]),
+                 tensor([1] * count, 'int32', [count])]))
+        finally:
+            G.cuda_set_device(previous)
+    return inputs
+
 prefill_inputs = decode_inputs = None
+prefill_cohort_inputs = None
+
+def run_decode_first_request(trial, ids, start):
+    """Fixed 224-request correctness path using 112x36 FIFO prefill cohorts."""
+    request_ids = [f'q{slot:03d}' for slot in range(batch)]
+    slots = {request_id: slot for slot, request_id in enumerate(request_ids)}
+    offsets = {request_id: 0 for request_id in request_ids}
+    remaining = {request_id: len(ids) for request_id in request_ids}
+    active = []
+    rows = {}
+    prefill_steps = []
+    while any(remaining.values()):
+        queued = [QueuedPrefill(request_id, remaining[request_id], offsets[request_id])
+                  for request_id in request_ids if remaining[request_id] > 0]
+        decision = plan_decode_first_iteration(active, queued, token_budget=8192,
+            max_sequences=batch, prefill_chunk=chunk, prefill_cohort=112,
+            max_peer_rows=4096)
+        if not decision.prefill_cohorts:
+            raise RuntimeError('Decode-first scheduler made no progress on queued prompts')
+        for cohort in decision.prefill_cohorts:
+            cohort_ids = [item.request_id for item in cohort]
+            cohort_slots = [slots[item] for item in cohort_ids]
+            offset = cohort[0].input_offset
+            real = cohort[0].real_tokens
+            if any(item.input_offset != offset or item.real_tokens != real
+                   for item in cohort):
+                raise ValueError('Fixed-batch harness received a heterogeneous prefill cohort')
+            token_row = ids[offset:offset + real] + [0] * (chunk - real)
+            position_row = list(range(offset, offset + chunk))
+            cohort_index = 0 if cohort_slots == list(range(112)) else 1
+            if cohort_slots != list(range(cohort_index * 112, (cohort_index + 1) * 112)):
+                raise ValueError('Fixed scheduler cohort order/slot ownership changed')
+            inputs = prefill_cohort_inputs[cohort_index]
+            values = [token_row * len(cohort_ids), position_row * len(cohort_ids),
+                [offset + real] * len(cohort_ids), cohort_slots]
+            final_slice = offset + real == len(ids)
+            step = time.perf_counter()
+            reply = pair.forward_prefill(inputs, sample=final_slice, sample_batch=True,
+                vector_values=values)
+            prefill_steps.append(time.perf_counter() - step)
+            if final_slice:
+                if len(reply.get('token_ids', [])) != len(cohort_ids):
+                    raise ValueError('Prefill cohort returned the wrong sampled token count')
+                for request_id, token in zip(cohort_ids, reply['token_ids']):
+                    rows[request_id] = [int(token)]
+            for item in cohort:
+                offsets[item.request_id] += item.real_tokens
+                remaining[item.request_id] -= item.real_tokens
+        if any(value < 0 for value in remaining.values()):
+            raise RuntimeError('Prefill planner advanced beyond an input prompt')
+        if all(value == 0 for value in remaining.values()):
+            active = list(request_ids)
+    first_token = time.perf_counter()
+    if set(rows) != set(request_ids) or any(len(row) != 1 for row in rows.values()):
+        raise ValueError('Every request must produce one prompt-completion token')
+    decode_steps = []
+    for decode_index in range(1, output_tokens):
+        decision = plan_decode_first_iteration(active, (), token_budget=8192,
+            max_sequences=batch, prefill_chunk=chunk, prefill_cohort=112,
+            max_peer_rows=4096)
+        if decision.decode_request_ids != tuple(active):
+            raise RuntimeError('Decode-first scheduler dropped an active request')
+        previous_tokens = [rows[request_id][-1] for request_id in active]
+        absolute_position = len(ids) + decode_index - 1
+        values = [previous_tokens, [absolute_position] * batch,
+            [absolute_position + 1] * batch, [slots[request_id] for request_id in active]]
+        step = time.perf_counter()
+        reply = pair.forward_decode(decode_inputs, sample=True, sample_batch=True,
+            vector_values=values)
+        decode_steps.append(time.perf_counter() - step)
+        tokens = reply.get('token_ids', [])
+        if len(tokens) != batch:
+            raise ValueError('Decode phase returned the wrong active sequence count')
+        for request_id, token in zip(active, tokens):
+            rows[request_id].append(int(token))
+    finish = time.perf_counter()
+    token_rows = [rows[request_id] for request_id in request_ids]
+    if any(len(row) != output_tokens for row in token_rows):
+        raise ValueError('Decode-first scheduler returned an incomplete token trajectory')
+    return dict(trial=trial, token_ids_by_request=token_rows,
+        prefill_kv_reused_for_decode_trial=False, prefill_step_seconds=prefill_steps,
+        prefill_seconds=first_token - start, decode_step_seconds=decode_steps,
+        decode_wall_seconds=finish - first_token,
+        decode_aggregate_output_tokens_per_second=batch * (output_tokens - 1) /
+            (finish - first_token), full_request_wall_seconds=finish - start,
+        full_request_output_tokens_per_second=batch * output_tokens / (finish - start),
+        request_first_token_seconds=[first_token - start] * batch,
+        request_completion_seconds=[finish - start] * batch)
 
 def run_request(trial, ids):
     start = time.perf_counter()
     state_handle = G.greedy_batch_state_create(batch, output_tokens) if native_greedy_state else None
+    execute = (lambda: run_decode_first_request(trial, ids, start)) if decode_first_scheduler else (
+        lambda: run_request_body(trial, ids, start, state_handle))
     # Keep the established default path's timing and call sequence unchanged.
     if not runtime_switch_us and state_handle is None:
-        result = run_request_body(trial, ids, start)
+        result = execute()
         result.update(runtime_scheduling=dict(requested_microseconds=0,
             default_seconds=None, effective_seconds=None, restored_seconds=None, applied=False),
             runtime_scheduling_finish_seconds=0., native_greedy_state=False,
@@ -237,9 +368,9 @@ def run_request(trial, ids):
     try:
         if runtime_switch_us:
             with RuntimeSwitchScope(runtime_switch_us) as scheduling:
-                result = run_request_body(trial, ids, start, state_handle)
+                result = execute()
         else:
-            result = run_request_body(trial, ids, start, state_handle)
+            result = execute()
     finally:
         if state_handle is not None:
             release_started = time.perf_counter()
@@ -418,9 +549,13 @@ def measure_case(case, index, cold_startup_seconds):
         full_request_output_tokens_per_second=trials[0]['full_request_output_tokens_per_second'],
         median_full_request_output_tokens_per_second=statistics.median(t['full_request_output_tokens_per_second'] for t in trials),
         measurement=('Instrumented resident diagnostic; timings are NOT benchmark evidence' if capture.enabled else
-            'homogeneous fixed-size TP2 resident batch, greedy, no early stop; three complete warmed requests'),
+            ('vLLM-style decode-first fixed 224-slot TP2 scheduler candidate, greedy, no early stop; three complete warmed requests'
+             if decode_first_scheduler else
+             'homogeneous fixed-size TP2 resident batch, greedy, no early stop; three complete warmed requests')),
         measurement_limits=('Nsight captures perturb timings; do not compare these rates to vLLM or accept them as an unprofiled reference. ' if capture.enabled else '') +
-            'Cold engine startup and warmup excluded, as for vLLM; every trial rewrites full input KV and includes controls/input preparation, sampling and phase transition. Sampled memory is not exhaustive peak; serial batches only, no continuous scheduler.',
+            ('Cold engine startup and warmup excluded, as for vLLM; every trial rewrites full input KV and includes controls/input preparation, FIFO chunk scheduling, sampling and phase transitions. The opt-in scheduler admits only the fixed 224/112/36 profile; it is not a general continuous batch server. Sampled memory is not exhaustive peak.'
+             if decode_first_scheduler else
+             'Cold engine startup and warmup excluded, as for vLLM; every trial rewrites full input KV and includes controls/input preparation, sampling and phase transition. Sampled memory is not exhaustive peak; serial batches only, no continuous scheduler.'),
         **startup_report, **layout_report, **capture.metadata()), indent=2))
     completed = dict(name=case['name'], result=str(result_path.resolve()),
         result_sha256=file_sha256(result_path), sampled_peak_gpu_memory_mib=peaks,
@@ -447,8 +582,13 @@ def measure_case(case, index, cold_startup_seconds):
 
 
 try:
-    prefill_inputs = tensors(pair.prefill_stages, chunk)
-    decode_inputs = tensors(pair.decode_stages, 1)
+    if decode_first_scheduler:
+        prefill_cohort_inputs = [phase_tensors(pair.prefill_stages, chunk,
+            list(range(start, start + 112))) for start in (0, 112)]
+        decode_inputs = phase_tensors(pair.decode_stages, 1, list(range(batch)))
+    else:
+        prefill_inputs = tensors(pair.prefill_stages, chunk)
+        decode_inputs = tensors(pair.decode_stages, 1)
     cold_startup_seconds = time.perf_counter() - startup_started
     if session_mode:
         session_report.update(phase='requests',

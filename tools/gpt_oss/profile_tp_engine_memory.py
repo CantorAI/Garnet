@@ -34,14 +34,21 @@ if len(sys.argv) in (4,5) and sys.argv[1] == '--runtime':
     weights = Path(os.environ.get('GARNET_GPT_OSS_WEIGHTS', root / 'models/gpt-oss-120b/original'))
     cache = Path(os.environ.get('GARNET_GPT_OSS_CACHE', root / 'work/gpt-oss-tp-cache'))
     devices = json.loads(G.cuda_devices_json())[:2]
+    phase_batches = dict(prefill=shape.get('prefill_engine_batch', shape['batch']),
+                         decode=shape.get('decode_engine_batch', shape['batch']))
     plan = make_tensor_parallel_plan(weights, devices, batch=shape['batch'],
         capacity=shape['max_context_tokens_per_request'],
         tokens=min(shape['prefill_chunk_tokens'] or shape['input_tokens_per_request'],
-                   shape['input_tokens_per_request']))
+                   shape['input_tokens_per_request']),
+        prefill_engine_batch=phase_batches['prefill'],
+        decode_engine_batch=phase_batches['decode'])
     if not plan['marlin_prepacked']:
         raise ValueError('Resident budget probe requires validated prepacked constants')
     if plan['hardware'] != reference['hardware']:
         raise ValueError('Recorded and current hardware differ; regenerate the profile')
+    if any(type(value) is not int or not 1 <= value <= plan['batch']
+           for value in phase_batches.values()):
+        raise ValueError('Phase engine batches must fit the admitted shared KV pool')
     model = None
     kv = None
     samples = []
@@ -55,7 +62,8 @@ if len(sys.argv) in (4,5) and sys.argv[1] == '--runtime':
             model = build_tensor_parallel(weights, cache, plan,
                 plan['max_tokens'] if prefill else 1, prefill, kv,
                 last_token_logits=prefill,
-                padded_prefill=prefill and os.environ.get('GARNET_RESIDENT_PADDED_PREFILL') == '1')
+                padded_prefill=prefill and os.environ.get('GARNET_RESIDENT_PADDED_PREFILL') == '1',
+                engine_batch=phase_batches['prefill' if prefill else 'decode'])
             after = memory()
             samples.append(dict(phase='prefill' if prefill else 'decode',
                                 memory_before_mib=before, memory_after_load_mib=after))
@@ -71,7 +79,7 @@ if len(sys.argv) in (4,5) and sys.argv[1] == '--runtime':
         native_binaries=native_identity(build), hardware_csv=hardware_identity(),
         kernel_environment=kernel_environment(), checkpoint=checkpoint_identity(weights),
         cache_root=str(cache.resolve()), padded_prefill=os.environ.get('GARNET_RESIDENT_PADDED_PREFILL') == '1',
-        candidate_shape=specification,
+        candidate_shape=specification, phase_engine_batches=phase_batches,
         measurement='Sequential engine loads only; no inference or paired residency',
         limits='Sampled process memory and engine/context bounds do not include all execution peaks'), indent=2))
     sys.exit(0)
@@ -84,6 +92,10 @@ parser.add_argument('--batch', type=int, help='explicit UNVALIDATED candidate ba
 parser.add_argument('--output', type=int, help='explicit UNVALIDATED fixed output reservation, up to2048')
 parser.add_argument('--context', type=int, help='explicit context; must preserve input plus output')
 parser.add_argument('--prefill-chunk', type=int, help='explicit UNVALIDATED prefill query chunk')
+parser.add_argument('--prefill-engine-batch', type=int,
+    help='explicit prefill dispatch batch within the shared KV-pool batch')
+parser.add_argument('--decode-engine-batch', type=int,
+    help='explicit decode dispatch batch within the shared KV-pool batch')
 parser.add_argument('--prepacked-candidate', action='store_true',
     help='explicitly profile packed engines for a completed original-layout workload; no quality claim')
 parser.add_argument('--large-prefill-block', type=int, choices=(0,64),
@@ -138,7 +150,9 @@ if reference.get('profiled_diagnostic') or reference.get('profile_decode_steps')
 if directory.exists():
     raise FileExistsError(directory)
 shape_overrides = dict(batch=args.batch,output=args.output,
-    context=args.context,prefill_chunk=args.prefill_chunk)
+    context=args.context,prefill_chunk=args.prefill_chunk,
+    prefill_engine_batch=args.prefill_engine_batch,
+    decode_engine_batch=args.decode_engine_batch)
 specification = (candidate_shape(reference,reference_bytes,**shape_overrides)
     if any(value is not None for value in shape_overrides.values()) else None)
 env = os.environ.copy()

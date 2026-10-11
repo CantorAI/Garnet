@@ -102,6 +102,21 @@ class DynamicBatchProfileTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(_dynamic_batch_profile([[8, 4]], [0], 8), {})
 
+    def test_split_prefill_profile_keeps_kv_pool_extents_fixed(self):
+        shapes = [[112, 36], [112, 36], [4, 43008, 16, 8, 64],
+                  [4, 43008, 16, 8, 64], [112, 192], [112], [112], [112]]
+        axes = [0, 0, -1, -1, 0, 0, 0, 0]
+        with patch.dict(os.environ, {
+            'GARNET_GPT_OSS_BATCH_PROFILE_MIN': '1',
+            'GARNET_GPT_OSS_BATCH_PROFILE_MAX': '224',
+        }, clear=False):
+            result = _dynamic_batch_profile(shapes, axes, 112,
+                phase_limit=112)['input_shape_profiles']
+        self.assertEqual(result['max'][0], [112, 36])
+        self.assertEqual(result['max'][2], shapes[2])
+        self.assertEqual(result['max'][3], shapes[3])
+        self.assertEqual(result['max'][4], [112, 192])
+
     def test_rejects_bad_bounds_and_axis_cardinality(self):
         with patch.dict(os.environ, {'GARNET_GPT_OSS_BATCH_PROFILE_MIN': '9'}):
             with self.assertRaises(ValueError):
