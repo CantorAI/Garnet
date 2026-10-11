@@ -850,9 +850,10 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
     const int nStart = blockIdx.y * 32;
     const int width = Up ? o.hidden : o.intermediate;
     const int outputs = Up ? 2 * o.intermediate : o.hidden;
+    __shared__ __align__(32) float c[Rows * 32];
+#if __CUDA_ARCH__ >= 800
     __shared__ __align__(32) __nv_bfloat16 a[Rows * 32];
     __shared__ __align__(32) __nv_bfloat16 b[32 * 32];
-    __shared__ __align__(32) float c[Rows * 32];
     const int warp = threadIdx.x / 32;
     const int mStart = (warp / 2) * 16, nSub = warp % 2;
     using namespace nvcuda;
@@ -887,6 +888,27 @@ __global__ void groupedExperts(const float* x, const unsigned char* blocks,
         __syncthreads();
     }
     wmma::store_matrix_sync(c + mStart * 32 + nSub * 16, acc, 32, wmma::mem_row_major);
+#else
+    // BF16 WMMA fragments are unavailable before SM80. Preserve the grouped
+    // kernel's rounded-input/weight semantics with a CUDA-core fallback.
+    for (int index = threadIdx.x; index < Rows * 32; index += blockDim.x) {
+        const int m = index / 32, n = index % 32;
+        if (first + m >= counts[expert] || nStart + n >= outputs) {
+            c[index] = 0.f;
+            continue;
+        }
+        const int slot = slots[size_t(expert) * tokens * o.topK + first + m];
+        const int inputRow = Up ? slot / o.topK : slot;
+        const size_t weightRow = size_t(storedExpert) * outputs + nStart + n;
+        float value = 0.f;
+        for (int k = 0; k < width; ++k) {
+            const float input = bf(x[size_t(inputRow) * width + k]);
+            const float weight = bf(fp4(blocks, scales, weightRow, k, width));
+            value += input * weight;
+        }
+        c[index] = value;
+    }
+#endif
     __syncthreads();
     for (int index = threadIdx.x; index < Rows * 32; index += blockDim.x) {
         const int m = index / 32, n = index % 32;
