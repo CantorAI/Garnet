@@ -6083,7 +6083,58 @@ namespace Garnet {
             for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
             start.d[1] = sourceDims.d[1] - 1;
             size.d[1] = 1;
-            auto* layer = network->addSlice(*source, start, size, stride);
+            ISliceLayer* layer = nullptr;
+            if (sourceDims.d[0] < 0) {
+                for (int i = 1; i < sourceDims.nbDims; ++i) {
+                    if (sourceDims.d[i] <= 0) {
+                        loweringError = "last_token dynamic batch requires concrete non-batch dimensions";
+                        return X::Value();
+                    }
+                }
+                // A negative wildcard cannot be passed as a constant Slice size.
+                // Build [runtime batch, 1, ...] from the TensorRT shape tensor;
+                // all non-batch dimensions remain the captured static extents.
+                auto* sourceShapeLayer = network->addShape(*source);
+                ITensor* sourceShape = sourceShapeLayer
+                    ? sourceShapeLayer->getOutput(0) : nullptr;
+                auto shapePart = [&](int offset, int count) -> ITensor* {
+                    Dims shapeStart{1, {offset}};
+                    Dims shapeSize{1, {count}};
+                    Dims shapeStride{1, {1}};
+                    auto* part = sourceShape
+                        ? network->addSlice(*sourceShape, shapeStart, shapeSize, shapeStride)
+                        : nullptr;
+                    return part ? part->getOutput(0) : nullptr;
+                };
+                ITensor* batchExtent = shapePart(0, 1);
+                integer64VectorWeights.emplace_back(1, 1);
+                Dims oneDims{1, {1}};
+                Weights oneWeights{
+                    DataType::kINT64, integer64VectorWeights.back().data(), 1};
+                auto* one = network->addConstant(oneDims, oneWeights);
+                ITensor* parts[3] = {batchExtent, one ? one->getOutput(0) : nullptr, nullptr};
+                int partCount = 2;
+                if (sourceDims.nbDims > 2) {
+                    parts[2] = shapePart(2, sourceDims.nbDims - 2);
+                    partCount = 3;
+                }
+                auto* dynamicSize = std::all_of(parts, parts + partCount,
+                    [](ITensor* value) { return value != nullptr; })
+                    ? network->addConcatenation(parts, partCount) : nullptr;
+                if (dynamicSize) dynamicSize->setAxis(0);
+                // Use a harmless concrete placeholder until the dynamic size input
+                // is attached; the final output extent is supplied by input 2.
+                size.d[0] = 1;
+                layer = network->addSlice(*source, start, size, stride);
+                if (!layer || !dynamicSize) {
+                    loweringError = "last_token dynamic batch Slice shape construction failed";
+                    return X::Value();
+                }
+                layer->setInput(2, *dynamicSize->getOutput(0));
+            }
+            else {
+                layer = network->addSlice(*source, start, size, stride);
+            }
             lastOutput = layer ? layer->getOutput(0) : nullptr;
         }
         else if (opName == "argmax_last_dim") {
