@@ -114,3 +114,25 @@ Experimental controls (defaults remain unchanged):
   GARNET_PI_TIMEOUT_SECONDS=180` on the measurement wrapper. These are polling
   termination guards, not hard memory caps. The earlier resident chunk attempt
   exhausted memory and required a manual reboot.
+
+## CPU architecture scope
+
+The CPU implementation targets x86-64 and ARM64. This directory records the
+original Pi investigation; native component tests also run on x86-64.
+On 2026-10-11, GCC 13.3 on x86-64 Linux built the Q4Q8, gated-delta and native
+decode sources and passed both available numerical CTests. Complete x86
+Qwen3.5 vision/OpenVINO package execution remains unvalidated. ARM64 Linux
+has actual Pi image-plus-text execution and OpenVINO component tests.
+The x86 kernel build requires AVX2/F16C; older CPUs are not validated.
+Windows ARM64 is not validated.
+
+Reproduce native x86 validation:
+```sh
+cmake -S test2026/pi5b -B build/cpu-native-validation
+cmake --build build/cpu-native-validation -j4
+ctest --test-dir build/cpu-native-validation --output-on-failure
+```
+
+Full x86 CPU/OpenVINO build, model parity and server performance still need
+validation before production support is claimed. Measure precision and thread
+settings per architecture; Pi settings are not server defaults.

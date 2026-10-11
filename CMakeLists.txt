@@ -321,7 +321,7 @@ if(OpenMP_CXX_FOUND)
     message(STATUS "Garnet native CPU INT4 OpenMP enabled")
 endif()
 
-if(MSVC)
+if(MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
     set_source_files_properties(
         "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/q4q8_linear.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/backends/cpu/qwen3_native_decode_engine.cpp"
