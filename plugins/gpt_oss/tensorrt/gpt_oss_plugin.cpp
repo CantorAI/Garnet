@@ -146,21 +146,43 @@ bool GptOssPlugin::supportsFormatCombination(int pos, const PluginTensorDesc* d,
 }
 void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
     const DynamicPluginTensorDesc*, int) noexcept {
+    static std::atomic<int> dynamicProfileDebugCount{0};
+    const bool debugDynamicProfile =
+        std::getenv("GARNET_TRT_DYNAMIC_PROFILE_DEBUG") != nullptr &&
+        dynamicProfileDebugCount.fetch_add(1, std::memory_order_relaxed) < 16;
+    const auto reportDynamicProfile = [&]() noexcept {
+        if (!debugDynamicProfile) return;
+        std::fprintf(stderr, "GPT-OSS dynamic profile: kind=%d rank=%d prefill=%d count=%d valid=%d\n",
+            m_options.kind, m_options.tpRank, m_options.prefill, count, m_valid ? 1 : 0);
+        if (!in || count < 0 || count > 16) return;
+        for (int i = 0; i < count; ++i) {
+            const auto printDims = [](const char* label, const Dims& dims) noexcept {
+                std::fprintf(stderr, "  %s[", label);
+                for (int d = 0; d < dims.nbDims; ++d)
+                    std::fprintf(stderr, "%s%lld", d ? "," : "", static_cast<long long>(dims.d[d]));
+                std::fprintf(stderr, "]");
+            };
+            std::fprintf(stderr, "  input=%d type=%d format=%d", i,
+                static_cast<int>(in[i].desc.type), static_cast<int>(in[i].desc.format));
+            printDims("min", in[i].min); printDims("opt", in[i].opt); printDims("max", in[i].max);
+            std::fprintf(stderr, "\n");
+        }
+    };
     m_valid = valid(m_options) && in && count ==
         (m_options.kind == 0 ? 2 : m_options.kind == 1 ? 8 :
          (m_options.kind == 2 || m_options.kind == 8) ? 9 :
          (m_options.kind == 5 || m_options.kind == 6) ? 2 : 1);
-    if (!m_valid) return;
+    if (!m_valid) { reportDynamicProfile(); return; }
     for (int index = 0; index < count; ++index) {
-        if (!validProfileRange(in[index])) { m_valid = false; return; }
+        if (!validProfileRange(in[index])) { m_valid = false; reportDynamicProfile(); return; }
     }
     const auto& o = m_options; const Dims d = in[0].opt;
     if (o.expertWeightsSharded != 0 &&
         (o.expertWeightsSharded != 1 || o.kind != 2 || o.tpRank < 0 || o.tpRank > 1)) {
-        m_valid = false; return;
+        m_valid = false; reportDynamicProfile(); return;
     }
     m_valid = rows(d) > 0;
-    if (!m_valid) return;
+    if (!m_valid) { reportDynamicProfile(); return; }
     const int batch = d.d[0], tokens = d.d[1];
     if (o.kind == 0) {
         m_valid = d.d[2] == (o.qHeads + 2 * o.kvHeads) * o.headDim &&
@@ -230,6 +252,7 @@ void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
     } else {
         m_valid = d.nbDims == 3 && d.d[0] > 0 && d.d[1] > 0 && d.d[2] > 0;
     }
+    if (!m_valid) reportDynamicProfile();
 }
 size_t GptOssPlugin::getWorkspaceSize(const PluginTensorDesc* in, int,
     const PluginTensorDesc*, int) const noexcept {
