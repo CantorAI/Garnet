@@ -2927,3 +2927,6 @@ The next runner attempt must start from the target’s actual clean HEAD, `1f4ce
 
 #### OPT168 disk-guard calibration (2026-10-11 UTC)
 The source fast-forward to `ad3bec3` succeeded and the post-sync GPU-idle checks passed. Configure did not start because the runner conservatively required 15 GiB plus 3 GiB of headroom, while the observed free space was 18,989,748,224 bytes (about 17.69 GiB). No build or GPU test ran. The remaining workflow emits at most the already budgeted approximately 1.2 GB of raw matrices plus a compressed archive; set each configure/build-step growth guard to 1 GiB and continue checking actual free space before every phase, preserving the 15 GiB floor.
+
+#### OPT168 fresh-cache build proposal (2026-10-11 UTC)
+The OFF→ON cache comparison stopped before build because CMake rewrote one additional internal entry, `prefix_result:INTERNAL`, from `/usr/lib` to a detected feature list. All other entries were identical, but the source of this generated value is not established, so it will not be suppressed or overwritten. Start a new isolated build directory and configure the committed private screen ON in its first configure; assert the source path, Release build, CUDA architecture 120, and the single explicit screen option. Continue to hash-guard the existing production wrapper cache and libraries.

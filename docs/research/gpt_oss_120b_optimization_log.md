@@ -4381,3 +4381,7 @@ The current target is clean at `1f4cef6c8cdcf7aa89dc11aab5613bb1292bc87c`, the d
 
 ### OPT168 disk guard stopped before build — 2026-10-11 UTC
 The docs-only source fast-forward to `ad3bec3` completed; GPU-idle checks passed. The first configure did not launch because the guard required 15 GiB + 3 GiB, exceeding observed free space of 18,989,748,224 bytes (approximately 17.69 GiB). No CMake or GPU test ran. Proposal: reduce the per-phase projected growth guard to 1 GiB, retain an actual 15 GiB free-space floor and recheck before every phase; the qualified output plan remains bounded to about 1.2 GB of raw matrices plus compression.
+
+
+### OPT168 cache-comparison stop and fresh-cache proposal — 2026-10-11 UTC
+The isolated CMake configure OFF and subsequent configure ON both returned zero. Before build, the strict comparison found exactly one additional cache difference beyond the screen option: `prefix_result:INTERNAL` changed from `/usr/lib` to a detected feature list. Its producer is not identified, so the controller will not override it. No GPU tests or build ran. Proposal: discard this failed private build directory, create a fresh directory, configure the screen ON on its first invocation, and explicitly validate source path, Release, CUDA 120, and the intended option. Keep the existing wrapper cache and installed production binaries hash-guarded and unchanged.
