@@ -20,6 +20,10 @@ parser.add_argument('profile', type=Path)
 parser.add_argument('directory', type=Path)
 parser.add_argument('cases', nargs='*')
 parser.add_argument('--batch', type=int, help='explicit homogeneous batch override, up to512')
+parser.add_argument('--batch-profile-min', type=int,
+                    help='opt in to a TensorRT cohort profile with this minimum batch (default 1)')
+parser.add_argument('--batch-profile-max', type=int,
+                    help='maximum batch for the opt-in TensorRT cohort profile (default selected batch)')
 parser.add_argument('--output', type=int, help='explicit fixed output length, up to2048')
 parser.add_argument('--prefill-chunk', type=int, help='explicit Garnet query chunk length')
 parser.add_argument('--context', type=int, help='explicit context reservation; reject shorter requests')
@@ -69,6 +73,11 @@ batch = reference['batch'] if args.batch is None else args.batch
 output = reference['output_tokens_per_request'] if args.output is None else args.output
 if not (1 <= batch <= 512 and 16 <= output <= 2048):
     raise ValueError('Invalid batch/output profile')
+batch_profile_enabled = args.batch_profile_min is not None or args.batch_profile_max is not None
+batch_profile_min = args.batch_profile_min if args.batch_profile_min is not None else 1
+batch_profile_max = args.batch_profile_max if args.batch_profile_max is not None else batch
+if batch_profile_enabled and not (1 <= batch_profile_min <= batch <= batch_profile_max <= 512):
+    raise ValueError('Batch profile bounds must contain the selected batch within [1,512]')
 if args.prefill_chunk is not None and not 1 <= args.prefill_chunk <= 4096:
     raise ValueError('Invalid prefill chunk')
 if args.context is not None and not 1 <= args.context <= 4096:
@@ -124,6 +133,9 @@ if args.resident_profile is not None:
     env['GARNET_RESIDENT_PROFILE'] = str(args.resident_profile.resolve())
     env['GARNET_RESIDENT_WARMUPS'] = '1'  # Existing V references have one complete warmup.
 env.update(host_candidates)
+if batch_profile_enabled:
+    env['GARNET_GPT_OSS_BATCH_PROFILE_MIN'] = str(batch_profile_min)
+    env['GARNET_GPT_OSS_BATCH_PROFILE_MAX'] = str(batch_profile_max)
 env[runtime_switch_policy] = str(args.runtime_switch_us)
 tensorrt = Path(env.get('GARNET_TENSORRT_ROOT', root / 'ThirdPartySDK/TensorRT'))
 env.setdefault('XLANG3_PYTHON_LIB', str(root / 'ThirdPartySDK/Python-3.14.0/Lib'))

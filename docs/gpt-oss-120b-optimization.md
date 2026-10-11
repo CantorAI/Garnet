@@ -3061,3 +3061,17 @@ The full 64,406,775-byte bundle reached only 11,026,432 bytes after about four m
 #### OPT170 first incremental-bundle guard invocation: local quoting failure
 
 The first remote guard command used PowerShell-interpolated command substitutions, so its local shell stripped the remote hash/size checks and the bundle ref was not fetched; the target stayed clean at `c968209`, with the uploaded 32,128-byte bundle hash matching locally. No source sync or build occurred. Reissue the guard as a literal script on SSH stdin, verify hash, size, clean worktree, branch, exact prerequisite and target SHA, then fetch and fast-forward.
+
+
+#### OPT170 Linux target build result
+
+The source bundle fast-forwarded the clean target checkout to `14a9b0c` using exact bundle SHA/size, prerequisite, branch, and ancestry guards. The existing wrapper-source build completed all 13 Ninja steps for `garnet` and `garnet_gpt_oss_ops`, producing `libgarnet.so` and `libgarnet_gpt_oss.so`; only existing TensorRT plugin deprecation warnings appeared. The target Python profile tests also pass 3/3. The enclosing shell returned 1 only because CRLF input left a carriage return in the final numeric disk-floor assertion; reported free space after build was 17,430,933,504 bytes, above the 16,106,127,360-byte 15-GiB floor. No model engine or inference ran.
+
+#### OPT170 paired-suite profile activation proposal (before source edit)
+
+`paired_batch_suite.py` clears inherited `GARNET_GPT_OSS_*` variables before launching either engine, so setting profile bounds in the shell would not activate the new code path. Add explicit `--batch-profile-min` and `--batch-profile-max` options; when either is given, default the other bound to 1 or the selected batch as appropriate, validate `1 <= min <= selected_batch <= max <= 512`, and set both variables in the child environment after inherited settings are cleared. Keep omission fully static and record the values in each runner's existing `optimization_environment` evidence. This enables an actual profiled engine build/run while preserving the vLLM-first paired ordering and fixed-shape defaults; it does not yet test multiple batch sizes in one engine or claim a win.
+
+
+#### OPT170 paired-suite activation implementation check
+
+Added explicit profile-bound CLI options to the paired suite after confirming that inherited flags are deliberately cleared. The selected benchmark batch must lie within validated `[min,max]` bounds, and profile variables are set only after sanitization; omission remains static. The standard/hybrid profile tests pass 3/3, all three GPT-OSS Python files byte-compile, CLI help exposes both options, and `git diff --check` passes. This makes the opt-in test launchable but is not a dynamic-shape execution or throughput result.
