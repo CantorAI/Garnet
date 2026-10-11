@@ -2912,3 +2912,6 @@ The first current-source private-push runner stopped before any target build or 
 
 #### OPT168 build-source guard (2026-10-11 UTC)
 A read-only preflight found that `/workspace/CantorAI/out/build/gpt-oss/source` is a separate wrapper directory and does not contain the current peer-push fixture source/targets. Replacing or editing that wrapper would violate the existing-build constraint. The next attempt will leave the wrapper and installed production binaries untouched, fast-forward only the target Git checkout, then configure a fresh isolated private build directory from that checkout with the screen option OFF then ON and verify no unrelated cache entry changes. This is build setup only; no target test has run yet.
+
+#### OPT168 source reconciliation (2026-10-11 UTC)
+The target base commit `239e7c4044312927ccff1ec541659780ee9442db` already contains the private peer-push implementation and fixtures. The current local candidate adds only the two optimization-document appends, so the guarded target sync is limited to those docs. The isolated build will compile only the two existing private fixture targets from the synchronized checkout; it will not change Garnet production code, installed libraries, or the existing wrapper.

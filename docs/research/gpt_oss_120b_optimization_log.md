@@ -4361,3 +4361,7 @@ The prepared OPT92 helper is pinned to source b5eda and its native hashes, while
 
 ### OPT168 isolated build adjustment — 2026-10-11 UTC
 A read-only comparison showed the existing `/workspace/CantorAI/out/build/gpt-oss/source` is a separate wrapper directory without the current `test2026/gpt_oss` peer-push fixture or target declarations. To keep the wrapper and production binaries unchanged while compiling the already committed fixture, use a fresh private build directory sourced from the fast-forwarded `/workspace/CantorAI/Garnet` checkout. Configure OFF then ON and require every other cache entry to remain equal; build only the two private fixture targets. No tests or GPU work occurred in this preflight.
+
+
+### OPT168 source reconciliation — 2026-10-11 UTC
+The target base `239e7c4044312927ccff1ec541659780ee9442db` already contains the private peer-push code and fixture sources. The source bundle advances only the two documentation files; the target sync must verify exactly those two paths. The isolated CMake build compiles the existing two fixture targets from the synchronized checkout without modifying production code, installed libraries, or the existing wrapper.
