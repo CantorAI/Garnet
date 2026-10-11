@@ -3365,3 +3365,8 @@ Local CPU verification on 2026-10-11: 11 tests passed across candidate-shape val
 
 
 OPT184 profile-shape correction (2026-10-11): CPU review caught that a prefill dispatch batch of112 must not scale the shared KV tensors from the224-slot pool. The TensorRT dynamic profile now holds K/V and hybrid KV-bank extents fixed for split-pool prefill engines while bounding the dynamic request/table axes to the phase dispatch limit. A regression test asserts the full43008-page K/V extent survives the112-row profile. Re-run from `tools/gpt_oss`: 20 tests passed across shape, scheduler, peer-layout, and dynamic-profile checks; Python compilation and `git diff --check` passed. This correction remains CPU-only evidence; no profile build or target claim has occurred.
+
+
+### OPT185 proposal: preserve OPT183 engine cache off-instance to recover safe profile-build headroom (2026-10-11)
+
+The target is idle, but `/dev/shm` has50,407,022,592 bytes free and the completed OPT183 cache occupies about8.7GB. A fresh four-engine profile is expected to need roughly the same space; writing it in place would drop free tmpfs below the existing40GiB guard. Before another profile build, copy only `/dev/shm/opt183-long-b112-chunk36-workspace640-cache` to local WORK, compare a per-file size/SHA-256 manifest and total bytes, and retain the local archive. Delete the target copy only after the downloaded tree matches the remote manifest and no owner/process is using it. Then verify restored free space still leaves at least40GiB after the estimated fresh-cache growth; otherwise stop. This trades a one-time cache transfer for keeping the target reserve and existing profile reproducible. No cleanup or profile run is authorized by this proposal until archive verification succeeds.
