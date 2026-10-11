@@ -3056,3 +3056,8 @@ The Vast host is idle (both RTX PRO 6000 GPUs show 15 MiB, and the only matching
 #### OPT170 full-bundle transfer replaced by incremental Git bundle
 
 The full 64,406,775-byte bundle reached only 11,026,432 bytes after about four minutes, so its SCP was stopped before any fetch or source change. Since the target's clean `c968209` commit is present locally and is an ancestor of the pushed branch, send only commits newer than that common commit as a prerequisite-based incremental bundle. Verify the bundle declares the exact prerequisite, copy it to WORK, and confirm SHA/size before fetch. This reduces transfer time without altering source or target history.
+
+
+#### OPT170 first incremental-bundle guard invocation: local quoting failure
+
+The first remote guard command used PowerShell-interpolated command substitutions, so its local shell stripped the remote hash/size checks and the bundle ref was not fetched; the target stayed clean at `c968209`, with the uploaded 32,128-byte bundle hash matching locally. No source sync or build occurred. Reissue the guard as a literal script on SSH stdin, verify hash, size, clean worktree, branch, exact prerequisite and target SHA, then fetch and fast-forward.
