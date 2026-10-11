@@ -3046,3 +3046,8 @@ The five modified C++ objects now compile, but the plugin has not been linked as
 #### OPT170 standalone plugin target result
 
 Building `garnet_gpt_oss_ops` alone still pulled the XLang3 runtime dependency and stopped at the same `sre_module.cpp` MSVC regex-constant incompatibility before plugin link. The changed GPT-OSS plugin object itself had already compiled successfully in the explicit object-target build, as had all four changed Garnet C++ objects. No dependency source was edited and no full library or engine was produced. Proceed from the committed source to the supported Linux target build only after existing target ownership and provenance guards permit it; preserve the local source and the unrelated Windows-only build blocker.
+
+
+#### OPT170 target fetch failure and safe sync proposal
+
+The Vast host is idle (both RTX PRO 6000 GPUs show 15 MiB, and the only matching `pgrep` row was the status command itself). The target Garnet checkout is clean at `c968209`, which is an ancestor of the pushed source commit `e7459a3`. Its configured GitHub SSH remote cannot authenticate (`Permission denied (publickey)`), so no source synchronization occurred. Transfer a local Git bundle through the target WORK directory, fetch that bundle in the target clone, verify exact commit and ancestor relationship, then fast-forward only; do not edit target source files directly.
