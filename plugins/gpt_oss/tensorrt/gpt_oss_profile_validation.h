@@ -31,7 +31,7 @@ inline bool profileShape(const nvinfer1::DynamicPluginTensorDesc& input,
         const int64_t maximum = input.max.d[dimension];
         const int64_t declared = input.desc.dims.d[dimension];
         if (extent == -1) {
-            if (declared != -1) return false;
+            if (declared != -1 && (minimum != declared || maximum != declared)) return false;
         } else if (minimum != extent || maximum != extent ||
             (declared != -1 && declared != extent)) {
             return false;

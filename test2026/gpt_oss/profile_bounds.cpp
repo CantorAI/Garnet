@@ -46,7 +46,13 @@ int main() {
     auto fixed = profile({8, 16, 2560}, {8, 16, 2560}, {8, 16, 2560});
     assert(validProfileRange(fixed));
     assert(profileShape(fixed, {8, 16, 2560}));
-    assert(!profileShape(fixed, {-1, 16, 2560}));
+    assert(profileShape(fixed, {-1, 16, 2560}));
+
+    auto executionPhase = profile({224, 16, 2560}, {224, 16, 2560}, {224, 16, 2560});
+    assert(validProfileRange(executionPhase));
+    assert(profileShape(executionPhase, {-1, 16, 2560}));
+    executionPhase.desc.dims.d[0] = 223;
+    assert(!validProfileRange(executionPhase));
 
     auto invertedBounds = activations;
     invertedBounds.max.d[0] = 0;
