@@ -35,6 +35,17 @@ struct Group {
 };
 thread_local Group* bound=nullptr;
 thread_local int boundRank=-1,boundPhase=-1;
+bool peerDebug(){return std::getenv("GARNET_TRT_DYNAMIC_PROFILE_DEBUG")!=nullptr;}
+void peerReject(const char* reason,size_t n,int rank,int prefill,cudaStream_t stream,
+                const Group* g) noexcept {
+    static std::atomic<int> count{0};
+    if(!peerDebug() || count.fetch_add(1,std::memory_order_relaxed)>=32)return;
+    int device=-1;const auto deviceStatus=cudaGetDevice(&device);
+    std::fprintf(stderr,"GPT-OSS peer allreduce rejected: reason=%s rank=%d prefill=%d n=%llu bound=%d bound_rank=%d bound_phase=%d configured_n=%llu stream=%p device=%d device_status=%d\n",
+        reason,rank,prefill,static_cast<unsigned long long>(n),bound?1:0,boundRank,boundPhase,
+        static_cast<unsigned long long>(g?g->elements[(prefill?0:1)]:0),
+        reinterpret_cast<void*>(stream),device,static_cast<int>(deviceStatus));
+}
 void Retain(void* p){static_cast<Group*>(p)->references.fetch_add(1,std::memory_order_relaxed);}
 void Release(void* p){auto* g=static_cast<Group*>(p);if(g->references.fetch_sub(1,std::memory_order_acq_rel)==1)delete g;}
 int Bind(void* p,uint32_t phase){
@@ -91,8 +102,13 @@ cudaError_t GptOssCreatePeerGroup(const char* options,size_t bytes,void** result
     e=cudaSetDevice(g->original);if(e!=cudaSuccess)return e;*result=g.release();return cudaSuccess;
 }
 cudaError_t GptOssPeerGroupAllReduce(const float* x,float* y,size_t n,int rank,int prefill,cudaStream_t stream){
-    if(!bound || rank!=boundRank || (prefill?0:1)!=boundPhase || n!=bound->elements[boundPhase])return cudaErrorInvalidValue;
-    return bound->owner.enqueue(x,y,n,rank,stream);
+    if(!bound){peerReject("not_bound",n,rank,prefill,stream,nullptr);return cudaErrorInvalidValue;}
+    if(rank!=boundRank){peerReject("rank_mismatch",n,rank,prefill,stream,bound);return cudaErrorInvalidValue;}
+    if((prefill?0:1)!=boundPhase){peerReject("phase_mismatch",n,rank,prefill,stream,bound);return cudaErrorInvalidValue;}
+    if(n!=bound->elements[boundPhase]){peerReject("element_count_mismatch",n,rank,prefill,stream,bound);return cudaErrorInvalidValue;}
+    const auto status=bound->owner.enqueue(x,y,n,rank,stream);
+    if(status!=cudaSuccess)peerReject("owner_enqueue_failed",n,rank,prefill,stream,bound);
+    return status;
 }
 cudaError_t GptOssPeerGroupPackedBuffer(size_t n,int rank,int prefill,cudaStream_t stream,void** result){
     if(!result)return cudaErrorInvalidValue;
