@@ -10,6 +10,7 @@
 #include <cuda_fp16.h>    // For FP16
 #include <cuda_bf16.h>    // For BF16
 #include <cuda_fp8.h>     // For FP8 (assumed to be provided by your CUDA installation)
+#include <type_traits>
 
 // Use the WMMA API.
 using namespace nvcuda::wmma;
@@ -22,7 +23,7 @@ using namespace nvcuda::wmma;
 // Templated WMMA kernel for lower-precision types (FP16, BF16, FP8)
 // Each block (one warp) computes one 16x16 tile of C.
 template <typename DataType>
-__global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C, int M, int N, int K) {
+__device__ void wmmaGemmBody(const DataType* A, const DataType* B, float* C, int M, int N, int K) {
     // Compute tile indices.
     int tileRow = blockIdx.y;  // Tile row index in C.
     int tileCol = blockIdx.x;  // Tile column index in C.
@@ -57,6 +58,23 @@ __global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C, 
 }
 
 // -----------------------------------------------------------------
+template <typename DataType>
+__global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C,
+    int M, int N, int K) {
+#if defined(__CUDA_ARCH__)
+#if __CUDA_ARCH__ < 800
+    // CUDA does not provide BF16 WMMA fragments below SM80. Keep compiling the
+    // shared FP16 kernel for SM75, but discard the BF16 instantiation there.
+    if constexpr (std::is_same_v<DataType, __nv_bfloat16>) {
+        return;
+    } else {
+        wmmaGemmBody<DataType>(A, B, C, M, N, K);
+    }
+#else
+    wmmaGemmBody<DataType>(A, B, C, M, N, K);
+#endif
+}
+
 // Conventional tiled kernel for float (32-bit) matrix multiplication.
 // This kernel uses shared memory tiling and does not use tensor cores.
 __global__ void gemmKernelFloat(const float* A, const float* B, float* C, int M, int N, int K) {
@@ -98,6 +116,14 @@ extern "C" void runWmmaGemmKernel_fp16(const __half* d_A, const __half* d_B, flo
 
 // BF16 version.
 extern "C" void runWmmaGemmKernel_bf16(const __nv_bfloat16* d_A, const __nv_bfloat16* d_B, float* d_C, int M, int N, int K) {
+    int device = 0;
+    cudaDeviceProp properties{};
+    if (cudaGetDevice(&device) != cudaSuccess ||
+        cudaGetDeviceProperties(&properties, device) != cudaSuccess ||
+        properties.major < 8) {
+        std::cerr << "BF16 WMMA requires an SM80 or newer CUDA device\n";
+        return;
+    }
     dim3 gridDim(N / WMMA_N, M / WMMA_M);
     dim3 blockDim(32, 1, 1);
     wmmaGemmKernelT<__nv_bfloat16> << <gridDim, blockDim >> > (d_A, d_B, d_C, M, N, K);
