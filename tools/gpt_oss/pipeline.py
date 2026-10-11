@@ -42,6 +42,7 @@ def _dynamic_batch_profile(input_shapes, batch_axes, batch, *, phase_limit=None,
             not 1 <= sequence_min_tokens <= input_shapes[0][1]):
         raise ValueError('dynamic prefill sequence range requires matching [B,S] token inputs')
     minimum, maximum, batch_units = [], [], []
+    sequence_axes = [-1] * len(input_shapes)
     for shape, axis in zip(input_shapes, batch_axes):
         low, high = list(shape), list(shape)
         if axis >= 0:
@@ -60,9 +61,12 @@ def _dynamic_batch_profile(input_shapes, batch_axes, batch, *, phase_limit=None,
     if sequence_min_tokens is not None:
         minimum[0][1] = sequence_min_tokens
         minimum[1][1] = sequence_min_tokens
+        sequence_axes[0] = 1
+        sequence_axes[1] = 1
     return {'input_shape_profiles': {
         'min': minimum, 'opt': [list(shape) for shape in input_shapes],
-        'max': maximum, 'batch_axes': list(batch_axes), 'batch_units': batch_units}}
+        'max': maximum, 'batch_axes': list(batch_axes), 'batch_units': batch_units,
+        'sequence_axes': sequence_axes}}
 
 
 def weight_sizes(weights):

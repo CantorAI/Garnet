@@ -116,6 +116,7 @@ class DynamicBatchProfileTests(unittest.TestCase):
         self.assertEqual(result['min'][2:], shapes[2:])
         self.assertEqual(result['batch_axes'], axes)
         self.assertEqual(result['batch_units'], [1, 1, 192, 192, 1, 1, 1, 1])
+        self.assertEqual(result['sequence_axes'], [1, 1, -1, -1, -1, -1, -1, -1])
 
     def test_sequence_tail_profile_rejects_malformed_or_unsafe_ranges(self):
         with patch.dict(os.environ, {}, clear=True):

@@ -4364,14 +4364,20 @@ namespace Garnet
                     const auto axes = axesValue.IsList() ? ReadIntList(axesValue) : std::vector<int>{};
                     X::Value unitsValue = FindField(profiles, "batch_units");
                     const auto units = unitsValue.IsList() ? ReadIntList(unitsValue) : std::vector<int>{};
+                    X::Value sequenceAxesValue = FindField(profiles, "sequence_axes");
+                    auto sequenceAxes = sequenceAxesValue.IsList()
+                        ? ReadIntList(sequenceAxesValue) : std::vector<int>{};
+                    if (sequenceAxes.empty() && !optimum.empty())
+                        sequenceAxes.assign(optimum.size(), -1);
                     if (minimum.empty() || minimum.size() != optimum.size() ||
                         optimum.size() != maximum.size() || axes.size() != optimum.size() ||
-                        units.size() != optimum.size()) {
+                        units.size() != optimum.size() || sequenceAxes.size() != optimum.size()) {
                         compiledInputShapeRanges.emplace_back();
                     } else {
                         for (size_t index = 0; index < optimum.size(); ++index)
                             compiledInputShapeRanges.push_back(
-                                {minimum[index], optimum[index], maximum[index], axes[index], units[index]});
+                                {minimum[index], optimum[index], maximum[index], axes[index],
+                                    units[index], sequenceAxes[index]});
                     }
                   }
                 }

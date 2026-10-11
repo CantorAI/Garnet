@@ -503,6 +503,7 @@ namespace
             material << "input_profile:" << input << '\n';
             material << "batch_axis:" << inputShapeRanges[input].batchAxis << '\n';
             material << "batch_units:" << inputShapeRanges[input].batchUnits << '\n';
+            material << "sequence_axis:" << inputShapeRanges[input].sequenceAxis << '\n';
             for (const int dimension : inputShapeRanges[input].minShape)
                 material << "min:" << dimension << '\n';
             for (const int dimension : inputShapeRanges[input].optShape)
@@ -879,6 +880,7 @@ namespace Garnet
                 return false;
             }
             int sharedMinimumBatch = -1, sharedOptimumBatch = -1, sharedMaximumBatch = -1;
+            int sharedMinimumSequence = -1, sharedOptimumSequence = -1, sharedMaximumSequence = -1;
             for (size_t input = 0; input < inputShapes.size(); ++input) {
                 const auto& shape = inputShapes[input];
                 const auto& range = m_inputShapeRanges[input];
@@ -890,6 +892,8 @@ namespace Garnet
                     return false;
                 }
                 if (range.batchAxis < -1 || range.batchAxis >= static_cast<int>(shape.size()) ||
+                    range.sequenceAxis < -1 || range.sequenceAxis >= static_cast<int>(shape.size()) ||
+                    (range.batchAxis >= 0 && range.batchAxis == range.sequenceAxis) ||
                     range.batchUnits <= 0 || (range.batchAxis < 0 && range.batchUnits != 1)) {
                     m_state = "failed";
                     m_errorCode = "invalid_input_shape_profile";
@@ -923,16 +927,37 @@ namespace Garnet
                     sharedOptimumBatch = optimumBatch;
                     sharedMaximumBatch = maximumBatch;
                 }
+                if (range.sequenceAxis >= 0) {
+                    const auto axis = static_cast<size_t>(range.sequenceAxis);
+                    const int minimumSequence = range.minShape[axis];
+                    const int optimumSequence = shape[axis];
+                    const int maximumSequence = range.maxShape[axis];
+                    if (sharedMinimumSequence >= 0 &&
+                        (minimumSequence != sharedMinimumSequence ||
+                            optimumSequence != sharedOptimumSequence ||
+                            maximumSequence != sharedMaximumSequence)) {
+                        m_state = "failed";
+                        m_errorCode = "invalid_input_shape_profile";
+                        m_errorMessage = "sequence-bearing profile inputs must describe identical sequence bounds";
+                        return false;
+                    }
+                    sharedMinimumSequence = minimumSequence;
+                    sharedOptimumSequence = optimumSequence;
+                    sharedMaximumSequence = maximumSequence;
+                }
                 for (size_t dimension = 0; dimension < shape.size(); ++dimension) {
                     const int minimum = range.minShape[dimension];
                     const int maximum = range.maxShape[dimension];
+                    const bool variableAxis =
+                        dimension == static_cast<size_t>(range.batchAxis) ||
+                        dimension == static_cast<size_t>(range.sequenceAxis);
                     if (minimum <= 0 || maximum < minimum || minimum > shape[dimension] ||
                         shape[dimension] > maximum ||
-                        (dimension != static_cast<size_t>(range.batchAxis) &&
+                        (!variableAxis &&
                             (minimum != shape[dimension] || maximum != shape[dimension]))) {
                         m_state = "failed";
                         m_errorCode = "invalid_input_shape_profile";
-                        m_errorMessage = "only the declared batch axis may vary; all other dimensions must remain static";
+                        m_errorMessage = "only declared batch/sequence axes may vary; all other dimensions must remain static";
                         return false;
                     }
                 }
@@ -1812,6 +1837,7 @@ namespace Garnet
         }
         std::string executionError;
         int64_t sharedBatchExtent = -1;
+        int64_t sharedSequenceExtent = -1;
         for (size_t index = 0; index < m_inputShapes.size(); ++index) {
             const auto input = inputs.Get(static_cast<long long>(index));
             if (!X::Tensor::IsTensor(input)) {
@@ -1835,6 +1861,11 @@ namespace Garnet
                 if (range->batchUnits <= 0 || extent % range->batchUnits != 0) matches = false;
                 else if (sharedBatchExtent < 0) sharedBatchExtent = extent / range->batchUnits;
                 else matches = sharedBatchExtent == extent / range->batchUnits;
+            }
+            if (matches && range && range->sequenceAxis >= 0) {
+                const int64_t extent = info.shape[range->sequenceAxis];
+                if (sharedSequenceExtent < 0) sharedSequenceExtent = extent;
+                else matches = sharedSequenceExtent == extent;
             }
             if (!matches) {
                 result.SetItem("status", NativeValue(host, "error"));

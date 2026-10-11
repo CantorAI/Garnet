@@ -17,13 +17,14 @@
 
 namespace Garnet {
     // Optional TensorRT input profile. The captured opt shape stays concrete;
-    // only the declared cohort axis may vary, by batchUnits per request.
+    // only the declared cohort and sequence axes may vary.
     struct TensorInputShapeRange {
         std::vector<int> minShape;
         std::vector<int> optShape;
         std::vector<int> maxShape;
         int batchAxis = -1;
         int batchUnits = 1;
+        int sequenceAxis = -1;
     };
 
     struct EnginePartitionBinding {

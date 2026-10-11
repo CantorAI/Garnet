@@ -4479,13 +4479,18 @@ namespace Garnet {
                     break;
                 }
                 const auto& range = inputShapeRanges[index];
-                if (range.batchAxis < -1 || range.batchAxis >= dimensions.nbDims) {
-                    loweringError = "TensorRT profile batch axis is out of range";
+                if (range.batchAxis < -1 || range.batchAxis >= dimensions.nbDims ||
+                    range.sequenceAxis < -1 || range.sequenceAxis >= dimensions.nbDims ||
+                    (range.batchAxis >= 0 && range.batchAxis == range.sequenceAxis)) {
+                    loweringError = "TensorRT profile batch/sequence axis is out of range";
                     break;
                 }
                 if (range.batchAxis >= 0 &&
                     range.minShape[range.batchAxis] != range.maxShape[range.batchAxis])
                     dimensions.d[range.batchAxis] = -1;
+                if (range.sequenceAxis >= 0 &&
+                    range.minShape[range.sequenceAxis] != range.maxShape[range.sequenceAxis])
+                    dimensions.d[range.sequenceAxis] = -1;
             }
             const std::string name = partitionBuildActive
                 ? partitionInputNames.at(TensorId(inputValue))
@@ -4555,8 +4560,11 @@ namespace Garnet {
                     };
                     const std::string name = "input_" + std::to_string(index);
                     const auto& range = inputShapeRanges[index];
-                    const bool dynamicInput = range.batchAxis >= 0 &&
+                    const bool dynamicBatch = range.batchAxis >= 0 &&
                         range.minShape[range.batchAxis] != range.maxShape[range.batchAxis];
+                    const bool dynamicSequence = range.sequenceAxis >= 0 &&
+                        range.minShape[range.sequenceAxis] != range.maxShape[range.sequenceAxis];
+                    const bool dynamicInput = dynamicBatch || dynamicSequence;
                     if (!dynamicInput) continue;
                     profileValid = optimizationProfile->setDimensions(
                         name.c_str(), OptProfileSelector::kMIN, makeDims(range.minShape)) &&
@@ -4936,8 +4944,11 @@ namespace Garnet {
                     shapeSignature.push_back(info.shape[dimension]);
                 }
                 const auto& range = inputShapeRanges[static_cast<size_t>(index)];
-                if (range.batchAxis >= 0 &&
-                    range.minShape[range.batchAxis] != range.maxShape[range.batchAxis] &&
+                const bool dynamicBatch = range.batchAxis >= 0 &&
+                    range.minShape[range.batchAxis] != range.maxShape[range.batchAxis];
+                const bool dynamicSequence = range.sequenceAxis >= 0 &&
+                    range.minShape[range.sequenceAxis] != range.maxShape[range.sequenceAxis];
+                if ((dynamicBatch || dynamicSequence) &&
                     !cachedContext->setInputShape(name.c_str(), dimensions)) {
                     errorMessage = "TensorRT rejected runtime input shape " + name;
                     return X::Value();
