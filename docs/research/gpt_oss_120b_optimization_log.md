@@ -4507,3 +4507,8 @@ Building `garnet_gpt_oss_ops` alone still pulled the XLang3 runtime dependency a
 #### OPT170 target fetch failure and safe sync proposal
 
 The Vast host is idle (both RTX PRO 6000 GPUs show 15 MiB, and the only matching `pgrep` row was the status command itself). The target Garnet checkout is clean at `c968209`, which is an ancestor of the pushed source commit `e7459a3`. Its configured GitHub SSH remote cannot authenticate (`Permission denied (publickey)`), so no source synchronization occurred. Transfer a local Git bundle through the target WORK directory, fetch that bundle in the target clone, verify exact commit and ancestor relationship, then fast-forward only; do not edit target source files directly.
+
+
+#### OPT170 full-bundle transfer replaced by incremental Git bundle
+
+The full 64,406,775-byte bundle reached only 11,026,432 bytes after about four minutes, so its SCP was stopped before any fetch or source change. Since the target's clean `c968209` commit is present locally and is an ancestor of the pushed branch, send only commits newer than that common commit as a prerequisite-based incremental bundle. Verify the bundle declares the exact prerequisite, copy it to WORK, and confirm SHA/size before fetch. This reduces transfer time without altering source or target history.
