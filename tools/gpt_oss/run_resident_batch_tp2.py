@@ -20,7 +20,7 @@ from kv_layout import kv_memory, logical_retained_kv_bytes
 from resident_capture import ResidentCapture
 from resident_session import read_session, session_partial
 from resident_runtime_scheduling import POLICY as runtime_switch_policy, parse_switch_us, RuntimeSwitchScope
-from decode_first_scheduler import QueuedPrefill, plan_decode_first_iteration
+from token_budget_scheduler import QueuedPrefill, plan_token_budget_iteration
 from resident_budget import (admit_resident, native_identity, hardware_identity,
     kernel_environment, checkpoint_identity, validate_engine_files, file_sha256,
     validate_runtime_candidate_shape)
@@ -40,14 +40,14 @@ native_candidate_merge = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_MERGE')
 final_prefill_sample_only = optional_flag('GARNET_RESIDENT_FINAL_PREFILL_SAMPLE_ONLY')
 pattern_updates = optional_flag('GARNET_RESIDENT_PATTERN_UPDATES')
 native_greedy_state = optional_flag('GARNET_RESIDENT_NATIVE_GREEDY_STATE')
-decode_first_scheduler = optional_flag('GARNET_RESIDENT_DECODE_FIRST_SCHEDULER')
+token_budget_scheduler = optional_flag('GARNET_RESIDENT_TOKEN_BUDGET_SCHEDULER')
 if native_greedy_state and native_candidate_merge:
     raise ValueError('Native greedy state replaces the independent native merge path')
 resident_host_candidates = dict(reuse_output=reuse_output,
     native_candidate_merge=native_candidate_merge,
     final_prefill_sample_only=final_prefill_sample_only,
     pattern_updates=pattern_updates, native_greedy_state=native_greedy_state,
-    decode_first_scheduler=decode_first_scheduler)
+    token_budget_scheduler=token_budget_scheduler)
 runtime_switch_us = parse_switch_us(os.environ.get(runtime_switch_policy, '0'))
 
 session_mode = len(sys.argv) > 1 and sys.argv[1] == '--session'
@@ -95,21 +95,21 @@ if (not isinstance(phase_batches, dict) or set(phase_batches) != {'prefill','dec
 validate_runtime_candidate_shape(profile, batch=batch, input_tokens=len(ids),
     output_tokens=output_tokens, context=capacity, prefill_chunk=chunk,
     phase_engine_batches=phase_batches)
-if decode_first_scheduler:
+if token_budget_scheduler:
     if (session_mode or batch != 224 or len(ids) != 2005 or output_tokens != 1024 or
             capacity != 3072 or chunk != 36 or
             phase_batches != dict(prefill=112, decode=224) or
             not profile.get('candidate_shape') or not padded or
             reuse_output or native_candidate_merge or final_prefill_sample_only or
             pattern_updates or native_greedy_state or runtime_switch_us):
-        raise ValueError('Decode-first scheduler requires the exact qualified-shape candidate gates')
+        raise ValueError('Token-budget scheduler requires the exact qualified-shape candidate gates')
 elif phase_batches != dict(prefill=batch, decode=batch):
-    raise ValueError('Split phase profiles require explicit decode-first scheduler opt-in')
+    raise ValueError('Split phase profiles require explicit token-budget scheduler opt-in')
 if len(ids) % chunk and not padded:
     raise ValueError('Ragged tail requires validated padded prefill engine')
 capture = ResidentCapture(os.environ, len(ids), chunk, output_tokens)
-if decode_first_scheduler and capture.enabled:
-    raise ValueError('Decode-first scheduler cannot be combined with instrumented captures')
+if token_budget_scheduler and capture.enabled:
+    raise ValueError('Token-budget scheduler cannot be combined with instrumented captures')
 if session_mode and (capture.enabled or os.environ.get('GARNET_BENCH_NSYS_OUTPUT')):
     raise ValueError('Session throughput requires uninstrumented requests')
 warmup_count = int(os.environ.get('GARNET_RESIDENT_WARMUPS', '1'))
@@ -270,7 +270,7 @@ def phase_tensors(stages, tokens, slots):
 prefill_inputs = decode_inputs = None
 prefill_cohort_inputs = None
 
-def run_decode_first_request(trial, ids, start):
+def run_token_budget_request(trial, ids, start):
     """Fixed 224-request correctness path using 112x36 FIFO prefill cohorts."""
     request_ids = [f'q{slot:03d}' for slot in range(batch)]
     slots = {request_id: slot for slot, request_id in enumerate(request_ids)}
@@ -282,11 +282,11 @@ def run_decode_first_request(trial, ids, start):
     while any(remaining.values()):
         queued = [QueuedPrefill(request_id, remaining[request_id], offsets[request_id])
                   for request_id in request_ids if remaining[request_id] > 0]
-        decision = plan_decode_first_iteration(active, queued, token_budget=8192,
+        decision = plan_token_budget_iteration(active, queued, token_budget=8192,
             max_sequences=batch, prefill_chunk=chunk, prefill_cohort=112,
             max_peer_rows=4096)
         if not decision.prefill_cohorts:
-            raise RuntimeError('Decode-first scheduler made no progress on queued prompts')
+            raise RuntimeError('Token-budget scheduler made no progress on queued prompts')
         for cohort in decision.prefill_cohorts:
             cohort_ids = [item.request_id for item in cohort]
             cohort_slots = [slots[item] for item in cohort_ids]
@@ -325,11 +325,11 @@ def run_decode_first_request(trial, ids, start):
         raise ValueError('Every request must produce one prompt-completion token')
     decode_steps = []
     for decode_index in range(1, output_tokens):
-        decision = plan_decode_first_iteration(active, (), token_budget=8192,
+        decision = plan_token_budget_iteration(active, (), token_budget=8192,
             max_sequences=batch, prefill_chunk=chunk, prefill_cohort=112,
             max_peer_rows=4096)
-        if decision.decode_request_ids != tuple(active):
-            raise RuntimeError('Decode-first scheduler dropped an active request')
+        if decision.priority_request_ids != tuple(active):
+            raise RuntimeError('Token-budget scheduler dropped an active request')
         previous_tokens = [rows[request_id][-1] for request_id in active]
         absolute_position = len(ids) + decode_index - 1
         values = [previous_tokens, [absolute_position] * batch,
@@ -346,7 +346,7 @@ def run_decode_first_request(trial, ids, start):
     finish = time.perf_counter()
     token_rows = [rows[request_id] for request_id in request_ids]
     if any(len(row) != output_tokens for row in token_rows):
-        raise ValueError('Decode-first scheduler returned an incomplete token trajectory')
+        raise ValueError('Token-budget scheduler returned an incomplete token trajectory')
     return dict(trial=trial, token_ids_by_request=token_rows,
         prefill_kv_reused_for_decode_trial=False, prefill_step_seconds=prefill_steps,
         prefill_seconds=first_token - start, decode_step_seconds=decode_steps,
@@ -360,7 +360,7 @@ def run_decode_first_request(trial, ids, start):
 def run_request(trial, ids):
     start = time.perf_counter()
     state_handle = G.greedy_batch_state_create(batch, output_tokens) if native_greedy_state else None
-    execute = (lambda: run_decode_first_request(trial, ids, start)) if decode_first_scheduler else (
+    execute = (lambda: run_token_budget_request(trial, ids, start)) if token_budget_scheduler else (
         lambda: run_request_body(trial, ids, start, state_handle))
     # Keep the established default path's timing and call sequence unchanged.
     if not runtime_switch_us and state_handle is None:
@@ -555,12 +555,12 @@ def measure_case(case, index, cold_startup_seconds):
         full_request_output_tokens_per_second=trials[0]['full_request_output_tokens_per_second'],
         median_full_request_output_tokens_per_second=statistics.median(t['full_request_output_tokens_per_second'] for t in trials),
         measurement=('Instrumented resident diagnostic; timings are NOT benchmark evidence' if capture.enabled else
-            ('vLLM-style decode-first fixed 224-slot TP2 scheduler candidate, greedy, no early stop; three complete warmed requests'
-             if decode_first_scheduler else
+            ('vLLM-style token-budget fixed 224-slot TP2 scheduler candidate, greedy, no early stop; three complete warmed requests'
+             if token_budget_scheduler else
              'homogeneous fixed-size TP2 resident batch, greedy, no early stop; three complete warmed requests')),
         measurement_limits=('Nsight captures perturb timings; do not compare these rates to vLLM or accept them as an unprofiled reference. ' if capture.enabled else '') +
             ('Cold engine startup and warmup excluded, as for vLLM; every trial rewrites full input KV and includes controls/input preparation, FIFO chunk scheduling, sampling and phase transitions. The opt-in scheduler admits only the fixed 224/112/36 profile; it is not a general continuous batch server. Sampled memory is not exhaustive peak.'
-             if decode_first_scheduler else
+             if token_budget_scheduler else
              'Cold engine startup and warmup excluded, as for vLLM; every trial rewrites full input KV and includes controls/input preparation, sampling and phase transition. Sampled memory is not exhaustive peak; serial batches only, no continuous scheduler.'),
         **startup_report, **layout_report, **capture.metadata()), indent=2))
     completed = dict(name=case['name'], result=str(result_path.resolve()),
@@ -588,7 +588,7 @@ def measure_case(case, index, cold_startup_seconds):
 
 
 try:
-    if decode_first_scheduler:
+    if token_budget_scheduler:
         prefill_cohort_inputs = [phase_tensors(pair.prefill_stages, chunk,
             list(range(start, start + 112))) for start in (0, 112)]
         decode_inputs = phase_tensors(pair.decode_stages, 1, list(range(batch)))

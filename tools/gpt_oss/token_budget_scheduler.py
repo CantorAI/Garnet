@@ -1,4 +1,4 @@
-"""Pure planner for a bounded vLLM-style decode-first scheduling step.
+"""Pure planner for a bounded vLLM-inspired token-budget scheduling step.
 
 This module does not execute Garnet kernels. It models one scheduler decision so
 that its token budget, FIFO order, request ownership, and peer-row bounds can be
@@ -30,8 +30,8 @@ class PrefillSlice:
 
 
 @dataclass(frozen=True)
-class DecodeFirstPlan:
-    decode_request_ids: tuple[str, ...]
+class TokenBudgetPlan:
+    priority_request_ids: tuple[str, ...]
     prefill_cohorts: tuple[tuple[PrefillSlice, ...], ...]
     token_budget: int
     scheduled_tokens: int
@@ -39,8 +39,8 @@ class DecodeFirstPlan:
     peer_rows_per_prefill_cohort: tuple[int, ...]
 
 
-def plan_decode_first_iteration(
-    active_decode_request_ids,
+def plan_token_budget_iteration(
+    active_priority_request_ids,
     queued_prefills,
     *,
     token_budget=DEFAULT_TOKEN_BUDGET,
@@ -64,7 +64,7 @@ def plan_decode_first_iteration(
     if prefill_cohort * prefill_chunk > max_peer_rows:
         raise ValueError("prefill cohort exceeds peer-row capacity")
 
-    active = tuple(active_decode_request_ids)
+    active = tuple(active_priority_request_ids)
     queued = tuple(queued_prefills)
     ids = [request_id for request_id in active]
     if any(not isinstance(request_id, str) or not request_id for request_id in ids):
@@ -117,5 +117,5 @@ def plan_decode_first_iteration(
     if used > token_budget:
         raise AssertionError("planner exceeded its aggregate token budget")
 
-    return DecodeFirstPlan(tuple(decode_ids), cohorts, token_budget, used,
+    return TokenBudgetPlan(tuple(decode_ids), cohorts, token_budget, used,
                            live, row_counts)
