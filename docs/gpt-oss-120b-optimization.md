@@ -3187,3 +3187,9 @@ The first fallback attempt stopped at the existing pre-inference admission gate,
 ###### OPT171 dependent peer-group profile flag correction proposal
 
 Prepare a fresh copied profile from the same validated base, changing only the peer-group enable from `1` to `0` and its dependent grid-signaling flag from `1` to `0`; preserve BF16 prefill all-reduce, all workload dimensions, cache-admission guards, and saved-reference validation. This is a profile-only diagnostic; rerun once after verifying target free space and idle state. Expect the paired suite to revalidate vLLM before any Garnet inference. Do not alter source or infer success from admission.
+
+The proposed two-variable profile also failed the admission-only layout validator: with peer-group mode off, its retained CTA policy `128` violates the existing fallback contract, which requires CTA `64`; the run stopped before reference revalidation or GPU work. No inference occurred. The exact policy is enforced by `peer_group_layout.py`: fallback requires peer-group `0`, grid-signals `0`, CTAs `64`, and threads `256`.
+
+###### OPT171 exact fallback-profile proposal
+
+Create one new profile copy changing only those four peer transport controls to the documented fallback tuple `(peer_group=0, grid_signals=0, CTAs=64, threads=256)`. Leave BF16 prefill all-reduce, saved vLLM manifest, and all workload settings untouched. Run only after the 15-GiB free-space and idle gates pass; the paired suite must validate the saved vLLM reference before Garnet. Preserve both admission failures. If this exact profile fails admission, stop rather than iterating settings blindly.
