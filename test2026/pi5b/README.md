@@ -102,3 +102,15 @@ is unverified. F32 with four threads was slower than two in the actual image run
 A CPU having four cores does not establish the best thread count for every
 small matrix/recurrent graph. See the investigation's optimization logs for
 complete observations; cold compile/load times depend on cache residency.
+
+Experimental controls (defaults remain unchanged):
+- Fifth inference-driver argument `4` enables memory-bounded chunk prefill;
+  compilation overhead made the executed one-shot photo slower.
+- `GARNET_CPU_HEAD_THREADS=4` changes only output projection worker count.
+- `GARNET_CPU_HEAD_PRECISION=q4q8` enables native quantized output projection;
+  the executed caption changed, so treat accuracy as unverified.
+- `GARNET_CPU_WEIGHT_PRECISION=int4_fp16` enables experimental OV weight packing.
+- Use `GARNET_PI_MAX_RSS_MIB=4096 GARNET_PI_MIN_AVAILABLE_MIB=1024
+  GARNET_PI_TIMEOUT_SECONDS=180` on the measurement wrapper. These are polling
+  termination guards, not hard memory caps. The earlier resident chunk attempt
+  exhausted memory and required a manual reboot.

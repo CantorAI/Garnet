@@ -607,7 +607,7 @@ namespace Garnet
                 return {};
             }
             const int effectiveBlockSize =
-                quantizationBlockSize == -1
+                quantizationBlockSize == -1 && metadata->shape.size() == 2
                     ? static_cast<int>(metadata->shape[1])
                     : quantizationBlockSize;
             if (int4WeightOnly &&
@@ -1764,6 +1764,21 @@ namespace Garnet
             const auto result=std::make_shared<ov::opset13::Concat>(ov::OutputVector{rightValue,suffix},1);
             m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
         }
+        if(opName=="qwen35_concat_sequence") {
+            const auto a=leftValue.get_shape(),b=rightValue.get_shape();
+            if(a.size()<2||a.size()!=b.size()){m_error="sequence concat rank mismatch";return X::Value();}
+            for(size_t i=0;i<a.size();++i)if(i!=1&&a[i]!=b[i]){m_error="sequence concat shape mismatch";return X::Value();}
+            auto result=std::make_shared<ov::opset13::Concat>(ov::OutputVector{leftValue,rightValue},1);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
+        if(opName=="qwen35_mask_chunk") {
+            const auto shape=leftValue.get_shape();
+            if(shape.size()!=3||rightValue.get_shape()!=ov::Shape{shape[0],shape[1]}){m_error="chunk mask shape mismatch";return X::Value();}
+            auto mask=std::make_shared<ov::opset13::Convert>(rightValue,ov::element::boolean);
+            auto result=std::make_shared<ov::opset13::Select>(Reshape(mask,{int64_t(shape[0]),int64_t(shape[1]),1}),leftValue,
+                ov::opset13::Constant::create(leftValue.get_element_type(),ov::Shape{},std::vector<float>{0}));
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
         if(opName=="qwen35_mask_rows") {
             const auto shape=leftValue.get_shape();
             if(shape.size()!=2||rightValue.get_shape()!=ov::Shape{shape[0]}) {
@@ -1964,6 +1979,15 @@ namespace Garnet
             auto* item = FindKeyword(keywordParams, name);
             return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
         };
+        if(opName=="qwen35_chunk_token") {
+            auto shape=source->second.get_shape();const int index=keywordInt("index",-1);
+            if((shape.size()!=2&&shape.size()!=3)||index<0||size_t(index)>=shape[1]){m_error="chunk token index/shape mismatch";return X::Value();}
+            auto value=std::make_shared<ov::opset13::Slice>(source->second,I64Vector({index}),I64Vector({index+1}),I64Vector({1}),I64Vector({1}));
+            std::vector<int64_t> target{int64_t(shape[0])};if(shape.size()==3)target.push_back(int64_t(shape[2]));
+            auto result=std::make_shared<ov::opset13::Reshape>(value,
+                ov::opset13::Constant::create(ov::element::i64,ov::Shape{target.size()},target),false);
+            m_implementation->tensors[outputId]=result;m_implementation->lastOutput=result;return X::Value(true);
+        }
         if(opName=="qwen35_vision_encoder") {
             auto lookup=[&](const std::string& name)->ov::Output<ov::Node>{
                 auto value=m_implementation->GetWeight(name,m_error);

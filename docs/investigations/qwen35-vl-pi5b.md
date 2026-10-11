@@ -322,9 +322,7 @@ more image evidence and is the recommended measured improvement.
 
 Reproduce the recommended profile with the README command, setting
 GARNET_OPENVINO_CPU_THREADS=2 and GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f16.
-Actual learned inference remains Garnet/xModel throughout. Chunked prefill,
-weight quantization and persistent model residency remain further optimization
-work, not implemented or claimed by this follow-up. Raw optimization logs retain
+Actual learned inference remains Garnet/xModel throughout. Further experiments are recorded below. Raw optimization logs retain
 slower and quality-reducing experiments as well as successful improvements.
 
 Final optimized batch 2 also exited 0 with the same 28 token IDs in both rows.
@@ -345,3 +343,50 @@ FP32 samples, so first-output and startup comparisons include cache effects.
 These remain one-photo, short-decode measurements with existing services active,
 not a general quality/sustained-throughput guarantee. The strict pretrained
 vision parity limitation from the earlier investigation remains unresolved.
+
+## Post-reboot experiments: first output and decode speed
+
+The initial resident chunk implementation exhausted RAM and the 2 GiB swap;
+SSH stopped responding and the user manually rebooted the Pi. It produced no
+completed inference result. `chunk-photo-b1.log` retains the failed attempt.
+The replacement compiles one prefill layer at a time and releases it before
+compiling the next. Chunk-4 padded fixtures passed unchanged numerical tolerances
+for linear/full attention, batches 1/2, and pause/resume. The actual photo matched
+all 28 baseline token IDs, with 2.81 GiB peak RSS. However, prefill took 37.02 s
+(including 20.10 s compilation and 8.98 s graph inference), so this is an
+experimental path, not the recommended one-shot latency profile. Its 75.99 s
+first output includes cold initialization after reboot.
+
+`measure_process.py` now supports stop-on-threshold guards for child RSS,
+host available memory and elapsed time. These poll every 100 ms and kill only
+the launched child's process group; they are not hard OS memory reservations.
+Actual Linux allocation/time-limit probes verified termination. Subsequent
+photo runs used 4096 MiB child RSS, 1024 MiB minimum available and 180 seconds.
+No guard triggered in the completed runs.
+
+The OpenVINO INT4-weight experiment completed execution but reached the
+32-token limit without EOS, changed the caption, and retained about 2.81 GiB
+RSS. It did not provide a useful overall improvement. It remains opt-in through
+GARNET_CPU_WEIGHT_PRECISION=int4_fp16; default decoder weights are unchanged.
+The decoder builder also fixes rank-one metadata indexing with group size -1.
+
+The separate native Garnet Q4-weight/Q8-activation output-head experiment uses
+GARNET_CPU_HEAD_PRECISION=q4q8 and GARNET_CPU_HEAD_THREADS=4, with unquantized
+decoder weights and the FP16 backend hint. It completed the photo caption with
+EOS at about 4.87 tokens/sec and 2.47 GiB RSS. First output was 28.01 s versus
+28.29 s in the immediately preceding two-thread BF16-head control; startup/cache
+variation prevents a first-output speedup claim. Its shorter caption identified
+the statue, golden headband and cityscape, but omitted balcony/mountain detail.
+This is a quality-changing experimental option, not general accuracy parity.
+The default BF16 output head remains unchanged. One-thread FP16 also completed
+all baseline token IDs at about 4.2 tokens/sec and 25.93 s first output; this
+single sample does not establish a consistent advantage over two threads.
+
+Logs preserve failed and slower experiments. Strict pretrained vision parity
+remains unresolved; component/chunk success does not remove that limitation.
+
+
+Four BF16-head workers passed the independent full-vocabulary batch-2 reference
+at unchanged tolerances and preserved all photo caption IDs. Actual generation
+slowed to about 3.49 tokens/sec, so two workers remain recommended. Rebuilt native
+library SHA256: 24200af5a30258f72a93ab526960ba9404e360735efe4443ac004b84e215f3b3.

@@ -51,7 +51,8 @@ for kind in ('linear','full'):
             fixture=dict(config=config,checkpoint=str(checkpoint),steps=steps,memory_only=True)
             path=Path(folder)/'fixture.json';path.write_text(json.dumps(fixture))
             if len(sys.argv)>3:
-                command=[sys.argv[1],str(Path(__file__).with_name('run_cpu_package.py')),str(path),sys.argv[3],sys.argv[2]]
+                runner=sys.argv[4] if len(sys.argv)>4 else 'run_cpu_package.py'
+                command=[sys.argv[1],str(Path(__file__).with_name(runner)),str(path),sys.argv[3],sys.argv[2]]
             else:
                 command=[sys.argv[1],sys.argv[2],str(Path(__file__).with_name('run_decoder_graph.py')),str(path)]
             subprocess.run(command,check=True)

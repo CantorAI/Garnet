@@ -1,0 +1,30 @@
+Internal ctest changing into directory: /home/shawn/garnet-pi5b-investigation/cpu-build
+Test project /home/shawn/garnet-pi5b-investigation/cpu-build
+    Start 1: q4q8_reference
+1/8 Test #1: q4q8_reference .........................   Passed    0.00 sec
+    Start 2: gated_delta_reference
+2/8 Test #2: gated_delta_reference ..................   Passed    0.22 sec
+    Start 3: qwen35_linear_attention_reference
+3/8 Test #3: qwen35_linear_attention_reference ......   Passed    3.88 sec
+    Start 4: gated_delta_openvino_reference
+4/8 Test #4: gated_delta_openvino_reference .........   Passed    0.91 sec
+    Start 5: qwen35_linear_captured_checkpoint
+5/8 Test #5: qwen35_linear_captured_checkpoint ......   Passed    3.49 sec
+    Start 6: qwen35_attention_captured_checkpoint
+6/8 Test #6: qwen35_attention_captured_checkpoint ...   Passed    3.20 sec
+    Start 7: qwen35_decoder_captured_checkpoint
+7/8 Test #7: qwen35_decoder_captured_checkpoint .....   Passed    0.96 sec
+    Start 8: gated_delta_xmodel_graph
+8/8 Test #8: gated_delta_xmodel_graph ...............   Passed    0.36 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Total Test time (real) =  13.04 sec
+Garnet CPU-only OpenVINO 2026.2.1-21919-ede283a88e3-releases/2026/2 actual CPU package decoder linear batch 1 PASS compile_ms 148.315947 inference_ms [0.935234, 0.436987, 0.388394, 0.403042, 0.349708, 0.335837]
+complete captured decoder block linear batch 1 PASS
+Garnet CPU-only OpenVINO 2026.2.1-21919-ede283a88e3-releases/2026/2 actual CPU package decoder linear batch 2 PASS compile_ms 164.499334 inference_ms [1.144088, 0.598434, 0.650193, 0.661415, 0.689565, 0.626378]
+complete captured decoder block linear batch 2 PASS
+Garnet CPU-only OpenVINO 2026.2.1-21919-ede283a88e3-releases/2026/2 actual CPU package decoder full batch 1 PASS compile_ms 131.949101 inference_ms [0.959142, 0.469321, 0.445765, 0.439524, 0.374227, 0.363431]
+complete captured decoder block full batch 1 PASS
+Garnet CPU-only OpenVINO 2026.2.1-21919-ede283a88e3-releases/2026/2 actual CPU package decoder full batch 2 PASS compile_ms 131.213759 inference_ms [1.126422, 0.740287, 0.65799, 0.608433, 0.595137, 0.65173]
+complete captured decoder block full batch 2 PASS

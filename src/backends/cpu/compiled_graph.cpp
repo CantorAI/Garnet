@@ -5,6 +5,7 @@
 #include <atomic>
 #include <chrono>
 #include <filesystem>
+#include <cstdlib>
 namespace Garnet {
 CPUCompiledGraph::CPUCompiledGraph() {
     static std::atomic<uint64_t> next{0};
@@ -31,7 +32,10 @@ bool CPUCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string& 
     X::ARGS inputs;for(uint64_t i=0;i<symbols.Size();++i)inputs.push_back(symbols.Get(i));
     auto arguments=inputs;OpenVINOBuilder builder;
     const auto start=std::chrono::steady_clock::now();
-    if(!builder.BuildCapturedGraph(graph,X::Value(),arguments,inputs,&m_weights,m_cacheKey,"bf16",error,true))throw X::Error(error);
+    const char* configured=std::getenv("GARNET_CPU_WEIGHT_PRECISION");
+    const std::string precision=configured&&*configured?configured:"bf16";
+    if(precision!="bf16"&&precision!="fp16"&&precision!="int4_fp16")throw X::Error("CPU weight precision must be bf16, fp16 or int4_fp16");
+    if(!builder.BuildCapturedGraph(graph,X::Value(),arguments,inputs,&m_weights,m_cacheKey,precision,error,true))throw X::Error(error);
     if(!builder.PrepareCapturedEngine(m_cacheKey,&m_weights,error)){CloseUnlocked();throw X::Error(error);}
     m_compileMs=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
     m_ready=true;return true;

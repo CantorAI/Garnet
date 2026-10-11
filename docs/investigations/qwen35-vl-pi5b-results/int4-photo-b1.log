@@ -1,0 +1,62 @@
+vision_compile_ms 1468.851548
+vision_inference_ms 370.981543 image_sha256 eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9
+compiled Garnet decoder layer 0 linear_attention ms 822.145074
+compiled Garnet decoder layer 1 linear_attention ms 795.692827
+compiled Garnet decoder layer 2 linear_attention ms 794.847406
+compiled Garnet decoder layer 3 full_attention ms 685.534935
+compiled Garnet decoder layer 4 linear_attention ms 800.745089
+compiled Garnet decoder layer 5 linear_attention ms 801.383884
+compiled Garnet decoder layer 6 linear_attention ms 798.887417
+compiled Garnet decoder layer 7 full_attention ms 689.659653
+compiled Garnet decoder layer 8 linear_attention ms 800.314282
+compiled Garnet decoder layer 9 linear_attention ms 808.414244
+compiled Garnet decoder layer 10 linear_attention ms 799.590457
+compiled Garnet decoder layer 11 full_attention ms 687.504996
+compiled Garnet decoder layer 12 linear_attention ms 810.598039
+compiled Garnet decoder layer 13 linear_attention ms 798.352172
+compiled Garnet decoder layer 14 linear_attention ms 797.368079
+compiled Garnet decoder layer 15 full_attention ms 694.390526
+compiled Garnet decoder layer 16 linear_attention ms 795.367213
+compiled Garnet decoder layer 17 linear_attention ms 794.760651
+compiled Garnet decoder layer 18 linear_attention ms 801.173439
+compiled Garnet decoder layer 19 full_attention ms 688.164952
+compiled Garnet decoder layer 20 linear_attention ms 800.229731
+compiled Garnet decoder layer 21 linear_attention ms 802.374779
+compiled Garnet decoder layer 22 linear_attention ms 798.071311
+compiled Garnet decoder layer 23 full_attention ms 687.040086
+initialization_seconds 21.437567710876465
+prefill_seconds 15.349370002746582 prompt_tokens [79] mrope_next_position 34 ttft_from_start_seconds 36.78728890419006
+image_generated_tokens [760] text ['The']
+image_generated_tokens [1822] text ['The main']
+image_generated_tokens [5978] text ['The main objects']
+image_generated_tokens [303] text ['The main objects in']
+image_generated_tokens [411] text ['The main objects in this']
+image_generated_tokens [2099] text ['The main objects in this image']
+image_generated_tokens [2830] text ['The main objects in this image include']
+image_generated_tokens [264] text ['The main objects in this image include a']
+image_generated_tokens [3349] text ['The main objects in this image include a large']
+image_generated_tokens [33138] text ['The main objects in this image include a large statue']
+image_generated_tokens [314] text ['The main objects in this image include a large statue of']
+image_generated_tokens [264] text ['The main objects in this image include a large statue of a']
+image_generated_tokens [5054] text ['The main objects in this image include a large statue of a woman']
+image_generated_tokens [440] text ['The main objects in this image include a large statue of a woman with']
+image_generated_tokens [264] text ['The main objects in this image include a large statue of a woman with a']
+image_generated_tokens [20117] text ['The main objects in this image include a large statue of a woman with a golden']
+image_generated_tokens [1901] text ['The main objects in this image include a large statue of a woman with a golden head']
+image_generated_tokens [6833] text ['The main objects in this image include a large statue of a woman with a golden headband']
+image_generated_tokens [321] text ['The main objects in this image include a large statue of a woman with a golden headband and']
+image_generated_tokens [264] text ['The main objects in this image include a large statue of a woman with a golden headband and a']
+image_generated_tokens [3177] text ['The main objects in this image include a large statue of a woman with a golden headband and a city']
+image_generated_tokens [55592] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape']
+image_generated_tokens [9896] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled']
+image_generated_tokens [440] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with']
+image_generated_tokens [11770] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous']
+image_generated_tokens [13308] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous buildings']
+image_generated_tokens [321] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous buildings and']
+image_generated_tokens [22767] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous buildings and mountains']
+image_generated_tokens [303] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous buildings and mountains in']
+image_generated_tokens [279] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous buildings and mountains in the']
+image_generated_tokens [3870] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous buildings and mountains in the background']
+image_generated_tokens [13] text ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous buildings and mountains in the background.']
+image_result {'text': ['The main objects in this image include a large statue of a woman with a golden headband and a cityscape filled with numerous buildings and mountains in the background.'], 'token_ids': [[760, 1822, 5978, 303, 411, 2099, 2830, 264, 3349, 33138, 314, 264, 5054, 440, 264, 20117, 1901, 6833, 321, 264, 3177, 55592, 9896, 440, 11770, 13308, 321, 22767, 303, 279, 3870, 13]], 'decode_step_seconds': [0.2524590492248535, 0.2387847900390625, 0.23121094703674316, 0.23035240173339844, 0.23145008087158203, 0.2318100929260254, 0.2306656837463379, 0.2309577465057373, 0.23167109489440918, 0.25778794288635254, 0.23093271255493164, 0.23111963272094727, 0.23142337799072266, 0.23188471794128418, 0.23074007034301758, 0.23118066787719727, 0.23068690299987793, 0.23152446746826172, 0.23683714866638184, 0.25234198570251465, 0.23047232627868652, 0.23538851737976074, 0.23077702522277832, 0.2304983139038086, 0.2310161590576172, 0.23096442222595215, 0.23101568222045898, 0.2308056354522705, 0.25815582275390625, 0.23163986206054688, 0.23125386238098145, 0.23068976402282715], 'batch': 1, 'image_sha256': 'eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9'}
+process_metrics {"exit_code": 0, "wall_seconds": 44.884485875999985, "max_rss_kib": 2949872, "user_seconds": 63.183247, "system_seconds": 3.700441, "major_faults": 1, "minor_faults": 258295, "guard_reason": null}

@@ -1,0 +1,50 @@
+vision_compile_ms 1388.263237
+vision_inference_ms 372.061905 image_sha256 eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9
+compiled Garnet decoder layer 0 linear_attention ms 303.406029
+compiled Garnet decoder layer 1 linear_attention ms 312.188154
+compiled Garnet decoder layer 2 linear_attention ms 302.943877
+compiled Garnet decoder layer 3 full_attention ms 271.40213
+compiled Garnet decoder layer 4 linear_attention ms 306.603947
+compiled Garnet decoder layer 5 linear_attention ms 308.466396
+compiled Garnet decoder layer 6 linear_attention ms 309.486007
+compiled Garnet decoder layer 7 full_attention ms 269.006978
+compiled Garnet decoder layer 8 linear_attention ms 307.101368
+compiled Garnet decoder layer 9 linear_attention ms 309.096267
+compiled Garnet decoder layer 10 linear_attention ms 307.348806
+compiled Garnet decoder layer 11 full_attention ms 270.484615
+compiled Garnet decoder layer 12 linear_attention ms 308.450671
+compiled Garnet decoder layer 13 linear_attention ms 307.194386
+compiled Garnet decoder layer 14 linear_attention ms 307.201367
+compiled Garnet decoder layer 15 full_attention ms 270.052635
+compiled Garnet decoder layer 16 linear_attention ms 316.963678
+compiled Garnet decoder layer 17 linear_attention ms 307.982588
+compiled Garnet decoder layer 18 linear_attention ms 309.123028
+compiled Garnet decoder layer 19 full_attention ms 273.202925
+compiled Garnet decoder layer 20 linear_attention ms 310.338903
+compiled Garnet decoder layer 21 linear_attention ms 307.365274
+compiled Garnet decoder layer 22 linear_attention ms 308.983055
+compiled Garnet decoder layer 23 full_attention ms 273.775999
+initialization_seconds 12.668043851852417
+prefill_seconds 15.341235637664795 prompt_tokens [79] mrope_next_position 34 ttft_from_start_seconds 28.009589195251465
+image_generated_tokens [32] text ['A']
+image_generated_tokens [3349] text ['A large']
+image_generated_tokens [33138] text ['A large statue']
+image_generated_tokens [314] text ['A large statue of']
+image_generated_tokens [264] text ['A large statue of a']
+image_generated_tokens [855] text ['A large statue of a man']
+image_generated_tokens [440] text ['A large statue of a man with']
+image_generated_tokens [264] text ['A large statue of a man with a']
+image_generated_tokens [20117] text ['A large statue of a man with a golden']
+image_generated_tokens [1901] text ['A large statue of a man with a golden head']
+image_generated_tokens [6833] text ['A large statue of a man with a golden headband']
+image_generated_tokens [321] text ['A large statue of a man with a golden headband and']
+image_generated_tokens [264] text ['A large statue of a man with a golden headband and a']
+image_generated_tokens [3177] text ['A large statue of a man with a golden headband and a city']
+image_generated_tokens [55592] text ['A large statue of a man with a golden headband and a cityscape']
+image_generated_tokens [303] text ['A large statue of a man with a golden headband and a cityscape in']
+image_generated_tokens [279] text ['A large statue of a man with a golden headband and a cityscape in the']
+image_generated_tokens [3870] text ['A large statue of a man with a golden headband and a cityscape in the background']
+image_generated_tokens [13] text ['A large statue of a man with a golden headband and a cityscape in the background.']
+image_generated_tokens [248046] text ['A large statue of a man with a golden headband and a cityscape in the background.<|im_end|>']
+image_result {'text': ['A large statue of a man with a golden headband and a cityscape in the background.<|im_end|>'], 'token_ids': [[32, 3349, 33138, 314, 264, 855, 440, 264, 20117, 1901, 6833, 321, 264, 3177, 55592, 303, 279, 3870, 13, 248046]], 'decode_step_seconds': [0.20392346382141113, 0.20374464988708496, 0.20504021644592285, 0.20495343208312988, 0.20405793190002441, 0.20452260971069336, 0.2044823169708252, 0.20525860786437988, 0.2239539623260498, 0.21076035499572754, 0.20339703559875488, 0.20395708084106445, 0.20503807067871094, 0.20516276359558105, 0.2038097381591797, 0.20484375953674316, 0.2040567398071289, 0.20436310768127441, 0.20389270782470703], 'batch': 1, 'image_sha256': 'eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9', 'finished': [True]}
+process_metrics {"exit_code": 0, "wall_seconds": 32.53893783400008, "max_rss_kib": 2589616, "user_seconds": 48.610919, "system_seconds": 3.012891, "major_faults": 0, "minor_faults": 225255, "guard_reason": null}

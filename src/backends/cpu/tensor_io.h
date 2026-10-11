@@ -2,6 +2,8 @@
 #pragma once
 #include "xlang3/xlang3.h"
 #include "safetensors_index.h"
+#include "q4q8_linear.h"
+#include <memory>
 #include <cstring>
 #include <limits>
 #include <cmath>
@@ -18,6 +20,7 @@ class CPUTensorIO {
     SafeTensorsIndex m_index;
     SafeTensorsMappedFile m_mapping;
     const SafeTensorMetadata* m_embedding=nullptr;
+    std::unique_ptr<Q4Q8Linear> m_quantizedHead;
     static std::vector<int64_t> Shape(X::Value value) {
         if(!value.IsList())throw X::Error("shape must be a list");
         std::vector<int64_t> shape;
@@ -29,6 +32,22 @@ class CPUTensorIO {
         if(count>SIZE_MAX/sizeof(float))throw X::Error("tensor bytes overflow");return count;
     }
 public:
+    X::Value StackTokens(X::Value values) {
+        if(!values.IsList()||!values.Size())throw X::Error("tokens must be a nonempty tensor list");
+        X::Tensor first(values.Get(uint64_t(0)));auto shape=first.Info();
+        if(shape.rank!=2||shape.shape[0]<=0||shape.shape[1]<=0)throw X::Error("token tensors must be batch/hidden");
+        const int64_t batch=shape.shape[0],width=shape.shape[1],tokens=values.Size();
+        std::vector<float> data(Count({batch,tokens,width}));
+        for(int64_t t=0;t<tokens;++t){
+            X::Tensor tensor(values.Get(t));auto info=tensor.Info();
+            if(info.symbolic||info.device_type!=0||info.dtype!=X3_TENSOR_FLOAT32||info.rank!=2||!info.data||info.shape[0]!=batch||info.shape[1]!=width)
+                throw X::Error("tokens require equal host FP32 shapes");
+            if(info.strides&&(info.strides[1]!=4||info.strides[0]!=width*4))throw X::Error("tokens require contiguous rows");
+            auto lease=tensor.Acquire();auto* input=static_cast<const float*>(info.data);
+            for(int64_t b=0;b<batch;++b)std::memcpy(data.data()+(b*tokens+t)*width,input+b*width,size_t(width)*sizeof(float));
+        }
+        return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,{batch,tokens,width},data.data(),data.size()*sizeof(float));
+    }
     X::Value ReadF32(const std::string& path,X::Value dimensions) {
         auto shape=Shape(dimensions);const auto count=Count(shape);std::vector<float> data(count);
         std::ifstream stream(path,std::ios::binary|std::ios::ate);
@@ -61,7 +80,7 @@ public:
         return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,shape,data.data(),count*sizeof(float));
     }
     bool Open(const std::string& path) {
-        m_embedding=nullptr;m_mapping.Close();std::string error;
+        m_embedding=nullptr;m_quantizedHead.reset();m_mapping.Close();std::string error;
         if(!m_index.Open(path,error))throw X::Error(error);
         auto* entry=m_index.Find("model.language_model.embed_tokens.weight");
         if(!entry||entry->dataType!="BF16"||entry->shape.size()!=2)throw X::Error("Qwen3.5 BF16 embedding table missing");
@@ -69,6 +88,19 @@ public:
             uint64_t(entry->shape[0])*uint64_t(entry->shape[1])*2!=entry->dataSize)throw X::Error("invalid embedding storage size");
         if(!m_mapping.Open(entry->filePath,error))throw X::Error(error);
         if(!m_mapping.DataAt(entry->dataOffset,entry->dataSize))throw X::Error("embedding exceeds mapped checkpoint");
+        const char* setting=std::getenv("GARNET_CPU_HEAD_PRECISION");
+        const std::string precision=setting&&*setting?setting:"bf16";
+        if(precision!="bf16"&&precision!="q4q8")throw X::Error("CPU head precision must be bf16 or q4q8");
+        if(precision=="q4q8") {
+            QuantizedWeight quantized;
+            // The tied embedding matrix is used as the logical LM head here.
+            if(!QuantizeSymmetricINT4("lm_head.weight",*entry,m_mapping.DataAt(entry->dataOffset,entry->dataSize),128,quantized,error))throw X::Error(error);
+            auto head=std::make_unique<Q4Q8Linear>();
+            if(!head->Prepare(quantized,error))throw X::Error(error);
+            m_quantizedHead=std::move(head);
+            // Drop the fully scanned BF16 mapping; embedding lookup remaps it lazily.
+            m_mapping.Close();if(!m_mapping.Open(entry->filePath,error)){m_quantizedHead.reset();throw X::Error(error);}
+        }
         m_embedding=entry;return true;
     }
     X::Value Embedding(X::Value tokens) {
@@ -96,7 +128,13 @@ public:
         auto* table=static_cast<const uint16_t*>(m_mapping.DataAt(m_embedding->dataOffset,m_embedding->dataSize));
         int threads=2;
         if(const char* setting=std::getenv("GARNET_OPENVINO_CPU_THREADS"))threads=std::max(1,std::min(64,std::atoi(setting)));
+        if(const char* setting=std::getenv("GARNET_CPU_HEAD_THREADS"))threads=std::max(1,std::min(64,std::atoi(setting)));
         threads=std::min<int64_t>(threads,vocab);
+        if(m_quantizedHead) {
+            std::string error;
+            for(int64_t b=0;b<batch;++b)if(!m_quantizedHead->Forward(hidden+b*dim,output.data()+b*vocab,threads,error))throw X::Error(error);
+            return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,{batch,vocab},output.data(),output.size()*sizeof(float));
+        }
         auto worker=[&](int id){
             for(int64_t row=vocab*id/threads;row<vocab*(id+1)/threads;++row){
                 const auto* weight=table+row*dim;
@@ -132,6 +170,7 @@ public:
         return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,{batch,vocab},output.data(),output.size()*sizeof(float));
     }
     BEGIN_PACKAGE(CPUTensorIO)
+        APISET().AddFunc<1>("stack_tokens",&CPUTensorIO::StackTokens);
         APISET().AddFunc<1>("zeros",&CPUTensorIO::Zeros);
         APISET().AddFunc<2>("read_f32",&CPUTensorIO::ReadF32);
         APISET().AddFunc<2>("visual_token",&CPUTensorIO::VisualToken);
