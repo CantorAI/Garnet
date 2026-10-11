@@ -2854,3 +2854,15 @@ No Garnet source, build, remote checkout, target, sanitizer, or inference change
 ### OPT164 official stable vLLM baseline recheck (2026-10-11 08:04 UTC)
 
 Official PyPI and vLLM release records were checked again while the optimization goal remains open. vLLM0.31.0, published Oct5, is still the latest listed stable release; the current benchmark baseline does not need a version change. Sources: [PyPI vLLM0.31.0](https://pypi.org/project/vllm/0.31.0/) and [official vLLM releases](https://github.com/vllm-project/vllm/releases). This verifies only the release version, not a fresh target install or benchmark. The vLLM-first, matched-settings comparison requirement remains unchanged.
+
+
+### OPT165 full-wall savings threshold analysis proposal (before calculation)
+
+Use only the already independently qualified, hash-bound OPT155 versus vLLM0.31.0 full-request medians and exact batch/output counts to calculate the extra seconds each case must save to reach parity. Compare those arithmetic thresholds with the recorded Garnet prefill component as context only; do not attribute the gap to prefill or predict any scheduler speed. This local calculation may reject obviously unsupported claims, but it cannot justify a target experiment or change the all-four goal.
+
+
+### OPT165 full-wall parity thresholds from audited OPT155 medians (2026-10-11 08:06 UTC)
+
+Using the already-audited OPT155 versus vLLM0.31.0 medians and exact aggregate output counts, the additional full-window time that must be removed for parity is1.925s arithmetic,5.068s code,1.002s instruction, and3.022s long. These correspond to3.13%,8.40%,1.65%, and4.97% reductions from Garnet's implied median full wall. For scale only, those times are28.6%,74.1%,14.7%, and12.0% of each Garnet prefill component; this ratio does not attribute the deficit to prefill. Smaller-cohort dispatch counts remain unpriced, so no all-four speed path is established.
+
+The calculation reads only the passing OPT155 component crosscheck JSON (SHA-256 `3c9ac04a8d07dbf810d9838d5350655831925c5b0d221cfb5b73620b9693c4de) and converts rate to wall as `batch * output_tokens / median_rate`; it is a threshold, not a new measurement or candidate prediction. Helper SHA-256 `93b9065cbf9190af0039bced2c60f23e7df0432f6125a37e28158def5601fb45`; result SHA-256 `4614f45db51b1b34a646cebb1c549b0f36a64b348b92c322f115f637c34c4320`. Goal remains unmet. No source, target, GPU, profile, build, sanitizer, or inference changed.

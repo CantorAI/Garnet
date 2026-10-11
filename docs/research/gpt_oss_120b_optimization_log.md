@@ -4300,3 +4300,17 @@ The first audit-helper run failed because it expected `table_shape = [batch,page
 ### OPT164 official stable vLLM baseline recheck (2026-10-11 08:04 UTC)
 
 Official PyPI and vLLM release records were checked again while the optimization goal remains open. vLLM0.31.0, published Oct5, is still the latest listed stable release; the current benchmark baseline does not need a version change. Sources: [PyPI vLLM0.31.0](https://pypi.org/project/vllm/0.31.0/) and [official vLLM releases](https://github.com/vllm-project/vllm/releases). This verifies only the release version, not a fresh target install or benchmark. The vLLM-first, matched-settings comparison requirement remains unchanged.
+
+
+### OPT165 full-wall savings threshold analysis proposal (before calculation)
+
+Use only the already independently qualified, hash-bound OPT155 versus vLLM0.31.0 full-request medians and exact batch/output counts to calculate the extra seconds each case must save to reach parity. Compare those arithmetic thresholds with the recorded Garnet prefill component as context only; do not attribute the gap to prefill or predict any scheduler speed. This local calculation may reject obviously unsupported claims, but it cannot justify a target experiment or change the all-four goal.
+
+
+### OPT165 full-wall parity thresholds from audited OPT155 medians (2026-10-11 08:06 UTC)
+
+**Proposal-before-calculation.** The preceding OPT165 proposal specified a local-only conversion of the already-qualified OPT155/vLLM0.31.0 rates into an absolute time-to-parity threshold. The input component crosscheck is bound by SHA-256 `3c9ac04a8d07dbf810d9838d5350655831925c5b0d221cfb5b73620b9693c4de`; it carries the previously independent all-four trajectory gate and labels OPT155 as a slower-than-vLLM candidate.
+
+For each workload, aggregate tokens are batch×1,024 output tokens; implied median full wall is aggregate tokens divided by each audited median rate. Arithmetic (B512) needs1.9253s saved from61.5170s, a3.1297% reduction. Code-tracing (B512) needs5.0684s from60.3530s, an8.3979% reduction. Instruction-following (B512) needs1.0024s from60.6960s, a1.6514% reduction. Long retrieval (B224) needs3.0216s from60.7685s, a4.9724% reduction. The saved time as a fraction of Garnet's recorded prefill component is28.64%,74.09%,14.66%, and12.00%, respectively. These latter ratios are contextual arithmetic only; prefill causality is explicitly not inferred, and a scheduler may also change decode behavior and dispatch overhead. No cohort latency or rate is predicted.
+
+Helper `D:/CantorAI/work/opt86-local/analyze_opt165_full_wall_thresholds.py` SHA-256 `93b9065cbf9190af0039bced2c60f23e7df0432f6125a37e28158def5601fb45`; output `D:/CantorAI/work/opt86-local/opt165-full-wall-thresholds.json` SHA-256 `4614f45db51b1b34a646cebb1c549b0f36a64b348b92c322f115f637c34c4320`. The outcome is not an inference run or optimization result; all-four remains unmet. No source, remote, GPU, profile, build, sanitizer, or inference state changed. A dynamic cohort candidate remains unsubstantiated because smaller cohorts materially increase dispatch counts and these exact per-shape GPU costs are unknown. Do not spend on target testing until a concrete candidate offers a credible path to all four full-rate thresholds and current billing leaves the $25/$375 reserve.
