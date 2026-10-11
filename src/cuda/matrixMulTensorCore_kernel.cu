@@ -73,6 +73,7 @@ __global__ void wmmaGemmKernelT(const DataType* A, const DataType* B, float* C,
 #else
     wmmaGemmBody<DataType>(A, B, C, M, N, K);
 #endif
+#endif
 }
 
 // Conventional tiled kernel for float (32-bit) matrix multiplication.
