@@ -4345,3 +4345,6 @@ Use the already-present `GARNET_PROFILE_DECODE_LAYERS` one-shot TensorRT `IProfi
 
 
 **OPT167 launch attempt 4 (2026-10-11):** With explicit B512/context1280/chunk8 and a fresh output directory, the paired suite entered code-tracing admission, then the XLang3 admission subprocess returned exit1. It did not start resident serving or emit the requested layer profile. Preserve `work/opt167-layer-diagnostic/short-retry2` and its logs as a failed preflight; abandon this profiler path rather than spending more target time on launcher repair. No timing or optimization conclusion follows.
+
+
+**OPT167 admission failure clarification (2026-10-11):** The retained `code-tracing.admission.log` identifies the cause: the supplied OPT155 resident profile failed `native_binaries` identity matching against the installed target binary. The runner stopped before model loading; the layer profile was not created. This confirms that the stale profile cannot be reused for this diagnostic. Do not spend more target time repairing OPT167; any new profile requires a concrete optimization candidate and a source/native-matched preparation first.
