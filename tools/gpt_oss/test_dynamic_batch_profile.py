@@ -1,11 +1,34 @@
 import os
+import ast
 import unittest
 from unittest.mock import patch
+from pathlib import Path
 
 from pipeline import _dynamic_batch_profile, shared_kv_handoff
 
 
 class DynamicBatchProfileTests(unittest.TestCase):
+    def test_batch_runner_uses_full_handoff_at_shape_and_decode_boundaries(self):
+        runner = Path(__file__).with_name('run_tp_batch_throughput.py')
+        tree = ast.parse(runner.read_text(encoding='utf-8'))
+        handoff_assignments = [
+            node for node in ast.walk(tree)
+            if isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == 'kv'
+                    for target in node.targets)
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name)
+            and node.value.func.id == 'shared_kv_handoff'
+        ]
+        self.assertEqual(len(handoff_assignments), 2)
+        self.assertFalse(any(
+            isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == 'kv'
+                    for target in node.targets)
+            and isinstance(node.value, ast.ListComp)
+            for node in ast.walk(tree)
+        ))
+
     def test_hybrid_kv_handoff_preserves_every_bank_and_table_reference(self):
         layout = {'extra_tensor_arguments': ['window_keys', 'window_values', 'window_table']}
         keys, values = object(), object()

@@ -148,7 +148,7 @@ prefill_completed_memory_mib = prefill_completed_memory_samples_mib[-1]
 generated = [[int(token)] for token in prefill['token_ids']]
 assert len(generated) == batch, (len(generated), batch)
 print('TP2 batch prefill complete', prefill_seconds, flush=True)
-kv = [(stage['keys'], stage['values']) for stage in model.stages]
+kv = shared_kv_handoff(model.stages, plan.get('kv_layout'))
 model.release()
 
 started = time.perf_counter()
