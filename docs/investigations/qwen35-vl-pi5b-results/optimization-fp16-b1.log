@@ -1,0 +1,58 @@
+vision_compile_ms 3756.466913
+vision_inference_ms 398.064755 image_sha256 eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9
+compiled Garnet decoder layer 0 linear_attention ms 875.623117
+compiled Garnet decoder layer 1 linear_attention ms 868.600939
+compiled Garnet decoder layer 2 linear_attention ms 886.287285
+compiled Garnet decoder layer 3 full_attention ms 740.611444
+compiled Garnet decoder layer 4 linear_attention ms 851.574158
+compiled Garnet decoder layer 5 linear_attention ms 901.402523
+compiled Garnet decoder layer 6 linear_attention ms 854.234178
+compiled Garnet decoder layer 7 full_attention ms 746.663063
+compiled Garnet decoder layer 8 linear_attention ms 972.293665
+compiled Garnet decoder layer 9 linear_attention ms 854.728129
+compiled Garnet decoder layer 10 linear_attention ms 865.234185
+compiled Garnet decoder layer 11 full_attention ms 711.753121
+compiled Garnet decoder layer 12 linear_attention ms 853.215418
+compiled Garnet decoder layer 13 linear_attention ms 881.208187
+compiled Garnet decoder layer 14 linear_attention ms 803.049108
+compiled Garnet decoder layer 15 full_attention ms 709.454201
+compiled Garnet decoder layer 16 linear_attention ms 840.950225
+compiled Garnet decoder layer 17 linear_attention ms 683.379799
+compiled Garnet decoder layer 18 linear_attention ms 720.969857
+compiled Garnet decoder layer 19 full_attention ms 738.644777
+compiled Garnet decoder layer 20 linear_attention ms 566.629435
+compiled Garnet decoder layer 21 linear_attention ms 536.661986
+compiled Garnet decoder layer 22 linear_attention ms 395.511469
+compiled Garnet decoder layer 23 full_attention ms 476.436217
+initialization_seconds 23.63503098487854
+prefill_seconds 16.19124484062195 prompt_tokens [79] mrope_next_position 34 ttft_from_start_seconds 39.82659435272217
+image_generated_tokens [32] text ['A']
+image_generated_tokens [3349] text ['A large']
+image_generated_tokens [33138] text ['A large statue']
+image_generated_tokens [314] text ['A large statue of']
+image_generated_tokens [264] text ['A large statue of a']
+image_generated_tokens [855] text ['A large statue of a man']
+image_generated_tokens [440] text ['A large statue of a man with']
+image_generated_tokens [264] text ['A large statue of a man with a']
+image_generated_tokens [20117] text ['A large statue of a man with a golden']
+image_generated_tokens [1901] text ['A large statue of a man with a golden head']
+image_generated_tokens [6833] text ['A large statue of a man with a golden headband']
+image_generated_tokens [12965] text ['A large statue of a man with a golden headband stands']
+image_generated_tokens [383] text ['A large statue of a man with a golden headband stands on']
+image_generated_tokens [264] text ['A large statue of a man with a golden headband stands on a']
+image_generated_tokens [42401] text ['A large statue of a man with a golden headband stands on a balcony']
+image_generated_tokens [50471] text ['A large statue of a man with a golden headband stands on a balcony overlooking']
+image_generated_tokens [264] text ['A large statue of a man with a golden headband stands on a balcony overlooking a']
+image_generated_tokens [93182] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely']
+image_generated_tokens [33218] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated']
+image_generated_tokens [3177] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city']
+image_generated_tokens [85624] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled']
+image_generated_tokens [303] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in']
+image_generated_tokens [264] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a']
+image_generated_tokens [15822] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountain']
+image_generated_tokens [757] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous']
+image_generated_tokens [17865] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape']
+image_generated_tokens [13] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.']
+image_generated_tokens [248046] text ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.<|im_end|>']
+image_result {'text': ['A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.<|im_end|>'], 'token_ids': [[32, 3349, 33138, 314, 264, 855, 440, 264, 20117, 1901, 6833, 12965, 383, 264, 42401, 50471, 264, 93182, 33218, 3177, 85624, 303, 264, 15822, 757, 17865, 13, 248046]], 'decode_step_seconds': [0.2490861415863037, 0.24479174613952637, 0.25120067596435547, 0.26241588592529297, 0.24961519241333008, 0.2472066879272461, 0.24474835395812988, 0.24703574180603027, 0.248521089553833, 0.24631071090698242, 0.24541711807250977, 0.2538304328918457, 0.2671682834625244, 0.2458493709564209, 0.24614357948303223, 0.2459735870361328, 0.32187604904174805, 0.24607324600219727, 0.24529528617858887, 0.24612998962402344, 0.2669484615325928, 0.24890947341918945, 0.247528076171875, 0.24681997299194336, 0.3204457759857178, 0.24559640884399414, 0.24564528465270996], 'batch': 1, 'image_sha256': 'eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9'}
+process_metrics {"exit_code": 0, "wall_seconds": 47.33665255999949, "max_rss_kib": 2939104, "user_seconds": 52.538246, "system_seconds": 3.51429, "major_faults": 3915, "minor_faults": 223696}

@@ -1,0 +1,86 @@
+[
+  {
+    "log": "optimization-final-b1.log",
+    "batch": 1,
+    "decode_calls": 27,
+    "decode_total_seconds": 6.593223333358765,
+    "tokens_per_second_per_row": 4.095113821397807,
+    "tokens_per_second_combined": 4.095113821397807,
+    "peak_rss_gib": 2.8023681640625,
+    "wall_seconds": 33.202216721001605,
+    "prefill_record": "prefill_seconds 16.05868411064148 prompt_tokens [79] mrope_next_position 34 ttft_from_start_seconds 26.034000873565674",
+    "exit_code": 0
+  },
+  {
+    "log": "optimization-final-b2.log",
+    "batch": 2,
+    "decode_calls": 27,
+    "decode_total_seconds": 9.368406057357788,
+    "tokens_per_second_per_row": 2.8820270849377474,
+    "tokens_per_second_combined": 5.764054169875495,
+    "peak_rss_gib": 2.9481048583984375,
+    "wall_seconds": 45.67248720000498,
+    "prefill_record": "prefill_seconds 23.576127290725708 prompt_tokens [79, 79] mrope_next_position 34 ttft_from_start_seconds 35.720613956451416",
+    "exit_code": 0
+  },
+  {
+    "log": "optimization-fp16-b1.log",
+    "batch": 1,
+    "decode_calls": 27,
+    "decode_total_seconds": 6.876582622528076,
+    "tokens_per_second_per_row": 3.9263688785686166,
+    "tokens_per_second_combined": 3.9263688785686166,
+    "peak_rss_gib": 2.802947998046875,
+    "wall_seconds": 47.33665255999949,
+    "prefill_record": "prefill_seconds 16.19124484062195 prompt_tokens [79] mrope_next_position 34 ttft_from_start_seconds 39.82659435272217",
+    "exit_code": 0
+  },
+  {
+    "log": "optimization-fp16-b2.log",
+    "batch": 2,
+    "decode_calls": 27,
+    "decode_total_seconds": 10.684850692749023,
+    "tokens_per_second_per_row": 2.5269421891241586,
+    "tokens_per_second_combined": 5.053884378248317,
+    "peak_rss_gib": 2.9445953369140625,
+    "wall_seconds": 45.584811174994684,
+    "prefill_record": "prefill_seconds 23.872138738632202 prompt_tokens [79, 79] mrope_next_position 34 ttft_from_start_seconds 34.32881736755371",
+    "exit_code": 0
+  },
+  {
+    "log": "optimization-fp16-threads4-b1.log",
+    "batch": 1,
+    "decode_calls": 27,
+    "decode_total_seconds": 7.765975713729858,
+    "tokens_per_second_per_row": 3.4767041509369316,
+    "tokens_per_second_combined": 3.4767041509369316,
+    "peak_rss_gib": 2.8089141845703125,
+    "wall_seconds": 45.49900820599578,
+    "prefill_record": "prefill_seconds 19.131503343582153 prompt_tokens [79] mrope_next_position 34 ttft_from_start_seconds 37.04900598526001",
+    "exit_code": 0
+  },
+  {
+    "log": "optimization-small-b1.log",
+    "batch": 1,
+    "decode_calls": 28,
+    "decode_total_seconds": 12.312238931655884,
+    "tokens_per_second_per_row": 2.2741598953224873,
+    "tokens_per_second_combined": 2.2741598953224873,
+    "peak_rss_gib": 4.6296844482421875,
+    "wall_seconds": 40.78733819899935,
+    "prefill_record": "prefill_seconds 18.786425828933716 prompt_tokens [37] mrope_next_position 29 ttft_from_start_seconds 27.848357439041138",
+    "exit_code": 0
+  },
+  {
+    "log": "optimization-threads4-b1.log",
+    "batch": 1,
+    "decode_calls": 27,
+    "decode_total_seconds": 17.000099182128906,
+    "tokens_per_second_per_row": 1.5882260280212563,
+    "tokens_per_second_combined": 1.5882260280212563,
+    "peak_rss_gib": 4.6277008056640625,
+    "wall_seconds": 89.02331941600278,
+    "prefill_record": "prefill_seconds 52.72913455963135 prompt_tokens [79] mrope_next_position 34 ttft_from_start_seconds 71.2189712524414",
+    "exit_code": 0
+  }
+]

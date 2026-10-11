@@ -78,3 +78,27 @@ cross-framework parity. Actual photo generation, component verification, and
 that stricter diagnostic are reported separately. General Unicode tokenizer
 parity, fast-processor pixel parity, long contexts, video, batch 4, efficient
 chunked prefill, and a persistent serving API are not established by these tests.
+
+## Optimization profiles
+
+Keep the original 65,536-pixel image budget for quality. The optional fifth
+preprocessor argument selects a pixel budget, for example `1 16384`; this is
+an experimental detail/speed tradeoff, not an equivalent-quality profile.
+The 16,384-pixel sample changed a headband into a reported glowing orb.
+
+For the faster execution profile, explicitly set both:
+
+```sh
+GARNET_OPENVINO_CPU_THREADS=2 GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f16 \
+  venv/bin/python source/test2026/pi5b/measure_process.py \
+  /home/shawn/cantorai-ci/out/build/linux-arm64-release/bin/xlang3 \
+  source/test2026/pi5b/run_image_decoder.py cpu-runtime-build source \
+  models/Qwen3.5-0.8B inputs/RealWorld-04-b1.json
+```
+
+The FP32 default remains the numerical reference. The FP16 performance setting
+preserved all generated IDs on the measured photo; general accuracy equivalence
+is unverified. F32 with four threads was slower than two in the actual image run.
+A CPU having four cores does not establish the best thread count for every
+small matrix/recurrent graph. See the investigation's optimization logs for
+complete observations; cold compile/load times depend on cache residency.

@@ -103,6 +103,20 @@ public:
                 for(int64_t b=0;b<batch;++b){const auto* x=hidden+b*dim;int64_t d=0;float sum=0;
 #if defined(__aarch64__)
                     float32x4_t accum=vdupq_n_f32(0);
+                    float32x4_t accum1=vdupq_n_f32(0),accum2=vdupq_n_f32(0),accum3=vdupq_n_f32(0);
+                    // Independent accumulators avoid one long FMA dependency chain.
+                    for(;d+16<=dim;d+=16){
+                        auto lo=vld1q_u16(weight+d),hi=vld1q_u16(weight+d+8);
+                        auto w0=vreinterpretq_f32_u32(vshlq_n_u32(vmovl_u16(vget_low_u16(lo)),16));
+                        auto w1=vreinterpretq_f32_u32(vshlq_n_u32(vmovl_u16(vget_high_u16(lo)),16));
+                        auto w2=vreinterpretq_f32_u32(vshlq_n_u32(vmovl_u16(vget_low_u16(hi)),16));
+                        auto w3=vreinterpretq_f32_u32(vshlq_n_u32(vmovl_u16(vget_high_u16(hi)),16));
+                        accum=vfmaq_f32(accum,w0,vld1q_f32(x+d));
+                        accum1=vfmaq_f32(accum1,w1,vld1q_f32(x+d+4));
+                        accum2=vfmaq_f32(accum2,w2,vld1q_f32(x+d+8));
+                        accum3=vfmaq_f32(accum3,w3,vld1q_f32(x+d+12));
+                    }
+                    accum=vaddq_f32(vaddq_f32(accum,accum1),vaddq_f32(accum2,accum3));
                     for(;d+4<=dim;d+=4){auto w=vreinterpretq_f32_u32(vshlq_n_u32(vmovl_u16(vld1_u16(weight+d)),16));accum=vfmaq_f32(accum,w,vld1q_f32(x+d));}
                     sum=vaddvq_f32(accum);
 #endif

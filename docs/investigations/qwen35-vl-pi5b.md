@@ -274,3 +274,74 @@ Final component regression: 8/8 CTest passed with GLIBC_TUNABLES=glibc.rtld.dyna
 The additional strict all-pretrained-vision endpoint comparison remains FAIL at the unchanged tolerance, as detailed above and preserved in pretrained-vision-reference.log. Full cross-framework parity is unverified. This investigation establishes actual image-plus-text execution, not production readiness: quantization, efficient prefill, persistent serving, general Unicode tokenizer parity, video, larger batches and long contexts remain unverified.
 
 Audit: isolated D:/CantorAI/Garnet-pi5b clone on feature/qwen35-vl-pi5b from main; original D:/CantorAI/Garnet branch remains feature/gpt-oss-120b and was not modified. Existing xlang3 SDK/runtime were read-only. Saved SSH alias used with verified address overrides, no credentials logged. Pi OS/architecture/RAM/swap/storage/CPU/thermals/runtime checks, approved inactive-output cleanup, pinned checkpoint hashes, reproduction commands and actual latency/memory/throughput limits are recorded. Qwen3.5-0.8B uses Garnet xModel/OpenVINO encoder/decoder plus Garnet native CPU tensor/tokenizer/tied-head operations. No inference substitution was used. All requested investigation work is complete with the explicit limitations above.
+
+## Follow-up optimization: four cores, FP16 and native projection
+
+The Pi has four Cortex-A76 cores. Actual full-photo profiling establishes that
+more worker threads are not automatically faster for these small decoder graphs:
+FP32 four threads measured 1.59 tokens/sec, 52.729 s prefill, versus the earlier
+two-thread FP32 2.51 tokens/sec and 29.081 s prefill. The FP16 hint with four
+threads measured 3.48 tokens/sec and 19.132 s prefill; two-thread FP16 initially
+measured 3.93 tokens/sec and 16.191 s prefill. Four-thread FP16 changed one word
+from populated to packed, retaining the same scene description. Temperatures
+sampled during the experiments were 60.6-71.05 C; throttled=0xe0000 has no active
+low status bits. Existing CI services were left running.
+
+The explicit GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f16 performance profile
+reduces the native package's working memory substantially. It is a backend
+precision hint, not a claim that every operation/state or the native BF16 output
+head executes in FP16. FP32 remains the default numerical reference; no existing
+test tolerance was relaxed. Before the native projection change, batch-2 FP16
+measured 5.05 tokens/sec combined, 23.872 s prefill, and 2.94 GiB peak RSS; both
+rows matched all 28 baseline token IDs. General FP16 accuracy parity remains
+unverified beyond these executed examples.
+
+The native CPU tied-head kernel now uses four independent NEON FMA accumulators
+per 16-element block and combines them before the existing tail path. This
+reduces the serial accumulator dependency without weight quantization. The
+independent full-vocabulary BF16 reference passed its unchanged argmax checks
+over all 248,320 outputs and 256 sampled logits per row, batch 2. The head call
+measured 53.832 ms in that focused run; this is not a controlled comparison with
+older cold measurements. Native tensor/head small numerical fixtures also
+passed. Final native library SHA256:
+276704d449c8f39eeba4ad9d23f05f1fc69dc523862185ed7498deb0a7e2eaee.
+
+Final two-thread FP16 batch-1 photo run exited 0, preserving all baseline token
+IDs. Peak RSS 2.8024 GiB; prefill 16.059 s; initialization 9.975 s; first output
+26.034 s; wall 33.202 s. This run had zero major page faults, so its warm-file
+startup must not be presented as a guaranteed cold-start speedup. Warm decode
+performance and the final batch-2 result are recorded in metrics-optimization.json.
+
+An optional fifth prepare_cpu_image.py argument now selects the pixel budget;
+its default remains 65,536. Tested 16,384 with the same checkpoint/photo and FP32:
+128x96, 12 visual tokens instead of 54; prompt 37 instead of 79 slots. Prefill
+18.786 s, first output 27.848 s, decode 2.27 tokens/sec. However the output called
+the headband a glowing orb and the sculpture metallic. This quality tradeoff is
+not recommended as the default. The original-resolution FP16 profile preserves
+more image evidence and is the recommended measured improvement.
+
+Reproduce the recommended profile with the README command, setting
+GARNET_OPENVINO_CPU_THREADS=2 and GARNET_OPENVINO_CPU_INFERENCE_PRECISION=f16.
+Actual learned inference remains Garnet/xModel throughout. Chunked prefill,
+weight quantization and persistent model residency remain further optimization
+work, not implemented or claimed by this follow-up. Raw optimization logs retain
+slower and quality-reducing experiments as well as successful improvements.
+
+Final optimized batch 2 also exited 0 with the same 28 token IDs in both rows.
+Both final photo runs used the rebuilt library above, original image size,
+two threads, FP16 hint and the unrolled native output projection.
+
+| Final measured profile | FP32 baseline B1 | Optimized B1 | FP32 baseline B2 | Optimized B2 |
+| --- | ---: | ---: | ---: | ---: |
+| Combined decode tokens/sec | 2.5079 | 4.0951 | 3.6106 | 5.7641 |
+| Per-request decode tokens/sec | 2.5079 | 4.0951 | 1.8053 | 2.8820 |
+| Peak RSS GiB | 4.6503 | 2.8024 | 4.8096 | 2.9481 |
+| Prefill seconds | 29.081 | 16.059 | 38.345 | 23.576 |
+| First output seconds | 42.436 | 26.034 | 51.978 | 35.721 |
+
+Decode improved 63%/60% for batches 1/2 respectively; memory fell 40%/39%.
+The final optimized runs had zero major page faults, unlike the earlier
+FP32 samples, so first-output and startup comparisons include cache effects.
+These remain one-photo, short-decode measurements with existing services active,
+not a general quality/sustained-throughput guarantee. The strict pretrained
+vision parity limitation from the earlier investigation remains unresolved.

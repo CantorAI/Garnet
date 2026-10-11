@@ -1,0 +1,59 @@
+vision_compile_ms 1146.505486
+vision_inference_ms 145.085846 image_sha256 eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9
+compiled Garnet decoder layer 0 linear_attention ms 243.163827
+compiled Garnet decoder layer 1 linear_attention ms 244.081705
+compiled Garnet decoder layer 2 linear_attention ms 245.811568
+compiled Garnet decoder layer 3 full_attention ms 214.440053
+compiled Garnet decoder layer 4 linear_attention ms 243.8635
+compiled Garnet decoder layer 5 linear_attention ms 249.960653
+compiled Garnet decoder layer 6 linear_attention ms 247.564266
+compiled Garnet decoder layer 7 full_attention ms 247.790713
+compiled Garnet decoder layer 8 linear_attention ms 245.30038
+compiled Garnet decoder layer 9 linear_attention ms 242.704362
+compiled Garnet decoder layer 10 linear_attention ms 244.401782
+compiled Garnet decoder layer 11 full_attention ms 213.665956
+compiled Garnet decoder layer 12 linear_attention ms 244.415819
+compiled Garnet decoder layer 13 linear_attention ms 245.019157
+compiled Garnet decoder layer 14 linear_attention ms 245.360232
+compiled Garnet decoder layer 15 full_attention ms 218.335581
+compiled Garnet decoder layer 16 linear_attention ms 246.548593
+compiled Garnet decoder layer 17 linear_attention ms 245.252084
+compiled Garnet decoder layer 18 linear_attention ms 268.195541
+compiled Garnet decoder layer 19 full_attention ms 257.901876
+compiled Garnet decoder layer 20 linear_attention ms 363.117612
+compiled Garnet decoder layer 21 linear_attention ms 427.531766
+compiled Garnet decoder layer 22 linear_attention ms 423.235292
+compiled Garnet decoder layer 23 full_attention ms 527.316593
+initialization_seconds 9.06093978881836
+prefill_seconds 18.786425828933716 prompt_tokens [37] mrope_next_position 29 ttft_from_start_seconds 27.848357439041138
+image_generated_tokens [32] text ['A']
+image_generated_tokens [3349] text ['A large']
+image_generated_tokens [11] text ['A large,']
+image_generated_tokens [43651] text ['A large, metallic']
+image_generated_tokens [48285] text ['A large, metallic sculpture']
+image_generated_tokens [314] text ['A large, metallic sculpture of']
+image_generated_tokens [264] text ['A large, metallic sculpture of a']
+image_generated_tokens [3611] text ['A large, metallic sculpture of a human']
+image_generated_tokens [1901] text ['A large, metallic sculpture of a human head']
+image_generated_tokens [440] text ['A large, metallic sculpture of a human head with']
+image_generated_tokens [264] text ['A large, metallic sculpture of a human head with a']
+image_generated_tokens [46877] text ['A large, metallic sculpture of a human head with a glowing']
+image_generated_tokens [35164] text ['A large, metallic sculpture of a human head with a glowing orb']
+image_generated_tokens [383] text ['A large, metallic sculpture of a human head with a glowing orb on']
+image_generated_tokens [1141] text ['A large, metallic sculpture of a human head with a glowing orb on its']
+image_generated_tokens [49530] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead']
+image_generated_tokens [11] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead,']
+image_generated_tokens [716] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set']
+image_generated_tokens [2272] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against']
+image_generated_tokens [264] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a']
+image_generated_tokens [37200] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop']
+image_generated_tokens [314] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of']
+image_generated_tokens [264] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of a']
+image_generated_tokens [3177] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of a city']
+image_generated_tokens [55592] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of a cityscape']
+image_generated_tokens [321] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of a cityscape and']
+image_generated_tokens [22767] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of a cityscape and mountains']
+image_generated_tokens [13] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of a cityscape and mountains.']
+image_generated_tokens [248046] text ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of a cityscape and mountains.<|im_end|>']
+image_result {'text': ['A large, metallic sculpture of a human head with a glowing orb on its forehead, set against a backdrop of a cityscape and mountains.<|im_end|>'], 'token_ids': [[32, 3349, 11, 43651, 48285, 314, 264, 3611, 1901, 440, 264, 46877, 35164, 383, 1141, 49530, 11, 716, 2272, 264, 37200, 314, 264, 3177, 55592, 321, 22767, 13, 248046]], 'decode_step_seconds': [0.43668198585510254, 0.4550669193267822, 0.42822790145874023, 0.43003010749816895, 0.43232178688049316, 0.4834744930267334, 0.43303871154785156, 0.425844669342041, 0.43250536918640137, 0.4282219409942627, 0.47185206413269043, 0.42831993103027344, 0.4268770217895508, 0.433316707611084, 0.4277026653289795, 0.47516775131225586, 0.4300041198730469, 0.4318275451660156, 0.42882609367370605, 0.42893433570861816, 0.4601597785949707, 0.4270033836364746, 0.43121862411499023, 0.4287121295928955, 0.42951464653015137, 0.4788806438446045, 0.4609336853027344, 0.42757391929626465], 'batch': 1, 'image_sha256': 'eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9'}
+process_metrics {"exit_code": 0, "wall_seconds": 40.78733819899935, "max_rss_kib": 4854576, "user_seconds": 59.289241, "system_seconds": 3.191943, "major_faults": 3872, "minor_faults": 363545}
