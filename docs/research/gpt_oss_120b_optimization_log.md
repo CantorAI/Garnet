@@ -4880,3 +4880,8 @@ Keep the old reference and native archives immutable. For a new candidate-only p
 ### OPT198 runner launch failed before profile preflight
 
 A launch attempt invoked the Python orchestration helper through `xlang3` itself. The process exited immediately with `runtime: cannot initialize site: No module named 'site'`; this is a launcher mismatch, not a profile result. No engine profile or inference ran, and the helper did not reach its status-writing/preflight stage. Preserve this failure. The retry must invoke the helper with the target vLLM Python interpreter under the GPU lock; the helper will continue to invoke the documented `xlang3` runtime only for `profile_tp_engine_memory.py`.
+
+
+### OPT199 profile guard used the wrong CMakeCache path
+
+The corrected target-Python launch reached the local preflight and stopped before creating the candidate output directory or invoking the engine profiler. It attempted `/workspace/CantorAI/out/build/CMakeCache.txt`, but the existing build cache is under `/workspace/CantorAI/out/build/gpt-oss/CMakeCache.txt`. No profile or inference ran; temporary profile cache was not created. Preserve this failed guard check. The next retry changes only the helper's path lookup to the existing CMake wrapper cache path and retains every other source, native-binary, vLLM-reference, idle-GPU, and storage guard.
