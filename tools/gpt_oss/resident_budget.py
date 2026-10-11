@@ -106,6 +106,24 @@ def plan_identity(plan):
     return identity
 
 
+def validate_runtime_candidate_shape(profile, *, batch, input_tokens, output_tokens,
+                                     context, prefill_chunk, phase_engine_batches):
+    """Reject workloads that differ from the shape used to build candidate engines."""
+    shape = profile.get('candidate_shape')
+    if shape is None:
+        return
+    if not isinstance(shape, dict):
+        raise ValueError('Resident candidate profile shape is malformed')
+    expected = dict(batch=batch, input_tokens_per_request=input_tokens,
+        output_tokens_per_request=output_tokens,
+        max_context_tokens_per_request=context,
+        prefill_chunk_tokens=prefill_chunk,
+        prefill_engine_batch=phase_engine_batches['prefill'],
+        decode_engine_batch=phase_engine_batches['decode'])
+    if any(shape.get(key) != value for key, value in expected.items()):
+        raise ValueError('Resident request shape differs from the immutable candidate profile')
+
+
 def admit_resident(profile, plan, devices, *, binaries, hardware_csv, environment,
                    checkpoint, cache, padded_prefill, reserve_bytes=2 << 30,
                    memory_fraction=.9):

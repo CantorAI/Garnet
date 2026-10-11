@@ -22,7 +22,8 @@ from resident_session import read_session, session_partial
 from resident_runtime_scheduling import POLICY as runtime_switch_policy, parse_switch_us, RuntimeSwitchScope
 from decode_first_scheduler import QueuedPrefill, plan_decode_first_iteration
 from resident_budget import (admit_resident, native_identity, hardware_identity,
-    kernel_environment, checkpoint_identity, validate_engine_files, file_sha256)
+    kernel_environment, checkpoint_identity, validate_engine_files, file_sha256,
+    validate_runtime_candidate_shape)
 
 startup_started = time.perf_counter()
 
@@ -91,8 +92,13 @@ phase_batches = profile.get('phase_engine_batches',
 if (not isinstance(phase_batches, dict) or set(phase_batches) != {'prefill','decode'} or
         any(type(value) is not int or not 1 <= value <= batch for value in phase_batches.values())):
     raise ValueError('Resident profile has invalid phase engine batches')
+validate_runtime_candidate_shape(profile, batch=batch, input_tokens=len(ids),
+    output_tokens=output_tokens, context=capacity, prefill_chunk=chunk,
+    phase_engine_batches=phase_batches)
 if decode_first_scheduler:
-    if (batch != 224 or chunk != 36 or phase_batches != dict(prefill=112, decode=224) or
+    if (session_mode or batch != 224 or len(ids) != 2005 or output_tokens != 1024 or
+            capacity != 3072 or chunk != 36 or
+            phase_batches != dict(prefill=112, decode=224) or
             not profile.get('candidate_shape') or not padded or
             reuse_output or native_candidate_merge or final_prefill_sample_only or
             pattern_updates or native_greedy_state or runtime_switch_us):
