@@ -4885,3 +4885,8 @@ A launch attempt invoked the Python orchestration helper through `xlang3` itself
 ### OPT199 profile guard used the wrong CMakeCache path
 
 The corrected target-Python launch reached the local preflight and stopped before creating the candidate output directory or invoking the engine profiler. It attempted `/workspace/CantorAI/out/build/CMakeCache.txt`, but the existing build cache is under `/workspace/CantorAI/out/build/gpt-oss/CMakeCache.txt`. No profile or inference ran; temporary profile cache was not created. Preserve this failed guard check. The next retry changes only the helper's path lookup to the existing CMake wrapper cache path and retains every other source, native-binary, vLLM-reference, idle-GPU, and storage guard.
+
+
+### OPT200 profile retry refused a pre-existing status path
+
+After correcting the CMakeCache path, the helper stopped at its no-overwrite guard because `/workspace/CantorAI/work/opt193b-long-b224-prefill112-chunk36/profile-status.json` already existed. Inspection found it was a terminal failed-preflight record; its paired `/dev/shm/opt193b-long-b224-prefill112-chunk36-cache` did not exist. The older `opt193-long...` path likewise contains only a terminal failed native-mismatch status. Both records are preserved; no candidate engines, cache, profile, or inference were produced by this attempt. The next run uses a new unique `opt193c` output/cache namespace and retains the existing paths untouched.
