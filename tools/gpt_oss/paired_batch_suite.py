@@ -273,6 +273,10 @@ for case in manifest['cases']:
 for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
     if engine == 'garnet' and args.resident_session:
         case_env = env.copy()
+        # Preserve the suite's selected cache for the benchmark shell. The
+        # sanitized environment drops inherited GARNET_* values, but this
+        # path is part of the resident profile identity used at admission.
+        case_env['GARNET_GPT_OSS_CACHE'] = str(cache.resolve())
         case_env.update(GARNET_BATCH_CONTEXT_CAPACITY=str(session_payload['context']),
             GARNET_BATCH_PREFILL_CHUNK=str(session_payload['prefill_chunk']), GARNET_RESIDENT_SESSION='1')
         command_logged(['bash', repo / 'tools/gpt_oss/benchmark_batch_tp2.sh',
@@ -296,6 +300,8 @@ for engine in (('vllm',) if args.vllm_only else ('vllm', 'garnet')):
         result = Path(str(prefix) + '.json')
         case_env = env.copy()
         case_env['GARNET_BATCH_CONTEXT_CAPACITY'] = str(case['context'])
+        if engine == 'garnet':
+            case_env['GARNET_GPT_OSS_CACHE'] = str(cache.resolve())
         print('Starting', engine, case['name'], 'batch', batch, 'input', case['input'],
               'output', output, 'context', case['context'], flush=True)
         if engine == 'vllm':
