@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <mutex>
 #include <new>
 #include <limits>
@@ -70,6 +71,22 @@ int rows(const Dims& d) {
         d.d[0] > std::numeric_limits<int>::max() / d.d[1]) return 0;
     return d.d[0] * d.d[1];
 }
+bool dynamicProfileDebugEnabled() noexcept {
+    const char* legacy = std::getenv("GARNET_TRT_DYNAMIC_PROFILE_DEBUG");
+    const char* scoped = std::getenv("GARNET_GPT_OSS_DYNAMIC_PROFILE_DEBUG");
+    return (legacy && legacy[0] != '\0' && legacy[0] != '0') ||
+        (scoped && std::strcmp(scoped, "1") == 0);
+}
+void reportInitializeFailure(const GptOssOptions& options, const char* stage,
+    cudaError_t status) noexcept {
+    static std::atomic<int> reported{0};
+    if (!dynamicProfileDebugEnabled() ||
+        reported.fetch_add(1, std::memory_order_relaxed) >= 32) return;
+    std::fprintf(stderr,
+        "GPT-OSS plugin initialize failed stage=%s kind=%d rank=%d prefill=%d status=%d cuda=%s\n",
+        stage ? stage : "unknown", options.kind, options.tpRank, options.prefill,
+        static_cast<int>(status), cudaGetErrorString(status));
+}
 }
 GptOssPlugin::GptOssPlugin(const GptOssOptions& o) : m_options(o), m_valid(valid(o)) {}
 GptOssPlugin::GptOssPlugin(const void* data, size_t size) {
@@ -112,7 +129,7 @@ bool GptOssPlugin::supportsFormatCombination(int pos, const PluginTensorDesc* d,
 void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
     const DynamicPluginTensorDesc*, int) noexcept {
     static std::atomic<int> rejectedProfileDebugCount{0};
-    const bool debugDynamicProfile = std::getenv("GARNET_TRT_DYNAMIC_PROFILE_DEBUG") != nullptr;
+    const bool debugDynamicProfile = dynamicProfileDebugEnabled();
     const auto reportDynamicProfile = [&]() noexcept {
         if (!debugDynamicProfile ||
             rejectedProfileDebugCount.fetch_add(1, std::memory_order_relaxed) >= 16) return;
@@ -410,15 +427,32 @@ const char* GptOssPlugin::getPluginType() const noexcept { return kName; }
 const char* GptOssPlugin::getPluginVersion() const noexcept { return kVersion; }
 int GptOssPlugin::getNbOutputs() const noexcept { return 1; }
 int GptOssPlugin::initialize() noexcept {
-    if (!m_valid) return 1;
+    if (!m_valid) {
+        reportInitializeFailure(m_options, "invalid_plugin_configuration", cudaErrorInvalidValue);
+        return 1;
+    }
     if ((m_options.kind == 3 || m_options.kind == 4) && !m_tpInitialized) {
         const auto status = GptOssTpAcquire();
-        if (status != cudaSuccess) return 1;
+        if (status != cudaSuccess) {
+            reportInitializeFailure(m_options, "tp_communicator_acquire", status);
+            return 1;
+        }
         m_tpInitialized = true;
     }
     if ((m_options.kind == 2 || m_options.kind == 8) && !m_marlin) {
         try { m_marlin.reset(new GptOssMarlin(m_options)); }
-        catch (...) { return 1; }
+        catch (const std::bad_alloc&) {
+            reportInitializeFailure(m_options, "marlin_host_allocation", cudaErrorMemoryAllocation);
+            return 1;
+        }
+        catch (const std::exception&) {
+            reportInitializeFailure(m_options, "marlin_state_construction", cudaErrorUnknown);
+            return 1;
+        }
+        catch (...) {
+            reportInitializeFailure(m_options, "marlin_unknown_exception", cudaErrorUnknown);
+            return 1;
+        }
     }
     return 0;
 }

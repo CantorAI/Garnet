@@ -8,6 +8,19 @@ from pipeline import _dynamic_batch_profile, shared_kv_handoff
 
 
 class DynamicBatchProfileTests(unittest.TestCase):
+    def test_plugin_initialization_diagnostics_are_opt_in_and_stage_specific(self):
+        plugin = Path(__file__).parents[2] / 'plugins/gpt_oss/tensorrt/gpt_oss_plugin.cpp'
+        source = plugin.read_text(encoding='utf-8')
+        self.assertIn('GARNET_GPT_OSS_DYNAMIC_PROFILE_DEBUG', source)
+        self.assertIn('dynamicProfileDebugEnabled()', source)
+        self.assertIn('if (!dynamicProfileDebugEnabled()', source)
+        for stage in ('invalid_plugin_configuration', 'tp_communicator_acquire',
+                      'marlin_host_allocation', 'marlin_state_construction',
+                      'marlin_unknown_exception'):
+            self.assertIn('"' + stage + '"', source)
+        self.assertIn('GPT-OSS plugin initialize failed stage=%s kind=%d rank=%d prefill=%d',
+                      source)
+
     def test_batch_runner_uses_full_handoff_at_shape_and_decode_boundaries(self):
         runner = Path(__file__).with_name('run_tp_batch_throughput.py')
         tree = ast.parse(runner.read_text(encoding='utf-8'))
