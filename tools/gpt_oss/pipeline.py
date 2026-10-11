@@ -307,6 +307,11 @@ def marlin_workspace_profile():
             'decode_block_override': decode if decode in (8, 32) else 0}
     if large == 64:
         profile['large_prefill_block'] = 64
+    up_n_tile = os.environ.get('GARNET_GPT_OSS_MARLIN_PREFILL_UP_N_TILE')
+    if up_n_tile is not None:
+        if large != 64 or up_n_tile not in ('64', '128'):
+            raise ValueError('Marlin prefill up N tile requires the large-prefill64 path and must be64/128')
+        profile['prefill_up_n_tile'] = int(up_n_tile)
     up_stages = os.environ.get('GARNET_GPT_OSS_MARLIN_PREFILL_UP_STAGES')
     if up_stages is not None:
         if large != 64 or up_stages not in ('2', '4'):
@@ -320,6 +325,12 @@ def marlin_workspace_profile():
             if value not in ('1', '2', '4'):
                 raise ValueError('Marlin projection CTA policy must be1/2/4')
             profile[field] = int(value)
+    if up_n_tile == '64' and (up_stages not in (None, '4') or any(
+            os.environ.get(variable) is not None for variable in (
+                'GARNET_GPT_OSS_MARLIN_CTAS_PER_SM',
+                'GARNET_GPT_OSS_MARLIN_PREFILL_CTAS_PER_SM',
+                'GARNET_GPT_OSS_MARLIN_PREFILL_UP_CTAS_PER_SM'))):
+        raise ValueError('OPT156 N64 derives its up grid; independent Marlin CTA/stage overrides are unsupported')
     bounded = os.environ.get('GARNET_GPT_OSS_MARLIN_BOUNDED_PREFILL', '0')
     if bounded not in ('0', '1'):
         raise ValueError('Bounded Marlin prefill flag must be0 or1')
