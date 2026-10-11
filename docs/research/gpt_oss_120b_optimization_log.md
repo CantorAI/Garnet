@@ -4890,3 +4890,8 @@ The corrected target-Python launch reached the local preflight and stopped befor
 ### OPT200 profile retry refused a pre-existing status path
 
 After correcting the CMakeCache path, the helper stopped at its no-overwrite guard because `/workspace/CantorAI/work/opt193b-long-b224-prefill112-chunk36/profile-status.json` already existed. Inspection found it was a terminal failed-preflight record; its paired `/dev/shm/opt193b-long-b224-prefill112-chunk36-cache` did not exist. The older `opt193-long...` path likewise contains only a terminal failed native-mismatch status. Both records are preserved; no candidate engines, cache, profile, or inference were produced by this attempt. The next run uses a new unique `opt193c` output/cache namespace and retains the existing paths untouched.
+
+
+### OPT201 candidate profile preflight expected an absent reference field
+
+The OPT193c attempt passed the earlier source, native, cache-path, and fresh-output guards, then stopped before engine loading because the saved profile reference has no top-level `checkpoint` key. It records tokenizer SHA-256 and source/native identity, while the checkpoint identity belongs to the referenced engine-load profile. No candidate engine/profile or inference was produced; the helper wrote only its terminal failed-preflight status. Preserve it. The next preflight will compare the live checkpoint identity against the archived engine-load profile's explicit checkpoint record, and will use a fresh `opt193d` output/cache namespace.
