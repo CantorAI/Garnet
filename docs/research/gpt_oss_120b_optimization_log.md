@@ -4895,3 +4895,8 @@ After correcting the CMakeCache path, the helper stopped at its no-overwrite gua
 ### OPT201 candidate profile preflight expected an absent reference field
 
 The OPT193c attempt passed the earlier source, native, cache-path, and fresh-output guards, then stopped before engine loading because the saved profile reference has no top-level `checkpoint` key. It records tokenizer SHA-256 and source/native identity, while the checkpoint identity belongs to the referenced engine-load profile. No candidate engine/profile or inference was produced; the helper wrote only its terminal failed-preflight status. Preserve it. The next preflight will compare the live checkpoint identity against the archived engine-load profile's explicit checkpoint record, and will use a fresh `opt193d` output/cache namespace.
+
+
+### OPT202 checkpoint identity guard correction proposal
+
+The OPT193c reference lacks a `checkpoint` field, but the already archived engine-load profile at `D:/CantorAI/work/opt86-local/opt157-n64-pipelinefix-long-profile-retry1/engine-loads.json` contains the checkpoint header/config identity. Its local SHA-256 is `9f470a4caeb3b5a1d61806609bc54de23eede6e82338ffff2696b9fa04d1dff5`; its checkpoint record names the same `/workspace/CantorAI/models/gpt-oss-120b/original` root. Before any new profile work, use that archived identity as an independent model-asset guard and retain the separate OPT183 tokenizer SHA, source, native, and vLLM checks. This is identity validation only; it does not transfer the older profile's engine or performance claims to the new candidate.
