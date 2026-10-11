@@ -3193,3 +3193,9 @@ The proposed two-variable profile also failed the admission-only layout validato
 ###### OPT171 exact fallback-profile proposal
 
 Create one new profile copy changing only those four peer transport controls to the documented fallback tuple `(peer_group=0, grid_signals=0, CTAs=64, threads=256)`. Leave BF16 prefill all-reduce, saved vLLM manifest, and all workload settings untouched. Run only after the 15-GiB free-space and idle gates pass; the paired suite must validate the saved vLLM reference before Garnet. Preserve both admission failures. If this exact profile fails admission, stop rather than iterating settings blindly.
+
+The exact fallback tuple passed admission and the saved vLLM reference revalidated, but Garnet engine preparation stopped before CUDA inference: the same profile also enabled `GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE=1`, and `fusion_policy.py` correctly rejected fused peer MoE without an owned peer group. No GPU kernel ran and no candidate output exists. This is a third dependent peer-group control, not evidence about model correctness.
+
+###### OPT171 peer-independent MoE fallback proposal
+
+Make one final profile copy for the diagnostic fallback by additionally setting `GARNET_GPT_OSS_FUSED_MOE_TP_REDUCE=0`; retain the already documented fallback tuple, BF16 prefill all-reduce, and all other settings. Re-run the same saved-reference-revalidated long case once, with disk admission intact. This isolates peer-group lifecycle from the peer-dependent fused MoE path; it is not a comparison of equivalent serving implementations and cannot support a speed claim. If this run passes warmup, preserve its full answers and trajectory; if it fails, stop and diagnose from evidence rather than adding more arbitrary overrides.
