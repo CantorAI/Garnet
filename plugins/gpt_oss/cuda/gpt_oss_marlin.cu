@@ -330,9 +330,16 @@ UpKernel downKernel32() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloa
 UpKernel upKernel64Stages4() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE8M0fnu.id(),128,4,8,4,false,4,2,false>;}
+// The N64 up tile has one 128-int4 B vector per K stage. Keep at least two
+// load iterations so the pinned pipeline reaches its k == iters - 2 advance.
+constexpr int kUpN64Threads = 64;
+constexpr int kUpN64LoadIterations =
+    (4 * 16 * 16 / 8 / 4 * 4) / kUpN64Threads;
+static_assert(kUpN64LoadIterations >= 2,
+    "Marlin up-N64 requires at least two weight-load iterations");
 UpKernel upKernel64N64Stages4() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
-    garnet_marlin_types::kFE8M0fnu.id(),128,4,4,4,false,4,2,false>;}
+    garnet_marlin_types::kFE8M0fnu.id(),kUpN64Threads,4,4,4,false,4,2,false>;}
 UpKernel upKernel64Stages2() {return GarnetMarlin::Marlin<garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE2M1f.id(),garnet_marlin_types::kBFloat16.id(),
     garnet_marlin_types::kFE8M0fnu.id(),128,4,8,4,false,2,2,false>;}
@@ -501,13 +508,14 @@ struct GptOssMarlin::State {
                 cudaFuncAttributes attributes{};int active=0;
                 status=cudaFuncGetAttributes(&attributes,kernel);
                 if(status==cudaSuccess)status=cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-                    &active,kernel,128,selectedUpShared);
+                    &active,kernel,upNBlocks==4?kUpN64Threads:128,selectedUpShared);
                 const int requested=upNBlocks==4?2:projectionCtasPerSm(true,computeMajor,true);
                 if(status==cudaSuccess && requested>active)status=cudaErrorInvalidConfiguration;
                 if(status==cudaSuccess && upNBlocks==4 && active<2)status=cudaErrorInvalidConfiguration;
                 if(status==cudaSuccess && debugMarlin())std::fprintf(stderr,
-                    "GPT-OSS large-prefill up: n_tile=%d stages=%d threads=128 shared=%d regs=%d local=%zu active_blocks_per_sm=%d requested_ctas_per_sm=%d device_shared_per_sm=%zu\n",
-                    upNBlocks*16,upStages,selectedUpShared,attributes.numRegs,attributes.localSizeBytes,
+                    "GPT-OSS large-prefill up: n_tile=%d stages=%d threads=%d load_iters=%d shared=%d regs=%d local=%zu active_blocks_per_sm=%d requested_ctas_per_sm=%d device_shared_per_sm=%zu\n",
+                    upNBlocks*16,upStages,upNBlocks==4?kUpN64Threads:128,
+                    upNBlocks==4?kUpN64LoadIterations:2,selectedUpShared,attributes.numRegs,attributes.localSizeBytes,
                     active,requested,prop.sharedMemPerMultiprocessor);
             }
         }
@@ -618,9 +626,10 @@ cudaError_t GptOssMarlin::Run(const void* const* in,float* y,void* workspace,int
         (upStages==2?kUpShared64Stages2:kUpShared64)):(block==32?35584:27136);
     auto up=block==64?(upNBlocks==4?upKernel64N64Stages4():upKernel64(upStages)):
         (block==32?upKernel32():upKernel());
+    const int upThreads=block==64 && upNBlocks==4?kUpN64Threads:128;
     const int upCtasPerSm=block==64 && upNBlocks==4?2:
         projectionCtasPerSm(true,s.computeMajor,o.prefill);
-    up<<<s.sms*upCtasPerSm,128,upShared,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
+    up<<<s.sms*upCtasPerSm,upThreads,upShared,stream>>>(at<int4>(workspace,l.a),(const int4*)s.weights[0],at<int4>(workspace,l.up),at<int4>(workspace,l.tmp),
         nullptr,nullptr,(const int4*)s.weights[1],nullptr,nullptr,at<int>(workspace,l.sorted),at<int>(workspace,l.experts),at<int>(workspace,l.padded),
         nullptr,o.topK,false,tokens,g.upN,g.upK,at<int>(workspace,l.locks),false,false,true);
     activation<<<(slots*g.downK+255)/256,256,0,stream>>>(at<nv_bfloat16>(workspace,l.up),(const float*)in[5],selected,at<nv_bfloat16>(workspace,l.activation),slots,g.upN,g.downK,o);
