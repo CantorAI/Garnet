@@ -5,6 +5,7 @@ input updates, sampling, and phase transition; no logging/memory subprocesses
 inside the timed window. Engine loading is separately reported cold startup.
 """
 import json
+import hashlib
 import math
 import os
 from pathlib import Path
@@ -97,9 +98,14 @@ validate_runtime_candidate_shape(profile, batch=batch, input_tokens=len(ids),
     phase_engine_batches=phase_batches)
 if token_budget_scheduler:
     if (session_mode or batch != 224 or len(ids) != 2005 or output_tokens != 1024 or
-            capacity != 3072 or chunk != 36 or
-            phase_batches != dict(prefill=112, decode=224) or
-            not profile.get('candidate_shape') or not padded or
+            capacity != 3072 or
+            phase_batches != dict(prefill=224, decode=224) or
+            not profile.get('candidate_shape') or
+            profile['candidate_shape'].get('prefill_chunk_tokens') != chunk or
+            profile['candidate_shape'].get('input_ids_sha256') != hashlib.sha256(
+                json.dumps(ids, separators=(',', ':')).encode()).hexdigest() or
+            (len(ids) % chunk and not padded) or
+            min(112, batch) * chunk > 4096 or
             reuse_output or native_candidate_merge or final_prefill_sample_only or
             pattern_updates or native_greedy_state or runtime_switch_us):
         raise ValueError('Token-budget scheduler requires the exact qualified-shape candidate gates')
@@ -271,22 +277,63 @@ prefill_inputs = decode_inputs = None
 prefill_cohort_inputs = None
 
 def run_token_budget_request(trial, ids, start):
-    """Fixed 224-request correctness path using 112x36 FIFO prefill cohorts."""
+    """Decode active requests first, then FIFO-prefill up to one bounded cohort."""
     request_ids = [f'q{slot:03d}' for slot in range(batch)]
     slots = {request_id: slot for slot, request_id in enumerate(request_ids)}
     offsets = {request_id: 0 for request_id in request_ids}
     remaining = {request_id: len(ids) for request_id in request_ids}
     active = []
     rows = {}
+    first_token_times = {}
+    completion_times = {}
     prefill_steps = []
-    while any(remaining.values()):
+    decode_steps = []
+    decode_batch_sizes = []
+    scheduler_steps = []
+    while any(remaining.values()) or active:
         queued = [QueuedPrefill(request_id, remaining[request_id], offsets[request_id])
                   for request_id in request_ids if remaining[request_id] > 0]
         decision = plan_token_budget_iteration(active, queued, token_budget=8192,
             max_sequences=batch, prefill_chunk=chunk, prefill_cohort=112,
-            max_peer_rows=4096)
-        if not decision.prefill_cohorts:
-            raise RuntimeError('Token-budget scheduler made no progress on queued prompts')
+            max_peer_rows=4096, max_new_prefills=112)
+        if decision.priority_request_ids != tuple(active):
+            raise RuntimeError('Token-budget scheduler failed to retain every active request')
+        if decision.scheduled_tokens > 8192:
+            raise RuntimeError('Token-budget scheduler exceeded the aggregate token budget')
+        scheduler_steps.append(dict(active_decode=len(decision.priority_request_ids),
+            prefill_tokens=sum(item.real_tokens for cohort in decision.prefill_cohorts
+                               for item in cohort), scheduled_tokens=decision.scheduled_tokens,
+            prefill_cohorts=[len(cohort) for cohort in decision.prefill_cohorts]))
+
+        # Garnet has separate phase engines. Preserve vLLM's priority ordering,
+        # while timing both serial forwards inside the same full-request window.
+        if active:
+            active_slots = [slots[request_id] for request_id in active]
+            slot_key = tuple(active_slots)
+            if slot_key not in decode_inputs_by_slot_group:
+                raise RuntimeError('Active sequence slots do not match an admitted decode cohort')
+            lengths = [len(rows[request_id]) for request_id in active]
+            if any(length != lengths[0] for length in lengths):
+                raise RuntimeError('Fixed cohort decode histories diverged')
+            tokens = [rows[request_id][-1] for request_id in active]
+            positions = [len(ids) + length - 1 for length in lengths]
+            step = time.perf_counter()
+            reply = pair.forward_decode(decode_inputs_by_slot_group[slot_key], sample=True,
+                sample_batch=True, vector_values=[tokens, positions,
+                [len(ids) + length for length in lengths], active_slots])
+            decode_steps.append(time.perf_counter() - step)
+            decode_batch_sizes.append(len(active))
+            tokens = reply.get('token_ids', [])
+            if len(tokens) != len(active):
+                raise ValueError('Decode phase returned the wrong active sequence count')
+            for request_id, token in zip(active, tokens):
+                rows[request_id].append(int(token))
+                if len(rows[request_id]) == output_tokens:
+                    completion_times[request_id] = time.perf_counter() - start
+            active = [request_id for request_id in active
+                      if len(rows[request_id]) < output_tokens]
+
+        completed_prefills = []
         for cohort in decision.prefill_cohorts:
             cohort_ids = [item.request_id for item in cohort]
             cohort_slots = [slots[item] for item in cohort_ids]
@@ -313,49 +360,46 @@ def run_token_budget_request(trial, ids, start):
                     raise ValueError('Prefill cohort returned the wrong sampled token count')
                 for request_id, token in zip(cohort_ids, reply['token_ids']):
                     rows[request_id] = [int(token)]
+                    first_token_times[request_id] = time.perf_counter() - start
             for item in cohort:
                 offsets[item.request_id] += item.real_tokens
                 remaining[item.request_id] -= item.real_tokens
+                if remaining[item.request_id] == 0:
+                    completed_prefills.append(item.request_id)
         if any(value < 0 for value in remaining.values()):
             raise RuntimeError('Prefill planner advanced beyond an input prompt')
-        if all(value == 0 for value in remaining.values()):
-            active = list(request_ids)
-    first_token = time.perf_counter()
-    if set(rows) != set(request_ids) or any(len(row) != 1 for row in rows.values()):
-        raise ValueError('Every request must produce one prompt-completion token')
-    decode_steps = []
-    for decode_index in range(1, output_tokens):
-        decision = plan_token_budget_iteration(active, (), token_budget=8192,
-            max_sequences=batch, prefill_chunk=chunk, prefill_cohort=112,
-            max_peer_rows=4096)
-        if decision.priority_request_ids != tuple(active):
-            raise RuntimeError('Token-budget scheduler dropped an active request')
-        previous_tokens = [rows[request_id][-1] for request_id in active]
-        absolute_position = len(ids) + decode_index - 1
-        values = [previous_tokens, [absolute_position] * batch,
-            [absolute_position + 1] * batch, [slots[request_id] for request_id in active]]
-        step = time.perf_counter()
-        reply = pair.forward_decode(decode_inputs, sample=True, sample_batch=True,
-            vector_values=values)
-        decode_steps.append(time.perf_counter() - step)
-        tokens = reply.get('token_ids', [])
-        if len(tokens) != batch:
-            raise ValueError('Decode phase returned the wrong active sequence count')
-        for request_id, token in zip(active, tokens):
-            rows[request_id].append(int(token))
-    finish = time.perf_counter()
+        for request_id in completed_prefills:
+            if len(rows.get(request_id, ())) != 1 or request_id in active:
+                raise RuntimeError('Completed prompt was duplicated or missed its first token')
+            active.append(request_id)
+        if not active and not any(remaining.values()):
+            break
+
+    finish = time.perf_counter() - start
     token_rows = [rows[request_id] for request_id in request_ids]
-    if any(len(row) != output_tokens for row in token_rows):
+    if (set(rows) != set(request_ids) or any(len(row) != output_tokens for row in token_rows) or
+            set(first_token_times) != set(request_ids) or set(completion_times) != set(request_ids)):
         raise ValueError('Token-budget scheduler returned an incomplete token trajectory')
+    earliest_first = min(first_token_times.values())
+    latest_last = max(completion_times.values())
+    decode_wall = latest_last - earliest_first
+    prefill_wall = max(first_token_times.values())
     return dict(trial=trial, token_ids_by_request=token_rows,
         prefill_kv_reused_for_decode_trial=False, prefill_step_seconds=prefill_steps,
-        prefill_seconds=first_token - start, decode_step_seconds=decode_steps,
-        decode_wall_seconds=finish - first_token,
-        decode_aggregate_output_tokens_per_second=batch * (output_tokens - 1) /
-            (finish - first_token), full_request_wall_seconds=finish - start,
-        full_request_output_tokens_per_second=batch * output_tokens / (finish - start),
-        request_first_token_seconds=[first_token - start] * batch,
-        request_completion_seconds=[finish - start] * batch)
+        prefill_seconds=prefill_wall, decode_step_seconds=decode_steps,
+        decode_batch_sizes=decode_batch_sizes, decode_wall_seconds=decode_wall,
+        decode_aggregate_output_tokens_per_second=batch * (output_tokens - 1) / decode_wall,
+        full_request_wall_seconds=finish,
+        full_request_output_tokens_per_second=batch * output_tokens / finish,
+        request_first_token_seconds=[first_token_times[item] for item in request_ids],
+        request_completion_seconds=[completion_times[item] for item in request_ids],
+        benchmark_started_ts=start,
+        request_timings=[dict(first_token_ts=start + first_token_times[item],
+                              last_token_ts=start + completion_times[item])
+                         for item in request_ids],
+        token_budget_scheduler=dict(token_budget=8192, max_peer_rows=4096,
+            chunk_tokens=chunk, scheduling_steps=scheduler_steps,
+            execution='decode forward before FIFO prefill forward; sequential engine calls'))
 
 def run_request(trial, ids):
     start = time.perf_counter()
@@ -591,7 +635,11 @@ try:
     if token_budget_scheduler:
         prefill_cohort_inputs = [phase_tensors(pair.prefill_stages, chunk,
             list(range(start, start + 112))) for start in (0, 112)]
-        decode_inputs = phase_tensors(pair.decode_stages, 1, list(range(batch)))
+        decode_inputs_by_slot_group = {
+            tuple(range(112)): phase_tensors(pair.decode_stages, 1, list(range(112))),
+            tuple(range(112, 224)): phase_tensors(pair.decode_stages, 1, list(range(112, 224))),
+            tuple(range(224)): phase_tensors(pair.decode_stages, 1, list(range(224))),
+        }
     else:
         prefill_inputs = tensors(pair.prefill_stages, chunk)
         decode_inputs = tensors(pair.decode_stages, 1)

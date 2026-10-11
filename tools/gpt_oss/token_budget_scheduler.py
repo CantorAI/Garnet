@@ -48,13 +48,16 @@ def plan_token_budget_iteration(
     prefill_chunk=DEFAULT_PREFILL_CHUNK,
     prefill_cohort=DEFAULT_PREFILL_COHORT,
     max_peer_rows=DEFAULT_MAX_PEER_ROWS,
+    max_new_prefills=None,
 ):
     """Plan decodes first, then FIFO prefill slices within both hard budgets.
 
     Each new request receives at most one prefill slice in this scheduler
     iteration. Two disjoint 112x36 cohorts can therefore use 8,064 of an
     8,192-token budget, while every individual peer-group dispatch expands to
-    at most 4,032 rows. The caller owns KV allocation and state transitions.
+    at most 4,032 rows. ``max_new_prefills`` can stage a smaller FIFO admission
+    wave to overlap request lifetimes across iterations. The caller owns KV
+    allocation and state transitions.
     """
     if min(token_budget, max_sequences, prefill_chunk, prefill_cohort,
            max_peer_rows) <= 0:
@@ -63,6 +66,8 @@ def plan_token_budget_iteration(
         raise ValueError("prefill chunk exceeds peer-row capacity")
     if prefill_cohort * prefill_chunk > max_peer_rows:
         raise ValueError("prefill cohort exceeds peer-row capacity")
+    if max_new_prefills is not None and max_new_prefills <= 0:
+        raise ValueError("new-prefill admission limit must be positive")
 
     active = tuple(active_priority_request_ids)
     queued = tuple(queued_prefills)
@@ -96,8 +101,10 @@ def plan_token_budget_iteration(
         slots = 0
 
     selected = []
+    prefill_limit = min(slots, len(queued),
+                        max_new_prefills if max_new_prefills is not None else len(queued))
     for item in queued:
-        if len(selected) >= slots:
+        if len(selected) >= prefill_limit:
             break
         real_tokens = min(item.remaining_tokens, prefill_chunk)
         if used + real_tokens > token_budget:

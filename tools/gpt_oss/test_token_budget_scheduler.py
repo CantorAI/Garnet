@@ -32,6 +32,32 @@ class TokenBudgetSchedulerTests(unittest.TestCase):
         self.assertEqual(plan.scheduled_tokens, 112 + 112 * 36)
         self.assertEqual(plan.live_sequences_after_admission, 224)
 
+    def test_chunk18_interleaving_reserves_decode_then_fifo_prefill(self):
+        active = [f'a{i:03d}' for i in range(112)]
+        queued = [QueuedPrefill(f'q{i:03d}', 2005) for i in range(224)]
+        plan = plan_token_budget_iteration(active, queued, token_budget=8192,
+            max_sequences=224, prefill_chunk=18, prefill_cohort=112,
+            max_peer_rows=4096, max_new_prefills=112)
+
+        self.assertEqual(plan.priority_request_ids, tuple(active))
+        self.assertEqual([len(group) for group in plan.prefill_cohorts], [112])
+        self.assertEqual(plan.peer_rows_per_prefill_cohort, (2016,))
+        self.assertEqual(plan.scheduled_tokens, 112 + 112 * 18)
+        self.assertEqual([item.request_id for item in plan.prefill_cohorts[0]],
+                         [f'q{i:03d}' for i in range(112)])
+        self.assertEqual(plan.live_sequences_after_admission, 224)
+
+    def test_no_prefill_admission_when_all_slots_are_active(self):
+        active = [f'a{i:03d}' for i in range(224)]
+        queued = [QueuedPrefill('waiting', 7)]
+        plan = plan_token_budget_iteration(active, queued, prefill_chunk=18,
+            max_sequences=224, max_peer_rows=4096, max_new_prefills=112)
+
+        self.assertEqual(plan.priority_request_ids, tuple(active))
+        self.assertEqual(plan.prefill_cohorts, ())
+        self.assertEqual(plan.scheduled_tokens, 224)
+        self.assertEqual(plan.live_sequences_after_admission, 224)
+
     def test_fifo_and_partial_prefill_offsets_are_preserved(self):
         queued = [QueuedPrefill("first", 7, 36), QueuedPrefill("second", 80, 0)]
         plan = plan_token_budget_iteration((), queued, max_sequences=2)
@@ -65,6 +91,8 @@ class TokenBudgetSchedulerTests(unittest.TestCase):
             plan_token_budget_iteration([], [QueuedPrefill("x", 1, -1)])
         with self.assertRaises(ValueError):
             plan_token_budget_iteration([], [], prefill_cohort=114)
+        with self.assertRaises(ValueError):
+            plan_token_budget_iteration([], [], max_new_prefills=0)
         with self.assertRaises(ValueError):
             plan_token_budget_iteration(["a", "b"], [], max_sequences=1)
 
