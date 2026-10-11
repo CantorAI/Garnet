@@ -6082,29 +6082,31 @@ namespace Garnet {
         }
         else if (opName == "last_token") {
             const Dims sourceDims = source->getDimensions();
-            if (sourceDims.nbDims < 2 || sourceDims.d[1] <= 0) {
+            if (sourceDims.nbDims < 2 || sourceDims.d[0] == 0 || sourceDims.d[1] == 0) {
                 loweringError = "last_token requires a non-empty sequence dimension";
                 return X::Value();
             }
+            bool hasDynamicBatch = sourceDims.d[0] < 0;
+            bool hasDynamicSequence = sourceDims.d[1] < 0;
             Dims start{};
             Dims size = sourceDims;
             Dims stride{};
             start.nbDims = sourceDims.nbDims;
             stride.nbDims = sourceDims.nbDims;
             for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
-            start.d[1] = sourceDims.d[1] - 1;
+            start.d[1] = hasDynamicSequence ? 0 : sourceDims.d[1] - 1;
             size.d[1] = 1;
             ISliceLayer* layer = nullptr;
-            if (sourceDims.d[0] < 0) {
-                for (int i = 1; i < sourceDims.nbDims; ++i) {
+            if (hasDynamicBatch || hasDynamicSequence) {
+                for (int i = 2; i < sourceDims.nbDims; ++i) {
                     if (sourceDims.d[i] <= 0) {
-                        loweringError = "last_token dynamic batch requires concrete non-batch dimensions";
+                        loweringError = "last_token dynamic batch/sequence requires concrete trailing dimensions";
                         return X::Value();
                     }
                 }
-                // A negative wildcard cannot be passed as a constant Slice size.
-                // Build [runtime batch, 1, ...] from the TensorRT shape tensor;
-                // all non-batch dimensions remain the captured static extents.
+                // TensorRT Slice start/size must be shape tensors when either
+                // leading extent varies. Derive S-1 from the runtime shape and
+                // preserve the existing [B,1,...] output extent contract.
                 auto* sourceShapeLayer = network->addShape(*source);
                 ITensor* sourceShape = sourceShapeLayer
                     ? sourceShapeLayer->getOutput(0) : nullptr;
@@ -6117,31 +6119,49 @@ namespace Garnet {
                         : nullptr;
                     return part ? part->getOutput(0) : nullptr;
                 };
-                ITensor* batchExtent = shapePart(0, 1);
-                integer64VectorWeights.emplace_back(1, 1);
-                Dims oneDims{1, {1}};
-                Weights oneWeights{
-                    DataType::kINT64, integer64VectorWeights.back().data(), 1};
-                auto* one = network->addConstant(oneDims, oneWeights);
-                ITensor* parts[3] = {batchExtent, one ? one->getOutput(0) : nullptr, nullptr};
-                int partCount = 2;
-                if (sourceDims.nbDims > 2) {
-                    parts[2] = shapePart(2, sourceDims.nbDims - 2);
-                    partCount = 3;
+                auto constantShapeScalar = [&](int64_t value) -> ITensor* {
+                    if (value < 0 || value > std::numeric_limits<int32_t>::max()) return nullptr;
+                    integerVectorWeights.emplace_back(1, static_cast<int32_t>(value));
+                    Dims scalarDims{1, {1}};
+                    Weights scalarWeights{
+                        DataType::kINT32, integerVectorWeights.back().data(), 1};
+                    auto* constant = network->addConstant(scalarDims, scalarWeights);
+                    return constant ? constant->getOutput(0) : nullptr;
+                };
+                ITensor* startParts[Dims::MAX_DIMS]{};
+                ITensor* sizeParts[Dims::MAX_DIMS]{};
+                ITensor* sequenceExtent = hasDynamicSequence ? shapePart(1, 1) : nullptr;
+                ITensor* one = hasDynamicSequence ? constantShapeScalar(1) : nullptr;
+                auto* sequenceStartLayer = hasDynamicSequence && sequenceExtent && one
+                    ? network->addElementWise(*sequenceExtent, *one, ElementWiseOperation::kSUB)
+                    : nullptr;
+                ITensor* sequenceStart = sequenceStartLayer ? sequenceStartLayer->getOutput(0) : nullptr;
+                bool validShapeParts = !hasDynamicSequence || sequenceStart != nullptr;
+                for (int i = 0; i < sourceDims.nbDims; ++i) {
+                    if (i == 1 && hasDynamicSequence) {
+                        startParts[i] = sequenceStart;
+                        sizeParts[i] = one;
+                    } else {
+                        startParts[i] = constantShapeScalar(0);
+                        sizeParts[i] = (i == 0 && hasDynamicBatch)
+                            ? shapePart(i, 1) : constantShapeScalar(sourceDims.d[i]);
+                    }
+                    validShapeParts = validShapeParts && startParts[i] && sizeParts[i];
                 }
-                auto* dynamicSize = std::all_of(parts, parts + partCount,
-                    [](ITensor* value) { return value != nullptr; })
-                    ? network->addConcatenation(parts, partCount) : nullptr;
+                auto* dynamicStart = validShapeParts
+                    ? network->addConcatenation(startParts, sourceDims.nbDims) : nullptr;
+                auto* dynamicSize = validShapeParts
+                    ? network->addConcatenation(sizeParts, sourceDims.nbDims) : nullptr;
+                if (dynamicStart) dynamicStart->setAxis(0);
                 if (dynamicSize) dynamicSize->setAxis(0);
-                // Use a harmless concrete placeholder until the dynamic size input
-                // is attached; the final output extent is supplied by input 2.
-                size.d[0] = 1;
+                size.d[0] = hasDynamicBatch ? 1 : sourceDims.d[0];
                 layer = network->addSlice(*source, start, size, stride);
-                if (!layer || !dynamicSize) {
-                    loweringError = "last_token dynamic batch Slice shape construction failed";
+                if (!layer || !dynamicStart || !dynamicSize ||
+                    !layer->setInput(1, *dynamicStart->getOutput(0)) ||
+                    !layer->setInput(2, *dynamicSize->getOutput(0))) {
+                    loweringError = "last_token dynamic batch/sequence Slice shape construction failed";
                     return X::Value();
                 }
-                layer->setInput(2, *dynamicSize->getOutput(0));
             }
             else {
                 layer = network->addSlice(*source, start, size, stride);
