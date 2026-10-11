@@ -2891,3 +2891,6 @@ Use the already-present `GARNET_PROFILE_DECODE_LAYERS` one-shot TensorRT `IProfi
 
 
 **OPT167 launch attempt 2 (2026-10-11):** After resolving the manifest, the paired runner refused the reused output directory created during attempt1's early failure. It exited before model startup; no CUDA owner or layer profile ran. Preserve the empty/partial `work/opt167-layer-diagnostic/short` directory and use a fresh output path on retry.
+
+
+**OPT167 launch attempt 3 (2026-10-11):** With a fresh output path, the paired suite rejected the saved short resident profile because the implicit batch/context/chunk did not match the profile. This was still pre-inference and produced no GPU profile. Resolve the exact dimensions from the saved profile and pass them explicitly before the final retry.
