@@ -111,12 +111,11 @@ bool GptOssPlugin::supportsFormatCombination(int pos, const PluginTensorDesc* d,
 }
 void GptOssPlugin::configurePlugin(const DynamicPluginTensorDesc* in, int count,
     const DynamicPluginTensorDesc*, int) noexcept {
-    static std::atomic<int> dynamicProfileDebugCount{0};
-    const bool debugDynamicProfile =
-        std::getenv("GARNET_TRT_DYNAMIC_PROFILE_DEBUG") != nullptr &&
-        dynamicProfileDebugCount.fetch_add(1, std::memory_order_relaxed) < 16;
+    static std::atomic<int> rejectedProfileDebugCount{0};
+    const bool debugDynamicProfile = std::getenv("GARNET_TRT_DYNAMIC_PROFILE_DEBUG") != nullptr;
     const auto reportDynamicProfile = [&]() noexcept {
-        if (!debugDynamicProfile) return;
+        if (!debugDynamicProfile ||
+            rejectedProfileDebugCount.fetch_add(1, std::memory_order_relaxed) >= 16) return;
         std::fprintf(stderr, "GPT-OSS dynamic profile: kind=%d rank=%d prefill=%d count=%d valid=%d\n",
             m_options.kind, m_options.tpRank, m_options.prefill, count, m_valid ? 1 : 0);
         if (!in || count < 0 || count > 16) return;
