@@ -4336,3 +4336,6 @@ Use the already-present `GARNET_PROFILE_DECODE_LAYERS` one-shot TensorRT `IProfi
 
 
 **OPT167 launch attempt 1 (2026-10-11):** The short-profile paired runner exited before model startup because the supplied archived vLLM manifest path `work/opt155-grid-barrier-serving-371d2f4/short-vllm-first/manifest.json` does not exist on the target. No CUDA owner was launched and no inference/profile output was produced. This was a path-resolution error; resolve the actual existing manifest before a single retry.
+
+
+**OPT167 launch attempt 2 (2026-10-11):** After resolving the manifest, the paired runner refused the reused output directory created during attempt1's early failure. It exited before model startup; no CUDA owner or layer profile ran. Preserve the empty/partial `work/opt167-layer-diagnostic/short` directory and use a fresh output path on retry.
