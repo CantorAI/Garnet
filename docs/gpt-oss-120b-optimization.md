@@ -3449,3 +3449,8 @@ The OPT193c reference lacks a `checkpoint` field, but the already archived engin
 ### OPT203 checkpoint guard rejected timestamp-only drift; stable-identity retry proposal
 
 The OPT193d preflight stopped before engine loading because `checkpoint_identity` differed from the archived profile only in safetensors `mtime_ns`: the current and archived checkpoint have the same root, config SHA-256, seven shard names, exact shard byte sizes, and each shard's safetensors-header SHA-256. No tensor payload hash is present in the prior record, and this attempt did not hash all payload bytes, so exact weight-payload equality remains unproven. No candidate engine/profile or inference was produced; the failed status is preserved. For the next preflight, compare only root/config/shard names/sizes/header hashes, still require the archived checkpoint-record file SHA and tokenizer SHA, and label payload identity as unverified until correctness is checked against the frozen vLLM answer set. Use a fresh `opt193e` output/cache namespace.
+
+
+### OPT204 profile driver redundantly reacquired its GPU lock
+
+The OPT193e helper passed the recorded source/native/model-metadata, vLLM, hardware, storage, and fresh-output checks and wrote its run metadata. It then exited before loading engines: the outer invocation already held `gpu-benchmark.lock`, while the helper launched the profiler through a second nonblocking `flock` on that same lock. The driver log is empty, the candidate cache does not exist, and no engine profile or inference occurred. Preserve the failed status. The next retry uses `opt193f`, keeps one outer lock across preflight and profiling, and invokes `xlang3` directly from inside that lock (removing only the redundant nested lock command).
