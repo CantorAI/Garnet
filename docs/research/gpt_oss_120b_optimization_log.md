@@ -4849,3 +4849,6 @@ The OPT185 cache-preservation step completed: the full remote OPT183 cache tree 
 ### OPT190 storage-retirement guard failure retained
 
 The first guarded retirement helper stopped before deletion because it compared serialized JSON bytes without accounting for the manifest writer's trailing newline. This was a guard-format mismatch, not evidence of cache corruption: a fresh target-side manifest hash already matched the archived manifest SHA-256, and the directory remained present. Correct the guard to compare parsed manifest records while still validating the exact manifest-file SHA, exact path, and idle GPU; retry only after that independent structural comparison passes.
+### OPT191 target-manifest path-base guard failure retained
+
+The corrected retirement helper also stopped before deletion: its computed manifest paths were rooted one directory too high (`/dev/shm`) while the archived manifest paths are relative to the cache directory itself. The cache remains intact, and the independent SHA-256 manifest-generation command still reports the archived manifest hash. Fix the helper's relative path base to the exact cache root, retain parsed-record and manifest-file hash checks, and retry only with idle-GPU validation.
