@@ -4989,3 +4989,8 @@ The completed OPT211 cache is 9,338,536,684 bytes, and its use leaves only 50,40
 ### OPT216 source-identity transcription correction
 
 The preceding proposal used a stale expected source revision and mistyped the subsequent documentation commit. The idle target was later fast-forwarded cleanly to the actual source revision `91a5838e92e92a4c8ccbf2f2ebff3e9a1d8d45fe`, which is also the local pushed branch head. The cache-retirement guard must require this exact current revision; no code or cache action is authorized by the earlier incorrect hash.
+
+
+### OPT216 latest-source guard correction
+
+The profile-report schema change and its documentation were then pushed as `e5a8239324da87697c532143dc0a574bd7c3a4c9` and fast-forwarded to the idle target; it changes no native binary. The cache archive independently passed exact 61-file, 9,338,536,684-byte path/size/SHA-256 comparison against the terminal OPT211 inventory. Since this correction itself advances the docs, the deletion command must bind to the actual clean local/target HEAD observed immediately before removal, verify that it is the pushed documentation-only descendant of `e5a8239324da87697c532143dc0a574bd7c3a4c9`, and confirm the profile terminal status and zero GPU apps. The earlier SHA transcription is superseded.
