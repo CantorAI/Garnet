@@ -42,6 +42,7 @@ public:
     void EncodeSiluMul(const MetalMatrix& gate, const MetalMatrix& up,
         const MetalMatrix& output);
     void EncodeAdd(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
+    void EncodeBias(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
     void EncodeMaskRows(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
     // Packed rows retain explicit caller-owned states after the output segment.
     void EncodeCausalConv(const MetalMatrix& token,const MetalMatrix& weight,
@@ -57,13 +58,13 @@ public:
         const MetalMatrix& output,size_t heads,size_t valueDim,float epsilon);
     void EncodeConcat(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,bool includeThird=true);
     void EncodeNormRope(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
-        const MetalMatrix&,size_t heads,size_t dim,size_t rotary,float epsilon);
+        const MetalMatrix&,size_t heads,size_t dim,size_t rotary,float epsilon,float weightOffset=1,bool normalize=true);
     void EncodeKVUpdate(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         const MetalMatrix&,size_t kvHeads,size_t dim,size_t capacity);
     void EncodeAttentionScores(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         const MetalMatrix&,size_t heads,size_t kvHeads,size_t dim,size_t capacity);
     void EncodeAttentionContext(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
-        size_t heads,size_t kvHeads,size_t dim,size_t capacity);
+        size_t heads,size_t kvHeads,size_t dim,size_t capacity,bool gated=true);
     void EncodeLayout(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,size_t tokenWidth=0);
     void SubmitAndWait();
     // Fixed-grid image operators; projections continue to use MPS matmul.

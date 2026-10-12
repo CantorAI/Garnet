@@ -376,7 +376,93 @@ states at unchanged tolerance. Serving reset/profile replacement tests and
 native primitive CTest pass. Seven successful job command/exit/output records
 and parsed timing data are in `results/20261012/state-copy/`.
 The previous build is commit `31571af`; new runs use this lowering change.
-Dedicated Qwen text and coder adapters are the next work requested by the user.
+The following section records the dedicated Qwen text and coder adapters requested next by the user.
+
+## Dedicated Qwen text and coder adapters — 2026-10-12
+
+`xModel/qwen/metal_dense/decoder.py` now provides `DenseMetalDecoder` for
+native Garnet Metal/MPS text generation. Executed checkpoints are
+[Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B) and
+[Qwen2.5-Coder-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct).
+The adapter shares prefill scheduling, request reset and explicit KV serving
+with the Qwen3.5 Metal adapter. It adds plain RMS weights, ungated attention,
+Qwen3 Q/K normalization, standard text RoPE, Qwen2.5 QKV biases and configurable
+GPU vocabulary projection. Token embedding lookup, state copies and greedy
+argmax remain on the CPU; all learned projections and attention run on GPU.
+
+Actual M4 warm measurements with chunk 16 and the model resident:
+
+| Model / prompt | Batch | Completed tokens per row | First token | Complete answer | Decode tokens/s per row | Peak process RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Qwen3-0.6B: capital of France, 22 input tokens | 1 | 8 including stop | 0.608 s | 1.108 s | 13.99 | 4.16 GiB |
+| Qwen3-0.6B: same prompt on both rows | 2 | 8 including stop | 0.727 s | 1.305 s | 12.12 | 4.28 GiB |
+| Qwen2.5-Coder: Python add function | 1 | 17 including stop | 0.347 s | 1.132 s | 20.38 | 3.34 GiB |
+| Qwen2.5-Coder: same prompt on both rows | 2 | 17 including stop | 0.390 s | 1.217 s | 19.34 | 3.39 GiB |
+
+The text answer is “The capital of France is Paris.” The coder returns a fenced
+`def add(a, b): return a + b` function. Its AST contains only the expected
+function, names, addition and return; the generated function passes four cases
+covering positive/negative integers, zero and floating-point addition.
+This is a functional coding smoke test, not a coding benchmark suite.
+Sequential and chunk-16 generation match token IDs exactly for both requests;
+batch-2 rows also match. The requests reset KV state and reprocess the prompt.
+Sequential warm first-token latency is 1.292 s for text and 1.042 s for coder.
+Sequential peak RSS is lower: 3.23 GiB / 2.71 GiB respectively.
+
+Lazy compilation costs matter for short requests: first model-loaded chunked
+text/coder requests take 2.012 s / 1.451 s to first token, after 1.563 s /
+1.254 s initialization. Their first complete answers including initialization
+are approximately 4.098 s / 3.510 s. Sequential first requests are faster than
+these cold chunked requests. Warm timings and decode rates are for these short
+answers, not a long-output throughput claim. Peak RSS is native process memory,
+not isolated GPU memory. No other Apple hardware or larger checkpoint is claimed.
+
+Independent references execute real first and last pretrained layers for each
+model, batches 1/2, chunks 1/16 and two successive chunks (capacity 32). They
+check paused/resumed rows, partial tails, invalid flags/slots/positions, every
+hidden vector and final KV state. Dense reference dot products and RMS
+reductions accumulate in FP64 and round values back to FP32; runtime inference
+remains FP32. Hidden vectors and each cached value vector are checked in both
+Euclidean and infinity norms with `5e-6 + 5e-5 * reference_norm`; rotated key
+pairs use the same Euclidean norm bound. These are **vector-based criteria**,
+not the older Qwen3.5 component-relative criterion. Cancellation-sensitive
+component tests failed on random final-layer inputs before this change. The
+raw initial failure and wider-reference failure are retained. Final vector
+checks pass, and logs report maximum component error as well as normalized
+error ratios. Qwen3 final-layer maximum component error reaches 0.00818 on
+large-valued activations; hidden vector relative error remains below 5e-6 in
+the executed cases. This is not a Transformers end-to-end numerical parity claim.
+Qwen3.5's existing component reference criteria remain unchanged and pass.
+
+Download manifests in `dense_models/` pin all four files by size and SHA-256
+from the official Qwen ModelScope repositories. Both Mac downloads verify every
+file before publishing its final name; raw download logs retain the hashes.
+Use `download_dense_checkpoint.py manifest.json model_directory` to reproduce.
+The full checkpoints are downloaded inputs and are not committed.
+
+Run Mac Python with `benchmark_dense_text.py runtime build source model_directory
+batch output_limit prompt chunk`. The background modes are
+`dense-text:Qwen3-0.6B:1:16`,
+`dense-text:Qwen2.5-Coder-0.5B-Instruct:1:16` and
+`dense-reference:model_name`; substitute batch 2 or chunk 0 for the executed
+alternatives. The model API is `DenseMetalDecoder(checkpoint,config,batch,capacity)`,
+`enable_prefill(16)`, `prefill_sequence(...)`, `step(...)`, `reset()` and `close()`.
+This is an experimental native adapter rather than a paged/continuous-batching
+service. Only the two named checkpoints, fixed batches 1/2 and short contexts
+have been executed. Scaled RoPE, sliding-window attention and non-SwiGLU MLP
+profiles are rejected. Quantized weights and long-context serving remain future work.
+
+Raw commands, exit/output records, parsed benchmarks and generated-code
+validation are in `results/20261012/dense-text-coder/`. The final shared library
+also repeats Qwen3.5 image inference with the same 28 token IDs, 1.928 s warm
+first token / 3.996 s completion. Full-size Qwen3.5 component references and
+native primitive CTest pass after the shared kernel changes.
+After sharing the prefill scheduler, additional text/coder batch-2 requests
+retain identical tokens, the serving fixture passes reset/profile changes
+2/4/8/16/2, and the repeated image caption is unchanged at 1.919 s / 3.993 s.
+The saved folder contains 18 job records, including two earlier diagnostic
+failures; final verification jobs exit successfully.
+
 
 ## Limits and next performance work
 

@@ -27,12 +27,15 @@ class MetalDecoder(CPUDecoder):
         self.chunk=chunk
         if not hasattr(self,'prefill_graphs'):self.prefill_graphs={}
 
+    def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):
+        from .prefill_layer import PrefillLayer
+        return PrefillLayer(hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind)
+
     def prefill_sequence(self,hidden_tokens,positions,predict=True):
         if self.poisoned:raise ValueError('reset after failed prefill')
         count=len(hidden_tokens);chunk=self.chunk;batch=self.batch;config=self.config;capacity=self.capacity
         if count<1 or any(slot+count>capacity for slot in self.slots):raise ValueError('invalid prefill length/capacity')
         if len(positions)!=batch or any(len(row)!=count or any(len(p)!=3 for p in row) for row in positions):raise ValueError('invalid prefill THW positions')
-        from .prefill_layer import PrefillLayer
         width=config['hidden_size'];self.poisoned=True;self.prefill_compile_ms=0;self.prefill_inference_ms=0
         for idx,layer in enumerate(self.layers):
             kind=layer['kind'];shapes=[[batch,chunk,width],layer['shapes'][1],layer['shapes'][2],
@@ -40,7 +43,7 @@ class MetalDecoder(CPUDecoder):
             symbols=[tensor.input('prefill_'+str(idx)+'_'+str(i),shape=s,dtype=tensor.float32) for i,s in enumerate(shapes)]
             @T.fusion(name='qwen35_metal_prefill',boundary='required')
             def forward(hidden,state1,state2,positions,slots,active):
-                return PrefillLayer(hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind)
+                return self._prefill_layer(hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind)
             key=str(chunk)+'-'+str(idx)
             graph=self.prefill_graphs.get(key);next_hidden=[]
             if graph is None:

@@ -72,7 +72,7 @@ kernel void add_matrix(device const float* a [[buffer(0)]],device const float* b
     device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
     if(id>=p.rows*p.columns)return;
     ulong row=id/p.columns,col=id%p.columns;
-    c[row*p.cStride+col]=a[row*p.aStride+col]+b[row*p.bStride+col];
+    c[row*p.cStride+col]=a[row*p.aStride+col]+b[(p.offset!=0?0:row)*p.bStride+col];
 }
 kernel void mask_rows(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
     device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
@@ -80,7 +80,7 @@ kernel void mask_rows(device const float* a [[buffer(0)]],device const float* b 
     ulong row=id/p.columns,col=id%p.columns;
     c[row*p.cStride+col]=b[row*p.bStride]!=0.0f?a[row*p.aStride+col]:0.0f;
 }
-struct RopeParams {ulong batch,heads,dim,rotary,iStride,pStride,fStride,oStride;float epsilon;};
+struct RopeParams {ulong batch,heads,dim,rotary,iStride,pStride,fStride,oStride;float epsilon,weightOffset;ulong normalize;};
 kernel void norm_rope(device const float* input [[buffer(0)]],device const float* weight [[buffer(1)]],
     device const float* positions [[buffer(2)]],device const float* frequencies [[buffer(3)]],
     device float* output [[buffer(4)]],constant RopeParams& p [[buffer(5)]],uint id [[thread_position_in_grid]]) {
@@ -88,15 +88,15 @@ kernel void norm_rope(device const float* input [[buffer(0)]],device const float
     ulong row=id/p.heads,head=id%p.heads,base=row*p.iStride+head*p.dim;
     float sum=0.0f;
     for(ulong j=0;j<p.dim;++j){float x=input[base+j];sum+=x*x;}
-    float inverse=rsqrt(sum/float(p.dim)+p.epsilon);
+    float inverse=p.normalize?rsqrt(sum/float(p.dim)+p.epsilon):1.0f;
     for(ulong j=0;j<p.dim;++j) {
-        float x=input[base+j]*inverse*(1.0f+weight[j]);
+        float x=input[base+j]*inverse*(p.normalize?(p.weightOffset+weight[j]):1.0f);
         if(j<p.rotary) {
             ulong halfWidth=p.rotary/2,frequency=j%halfWidth,other=j<halfWidth?j+halfWidth:j-halfWidth;
             ulong axis=ulong(frequencies[p.fStride+frequency]);
             float angle=positions[row*p.pStride+axis]*frequencies[frequency];
-            float y=input[base+other]*inverse*(1.0f+weight[other]);
-            x=x*cos(angle)+(j<halfWidth?-y:y)*sin(angle);
+            float y=input[base+other]*inverse*(p.normalize?(p.weightOffset+weight[other]):1.0f);
+            x=x*precise::cos(angle)+(j<halfWidth?-y:y)*precise::sin(angle);
         }
         output[row*p.oStride+head*p.dim+j]=x;
     }
@@ -132,7 +132,7 @@ kernel void attention_scores(device const float* query [[buffer(0)]],device cons
     for(ulong s=0;s<p.capacity;++s){float probability=exp(output[base+s]-maximum);output[base+s]=probability;denominator+=probability;}
     for(ulong s=0;s<p.capacity;++s)output[base+s]/=denominator;
 }
-struct AttentionParams {ulong batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,oStride;};
+struct AttentionParams {ulong batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,oStride,gated;};
 kernel void attention_context(device const float* probabilities [[buffer(0)]],device const float* value [[buffer(1)]],
     device const float* gate [[buffer(2)]],device float* output [[buffer(3)]],constant AttentionParams& p [[buffer(4)]],
     uint id [[thread_position_in_grid]]) {
@@ -140,7 +140,7 @@ kernel void attention_context(device const float* probabilities [[buffer(0)]],de
     ulong row=id/(p.heads*p.dim),head=(id/p.dim)%p.heads,col=id%p.dim,kv=head/(p.heads/p.kvHeads);
     float result=0.0f;
     for(ulong s=0;s<p.capacity;++s)result+=probabilities[row*p.pStride+head*p.capacity+s]*value[row*p.vStride+(kv*p.capacity+s)*p.dim+col];
-    output[row*p.oStride+head*p.dim+col]=result/(1.0f+exp(-gate[row*p.gStride+head*p.dim+col]));
+    output[row*p.oStride+head*p.dim+col]=p.gated?result/(1.0f+exp(-gate[row*p.gStride+head*p.dim+col])):result;
 }
 struct PrepareParams {ulong batch,keyHeads,valueHeads,keyDim,valueDim,kSize,cStride,aStride,bStride,oStride,width;};
 kernel void linear_prepare(device const float* conv [[buffer(0)]],device const float* a [[buffer(1)]],
@@ -432,8 +432,8 @@ void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right
 void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& right,
     const MetalMatrix& output,unsigned operation,float epsilon,float offset) {
     @autoreleasepool {
-    if(operation>3)throw std::invalid_argument("Unknown Metal pointwise operation");
-    const bool rms=operation==0,mask=operation==3;
+    if(operation>4)throw std::invalid_argument("Unknown Metal pointwise operation");
+    const bool rms=operation==0,mask=operation==3,bias=operation==4;
     if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
     if(!left.impl_||!right.impl_||!output.impl_)throw std::invalid_argument("Empty Metal matrix");
     auto a=left.impl_->matrix,b=right.impl_->matrix,c=output.impl_->matrix;
@@ -442,7 +442,7 @@ void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& ri
     auto usable=[&](const MetalMatrix& matrix){return matrix.impl_->ready ||
         (matrix.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),matrix.impl_)!=impl_->outputs.end());};
     if(!usable(left)||!usable(right))throw std::logic_error("Uninitialized Metal input");
-    if(a.rows!=c.rows||a.columns!=c.columns||b.columns!=(mask?1:a.columns)||b.rows!=(rms?1:a.rows))
+    if(a.rows!=c.rows||a.columns!=c.columns||b.columns!=(mask?1:a.columns)||b.rows!=((rms||bias)?1:a.rows))
         throw std::invalid_argument("Qwen Metal operation shape mismatch");
     if(rms && (!(epsilon>0)||!std::isfinite(epsilon)||!std::isfinite(offset)))
         throw std::invalid_argument("Invalid RMS normalization parameters");
@@ -451,7 +451,7 @@ void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& ri
         throw std::logic_error("Metal output is in another command batch");
     struct Params {uint64_t rows,columns,aStride,bStride,cStride;float epsilon,offset;};
     Params p{a.rows,a.columns,a.rowBytes/4,b.rowBytes/4,c.rowBytes/4,epsilon,offset};
-    auto pipeline=rms?impl_->rms:(operation==1?impl_->silu:(operation==2?impl_->add:impl_->mask));
+    auto pipeline=rms?impl_->rms:(operation==1?impl_->silu:((operation==2||bias)?impl_->add:impl_->mask));
     id<MTLComputeCommandEncoder> encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal compute encoder");
     [encoder setComputePipelineState:pipeline];
@@ -473,6 +473,9 @@ void MetalContext::EncodeSiluMul(const MetalMatrix& gate,const MetalMatrix& up,c
 }
 void MetalContext::EncodeAdd(const MetalMatrix& a,const MetalMatrix& b,const MetalMatrix& out) {
     EncodePointwise(a,b,out,2,0,0);
+}
+void MetalContext::EncodeBias(const MetalMatrix& a,const MetalMatrix& b,const MetalMatrix& out) {
+    EncodePointwise(a,b,out,4,0,1);
 }
 void MetalContext::EncodeMaskRows(const MetalMatrix& a,const MetalMatrix& mask,const MetalMatrix& out) {
     EncodePointwise(a,mask,out,3,0,0);
@@ -625,14 +628,14 @@ void MetalContext::EncodeConcat(const MetalMatrix& first,const MetalMatrix& seco
     EncodeStateKernel(5,{first,second,third},output,&p,sizeof(p),Elements(o.rows,o.columns));
 }
 void MetalContext::EncodeNormRope(const MetalMatrix& input,const MetalMatrix& weight,const MetalMatrix& positions,
-    const MetalMatrix& frequencies,const MetalMatrix& output,size_t heads,size_t dim,size_t rotary,float epsilon) {
+    const MetalMatrix& frequencies,const MetalMatrix& output,size_t heads,size_t dim,size_t rotary,float epsilon,float weightOffset,bool normalize) {
     if(!input.impl_||!weight.impl_||!positions.impl_||!frequencies.impl_||!output.impl_||!rotary||rotary%2||rotary>dim||
-        !(epsilon>0)||!std::isfinite(epsilon))throw std::invalid_argument("Invalid Metal norm/RoPE arguments");
+        !(epsilon>0)||!std::isfinite(epsilon)||!std::isfinite(weightOffset))throw std::invalid_argument("Invalid Metal norm/RoPE arguments");
     auto i=input.impl_->matrix,w=weight.impl_->matrix,p=positions.impl_->matrix,f=frequencies.impl_->matrix,o=output.impl_->matrix;
     if(i.columns!=Elements(heads,dim)||w.rows!=1||w.columns!=dim||p.rows!=i.rows||p.columns!=3||f.rows!=2||f.columns!=rotary/2||
         o.rows!=i.rows||o.columns!=i.columns)throw std::invalid_argument("Metal norm/RoPE shape mismatch");
-    struct Params {uint64_t batch,heads,dim,rotary,iStride,pStride,fStride,oStride;float epsilon;};
-    Params params{i.rows,heads,dim,rotary,i.rowBytes/4,p.rowBytes/4,f.rowBytes/4,o.rowBytes/4,epsilon};
+    struct Params {uint64_t batch,heads,dim,rotary,iStride,pStride,fStride,oStride;float epsilon,weightOffset;uint64_t normalize;};
+    Params params{i.rows,heads,dim,rotary,i.rowBytes/4,p.rowBytes/4,f.rowBytes/4,o.rowBytes/4,epsilon,weightOffset,uint64_t(normalize)};
     EncodeStateKernel(6,{input,weight,positions,frequencies},output,&params,sizeof(params),Elements(i.rows,heads));
 }
 void MetalContext::EncodeKVUpdate(const MetalMatrix& token,const MetalMatrix& cache,const MetalMatrix& slots,
@@ -659,14 +662,14 @@ void MetalContext::EncodeAttentionScores(const MetalMatrix& query,const MetalMat
     EncodeStateKernel(8,{query,key,slots,active},output,&p,sizeof(p),Elements(q.rows,heads));
 }
 void MetalContext::EncodeAttentionContext(const MetalMatrix& probabilities,const MetalMatrix& value,const MetalMatrix& gate,
-    const MetalMatrix& output,size_t heads,size_t kvHeads,size_t dim,size_t capacity) {
+    const MetalMatrix& output,size_t heads,size_t kvHeads,size_t dim,size_t capacity,bool gated) {
     if(!probabilities.impl_||!value.impl_||!gate.impl_||!output.impl_||!kvHeads||!heads||heads%kvHeads)
         throw std::invalid_argument("Invalid Metal attention context arguments");
     auto p=probabilities.impl_->matrix,v=value.impl_->matrix,g=gate.impl_->matrix,o=output.impl_->matrix;
     if(p.columns!=Elements(heads,capacity)||v.rows!=p.rows||v.columns!=Elements(Elements(kvHeads,capacity),dim)||g.rows!=p.rows||
         g.columns!=Elements(heads,dim)||o.rows!=p.rows||o.columns!=g.columns)throw std::invalid_argument("Metal attention context shape mismatch");
-    struct Params {uint64_t batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,oStride;};
-    Params params{p.rows,heads,kvHeads,dim,capacity,p.rowBytes/4,v.rowBytes/4,g.rowBytes/4,o.rowBytes/4};
+    struct Params {uint64_t batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,oStride,gated;};
+    Params params{p.rows,heads,kvHeads,dim,capacity,p.rowBytes/4,v.rowBytes/4,g.rowBytes/4,o.rowBytes/4,uint64_t(gated)};
     EncodeStateKernel(9,{probabilities,value,gate},output,&params,sizeof(params),Elements(o.rows,o.columns));
 }
 void MetalContext::SubmitAndWait() {

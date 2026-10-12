@@ -19,6 +19,9 @@ elif mode=='run':
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_chunk.py'),runtime,build,source,str(folder)]
  elif batch=='optimization-suite':
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_optimization.py'),runtime,build,source,str(folder)]
+ elif batch.startswith('dense-download:'):
+  name=batch.split(':')[1]
+  command=[sys.executable,str(Path(source)/'test2026/metal/download_dense_checkpoint.py'),str(Path(source)/'test2026/metal/dense_models'/(name+'.json')),str(Path(source).parent/'models'/name)]
  elif batch=='download':
   command=[sys.executable,str(Path(source)/'test2026/pi5b/download_full_checkpoint.py'),
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
@@ -30,6 +33,11 @@ elif mode=='run':
   if ':' in batch:command.append(batch.split(':')[1])
  elif batch=='chunk':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_chunk_graph.py'),runtime,build,source,str(Path(source).parent/'models/Qwen3.5-0.8B')]
+ elif batch.startswith('dense-reference:'):
+  command=[sys.executable,str(Path(source)/'test2026/metal/test_dense_reference.py'),runtime,build,source,str(Path(source).parent/'models'/batch.split(':')[1])]
+ elif batch.startswith('dense-text:'):
+  parts=batch.split(':');name=parts[1];prompt='What is the capital of France? Answer briefly.' if name=='Qwen3-0.6B' else 'Write a Python function add(a, b) that returns their sum. Output only code.'
+  command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_dense_text.py'),runtime,build,source,str(Path(source).parent/'models'/name),parts[2],'64',prompt,parts[3]]
  elif batch=='pretrained':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_pretrained_graph.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B')]

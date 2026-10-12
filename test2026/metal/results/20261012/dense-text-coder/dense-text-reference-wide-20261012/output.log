@@ -1,0 +1,25 @@
+dense reference full_attention batch 1 chunk 1 max_abs_error 1.52587890625e-05 worst_ratio 0.04851817565528005 ms 18.47025
+dense reference full_attention batch 1 chunk 1 max_abs_error 0.0 worst_ratio 0 ms 3.764708
+pretrained dense PASS full_attention 1 1
+dense reference full_attention batch 1 chunk 16 max_abs_error 0.000823974609375 worst_ratio 0.4841936365494239 ms 31.2385
+dense reference full_attention batch 1 chunk 16 max_abs_error 0.0002593994140625 worst_ratio 0.6322206098078983 ms 19.637
+pretrained dense PASS full_attention 1 16
+dense reference full_attention batch 2 chunk 1 max_abs_error 2.288818359375e-05 worst_ratio 0.03106319878593198 ms 18.9015
+dense reference full_attention batch 2 chunk 1 max_abs_error 0.0 worst_ratio 0 ms 5.856875
+pretrained dense PASS full_attention 2 1
+dense reference full_attention batch 2 chunk 16 max_abs_error 0.0003204345703125 worst_ratio 0.4157765484273534 ms 34.076333
+dense reference full_attention batch 2 chunk 16 max_abs_error 0.000518798828125 worst_ratio 0.6215403386198055 ms 21.634
+pretrained dense PASS full_attention 2 16
+dense reference full_attention batch 1 chunk 1 max_abs_error 0.00018310546875 worst_ratio 0.3814389247708152 ms 18.475792
+dense reference full_attention batch 1 chunk 1 max_abs_error 0.0 worst_ratio 0 ms 3.829083
+pretrained dense PASS full_attention 1 1
+dense reference full_attention batch 1 chunk 16 max_abs_error 0.00250244140625 worst_ratio 3.813547202710161 ms 31.128458
+runtime: uncaught exception in <module> (/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_dense_reference.py:1): <class 'AssertionError'>: [[66, 0.4182748794555664, 0.41819095611572266, 1.1835266538944416], [1162, 1.49151611328125, 1.4916419982910156, 1.0104582428131157], [1319, -0.017999649047851562, -0.0179443359375, 1.0867610025182874], [1423, 0.13889217376708984, 0.13882064819335938, 1.2561341216272799]]
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_dense_reference.py", line 32, in <module>
+    subprocess.run([runtime,str(Path(__file__).with_name('run_dense_reference.py')),str(fixture),build,source],check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3', '/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_dense_reference.py', '/var/folders/1v/pfqt86pd2mzdnlq2gq0g5tdc0000gn/T/dense-metal-reference-edagu0le/fixture.json', '/Users/zsdx/garnet-metal-investigation/build', '/Users/zsdx/garnet-metal-investigation/source']' returned non-zero exit status 1.

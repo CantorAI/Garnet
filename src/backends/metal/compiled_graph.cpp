@@ -287,7 +287,7 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 if(std::find(inputs_.begin(),inputs_.end(),a)!=inputs_.end())controlSources_[out]={a,size_t(index)};
             }else if(node.name=="qwen35_vision_encoder") {
                 out=LowerVision(a,node.attributes);
-            }else if(node.name=="qwen35_attention_step") {
+            }else if(node.name=="qwen35_attention_step"||node.name=="qwen_text_attention_step") {
                 auto integer=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
                     if(v<=0||uint64_t(v)>limit)throw std::runtime_error(std::string("Invalid Metal attention dimension: ")+name);
                     return size_t(v);};
@@ -313,12 +313,21 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                     throw std::runtime_error("Metal attention control tensors must be graph inputs");
                 const size_t batch=hs[0],capacity=cs[2],cacheWidth=kv*capacity*dim;
                 auto prefix=node.attributes.Get("weight_prefix").ToString();
+                const bool text=node.name=="qwen_text_attention_step",normalize=!text||node.attributes.Get("qk_norm").ToInt64()!=0;
                 auto qg=matmul(a,Weight(prefix+".q_proj.weight")),kp=matmul(a,Weight(prefix+".k_proj.weight")),vp=matmul(a,Weight(prefix+".v_proj.weight"));
-                auto qw=Weight(prefix+".q_norm.weight"),kw=Weight(prefix+".k_norm.weight");
-                if(slots_[qg].columns!=2*heads*dim||slots_[kp].columns!=kv*dim||slots_[vp].columns!=kv*dim||
+                if(text&&node.attributes.Get("attention_bias").ToInt64()!=0) {
+                    auto bias=[&](size_t input,const std::string& name){auto weight=Weight(name);
+                        if(slots_[weight].rows!=1||slots_[weight].columns!=slots_[input].columns)throw std::runtime_error("Metal projection bias shape mismatch");
+                        auto result=Allocate(slots_[input].rows,slots_[input].columns);ops_.push_back({Kind::Bias,input,weight,result});return result;};
+                    qg=bias(qg,prefix+".q_proj.bias");kp=bias(kp,prefix+".k_proj.bias");vp=bias(vp,prefix+".v_proj.bias");
+                }
+                size_t qw,kw;
+                if(normalize){qw=Weight(prefix+".q_norm.weight");kw=Weight(prefix+".k_norm.weight");}
+                else{std::vector<float> ones(dim,1);qw=slots_.size();slots_.push_back({gpu_->Upload(ones,1,dim),1,dim,{1,int64_t(dim)}});kw=qw;}
+                if(slots_[qg].columns!=(text?1:2)*heads*dim||slots_[kp].columns!=kv*dim||slots_[vp].columns!=kv*dim||
                     slots_[qw].rows!=1||slots_[qw].columns!=dim||slots_[kw].rows!=1||slots_[kw].columns!=dim)
                     throw std::runtime_error("Metal full attention checkpoint dimensions mismatch");
-                auto q=slice(qg,heads,2*dim,0,dim),gate=slice(qg,heads,2*dim,dim,dim);
+                auto q=text?qg:slice(qg,heads,2*dim,0,dim),gate=text?q:slice(qg,heads,2*dim,dim,dim);
                 std::vector<float> frequencies(rotary);
                 for(size_t i=0;i<rotary/2;++i) {
                     frequencies[i]=float(std::pow(theta,-2.0*double(i)/double(rotary)));
@@ -326,8 +335,8 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 }
                 auto freq=slots_.size();slots_.push_back({gpu_->Upload(frequencies,2,rotary/2),2,rotary/2,{2,int64_t(rotary/2)}});
                 auto qr=Allocate(batch,heads*dim),kr=Allocate(batch,kv*dim);
-                Op qrope{Kind::NormRope,q,qw,qr,float(epsilon)};qrope.arguments={q,qw,positions,freq};qrope.dimensions={heads,dim,rotary};ops_.push_back(std::move(qrope));
-                Op krope{Kind::NormRope,kp,kw,kr,float(epsilon)};krope.arguments={kp,kw,positions,freq};krope.dimensions={kv,dim,rotary};ops_.push_back(std::move(krope));
+                Op qrope{Kind::NormRope,q,qw,qr,float(epsilon)};qrope.arguments={q,qw,positions,freq};qrope.dimensions={heads,dim,rotary,size_t(normalize)};qrope.offset=text?0:1;ops_.push_back(std::move(qrope));
+                Op krope{Kind::NormRope,kp,kw,kr,float(epsilon)};krope.arguments={kp,kw,positions,freq};krope.dimensions={kv,dim,rotary,size_t(normalize)};krope.offset=text?0:1;ops_.push_back(std::move(krope));
                 auto nextKey=Allocate(batch,cacheWidth),nextValue=Allocate(batch,cacheWidth);
                 for(auto pair:{std::make_pair(kr,std::make_pair(key,nextKey)),std::make_pair(vp,std::make_pair(value,nextValue))}) {
                     Op update{Kind::KVUpdate,pair.first,pair.second.first,pair.second.second};
@@ -336,7 +345,7 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 auto probabilities=Allocate(batch,heads*capacity);
                 Op scores{Kind::Scores,qr,nextKey,probabilities};scores.arguments={qr,nextKey,slot,active};scores.dimensions={heads,kv,dim,capacity};ops_.push_back(std::move(scores));
                 auto context=Allocate(batch,heads*dim);
-                Op attend{Kind::AttentionContext,probabilities,nextValue,context};attend.arguments={probabilities,nextValue,gate};attend.dimensions={heads,kv,dim,capacity};ops_.push_back(std::move(attend));
+                Op attend{Kind::AttentionContext,probabilities,nextValue,context};attend.arguments={probabilities,nextValue,gate};attend.dimensions={heads,kv,dim,capacity,size_t(!text)};ops_.push_back(std::move(attend));
                 auto hidden=matmul(context,Weight(prefix+".o_proj.weight"));
                 if(slots_[hidden].columns!=uint64_t(hs[1]))throw std::runtime_error("Metal attention output projection shape mismatch");
                 out=Allocate(batch,size_t(hs[1])+2*cacheWidth);
@@ -463,12 +472,12 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                     Op op{Kind::Delta,a,k,out};op.arguments={a,k,v,g,beta,s,active};
                     op.dimensions={size_t(shape[1]),size_t(shape[2]),size_t(vs[2])};ops_.push_back(std::move(op));
                 }
-            }else if(node.name=="qwen35_rms_norm") {
+            }else if(node.name=="qwen35_rms_norm"||node.name=="qwen_text_norm") {
                 auto weight=Weight(node.attributes.Get("weight_name").ToString());
                 if(slots_[weight].rows!=1||slots_[weight].columns!=slots_[a].columns)
                     throw std::runtime_error("Metal normalization shape mismatch");
                 out=Allocate(slots_[a].rows,slots_[a].columns);
-                ops_.push_back({Kind::Norm,a,weight,out,float(node.attributes.Get("eps").ToDouble()),1,false});
+                ops_.push_back({Kind::Norm,a,weight,out,float(node.attributes.Get("eps").ToDouble()),node.name=="qwen_text_norm"?0.0f:1.0f,false});
             }else if(node.name=="qwen35_mlp") {
                 auto prefix=node.attributes.Get("weight_prefix").ToString();
                 auto gate=matmul(a,Weight(prefix+".gate_proj.weight"));
@@ -478,6 +487,7 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 ops_.push_back({Kind::Silu,gate,up,activated});
                 out=matmul(activated,Weight(prefix+".down_proj.weight"));
             }else if(node.name=="qwen35_tied_head")out=matmul(a,Weight("model.language_model.embed_tokens.weight"));
+            else if(node.name=="qwen_text_head")out=matmul(a,Weight(node.attributes.Get("weight_name").ToString()));
             else throw std::runtime_error("Metal lowering not implemented: "+node.name);
             tensors_[TensorId(node.output)]=out;
         }
@@ -558,6 +568,7 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
             else if(op.kind==Kind::Norm)gpu_->EncodeRMSNorm(a,b,out,op.epsilon,op.offset);
             else if(op.kind==Kind::Silu)gpu_->EncodeSiluMul(a,b,out);
             else if(op.kind==Kind::Add)gpu_->EncodeAdd(a,b,out);
+            else if(op.kind==Kind::Bias)gpu_->EncodeBias(a,b,out);
             else if(op.kind==Kind::Mask)gpu_->EncodeMaskRows(a,b,out);
             else if(op.kind==Kind::Conv) {
                 auto& args=op.arguments;gpu_->EncodeCausalConv(slots_[args[0]].matrix,slots_[args[1]].matrix,
@@ -576,7 +587,7 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
                 auto& args=op.arguments;gpu_->EncodeConcat(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,out,op.transpose);
             }else if(op.kind==Kind::NormRope) {
                 auto& args=op.arguments;gpu_->EncodeNormRope(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.epsilon);
+                    slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.epsilon,op.offset,op.dimensions[3]!=0);
             }else if(op.kind==Kind::KVUpdate) {
                 auto& args=op.arguments;gpu_->EncodeKVUpdate(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                     slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2]);
@@ -588,7 +599,7 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
                 gpu_->EncodeVision(op.dimensions[0],args,out,op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
             }else if(op.kind==Kind::AttentionContext) {
                 auto& args=op.arguments;gpu_->EncodeAttentionContext(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
+                    out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]!=0);
             }else {
                 gpu_->EncodeSliceGroups(a,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
             }

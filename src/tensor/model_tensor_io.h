@@ -34,6 +34,7 @@ public:
     bool Open(const std::string& path) {
         Close();std::string error;if(!index_.Open(path,error))throw X::Error(error);
         const auto* entry=index_.Find("model.language_model.embed_tokens.weight");
+        if(!entry)entry=index_.Find("model.embed_tokens.weight");
         if(!entry||entry->dataType!="BF16"||entry->shape.size()!=2||!entry->shape[0]||!entry->shape[1]||
             entry->shape[0]>INT64_MAX||entry->shape[1]>INT64_MAX||entry->shape[0]>UINT64_MAX/2/entry->shape[1]||
             entry->shape[0]*entry->shape[1]*2!=entry->dataSize)throw X::Error("invalid BF16 embedding table");
