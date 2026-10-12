@@ -1,0 +1,20 @@
+{
+  "origin_sha256": {
+    "plugins/gpt_oss/cuda/tp_peer_owner.cuh": "c853e20895feadb2d3213c5730931a92445c10c2b31f81937e417950711d7ee3",
+    "plugins/gpt_oss/cuda/tp_peer_math.cuh": "ad5c5cbd2fd5e57c6384c06a179cba65734bfb6dce01b7f243cf21daad47133f",
+    "test2026/gpt_oss/bf16_peer_push_native.cuh": "42efddb38f92fa01167b3eec307b8dae9971bbd8575972195a92eda9c638ab5f",
+    "test2026/gpt_oss/bf16_peer_push_screen.cu": "b25cb483799dcd6c6081f35b4326b56e319471554f9578688b2e30b07285a47d",
+    "test2026/gpt_oss/bf16_peer_push_phase_screen.cu": "78f86d3d4d7f3f0c706093834de13db7288323731bbe821b11c0bae474e3790f",
+    "test2026/gpt_oss/bf16_peer_push_oracle.py": "9076d9ab09f2a68e0049ff28a93ff29a1d4fa800ebd79d729caf8299e76e1749"
+  },
+  "private_files_sha256": {
+    "bf16_peer_dma_native.cuh": "a5085bb948457d2082a5375a6fc95ecbbc5729917242ef609b2e159e96b92f12",
+    "bf16_peer_dma_screen.cu": "4764f2cf2fbf7b2578d28e67826b902708b3a4412378d704ea0e1196e4d2f55a",
+    "bf16_peer_dma_phase_screen.cu": "e302f04fc29f7ed1e882ea4abb9ac755d9f213e5ea8583118912d44329339bb1",
+    "bf16_peer_dma_oracle.py": "7c6c599371e319c5d372250ca1feda0c863ac1da45bc9d9da02b7f035aa2344f"
+  },
+  "scope": "Private default-OFF copy-engine hypothesis. Original current production pull grid1 control. No production integration, GPU qualification or serving claim.",
+  "numerical_oracle_changes": "Only transport/protocol metadata changed from pinned push oracle. sum_round/finite/table generation/full-byte checks unchanged.",
+  "memory": "Owned packed+received4*capacity bytes/rank plus original sequence/faults/mapped slots. Additional receive2*capacity charged.",
+  "transport": "Same-stream pack/ready kernel/explicit cudaMemcpyPeerAsync/local canonical rank0+rank1 BF16RN reduction/end kernel. Actual peer-copy capture/order/lifetime/cost unproven."
+}
