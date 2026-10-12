@@ -46,6 +46,12 @@ public:
         const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,
         const MetalMatrix& active,const MetalMatrix& packed,size_t heads,size_t keyDim,size_t valueDim);
     void EncodeSliceGroups(const MetalMatrix&,const MetalMatrix&,size_t groups,size_t sourceWidth,size_t start,size_t count);
+    void EncodeLinearPrepare(const MetalMatrix& conv,const MetalMatrix& a,const MetalMatrix& b,
+        const MetalMatrix& aLog,const MetalMatrix& dtBias,const MetalMatrix& output,
+        size_t keyHeads,size_t valueHeads,size_t keyDim,size_t valueDim,size_t kernel);
+    void EncodeGatedNorm(const MetalMatrix& core,const MetalMatrix& z,const MetalMatrix& norm,
+        const MetalMatrix& output,size_t heads,size_t valueDim,float epsilon);
+    void EncodeConcat(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,bool includeThird=true);
     void SubmitAndWait();
     void Abort();
     std::vector<float> Download(const MetalMatrix& matrix) const;

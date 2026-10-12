@@ -1,0 +1,29 @@
+"""Keep test logs and completion evidence across intermittent SSH sessions."""
+import json,os,subprocess,sys
+from pathlib import Path
+mode,folder,runtime,build,source,batch=sys.argv[1:]
+folder=Path(folder).resolve();folder.mkdir(parents=True,exist_ok=True)
+pidfile=folder/'pid';exitfile=folder/'exit.json';logfile=folder/'output.log'
+if mode=='launch':
+ if pidfile.exists() and not exitfile.exists():
+  try:os.kill(int(pidfile.read_text()),0)
+  except ProcessLookupError:pass
+  else:raise RuntimeError('Prior job PID is still alive; inspect it before starting another')
+ exitfile.unlink(missing_ok=True)
+ with logfile.open('w') as log:
+  process=subprocess.Popen([sys.executable,__file__,'run',str(folder),runtime,build,source,batch],
+      stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ pidfile.write_text(str(process.pid));print('Started test PID',process.pid,flush=True)
+elif mode=='run':
+ if batch=='download':
+  command=[sys.executable,str(Path(source)/'test2026/pi5b/download_full_checkpoint.py'),
+      str(Path(source).parent/'models/Qwen3.5-0.8B')]
+ else:
+  command=[sys.executable,str(Path(source)/'test2026/metal/test_linear_graph.py'),runtime,build,source,batch]
+ try:
+  result=subprocess.run(command)
+  exitfile.write_text(json.dumps(dict(command=command,exit_code=result.returncode)))
+ except Exception as error:
+  exitfile.write_text(json.dumps(dict(command=command,error=type(error).__name__,exit_code=1)))
+  print('Background job failed:',type(error).__name__,flush=True);raise SystemExit(1)
+else:raise ValueError('mode must be launch or run')

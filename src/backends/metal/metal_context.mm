@@ -27,6 +27,9 @@ struct MetalContext::Impl {
     id<MTLComputePipelineState> conv;
     id<MTLComputePipelineState> delta;
     id<MTLComputePipelineState> slice;
+    id<MTLComputePipelineState> prepare;
+    id<MTLComputePipelineState> gatedNorm;
+    id<MTLComputePipelineState> concat;
 };
 static size_t Elements(size_t rows, size_t columns) {
     if (!rows || !columns || rows > std::numeric_limits<size_t>::max()/columns ||
@@ -71,6 +74,55 @@ kernel void mask_rows(device const float* a [[buffer(0)]],device const float* b 
     if(id>=p.rows*p.columns)return;
     ulong row=id/p.columns,col=id%p.columns;
     c[row*p.cStride+col]=b[row*p.bStride]!=0.0f?a[row*p.aStride+col]:0.0f;
+}
+struct PrepareParams {ulong batch,keyHeads,valueHeads,keyDim,valueDim,kSize,cStride,aStride,bStride,oStride,width;};
+kernel void linear_prepare(device const float* conv [[buffer(0)]],device const float* a [[buffer(1)]],
+    device const float* b [[buffer(2)]],device const float* aLog [[buffer(3)]],device const float* dtBias [[buffer(4)]],
+    device float* output [[buffer(5)]],constant PrepareParams& p [[buffer(6)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.batch*p.width)return;
+    ulong row=id/p.width,col=id%p.width,keyWidth=p.valueHeads*p.keyDim,valueWidth=p.valueHeads*p.valueDim;
+    float result;
+    if(col<2*keyWidth) {
+        ulong part=col/keyWidth,within=col%keyWidth,head=within/p.keyDim,dim=within%p.keyDim;
+        ulong channel=part*p.keyHeads*p.keyDim+(head/(p.valueHeads/p.keyHeads))*p.keyDim+dim;
+        result=conv[row*p.cStride+channel*(p.kSize+1)];
+    }else if(col<2*keyWidth+valueWidth) {
+        ulong channel=2*p.keyHeads*p.keyDim+col-2*keyWidth;
+        result=conv[row*p.cStride+channel*(p.kSize+1)];
+    }else if(col<2*keyWidth+valueWidth+p.valueHeads) {
+        ulong head=col-2*keyWidth-valueWidth;
+        float x=a[row*p.aStride+head]+dtBias[head];
+        float softplus=max(x,0.0f)+log(1.0f+exp(-abs(x)));
+        result=-exp(aLog[head])*softplus;
+    }else {
+        ulong head=col-2*keyWidth-valueWidth-p.valueHeads;
+        result=1.0f/(1.0f+exp(-b[row*p.bStride+head]));
+    }
+    output[row*p.oStride+col]=result;
+}
+struct GateParams {ulong batch,heads,valueDim,cStride,zStride,oStride;float epsilon;};
+kernel void gated_norm(device const float* core [[buffer(0)]],device const float* z [[buffer(1)]],
+    device const float* norm [[buffer(2)]],device float* output [[buffer(3)]],
+    constant GateParams& p [[buffer(4)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.batch*p.heads)return;
+    ulong row=id/p.heads,head=id%p.heads;
+    float sum=0.0f;
+    for(ulong j=0;j<p.valueDim;++j){float x=core[row*p.cStride+head*p.valueDim+j];sum+=x*x;}
+    float inverse=rsqrt(sum/float(p.valueDim)+p.epsilon);
+    for(ulong j=0;j<p.valueDim;++j) {
+        float gate=z[row*p.zStride+head*p.valueDim+j];
+        output[row*p.oStride+head*p.valueDim+j]=core[row*p.cStride+head*p.valueDim+j]*inverse*norm[j]*gate/(1.0f+exp(-gate));
+    }
+}
+struct ConcatParams {ulong batch,aWidth,bWidth,cWidth,aStride,bStride,cStride,oStride;};
+kernel void concat_rows(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+    device const float* c [[buffer(2)]],device float* output [[buffer(3)]],
+    constant ConcatParams& p [[buffer(4)]],uint id [[thread_position_in_grid]]) {
+    ulong width=p.aWidth+p.bWidth+p.cWidth;
+    if(id>=p.batch*width)return;
+    ulong row=id/width,col=id%width;
+    output[row*p.oStride+col]=col<p.aWidth?a[row*p.aStride+col]:
+        (col<p.aWidth+p.bWidth?b[row*p.bStride+col-p.aWidth]:c[row*p.cStride+col-p.aWidth-p.bWidth]);
 }
 struct SliceParams {ulong batch,groups,sourceWidth,start,count,iStride,oStride;};
 kernel void slice_groups(device const float* input [[buffer(0)]],device float* output [[buffer(1)]],
@@ -139,7 +191,11 @@ kernel void gated_delta(device const float* query [[buffer(0)]],device const flo
         impl_->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
         impl_->delta=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta"] error:&error];
         impl_->slice=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups"] error:&error];
-        if(!impl_->rms||!impl_->silu||!impl_->add||!impl_->mask||!impl_->conv||!impl_->delta||!impl_->slice)
+        impl_->prepare=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"linear_prepare"] error:&error];
+        impl_->gatedNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_norm"] error:&error];
+        impl_->concat=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"concat_rows"] error:&error];
+        if(!impl_->rms||!impl_->silu||!impl_->add||!impl_->mask||!impl_->conv||!impl_->delta||!impl_->slice||
+            !impl_->prepare||!impl_->gatedNorm||!impl_->concat)
             throw std::runtime_error("Cannot create Qwen Metal pipelines");
     }
 }
@@ -262,8 +318,9 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
             throw std::logic_error("Uninitialized Metal state kernel input");
         if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
     }
-    if(operation>2)throw std::invalid_argument("Unknown Metal state kernel");
-    auto pipeline=operation==0?impl_->conv:(operation==1?impl_->delta:impl_->slice);
+    if(operation>5)throw std::invalid_argument("Unknown Metal state kernel");
+    auto pipeline=operation==0?impl_->conv:(operation==1?impl_->delta:(operation==2?impl_->slice:
+        (operation==3?impl_->prepare:(operation==4?impl_->gatedNorm:impl_->concat))));
     auto encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal state kernel encoder");
     [encoder setComputePipelineState:pipeline];
@@ -314,6 +371,44 @@ void MetalContext::EncodeGatedDelta(const MetalMatrix& query,const MetalMatrix& 
     Params p{q.rows,heads,keyDim,valueDim,q.rowBytes/4,k.rowBytes/4,v.rowBytes/4,g.rowBytes/4,b.rowBytes/4,
         s.rowBytes/4,a.rowBytes/4,o.rowBytes/4};
     EncodeStateKernel(1,{query,key,value,decay,beta,state,active},packed,&p,sizeof(p),Elements(q.rows,vWidth));
+}
+void MetalContext::EncodeLinearPrepare(const MetalMatrix& conv,const MetalMatrix& a,const MetalMatrix& b,
+    const MetalMatrix& aLog,const MetalMatrix& dtBias,const MetalMatrix& output,
+    size_t keyHeads,size_t valueHeads,size_t keyDim,size_t valueDim,size_t kernel) {
+    if(!conv.impl_||!a.impl_||!b.impl_||!aLog.impl_||!dtBias.impl_||!output.impl_||!keyHeads||!valueHeads||
+        valueHeads%keyHeads||!keyDim||!valueDim||!kernel||keyHeads>128||valueHeads>128||keyDim>4096||valueDim>4096||kernel>64)
+        throw std::invalid_argument("Invalid Metal linear preparation arguments");
+    auto c=conv.impl_->matrix,ap=a.impl_->matrix,bp=b.impl_->matrix,al=aLog.impl_->matrix,dt=dtBias.impl_->matrix,o=output.impl_->matrix;
+    const size_t channels=2*keyHeads*keyDim+valueHeads*valueDim,width=2*valueHeads*keyDim+valueHeads*valueDim+2*valueHeads;
+    if(c.columns!=channels*(kernel+1)||ap.rows!=c.rows||bp.rows!=c.rows||ap.columns!=valueHeads||bp.columns!=valueHeads||
+        al.rows!=1||al.columns!=valueHeads||dt.rows!=1||dt.columns!=valueHeads||o.rows!=c.rows||o.columns!=width)
+        throw std::invalid_argument("Metal linear preparation shape mismatch");
+    struct Params {uint64_t batch,keyHeads,valueHeads,keyDim,valueDim,kSize,cStride,aStride,bStride,oStride,width;};
+    Params p{c.rows,keyHeads,valueHeads,keyDim,valueDim,kernel,c.rowBytes/4,ap.rowBytes/4,bp.rowBytes/4,o.rowBytes/4,width};
+    EncodeStateKernel(3,{conv,a,b,aLog,dtBias},output,&p,sizeof(p),Elements(o.rows,o.columns));
+}
+void MetalContext::EncodeGatedNorm(const MetalMatrix& core,const MetalMatrix& z,const MetalMatrix& norm,
+    const MetalMatrix& output,size_t heads,size_t valueDim,float epsilon) {
+    if(!core.impl_||!z.impl_||!norm.impl_||!output.impl_||!(epsilon>0)||!std::isfinite(epsilon))
+        throw std::invalid_argument("Invalid Metal gated normalization arguments");
+    auto c=core.impl_->matrix,gate=z.impl_->matrix,w=norm.impl_->matrix,o=output.impl_->matrix;
+    if(c.columns!=Elements(heads,valueDim)||gate.rows!=c.rows||gate.columns!=c.columns||w.rows!=1||w.columns!=valueDim||
+        o.rows!=c.rows||o.columns!=c.columns)throw std::invalid_argument("Metal gated normalization shape mismatch");
+    struct Params {uint64_t batch,heads,valueDim,cStride,zStride,oStride;float epsilon;};
+    Params p{c.rows,heads,valueDim,c.rowBytes/4,gate.rowBytes/4,o.rowBytes/4,epsilon};
+    EncodeStateKernel(4,{core,z,norm},output,&p,sizeof(p),Elements(c.rows,heads));
+}
+void MetalContext::EncodeConcat(const MetalMatrix& first,const MetalMatrix& second,const MetalMatrix& third,
+    const MetalMatrix& output,bool includeThird) {
+    if(!first.impl_||!second.impl_||!third.impl_||!output.impl_)throw std::invalid_argument("Empty Metal concat argument");
+    auto a=first.impl_->matrix,b=second.impl_->matrix,c=third.impl_->matrix,o=output.impl_->matrix;
+    const auto cw=includeThird?c.columns:0;
+    if(b.columns>std::numeric_limits<size_t>::max()-a.columns||cw>std::numeric_limits<size_t>::max()-a.columns-b.columns||
+        a.rows!=b.rows||a.rows!=c.rows||a.rows!=o.rows||o.columns!=a.columns+b.columns+cw)
+        throw std::invalid_argument("Metal concat shape mismatch");
+    struct Params {uint64_t batch,aWidth,bWidth,cWidth,aStride,bStride,cStride,oStride;};
+    Params p{a.rows,a.columns,b.columns,cw,a.rowBytes/4,b.rowBytes/4,c.rowBytes/4,o.rowBytes/4};
+    EncodeStateKernel(5,{first,second,third},output,&p,sizeof(p),Elements(o.rows,o.columns));
 }
 void MetalContext::SubmitAndWait() {
     if(!impl_->command)throw std::logic_error("No Metal command batch to submit");

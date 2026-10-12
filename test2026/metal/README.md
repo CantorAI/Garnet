@@ -83,6 +83,41 @@ states; end-to-end decoder feedback is still required.
   /Users/zsdx/garnet-metal-investigation/source
 ```
 
-Next integration: checkpoint-backed QKV/gate/decay projections, grouped head
-expansion, gated recurrent output normalization, decoder state packing and
-residual replacement; then full attention/RoPE/KV updates and vision encoding.
+## Complete linear attention and decoder layers
+
+Checkpoint-backed QKV/Z/A/B projections, grouped head expansion, softplus decay,
+sigmoid beta, recurrent output RMS normalization/SiLU gating, output projection,
+state packing and residual replacement now execute through the captured
+`Qwen35LinearAttentionStep` and `Qwen35LinearDecoderLayer` programs. Each graph
+retains weights and intermediate matrices and submits one command buffer.
+
+On the M4, all 32 numerical cases produced PASS: batches 1/2, equal/grouped
+key/value heads (2/2 and 1/2), attention/decoder graphs and four output modes
+(packed, hidden, convolution state, recurrent state). Each case runs seven
+updates with mixed BF16/F32 checkpoint values, nonzero initial states and
+inactive/resumed batch rows. The tolerance remains `5e-6 + 5e-5 * abs(reference)`.
+The fixture uses hidden width 11, key width 7, value width 5 and two value heads;
+its timings are component checks, not full model performance.
+
+The initial foreground suite lost its SSH connection after completing batch 1
+and the first batch-2 case. Process inspection then confirmed it was no longer
+running. All batch-2 cases were rerun with durable logs and completed with exit
+code 0 under `logs/linear-batch2-20261011` on the Mac. The native CTest also passed
+1/1 (3.96 seconds including startup and shader compilation).
+
+```sh
+/opt/homebrew/bin/python3 source/test2026/metal/test_linear_graph.py \
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3 \
+  /Users/zsdx/garnet-metal-investigation/build \
+  /Users/zsdx/garnet-metal-investigation/source
+```
+
+`background_test.py` can preserve test output and exit evidence across SSH drops.
+Its download mode reuses the existing pinned-checkpoint downloader. Direct model
+download failed on this Mac with a DNS/routing error; no pretrained inference is
+claimed. The existing full checkpoint was found on the Pi (1,746,942,600 bytes),
+and transfer through the local investigation workspace is underway.
+
+Next: verify full-size pretrained linear layers, implement full attention/RoPE/KV
+updates and vision encoding, then run actual text/image inference and profile
+latency, memory and throughput before optimizing the complete workload.

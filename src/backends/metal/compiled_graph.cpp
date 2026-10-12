@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <limits>
 #include <algorithm>
+#include <cmath>
 namespace Garnet {
 size_t MetalCompiledGraph::Allocate(size_t rows,size_t columns) {
     auto id=slots_.size();slots_.push_back({gpu_->Allocate(rows,columns),rows,columns,{int64_t(rows),int64_t(columns)}});return id;
@@ -14,7 +15,8 @@ size_t MetalCompiledGraph::Allocate(size_t rows,size_t columns) {
 size_t MetalCompiledGraph::Weight(const std::string& name) {
     auto found=weights_.find(name);if(found!=weights_.end())return found->second;
     auto entry=index_.Find(name);
-    if(!entry||entry->shape.empty()||entry->shape.size()>2)
+    if(!entry||entry->shape.empty()||entry->shape.size()>3||
+        (entry->shape.size()==3&&entry->shape[1]!=1))
         throw std::runtime_error("Metal matrix weight missing/invalid: "+name);
     for(auto dim:entry->shape)if(dim<=0)throw std::runtime_error("Invalid Metal checkpoint dimension");
     const size_t rows=entry->shape.size()==1?1:entry->shape[0],columns=entry->shape.back();
@@ -73,6 +75,14 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
         auto matmul=[&](size_t a,size_t b){
             if(slots_[a].columns!=slots_[b].columns)throw std::runtime_error("Metal checkpoint projection shape mismatch");
             auto out=Allocate(slots_[a].rows,slots_[b].rows);ops_.push_back({Kind::MatMul,a,b,out,0,0,true});return out;};
+        auto slice=[&](size_t input,size_t groups,size_t sourceWidth,size_t start,size_t count,
+            std::vector<int64_t> shape=std::vector<int64_t>{}) {
+            if(!groups||!count||start>sourceWidth||count>sourceWidth-start||groups>std::numeric_limits<size_t>::max()/sourceWidth||
+                slots_[input].columns!=groups*sourceWidth)throw std::runtime_error("Metal graph slice shape mismatch");
+            auto out=Allocate(slots_[input].rows,groups*count);
+            if(!shape.empty())slots_[out].shape=std::move(shape);
+            Op op{Kind::Slice,input,input,out};op.dimensions={groups,sourceWidth,start,count};ops_.push_back(std::move(op));return out;
+        };
         for(const auto& node:capture.Operations()) {
             if(node.provider.empty())continue;
             if(node.provider!="garnet"||node.inputs.empty()||node.operandCount<1||node.operandCount>2)
@@ -89,6 +99,16 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                     auto bound=bindings_[TensorId(node.inputs[0])];bound[node.name]=b;
                     bindings_[TensorId(node.output)]=std::move(bound);tensors_[TensorId(node.output)]=a;continue;
                 }
+                if(node.name=="qwen35_replace_packed_hidden") {
+                    auto hiddenDim=node.attributes.Get("hidden_dim").ToInt64();
+                    if(hiddenDim<=0||slots_[a].rows!=slots_[b].rows||slots_[b].columns!=uint64_t(hiddenDim)||
+                        slots_[a].columns<=uint64_t(hiddenDim))throw std::runtime_error("Metal packed hidden replacement shape mismatch");
+                    const auto packedWidth=slots_[a].columns;
+                    auto tail=slice(a,1,packedWidth,hiddenDim,packedWidth-hiddenDim);
+                    out=Allocate(slots_[a].rows,packedWidth);
+                    Op op{Kind::Concat,b,tail,out};op.arguments={b,tail,tail};op.transpose=false;ops_.push_back(std::move(op));
+                    tensors_[TensorId(node.output)]=out;continue;
+                }
                 const bool mask=node.name=="qwen35_mask_rows";
                 if(node.name!="add"&&!mask)throw std::runtime_error("Metal binary lowering not implemented: "+node.name);
                 if(slots_[a].rows!=slots_[b].rows||slots_[b].columns!=(mask?1:slots_[a].columns))
@@ -97,7 +117,65 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 ops_.push_back({mask?Kind::Mask:Kind::Add,a,b,out});
                 tensors_[TensorId(node.output)]=out;continue;
             }
-            if(node.name=="qwen35_conv_output"||node.name=="qwen35_conv_state"||
+            if(node.name=="qwen35_linear_step") {
+                auto integer=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
+                    if(v<=0||uint64_t(v)>limit)throw std::runtime_error(std::string("Invalid Metal linear dimension: ")+name);
+                    return size_t(v);};
+                const auto kh=integer("key_heads",128),vh=integer("value_heads",128),kd=integer("key_dim",4096),vd=integer("value_dim",4096);
+                if(vh%kh)throw std::runtime_error("Metal linear head grouping mismatch");
+                const auto hiddenShape=slots_[a].shape;
+                const auto bound=bindings_[TensorId(node.inputs[0])];
+                auto require=[&](const char* name){auto it=bound.find(name);
+                    if(it==bound.end())throw std::runtime_error(std::string("Metal linear missing binding: ")+name);
+                    return it->second;};
+                auto convState=require("qwen35_conv_bind_state"),state=require("qwen35_delta_bind_state"),active=require("qwen35_conv_bind_active");
+                const auto cs=slots_[convState].shape;
+                const size_t channels=2*kh*kd+vh*vd;
+                if(hiddenShape.size()!=2||cs.size()!=3||cs[0]!=hiddenShape[0]||uint64_t(cs[1])!=channels||cs[2]<=0||cs[2]>64||
+                    slots_[state].shape!=std::vector<int64_t>{hiddenShape[0],int64_t(vh),int64_t(kd),int64_t(vd)}||
+                    slots_[active].shape!=std::vector<int64_t>{hiddenShape[0]})throw std::runtime_error("Metal linear state logical shape mismatch");
+                const auto batch=size_t(hiddenShape[0]),kernel=size_t(cs[2]);
+                const auto prefix=node.attributes.Get("weight_prefix").ToString();
+                const auto epsilon=float(node.attributes.Get("eps").ToDouble());
+                if(!(epsilon>0)||!std::isfinite(epsilon))throw std::runtime_error("Invalid Metal linear epsilon");
+                auto qkv=matmul(a,Weight(prefix+".in_proj_qkv.weight"));
+                auto z=matmul(a,Weight(prefix+".in_proj_z.weight"));
+                auto ap=matmul(a,Weight(prefix+".in_proj_a.weight")),bp=matmul(a,Weight(prefix+".in_proj_b.weight"));
+                auto convWeight=Weight(prefix+".conv1d.weight"),aLog=Weight(prefix+".A_log"),dt=Weight(prefix+".dt_bias");
+                if(slots_[qkv].columns!=channels||slots_[z].columns!=vh*vd||slots_[ap].columns!=vh||slots_[bp].columns!=vh||
+                    slots_[convWeight].rows!=channels||slots_[convWeight].columns!=kernel||slots_[aLog].columns!=vh||slots_[dt].columns!=vh)
+                    throw std::runtime_error("Metal linear checkpoint projection shape mismatch");
+                auto convPacked=Allocate(batch,channels*(kernel+1));
+                Op conv{Kind::Conv,qkv,convWeight,convPacked};conv.arguments={qkv,convWeight,convState,active};conv.dimensions={kernel};ops_.push_back(std::move(conv));
+                const size_t qw=vh*kd,vw=vh*vd,pw=2*qw+vw+2*vh;
+                auto prepared=Allocate(batch,pw);
+                Op prepare{Kind::Prepare,convPacked,ap,prepared};prepare.arguments={convPacked,ap,bp,aLog,dt};
+                prepare.dimensions={kh,vh,kd,vd,kernel};ops_.push_back(std::move(prepare));
+                auto q=slice(prepared,1,pw,0,qw),k=slice(prepared,1,pw,qw,qw),v=slice(prepared,1,pw,2*qw,vw),
+                    g=slice(prepared,1,pw,2*qw+vw,vh),beta=slice(prepared,1,pw,2*qw+vw+vh,vh);
+                auto deltaPacked=Allocate(batch,vw*(kd+1));
+                Op delta{Kind::Delta,q,k,deltaPacked};delta.arguments={q,k,v,g,beta,state,active};delta.dimensions={vh,kd,vd};ops_.push_back(std::move(delta));
+                auto core=slice(deltaPacked,vh,(kd+1)*vd,0,vd);
+                auto gated=Allocate(batch,vw),norm=Weight(prefix+".norm.weight");
+                if(slots_[norm].rows!=1||slots_[norm].columns!=vd)throw std::runtime_error("Metal linear norm weight shape mismatch");
+                Op gate{Kind::GateNorm,core,z,gated,epsilon};gate.arguments={core,z,norm};gate.dimensions={vh,vd};ops_.push_back(std::move(gate));
+                auto hidden=matmul(gated,Weight(prefix+".out_proj.weight"));
+                if(slots_[hidden].columns!=slots_[a].columns)throw std::runtime_error("Metal linear output projection shape mismatch");
+                auto nextConv=slice(convPacked,channels,kernel+1,1,kernel),nextState=slice(deltaPacked,vh,(kd+1)*vd,vd,kd*vd);
+                out=Allocate(batch,slots_[hidden].columns+slots_[nextConv].columns+slots_[nextState].columns);
+                Op pack{Kind::Concat,hidden,nextConv,out};pack.arguments={hidden,nextConv,nextState};pack.transpose=true;ops_.push_back(std::move(pack));
+            }else if(node.name=="qwen35_linear_output"||node.name=="qwen35_linear_conv_state"||node.name=="qwen35_linear_recurrent_state") {
+                auto dim=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
+                    if(v<=0||uint64_t(v)>limit)throw std::runtime_error("Invalid Metal linear unpack dimension");
+                    return size_t(v);};
+                const auto h=dim("hidden_dim",65536),kh=dim("key_heads",128),vh=dim("value_heads",128),kd=dim("key_dim",4096),
+                    vd=dim("value_dim",4096),kernel=dim("kernel_size",64),channels=2*kh*kd+vh*vd,conv=channels*kernel,state=vh*kd*vd;
+                if(vh%kh||slots_[a].columns!=h+conv+state)throw std::runtime_error("Metal linear packed dimensions mismatch");
+                const auto batch=int64_t(slots_[a].rows);
+                if(node.name=="qwen35_linear_output")out=slice(a,1,h+conv+state,0,h,{batch,int64_t(h)});
+                else if(node.name=="qwen35_linear_conv_state")out=slice(a,1,h+conv+state,h,conv,{batch,int64_t(channels),int64_t(kernel)});
+                else out=slice(a,1,h+conv+state,h+conv,state,{batch,int64_t(vh),int64_t(kd),int64_t(vd)});
+            }else if(node.name=="qwen35_conv_output"||node.name=="qwen35_conv_state"||
                 node.name=="qwen35_delta_output"||node.name=="qwen35_delta_state") {
                 const auto shape=slots_[a].shape;
                 if(shape.size()!=3)throw std::runtime_error("Metal attention unpack requires rank three packed input");
@@ -207,6 +285,14 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
                 auto& args=op.arguments;gpu_->EncodeGatedDelta(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                     slots_[args[3]].matrix,slots_[args[4]].matrix,slots_[args[5]].matrix,slots_[args[6]].matrix,out,
                     op.dimensions[0],op.dimensions[1],op.dimensions[2]);
+            }else if(op.kind==Kind::Prepare) {
+                auto& args=op.arguments;gpu_->EncodeLinearPrepare(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                    slots_[args[3]].matrix,slots_[args[4]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
+            }else if(op.kind==Kind::GateNorm) {
+                auto& args=op.arguments;gpu_->EncodeGatedNorm(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                    out,op.dimensions[0],op.dimensions[1],op.epsilon);
+            }else if(op.kind==Kind::Concat) {
+                auto& args=op.arguments;gpu_->EncodeConcat(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,out,op.transpose);
             }else {
                 gpu_->EncodeSliceGroups(a,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
             }

@@ -9,7 +9,7 @@
 namespace Garnet {
 class MetalCompiledGraph {
     struct Slot {MetalMatrix matrix;size_t rows=0,columns=0;std::vector<int64_t> shape;};
-    enum class Kind {MatMul,Norm,Silu,Add,Mask,Conv,Delta,Slice};
+    enum class Kind {MatMul,Norm,Silu,Add,Mask,Conv,Delta,Slice,Prepare,GateNorm,Concat};
     struct Op {Kind kind;size_t a,b,out;float epsilon=0,offset=0;bool transpose=false;
         std::vector<size_t> arguments={},dimensions={};};
     std::unique_ptr<MetalContext> gpu_;
