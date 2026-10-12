@@ -1,0 +1,18 @@
+{
+  "protocol": "opt251-private-eager-diagnostic-provenance-v1",
+  "origin_sha256": {
+    "test2026/gpt_oss/bf16_peer_dma_native.cuh": "a5085bb948457d2082a5375a6fc95ecbbc5729917242ef609b2e159e96b92f12",
+    "test2026/gpt_oss/bf16_peer_dma_screen.cu": "4764f2cf2fbf7b2578d28e67826b902708b3a4412378d704ea0e1196e4d2f55a",
+    "test2026/gpt_oss/bf16_peer_dma_phase_screen.cu": "e302f04fc29f7ed1e882ea4abb9ac755d9f213e5ea8583118912d44329339bb1",
+    "test2026/gpt_oss/bf16_peer_dma_oracle.py": "7c6c599371e319c5d372250ca1feda0c863ac1da45bc9d9da02b7f035aa2344f",
+    "test2026/gpt_oss/bf16_peer_dma_provenance.json": "31793904b4b7820a8154347513fe908fb2dc928182732ccb597ab263ebce4653",
+    "plugins/gpt_oss/cuda/tp_peer_owner.cuh": "c853e20895feadb2d3213c5730931a92445c10c2b31f81937e417950711d7ee3",
+    "plugins/gpt_oss/cuda/tp_peer_math.cuh": "ad5c5cbd2fd5e57c6384c06a179cba65734bfb6dce01b7f243cf21daad47133f",
+    "plugins/gpt_oss/cuda/tp_bf16.cu": "0acc8595e728dc565dba7f05ee0b5f84a2a6db083bf511794fb0d621cb9e3ac4"
+  },
+  "private_files_sha256": {
+    "bf16_peer_dma_diagnostic_native.cuh": "815d0e4d0ff297f15249d5928e30eebd8bac9df0cd55e90350994e0edc63c7d7",
+    "bf16_peer_dma_diagnostic.cu": "2ee4041b2e10b6c79e6f99493c9836117e0c93f8941376edf5c3257f0f474639"
+  },
+  "scope": "Distinct timeout IDs and bounded host traces only. Original OPT250 immutable; unchanged pack/copy/reduction/ready/end/watchdog/ownership. Eager diagnostic output zero-initialized; no candidate full safety/correctness/performance/serving qualification."
+}
