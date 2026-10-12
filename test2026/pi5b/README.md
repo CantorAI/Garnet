@@ -153,11 +153,15 @@ cmake --build build/metal -j4
 ctest --test-dir build/metal --output-on-failure
 ```
 
-As of 2026-10-11 this target has NOT been compiled or executed on macOS.
+On 2026-10-11 the target built with AppleClang 17.0.0 on the reachable M4 Mac
+mini (16 GiB RAM, Xcode installed). The actual Metal/MPS numerical CTest passed
+(1/1, 2.59 seconds including test startup). This is a GPU primitive correctness
+result, not Qwen model inference or a throughput benchmark.
 The Linux platform-rejection check passed: configuring Metal on Linux reports
 that macOS and a real Metal GPU are required. No Apple GPU speed is claimed.
-The saved Mac mini SSH addresses did not complete a connection; the current
-reachable address has been requested. No SSH identity checks were disabled.
+The Tailscale address subsequently connected using the previously saved
+ZeroTier host key through HostKeyAlias. The connection is intermittent.
+No SSH identity checks were disabled.
 
 Next milestones: validate native toolchain/GPU; add persistent device tensors
 and captured xModel graph lowering; implement Qwen normalization, positional
