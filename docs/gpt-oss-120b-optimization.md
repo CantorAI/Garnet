@@ -3631,3 +3631,8 @@ The first OPT233 recovery helper launch exited at import time with `ModuleNotFou
 ### OPT235 profile recovery again stopped in embedded-Python preflight
 
 The OPT234 retry reached the recovery script but failed before any GPU work: XLang3's subprocess adapter rejected a `Path` object supplied as `cwd` (`RuntimeError: process argument must be str or bytes`). The exception handler then hit the embedded runtime's reduced `shutil` module, which does not expose `disk_usage`, so no structured status was written. The target log preserves both traces; nvidia-smi showed both devices at15MiB and no compute applications, and no engine load began. Correct the helper only: pass `str(REPO)` to each subprocess working-directory argument and compute available bytes through the POSIX `os.statvfs` API. Keep the same source/profile/cache guards and decode-only recovery scope.
+
+
+### OPT236 preflight found a second missing POSIX API in embedded Python
+
+The OPT235 launch again exited before status creation or GPU work because this XLang3 runtime also lacks `os.statvfs`; the exception path repeated the same limitation. The launch log preserves the trace, and both GPUs remained at15MiB with no compute application. Replace the free-space probe with the target's `df -B1 --output=avail <path>` result through subprocess (using string arguments), retaining the15GiB threshold. No candidate, engine cache, or source state changed.
