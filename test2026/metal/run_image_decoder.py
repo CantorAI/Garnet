@@ -72,6 +72,7 @@ try:
             ttft_first_request_seconds=initialization+ttft if request==0 else None,
             decode_layer_ms=layer_durations,decode_head_ms=head_durations,
             decode_steps_per_second=len(durations)/decode_seconds if decode_seconds>0 else None)),flush=True)
+    print('metal_graph_operations',json.dumps(dict(decode=[layer['graph'].operation_count for layer in decoder.layers],prefill=[graph.operation_count for graph in decoder.prefill_graphs.values()] if hasattr(decoder,'prefill_graphs') else [])),flush=True)
 finally:
     if vision is not None:vision.close()
     if decoder is not None:decoder.close()

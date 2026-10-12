@@ -342,11 +342,47 @@ and parsed timing data for seven successful jobs are in
 `results/20261012/chunk16/`. Reproduce with `image-chunk:1:16` or
 `image-chunk:2:16`. Larger chunks remain unmeasured.
 
+## Removing unused attention-state packing — 2026-10-12
+
+Metal graph lowering now aliases complete segments of packed attention results
+back to their existing buffers and traces graph dependencies to remove unused
+packing/unpacking operations. Replacing the hidden result packs the final
+hidden/state buffers directly. Unused GPU allocations are released after
+lowering. Caller-owned states, masking, validation and FP32 math are preserved.
+Graphs expose `operation_count` for diagnostics; image logs include per-layer
+counts. This reduces GPU copies inside a graph; it does not yet keep states
+on the GPU across separate layer calls.
+
+| Warm batch-1 image, chunk 16 | Fresh previous build | New build | Repeat |
+| --- | ---: | ---: | ---: |
+| Prompt processing | 1.728 s | 1.555 s | 1.558 s |
+| First token including vision | 2.084 s | 1.908 s | 1.908 s |
+| Complete 28-token caption | 4.198 s | 3.954 s | 3.969 s |
+| Answer generation | 12.78 tokens/s | 13.19 tokens/s | 13.10 tokens/s |
+
+Warm first-token latency improves about 8.5%; generation improves about 3% in
+these runs, so this is a small measured decoding gain rather than a large one.
+All image and text output IDs match exactly. Batch 2 measures 2.599 s first
+token / 5.041 s for both captions and 11.05 tokens/s per row; compare with the
+prior saved isolated 2.951 s / 5.518 s as a historical comparison. Text batch 1
+is 0.506 s first token / 2.649 s for the same 32-token capped output, not a
+completed answer. Model-loaded first image request takes 3.276 s first token /
+5.363 s complete after 2.995 s initialization. Batch-1 process peak RSS stays
+around 5.45 GiB, so no process memory reduction is established.
+
+Full-size pretrained layers pass batches 1/2 and chunks 2/4/8/16, including
+paused rows, partial tails, invalid controls, all hidden outputs and final
+states at unchanged tolerance. Serving reset/profile replacement tests and
+native primitive CTest pass. Seven successful job command/exit/output records
+and parsed timing data are in `results/20261012/state-copy/`.
+The previous build is commit `31571af`; new runs use this lowering change.
+Dedicated Qwen text and coder adapters are the next work requested by the user.
+
 ## Limits and next performance work
 
 The decoder now supports chunked prefill, but it still uses synchronous
 per-layer/chunk graph submission and explicit CPU state copies. Warm image
-prefill with chunk 16 and batched projections is about 1.75 s for 79 prompt tokens and still dominates
+prefill with chunk 16, batched projections and packing removal is about 1.56 s for 79 prompt tokens and still dominates
 first-token latency. Captured weights are
 expanded from BF16 into FP32, increasing memory and bandwidth requirements.
 The tied vocabulary head alone occupies approximately 1 GB in FP32.

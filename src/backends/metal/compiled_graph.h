@@ -37,6 +37,7 @@ public:
     bool Ready() const {return ready_;}
     double CompileMs() const {return compileMs_;}
     double LastInferenceMs() const {return inferenceMs_;}
+    size_t OperationCount() const {return ops_.size();}
     BEGIN_PACKAGE(MetalCompiledGraph)
         APISET().AddFunc<3>("build",&MetalCompiledGraph::Build);
         APISET().AddFunc<1>("run",&MetalCompiledGraph::Run);
@@ -44,6 +45,7 @@ public:
         APISET().AddProp("ready",&MetalCompiledGraph::Ready);
         APISET().AddProp("compile_ms",&MetalCompiledGraph::CompileMs);
         APISET().AddProp("last_inference_ms",&MetalCompiledGraph::LastInferenceMs);
+        APISET().AddProp("operation_count",&MetalCompiledGraph::OperationCount);
     END_PACKAGE
 };
 }

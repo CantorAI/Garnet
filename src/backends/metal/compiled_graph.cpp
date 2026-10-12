@@ -156,10 +156,25 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
         auto lookup=[&](const X::Value& value){auto found=tensors_.find(TensorId(value));
             if(found==tensors_.end())throw std::runtime_error("Unknown Metal graph operand");
             return found->second;};
+        std::map<size_t,std::vector<size_t>> packedParts;
+        std::map<size_t,size_t> aliases;
         auto slice=[&](size_t input,size_t groups,size_t sourceWidth,size_t start,size_t count,
             std::vector<int64_t> shape=std::vector<int64_t>{}) {
             if(!groups||!count||start>sourceWidth||count>sourceWidth-start||groups>std::numeric_limits<size_t>::max()/sourceWidth||
                 slots_[input].columns!=groups*sourceWidth)throw std::runtime_error("Metal graph slice shape mismatch");
+            auto parts=packedParts.find(input);
+            if(groups==1&&parts!=packedParts.end()) {
+                size_t offset=0;
+                for(auto part:parts->second) {
+                    if(start==offset&&count==slots_[part].columns) {
+                        // A complete packed segment already exists as an independent matrix.
+                        // Alias its storage; preserve this view's logical shape separately.
+                        auto view=slots_[part];view.shape=shape.empty()?std::vector<int64_t>{int64_t(view.rows),int64_t(view.columns)}:shape;
+                        const auto id=slots_.size();slots_.push_back(std::move(view));aliases[id]=part;return id;
+                    }
+                    offset+=slots_[part].columns;
+                }
+            }
             auto out=Allocate(slots_[input].rows,groups*count);
             if(!shape.empty())slots_[out].shape=std::move(shape);
             Op op{Kind::Slice,input,input,out};op.dimensions={groups,sourceWidth,start,count};ops_.push_back(std::move(op));return out;
@@ -232,6 +247,13 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                     if(hiddenDim<=0||slots_[a].rows!=slots_[b].rows||slots_[b].columns!=uint64_t(hiddenDim)||
                         slots_[a].columns<=uint64_t(hiddenDim))throw std::runtime_error("Metal packed hidden replacement shape mismatch");
                     const auto packedWidth=slots_[a].columns;
+                    auto parts=packedParts.find(a);
+                    if(parts!=packedParts.end()&&parts->second.size()==3&&slots_[parts->second[0]].columns==uint64_t(hiddenDim)) {
+                        out=Allocate(slots_[a].rows,packedWidth);
+                        Op op{Kind::Concat,b,parts->second[1],out};op.arguments={b,parts->second[1],parts->second[2]};op.transpose=true;
+                        packedParts[out]=op.arguments;ops_.push_back(std::move(op));
+                        tensors_[TensorId(node.output)]=out;continue;
+                    }
                     auto tail=slice(a,1,packedWidth,hiddenDim,packedWidth-hiddenDim);
                     out=Allocate(slots_[a].rows,packedWidth);
                     Op op{Kind::Concat,b,tail,out};op.arguments={b,tail,tail};op.transpose=false;ops_.push_back(std::move(op));
@@ -318,7 +340,7 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 auto hidden=matmul(context,Weight(prefix+".o_proj.weight"));
                 if(slots_[hidden].columns!=uint64_t(hs[1]))throw std::runtime_error("Metal attention output projection shape mismatch");
                 out=Allocate(batch,size_t(hs[1])+2*cacheWidth);
-                Op pack{Kind::Concat,hidden,nextKey,out};pack.arguments={hidden,nextKey,nextValue};pack.transpose=true;ops_.push_back(std::move(pack));
+                Op pack{Kind::Concat,hidden,nextKey,out};pack.arguments={hidden,nextKey,nextValue};pack.transpose=true;packedParts[out]=pack.arguments;ops_.push_back(std::move(pack));
             }else if(node.name=="qwen35_attention_output"||node.name=="qwen35_attention_key_cache"||node.name=="qwen35_attention_value_cache") {
                 auto dimension=[&](const char* name,size_t limit){auto n=node.attributes.Get(name).ToInt64();
                     if(n<=0||uint64_t(n)>limit)throw std::runtime_error("Invalid Metal attention unpack dimension");
@@ -375,7 +397,7 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 if(slots_[hidden].columns!=slots_[a].columns)throw std::runtime_error("Metal linear output projection shape mismatch");
                 auto nextConv=slice(convPacked,channels,kernel+1,1,kernel),nextState=slice(deltaPacked,vh,(kd+1)*vd,vd,kd*vd);
                 out=Allocate(batch,slots_[hidden].columns+slots_[nextConv].columns+slots_[nextState].columns);
-                Op pack{Kind::Concat,hidden,nextConv,out};pack.arguments={hidden,nextConv,nextState};pack.transpose=true;ops_.push_back(std::move(pack));
+                Op pack{Kind::Concat,hidden,nextConv,out};pack.arguments={hidden,nextConv,nextState};pack.transpose=true;packedParts[out]=pack.arguments;ops_.push_back(std::move(pack));
             }else if(node.name=="qwen35_linear_output"||node.name=="qwen35_linear_conv_state"||node.name=="qwen35_linear_recurrent_state") {
                 auto dim=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
                     if(v<=0||uint64_t(v)>limit)throw std::runtime_error("Invalid Metal linear unpack dimension");
@@ -463,7 +485,22 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
         if((output.IsList()||x3_value_object_kind(output.raw())==X3_OBJECT_KIND_TUPLE)&&output.Size()==1)
             output=output.Get(uint64_t(0));
         if(!IsTensor(output))throw std::runtime_error("Initial Metal graph requires one tensor output");
-        output_=lookup(output);ready_=true;
+        output_=lookup(output);
+        // All operations write fresh slots. Trace only matrices needed by the
+        // returned value, resolving storage aliases before removing unused packs.
+        auto canonical=[&](size_t id){while(aliases.count(id))id=aliases.at(id);return id;};
+        std::unordered_set<size_t> live={canonical(output_)};
+        std::vector<Op> retained;
+        for(auto it=ops_.rbegin();it!=ops_.rend();++it) {
+            if(!live.count(canonical(it->out)))continue;
+            live.insert(canonical(it->a));live.insert(canonical(it->b));
+            for(auto arg:it->arguments)live.insert(canonical(arg));
+            retained.push_back(std::move(*it));
+        }
+        std::reverse(retained.begin(),retained.end());ops_=std::move(retained);
+        for(auto id:inputs_)live.insert(canonical(id));
+        for(size_t id=0;id<slots_.size();++id)if(!live.count(canonical(id)))slots_[id].matrix=MetalMatrix();
+        ready_=true;
         compileMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
         return true;
     }catch(...){Clear();throw;}
