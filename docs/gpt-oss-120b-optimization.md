@@ -4128,3 +4128,63 @@ CPU preparation actual0 work/opt86-local/opt252-cpu-preparation.json SHA64a566d4
 2026-10-12T05:06:37.222917+00:00
 
 First packet preparation failed actual1 BEFORE targetupload/restart/launch: importing boundcontroller for CPUvalidate_inputs created __pycache__ directory; blanket directory iteration included that directory as a tar member, strict allfile/path assertion correctly rejected. Preserve first inputfolder/bundle/manifest/tar unchanged; no target/GPUfailure or paididle. Proposal: distinct retry localfolder/script/packet, copysame immutable helpers and latestdoc-onlybundle; package ONLY manifest-listed regular files plus manifest itself. Assert EXACT member set/regularfiles/no.. and every payload byte equals boundinputs. No cleanup of failure, no broad relaxed tar/path guard, same remote previouslyuncreatedopt252-trace-inputs destination onlyafter SCP0/hashsize. CPUready proof64a566d4 remains unchanged sourcehelper/parser qualification scope only.
+
+
+## OPT252 actual profiler-option failure, retained archive and supported-option retry proposal
+
+2026-10-12T05:13:29.244678+00:00
+
+Fresh original34control/nativeapp0 and independentCPUoracle0 completed FIRST; fetch/doc-onlyff/nsysversion actual0. Exact unchanged PRIVATE diagnostic did NOT start: installedNsight2026.5.1 profile CLI actual1 rejected --process-scope=process-tree; output164B unrecognisedoption. Published guide includes options across commands/platforms and was insufficient for exactinstalledprofileCLI; actual downloadedinstalledhelp is authoritative. No newGPUtimeline/nativefailure/candidatebits/memory/profile/serving gain. Controller2093 and ALLobservedchildren ACTUALLYgone/GPUappsEMPTY beforecollector0; target3581def1488ba1914d54a31a017fee60620dc3ce clean/doc-onlydiff/native2/private3/cache936 unchanged. Canonical0965d24f49ef991426ac901bc6414659d6455f4e020766bc22498f67ac100e0b/56295264B;receiptabae0d400058afda92a94bbcf198fe2a6d1ad214be80c25f336dffecfa4f752a/4497B;rootloge4a4c8d477b4f2f2715db4ae7583dbbd1f77d14c52307c94bec6f52deac3a38f/8995B;installedhelpe3ba313f9cce6e985a6112381ed3f0a701e2454f769684c6837559165d710054/38239B. SCPsession4976 yieldedrunning; prematurehashread failed missingrootlog and is NOT qualification. Then actualSCPterminal0 observed, ALL4SHA/size reverified AFTERactual0 BEFOREsafeextractactual0/519members. Rawfailedpacket/canonical/helpers preserved.
+
+Stopconfirmed2026-10-12T05:11:16.900Z Inactive/.112storage/dataretained screenshotwork/opt86-local/opt252-vast-stopped.png; NEW1791781619.586..1791782819.586 windowCLOSED after257.3140001296997sec/4.288566668828328min/~0.18905431398418215USD GPUestimate NOTinvoice. No paididle CPUaudit/preparation. Proposal BEFORE edits: unchangedfullauditor must reject incompletecapture withactualexit/log/no passoutput. Separatefailurebinder binds ALLcanonical/source444/native2/private3/cache/19immutableinputs/cost/deadline/owner/PIDabsence/control34EVERYrawbyte and exactprofileroptionfailure/no nativechildreceipt/no report, explicit passedFALSE/failureboundTRUE/traceboundFALSE only. Preserve first helpers; distinct retry removes ONLY unsupported --process-scope, retain explicit supported --cuda-trace-scope=process-tree and add supported --wait=all. Bind installedprofilehelpSHA and require everyselectedoption documented by actualinstalledCLI BEFOREtarget launch, native0/3 separatelyreceipted. Fresh uniqueWORK input/output, latestlocalpusheddoc-onlysource/targetbase358 unchangedbinaries/cache, strict7ownerfunctions/CPUpreflight/numerical/sanitizer/trace/source/disk guards unchanged. Include this confirmed257.3140001296997sec fourthwindow in nextcostupper plus prior552.908/195.968/249.203/fullhour/storage/new20min/2margin under400/375guard. Complete newCPUpreparedpacket/auditor/collector before SAMErentalrestart; no blindunchangedrerun/longerwatchdog/production/Qwen edits.
+
+
+## OPT252 failed-auditor bytecode side effect and immutable-evidence repair proposal
+
+2026-10-12T05:14:39.245340+00:00
+
+First separatefailureauditor actual1 rejected canonical-vs-extracted member-set: importing archived auditor before tar validation generated bound-inputs/__pycache__ bytecode. No passoutput or source/GPU change. Proposal BEFORE repair: preserve originalauditor and exactgeneratedsideeffectbytes in separateWORK folder; restore extracted member set by moving ONLY observed generatedcache directory (resolved exactboundinputpath) without altering anycanonical member. Archive remains immutable. Distinct failureauditor disables Python bytecode writes BEFORE imports, preserves EVERYtar/member/source/native/owner/control guard. Newtrace retry auditor likewise disables bytecode writes to keep evidence untouched. No ignoring extra files or tar gateweakening. Fulloriginalauditor on incompletecapture must reject; saveactualexit/log.
+
+
+## OPT252 extracted-evidence exact-member restoration correction
+
+2026-10-12T05:15:16.623386+00:00
+
+Retryfailureauditor actual1 correctly rejected missingcanonical members: moved __pycache__ also contained TWO modulebytecodes already archived from target, alongside newly generated localauditor bytecode. Proposal BEFORE correction: restore ONLY missing originalcanonical members from hash-pinned unchangedtar, require exactregular/path/size/SHA and compare every existing extracted member to its canonical bytes. Preserve moved copies/extraauditor bytecode in WORK. Do not ignore any missing/extra member or change auditor gates. Rerun unchanged no-bytecode failureauditor; no target/GPUrerun. Fulltraceauditor actual1 rejection/no passoutput separately receipted.
+
+
+## OPT252 archived-controller filename correction proposal BEFORE auditor repair
+
+2026-10-12T05:15:46.291740+00:00
+
+No-bytecode failureauditor now passed exact519canonical members but actual1 rejected missing run_opt252_device_trace.py: packet executed __file__ controller.py and archived exactcontroller.py. Proposal: preserve existingauditors, distinct retry2 correct ONLY expected archivedcontroller filename, still require exact identity equal manifest/runningcontrollerSHA. Applysame actualfilename expectation to future fulltrace retryauditor. No input/state fabrication or source/native/bit/owner gate weakening.
+
+
+## OPT252 empty diagnostic-directory archive expectation correction
+
+2026-10-12T05:16:12.846089+00:00
+
+Retry2 actual1 rejected absent diagnosticdirectory: archive intentionally contains only regularfiles, so emptydirectory is omitted. Before repair: distinct retry3 must require ZERO archived/extracted diagnostic files whether directory absent or empty, with existing exactALLtar-member equality intact. No missing-data success inference; nativechildreceipt/report/SQLite still explicitly absent and CLI1 retained. Originalauditors unchanged.
+
+
+## OPT252 installed-help UTF8 audit repair proposal
+
+2026-10-12T05:17:18.332759+00:00
+
+Retry3 completed independentEVERY34rawbyte CPUoracle exact85fc8484 and source/native/owner/cost guards, then actual1 on WindowsimplicitGBK decoding installedNsighthelpUTF8. Beforerepair preserve retry3/componentoracle; distinct retry4 uses explicitUTF8 helpread ONLY, unchanged hash/size/option assertions/every other gate. Newuniqueaggregate output and componentoracle, no targetrerun. All WORK authoring UTF8/LF; future helper reads installedhelp explicitlyUTF8.
+
+
+## OPT252 independently bound profiler failure and supported-option retry implementation proposal
+
+2026-10-12T05:19:30.151781+00:00
+
+SeparateCPUfailurebinder actual0 work/opt86-local/opt252-failure-independent-retry4.json SHA531ed412c3fb320b85cce6eebb41932d4d6ab88697c9b2fedeede4e01b8c4328/2428B: passedFALSE/failure_evidence_boundTRUE/trace_evidence_boundFALSE/original_control_component_qualifiedTRUE, ALL519canonical bytes/source444/native2/private3/cache936/19inputs/actualownerretirement/deadline/cost/stop/installedhelp bound; every34control rawbyte independentCPUexact85fc8484. Nativeapp neverstarted, profileractual1 unsupportedoption; no candidate/rawtrace/bit/safety/performance claim. Prior auditor failures (bytecode sideeffect/missingoriginalbytecodes/actualcontrollerfilename/omittedemptydirectory/WindowsGBK) retained; corrections changed only extraction restoration/evidence-reading expectations, strictgates unchanged. Source/binary/canonical hashes unaffected; noGPUrerun duringCPUaudit.
+
+BEFORE retry implementation: distinct run/auditor/shim/collector/preparer, same privatebinary and seven strict ownerfunctions; targetbase3581def/doc-onlylatestsource. Remove unsupportedprocess-scope, addactualhelp-supportedwait=all; explicitcuda-trace-scopeprocess-tree retained. PinactualhelpSHAe3ba313f/fullfailureproof531ed412/stop252; add fourthconfirmed257.314sec to costupper. Disable bytecode writing in evidence-reading auditor, expected archivedcontroller filenamecontroller.py; no ignoring unexpectedtarfiles. CPUsyntax/parserhazards/sourceclosure/manifest/selectedinstalledoptions must pass BEFOREpacket/restart. Freshunique retryfolders, no failedartifactoverwrite/newsourcekernel/configure/build/watchdog/math/Qwen changes. Wholeapptrace remains diagnosticONLY. Original34 FIRST candidateSECOND; nativeactual0or3 separatelyfromNsightCLI; allCSV/SQLite rows/summarycounts/correlation exact. StopafteractualdownloadbeforeCPUaudit;400TOTAL375guard25reserve/15GiB+growth/max20minreserve120 unchanged.
+
+
+## OPT252 supported-option retry CPU preparation outcome
+
+2026-10-12T05:20:41.255114+00:00
+
+Retry CPU preparation actual0 SHA166f50b2fc7f7282356e1ac4fd90d44c28894a2cb044a6e2efd36cfba6a471e0/2300B passed. Eight retry/common WORK files syntax0, strictsevenowner functions via unchangedmodulef880, collector changesONLYunique retry names, original34/hosttrace component unchanged, exact sourcefetch/diff/ff order, supportedinstalledprofilehelp e3ba flags verified. --process-scope absent; --cuda-trace-scopeprocess-tree and --waitall explicitly selected, full-app/cuda-sw/nodehost-only/sample-none/cpuctxsw-none preserved. Evidence-reader bytecode disabled; actualarchivedcontroller.py identity staysmanifest-bound. Same CPU72APIrows/allarchivedGPUevents/syntheticSQLite and corruptionreject tests passed. Newfailedproof531ed412+help+stop252 bound, targetbase358/native2/private3/cache936 unchanged. No targetupload/restart/launch yet; goalACTIVEUNMET, allprivate/serving/allFOUR acceptanceFALSE. Fresh immutable retry packet must bind latestpusheddoc-onlysource and exactmanifestfiles before sameinstance boundednew20min; include confirmed257.314sec fourthpreviousGPUwindow in costupper, no paididle prep.
