@@ -123,7 +123,7 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     return output;
 }
 void MetalCompiledGraph::Clear() {
-    ready_=false;ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();bindings_.clear();slots_.clear();gpu_.reset();
+    ready_=false;controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();bindings_.clear();slots_.clear();gpu_.reset();
 }
 void MetalCompiledGraph::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string& checkpoint) {
@@ -184,6 +184,21 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                     auto bound=bindings_[TensorId(node.inputs[0])];bound[node.name]=b;
                     bindings_[TensorId(node.output)]=std::move(bound);tensors_[TensorId(node.output)]=a;continue;
                 }
+                if(node.name=="qwen35_concat_sequence") {
+                    auto as=slots_[a].shape,bs=slots_[b].shape;
+                    if(as.size()!=bs.size()||(as.size()!=2&&as.size()!=3)||as[0]!=bs[0]||(as.size()==3&&as[2]!=bs[2]))
+                        throw std::runtime_error("Metal chunk concat shape mismatch");
+                    out=Allocate(slots_[a].rows,slots_[a].columns+slots_[b].columns);as[1]+=bs[1];slots_[out].shape=as;
+                    Op op{Kind::Concat,a,b,out};op.arguments={a,b,b};op.transpose=false;ops_.push_back(std::move(op));
+                    tensors_[TensorId(node.output)]=out;continue;
+                }
+                if(node.name=="qwen35_mask_chunk") {
+                    const auto as=slots_[a].shape,bs=slots_[b].shape;
+                    if(as.size()!=3||bs!=std::vector<int64_t>{as[0],as[1]})throw std::runtime_error("Metal chunk mask shape mismatch");
+                    out=Allocate(slots_[a].rows,slots_[a].columns);slots_[out].shape=as;
+                    Op op{Kind::Layout,a,b,out};op.dimensions={size_t(as[2])};ops_.push_back(std::move(op));
+                    tensors_[TensorId(node.output)]=out;continue;
+                }
                 if(node.name=="qwen35_replace_packed_hidden") {
                     auto hiddenDim=node.attributes.Get("hidden_dim").ToInt64();
                     if(hiddenDim<=0||slots_[a].rows!=slots_[b].rows||slots_[b].columns!=uint64_t(hiddenDim)||
@@ -199,10 +214,27 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 if(slots_[a].rows!=slots_[b].rows||slots_[b].columns!=(mask?1:slots_[a].columns))
                     throw std::runtime_error("Metal binary shape mismatch");
                 out=Allocate(slots_[a].rows,slots_[a].columns);
-                ops_.push_back({mask?Kind::Mask:Kind::Add,a,b,out});
+                ops_.push_back({mask?Kind::Mask:Kind::Add,a,b,out});slots_[out].shape=slots_[a].shape;
                 tensors_[TensorId(node.output)]=out;continue;
             }
-            if(node.name=="qwen35_vision_encoder") {
+            if(node.name=="reshape") {
+                auto dimensions=node.attributes.Get("shape");std::vector<int64_t> shape;size_t total=slots_[a].rows*slots_[a].columns,known=1;int inferred=-1;
+                if(!dimensions.IsList()||!dimensions.Size()||dimensions.Size()>4)throw std::runtime_error("Invalid Metal reshape rank");
+                for(uint64_t i=0;i<dimensions.Size();++i){auto d=dimensions.Get(i).ToInt64();shape.push_back(d);
+                    if(d==-1){if(inferred!=-1)throw std::runtime_error("Multiple inferred reshape dimensions");inferred=int(i);}
+                    else{if(d<=0||uint64_t(d)>total/known)throw std::runtime_error("Invalid Metal reshape dimension");known*=size_t(d);}}
+                if(inferred>=0){if(total%known)throw std::runtime_error("Indivisible Metal reshape");shape[inferred]=total/known;}
+                else if(known!=total)throw std::runtime_error("Metal reshape element count mismatch");
+                out=Allocate(shape[0],total/size_t(shape[0]));slots_[out].shape=shape;
+                Op op{Kind::Layout,a,a,out};op.dimensions={0};ops_.push_back(std::move(op));
+            }else if(node.name=="qwen35_chunk_token") {
+                auto shape=slots_[a].shape;auto index=node.attributes.Get("index").ToInt64();
+                if((shape.size()!=2&&shape.size()!=3)||index<0||index>=shape[1])throw std::runtime_error("Invalid Metal chunk token");
+                size_t width=shape.size()==3?size_t(shape[2]):1;
+                std::vector<int64_t> outputShape=shape.size()==3?std::vector<int64_t>{shape[0],shape[2]}:std::vector<int64_t>{shape[0]};
+                out=slice(a,1,slots_[a].columns,size_t(index)*width,width,outputShape);
+                if(std::find(inputs_.begin(),inputs_.end(),a)!=inputs_.end())controlSources_[out]={a,size_t(index)};
+            }else if(node.name=="qwen35_vision_encoder") {
                 out=LowerVision(a,node.attributes);
             }else if(node.name=="qwen35_attention_step") {
                 auto integer=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
@@ -226,7 +258,7 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                     slots_[slot].shape!=std::vector<int64_t>{hs[0]}||slots_[active].shape!=slots_[slot].shape)
                     throw std::runtime_error("Metal full attention state shapes invalid");
                 // Control tensors must be explicit host inputs for pre-dispatch bounds checks.
-                for(auto control:{positions,slot,active})if(std::find(inputs_.begin(),inputs_.end(),control)==inputs_.end())
+                for(auto control:{positions,slot,active})if(std::find(inputs_.begin(),inputs_.end(),control)==inputs_.end()&&!controlSources_.count(control))
                     throw std::runtime_error("Metal attention control tensors must be graph inputs");
                 const size_t batch=hs[0],capacity=cs[2],cacheWidth=kv*capacity*dim;
                 auto prefix=node.attributes.Get("weight_prefix").ToString();
@@ -415,7 +447,8 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
     std::unordered_map<size_t,std::vector<float>> hostInputs;
     std::unordered_set<size_t> controls;
     for(const auto& op:ops_)if(op.kind==Kind::KVUpdate)
-        for(auto i:{2,3,4})controls.insert(op.arguments[i]);
+        for(auto i:{2,3,4}){auto id=op.arguments[i];controls.insert(controlSources_.count(id)?controlSources_.at(id).first:id);}
+    for(const auto& op:ops_)if(op.kind==Kind::Layout&&op.dimensions[0])controls.insert(op.b);
     for(size_t i=0;i<inputs_.size();++i) {
         X::Tensor tensor(inputs.Get(i));auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
         if(info.symbolic||info.device_type!=0||info.dtype!=X3_TENSOR_FLOAT32||info.rank!=inputShapes_[i].size()||
@@ -423,6 +456,17 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
             throw std::runtime_error("Metal runtime input shape/storage mismatch");
         auto lease=tensor.Acquire();auto data=static_cast<const float*>(info.data);
         if(controls.count(inputs_[i]))hostInputs[inputs_[i]]=std::vector<float>(data,data+slot.rows*slot.columns);
+    }
+    for(const auto& op:ops_)if(op.kind==Kind::Layout&&op.dimensions[0]) {
+        const auto& flags=hostInputs.at(op.b);
+        for(float value:flags)if(!std::isfinite(value)||(value!=0&&value!=1))throw std::runtime_error("Invalid Metal chunk active flags");
+    }
+    for(const auto& entry:controlSources_)if(controls.count(entry.second.first)) {
+        const auto& source=slots_[entry.second.first];const auto& values=hostInputs.at(entry.second.first);
+        const auto& output=slots_[entry.first];std::vector<float> selected(output.rows*output.columns);
+        for(size_t row=0;row<output.rows;++row)std::copy_n(values.data()+row*source.columns+entry.second.second*output.columns,
+            output.columns,selected.data()+row*output.columns);
+        hostInputs[entry.first]=std::move(selected);
     }
     for(const auto& op:ops_)if(op.kind==Kind::KVUpdate) {
         const auto& positions=hostInputs.at(op.arguments[4]);const auto& slots=hostInputs.at(op.arguments[2]);
@@ -444,6 +488,7 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
         for(const auto& op:ops_) {
             auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
             if(op.kind==Kind::MatMul)gpu_->EncodeMatMul(a,b,out,op.transpose);
+            else if(op.kind==Kind::Layout)gpu_->EncodeLayout(a,b,out,op.dimensions[0]);
             else if(op.kind==Kind::Norm)gpu_->EncodeRMSNorm(a,b,out,op.epsilon,op.offset);
             else if(op.kind==Kind::Silu)gpu_->EncodeSiluMul(a,b,out);
             else if(op.kind==Kind::Add)gpu_->EncodeAdd(a,b,out);

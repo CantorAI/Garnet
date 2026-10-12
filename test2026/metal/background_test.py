@@ -15,7 +15,9 @@ if mode=='launch':
       stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
  pidfile.write_text(str(process.pid));print('Started test PID',process.pid,flush=True)
 elif mode=='run':
- if batch=='optimization-suite':
+ if batch=='chunk-suite':
+  command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_chunk.py'),runtime,build,source,str(folder)]
+ elif batch=='optimization-suite':
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_optimization.py'),runtime,build,source,str(folder)]
  elif batch=='download':
   command=[sys.executable,str(Path(source)/'test2026/pi5b/download_full_checkpoint.py'),
@@ -26,6 +28,8 @@ elif mode=='run':
  elif batch.startswith('attention'):
   command=[sys.executable,str(Path(source)/'test2026/metal/test_attention_graph.py'),runtime,build,source]
   if ':' in batch:command.append(batch.split(':')[1])
+ elif batch=='chunk':
+  command=[sys.executable,str(Path(source)/'test2026/metal/test_chunk_graph.py'),runtime,build,source,str(Path(source).parent/'models/Qwen3.5-0.8B')]
  elif batch=='pretrained':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_pretrained_graph.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
@@ -38,10 +42,14 @@ elif mode=='run':
  elif batch=='pretrained-vision':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_pretrained_vision_graph.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
+ elif batch.startswith('image-chunk:'):
+  parts=batch.split(':');command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_image.py'),runtime,build,source,str(Path(source).parent/'models/Qwen3.5-0.8B'),str(Path(source).parent/'images'/('RealWorld-04.batch'+parts[1]+'.json')),'32',parts[2]]
  elif batch.startswith('image:') or batch.startswith('image-long:'):
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_image.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B'),str(Path(source).parent/'images'/('RealWorld-04.batch'+batch.split(':')[1]+'.json'))]
   if batch.startswith('image-long:'):command.append('32')
+ elif batch.startswith('text-chunk:'):
+  parts=batch.split(':');command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,str(Path(source).parent/'models/Qwen3.5-0.8B'),parts[1],'32','Explain three benefits of running language models locally.',parts[2]]
  elif batch.startswith('text:') or batch.startswith('text-long:'):
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B'),batch.split(':')[1]]

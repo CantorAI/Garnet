@@ -33,7 +33,7 @@ struct MetalContext::Impl {
     id<MTLComputePipelineState> gatedNorm;
     id<MTLComputePipelineState> concat;
     id<MTLComputePipelineState> normRope,kvUpdate,scores,attentionContext;
-    id<MTLComputePipelineState> vision;
+    id<MTLComputePipelineState> vision,layout;
     std::map<std::array<size_t,4>,MPSMatrixMultiplication*> matmul;
 };
 static size_t Elements(size_t rows, size_t columns) {
@@ -247,6 +247,15 @@ kernel void gated_delta(device const float* query [[buffer(0)]],device const flo
     }
     packed[outputBase+column]=result;
 }
+struct LayoutParams {ulong aRows,aColumns,aStride,bStride,oRows,oColumns,oStride,tokenWidth;};
+kernel void chunk_layout(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+ device float* out [[buffer(2)]],constant LayoutParams& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
+ if(id>=p.oRows*p.oColumns)return;
+ ulong sourceRow=id/p.aColumns,sourceColumn=id%p.aColumns,row=id/p.oColumns,col=id%p.oColumns;
+ float value=a[sourceRow*p.aStride+sourceColumn];
+ if(p.tokenWidth&&b[sourceRow*p.bStride+sourceColumn/p.tokenWidth]==0.0f)value=0;
+ out[row*p.oStride+col]=value;
+}
 struct VisionParams {ulong rows,columns,outRows,outColumns,aStride,bStride,cStride,oStride,tokens,hidden,heads,unit,mode;};
 // Input/output matrices contain flattened batch/token rows. The merger copies
 // across padded MPS row boundaries explicitly rather than aliasing row strides.
@@ -327,8 +336,9 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->scores=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_scores"] error:&error];
         impl_->attentionContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_context"] error:&error];
         impl_->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
+        impl_->layout=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"chunk_layout"] error:&error];
         if(!impl_->rms||!impl_->silu||!impl_->add||!impl_->mask||!impl_->conv||!impl_->delta||!impl_->slice||
-            !impl_->prepare||!impl_->gatedNorm||!impl_->concat||!impl_->normRope||!impl_->kvUpdate||!impl_->scores||!impl_->attentionContext||!impl_->vision)
+            !impl_->prepare||!impl_->gatedNorm||!impl_->concat||!impl_->normRope||!impl_->kvUpdate||!impl_->scores||!impl_->attentionContext||!impl_->vision||!impl_->layout)
             throw std::runtime_error("Cannot create Qwen Metal pipelines");
     }
 }
@@ -485,9 +495,9 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
             throw std::logic_error("Uninitialized Metal state kernel input");
         if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
     }
-    if(operation>10)throw std::invalid_argument("Unknown Metal state kernel");
+    if(operation>11)throw std::invalid_argument("Unknown Metal state kernel");
     id<MTLComputePipelineState> pipelines[]={impl_->conv,impl_->delta,impl_->slice,impl_->prepare,impl_->gatedNorm,
-        impl_->concat,impl_->normRope,impl_->kvUpdate,impl_->scores,impl_->attentionContext,impl_->vision};
+        impl_->concat,impl_->normRope,impl_->kvUpdate,impl_->scores,impl_->attentionContext,impl_->vision,impl_->layout};
     auto pipeline=pipelines[operation];
     auto encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal state kernel encoder");
@@ -499,6 +509,16 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(pipeline.maxTotalThreadsPerThreadgroup)),1,1)];
     [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;impl_->outputs.push_back(output.impl_);
     }
+}
+void MetalContext::EncodeLayout(const MetalMatrix& input,const MetalMatrix& flags,const MetalMatrix& output,size_t tokenWidth) {
+ if(!input.impl_||!flags.impl_||!output.impl_)throw std::invalid_argument("Missing layout matrix");
+ auto a=input.impl_->matrix,b=flags.impl_->matrix,o=output.impl_->matrix;
+ if(Elements(a.rows,a.columns)!=Elements(o.rows,o.columns)||
+    (tokenWidth&&(a.columns%tokenWidth||b.rows!=a.rows||b.columns!=a.columns/tokenWidth)))
+    throw std::invalid_argument("Metal layout shape mismatch");
+ struct Params{uint64_t aRows,aColumns,aStride,bStride,oRows,oColumns,oStride,tokenWidth;};
+ Params p{a.rows,a.columns,a.rowBytes/4,b.rowBytes/4,o.rows,o.columns,o.rowBytes/4,tokenWidth};
+ EncodeStateKernel(11,{input,flags},output,&p,sizeof(p),Elements(o.rows,o.columns));
 }
 void MetalContext::EncodeVision(unsigned operation,const std::vector<MetalMatrix>& inputs,
     const MetalMatrix& output,size_t tokens,size_t hidden,size_t heads,size_t mergeUnit) {

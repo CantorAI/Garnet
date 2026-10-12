@@ -30,7 +30,7 @@ intermittent network connections.
 
 ## Actual measurements, 2026-10-11 Pacific (2026-10-12 UTC logs)
 
-The table reflects the final allocation-reuse build. Each process loads the
+The table reflects the chunk-4 prefill build. Each process loads the
 model once and runs two independent requests, resetting
 state between them. The table uses the second request. Output limits apply
 per batch row. Timings exclude CPU image preprocessing, which was performed
@@ -39,10 +39,10 @@ prefill. Decode throughput excludes the initial token produced by prefill.
 
 | Workload | Batch | Output | Loaded first token, s | Loaded result, s | Decode tokens/s per row | Combined tokens/s | Process peak RSS, GiB |
 | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: |
-| Text: local-model benefits | 1 | 32-token limit | 1.245 | 3.395 | 14.42 | 14.42 | 4.40 |
-| Text: local-model benefits | 2 | 32-token limit each | 1.477 | 4.031 | 12.14 | 24.28 | 4.41 |
-| Image, allocation reuse | 2 | 16-token limit each | 6.372 | 7.750 | 10.88 | 21.77 | 4.84 |
-| Image, complete caption | 1 | 28 tokens including stop | 5.037 | 7.101 | 13.08 | 13.08 | 4.81 |
+| Text: local-model benefits, chunk 4 | 1 | 32-token limit | 0.810 | 2.986 | 14.25 | 14.25 | 5.04 |
+| Text: local-model benefits, chunk 4 | 2 | 32-token limit each | 1.012 | 3.617 | 11.90 | 23.81 | 5.24 |
+| Image, chunk 4 | 2 | 28 tokens including stop each | 4.428 | 6.927 | 10.80 | 21.61 | 5.64 |
+| Image, complete caption, chunk 4 | 1 | 28 tokens including stop | 3.293 | 5.391 | 12.87 | 12.87 | 5.43 |
 
 Peak RSS is measured for the whole native process in macOS bytes, converted
 to GiB, and is not isolated GPU allocation. It varies across runs and MPS
@@ -51,12 +51,15 @@ showed 3,741 MiB swap in use, so these are development-machine observations,
 not isolated laboratory results or percentile latency guarantees.
 
 Text initialization was about 2.85 s for the short Paris test; the first
-request including startup reached its first token in 4.77 s. Those short-test values are from the earlier build. In the final build,
-longer-text initialization was 2.04 s with first token including startup at
-3.36 s; image initialization was 2.81 s with first token including startup
-at 7.96 s.
-The longer text test reached its token cap rather than EOS; the caption
-finished normally at 28 tokens. Batch 2 repeats the same input on both rows;
+request including startup reached its first token in 4.77 s. Those short-test values are from the earlier build. The allocation-reuse build
+had longer-text startup plus first token at 3.36 s. With lazy chunk-4 compilation,
+text initialization is 2.07 s and first token including startup is 4.21 s;
+image initialization is 2.91 s and first token including startup is 7.37 s.
+The first chunked request includes extra graph compilation, while subsequent
+requests reuse those graphs. The faster warm result must not be presented as
+a cold-start timing.
+The longer text test reached its token cap rather than EOS; the final captions
+finish normally at 28 tokens per row. Batch 2 repeats the same input on both rows;
 independent row controls are tested separately in the integration fixture.
 
 The Paris prompt generated `Paris` and the normal stop token. The real-image
@@ -115,8 +118,8 @@ outputs, a foreign device and an open command batch.
 MPS matrix-multiplication objects are cached per graph context by result rows,
 result columns, inner width and transpose mode. Weights, matrix strides and
 operands remain explicitly bound on every encode. Captured graph math and
-checkpoint precision are unchanged. No GPU-resident recurrent state or chunked
-prefill claim is made by this allocation optimization.
+checkpoint precision are unchanged. No GPU-resident recurrent state claim is made by this allocation optimization;
+the subsequent chunked-prefill implementation is described below.
 
 A fresh pre-change caption baseline was run immediately before rebuilding:
 
@@ -150,14 +153,79 @@ All commands, native outputs, timings and successful exit status are saved in
 Vision reference tensors also use binary files now, retaining the original
 reference and tolerance while avoiding the numeric JSON parsing bottleneck.
 
+## Native chunked prefill, 2026-10-11 Pacific
+
+Metal lowering now supports stride-aware reshape, chunk token extraction,
+chunk masks and sequence concatenation. Prompt normalization and MLP projections
+run across a chunk; causal convolution, GatedDelta and full-attention state
+updates remain in token order within one GPU submission per layer/chunk.
+Position, slot and active controls extracted from chunks are checked on the
+host before GPU dispatch. No learned operation falls back to the CPU.
+
+`MetalDecoder.enable_prefill(4)` enables the measured profile; call
+`prefill_sequence(hidden_tokens, positions)` for an entire prompt, then use
+ordinary `step`/`step_hidden` for generation. `hidden_tokens` is a list of
+batch-by-hidden native tensors, and positions are batch-by-token-by-THW lists.
+Chunks 2 and 4 are supported. The existing sequential path remains available.
+Graphs compile lazily on first use, remain cached across request resets, and
+are released when changing chunk size or closing the decoder. A partial final
+chunk is zero-padded and masked; only actual prompt tokens advance the slots.
+
+Fresh sequential/chunked measurements use the same checkpoint, 79-token prompt,
+288 x 192 image, 32-token output limit and two requests per process. The image
+caption finishes at 28 tokens including EOS. All caption token IDs and finish
+status match exactly between sequential, chunk 2 and chunk 4.
+
+| Warm batch-1 image request | Sequential | Chunk 2 | Chunk 4 |
+| --- | ---: | ---: | ---: |
+| Prefill, s | 4.682 | 3.658 | 2.936 |
+| First token, s | 5.037 | 4.011 | 3.293 |
+| Complete caption, s | 7.101 | 6.102 | 5.391 |
+| Process peak RSS, GiB | 4.81 | 5.44 | 5.43 |
+
+Chunk 4 lowers warm prefill by 37.3%, first-token wait by 34.6%, and complete
+caption time by 24.1% versus the freshly paired sequential run. It does not
+increase decode throughput: 12.87 versus 13.08 tokens/s in these runs. The
+cached prefill graphs increase measured peak process memory by about 0.62 GiB.
+The first chunk-4 request spends 1.1 s compiling its 24 prefill graphs; its
+loaded first-token wait is 4.46 s, versus 5.13 s for sequential. For the shorter
+text prompt, lazy graph compilation makes the first chunked request slower
+(loaded first token 2.14 s), followed by the 0.81 s warm result. Text warm
+comparisons use the earlier saved allocation-reuse run, not a fresh text pair.
+
+Batch-2 complete image captions improve from a paired sequential 6.282 s first
+token / 8.756 s complete result to 4.428 s / 6.927 s with chunk 4. Both rows
+match exactly and finish at 28 tokens. Text chunk-4 outputs match the earlier
+sequential 32-token capped outputs exactly for batches 1/2 and both requests.
+
+Correctness evidence on the M4:
+
+- Full-size pretrained linear layer 0 and full-attention layer 3, batches 1/2
+  and chunks 2/4: all chunk hidden outputs and final recurrent/KV states match
+  independent sequential FP32 NumPy references at the unchanged tolerance.
+  Each profile runs two chunks, including paused/resumed rows and partial tails.
+- Invalid active flags, out-of-capacity slots and non-finite positions are
+  rejected before dispatch; subsequent valid executions still pass.
+- Serving-level small BF16 fixture, batches 1/2: chunks 2/4/2 agree with sequential
+  predictions and final states; profile changes, request reset and partial tails
+  pass. This fixture also checks padded widths through native token stacking.
+- Primitive CTest passes 1/1 after the final chunk build, 0.61 s.
+
+Raw command/exit/output evidence and decoded timing records are in
+`results/20261012/chunk-prefill/`. `benchmark_chunk.py` runs the workloads
+sequentially through background mode `chunk-suite`; `image-chunk:1:4` and
+`text-chunk:1:4` run individual image/text jobs. Chunks are opt-in, and benchmark
+scripts record `prefill_chunk` and first-request compile time explicitly.
+
 ## Limits and next performance work
 
-The decoder still uses sequential prefill and synchronous per-layer graph
-submission, with explicit CPU state copies. Warm image prefill is about 4.68 s
-for 79 prompt tokens and dominates first-token latency. Captured weights are
+The decoder now supports chunked prefill, but it still uses synchronous
+per-layer/chunk graph submission and explicit CPU state copies. Warm image
+prefill with chunk 4 is about 2.94 s for 79 prompt tokens and still dominates
+first-token latency. Captured weights are
 expanded from BF16 into FP32, increasing memory and bandwidth requirements.
 The tied vocabulary head alone occupies approximately 1 GB in FP32.
-Chunked prefill, GPU-resident cross-layer state, BF16/quantized kernels,
+Batched attention projections, GPU-resident cross-layer state, BF16/quantized kernels,
 KV/state allocation reduction and memory-pressure profiling remain future work.
 Batch 2 improves aggregate throughput while increasing per-request latency;
 only batches 1/2 have been executed. No batch-4, multi-client concurrency,
@@ -184,7 +252,7 @@ text benchmarks for batches 1/2 sequentially with separate process RSS records. 
 Real checkpoint and image inputs are not committed.
 
 Saved raw command/exit/output evidence is in `results/20261012/`;
-Both the earlier `benchmarks.json` and `allocation-reuse/benchmarks.json`
-retain tokens, output, per-step/layer/head timings and peak
+The earlier `benchmarks.json`, `allocation-reuse/benchmarks.json` and
+`chunk-prefill/benchmarks.json` retain tokens, output, per-step/layer/head timings and peak
 RSS. Historical bring-up evidence is in `BRINGUP_HISTORY.md`; its earlier
 pending-state notes are superseded by this report.

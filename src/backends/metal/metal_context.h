@@ -64,6 +64,7 @@ public:
         const MetalMatrix&,size_t heads,size_t kvHeads,size_t dim,size_t capacity);
     void EncodeAttentionContext(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         size_t heads,size_t kvHeads,size_t dim,size_t capacity);
+    void EncodeLayout(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,size_t tokenWidth=0);
     void SubmitAndWait();
     // Fixed-grid image operators; projections continue to use MPS matmul.
     void EncodeVision(unsigned operation,const std::vector<MetalMatrix>& inputs,

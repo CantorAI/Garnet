@@ -20,10 +20,12 @@ prefix=tokenizer.encode('<|im_start|>user\n<|vision_start|>')
 suffix=tokenizer.encode('<|vision_end|>Describe the main objects in this image in one sentence.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
 stops=[config['text_config']['eos_token_id'],tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
 capacity=len(prefix)+mh*mw+len(suffix)+limit
+chunk=int(sys.argv[6]) if len(sys.argv)>6 else 0
 vision=None;decoder=None
 try:
     vision=MetalImageEncoder(folder+'/model.safetensors',config['vision_config'],gh,gw,batch)
     decoder=MetalDecoder(folder+'/model.safetensors',config['text_config'],batch,capacity)
+    if chunk:decoder.enable_prefill(chunk)
     initialization=time.time()-start
     print('metal_image_initialization',dict(seconds=initialization,vision_compile_ms=vision.graph.compile_ms,
         batch=batch,capacity=capacity,resized_hw=metadata['resized_hw'],visual_tokens=mh*mw),flush=True)
@@ -32,18 +34,22 @@ try:
         # Re-encode each frame with resident weights; do not reuse embeddings.
         image_embeddings=vision.encode_file(metadata['patch_file'])
         vision_seconds=time.time()-request_start;current=0;prefill=time.time()
+        hidden_tokens=[];prompt_positions=[]
         for token in prefix:
-            decoder.step([token]*batch,positions=[[current]*3 for b in range(batch)],predict=False)
+            if chunk:hidden_tokens.append(decoder.io.embedding([token]*batch));prompt_positions.append([current]*3)
+            else:decoder.step([token]*batch,positions=[[current]*3 for b in range(batch)],predict=False)
             current+=1
         image_base=current
         for i in range(mh*mw):
             position=[image_base,image_base+i//mw,image_base+i%mw]
-            decoder.step_hidden(decoder.io.visual_token(image_embeddings,i),
-                positions=[position for b in range(batch)],predict=False)
+            if chunk:hidden_tokens.append(decoder.io.visual_token(image_embeddings,i));prompt_positions.append(position)
+            else:decoder.step_hidden(decoder.io.visual_token(image_embeddings,i),positions=[position for b in range(batch)],predict=False)
         current=image_base+max(mh,mw)
         for i,token in enumerate(suffix):
-            next_ids=decoder.step([token]*batch,positions=[[current]*3 for b in range(batch)],predict=i==len(suffix)-1)
+            if chunk:hidden_tokens.append(decoder.io.embedding([token]*batch));prompt_positions.append([current]*3)
+            else:next_ids=decoder.step([token]*batch,positions=[[current]*3 for b in range(batch)],predict=i==len(suffix)-1)
             current+=1
+        if chunk:next_ids=decoder.prefill_sequence(hidden_tokens,[prompt_positions for b in range(batch)])
         prefill_seconds=time.time()-prefill;ttft=time.time()-request_start
         outputs=[[] for b in range(batch)];active=[1]*batch;durations=[]
         layer_durations=[];head_durations=[]
@@ -56,7 +62,8 @@ try:
             current+=1;durations.append(time.time()-step)
             layer_durations.append(decoder.last_layer_ms);head_durations.append(decoder.last_head_ms)
         decode_seconds=sum(durations)
-        print('metal_image_result',json.dumps(dict(request=request,batch=batch,
+        print('metal_image_result',json.dumps(dict(request=request,batch=batch,prefill_chunk=chunk,
+            prefill_compile_ms=decoder.prefill_compile_ms if chunk else 0,
             text=[tokenizer.decode(ids) for ids in outputs],token_ids=outputs,finished=[a==0 for a in active],
             output_tokens=[len(ids) for ids in outputs],image_sha256=metadata['image_sha256'],resized_hw=metadata['resized_hw'],
             visual_tokens=mh*mw,prompt_tokens=len(prefix)+mh*mw+len(suffix),initialization_seconds=initialization,

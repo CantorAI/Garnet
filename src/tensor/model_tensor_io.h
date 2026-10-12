@@ -73,6 +73,17 @@ public:
         if(!file)throw X::Error("FP32 file read failed");
         return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,shape,values.data(),values.size()*4);
     }
+    X::Value StackTokens(X::Value tokens) {
+        if(!tokens.IsList()||!tokens.Size())throw X::Error("nonempty token tensor list required");
+        X::Tensor first(tokens.Get(uint64_t(0)));RequireHost(first);auto info=first.Info();
+        if(info.rank!=2)throw X::Error("token tensors require batch x hidden shape");
+        std::vector<int64_t> shape{info.shape[0],int64_t(tokens.Size()),info.shape[1]};std::vector<float> values(Count(shape));
+        for(uint64_t i=0;i<tokens.Size();++i){X::Tensor tensor(tokens.Get(i));RequireHost(tensor);auto t=tensor.Info();
+            if(t.rank!=2||t.shape[0]!=shape[0]||t.shape[1]!=shape[2])throw X::Error("token tensor stack shape mismatch");
+            auto lease=tensor.Acquire();auto data=static_cast<const float*>(t.data);
+            for(int64_t b=0;b<shape[0];++b)std::memcpy(values.data()+(b*shape[1]+i)*shape[2],data+b*shape[2],shape[2]*4);}
+        return X::Tensor::Create(Host(),X3_TENSOR_FLOAT32,shape,values.data(),values.size()*4);
+    }
     X::Value VisualToken(X::Value source,int64_t token) {
         X::Tensor tensor(source);RequireHost(tensor);auto info=tensor.Info();
         if(info.rank!=3||token<0||token>=info.shape[1])throw X::Error("visual token index/shape invalid");
@@ -103,6 +114,7 @@ public:
         APISET().AddFunc<1>("zeros",&ModelTensorIO::Zeros);
         APISET().AddFunc<3>("slice",&ModelTensorIO::Slice);
         APISET().AddFunc<2>("read_f32",&ModelTensorIO::ReadF32);
+        APISET().AddFunc<1>("stack_tokens",&ModelTensorIO::StackTokens);
         APISET().AddFunc<2>("visual_token",&ModelTensorIO::VisualToken);
         APISET().AddFunc<1>("logits",&ModelTensorIO::Logits);
         APISET().AddFunc<1>("argmax",&ModelTensorIO::Argmax);
