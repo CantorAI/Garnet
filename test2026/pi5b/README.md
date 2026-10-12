@@ -136,3 +136,33 @@ ctest --test-dir build/cpu-native-validation --output-on-failure
 Full x86 CPU/OpenVINO build, model parity and server performance still need
 validation before production support is claimed. Measure precision and thread
 settings per architecture; Pi settings are not server defaults.
+
+## Apple GPU investigation (feature/qwen35-metal)
+
+The sibling Garnet-metal worktree is isolated from the CPU investigation and
+the original gpt-oss checkout. Its initial GARNET_METAL build target contains
+a native C++/Objective-C++ Metal context and an MPS matrix multiplication
+primitive. This is a backend foundation, not a complete Garnet xModel package.
+The numerical test covers non-square matrices, transposed weights, padded MPS
+row strides, and invalid dimensions against an independent CPU reference.
+
+On the actual Mac, run:
+```sh
+cmake -S . -B build/metal -DGARNET_METAL=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build/metal -j4
+ctest --test-dir build/metal --output-on-failure
+```
+
+As of 2026-10-11 this target has NOT been compiled or executed on macOS.
+The Linux platform-rejection check passed: configuring Metal on Linux reports
+that macOS and a real Metal GPU are required. No Apple GPU speed is claimed.
+The saved Mac mini SSH addresses did not complete a connection; the current
+reachable address has been requested. No SSH identity checks were disabled.
+
+Next milestones: validate native toolchain/GPU; add persistent device tensors
+and captured xModel graph lowering; implement Qwen normalization, positional
+encoding, recurrent attention, KV attention and vision operations; execute
+text-only then actual image-plus-text with numerical references. Only after
+that measure and optimize FP16, fused kernels, batched prefill, command-buffer
+submissions and GPU output projection. The initial synchronous matmul helper
+is for correctness bring-up, not the per-operation schedule for Qwen.
