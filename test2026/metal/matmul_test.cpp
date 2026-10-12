@@ -22,6 +22,39 @@ int main() {
         bool rejected=false;
         try {gpu.MatMul({}, {}, 0, 7, 5);}catch(const std::invalid_argument&){rejected=true;}
         if(!rejected)throw std::runtime_error("Invalid dimensions were accepted");
+        auto input=gpu.Upload({1,2,3,4},2,2);
+        auto weight=gpu.Upload({2,0,0,3},2,2);
+        auto hidden=gpu.Allocate(2,2),output=gpu.Allocate(2,2);
+        for(int request=0;request<2;++request) {
+            gpu.Begin();
+            gpu.EncodeMatMul(input,weight,hidden);
+            gpu.EncodeMatMul(hidden,weight,output);
+            bool pendingRejected=false;
+            try {gpu.Download(output);}catch(const std::logic_error&){pendingRejected=true;}
+            if(!pendingRejected)throw std::runtime_error("Pending GPU output was readable");
+            gpu.SubmitAndWait();
+            if(gpu.Download(output)!=std::vector<float>({4,18,12,36}))
+                throw std::runtime_error("Persistent chained matmul reference mismatch");
+        }
+        gpu.Begin();gpu.EncodeMatMul(input,weight,output);gpu.Abort();
+        bool abortedRejected=false;
+        try {gpu.Download(output);}catch(const std::logic_error&){abortedRejected=true;}
+        if(!abortedRejected)throw std::runtime_error("Aborted GPU output was readable");
+        auto scale=gpu.Upload({0.25f,-0.5f},1,2);
+        auto normalized=gpu.Allocate(2,2),activation=gpu.Allocate(2,2);
+        gpu.Begin();
+        gpu.EncodeRMSNorm(input,scale,normalized,1e-6f);
+        gpu.EncodeSiluMul(normalized,input,activation);
+        gpu.SubmitAndWait();
+        auto actual=gpu.Download(activation);
+        for(size_t row=0;row<2;++row)for(size_t col=0;col<2;++col) {
+            double x=double(row*2+col+1);
+            double first=row*2+1,second=row*2+2;
+            double norm=x/std::sqrt((first*first+second*second)/2+1e-6)*(col==0?1.25:0.5);
+            double wanted=norm/(1+std::exp(-norm))*x;
+            if(std::abs(actual[row*2+col]-wanted)>2e-5)
+                throw std::runtime_error("Qwen RMS/SiLU GPU reference mismatch");
+        }
         std::cout<<"Metal/MPS matmul reference PASS device="<<gpu.DeviceName()<<"\n";
         return 0;
     }catch(const std::exception& e) {

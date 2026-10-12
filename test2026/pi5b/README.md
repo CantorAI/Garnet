@@ -170,3 +170,16 @@ text-only then actual image-plus-text with numerical references. Only after
 that measure and optimize FP16, fused kernels, batched prefill, command-buffer
 submissions and GPU output projection. The initial synchronous matmul helper
 is for correctness bring-up, not the per-operation schedule for Qwen.
+
+Follow-up executed on the same Apple M4: persistent FP32 Metal matrices,
+multiple MPS operations in one command buffer, reuse across two requests,
+pending/aborted output guards, GPU RMS normalization (Qwen weight offset +1),
+and fused SiLU multiplication all passed independent reference checks. The
+expanded actual GPU CTest passed 1/1 in 1.45 seconds including startup. Shared
+storage currently exposes explicit upload/download at request boundaries;
+intermediate matrices stay GPU-backed. Contexts are single-thread-owned.
+The initial RMS kernel is a correctness implementation with a serial reduction
+per row; it requires performance profiling and parallelization. FP16, attention,
+checkpoint-backed xModel graph execution and full Qwen inference remain undone.
+The existing Mac XLang3 SDK was found under /Users/zsdx/CantorAI/xlang3/sdk;
+shared project files/builds remain read-only for this investigation.
