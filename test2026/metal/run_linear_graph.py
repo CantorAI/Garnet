@@ -22,9 +22,15 @@ graph=garnet.compiled_graph()
 try:
     graph.build(forward(*symbols),symbols,f['checkpoint'])
     for step in f['steps']:
-        actual=graph.run([tensor.tensor(data,shape=s,dtype=tensor.float32) for data,s in zip(step['inputs'],shapes)]).tolist()
-        assert len(actual)==len(step['expected'])
-        for x,y in zip(actual,step['expected']):
+        if 'input_files' in step:
+            inputs=[garnet.tensor_io().read_f32(path,s) for path,s in zip(step['input_files'],shapes)]
+            expected=garnet.tensor_io().read_f32(step['expected_file'],[step['expected_count']]).tolist()
+        else:
+            inputs=[tensor.tensor(data,shape=s,dtype=tensor.float32) for data,s in zip(step['inputs'],shapes)]
+            expected=step['expected']
+        actual=graph.run(inputs).tolist()
+        assert len(actual)==len(expected)
+        for x,y in zip(actual,expected):
             assert math.isfinite(x) and abs(x-y)<=5e-6+5e-5*abs(y),(c,x,y)
     print(garnet.backend_info(),'complete linear','decoder' if c['decoder'] else 'attention',
         'batch',batch,'heads',c['linear_num_key_heads'],c['linear_num_value_heads'],c['mode'],

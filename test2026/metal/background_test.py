@@ -36,12 +36,14 @@ elif mode=='run':
  elif batch=='pretrained-vision':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_pretrained_vision_graph.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
- elif batch.startswith('image:'):
+ elif batch.startswith('image:') or batch.startswith('image-long:'):
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_image.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B'),str(Path(source).parent/'images'/('RealWorld-04.batch'+batch.split(':')[1]+'.json'))]
- elif batch.startswith('text:'):
+  if batch.startswith('image-long:'):command.append('32')
+ elif batch.startswith('text:') or batch.startswith('text-long:'):
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B'),batch.split(':')[1]]
+  if batch.startswith('text-long:'):command.extend(['32','Explain three benefits of running language models locally.'])
  else:
   command=[sys.executable,str(Path(source)/'test2026/metal/test_linear_graph.py'),runtime,build,source,batch]
  try:

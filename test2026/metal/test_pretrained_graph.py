@@ -42,18 +42,24 @@ for kind in ('linear','attention'):
    hidden=rng.normal(size=(batch,d)).astype(np.float32);active=np.ones(batch,np.float32)
    if batch==2 and step==2:active[1]=0
    if kind=='linear':
-    inputs=[a.ravel().tolist() for a in (hidden,first,second,active)]
     out,next_first,next_second=linear_block(hidden,first,second,active,weights,kh,vh,kd,vd)
    else:
     positions=np.stack([slots*2+1,slots*3+4,slots*5+7],axis=-1).astype(np.float32)
-    inputs=[a.ravel().tolist() for a in (hidden,first,second,positions,slots,active)]
     out,next_first,next_second=attention_block(hidden,first,second,positions,slots,active,weights,heads,kv,dim,rotary,rope['mrope_section'],rope['rope_theta'])
    packed=np.concatenate([out,next_first.reshape(batch,-1),next_second.reshape(batch,-1)],axis=-1)
-   steps.append(dict(inputs=inputs,expected=packed.ravel().tolist()))
+   steps.append(dict(inputs=[a.copy() for a in ((hidden,first,second,active) if kind=='linear' else (hidden,first,second,positions,slots,active))],expected=packed.copy()))
    first,second=next_first.astype(np.float32),next_second.astype(np.float32);slots+=active
   with tempfile.TemporaryDirectory(prefix='garnet-metal-pretrained-') as tmp:
-   fixture=Path(tmp)/'fixture.json';fixture.write_text(json.dumps(dict(config=dict(config,batch=batch,decoder=True,mode='packed',capacity=capacity),
-       checkpoint=str(checkpoint),steps=steps)))
+   fixture=Path(tmp)/'fixture.json'
+   binary_steps=[]
+   for step_index,step in enumerate(steps):
+    files=[]
+    for input_index,data in enumerate(step['inputs']):
+     path=Path(tmp)/('step'+str(step_index)+'-input'+str(input_index)+'.f32');data.astype('<f4').tofile(path);files.append(str(path))
+    path=Path(tmp)/('step'+str(step_index)+'-expected.f32');step['expected'].astype('<f4').tofile(path)
+    binary_steps.append(dict(input_files=files,expected_file=str(path),expected_count=step['expected'].size))
+   fixture.write_text(json.dumps(dict(config=dict(config,batch=batch,decoder=True,mode='packed',capacity=capacity),
+       checkpoint=str(checkpoint),steps=binary_steps)))
    subprocess.run([sys.argv[1],str(Path(__file__).with_name('run_'+kind+'_graph.py')),str(fixture),sys.argv[2],sys.argv[3]],check=True)
   rss=resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss/(1024**2 if sys.platform=='darwin' else 1024)
   print('Full-size pretrained',kind,'decoder batch',batch,'PASS child peak RSS MiB',rss,flush=True)

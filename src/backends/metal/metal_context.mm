@@ -254,13 +254,17 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
     ulong row=id/p.outColumns,col=id%p.outColumns;
     if(p.mode==0){out[row*p.oStride+col]=a[row*p.aStride+col]+b[col];return;}
     if(p.mode==1){
+        // Compute row statistics once rather than repeating both sums per column.
+        if(col)return;
         float mean=0;for(ulong j=0;j<p.columns;++j)mean+=a[row*p.aStride+j];mean/=float(p.columns);
         float variance=0;for(ulong j=0;j<p.columns;++j){float x=a[row*p.aStride+j]-mean;variance+=x*x;}
-        out[row*p.oStride+col]=(a[row*p.aStride+col]-mean)*rsqrt(variance/float(p.columns)+1e-6f)*b[col]+c[col];return;
+        float inverse=rsqrt(variance/float(p.columns)+1e-6f);
+        for(ulong j=0;j<p.columns;++j)out[row*p.oStride+j]=(a[row*p.aStride+j]-mean)*inverse*b[j]+c[j];return;
     }
     if(p.mode==2||p.mode==3){
         float x=a[row*p.aStride+col],activation;
-        if(p.mode==2)activation=tanh(0.7978845608028654f*(x+0.044715f*x*x*x));
+        // Avoid native tanh overflow; at |argument| >= 10 its FP32 value saturates.
+        if(p.mode==2)activation=tanh(clamp(0.7978845608028654f*(x+0.044715f*x*x*x),-10.0f,10.0f));
         else {
             // Abramowitz-Stegun erf approximation (absolute error < 1.5e-7).
             float z=abs(x)*0.7071067811865475f,t=1.0f/(1.0f+0.3275911f*z);

@@ -1,0 +1,5 @@
+vision reference max_abs_error 1.6689300537109375e-06 relative_l2 3.6340529469632817e-06 worst_tolerance_ratio 0.2672386122063897
+actual Garnet vision graph batch 1 grid 2 2 PASS compile_ms 1617.722375 inference_ms [49.398041]
+vision reference max_abs_error 2.384185791015625e-06 relative_l2 4.323777093328352e-06 worst_tolerance_ratio 0.3666166988970435
+actual Garnet vision graph batch 2 grid 2 2 PASS compile_ms 1447.616959 inference_ms [737.979458]
+all pretrained vision blocks/merger batch 1/2 reference PASS
