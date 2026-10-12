@@ -3641,3 +3641,8 @@ The OPT235 launch again exited before status creation or GPU work because this X
 ### OPT237 profile recovery preflight rejected harmless XLang3 startup warnings
 
 With `df` supplying free-space data and the system `flock` guard in place, the OPT236 helper stopped at its log-emptiness assertion before any engine call. XLang3 writes its unsupported-hash startup warnings to the redirected log before executing the script, so the log is expected to be nonempty; the profile output itself was still absent. Structured status recorded the assertion, free-space guards passed, and GPU compute-apps remained empty. Preserve the startup warnings. Relax only the helper's log-size assertion: allow preexisting runtime text and parse only exact `[TRTEngineMemory]` records, while still requiring a fresh profile-output path and exact expected engine paths/statistics.
+
+
+### OPT238 cache inventory guard omitted its hash-key directory
+
+The OPT237 profile-recovery preflight reached the candidate cache inventory and safely stopped because my expected engine paths omitted the cache's hash-key directory `dfe3a1c89f2f7ef966e27051/`. The observed cache contained exactly the four expected prefill/decode `model.engine` files under that prefix; no engine load started, and both GPUs remained at15MiB with no compute applications. Preserve the run status. Add the observed cache-key prefix to the exact path guard, then retry the same single decode-pair profile recovery; do not rebuild or alter the cache.
