@@ -19,7 +19,7 @@ class MetalContext {
     struct Impl;
     std::unique_ptr<Impl> impl_;
     void EncodePointwise(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&,
-        bool rms, float epsilon, float offset);
+        unsigned operation, float epsilon, float offset);
 public:
     MetalContext();
     ~MetalContext();
@@ -35,6 +35,8 @@ public:
         const MetalMatrix& output, float epsilon, float weightOffset = 1.0f);
     void EncodeSiluMul(const MetalMatrix& gate, const MetalMatrix& up,
         const MetalMatrix& output);
+    void EncodeAdd(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
+    void EncodeMaskRows(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
     void SubmitAndWait();
     void Abort();
     std::vector<float> Download(const MetalMatrix& matrix) const;

@@ -22,6 +22,8 @@ struct MetalContext::Impl {
     std::vector<std::shared_ptr<MetalMatrix::Impl>> outputs;
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
+    id<MTLComputePipelineState> add;
+    id<MTLComputePipelineState> mask;
 };
 static size_t Elements(size_t rows, size_t columns) {
     if (!rows || !columns || rows > std::numeric_limits<size_t>::max()/columns ||
@@ -55,13 +57,27 @@ kernel void silu_mul(device const float* a [[buffer(0)]],device const float* b [
     float gate=a[row*p.aStride+col];
     c[row*p.cStride+col]=(gate/(1.0f+exp(-gate)))*b[row*p.bStride+col];
 }
+kernel void add_matrix(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.rows*p.columns)return;
+    ulong row=id/p.columns,col=id%p.columns;
+    c[row*p.cStride+col]=a[row*p.aStride+col]+b[row*p.bStride+col];
+}
+kernel void mask_rows(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.rows*p.columns)return;
+    ulong row=id/p.columns,col=id%p.columns;
+    c[row*p.cStride+col]=b[row*p.bStride]!=0.0f?a[row*p.aStride+col]:0.0f;
+}
 )METAL"];
         NSError* error=nil;
         auto library=[impl_->device newLibraryWithSource:source options:nil error:&error];
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
         impl_->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
-        if(!impl_->rms||!impl_->silu)throw std::runtime_error("Cannot create Qwen Metal pipelines");
+        impl_->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
+        impl_->mask=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"mask_rows"] error:&error];
+        if(!impl_->rms||!impl_->silu||!impl_->add||!impl_->mask)throw std::runtime_error("Cannot create Qwen Metal pipelines");
     }
 }
 MetalContext::~MetalContext() { Abort(); }
@@ -121,7 +137,9 @@ void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right
     impl_->outputs.push_back(output.impl_);
 }
 void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& right,
-    const MetalMatrix& output,bool rms,float epsilon,float offset) {
+    const MetalMatrix& output,unsigned operation,float epsilon,float offset) {
+    if(operation>3)throw std::invalid_argument("Unknown Metal pointwise operation");
+    const bool rms=operation==0,mask=operation==3;
     if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
     if(!left.impl_||!right.impl_||!output.impl_)throw std::invalid_argument("Empty Metal matrix");
     auto a=left.impl_->matrix,b=right.impl_->matrix,c=output.impl_->matrix;
@@ -130,14 +148,16 @@ void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& ri
     auto usable=[&](const MetalMatrix& matrix){return matrix.impl_->ready ||
         (matrix.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),matrix.impl_)!=impl_->outputs.end());};
     if(!usable(left)||!usable(right))throw std::logic_error("Uninitialized Metal input");
-    if(a.rows!=c.rows||a.columns!=c.columns||b.columns!=a.columns||b.rows!=(rms?1:a.rows))
+    if(a.rows!=c.rows||a.columns!=c.columns||b.columns!=(mask?1:a.columns)||b.rows!=(rms?1:a.rows))
         throw std::invalid_argument("Qwen Metal operation shape mismatch");
     if(rms && (!(epsilon>0)||!std::isfinite(epsilon)||!std::isfinite(offset)))
         throw std::invalid_argument("Invalid RMS normalization parameters");
     if(c.data==a.data||c.data==b.data)throw std::invalid_argument("In-place operation is unsupported");
+    if(output.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),output.impl_)==impl_->outputs.end())
+        throw std::logic_error("Metal output is in another command batch");
     struct Params {uint64_t rows,columns,aStride,bStride,cStride;float epsilon,offset;};
     Params p{a.rows,a.columns,a.rowBytes/4,b.rowBytes/4,c.rowBytes/4,epsilon,offset};
-    auto pipeline=rms?impl_->rms:impl_->silu;
+    auto pipeline=rms?impl_->rms:(operation==1?impl_->silu:(operation==2?impl_->add:impl_->mask));
     id<MTLComputeCommandEncoder> encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal compute encoder");
     [encoder setComputePipelineState:pipeline];
@@ -151,10 +171,16 @@ void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& ri
 }
 void MetalContext::EncodeRMSNorm(const MetalMatrix& input,const MetalMatrix& weight,
     const MetalMatrix& output,float epsilon,float weightOffset) {
-    EncodePointwise(input,weight,output,true,epsilon,weightOffset);
+    EncodePointwise(input,weight,output,0,epsilon,weightOffset);
 }
 void MetalContext::EncodeSiluMul(const MetalMatrix& gate,const MetalMatrix& up,const MetalMatrix& output) {
-    EncodePointwise(gate,up,output,false,0,0);
+    EncodePointwise(gate,up,output,1,0,0);
+}
+void MetalContext::EncodeAdd(const MetalMatrix& a,const MetalMatrix& b,const MetalMatrix& out) {
+    EncodePointwise(a,b,out,2,0,0);
+}
+void MetalContext::EncodeMaskRows(const MetalMatrix& a,const MetalMatrix& mask,const MetalMatrix& out) {
+    EncodePointwise(a,mask,out,3,0,0);
 }
 void MetalContext::SubmitAndWait() {
     if(!impl_->command)throw std::logic_error("No Metal command batch to submit");
