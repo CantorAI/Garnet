@@ -217,15 +217,60 @@ sequentially through background mode `chunk-suite`; `image-chunk:1:4` and
 `text-chunk:1:4` run individual image/text jobs. Chunks are opt-in, and benchmark
 scripts record `prefill_chunk` and first-request compile time explicitly.
 
+## Batched attention input projections — 2026-10-12
+
+Chunk lowering now projects the whole normalized input chunk once per attention
+weight, then extracts each token's projection on the GPU. Convolution, gated
+DeltaNet recurrence and causal KV updates retain their sequential order. This
+uses the existing native Garnet Metal/MPS backend and FP32 checkpoint weights.
+
+Actual M4 runs with the same image, 79 prompt tokens, chunk 4 and 28-token
+completed caption:
+
+| Warm batch-1 image request | Previous build repeat | Batched projections repeat |
+| --- | ---: | ---: |
+| Prompt processing | 2.953 s | 2.406 s |
+| First token, including vision | 3.307 s | 2.759 s |
+| Complete caption | 5.419 s | 4.867 s |
+| Answer generation | 12.78 tokens/s | 12.81 tokens/s |
+
+The first new run measured 2.786 s first token / 4.911 s complete, confirming
+this repeat. First-token latency improves about 17%, prompt processing about
+19%; generation speed is essentially unchanged. The initial old-build run was
+slower (3.793 s / 5.921 s), so it is not used for the conservative percentage.
+Batch 2 measures 3.906 s first token / 6.446 s for both complete captions,
+versus the earlier saved chunk-4 4.428 s / 6.927 s; that is a historical
+comparison rather than a fresh batch-2 pair. Both rows and both requests retain
+exactly the same token IDs and finish normally.
+
+Text batch 1 measures 0.658 s warm first token / 2.830 s for the 32-token
+capped output; it matches the earlier chunk-4 output tokens. It remains capped,
+not a completed answer. First image request with new graphs takes 4.056 s to
+first token and 6.198 s to completion after 2.949 s model initialization:
+approximately 7.005 s / 9.147 s from process-side model initialization.
+Warm numbers exclude initialization and cached-graph compilation. New batch-1
+image peak native RSS is 5.45–5.46 GiB; the previous-build repeat is 5.47 GiB.
+RSS is process memory, not an isolated GPU allocation measurement; workloads
+and macOS caching can affect timing and memory.
+
+Full-size pretrained layer references pass batches 1/2 and chunks 2/4 at the
+unchanged tolerance for all hidden outputs and final states, including paused
+rows, partial tails and invalid controls. Serving lifecycle tests pass reset,
+chunks 2/4/2 and profile replacement for batches 1/2. Native primitive CTest
+passes 1/1. Raw commands, exit codes and outputs from eight successful jobs
+are saved in `results/20261012/batched-projections/`, with parsed
+`benchmarks.json`. The previous-build runs use commit `0bceee4`; other jobs
+use this change. The optimized source and library are restored on the Mac.
+
 ## Limits and next performance work
 
 The decoder now supports chunked prefill, but it still uses synchronous
 per-layer/chunk graph submission and explicit CPU state copies. Warm image
-prefill with chunk 4 is about 2.94 s for 79 prompt tokens and still dominates
+prefill with chunk 4 and batched projections is about 2.41 s for 79 prompt tokens and still dominates
 first-token latency. Captured weights are
 expanded from BF16 into FP32, increasing memory and bandwidth requirements.
 The tied vocabulary head alone occupies approximately 1 GB in FP32.
-Batched attention projections, GPU-resident cross-layer state, BF16/quantized kernels,
+GPU-resident cross-layer state, BF16/quantized kernels,
 KV/state allocation reduction and memory-pressure profiling remain future work.
 Batch 2 improves aggregate throughput while increasing per-request latency;
 only batches 1/2 have been executed. No batch-4, multi-client concurrency,

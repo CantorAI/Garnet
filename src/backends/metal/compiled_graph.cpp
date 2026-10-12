@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <unordered_set>
+#include <map>
 namespace Garnet {
 size_t MetalCompiledGraph::Allocate(size_t rows,size_t columns) {
     auto id=slots_.size();slots_.push_back({gpu_->Allocate(rows,columns),rows,columns,{int64_t(rows),int64_t(columns)}});return id;
@@ -155,9 +156,6 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
         auto lookup=[&](const X::Value& value){auto found=tensors_.find(TensorId(value));
             if(found==tensors_.end())throw std::runtime_error("Unknown Metal graph operand");
             return found->second;};
-        auto matmul=[&](size_t a,size_t b){
-            if(slots_[a].columns!=slots_[b].columns)throw std::runtime_error("Metal checkpoint projection shape mismatch");
-            auto out=Allocate(slots_[a].rows,slots_[b].rows);ops_.push_back({Kind::MatMul,a,b,out,0,0,true});return out;};
         auto slice=[&](size_t input,size_t groups,size_t sourceWidth,size_t start,size_t count,
             std::vector<int64_t> shape=std::vector<int64_t>{}) {
             if(!groups||!count||start>sourceWidth||count>sourceWidth-start||groups>std::numeric_limits<size_t>::max()/sourceWidth||
@@ -165,6 +163,36 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
             auto out=Allocate(slots_[input].rows,groups*count);
             if(!shape.empty())slots_[out].shape=std::move(shape);
             Op op{Kind::Slice,input,input,out};op.dimensions={groups,sourceWidth,start,count};ops_.push_back(std::move(op));return out;
+        };
+        // Input projections are independent across chunk tokens; recurrent attention stays sequential.
+        std::map<size_t,std::pair<size_t,size_t>> chunkOrigins;
+        std::map<size_t,size_t> flatChunks;
+        std::map<std::pair<size_t,size_t>,size_t> chunkProjections;
+        auto matmul=[&](size_t a,size_t b){
+            if(slots_[a].columns!=slots_[b].columns)throw std::runtime_error("Metal checkpoint projection shape mismatch");
+            auto origin=chunkOrigins.find(a);
+            if(origin!=chunkOrigins.end()&&slots_[origin->second.first].shape.size()==3) {
+                const auto source=origin->second.first,index=origin->second.second;
+                const auto shape=slots_[source].shape;
+                const size_t batch=shape[0],chunk=shape[1],width=shape[2],outputWidth=slots_[b].rows;
+                auto flat=flatChunks.find(source);
+                if(flat==flatChunks.end()) {
+                    auto id=Allocate(batch*chunk,width);
+                    Op op{Kind::Layout,source,source,id};op.dimensions={0};ops_.push_back(std::move(op));
+                    flat=flatChunks.emplace(source,id).first;
+                }
+                const auto key=std::make_pair(source,b);
+                auto projected=chunkProjections.find(key);
+                if(projected==chunkProjections.end()) {
+                    auto matrix=Allocate(batch*chunk,outputWidth);
+                    ops_.push_back({Kind::MatMul,flat->second,b,matrix,0,0,true});
+                    auto packed=Allocate(batch,chunk*outputWidth);
+                    Op op{Kind::Layout,matrix,matrix,packed};op.dimensions={0};ops_.push_back(std::move(op));
+                    projected=chunkProjections.emplace(key,packed).first;
+                }
+                return slice(projected->second,1,chunk*outputWidth,index*outputWidth,outputWidth);
+            }
+            auto out=Allocate(slots_[a].rows,slots_[b].rows);ops_.push_back({Kind::MatMul,a,b,out,0,0,true});return out;
         };
         for(const auto& node:capture.Operations()) {
             if(node.provider.empty())continue;
@@ -233,6 +261,7 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 size_t width=shape.size()==3?size_t(shape[2]):1;
                 std::vector<int64_t> outputShape=shape.size()==3?std::vector<int64_t>{shape[0],shape[2]}:std::vector<int64_t>{shape[0]};
                 out=slice(a,1,slots_[a].columns,size_t(index)*width,width,outputShape);
+                chunkOrigins[out]={a,size_t(index)};
                 if(std::find(inputs_.begin(),inputs_.end(),a)!=inputs_.end())controlSources_[out]={a,size_t(index)};
             }else if(node.name=="qwen35_vision_encoder") {
                 out=LowerVision(a,node.attributes);
