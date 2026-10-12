@@ -24,6 +24,9 @@ struct MetalContext::Impl {
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> add;
     id<MTLComputePipelineState> mask;
+    id<MTLComputePipelineState> conv;
+    id<MTLComputePipelineState> delta;
+    id<MTLComputePipelineState> slice;
 };
 static size_t Elements(size_t rows, size_t columns) {
     if (!rows || !columns || rows > std::numeric_limits<size_t>::max()/columns ||
@@ -69,6 +72,62 @@ kernel void mask_rows(device const float* a [[buffer(0)]],device const float* b 
     ulong row=id/p.columns,col=id%p.columns;
     c[row*p.cStride+col]=b[row*p.bStride]!=0.0f?a[row*p.aStride+col]:0.0f;
 }
+struct SliceParams {ulong batch,groups,sourceWidth,start,count,iStride,oStride;};
+kernel void slice_groups(device const float* input [[buffer(0)]],device float* output [[buffer(1)]],
+    constant SliceParams& p [[buffer(2)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.batch*p.groups*p.count)return;
+    ulong col=id%p.count,group=(id/p.count)%p.groups,row=id/(p.count*p.groups);
+    output[row*p.oStride+group*p.count+col]=input[row*p.iStride+group*p.sourceWidth+p.start+col];
+}
+struct ConvParams {ulong batch,channels,kSize,tStride,wStride,sStride,aStride,oStride;};
+kernel void causal_conv(device const float* token [[buffer(0)]],device const float* weight [[buffer(1)]],
+    device const float* state [[buffer(2)]],device const float* active [[buffer(3)]],
+    device float* packed [[buffer(4)]],constant ConvParams& p [[buffer(5)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.batch*p.channels)return;
+    ulong row=id/p.channels,col=id%p.channels;
+    bool enabled=active[row*p.aStride]!=0.0f;
+    float sum=0.0f;
+    for(ulong j=0;j<p.kSize;++j) {
+        float next=j+1==p.kSize?token[row*p.tStride+col]:state[row*p.sStride+col*p.kSize+j+1];
+        packed[row*p.oStride+col*(p.kSize+1)+1+j]=enabled?next:state[row*p.sStride+col*p.kSize+j];
+        sum+=next*weight[col*p.wStride+j];
+    }
+    packed[row*p.oStride+col*(p.kSize+1)]=enabled?sum/(1.0f+exp(-sum)):0.0f;
+}
+struct DeltaParams {ulong batch,heads,keyDim,valueDim,qStride,kStride,vStride,gStride,bStride,sStride,aStride,oStride;};
+kernel void gated_delta(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
+    device const float* value [[buffer(2)]],device const float* decay [[buffer(3)]],
+    device const float* beta [[buffer(4)]],device const float* state [[buffer(5)]],
+    device const float* active [[buffer(6)]],device float* packed [[buffer(7)]],
+    constant DeltaParams& p [[buffer(8)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.batch*p.heads*p.valueDim)return;
+    ulong column=id%p.valueDim,head=(id/p.valueDim)%p.heads,row=id/(p.heads*p.valueDim);
+    ulong stateBase=row*p.sStride+head*p.keyDim*p.valueDim;
+    ulong outputBase=row*p.oStride+head*(p.keyDim+1)*p.valueDim;
+    ulong outBase=outputBase+p.valueDim;
+    if(active[row*p.aStride]==0.0f) {
+        packed[outputBase+column]=0.0f;
+        for(ulong j=0;j<p.keyDim;++j)packed[outBase+j*p.valueDim+column]=state[stateBase+j*p.valueDim+column];
+        return;
+    }
+    float qs=1e-6f,ks=1e-6f;
+    for(ulong j=0;j<p.keyDim;++j) {
+        float q=query[row*p.qStride+head*p.keyDim+j],k=key[row*p.kStride+head*p.keyDim+j];
+        qs+=q*q;ks+=k*k;
+    }
+    float qi=rsqrt(qs)*rsqrt(float(p.keyDim)),ki=rsqrt(ks);
+    float factor=exp(decay[row*p.gStride+head]),memory=0.0f;
+    for(ulong j=0;j<p.keyDim;++j)
+        memory+=state[stateBase+j*p.valueDim+column]*factor*key[row*p.kStride+head*p.keyDim+j]*ki;
+    float change=(value[row*p.vStride+head*p.valueDim+column]-memory)*beta[row*p.bStride+head];
+    float result=0.0f;
+    for(ulong j=0;j<p.keyDim;++j) {
+        float next=state[stateBase+j*p.valueDim+column]*factor+key[row*p.kStride+head*p.keyDim+j]*ki*change;
+        packed[outBase+j*p.valueDim+column]=next;
+        result+=next*query[row*p.qStride+head*p.keyDim+j]*qi;
+    }
+    packed[outputBase+column]=result;
+}
 )METAL"];
         NSError* error=nil;
         auto library=[impl_->device newLibraryWithSource:source options:nil error:&error];
@@ -77,7 +136,11 @@ kernel void mask_rows(device const float* a [[buffer(0)]],device const float* b 
         impl_->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
         impl_->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
         impl_->mask=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"mask_rows"] error:&error];
-        if(!impl_->rms||!impl_->silu||!impl_->add||!impl_->mask)throw std::runtime_error("Cannot create Qwen Metal pipelines");
+        impl_->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
+        impl_->delta=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta"] error:&error];
+        impl_->slice=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups"] error:&error];
+        if(!impl_->rms||!impl_->silu||!impl_->add||!impl_->mask||!impl_->conv||!impl_->delta||!impl_->slice)
+            throw std::runtime_error("Cannot create Qwen Metal pipelines");
     }
 }
 MetalContext::~MetalContext() { Abort(); }
@@ -181,6 +244,76 @@ void MetalContext::EncodeAdd(const MetalMatrix& a,const MetalMatrix& b,const Met
 }
 void MetalContext::EncodeMaskRows(const MetalMatrix& a,const MetalMatrix& mask,const MetalMatrix& out) {
     EncodePointwise(a,mask,out,3,0,0);
+}
+void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalMatrix>& inputs,
+    const MetalMatrix& output,const void* parameters,size_t parameterBytes,size_t threads) {
+    if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
+    if(!output.impl_||!threads||threads>std::numeric_limits<uint32_t>::max())
+        throw std::invalid_argument("Invalid Metal state kernel output/grid");
+    auto c=output.impl_->matrix;
+    if(c.device!=impl_->device)throw std::invalid_argument("Metal output belongs to another device");
+    if(output.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),output.impl_)==impl_->outputs.end())
+        throw std::logic_error("Metal output is in another command batch");
+    for(const auto& input:inputs) {
+        if(!input.impl_||input.impl_->matrix.device!=impl_->device)
+            throw std::invalid_argument("Invalid Metal state kernel input/device");
+        if(!input.impl_->ready && !(input.impl_->pending &&
+            std::find(impl_->outputs.begin(),impl_->outputs.end(),input.impl_)!=impl_->outputs.end()))
+            throw std::logic_error("Uninitialized Metal state kernel input");
+        if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
+    }
+    if(operation>2)throw std::invalid_argument("Unknown Metal state kernel");
+    auto pipeline=operation==0?impl_->conv:(operation==1?impl_->delta:impl_->slice);
+    auto encoder=[impl_->command computeCommandEncoder];
+    if(!encoder)throw std::runtime_error("Cannot create Metal state kernel encoder");
+    [encoder setComputePipelineState:pipeline];
+    for(size_t i=0;i<inputs.size();++i)[encoder setBuffer:inputs[i].impl_->matrix.data offset:0 atIndex:i];
+    [encoder setBuffer:c.data offset:0 atIndex:inputs.size()];
+    [encoder setBytes:parameters length:parameterBytes atIndex:inputs.size()+1];
+    [encoder dispatchThreads:MTLSizeMake(threads,1,1)
+        threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(pipeline.maxTotalThreadsPerThreadgroup)),1,1)];
+    [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;impl_->outputs.push_back(output.impl_);
+}
+void MetalContext::EncodeCausalConv(const MetalMatrix& token,const MetalMatrix& weight,
+    const MetalMatrix& state,const MetalMatrix& active,const MetalMatrix& packed,size_t kernel) {
+    if(!token.impl_||!weight.impl_||!state.impl_||!active.impl_||!packed.impl_||!kernel)
+        throw std::invalid_argument("Empty Metal causal convolution argument");
+    auto t=token.impl_->matrix,w=weight.impl_->matrix,s=state.impl_->matrix,a=active.impl_->matrix,o=packed.impl_->matrix;
+    const auto stateWidth=Elements(t.columns,kernel);
+    if(stateWidth>std::numeric_limits<size_t>::max()-t.columns||w.rows!=t.columns||w.columns!=kernel||
+        s.rows!=t.rows||s.columns!=stateWidth||a.rows!=t.rows||a.columns!=1||o.rows!=t.rows||o.columns!=t.columns+stateWidth)
+        throw std::invalid_argument("Metal causal convolution shape mismatch");
+    struct Params {uint64_t batch,channels,kernel,tStride,wStride,sStride,aStride,oStride;};
+    Params p{t.rows,t.columns,kernel,t.rowBytes/4,w.rowBytes/4,s.rowBytes/4,a.rowBytes/4,o.rowBytes/4};
+    EncodeStateKernel(0,{token,weight,state,active},packed,&p,sizeof(p),Elements(t.rows,t.columns));
+}
+void MetalContext::EncodeSliceGroups(const MetalMatrix& input,const MetalMatrix& output,
+    size_t groups,size_t sourceWidth,size_t start,size_t count) {
+    if(!input.impl_||!output.impl_||!count||start>sourceWidth||count>sourceWidth-start)
+        throw std::invalid_argument("Invalid Metal grouped slice");
+    auto i=input.impl_->matrix,o=output.impl_->matrix;
+    if(i.rows!=o.rows||i.columns!=Elements(groups,sourceWidth)||o.columns!=Elements(groups,count))
+        throw std::invalid_argument("Metal grouped slice shape mismatch");
+    struct Params {uint64_t batch,groups,sourceWidth,start,count,iStride,oStride;};
+    Params p{i.rows,groups,sourceWidth,start,count,i.rowBytes/4,o.rowBytes/4};
+    EncodeStateKernel(2,{input},output,&p,sizeof(p),Elements(o.rows,o.columns));
+}
+void MetalContext::EncodeGatedDelta(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& value,
+    const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,const MetalMatrix& active,
+    const MetalMatrix& packed,size_t heads,size_t keyDim,size_t valueDim) {
+    if(!query.impl_||!key.impl_||!value.impl_||!decay.impl_||!beta.impl_||!state.impl_||!active.impl_||!packed.impl_)
+        throw std::invalid_argument("Empty Metal gated delta argument");
+    auto q=query.impl_->matrix,k=key.impl_->matrix,v=value.impl_->matrix,g=decay.impl_->matrix,
+        b=beta.impl_->matrix,s=state.impl_->matrix,a=active.impl_->matrix,o=packed.impl_->matrix;
+    const auto qWidth=Elements(heads,keyDim),vWidth=Elements(heads,valueDim),sWidth=Elements(qWidth,valueDim);
+    if(sWidth>std::numeric_limits<size_t>::max()-vWidth||q.columns!=qWidth||k.rows!=q.rows||k.columns!=qWidth||
+        v.rows!=q.rows||v.columns!=vWidth||g.rows!=q.rows||g.columns!=heads||b.rows!=q.rows||b.columns!=heads||
+        s.rows!=q.rows||s.columns!=sWidth||a.rows!=q.rows||a.columns!=1||o.rows!=q.rows||o.columns!=vWidth+sWidth)
+        throw std::invalid_argument("Metal gated delta shape mismatch");
+    struct Params {uint64_t batch,heads,keyDim,valueDim,qStride,kStride,vStride,gStride,bStride,sStride,aStride,oStride;};
+    Params p{q.rows,heads,keyDim,valueDim,q.rowBytes/4,k.rowBytes/4,v.rowBytes/4,g.rowBytes/4,b.rowBytes/4,
+        s.rowBytes/4,a.rowBytes/4,o.rowBytes/4};
+    EncodeStateKernel(1,{query,key,value,decay,beta,state,active},packed,&p,sizeof(p),Elements(q.rows,vWidth));
 }
 void MetalContext::SubmitAndWait() {
     if(!impl_->command)throw std::logic_error("No Metal command batch to submit");

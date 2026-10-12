@@ -20,6 +20,8 @@ class MetalContext {
     std::unique_ptr<Impl> impl_;
     void EncodePointwise(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&,
         unsigned operation, float epsilon, float offset);
+    void EncodeStateKernel(unsigned operation,const std::vector<MetalMatrix>&,
+        const MetalMatrix&,const void* parameters,size_t parameterBytes,size_t threads);
 public:
     MetalContext();
     ~MetalContext();
@@ -37,6 +39,13 @@ public:
         const MetalMatrix& output);
     void EncodeAdd(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
     void EncodeMaskRows(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
+    // Packed rows retain explicit caller-owned states after the output segment.
+    void EncodeCausalConv(const MetalMatrix& token,const MetalMatrix& weight,
+        const MetalMatrix& state,const MetalMatrix& active,const MetalMatrix& packed,size_t kernel);
+    void EncodeGatedDelta(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& value,
+        const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,
+        const MetalMatrix& active,const MetalMatrix& packed,size_t heads,size_t keyDim,size_t valueDim);
+    void EncodeSliceGroups(const MetalMatrix&,const MetalMatrix&,size_t groups,size_t sourceWidth,size_t start,size_t count);
     void SubmitAndWait();
     void Abort();
     std::vector<float> Download(const MetalMatrix& matrix) const;

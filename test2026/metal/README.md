@@ -2,8 +2,8 @@
 
 This investigation uses Garnet's native xlang3 package, captured xModel graphs,
 Metal compute kernels and MPS matrix multiplication. It does not currently run
-the complete Qwen3.5 model. Attention, recurrent/KV state and vision lowering
-remain required before text/image inference and meaningful model benchmarks.
+the complete Qwen3.5 model. Complete checkpoint-backed attention, KV state and
+vision lowering remain required before text/image inference and model benchmarks.
 
 ## Verified on Apple M4, 16 GiB, 2026-10-11
 
@@ -50,8 +50,39 @@ cd /Users/zsdx/garnet-metal-investigation
 ```
 
 The Python reference requires NumPy (existing Mac installation: 2.3.4).
-Graph input storage currently accepts contiguous host FP32 vectors/matrices;
+Graph input storage currently accepts contiguous host FP32 rank 1–4 tensors;
 checkpoint loading supports F32 and BF16 converted to persistent FP32 matrices.
 One command buffer encodes all graph operations, followed by one completion wait
 and the final output download. Input allocation, per-context pipeline compilation,
 serial RMS reduction and FP32 weight storage still require optimization.
+
+## Executed recurrent component graphs
+
+The existing `Qwen35CausalConvStep` and `Qwen35GatedDeltaStep` xModel programs
+now lower their captured state bindings to native Metal kernels. Logical shapes
+are preserved while each batch row uses a padded GPU matrix row. Packed state
+layouts match the existing backend: convolution groups `[output, history]` per
+channel and delta groups `[output, flattened state]` per head. GPU grouped slices
+implement the existing xModel unpack helpers.
+
+On the same M4, all 12 captured graph cases passed: convolution and delta,
+packed/output/state return paths, batches 1 and 2. Each graph ran three explicit
+state updates. The independent NumPy calculations cover inactive-row state
+preservation, resuming rows, nonzero initial states and zero Q/K vectors. The
+tolerance remains `5e-6 + 5e-5 * abs(reference)`. The final primitive CTest passed
+1/1 in 0.06 seconds on the final rerun (0.75 seconds on the initial run).
+The existing checkpoint-backed MLP graph regression passed both batches again.
+These small components are not full attention layers or
+pretrained Qwen inference. The reference inputs include NumPy-computed prior
+states; end-to-end decoder feedback is still required.
+
+```sh
+/opt/homebrew/bin/python3 source/test2026/metal/test_state_graph.py \
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3 \
+  /Users/zsdx/garnet-metal-investigation/build \
+  /Users/zsdx/garnet-metal-investigation/source
+```
+
+Next integration: checkpoint-backed QKV/gate/decay projections, grouped head
+expansion, gated recurrent output normalization, decoder state packing and
+residual replacement; then full attention/RoPE/KV updates and vision encoding.
