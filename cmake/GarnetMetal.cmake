@@ -26,8 +26,8 @@ if(GARNET_METAL_XMODEL)
     set_target_properties(garnet_metal PROPERTIES POSITION_INDEPENDENT_CODE ON)
     add_library(garnet SHARED src/entry/metal_main.cpp src/backends/metal/compiled_graph.cpp
         src/tensor/garnet_tensor.cpp src/tensor/graph_capture.cpp src/core/lowering_context.cpp
-        src/model/safetensors_index.cpp)
-    target_include_directories(garnet PRIVATE "${XLANG3_SDK_ROOT}" src/tensor src/core src/model src/backends/metal third_party)
+        src/model/safetensors_index.cpp src/tokenizer/qwen_tokenizer.cpp)
+    target_include_directories(garnet PRIVATE "${XLANG3_SDK_ROOT}" src/tensor src/core src/model src/tokenizer src/backends/cpu src/backends/metal third_party)
     target_compile_definitions(garnet PRIVATE GARNET_WITH_METAL=1 XLANG3_USE_SHARED=1)
     target_link_libraries(garnet PRIVATE garnet_metal "${GARNET_XLANG3_RUNTIME_LIBRARY}")
 endif()

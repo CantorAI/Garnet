@@ -157,3 +157,32 @@ weight reads, four steps, batches 1/2 and child peak RSS reporting.
 
 Full text generation, vision encoding, actual image inference and workload
 performance measurements/optimization remain required.
+
+## Native decoder serving adapter
+
+The Metal package now exports the existing Qwen tokenizer plus host tensor I/O
+for BF16 embedding lookup, zero state creation, packed state extraction and
+argmax. Learned decoder operations and the vocabulary projection execute on
+Metal/MPS. `tensor_io.logits` accepts already projected vocabulary rows; it
+rejects unprojected hidden rows instead of performing a CPU projection.
+`MetalDecoder` reuses the explicit-state serving interface and captures layer
+graphs with explicit tensor parameters. Chunked prefill is not implemented.
+
+Actual Mac M4 closed-loop tests passed for batches 1 and 2: eight predictive
+steps, independent NumPy token/state references, and an inactive/resumed row.
+The durable job `logs/model-explicit-capture-20261011` exited 0. Last-step
+layer/head times were 1.100/0.400 ms for batch 1 and 1.319/0.685 ms for batch 2.
+These are small synthetic single-layer fixture timings, not Qwen performance.
+The first two adapter attempts failed capture; explicit fusion parameters
+resolved the failure, without changing tolerances or using a CPU neural path.
+
+Backend identification now queries the device without compiling shaders.
+Command encoding/allocation/submission uses autorelease pools to bound
+temporary Objective-C objects in a pure C++ caller. No full-model memory
+improvement is claimed before measurement.
+
+`benchmark_text.py` and `run_text_decoder.py` prepare actual native generation,
+two requests through a loaded model, bounded output, TTFT, per-step/layer/head
+timings and macOS peak runtime RSS. They remain unexecuted until the complete
+pinned checkpoint is available on the Mac. The transfer resumes its partial
+file over the verified ZeroTier route; no system networking changes are needed.

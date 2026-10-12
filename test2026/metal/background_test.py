@@ -24,6 +24,11 @@ elif mode=='run':
  elif batch=='pretrained':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_pretrained_graph.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
+ elif batch=='model':
+  command=[sys.executable,str(Path(source)/'test2026/metal/test_decoder_model.py'),runtime,build,source]
+ elif batch.startswith('text:'):
+  command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,
+      str(Path(source).parent/'models/Qwen3.5-0.8B'),batch.split(':')[1]]
  else:
   command=[sys.executable,str(Path(source)/'test2026/metal/test_linear_graph.py'),runtime,build,source,batch]
  try:

@@ -28,6 +28,7 @@ public:
     MetalContext(const MetalContext&) = delete;
     MetalContext& operator=(const MetalContext&) = delete;
     std::string DeviceName() const;
+    static std::string AvailableDeviceName();
     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
     MetalMatrix Allocate(size_t rows, size_t columns);
     void Begin();

@@ -270,7 +270,15 @@ MetalContext::~MetalContext() { Abort(); }
 std::string MetalContext::DeviceName() const {
     return std::string([impl_->device.name UTF8String]);
 }
+std::string MetalContext::AvailableDeviceName() {
+    @autoreleasepool {
+        auto device=MTLCreateSystemDefaultDevice();
+        if(!device||!MPSSupportsMTLDevice(device))throw std::runtime_error("No MPS-capable Metal GPU available");
+        return std::string(device.name.UTF8String);
+    }
+}
 MetalMatrix MetalContext::Allocate(size_t rows,size_t columns) {
+    @autoreleasepool {
     Elements(rows,columns);
     const auto stride=[MPSMatrixDescriptor rowBytesFromColumns:columns dataType:MPSDataTypeFloat32];
     if(stride>std::numeric_limits<size_t>::max()/rows)
@@ -283,6 +291,7 @@ MetalMatrix MetalContext::Allocate(size_t rows,size_t columns) {
     auto storage=std::make_shared<MetalMatrix::Impl>();
     storage->matrix=[[MPSMatrix alloc] initWithBuffer:buffer descriptor:descriptor];
     return MetalMatrix(storage);
+    }
 }
 MetalMatrix MetalContext::Upload(const std::vector<float>& values,size_t rows,size_t columns) {
     if(values.size()!=Elements(rows,columns))throw std::invalid_argument("Metal matrix input size mismatch");
@@ -295,12 +304,15 @@ MetalMatrix MetalContext::Upload(const std::vector<float>& values,size_t rows,si
     return result;
 }
 void MetalContext::Begin() {
+    @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
+    }
 }
 void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right,
     const MetalMatrix& output,bool transposeRight) {
+    @autoreleasepool {
     if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
     if(!left.impl_||!right.impl_||!output.impl_)throw std::invalid_argument("Empty Metal matrix");
     auto a=left.impl_->matrix,b=right.impl_->matrix,c=output.impl_->matrix;
@@ -322,9 +334,11 @@ void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right
     [op encodeToCommandBuffer:impl_->command leftMatrix:a rightMatrix:b resultMatrix:c];
     output.impl_->ready=false;output.impl_->pending=true;
     impl_->outputs.push_back(output.impl_);
+    }
 }
 void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& right,
     const MetalMatrix& output,unsigned operation,float epsilon,float offset) {
+    @autoreleasepool {
     if(operation>3)throw std::invalid_argument("Unknown Metal pointwise operation");
     const bool rms=operation==0,mask=operation==3;
     if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
@@ -355,6 +369,7 @@ void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& ri
     [encoder dispatchThreads:MTLSizeMake(count,1,1) threadsPerThreadgroup:MTLSizeMake(width,1,1)];
     [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;
     impl_->outputs.push_back(output.impl_);
+    }
 }
 void MetalContext::EncodeRMSNorm(const MetalMatrix& input,const MetalMatrix& weight,
     const MetalMatrix& output,float epsilon,float weightOffset) {
@@ -371,6 +386,7 @@ void MetalContext::EncodeMaskRows(const MetalMatrix& a,const MetalMatrix& mask,c
 }
 void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalMatrix>& inputs,
     const MetalMatrix& output,const void* parameters,size_t parameterBytes,size_t threads) {
+    @autoreleasepool {
     if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
     if(!output.impl_||!threads||threads>std::numeric_limits<uint32_t>::max())
         throw std::invalid_argument("Invalid Metal state kernel output/grid");
@@ -399,6 +415,7 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
     [encoder dispatchThreads:MTLSizeMake(threads,1,1)
         threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(pipeline.maxTotalThreadsPerThreadgroup)),1,1)];
     [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;impl_->outputs.push_back(output.impl_);
+    }
 }
 void MetalContext::EncodeCausalConv(const MetalMatrix& token,const MetalMatrix& weight,
     const MetalMatrix& state,const MetalMatrix& active,const MetalMatrix& packed,size_t kernel) {
@@ -525,6 +542,7 @@ void MetalContext::EncodeAttentionContext(const MetalMatrix& probabilities,const
     EncodeStateKernel(9,{probabilities,value,gate},output,&params,sizeof(params),Elements(o.rows,o.columns));
 }
 void MetalContext::SubmitAndWait() {
+    @autoreleasepool {
     if(!impl_->command)throw std::logic_error("No Metal command batch to submit");
     auto command=impl_->command;
     [command commit];[command waitUntilCompleted];
@@ -533,6 +551,7 @@ void MetalContext::SubmitAndWait() {
     impl_->outputs.clear();impl_->command=nil;
     if(!success)throw std::runtime_error(command.error ?
         std::string(command.error.localizedDescription.UTF8String):"Metal execution did not complete");
+    }
 }
 void MetalContext::Abort() {
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
