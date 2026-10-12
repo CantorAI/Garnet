@@ -5082,3 +5082,8 @@ The OPT230 log already contains actual TensorRT memory statistics and engine pat
 ### OPT234 profile-recovery helper stopped before GPU work because embedded Python lacks `fcntl`
 
 The first OPT233 recovery helper launch exited at import time with `ModuleNotFoundError: No module named 'fcntl'`. It created only its short launcher log; no status file, CUDA context, engine load, or GPU compute application was created, and both devices remained at15MiB. This is an XLang3 embedded-Python capability issue, not a target build/profile failure. Keep that launch log. Retry the same recovery design after removing the unsupported Python lock module and hold the existing shared `gpu-benchmark.lock` through the documented system `flock` launcher; retain the helper's independent zero-compute-app preflight. Do not change the candidate shape, engine cache, or native source.
+
+
+### OPT235 profile recovery again stopped in embedded-Python preflight
+
+The OPT234 retry reached the recovery script but failed before any GPU work: XLang3's subprocess adapter rejected a `Path` object supplied as `cwd` (`RuntimeError: process argument must be str or bytes`). The exception handler then hit the embedded runtime's reduced `shutil` module, which does not expose `disk_usage`, so no structured status was written. The target log preserves both traces; nvidia-smi showed both devices at15MiB and no compute applications, and no engine load began. Correct the helper only: pass `str(REPO)` to each subprocess working-directory argument and compute available bytes through the POSIX `os.statvfs` API. Keep the same source/profile/cache guards and decode-only recovery scope.
