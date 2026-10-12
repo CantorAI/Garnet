@@ -40,6 +40,21 @@ int main() {
         bool abortedRejected=false;
         try {gpu.Download(output);}catch(const std::logic_error&){abortedRejected=true;}
         if(!abortedRejected)throw std::runtime_error("Aborted GPU output was readable");
+        auto updated=gpu.Allocate(3,5);
+        std::vector<float> padded(15);
+        for(size_t i=0;i<padded.size();++i)padded[i]=float(i)-7;
+        gpu.Update(updated,padded);
+        if(gpu.Download(updated)!=padded)throw std::runtime_error("Padded row update mismatch");
+        gpu.Update(updated,std::vector<float>(15,0.25f));
+        if(gpu.Download(updated)!=std::vector<float>(15,0.25f))throw std::runtime_error("Repeated update retained stale values");
+        bool wrongSize=false;
+        try {gpu.Update(updated,{1});}catch(const std::invalid_argument&){wrongSize=true;}
+        if(!wrongSize)throw std::runtime_error("Invalid update length accepted");
+        gpu.Begin();gpu.EncodeMatMul(input,weight,hidden);
+        bool batchUpdate=false;
+        try {gpu.Update(input,{4,3,2,1});}catch(const std::logic_error&){batchUpdate=true;}
+        if(!batchUpdate)throw std::runtime_error("Update during command batch accepted");
+        gpu.SubmitAndWait();
         auto scale=gpu.Upload({0.25f,-0.5f},1,2);
         auto normalized=gpu.Allocate(2,2),activation=gpu.Allocate(2,2);
         gpu.Begin();

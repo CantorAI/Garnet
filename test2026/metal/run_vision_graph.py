@@ -10,9 +10,11 @@ try:
     for step in f['steps']:
         if 'patch_file' in step:result=encoder.encode_file(step['patch_file'])
         else:result=model.run([tensor.tensor(step['input'],shape=f['shape'],dtype=tensor.float32)])
-        actual=result.tolist();assert len(actual)==len(step['expected'])
+        expected=(garnet.tensor_io().read_f32(step['expected_file'],[step['expected_count']]).tolist()
+            if 'expected_file' in step else step['expected'])
+        actual=result.tolist();assert len(actual)==len(expected)
         max_error=0;worst_ratio=0;error_squared=0;reference_squared=0;failures=[]
-        for index,(observed,wanted) in enumerate(zip(actual,step['expected'])):
+        for index,(observed,wanted) in enumerate(zip(actual,expected)):
             max_error=max(max_error,abs(observed-wanted))
             difference=abs(observed-wanted);bound=5e-6+5e-5*abs(wanted)
             worst_ratio=max(worst_ratio,difference/bound);error_squared+=difference*difference;reference_squared+=wanted*wanted

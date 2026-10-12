@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
+#include <array>
+#include <map>
 namespace Garnet {
 struct MetalMatrix::Impl {
     MPSMatrix* matrix;
@@ -32,6 +34,7 @@ struct MetalContext::Impl {
     id<MTLComputePipelineState> concat;
     id<MTLComputePipelineState> normRope,kvUpdate,scores,attentionContext;
     id<MTLComputePipelineState> vision;
+    std::map<std::array<size_t,4>,MPSMatrixMultiplication*> matmul;
 };
 static size_t Elements(size_t rows, size_t columns) {
     if (!rows || !columns || rows > std::numeric_limits<size_t>::max()/columns ||
@@ -359,12 +362,23 @@ MetalMatrix MetalContext::Allocate(size_t rows,size_t columns) {
 MetalMatrix MetalContext::Upload(const std::vector<float>& values,size_t rows,size_t columns) {
     if(values.size()!=Elements(rows,columns))throw std::invalid_argument("Metal matrix input size mismatch");
     auto result=Allocate(rows,columns);
-    auto matrix=result.impl_->matrix;
-    for(size_t i=0;i<rows;++i)
-        std::memcpy(static_cast<char*>(matrix.data.contents)+i*matrix.rowBytes,
-            values.data()+i*columns,columns*sizeof(float));
-    result.impl_->ready=true;
+    Update(result,values);
     return result;
+}
+void MetalContext::Update(const MetalMatrix& matrix,const std::vector<float>& values) {
+    Update(matrix,values.data(),values.size());
+}
+void MetalContext::Update(const MetalMatrix& matrix,const float* values,size_t count) {
+    if(impl_->command)throw std::logic_error("Host update requires a closed command batch");
+    if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
+        throw std::invalid_argument("Metal update matrix belongs to another device or is empty");
+    if(matrix.impl_->pending)throw std::logic_error("Cannot update pending Metal output");
+    auto native=matrix.impl_->matrix;
+    if(!values||count!=Elements(native.rows,native.columns))throw std::invalid_argument("Metal update size mismatch");
+    for(size_t i=0;i<native.rows;++i)
+        std::memcpy(static_cast<char*>(native.data.contents)+i*native.rowBytes,
+            values+i*native.columns,native.columns*sizeof(float));
+    matrix.impl_->ready=true;
 }
 void MetalContext::Begin() {
     @autoreleasepool {
@@ -391,9 +405,15 @@ void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right
     if(c.data==a.data||c.data==b.data)throw std::invalid_argument("In-place Metal matmul is unsupported");
     if(output.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),output.impl_)==impl_->outputs.end())
         throw std::logic_error("Metal output is in another command batch");
-    auto op=[[MPSMatrixMultiplication alloc] initWithDevice:impl_->device transposeLeft:NO
-        transposeRight:transposeRight resultRows:c.rows resultColumns:c.columns
-        interiorColumns:a.columns alpha:1.0 beta:0.0];
+    const std::array<size_t,4> key{c.rows,c.columns,a.columns,size_t(transposeRight)};
+    auto found=impl_->matmul.find(key);
+    if(found==impl_->matmul.end()) {
+        auto op=[[MPSMatrixMultiplication alloc] initWithDevice:impl_->device transposeLeft:NO
+            transposeRight:transposeRight resultRows:c.rows resultColumns:c.columns
+            interiorColumns:a.columns alpha:1.0 beta:0.0];
+        found=impl_->matmul.emplace(key,op).first;
+    }
+    auto op=found->second;
     [op encodeToCommandBuffer:impl_->command leftMatrix:a rightMatrix:b resultMatrix:c];
     output.impl_->ready=false;output.impl_->pending=true;
     impl_->outputs.push_back(output.impl_);

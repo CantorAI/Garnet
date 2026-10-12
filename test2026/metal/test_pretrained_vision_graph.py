@@ -19,8 +19,10 @@ for batch in (1,2):
     patches=rng.normal(size=(batch,4,1536)).astype(np.float32)
     expected=reference(patches,weights,config,2,2)
     with tempfile.TemporaryDirectory(prefix='garnet-real-vision-') as temporary:
+        patches_path=Path(temporary)/'patches.f32';patches.astype('<f4').tofile(patches_path)
+        expected_path=Path(temporary)/'expected.f32';expected.astype('<f4').tofile(expected_path)
         fixture=dict(config=config,checkpoint=str(checkpoint.resolve()),shape=list(patches.shape),grid_h=2,grid_w=2,
-            steps=[dict(input=patches.ravel().tolist(),expected=expected.ravel().tolist())])
+            steps=[dict(patch_file=str(patches_path),expected_file=str(expected_path),expected_count=expected.size)])
         path=Path(temporary)/'fixture.json';path.write_text(json.dumps(fixture))
         subprocess.run([sys.argv[1],str(Path(__file__).with_name('run_vision_graph.py')),str(path),sys.argv[2],sys.argv[3]],check=True)
 print('all pretrained vision blocks/merger batch 1/2 reference PASS',flush=True)

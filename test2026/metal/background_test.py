@@ -15,7 +15,9 @@ if mode=='launch':
       stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
  pidfile.write_text(str(process.pid));print('Started test PID',process.pid,flush=True)
 elif mode=='run':
- if batch=='download':
+ if batch=='optimization-suite':
+  command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_optimization.py'),runtime,build,source,str(folder)]
+ elif batch=='download':
   command=[sys.executable,str(Path(source)/'test2026/pi5b/download_full_checkpoint.py'),
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
  elif batch=='modelscope-download':

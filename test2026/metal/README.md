@@ -28,9 +28,10 @@ The saved verified SSH route was retained; no credentials or host-key bypasses
 were used. Background jobs preserve command, output and exit status despite
 intermittent network connections.
 
-## Actual measurements, 2026-10-12
+## Actual measurements, 2026-10-11 Pacific (2026-10-12 UTC logs)
 
-Each process loads the model once and runs two independent requests, resetting
+The table reflects the final allocation-reuse build. Each process loads the
+model once and runs two independent requests, resetting
 state between them. The table uses the second request. Output limits apply
 per batch row. Timings exclude CPU image preprocessing, which was performed
 beforehand, and network transfer. First-token time includes vision and decoder
@@ -38,11 +39,10 @@ prefill. Decode throughput excludes the initial token produced by prefill.
 
 | Workload | Batch | Output | Loaded first token, s | Loaded result, s | Decode tokens/s per row | Combined tokens/s | Process peak RSS, GiB |
 | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: |
-| Text: local-model benefits | 1 | 32-token limit | 1.398 | 3.780 | 13.02 | 13.02 | 5.29 |
-| Text: local-model benefits | 2 | 32-token limit each | 1.753 | 4.668 | 10.63 | 21.27 | 7.62 |
-| Image, optimized normalization | 1 | 16-token limit | 5.649 | 6.914 | 11.86 | 11.86 | 7.54 |
-| Image, optimized normalization | 2 | 16-token limit each | 8.763 | 10.438 | 8.96 | 17.92 | 8.64 |
-| Image, complete caption | 1 | 28 tokens including stop | 5.608 | 7.908 | 11.74 | 11.74 | 8.17 |
+| Text: local-model benefits | 1 | 32-token limit | 1.245 | 3.395 | 14.42 | 14.42 | 4.40 |
+| Text: local-model benefits | 2 | 32-token limit each | 1.477 | 4.031 | 12.14 | 24.28 | 4.41 |
+| Image, allocation reuse | 2 | 16-token limit each | 6.372 | 7.750 | 10.88 | 21.77 | 4.84 |
+| Image, complete caption | 1 | 28 tokens including stop | 5.037 | 7.101 | 13.08 | 13.08 | 4.81 |
 
 Peak RSS is measured for the whole native process in macOS bytes, converted
 to GiB, and is not isolated GPU allocation. It varies across runs and MPS
@@ -51,8 +51,10 @@ showed 3,741 MiB swap in use, so these are development-machine observations,
 not isolated laboratory results or percentile latency guarantees.
 
 Text initialization was about 2.85 s for the short Paris test; the first
-request including startup reached its first token in 4.77 s. Image-caption
-initialization was 2.97 s; first token including startup was 8.68 s.
+request including startup reached its first token in 4.77 s. Those short-test values are from the earlier build. In the final build,
+longer-text initialization was 2.04 s with first token including startup at
+3.36 s; image initialization was 2.81 s with first token including startup
+at 7.96 s.
 The longer text test reached its token cap rather than EOS; the caption
 finished normally at 28 tokens. Batch 2 repeats the same input on both rows;
 independent row controls are tested separately in the integration fixture.
@@ -102,10 +104,56 @@ Large reference tensors now use binary FP32 fixtures. Sampling the original
 full-size test showed minutes spent parsing numeric JSON inside xlang3 before
 GPU dispatch. This improves test execution, not reported model throughput.
 
+## Decoder allocation reuse, 2026-10-11 Pacific
+
+Graph input buffers now persist across token steps. Host tensors copy directly
+into these existing allocations rather than into a temporary vector followed
+by a newly allocated GPU buffer. Small position/slot/active controls still
+undergo pre-dispatch validation. Host updates reject wrong dimensions, pending
+outputs, a foreign device and an open command batch.
+
+MPS matrix-multiplication objects are cached per graph context by result rows,
+result columns, inner width and transpose mode. Weights, matrix strides and
+operands remain explicitly bound on every encode. Captured graph math and
+checkpoint precision are unchanged. No GPU-resident recurrent state or chunked
+prefill claim is made by this allocation optimization.
+
+A fresh pre-change caption baseline was run immediately before rebuilding:
+
+| Batch-1 warm complete caption | Before | After | Change |
+| --- | ---: | ---: | ---: |
+| Decoder prefill, s | 5.251 | 4.685 | 10.8% lower |
+| First token, s | 5.612 | 5.037 | 10.3% lower |
+| Complete caption, s | 7.908 | 7.101 | 10.2% lower |
+| Decode tokens/s | 11.76 | 13.08 | 11.2% higher |
+| Process peak RSS, GiB | 8.17 | 4.81 | 41.2% lower |
+
+Peak RSS comparisons are sampled process high-water marks, including MPS
+resources, rather than isolated weight/GPU allocation. Memory pressure and
+other workloads can affect them; no fixed resident-memory budget is promised.
+The first allocation-reuse stage already reached 7.168 s for the warm caption;
+removing the temporary host copies additionally reached 7.101 s. Their separate
+contributions have not been isolated with repeated factorial benchmarks.
+
+Final primitive CTest passes 1/1 (0.52 s), including padded/repeated host
+updates and invalid updates. Full-size pretrained decoder and the full vision
+tower pass for batches 1/2 at unchanged tolerances. The four real workload
+benchmarks run sequentially through `benchmark_optimization.py`. Both requests
+in every workload produce exactly the earlier token IDs and finish status:
+batch-1 caption finishes at 28 tokens; capped text and batch-2 captions remain
+explicitly unfinished. Batch-2 image first-token latency improves from the
+previous 8.763 s observation to 6.372 s; that comparison uses the earlier
+saved run, unlike the freshly paired batch-1 baseline.
+
+All commands, native outputs, timings and successful exit status are saved in
+`results/20261012/allocation-reuse/`, with decoded records in `benchmarks.json`.
+Vision reference tensors also use binary files now, retaining the original
+reference and tolerance while avoiding the numeric JSON parsing bottleneck.
+
 ## Limits and next performance work
 
 The decoder still uses sequential prefill and synchronous per-layer graph
-submission, with explicit CPU state copies. Warm image prefill is about 5.26 s
+submission, with explicit CPU state copies. Warm image prefill is about 4.68 s
 for 79 prompt tokens and dominates first-token latency. Captured weights are
 expanded from BF16 into FP32, increasing memory and bandwidth requirements.
 The tied vocabulary head alone occupies approximately 1 GB in FP32.
@@ -130,11 +178,13 @@ see `cmake/GarnetMetal.cmake`. Run the following with Mac Python, supplying
 
 `background_test.py` launches durable jobs with modes `pretrained`,
 `pretrained-vision`, `pipeline`, `text-long:1`, `text-long:2`, `image:1`,
-`image:2` or `image-long:1`. Its explicit arguments are
+`image:2`, `image-long:1` or `optimization-suite`. The suite runs image and
+text benchmarks for batches 1/2 sequentially with separate process RSS records. Its explicit arguments are
 `launch log_directory runtime build source mode`.
 Real checkpoint and image inputs are not committed.
 
 Saved raw command/exit/output evidence is in `results/20261012/`;
-`benchmarks.json` retains tokens, output, per-step/layer/head timings and peak
+Both the earlier `benchmarks.json` and `allocation-reuse/benchmarks.json`
+retain tokens, output, per-step/layer/head timings and peak
 RSS. Historical bring-up evidence is in `BRINGUP_HISTORY.md`; its earlier
 pending-state notes are superseded by this report.

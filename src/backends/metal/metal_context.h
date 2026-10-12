@@ -31,6 +31,9 @@ public:
     static std::string AvailableDeviceName();
     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
     MetalMatrix Allocate(size_t rows, size_t columns);
+    // Synchronous host update into an existing allocation, between command batches.
+    void Update(const MetalMatrix&,const std::vector<float>& values);
+    void Update(const MetalMatrix&,const float* values,size_t count);
     void Begin();
     void EncodeMatMul(const MetalMatrix& left, const MetalMatrix& right,
         const MetalMatrix& output, bool transposeRight = false);

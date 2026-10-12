@@ -8,6 +8,7 @@
 #include <limits>
 #include <algorithm>
 #include <cmath>
+#include <unordered_set>
 namespace Garnet {
 size_t MetalCompiledGraph::Allocate(size_t rows,size_t columns) {
     auto id=slots_.size();slots_.push_back({gpu_->Allocate(rows,columns),rows,columns,{int64_t(rows),int64_t(columns)}});return id;
@@ -412,14 +413,16 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
         throw std::runtime_error("Metal graph not ready or input count invalid");
     auto start=std::chrono::steady_clock::now();
     std::unordered_map<size_t,std::vector<float>> hostInputs;
+    std::unordered_set<size_t> controls;
+    for(const auto& op:ops_)if(op.kind==Kind::KVUpdate)
+        for(auto i:{2,3,4})controls.insert(op.arguments[i]);
     for(size_t i=0;i<inputs_.size();++i) {
         X::Tensor tensor(inputs.Get(i));auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
         if(info.symbolic||info.device_type!=0||info.dtype!=X3_TENSOR_FLOAT32||info.rank!=inputShapes_[i].size()||
             !std::equal(inputShapes_[i].begin(),inputShapes_[i].end(),info.shape)||!info.data||!IsContiguousTensor(tensor))
             throw std::runtime_error("Metal runtime input shape/storage mismatch");
         auto lease=tensor.Acquire();auto data=static_cast<const float*>(info.data);
-        hostInputs[inputs_[i]]=std::vector<float>(data,data+slot.rows*slot.columns);
-        slot.matrix=gpu_->Upload(hostInputs[inputs_[i]],slot.rows,slot.columns);
+        if(controls.count(inputs_[i]))hostInputs[inputs_[i]]=std::vector<float>(data,data+slot.rows*slot.columns);
     }
     for(const auto& op:ops_)if(op.kind==Kind::KVUpdate) {
         const auto& positions=hostInputs.at(op.arguments[4]);const auto& slots=hostInputs.at(op.arguments[2]);
@@ -431,6 +434,10 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
             for(size_t axis=0;axis<3;++axis)if(!std::isfinite(positions[row*3+axis]))
                 throw std::runtime_error("Metal RoPE position must be finite");
         }
+    }
+    for(size_t i=0;i<inputs_.size();++i){
+        X::Tensor tensor(inputs.Get(i));auto lease=tensor.Acquire();auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
+        gpu_->Update(slot.matrix,static_cast<const float*>(info.data),slot.rows*slot.columns);
     }
     gpu_->Begin();
     try {
