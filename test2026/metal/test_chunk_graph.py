@@ -19,7 +19,7 @@ def read_weights(names,layer):
    weights[name]=data.reshape(info['shape'])
  return weights
 for kind in ('linear','attention'):
- names=common.copy();d=config['hidden_size'];capacity=16;layer=0 if kind=='linear' else 3
+ names=common.copy();d=config['hidden_size'];capacity=32;layer=0 if kind=='linear' else 3
  if kind=='linear':
   names.update({name:'linear_attn.'+suffix for name,suffix in dict(qkv='in_proj_qkv.weight',z='in_proj_z.weight',b_proj='in_proj_b.weight',a_proj='in_proj_a.weight',conv='conv1d.weight',a_log='A_log',dt_bias='dt_bias',norm='norm.weight',out_proj='out_proj.weight').items()})
   kh=config['linear_num_key_heads'];vh=config['linear_num_value_heads'];kd=config['linear_key_head_dim'];vd=config['linear_value_head_dim'];channels=2*kh*kd+vh*vd
@@ -28,7 +28,7 @@ for kind in ('linear','attention'):
   heads=config['num_attention_heads'];kv=config['num_key_value_heads'];dim=config['head_dim'];rope=config['rope_parameters'];rotary=int(dim*rope['partial_rotary_factor'])
  weights=read_weights(names,layer)
  for batch in (1,2):
-  for chunk in (2,4,8):
+  for chunk in (2,4,8,16):
    if kind=='linear':first=np.zeros((batch,channels,config['linear_conv_kernel_dim']),np.float32);second=np.zeros((batch,vh,kd,vd),np.float32)
    else:first=np.zeros((batch,kv,capacity,dim),np.float32);second=np.zeros_like(first)
    base=np.zeros(batch,np.float32);steps=[]

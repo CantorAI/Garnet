@@ -299,13 +299,54 @@ Seven successful jobs and exact commands/exits are saved under
 `results/20261012/chunk8/`, with parsed `benchmarks.json`.
 Reproduce with background modes `image-chunk:1:8`, `image-chunk:2:8` and
 `text-chunk:1:8`. Chunk 8 is the fastest executed image profile on this M4;
-chunks beyond 8 and other Apple devices remain unmeasured.
+this section measures through chunk 8; the following section measures chunk 16. Other Apple devices remain unmeasured.
+
+## Sixteen-token prefill profile — 2026-10-12
+
+`MetalDecoder.enable_prefill(16)` supports processing up to 16 prompt tokens
+per chunk. This is prompt length per GPU graph execution, independent of
+request batch size and answer-token limits. The 79-token image prompt needs
+5 chunks per layer rather than 10 with chunk 8. State transitions remain
+causal and sequential. The default profile remains chunk 4.
+
+| Warm batch-1 image request | Fresh chunk-8 control | Chunk 16 |
+| --- | ---: | ---: |
+| Prompt processing | 1.956 s | 1.746 s |
+| First token including vision | 2.316 s | 2.102 s |
+| Complete 28-token caption | 4.418 s | 4.208 s |
+| Answer generation | 12.84 tokens/s | 12.82 tokens/s |
+
+This is another 9% first-token improvement with identical output tokens.
+The repeat's warm result is 2.080 s / 4.198 s, but its cold request briefly
+overlapped the batch-2 job, so the repeat is excluded from the primary paired
+comparison. The original batch-2 job is also excluded from performance claims.
+Its correctness outputs are retained. An isolated rerun of batch 2 measures
+2.951 s first token / 5.518 s for both complete captions, 10.52 tokens/s per
+row. Compared with the prior saved chunk-8 3.420 s / 5.982 s, that is a
+historical comparison, not a fresh batch-2 pair.
+
+The uncontended first batch-1 request takes 3.420 s to first token / 5.535 s
+complete after 2.935 s initialization, approximately 6.354 s / 8.470 s including
+initialization. Peak native RSS is 5.47 GiB for batch 1 and 5.70 GiB for the
+isolated batch-2 run; these are process memory measurements. Answer generation
+speed is unchanged. Text-only chunk 16 has not been benchmarked.
+
+Full-size pretrained layer tests pass chunk 16 for batches 1/2, two successive
+chunks, paused/resumed rows, partial tails, invalid controls, all hidden
+outputs and final states at unchanged tolerance. Serving tests pass profile
+switching 2/4/8/16/2 and partial padding. The reference test now uses capacity
+32 to accommodate two 16-token chunks, and retains profiles 2/4/8/16 by default;
+the focused saved reference job executed only chunk 16. Evidence for the
+smaller profiles is retained in the preceding rounds. Raw commands, exit codes
+and parsed timing data for seven successful jobs are in
+`results/20261012/chunk16/`. Reproduce with `image-chunk:1:16` or
+`image-chunk:2:16`. Larger chunks remain unmeasured.
 
 ## Limits and next performance work
 
 The decoder now supports chunked prefill, but it still uses synchronous
 per-layer/chunk graph submission and explicit CPU state copies. Warm image
-prefill with chunk 8 and batched projections is about 1.96 s for 79 prompt tokens and still dominates
+prefill with chunk 16 and batched projections is about 1.75 s for 79 prompt tokens and still dominates
 first-token latency. Captured weights are
 expanded from BF16 into FP32, increasing memory and bandwidth requirements.
 The tied vocabulary head alone occupies approximately 1 GB in FP32.
