@@ -186,3 +186,57 @@ two requests through a loaded model, bounded output, TTFT, per-step/layer/head
 timings and macOS peak runtime RSS. They remain unexecuted until the complete
 pinned checkpoint is available on the Mac. The transfer resumes its partial
 file over the verified ZeroTier route; no system networking changes are needed.
+
+## Native still-image encoder
+
+The `qwen35_vision_encoder` capture now lowers the complete fixed-grid still
+image tower: flattened 3D patch projection and bias, bilinear position-table
+interpolation, mean/variance layer normalization, vision RoPE, noncausal
+multihead softmax attention, residual projections, tanh GELU MLPs, spatial
+merging and erf GELU output projection. Learned operators run on Metal/MPS;
+host preprocessing prepares RGB patches and constant coordinates. MPS row
+padding is respected when flattening and merging token rows. Batch 1/2 and
+equal grids per batch row are supported. This remains synchronous FP32 code.
+
+Actual M4 tests of `MetalImageEncoder` passed four batch/grid combinations:
+batches 1/2 with grids 2x2 and 4x6, each evaluated on two inputs. The fixture
+has two vision blocks, hidden width 16 and BF16 checkpoint weights. The durable
+`logs/vision-serving-20261011` job exited 0; maximum absolute error across
+these cases was 5.37e-7, below the unchanged `5e-6 + 5e-5 * abs(reference)`
+tolerance. The native CTest also passed 1/1 in 0.85 seconds after removal of
+temporary diagnostic output selectors. Fixture timings are not model timings.
+The final file-input suite `logs/vision-file-serving-20261011` also exited 0:
+all eight evaluations used native FP32 file reads and validated per-batch
+visual-token extraction. Its maximum absolute error was 5.96e-7. Both attention
+contractions in this suite use explicit einsum reference calculations.
+The decoder closed-loop batch-1/2 regression job also exited 0 after this
+addition (`logs/model-after-vision-20261011`, eight steps per batch).
+
+The first comparison exposed a reference issue: on this Mac's NumPy 2.3.4,
+strided `prob @ value` disagreed with explicit einsum by 1.528. The identical
+Windows NumPy 2.3.5 fixture agreed within 5.96e-8, and its attention context
+matched GPU output. `reference_metal_vision.py` uses explicit einsum attention
+contractions; model equations and tolerances were retained. The original Pi
+reference was left in place.
+
+`test_pretrained_vision_graph.py` prepares an independent comparison of all
+12 official vision blocks and the merger. `run_image_decoder.py` and
+`benchmark_image.py` prepare two actual image-plus-text requests with both
+models resident, fresh image encoding and decoder reset for each request,
+bounded output, vision/prefill/TTFT/decode timings and peak runtime RSS. They
+have not executed against pretrained weights yet.
+
+The real test image and prepared FP32 patches are on the Mac under `images/`.
+Preprocessing resizes 1818x1372 to 288x192, yielding grid 18x12, 216 patches
+and 54 visual tokens. Mac file hashes match the local originals:
+
+- Image: `eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9`.
+- Batch-1 patches: `1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15`.
+- Batch-2 patches: `bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5`.
+
+`transfer_checkpoint.py` now checks each complete 4 MiB block before append,
+verifies an existing prefix before resuming after a lost acknowledgement, and
+requires the full pinned SHA256 before promoting the partial checkpoint.
+Actual verified appends have progressed beyond 152 MB. The transfer is still
+running; pretrained text/image generation, full-size correctness checks,
+workload memory/performance measurements and optimization remain outstanding.

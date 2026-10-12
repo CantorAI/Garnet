@@ -62,6 +62,9 @@ public:
     void EncodeAttentionContext(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         size_t heads,size_t kvHeads,size_t dim,size_t capacity);
     void SubmitAndWait();
+    // Fixed-grid image operators; projections continue to use MPS matmul.
+    void EncodeVision(unsigned operation,const std::vector<MetalMatrix>& inputs,
+        const MetalMatrix& output,size_t tokens,size_t hidden,size_t heads,size_t mergeUnit);
     void Abort();
     std::vector<float> Download(const MetalMatrix& matrix) const;
     // Initial synchronous FP32 correctness primitive. Not the final scheduler:

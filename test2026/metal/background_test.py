@@ -26,6 +26,14 @@ elif mode=='run':
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
  elif batch=='model':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_decoder_model.py'),runtime,build,source]
+ elif batch=='vision':
+  command=[sys.executable,str(Path(source)/'test2026/metal/test_vision_graph.py'),runtime,build,source]
+ elif batch=='pretrained-vision':
+  command=[sys.executable,str(Path(source)/'test2026/metal/test_pretrained_vision_graph.py'),runtime,build,source,
+      str(Path(source).parent/'models/Qwen3.5-0.8B')]
+ elif batch.startswith('image:'):
+  command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_image.py'),runtime,build,source,
+      str(Path(source).parent/'models/Qwen3.5-0.8B'),str(Path(source).parent/'images'/('RealWorld-04.batch'+batch.split(':')[1]+'.json'))]
  elif batch.startswith('text:'):
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B'),batch.split(':')[1]]

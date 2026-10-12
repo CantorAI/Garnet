@@ -4,6 +4,7 @@ Run with xlang3, followed by native-package directory, source directory,
 model directory, output-token limit, batch size, and optional user prompt.
 """
 import sys,json,time
+started=time.time()
 sys.path.insert(0,sys.argv[1]);sys.path.insert(0,sys.argv[2])
 import garnet
 from xModel.qwen35.vl_0_8b.metal_decoder import MetalDecoder
@@ -16,8 +17,8 @@ if limit<1 or limit>128:raise ValueError('output-token limit must be 1 through 1
 with open(folder+'/config.json') as stream:config=json.load(stream)
 tokenizer=garnet.tokenizer();tokenizer.open(folder)
 tokens=tokenizer.encode('<|im_start|>user\n'+prompt+'<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n')
-stops=[tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
-decoder=None;started=time.time()
+stops=[config['text_config']['eos_token_id'],tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
+decoder=None
 try:
     decoder=MetalDecoder(folder+'/model.safetensors',config['text_config'],batch,len(tokens)+limit)
     initialization=time.time()-started
@@ -46,6 +47,7 @@ try:
             text=[tokenizer.decode(ids) for ids in outputs],token_ids=outputs,
             prompt_tokens=len(tokens),output_tokens=[len(ids) for ids in outputs],finished=[a==0 for a in active],
             initialization_seconds=initialization,ttft_loaded_seconds=ttft,total_loaded_seconds=elapsed,
+            ttft_first_request_seconds=initialization+ttft if request==0 else None,
             decode_step_seconds=durations,decode_layer_ms=layer_durations,decode_head_ms=head_durations,
             decode_steps_per_second=decoded_steps/decode_seconds if decode_seconds>0 else None)),flush=True)
 finally:

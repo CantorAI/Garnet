@@ -15,11 +15,16 @@ size_t MetalCompiledGraph::Allocate(size_t rows,size_t columns) {
 size_t MetalCompiledGraph::Weight(const std::string& name) {
     auto found=weights_.find(name);if(found!=weights_.end())return found->second;
     auto entry=index_.Find(name);
-    if(!entry||entry->shape.empty()||entry->shape.size()>3||
-        (entry->shape.size()==3&&entry->shape[1]!=1))
+    const bool patch=entry&&name=="model.visual.patch_embed.proj.weight"&&entry->shape.size()==5;
+    if(!entry||entry->shape.empty()||(!patch&&(entry->shape.size()>3||
+        (entry->shape.size()==3&&entry->shape[1]!=1))))
         throw std::runtime_error("Metal matrix weight missing/invalid: "+name);
     for(auto dim:entry->shape)if(dim<=0)throw std::runtime_error("Invalid Metal checkpoint dimension");
-    const size_t rows=entry->shape.size()==1?1:entry->shape[0],columns=entry->shape.back();
+    const size_t rows=entry->shape.size()==1?1:entry->shape[0];
+    size_t columns=entry->shape.back();
+    if(patch){columns=1;for(size_t i=1;i<entry->shape.size();++i){
+        if(uint64_t(entry->shape[i])>std::numeric_limits<size_t>::max()/columns)throw std::runtime_error("Metal patch dimension overflow");
+        columns*=entry->shape[i];}}
     if(rows>std::numeric_limits<size_t>::max()/columns || rows*columns>std::numeric_limits<size_t>::max()/4)
         throw std::runtime_error("Metal checkpoint matrix size overflow");
     SafeTensorsMappedFile file;std::string error;
@@ -38,6 +43,83 @@ size_t MetalCompiledGraph::Weight(const std::string& name) {
     const auto id=slots_.size();slots_.push_back({gpu_->Upload(data,rows,columns),rows,columns,
         std::vector<int64_t>(entry->shape.begin(),entry->shape.end())});
     weights_[name]=id;return id;
+}
+size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
+    auto integer=[&](const char* name,size_t limit){auto v=attrs.Get(name).ToInt64();
+        if(v<=0||uint64_t(v)>limit)throw std::runtime_error(std::string("Invalid Metal vision profile: ")+name);return size_t(v);};
+    const auto gh=integer("grid_h",128),gw=integer("grid_w",128),hidden=integer("hidden_size",4096),heads=integer("num_heads",128),
+        depth=integer("depth",64),patch=integer("patch_size",64),temporal=integer("temporal_patch_size",8),channels=integer("in_channels",16),
+        merge=integer("spatial_merge_size",8),positions=integer("num_position_embeddings",65536),outHidden=integer("out_hidden_size",65536);
+    const auto theta=attrs.Get("rope_theta").ToDouble();
+    const size_t n=gh*gw,unit=merge*merge,feature=channels*temporal*patch*patch,side=size_t(std::sqrt(double(positions)));
+    const auto shape=slots_[input].shape;
+    if(gh%merge||gw%merge||hidden%heads||(hidden/heads)%4||side*side!=positions||!(theta>0)||!std::isfinite(theta)||
+       shape.size()!=3||shape[1]!=int64_t(n)||shape[2]!=int64_t(feature))throw std::runtime_error("Metal still-image profile mismatch");
+    const size_t batch=shape[0],dim=hidden/heads;
+    auto constant=[&](const std::vector<float>& values,size_t rows,size_t columns){auto id=slots_.size();
+        slots_.push_back({gpu_->Upload(values,rows,columns),rows,columns,{int64_t(rows),int64_t(columns)}});return id;};
+    auto vision=[&](unsigned mode,size_t a,size_t b,size_t c,size_t rows,size_t columns){
+        auto out=Allocate(rows,columns);Op op{Kind::Vision,a,b,out};op.arguments={a,b,c};op.dimensions={mode,n,hidden,heads,unit};ops_.push_back(std::move(op));return out;};
+    auto project=[&](size_t a,const std::string& prefix){
+        auto w=Weight(prefix+".weight"),bias=Weight(prefix+".bias");
+        if(slots_[w].columns!=slots_[a].columns||slots_[bias].rows!=1||slots_[bias].columns!=slots_[w].rows)
+            throw std::runtime_error("Metal vision projection checkpoint mismatch: "+prefix);
+        auto product=Allocate(slots_[a].rows,slots_[w].rows);ops_.push_back({Kind::MatMul,a,w,product,0,0,true});
+        return vision(0,product,bias,bias,slots_[product].rows,slots_[product].columns);
+    };
+    auto norm=[&](size_t a,const std::string& prefix){auto w=Weight(prefix+".weight"),bias=Weight(prefix+".bias");
+        if(slots_[w].rows!=1||slots_[bias].rows!=1||slots_[w].columns!=slots_[a].columns||slots_[bias].columns!=slots_[a].columns)
+            throw std::runtime_error("Metal vision norm checkpoint mismatch");
+        return vision(1,a,w,bias,slots_[a].rows,slots_[a].columns);};
+    auto add=[&](size_t a,size_t b){if(slots_[a].rows!=slots_[b].rows||slots_[a].columns!=slots_[b].columns)
+        throw std::runtime_error("Metal vision residual dimensions mismatch");
+        auto out=Allocate(slots_[a].rows,slots_[a].columns);ops_.push_back({Kind::Add,a,b,out});return out;};
+    // Flatten only input batch/token rows; the copy respects native row padding.
+    auto flat=vision(9,input,input,input,batch*n,feature);
+    auto patchWeight=Weight("model.visual.patch_embed.proj.weight");
+    const std::vector<int64_t> patchShape={int64_t(hidden),int64_t(channels),int64_t(temporal),int64_t(patch),int64_t(patch)};
+    if(slots_[patchWeight].shape!=patchShape)throw std::runtime_error("Metal vision patch weight shape mismatch");
+    auto x=project(flat,"model.visual.patch_embed.proj");
+    if(slots_[x].columns!=hidden)throw std::runtime_error("Metal vision patch hidden size mismatch");
+    auto table=Weight("model.visual.pos_embed.weight");
+    if(slots_[table].rows!=positions||slots_[table].columns!=hidden)throw std::runtime_error("Metal vision position table mismatch");
+    std::vector<float> interpolation,angles;
+    interpolation.reserve(n*8);angles.reserve(n*dim);
+    for(size_t bh=0;bh<gh;bh+=merge)for(size_t bw=0;bw<gw;bw+=merge)
+      for(size_t ih=0;ih<merge;++ih)for(size_t iw=0;iw<merge;++iw){
+        const size_t h=bh+ih,w=bw+iw;
+        const float ph=gh>1?float(h)*float(side-1)/float(gh-1):0,pw=gw>1?float(w)*float(side-1)/float(gw-1):0;
+        const size_t h0=size_t(ph),w0=size_t(pw),h1=std::min(h0+1,side-1),w1=std::min(w0+1,side-1);
+        const float dh=ph-h0,dw=pw-w0;
+        interpolation.insert(interpolation.end(),{float(h0*side+w0),float(h0*side+w1),float(h1*side+w0),float(h1*side+w1),
+            (1-dh)*(1-dw),(1-dh)*dw,dh*(1-dw),dh*dw});
+        for(size_t repeat=0;repeat<2;++repeat)for(size_t axis=0;axis<2;++axis)for(size_t d=0;d<dim/4;++d)
+            angles.push_back(float(double(axis?w:h)*std::pow(theta,-double(2*d)/double(dim/2))));
+      }
+    const auto metadata=constant(interpolation,n,8),rope=constant(angles,n,dim);
+    x=vision(5,x,table,metadata,batch*n,hidden);
+    for(size_t layer=0;layer<depth;++layer){
+        auto prefix="model.visual.blocks."+std::to_string(layer);
+        auto qkv=project(norm(x,prefix+".norm1"),prefix+".attn.qkv");
+        if(slots_[qkv].columns!=3*hidden)throw std::runtime_error("Metal vision QKV shape mismatch");
+        auto rotated=vision(6,qkv,rope,rope,batch*n,3*hidden);
+        auto probability=vision(7,rotated,rotated,rotated,batch*n,heads*n);
+        auto context=vision(8,probability,rotated,rotated,batch*n,hidden);
+        x=add(x,project(context,prefix+".attn.proj"));
+        auto intermediate=project(norm(x,prefix+".norm2"),prefix+".mlp.linear_fc1");
+        auto activated=vision(2,intermediate,intermediate,intermediate,slots_[intermediate].rows,slots_[intermediate].columns);
+        x=add(x,project(activated,prefix+".mlp.linear_fc2"));
+    }
+    x=norm(x,"model.visual.merger.norm");
+    x=vision(4,x,x,x,batch*n/unit,hidden*unit);
+    auto fc=project(x,"model.visual.merger.linear_fc1");
+    x=vision(3,fc,fc,fc,slots_[fc].rows,slots_[fc].columns);
+    x=project(x,"model.visual.merger.linear_fc2");
+    if(slots_[x].columns!=outHidden)throw std::runtime_error("Metal vision merger output width mismatch");
+    auto output=vision(4,x,x,x,batch,n/unit*outHidden);
+    ops_.back().dimensions[4]=n/unit;
+    slots_[output].shape={int64_t(batch),int64_t(n/unit),int64_t(outHidden)};
+    return output;
 }
 void MetalCompiledGraph::Clear() {
     ready_=false;ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();bindings_.clear();slots_.clear();gpu_.reset();
@@ -119,7 +201,9 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 ops_.push_back({mask?Kind::Mask:Kind::Add,a,b,out});
                 tensors_[TensorId(node.output)]=out;continue;
             }
-            if(node.name=="qwen35_attention_step") {
+            if(node.name=="qwen35_vision_encoder") {
+                out=LowerVision(a,node.attributes);
+            }else if(node.name=="qwen35_attention_step") {
                 auto integer=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
                     if(v<=0||uint64_t(v)>limit)throw std::runtime_error(std::string("Invalid Metal attention dimension: ")+name);
                     return size_t(v);};
@@ -381,6 +465,9 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
             }else if(op.kind==Kind::Scores) {
                 auto& args=op.arguments;gpu_->EncodeAttentionScores(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                     slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
+            }else if(op.kind==Kind::Vision) {
+                std::vector<MetalMatrix> args;for(auto id:op.arguments)args.push_back(slots_[id].matrix);
+                gpu_->EncodeVision(op.dimensions[0],args,out,op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
             }else if(op.kind==Kind::AttentionContext) {
                 auto& args=op.arguments;gpu_->EncodeAttentionContext(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                     out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);

@@ -8,12 +8,16 @@ namespace Garnet {
 class GarnetMetalAPI {
 public:
     std::string BackendInfo() const {return "Garnet Metal/MPS "+MetalContext::AvailableDeviceName();}
+    // Graphs own synchronous queues and release them through close(). There
+    // is no package-global executor to drain, unlike asynchronous backends.
+    bool Shutdown() const {return true;}
     BEGIN_PACKAGE(GarnetMetalAPI)
         APISET().AddClass<0,GarnetTensor>("tensor");
         APISET().AddClass<0,MetalCompiledGraph>("compiled_graph");
         APISET().AddClass<0,ModelTensorIO>("tensor_io");
         APISET().AddClass<0,CPUTokenizer>("tokenizer");
         APISET().AddFunc<0>("backend_info",&GarnetMetalAPI::BackendInfo);
+        APISET().AddFunc<0>("shutdown",&GarnetMetalAPI::Shutdown);
     END_PACKAGE
 };
 }

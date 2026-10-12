@@ -1,4 +1,4 @@
-# Native backend foundation; Qwen graph integration is a separate milestone.
+# Native MPS kernels, with optional captured Qwen xModel package integration.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_OBJCXX_STANDARD 17)

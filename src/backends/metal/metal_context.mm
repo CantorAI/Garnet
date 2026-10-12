@@ -31,6 +31,7 @@ struct MetalContext::Impl {
     id<MTLComputePipelineState> gatedNorm;
     id<MTLComputePipelineState> concat;
     id<MTLComputePipelineState> normRope,kvUpdate,scores,attentionContext;
+    id<MTLComputePipelineState> vision;
 };
 static size_t Elements(size_t rows, size_t columns) {
     if (!rows || !columns || rows > std::numeric_limits<size_t>::max()/columns ||
@@ -243,6 +244,63 @@ kernel void gated_delta(device const float* query [[buffer(0)]],device const flo
     }
     packed[outputBase+column]=result;
 }
+struct VisionParams {ulong rows,columns,outRows,outColumns,aStride,bStride,cStride,oStride,tokens,hidden,heads,unit,mode;};
+// Input/output matrices contain flattened batch/token rows. The merger copies
+// across padded MPS row boundaries explicitly rather than aliasing row strides.
+kernel void vision_op(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+    device const float* c [[buffer(2)]],device float* out [[buffer(3)]],
+    constant VisionParams& p [[buffer(4)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.outRows*p.outColumns)return;
+    ulong row=id/p.outColumns,col=id%p.outColumns;
+    if(p.mode==0){out[row*p.oStride+col]=a[row*p.aStride+col]+b[col];return;}
+    if(p.mode==1){
+        float mean=0;for(ulong j=0;j<p.columns;++j)mean+=a[row*p.aStride+j];mean/=float(p.columns);
+        float variance=0;for(ulong j=0;j<p.columns;++j){float x=a[row*p.aStride+j]-mean;variance+=x*x;}
+        out[row*p.oStride+col]=(a[row*p.aStride+col]-mean)*rsqrt(variance/float(p.columns)+1e-6f)*b[col]+c[col];return;
+    }
+    if(p.mode==2||p.mode==3){
+        float x=a[row*p.aStride+col],activation;
+        if(p.mode==2)activation=tanh(0.7978845608028654f*(x+0.044715f*x*x*x));
+        else {
+            // Abramowitz-Stegun erf approximation (absolute error < 1.5e-7).
+            float z=abs(x)*0.7071067811865475f,t=1.0f/(1.0f+0.3275911f*z);
+            float v=1.0f-(((((1.061405429f*t-1.453152027f)*t)+1.421413741f)*t-0.284496736f)*t+0.254829592f)*t*exp(-z*z);
+            activation=x<0?-v:v;
+        }
+        out[row*p.oStride+col]=0.5f*x*(1.0f+activation);return;
+    }
+    if(p.mode==4){out[row*p.oStride+col]=a[(row*p.unit+col/p.columns)*p.aStride+col%p.columns];return;}
+    if(p.mode==9){out[row*p.oStride+col]=a[(row/p.tokens)*p.aStride+(row%p.tokens)*p.outColumns+col];return;}
+    if(p.mode==5){
+        ulong token=row%p.tokens;float position=0;
+        for(ulong i=0;i<4;++i)position+=b[ulong(c[token*p.cStride+i])*p.bStride+col]*c[token*p.cStride+4+i];
+        out[row*p.oStride+col]=a[row*p.aStride+col]+position;return;
+    }
+    ulong dim=p.hidden/p.heads;
+    if(p.mode==6){
+        if(col>=2*p.hidden){out[row*p.oStride+col]=a[row*p.aStride+col];return;}
+        ulong d=col%dim,base=col-d,other=(d+dim/2)%dim;
+        float angle=b[(row%p.tokens)*p.bStride+d];
+        out[row*p.oStride+col]=a[row*p.aStride+col]*cos(angle)+(d<dim/2?-1.0f:1.0f)*a[row*p.aStride+base+other]*sin(angle);return;
+    }
+    if(p.mode==7){
+        // One thread handles a whole softmax row; dispatch grid includes
+        // columns, but only its first column performs the reduction.
+        if(col%p.tokens)return;
+        ulong head=col/p.tokens,batchBase=(row/p.tokens)*p.tokens;float maximum=-INFINITY;
+        for(ulong key=0;key<p.tokens;++key){
+            float score=0;for(ulong d=0;d<dim;++d)score+=a[row*p.aStride+head*dim+d]*a[(batchBase+key)*p.aStride+p.hidden+head*dim+d];
+            score*=rsqrt(float(dim));out[row*p.oStride+head*p.tokens+key]=score;maximum=max(maximum,score);
+        }
+        float total=0;for(ulong key=0;key<p.tokens;++key){float v=exp(out[row*p.oStride+head*p.tokens+key]-maximum);out[row*p.oStride+head*p.tokens+key]=v;total+=v;}
+        for(ulong key=0;key<p.tokens;++key)out[row*p.oStride+head*p.tokens+key]/=total;return;
+    }
+    if(p.mode==8){
+        ulong head=col/dim,d=col%dim,batchBase=(row/p.tokens)*p.tokens;float result=0;
+        for(ulong key=0;key<p.tokens;++key)result+=a[row*p.aStride+head*p.tokens+key]*b[(batchBase+key)*p.bStride+2*p.hidden+head*dim+d];
+        out[row*p.oStride+col]=result;
+    }
+}
 )METAL"];
         NSError* error=nil;
         auto library=[impl_->device newLibraryWithSource:source options:nil error:&error];
@@ -261,8 +319,9 @@ kernel void gated_delta(device const float* query [[buffer(0)]],device const flo
         impl_->kvUpdate=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_update"] error:&error];
         impl_->scores=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_scores"] error:&error];
         impl_->attentionContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_context"] error:&error];
+        impl_->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
         if(!impl_->rms||!impl_->silu||!impl_->add||!impl_->mask||!impl_->conv||!impl_->delta||!impl_->slice||
-            !impl_->prepare||!impl_->gatedNorm||!impl_->concat||!impl_->normRope||!impl_->kvUpdate||!impl_->scores||!impl_->attentionContext)
+            !impl_->prepare||!impl_->gatedNorm||!impl_->concat||!impl_->normRope||!impl_->kvUpdate||!impl_->scores||!impl_->attentionContext||!impl_->vision)
             throw std::runtime_error("Cannot create Qwen Metal pipelines");
     }
 }
@@ -402,9 +461,9 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
             throw std::logic_error("Uninitialized Metal state kernel input");
         if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
     }
-    if(operation>9)throw std::invalid_argument("Unknown Metal state kernel");
+    if(operation>10)throw std::invalid_argument("Unknown Metal state kernel");
     id<MTLComputePipelineState> pipelines[]={impl_->conv,impl_->delta,impl_->slice,impl_->prepare,impl_->gatedNorm,
-        impl_->concat,impl_->normRope,impl_->kvUpdate,impl_->scores,impl_->attentionContext};
+        impl_->concat,impl_->normRope,impl_->kvUpdate,impl_->scores,impl_->attentionContext,impl_->vision};
     auto pipeline=pipelines[operation];
     auto encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal state kernel encoder");
@@ -416,6 +475,31 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(pipeline.maxTotalThreadsPerThreadgroup)),1,1)];
     [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;impl_->outputs.push_back(output.impl_);
     }
+}
+void MetalContext::EncodeVision(unsigned operation,const std::vector<MetalMatrix>& inputs,
+    const MetalMatrix& output,size_t tokens,size_t hidden,size_t heads,size_t mergeUnit) {
+    if(inputs.size()!=3||operation>9||!output.impl_||!tokens||!hidden||!heads||hidden%heads||!mergeUnit)
+        throw std::invalid_argument("Invalid Metal vision dispatch");
+    for(auto& input:inputs)if(!input.impl_)throw std::invalid_argument("Missing Metal vision input");
+    auto a=inputs[0].impl_->matrix,b=inputs[1].impl_->matrix,c=inputs[2].impl_->matrix,o=output.impl_->matrix;
+    const bool same=a.rows==o.rows&&a.columns==o.columns;
+    bool valid=false;
+    switch(operation) {
+    case 0:valid=same&&b.rows==1&&b.columns==a.columns;break;
+    case 1:valid=same&&b.rows==1&&c.rows==1&&b.columns==a.columns&&c.columns==a.columns;break;
+    case 2:case 3:valid=same;break;
+    case 4:valid=a.rows==o.rows*mergeUnit&&o.columns==a.columns*mergeUnit;break;
+    case 5:valid=same&&a.rows%tokens==0&&b.columns==a.columns&&c.rows==tokens&&c.columns==8;break;
+    case 6:valid=same&&a.rows%tokens==0&&a.columns==3*hidden&&b.rows==tokens&&b.columns==hidden/heads&&(hidden/heads)%4==0;break;
+    case 7:valid=a.rows==o.rows&&a.rows%tokens==0&&a.columns==3*hidden&&o.columns==heads*tokens;break;
+    case 8:valid=a.rows==o.rows&&a.rows==b.rows&&a.rows%tokens==0&&a.columns==heads*tokens&&b.columns==3*hidden&&o.columns==hidden;break;
+    case 9:valid=a.rows*tokens==o.rows&&a.columns==o.columns*tokens;break;
+    }
+    if(!valid)throw std::invalid_argument("Metal vision matrix dimensions mismatch");
+    // Positional indices are graph-owned constants validated during lowering.
+    struct Params {uint64_t rows,columns,outRows,outColumns,aStride,bStride,cStride,oStride,tokens,hidden,heads,unit,mode;};
+    Params p{a.rows,a.columns,o.rows,o.columns,a.rowBytes/4,b.rowBytes/4,c.rowBytes/4,o.rowBytes/4,tokens,hidden,heads,mergeUnit,operation};
+    EncodeStateKernel(10,inputs,output,&p,sizeof(p),Elements(o.rows,o.columns));
 }
 void MetalContext::EncodeCausalConv(const MetalMatrix& token,const MetalMatrix& weight,
     const MetalMatrix& state,const MetalMatrix& active,const MetalMatrix& packed,size_t kernel) {
