@@ -3646,3 +3646,8 @@ With `df` supplying free-space data and the system `flock` guard in place, the O
 ### OPT238 cache inventory guard omitted its hash-key directory
 
 The OPT237 profile-recovery preflight reached the candidate cache inventory and safely stopped because my expected engine paths omitted the cache's hash-key directory `dfe3a1c89f2f7ef966e27051/`. The observed cache contained exactly the four expected prefill/decode `model.engine` files under that prefix; no engine load started, and both GPUs remained at15MiB with no compute applications. Preserve the run status. Add the observed cache-key prefix to the exact path guard, then retry the same single decode-pair profile recovery; do not rebuild or alter the cache.
+
+
+### OPT239 engine-log parser did not account for the cache hash prefix
+
+The OPT238 attempt passed target and cache inventory checks, then rejected the first preserved engine record because the parser expected `prefill/` at the beginning of the cache-relative path. Actual records include `dfe3a1c89f2f7ef966e27051/` first. The helper stopped while parsing the old log, before the new decode load; both GPUs stayed at15MiB and compute-apps remained empty. Preserve the result and change only phase detection to recognize `/prefill/` or `/decode/` anywhere in the already cache-bounded relative path, while retaining the exact full path, rank, engine hash, and duplicate-record checks.
