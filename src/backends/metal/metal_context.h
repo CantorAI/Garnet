@@ -52,6 +52,14 @@ public:
     void EncodeGatedNorm(const MetalMatrix& core,const MetalMatrix& z,const MetalMatrix& norm,
         const MetalMatrix& output,size_t heads,size_t valueDim,float epsilon);
     void EncodeConcat(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,bool includeThird=true);
+    void EncodeNormRope(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
+        const MetalMatrix&,size_t heads,size_t dim,size_t rotary,float epsilon);
+    void EncodeKVUpdate(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
+        const MetalMatrix&,size_t kvHeads,size_t dim,size_t capacity);
+    void EncodeAttentionScores(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
+        const MetalMatrix&,size_t heads,size_t kvHeads,size_t dim,size_t capacity);
+    void EncodeAttentionContext(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
+        size_t heads,size_t kvHeads,size_t dim,size_t capacity);
     void SubmitAndWait();
     void Abort();
     std::vector<float> Download(const MetalMatrix& matrix) const;

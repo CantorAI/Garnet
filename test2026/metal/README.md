@@ -121,3 +121,39 @@ and transfer through the local investigation workspace is underway.
 Next: verify full-size pretrained linear layers, implement full attention/RoPE/KV
 updates and vision encoding, then run actual text/image inference and profile
 latency, memory and throughput before optimizing the complete workload.
+
+## Full attention implementation
+
+Captured full-attention and decoder programs now lower Q/K/V and output
+projections, per-head RMS normalization, partial/interleaved THW RoPE, explicit
+KV updates, grouped-query attention, stable masked softmax and sigmoid output
+gating to Metal/MPS. Cache unpack and decoder hidden replacement reuse the
+GPU grouped-slice/concat operations. Active slots and finite RoPE positions are
+validated before GPU dispatch; an inactive row preserves both KV caches.
+Allocations exceeding the device's maximum buffer length are rejected.
+
+The new independent NumPy test exercises 32 cases: attention/decoder, batches
+1/2, partial/full RoPE, and packed/hidden/key/value output modes, each with seven
+steps and inactive/resumed rows. Invalid active cache slots must also be rejected.
+All 32 cases passed on the actual M4, and the durable suite exit code was 0.
+The actual native CTest passed 1/1 in 3.28 seconds after fixing a Metal type-name
+collision. The full suite's durable logs are under `logs/attention-20261011` on
+the Mac. No full-size pretrained result is established by these fixtures.
+
+```sh
+/opt/homebrew/bin/python3 source/test2026/metal/test_attention_graph.py \
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3 \
+  /Users/zsdx/garnet-metal-investigation/build \
+  /Users/zsdx/garnet-metal-investigation/source
+```
+
+The Pi-to-PC checkpoint copy completed: 1,746,942,600 bytes, SHA256
+`04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696`.
+The resumable upload to the isolated Mac model folder remains incomplete.
+Mac DNS queries failed and a direct IPv4 HTTPS probe reset; system networking
+settings were not changed. `test_pretrained_graph.py` prepares complete layer-0
+linear and layer-3 full decoder tests from the official checkpoint using mapped
+weight reads, four steps, batches 1/2 and child peak RSS reporting.
+
+Full text generation, vision encoding, actual image inference and workload
+performance measurements/optimization remain required.

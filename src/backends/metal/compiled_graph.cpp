@@ -90,10 +90,12 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
             auto a=lookup(node.inputs[0]);size_t out;
             if(node.operandCount==2) {
                 auto b=lookup(node.inputs[1]);
-                if(node.name.rfind("qwen35_conv_bind_",0)==0||node.name.rfind("qwen35_delta_bind_",0)==0) {
+                if(node.name.rfind("qwen35_conv_bind_",0)==0||node.name.rfind("qwen35_delta_bind_",0)==0||node.name.rfind("qwen35_attention_bind_",0)==0) {
                     static const std::vector<std::string> allowed={"qwen35_conv_bind_weight","qwen35_conv_bind_state",
                         "qwen35_conv_bind_active","qwen35_delta_bind_key","qwen35_delta_bind_value",
-                        "qwen35_delta_bind_decay","qwen35_delta_bind_beta","qwen35_delta_bind_state","qwen35_delta_bind_active"};
+                        "qwen35_delta_bind_decay","qwen35_delta_bind_beta","qwen35_delta_bind_state","qwen35_delta_bind_active",
+                        "qwen35_attention_bind_key","qwen35_attention_bind_value","qwen35_attention_bind_positions",
+                        "qwen35_attention_bind_slots","qwen35_attention_bind_active"};
                     if(std::find(allowed.begin(),allowed.end(),node.name)==allowed.end())
                         throw std::runtime_error("Unknown Metal attention binding: "+node.name);
                     auto bound=bindings_[TensorId(node.inputs[0])];bound[node.name]=b;
@@ -117,7 +119,71 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 ops_.push_back({mask?Kind::Mask:Kind::Add,a,b,out});
                 tensors_[TensorId(node.output)]=out;continue;
             }
-            if(node.name=="qwen35_linear_step") {
+            if(node.name=="qwen35_attention_step") {
+                auto integer=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
+                    if(v<=0||uint64_t(v)>limit)throw std::runtime_error(std::string("Invalid Metal attention dimension: ")+name);
+                    return size_t(v);};
+                const auto heads=integer("num_heads",128),kv=integer("num_kv_heads",128),dim=integer("head_dim",4096),rotary=integer("rotary_dim",4096);
+                const auto theta=node.attributes.Get("rope_theta").ToDouble(),epsilon=node.attributes.Get("eps").ToDouble();
+                auto t=node.attributes.Get("mrope_t").ToInt64(),h=node.attributes.Get("mrope_h").ToInt64(),w=node.attributes.Get("mrope_w").ToInt64();
+                if(heads%kv||rotary%2||rotary>dim||t<0||h<0||w<0||t>int64_t(rotary/2)||h>int64_t(rotary/2)||w>int64_t(rotary/2)||
+                    uint64_t(t+h+w)!=rotary/2||!(theta>0)||!std::isfinite(theta)||!(epsilon>0)||!std::isfinite(float(epsilon)))
+                    throw std::runtime_error("Metal attention RoPE configuration invalid");
+                const auto bound=bindings_[TensorId(node.inputs[0])];
+                auto require=[&](const char* name){auto it=bound.find(name);
+                    if(it==bound.end())throw std::runtime_error(std::string("Metal attention missing binding: ")+name);
+                    return it->second;};
+                auto key=require("qwen35_attention_bind_key"),value=require("qwen35_attention_bind_value"),positions=require("qwen35_attention_bind_positions"),
+                    slot=require("qwen35_attention_bind_slots"),active=require("qwen35_attention_bind_active");
+                const auto hs=slots_[a].shape,cs=slots_[key].shape;
+                if(hs.size()!=2||cs.size()!=4||cs[0]!=hs[0]||uint64_t(cs[1])!=kv||cs[2]<=0||cs[2]>8192||uint64_t(cs[3])!=dim||
+                    slots_[value].shape!=cs||slots_[positions].shape!=std::vector<int64_t>{hs[0],3}||
+                    slots_[slot].shape!=std::vector<int64_t>{hs[0]}||slots_[active].shape!=slots_[slot].shape)
+                    throw std::runtime_error("Metal full attention state shapes invalid");
+                // Control tensors must be explicit host inputs for pre-dispatch bounds checks.
+                for(auto control:{positions,slot,active})if(std::find(inputs_.begin(),inputs_.end(),control)==inputs_.end())
+                    throw std::runtime_error("Metal attention control tensors must be graph inputs");
+                const size_t batch=hs[0],capacity=cs[2],cacheWidth=kv*capacity*dim;
+                auto prefix=node.attributes.Get("weight_prefix").ToString();
+                auto qg=matmul(a,Weight(prefix+".q_proj.weight")),kp=matmul(a,Weight(prefix+".k_proj.weight")),vp=matmul(a,Weight(prefix+".v_proj.weight"));
+                auto qw=Weight(prefix+".q_norm.weight"),kw=Weight(prefix+".k_norm.weight");
+                if(slots_[qg].columns!=2*heads*dim||slots_[kp].columns!=kv*dim||slots_[vp].columns!=kv*dim||
+                    slots_[qw].rows!=1||slots_[qw].columns!=dim||slots_[kw].rows!=1||slots_[kw].columns!=dim)
+                    throw std::runtime_error("Metal full attention checkpoint dimensions mismatch");
+                auto q=slice(qg,heads,2*dim,0,dim),gate=slice(qg,heads,2*dim,dim,dim);
+                std::vector<float> frequencies(rotary);
+                for(size_t i=0;i<rotary/2;++i) {
+                    frequencies[i]=float(std::pow(theta,-2.0*double(i)/double(rotary)));
+                    frequencies[rotary/2+i]=(i%3==1&&i<size_t(h)*3)?1.0f:((i%3==2&&i<size_t(w)*3)?2.0f:0.0f);
+                }
+                auto freq=slots_.size();slots_.push_back({gpu_->Upload(frequencies,2,rotary/2),2,rotary/2,{2,int64_t(rotary/2)}});
+                auto qr=Allocate(batch,heads*dim),kr=Allocate(batch,kv*dim);
+                Op qrope{Kind::NormRope,q,qw,qr,float(epsilon)};qrope.arguments={q,qw,positions,freq};qrope.dimensions={heads,dim,rotary};ops_.push_back(std::move(qrope));
+                Op krope{Kind::NormRope,kp,kw,kr,float(epsilon)};krope.arguments={kp,kw,positions,freq};krope.dimensions={kv,dim,rotary};ops_.push_back(std::move(krope));
+                auto nextKey=Allocate(batch,cacheWidth),nextValue=Allocate(batch,cacheWidth);
+                for(auto pair:{std::make_pair(kr,std::make_pair(key,nextKey)),std::make_pair(vp,std::make_pair(value,nextValue))}) {
+                    Op update{Kind::KVUpdate,pair.first,pair.second.first,pair.second.second};
+                    update.arguments={pair.first,pair.second.first,slot,active,positions};update.dimensions={kv,dim,capacity};ops_.push_back(std::move(update));
+                }
+                auto probabilities=Allocate(batch,heads*capacity);
+                Op scores{Kind::Scores,qr,nextKey,probabilities};scores.arguments={qr,nextKey,slot,active};scores.dimensions={heads,kv,dim,capacity};ops_.push_back(std::move(scores));
+                auto context=Allocate(batch,heads*dim);
+                Op attend{Kind::AttentionContext,probabilities,nextValue,context};attend.arguments={probabilities,nextValue,gate};attend.dimensions={heads,kv,dim,capacity};ops_.push_back(std::move(attend));
+                auto hidden=matmul(context,Weight(prefix+".o_proj.weight"));
+                if(slots_[hidden].columns!=uint64_t(hs[1]))throw std::runtime_error("Metal attention output projection shape mismatch");
+                out=Allocate(batch,size_t(hs[1])+2*cacheWidth);
+                Op pack{Kind::Concat,hidden,nextKey,out};pack.arguments={hidden,nextKey,nextValue};pack.transpose=true;ops_.push_back(std::move(pack));
+            }else if(node.name=="qwen35_attention_output"||node.name=="qwen35_attention_key_cache"||node.name=="qwen35_attention_value_cache") {
+                auto dimension=[&](const char* name,size_t limit){auto n=node.attributes.Get(name).ToInt64();
+                    if(n<=0||uint64_t(n)>limit)throw std::runtime_error("Invalid Metal attention unpack dimension");
+                    return size_t(n);};
+                auto hidden=dimension("hidden_dim",65536),kv=dimension("num_kv_heads",128),dim=dimension("head_dim",4096),capacity=dimension("capacity",8192);
+                const size_t cache=kv*dim*capacity,width=hidden+2*cache;const auto batch=int64_t(slots_[a].rows);
+                if(slots_[a].columns!=width)throw std::runtime_error("Metal attention packed shape mismatch");
+                if(node.name=="qwen35_attention_output")out=slice(a,1,width,0,hidden,{batch,int64_t(hidden)});
+                else out=slice(a,1,width,hidden+(node.name=="qwen35_attention_value_cache"?cache:0),cache,
+                    {batch,int64_t(kv),int64_t(capacity),int64_t(dim)});
+            }else if(node.name=="qwen35_linear_step") {
                 auto integer=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
                     if(v<=0||uint64_t(v)>limit)throw std::runtime_error(std::string("Invalid Metal linear dimension: ")+name);
                     return size_t(v);};
@@ -261,13 +327,26 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
     if(!ready_||inputs.runtime()!=Host()->runtime||!inputs.IsList()||inputs.Size()!=inputs_.size())
         throw std::runtime_error("Metal graph not ready or input count invalid");
     auto start=std::chrono::steady_clock::now();
+    std::unordered_map<size_t,std::vector<float>> hostInputs;
     for(size_t i=0;i<inputs_.size();++i) {
         X::Tensor tensor(inputs.Get(i));auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
         if(info.symbolic||info.device_type!=0||info.dtype!=X3_TENSOR_FLOAT32||info.rank!=inputShapes_[i].size()||
             !std::equal(inputShapes_[i].begin(),inputShapes_[i].end(),info.shape)||!info.data||!IsContiguousTensor(tensor))
             throw std::runtime_error("Metal runtime input shape/storage mismatch");
         auto lease=tensor.Acquire();auto data=static_cast<const float*>(info.data);
-        slot.matrix=gpu_->Upload(std::vector<float>(data,data+slot.rows*slot.columns),slot.rows,slot.columns);
+        hostInputs[inputs_[i]]=std::vector<float>(data,data+slot.rows*slot.columns);
+        slot.matrix=gpu_->Upload(hostInputs[inputs_[i]],slot.rows,slot.columns);
+    }
+    for(const auto& op:ops_)if(op.kind==Kind::KVUpdate) {
+        const auto& positions=hostInputs.at(op.arguments[4]);const auto& slots=hostInputs.at(op.arguments[2]);
+        const auto& active=hostInputs.at(op.arguments[3]);
+        for(size_t row=0;row<active.size();++row) {
+            if(!std::isfinite(active[row])||(active[row]!=0&&active[row]!=1)||!std::isfinite(slots[row])||slots[row]<0||
+                std::floor(slots[row])!=slots[row]||(active[row]!=0&&slots[row]>=op.dimensions[2]))
+                throw std::runtime_error("Metal attention active row/slot invalid");
+            for(size_t axis=0;axis<3;++axis)if(!std::isfinite(positions[row*3+axis]))
+                throw std::runtime_error("Metal RoPE position must be finite");
+        }
     }
     gpu_->Begin();
     try {
@@ -293,6 +372,18 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
                     out,op.dimensions[0],op.dimensions[1],op.epsilon);
             }else if(op.kind==Kind::Concat) {
                 auto& args=op.arguments;gpu_->EncodeConcat(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,out,op.transpose);
+            }else if(op.kind==Kind::NormRope) {
+                auto& args=op.arguments;gpu_->EncodeNormRope(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                    slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.epsilon);
+            }else if(op.kind==Kind::KVUpdate) {
+                auto& args=op.arguments;gpu_->EncodeKVUpdate(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                    slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2]);
+            }else if(op.kind==Kind::Scores) {
+                auto& args=op.arguments;gpu_->EncodeAttentionScores(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                    slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
+            }else if(op.kind==Kind::AttentionContext) {
+                auto& args=op.arguments;gpu_->EncodeAttentionContext(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                    out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
             }else {
                 gpu_->EncodeSliceGroups(a,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
             }
