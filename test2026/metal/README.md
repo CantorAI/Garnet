@@ -240,3 +240,30 @@ requires the full pinned SHA256 before promoting the partial checkpoint.
 Actual verified appends have progressed beyond 152 MB. The transfer is still
 running; pretrained text/image generation, full-size correctness checks,
 workload memory/performance measurements and optimization remain outstanding.
+
+## Whole serving-path fixture and direct checkpoint source
+
+The combined vision-to-decoder test passed on the actual M4 for batches 1/2
+(`logs/image-pipeline-20261011`, exit 0). Each batch evaluates two different
+images through two vision blocks, a linear decoder block, a full-attention
+decoder block and the tied GPU vocabulary head. Both requests run 14 steps;
+predictions and all recurrent/KV states match independent NumPy references
+within the original tolerance. The second request resets state while retaining
+weights; batch 2 also pauses/resumes a row. This is a small BF16 integration
+fixture, not a pretrained caption or a full-model benchmark.
+
+The SSH transfer gained lossless block compression and durable JSONL logs
+under local `work/logs/checkpoint-transfer.jsonl`. A representative 16 MiB
+block compressed to 13,441,235 bytes in 0.684 seconds. Compressed 4 MiB
+blocks were received/verified on the Mac. The uploader was deliberately
+stopped at a verified prefix after a faster direct source was found.
+
+The official ModelScope file listing advertises the exact pinned checkpoint
+size and SHA256. A direct Mac 1 MiB range probe succeeded at 1,474,454 bytes/s;
+its SHA256 `667d46579c60b536482da00c4cef612400f9f51af95f93f513021e2e6109c88a`
+matches the same prefix of the locally verified checkpoint. The background
+job `logs/modelscope-download-20261011` uses `download_modelscope_checkpoint.py`
+to resume the existing partial file, verify the full SHA256 before promotion,
+and verify config/tokenizer/preprocessor files individually. No system
+network settings were changed. Pretrained validation and benchmarks follow
+only after that job finishes successfully.

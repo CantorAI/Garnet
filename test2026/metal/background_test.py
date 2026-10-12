@@ -18,6 +18,9 @@ elif mode=='run':
  if batch=='download':
   command=[sys.executable,str(Path(source)/'test2026/pi5b/download_full_checkpoint.py'),
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
+ elif batch=='modelscope-download':
+  command=[sys.executable,str(Path(source)/'test2026/metal/download_modelscope_checkpoint.py'),
+      str(Path(source).parent/'models/Qwen3.5-0.8B')]
  elif batch.startswith('attention'):
   command=[sys.executable,str(Path(source)/'test2026/metal/test_attention_graph.py'),runtime,build,source]
   if ':' in batch:command.append(batch.split(':')[1])
@@ -26,6 +29,8 @@ elif mode=='run':
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
  elif batch=='model':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_decoder_model.py'),runtime,build,source]
+ elif batch=='pipeline':
+  command=[sys.executable,str(Path(source)/'test2026/metal/test_image_pipeline.py'),runtime,build,source]
  elif batch=='vision':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_vision_graph.py'),runtime,build,source]
  elif batch=='pretrained-vision':
