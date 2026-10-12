@@ -5107,3 +5107,8 @@ The OPT237 profile-recovery preflight reached the candidate cache inventory and 
 ### OPT239 engine-log parser did not account for the cache hash prefix
 
 The OPT238 attempt passed target and cache inventory checks, then rejected the first preserved engine record because the parser expected `prefill/` at the beginning of the cache-relative path. Actual records include `dfe3a1c89f2f7ef966e27051/` first. The helper stopped while parsing the old log, before the new decode load; both GPUs stayed at15MiB and compute-apps remained empty. Preserve the result and change only phase detection to recognize `/prefill/` or `/decode/` anywhere in the already cache-bounded relative path, while retaining the exact full path, rank, engine hash, and duplicate-record checks.
+
+
+### OPT240 recovery helper completed target identities but failed before loading decode engines
+
+The OPT239 run passed source, checkpoint, hardware, reference, cache-path, and exact old-log checks. It read roughly14GB while hashing preserved engine files, then stopped before the decode load because status JSON cannot serialize the tuple-keyed statistics map. No GPU compute application started; both devices remained at15MiB. The trace is retained. For the retry, serialize prior records as a list with explicit phase/device fields. Avoid repeated reads: parse prior and new TensorRT log records without hashing, hash only the four exact model-engine files once to bind profile entries, and let the existing resident runner independently verify those hashes during its own pre-inference admission. Preserve exact engine paths, ranks, cache sizes, and safety calculation; do not hash unrelated cache metadata.
