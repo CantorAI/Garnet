@@ -6120,11 +6120,11 @@ namespace Garnet {
                     return part ? part->getOutput(0) : nullptr;
                 };
                 auto constantShapeScalar = [&](int64_t value) -> ITensor* {
-                    if (value < 0 || value > std::numeric_limits<int32_t>::max()) return nullptr;
-                    integerVectorWeights.emplace_back(1, static_cast<int32_t>(value));
+                    if (value < 0) return nullptr;
+                    integer64VectorWeights.emplace_back(1, static_cast<long long>(value));
                     Dims scalarDims{1, {1}};
                     Weights scalarWeights{
-                        DataType::kINT32, integerVectorWeights.back().data(), 1};
+                        DataType::kINT64, integer64VectorWeights.back().data(), 1};
                     auto* constant = network->addConstant(scalarDims, scalarWeights);
                     return constant ? constant->getOutput(0) : nullptr;
                 };
