@@ -28,7 +28,7 @@ for kind in ('linear','attention'):
   heads=config['num_attention_heads'];kv=config['num_key_value_heads'];dim=config['head_dim'];rope=config['rope_parameters'];rotary=int(dim*rope['partial_rotary_factor'])
  weights=read_weights(names,layer)
  for batch in (1,2):
-  for chunk in (2,4):
+  for chunk in (2,4,8):
    if kind=='linear':first=np.zeros((batch,channels,config['linear_conv_kernel_dim']),np.float32);second=np.zeros((batch,vh,kd,vd),np.float32)
    else:first=np.zeros((batch,kv,capacity,dim),np.float32);second=np.zeros_like(first)
    base=np.zeros(batch,np.float32);steps=[]

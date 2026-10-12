@@ -20,7 +20,7 @@ class MetalDecoder(CPUDecoder):
             self.close();raise
 
     def enable_prefill(self,chunk=4):
-        if chunk not in (2,4):raise ValueError('Metal prefill chunk must be 2 or 4')
+        if chunk not in (2,4,8):raise ValueError('Metal prefill chunk must be 2, 4 or 8')
         if hasattr(self,'prefill_graphs') and getattr(self,'chunk',None)!=chunk:
             for graph in self.prefill_graphs.values():graph.close()
             self.prefill_graphs={}
