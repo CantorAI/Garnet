@@ -6157,11 +6157,12 @@ namespace Garnet {
                 size.d[0] = hasDynamicBatch ? 1 : sourceDims.d[0];
                 layer = network->addSlice(*source, start, size, stride);
                 if (!layer || !dynamicStart || !dynamicSize ||
-                    !layer->setInput(1, *dynamicStart->getOutput(0)) ||
-                    !layer->setInput(2, *dynamicSize->getOutput(0))) {
+                    !dynamicStart->getOutput(0) || !dynamicSize->getOutput(0)) {
                     loweringError = "last_token dynamic batch/sequence Slice shape construction failed";
                     return X::Value();
                 }
+                layer->setInput(1, *dynamicStart->getOutput(0));
+                layer->setInput(2, *dynamicSize->getOutput(0));
             }
             else {
                 layer = network->addSlice(*source, start, size, stride);
