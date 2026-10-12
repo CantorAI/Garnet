@@ -3636,3 +3636,8 @@ The OPT234 retry reached the recovery script but failed before any GPU work: XLa
 ### OPT236 preflight found a second missing POSIX API in embedded Python
 
 The OPT235 launch again exited before status creation or GPU work because this XLang3 runtime also lacks `os.statvfs`; the exception path repeated the same limitation. The launch log preserves the trace, and both GPUs remained at15MiB with no compute application. Replace the free-space probe with the target's `df -B1 --output=avail <path>` result through subprocess (using string arguments), retaining the15GiB threshold. No candidate, engine cache, or source state changed.
+
+
+### OPT237 profile recovery preflight rejected harmless XLang3 startup warnings
+
+With `df` supplying free-space data and the system `flock` guard in place, the OPT236 helper stopped at its log-emptiness assertion before any engine call. XLang3 writes its unsupported-hash startup warnings to the redirected log before executing the script, so the log is expected to be nonempty; the profile output itself was still absent. Structured status recorded the assertion, free-space guards passed, and GPU compute-apps remained empty. Preserve the startup warnings. Relax only the helper's log-size assertion: allow preexisting runtime text and parse only exact `[TRTEngineMemory]` records, while still requiring a fresh profile-output path and exact expected engine paths/statistics.
