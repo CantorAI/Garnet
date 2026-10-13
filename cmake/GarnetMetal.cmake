@@ -23,6 +23,10 @@ option(GARNET_METAL_FLOAT_DENSE_KEY_PREFILL "Test FP32 split-K dense key project
 if(GARNET_METAL_FLOAT_DENSE_KEY_PREFILL)
     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_FLOAT_DENSE_KEY_PREFILL=1)
 endif()
+option(GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE "Write recurrent chunk outputs directly into final token slots" OFF)
+if(GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE)
+    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=1)
+endif()
 target_include_directories(garnet_metal PUBLIC src/backends/metal)
 target_compile_options(garnet_metal PRIVATE -fobjc-arc)
 target_link_libraries(garnet_metal PUBLIC

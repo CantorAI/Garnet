@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_after_owned_job.py",
+    "/Users/zsdx/garnet-metal-investigation/logs/linear-direct-write-confirm-summary-20261013",
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/compare_equivalent_f32_linear_chunk.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-linear-direct-write",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/logs/equivalent-f32-direct-write-vl-20261013/jobs",
+    "shared",
+    "-",
+    "vl"
+  ],
+  "exit_code": 0
+}

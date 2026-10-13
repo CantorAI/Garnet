@@ -268,6 +268,38 @@ int main() {
                 if(std::memcmp(actual.data(),expected.data(),expected.size()*sizeof(float)))
                     throw std::runtime_error("Grouped slice differs from independent bitwise reference");
             }
+#ifdef GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE
+        // Multiple token writers must preserve every earlier slot, including
+        // padded row layouts and a second batch row.
+        for(size_t batch:{size_t(1),size_t(2)})for(size_t dim:{size_t(3),size_t(16),size_t(128)}) {
+            const size_t heads=2,tokens=3,width=heads*dim;
+            auto norm=gpu.Upload(std::vector<float>(dim,1.25f),1,dim);
+            std::vector<Garnet::MetalMatrix> cores,gates;std::vector<float> expected(batch*tokens*width);
+            for(size_t token=0;token<tokens;++token) {
+                std::vector<float> core(batch*width),gate(batch*width);
+                for(size_t i=0;i<core.size();++i){core[i]=float(int((i+token*5)%31)-15)*0.125f;gate[i]=float(int((i+token*3)%13)-6)*0.25f;}
+                cores.push_back(gpu.Upload(core,batch,width));gates.push_back(gpu.Upload(gate,batch,width));
+                auto compact=gpu.Allocate(batch,width);
+                gpu.Begin();gpu.EncodeGatedNorm(cores.back(),gates.back(),norm,compact,heads,dim,1e-6f);gpu.SubmitAndWait();
+                auto values=gpu.Download(compact);
+                for(size_t row=0;row<batch;++row)for(size_t col=0;col<width;++col)
+                    expected[(row*tokens+token)*width+col]=values[row*width+col];
+            }
+            auto combined=gpu.Allocate(batch,tokens*width);
+            for(int request=0;request<2;++request) {
+                gpu.Begin();
+                // Reverse order proves writers address disjoint token slots.
+                for(size_t token=tokens;token-->0;)gpu.EncodeGatedNorm(cores[token],gates[token],norm,combined,heads,dim,1e-6f,token*width);
+                gpu.SubmitAndWait();auto values=gpu.Download(combined);
+                if(std::memcmp(values.data(),expected.data(),values.size()*sizeof(float)))throw std::runtime_error("Gated token writes changed a previous slot");
+            }
+            bool rejected=false;gpu.Begin();
+            try{gpu.EncodeGatedNorm(cores[0],gates[0],norm,combined,heads,dim,1e-6f,tokens*width-width+1);}
+            catch(const std::invalid_argument&){rejected=true;}
+            gpu.Abort();if(!rejected)throw std::runtime_error("Out-of-range gated token slot accepted");
+        }
+        std::cout<<"Gated token direct-write reference PASS 6 layouts\n";
+#endif
         auto weight=gpu.Upload({2,0,0,3},2,2);
         auto hidden=gpu.Allocate(2,2),output=gpu.Allocate(2,2);
         for(int request=0;request<2;++request) {

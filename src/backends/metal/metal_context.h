@@ -75,8 +75,10 @@ public:
     void EncodeLinearPrepare(const MetalMatrix& conv,const MetalMatrix& a,const MetalMatrix& b,
         const MetalMatrix& aLog,const MetalMatrix& dtBias,const MetalMatrix& output,
         size_t keyHeads,size_t valueHeads,size_t keyDim,size_t valueDim,size_t kernel);
+    // Offset writes fill disjoint sequence segments; callers must fill every
+    // segment before reading or consuming the combined output.
     void EncodeGatedNorm(const MetalMatrix& core,const MetalMatrix& z,const MetalMatrix& norm,
-        const MetalMatrix& output,size_t heads,size_t valueDim,float epsilon);
+        const MetalMatrix& output,size_t heads,size_t valueDim,float epsilon,size_t columnOffset=0);
     void EncodeConcat(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,bool includeThird=true);
     void EncodeNormRope(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         const MetalMatrix&,size_t heads,size_t dim,size_t rotary,float epsilon,float weightOffset=1,bool normalize=true);

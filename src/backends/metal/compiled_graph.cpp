@@ -488,6 +488,11 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 if(slots_[norm].rows!=1||slots_[norm].columns!=vd)throw std::runtime_error("Metal linear norm weight shape mismatch");
                 const size_t qw=vh*kd,vw=vh*vd,pw=2*qw+vw+2*vh;
                 size_t accumulated=0;
+                bool directWrite=false;
+#ifdef GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE
+                directWrite=isChunk;
+                if(directWrite)accumulated=Allocate(batch,chunk*vw);
+#endif
                 for(size_t token=0;token<chunk;++token) {
                     auto select=[&](size_t projected,size_t columns) {
                         return isChunk?slice(projected,1,chunk*columns,token*columns,columns):projected;
@@ -504,9 +509,10 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                     auto deltaPacked=Allocate(batch,vw*(kd+1));
                     Op delta{Kind::Delta,q,k,deltaPacked};delta.arguments={q,k,v,g,beta,state,tokenActive};delta.dimensions={vh,kd,vd};ops_.push_back(std::move(delta));
                     auto core=slice(deltaPacked,vh,(kd+1)*vd,0,vd);
-                    auto gated=Allocate(batch,vw);
+                    auto gated=directWrite?accumulated:Allocate(batch,vw);
                     Op gate{Kind::GateNorm,core,tokenZ,gated,epsilon};gate.arguments={core,tokenZ,norm};gate.dimensions={vh,vd};ops_.push_back(std::move(gate));
-                    if(token==0)accumulated=gated;
+                    if(directWrite)ops_.back().dimensions.push_back(token*vw);
+                    else if(token==0)accumulated=gated;
                     else {
                         auto joined=Allocate(batch,(token+1)*vw);Op join{Kind::Concat,accumulated,gated,joined};
                         join.arguments={accumulated,gated,gated};join.transpose=false;ops_.push_back(std::move(join));accumulated=joined;
@@ -793,7 +799,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
                 slots_[args[3]].matrix,slots_[args[4]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
         }else if(op.kind==Kind::GateNorm) {
             auto& args=op.arguments;gpu.EncodeGatedNorm(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                out,op.dimensions[0],op.dimensions[1],op.epsilon);
+                out,op.dimensions[0],op.dimensions[1],op.epsilon,op.dimensions.size()>2?op.dimensions[2]:0);
         }else if(op.kind==Kind::Concat) {
             auto& args=op.arguments;gpu.EncodeConcat(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,out,op.transpose);
         }else if(op.kind==Kind::NormRope) {

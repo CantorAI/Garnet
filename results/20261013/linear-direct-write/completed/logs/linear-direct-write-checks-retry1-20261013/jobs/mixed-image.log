@@ -1,0 +1,6 @@
+compiled Garnet decoder layer 0 linear_attention ms 1.131
+compiled Garnet decoder layer 1 full_attention ms 1.048167
+Garnet Metal/MPS Apple M4; dense_key_split_k image-to-mixed-decoder/head batch 1 PASS two requests, 14 steps each
+compiled Garnet decoder layer 0 linear_attention ms 1.206666
+compiled Garnet decoder layer 1 full_attention ms 1.817625
+Garnet Metal/MPS Apple M4; dense_key_split_k image-to-mixed-decoder/head batch 2 PASS two requests, 14 steps each

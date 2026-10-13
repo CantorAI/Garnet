@@ -537,7 +537,7 @@ kernel void linear_prepare(device const float* conv [[buffer(0)]],device const f
     }
     output[row*p.oStride+col]=result;
 }
-struct GateParams {ulong batch,heads,valueDim,cStride,zStride,oStride;float epsilon;};
+struct GateParams {ulong batch,heads,valueDim,cStride,zStride,oStride,columnOffset;float epsilon;};
 kernel void gated_norm(device const float* core [[buffer(0)]],device const float* z [[buffer(1)]],
     device const float* norm [[buffer(2)]],device float* output [[buffer(3)]],
     constant GateParams& p [[buffer(4)]],uint id [[threadgroup_position_in_grid]],uint lane [[thread_index_in_simdgroup]]) {
@@ -549,7 +549,7 @@ kernel void gated_norm(device const float* core [[buffer(0)]],device const float
     float inverse=rsqrt(sum/float(p.valueDim)+p.epsilon);
     for(ulong j=lane;j<p.valueDim;j+=32) {
         float gate=z[row*p.zStride+head*p.valueDim+j];
-        output[row*p.oStride+head*p.valueDim+j]=core[row*p.cStride+head*p.valueDim+j]*inverse*norm[j]*gate/(1.0f+exp(-gate));
+        output[row*p.oStride+p.columnOffset+head*p.valueDim+j]=core[row*p.cStride+head*p.valueDim+j]*inverse*norm[j]*gate/(1.0f+exp(-gate));
     }
 }
 struct ConcatParams {ulong batch,aWidth,bWidth,cWidth,aStride,bStride,cStride,oStride;};
@@ -1440,14 +1440,14 @@ void MetalContext::EncodeLinearPrepare(const MetalMatrix& conv,const MetalMatrix
     EncodeStateKernel(3,{conv,a,b,aLog,dtBias},output,&p,sizeof(p),Elements(o.rows,o.columns));
 }
 void MetalContext::EncodeGatedNorm(const MetalMatrix& core,const MetalMatrix& z,const MetalMatrix& norm,
-    const MetalMatrix& output,size_t heads,size_t valueDim,float epsilon) {
+    const MetalMatrix& output,size_t heads,size_t valueDim,float epsilon,size_t columnOffset) {
     if(!core.impl_||!z.impl_||!norm.impl_||!output.impl_||!(epsilon>0)||!std::isfinite(epsilon))
         throw std::invalid_argument("Invalid Metal gated normalization arguments");
     auto c=core.impl_->matrix,gate=z.impl_->matrix,w=norm.impl_->matrix,o=output.impl_->matrix;
     if(c.columns!=Elements(heads,valueDim)||gate.rows!=c.rows||gate.columns!=c.columns||w.rows!=1||w.columns!=valueDim||
-        o.rows!=c.rows||o.columns!=c.columns)throw std::invalid_argument("Metal gated normalization shape mismatch");
-    struct Params {uint64_t batch,heads,valueDim,cStride,zStride,oStride;float epsilon;};
-    Params p{c.rows,heads,valueDim,c.rowBytes/4,gate.rowBytes/4,o.rowBytes/4,epsilon};
+        o.rows!=c.rows||columnOffset>o.columns||c.columns>o.columns-columnOffset)throw std::invalid_argument("Metal gated normalization shape mismatch");
+    struct Params {uint64_t batch,heads,valueDim,cStride,zStride,oStride,columnOffset;float epsilon;};
+    Params p{c.rows,heads,valueDim,c.rowBytes/4,gate.rowBytes/4,o.rowBytes/4,columnOffset,epsilon};
     EncodeStateKernel(4,{core,z,norm},output,&p,sizeof(p),Elements(c.rows,heads));
 }
 void MetalContext::EncodeConcat(const MetalMatrix& first,const MetalMatrix& second,const MetalMatrix& third,
