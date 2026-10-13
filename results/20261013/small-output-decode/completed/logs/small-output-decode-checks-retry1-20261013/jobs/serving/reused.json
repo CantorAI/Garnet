@@ -1,0 +1,11 @@
+{
+  "prior": "/Users/zsdx/garnet-metal-investigation/logs/small-output-decode-checks-20261013/jobs/serving/exit.json",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_decoder_model.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-small-output-decode",
+    "/Users/zsdx/garnet-metal-investigation/source"
+  ],
+  "prior_log_sha256": "bed063572d7861d77574a3bc9082ccf67c62c070e5d9c19cb31ed1bf842777d8"
+}

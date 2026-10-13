@@ -39,7 +39,7 @@ bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&im
 struct MetalPipelines {
     id<MTLLibrary> library;
     id<MTLComputePipelineState> argmax;
-    id<MTLComputePipelineState> bf16Decode,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
+    id<MTLComputePipelineState> bf16Decode,bf16DecodeSmall,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
     id<MTLComputePipelineState> bf16Split,bf16SplitReduce;
     id<MTLComputePipelineState> halfRescale;
     id<MTLComputePipelineState> rms;
@@ -145,6 +145,35 @@ kernel void bf16_decode(device const float* a [[buffer(0)]],device const ushort*
     sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
     sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
     if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
+}
+kernel void bf16_decode_small(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
+    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
+    ulong column=ulong(group)*4+simd*2;
+    if(column>=p.columns)return;
+    float2 sum0=0.0f,sum1=0.0f;
+    if(p.inner%4==0) {
+        for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
+            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
+            ushort4 b0=*(device const ushort4*)(weight+column*p.inner+k),b1=ushort4(0);
+            if(column+1<p.columns)b1=*(device const ushort4*)(weight+(column+1)*p.inner+k);
+            for(uint j=0;j<4;++j) {
+                float2 w=as_type<float2>(uint2(b0[j],b1[j])<<16);
+                sum0+=x[j]*w;if(p.rows==2)sum1+=y[j]*w;
+            }
+        }
+    } else {
+    for(ulong k=lane;k<p.inner;k+=32) {
+        float x=a[k],y=p.rows==2?a[p.aStride+k]:0.0f;
+        float2 w=0.0f;
+        w.x=as_type<float>(uint(weight[column*p.inner+k])<<16);
+        if(column+1<p.columns)w.y=as_type<float>(uint(weight[(column+1)*p.inner+k])<<16);
+        sum0+=x*w;if(p.rows==2)sum1+=y*w;
+    }
+    }
+    sum0=float2(simd_sum(sum0.x),simd_sum(sum0.y));
+    sum1=float2(simd_sum(sum1.x),simd_sum(sum1.y));
+    if(lane==0)for(uint j=0;j<2&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
 }
 // BF16 weights are expanded only inside a small shared-memory tile. FP32
 // SIMD-group matrix multiply accumulates two 8x8 output tiles per group.
@@ -919,6 +948,10 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->library=library;
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
+#ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
+        impl_->kernels->bf16DecodeSmall=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_small"] error:&error];
+        if(!impl_->kernels->bf16DecodeSmall)throw std::runtime_error("Cannot create small-output decode pipeline");
+#endif
         impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
 #ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
         impl_->kernels->bf16Split=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_split_key"] error:&error];
@@ -1143,6 +1176,12 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
             widePipeline.maxTotalThreadsPerThreadgroup>=256&&widePipeline.staticThreadgroupMemoryLength<=impl_->device.maxThreadgroupMemoryLength)wide=true;
         auto pipeline=a.rows<=2?impl_->kernels->bf16Decode:wide?widePipeline:impl_->kernels->bf16Gemm;
         size_t threads=wide?256:128,tileRows=wide&&a.rows>16?32:16,tileColumns=wide?64:32;
+        size_t decodeColumns=16;
+#ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
+        if(a.rows<=2&&o.columns<=256&&impl_->kernels->bf16DecodeSmall.threadExecutionWidth==32&&impl_->kernels->bf16DecodeSmall.maxTotalThreadsPerThreadgroup>=64) {
+            pipeline=impl_->kernels->bf16DecodeSmall;threads=64;decodeColumns=4;
+        }
+#endif
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)
             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
@@ -1152,7 +1191,7 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
         [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
         [encoder setBytes:&p length:sizeof(p) atIndex:3];
-        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+15)/16,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
+        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+decodeColumns-1)/decodeColumns,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }

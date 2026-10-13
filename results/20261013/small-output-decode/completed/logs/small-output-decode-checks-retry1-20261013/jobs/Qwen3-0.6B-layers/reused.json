@@ -1,0 +1,13 @@
+{
+  "prior": "/Users/zsdx/garnet-metal-investigation/logs/small-output-decode-checks-20261013/jobs/Qwen3-0.6B-layers/exit.json",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_dense_reference.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-small-output-decode",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+    "bf16"
+  ],
+  "prior_log_sha256": "0ac75975eb91776e1c5a6af81324d3b4d8a752cdc761aec9bd3280eeb36da4aa"
+}

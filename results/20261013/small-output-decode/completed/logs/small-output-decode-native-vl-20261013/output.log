@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_after_owned_job.py", line 23, in <module>
+    assert status['exit_code']==0,status
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'command': ['/opt/homebrew/bin/python3', '/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_after_owned_job.py', '/Users/zsdx/garnet-metal-investigation/logs/small-output-decode-checks-20261013', '/opt/homebrew/bin/python3', '/Users/zsdx/garnet-metal-investigation/benchmark_small_output_decode_dense.py', '/Users/zsdx/garnet-metal-investigation', '/Users/zsdx/garnet-metal-investigation/logs/small-output-decode-native-text-20261013/jobs'], 'exit_code': 1}
