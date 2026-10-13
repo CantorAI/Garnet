@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Qwen3-0.6B-bfloat16",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/audit_comparator_dtypes.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "bfloat16"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 12.907141707837582
+  },
+  {
+    "name": "Qwen3-0.6B-float32",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/audit_comparator_dtypes.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "float32"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 11.476454125251621
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-bfloat16",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/audit_comparator_dtypes.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "bfloat16"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 11.290436208248138
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-float32",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/audit_comparator_dtypes.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "float32"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 10.928714707959443
+  },
+  {
+    "name": "Qwen3.5-0.8B-bfloat16",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/audit_comparator_dtypes.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "bfloat16"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 36.71548058325425
+  },
+  {
+    "name": "Qwen3.5-0.8B-float32",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/audit_comparator_dtypes.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "float32"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 37.93662125011906
+  }
+]

@@ -1,0 +1,391 @@
+{
+  "scope": "Read-only actual loaded MLX model dtype audit, not speed evidence",
+  "reports": [
+    {
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "requested_dtype": "bfloat16",
+      "workers": [
+        {
+          "configured_model_dtype": "torch.bfloat16",
+          "actual_parameter_tensors": {
+            "mlx.core.bfloat16": 142
+          },
+          "actual_parameter_elements": {
+            "mlx.core.bfloat16": 419881984
+          },
+          "examples": {
+            "mlx.core.bfloat16": [
+              {
+                "name": "model.embed_tokens.weight",
+                "shape": [
+                  151936,
+                  1024
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "shape": [
+                  3072,
+                  1024
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "shape": [
+                  1024,
+                  3072
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "shape": [
+                  3072,
+                  1024
+                ]
+              },
+              {
+                "name": "model.layers.0.input_layernorm.weight",
+                "shape": [
+                  1024
+                ]
+              }
+            ]
+          },
+          "runner_kv_dtype": "mlx.core.bfloat16",
+          "mlx_default_device": "Device(gpu, 0)"
+        }
+      ],
+      "engine_mode": "in-process worker; serialization security defaults retained",
+      "versions": {
+        "vllm": "0.30.0+cpu",
+        "vllm-metal": "0.30.0",
+        "mlx": "0.32.1",
+        "mlx-lm": "0.32.0",
+        "mlx-vlm": "0.6.17"
+      },
+      "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+    },
+    {
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "requested_dtype": "float32",
+      "workers": [
+        {
+          "configured_model_dtype": "torch.float32",
+          "actual_parameter_tensors": {
+            "mlx.core.bfloat16": 142
+          },
+          "actual_parameter_elements": {
+            "mlx.core.bfloat16": 419881984
+          },
+          "examples": {
+            "mlx.core.bfloat16": [
+              {
+                "name": "model.embed_tokens.weight",
+                "shape": [
+                  151936,
+                  1024
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "shape": [
+                  3072,
+                  1024
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "shape": [
+                  1024,
+                  3072
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "shape": [
+                  3072,
+                  1024
+                ]
+              },
+              {
+                "name": "model.layers.0.input_layernorm.weight",
+                "shape": [
+                  1024
+                ]
+              }
+            ]
+          },
+          "runner_kv_dtype": "mlx.core.float32",
+          "mlx_default_device": "Device(gpu, 0)"
+        }
+      ],
+      "engine_mode": "in-process worker; serialization security defaults retained",
+      "versions": {
+        "vllm": "0.30.0+cpu",
+        "vllm-metal": "0.30.0",
+        "mlx": "0.32.1",
+        "mlx-lm": "0.32.0",
+        "mlx-vlm": "0.6.17"
+      },
+      "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+    },
+    {
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "requested_dtype": "bfloat16",
+      "workers": [
+        {
+          "configured_model_dtype": "torch.bfloat16",
+          "actual_parameter_tensors": {
+            "mlx.core.bfloat16": 122
+          },
+          "actual_parameter_elements": {
+            "mlx.core.bfloat16": 449964928
+          },
+          "examples": {
+            "mlx.core.bfloat16": [
+              {
+                "name": "model.embed_tokens.weight",
+                "shape": [
+                  151936,
+                  896
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "shape": [
+                  4864,
+                  896
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "shape": [
+                  896,
+                  4864
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "shape": [
+                  4864,
+                  896
+                ]
+              },
+              {
+                "name": "model.layers.0.input_layernorm.weight",
+                "shape": [
+                  896
+                ]
+              }
+            ]
+          },
+          "runner_kv_dtype": "mlx.core.bfloat16",
+          "mlx_default_device": "Device(gpu, 0)"
+        }
+      ],
+      "engine_mode": "in-process worker; serialization security defaults retained",
+      "versions": {
+        "vllm": "0.30.0+cpu",
+        "vllm-metal": "0.30.0",
+        "mlx": "0.32.1",
+        "mlx-lm": "0.32.0",
+        "mlx-vlm": "0.6.17"
+      },
+      "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+    },
+    {
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "requested_dtype": "float32",
+      "workers": [
+        {
+          "configured_model_dtype": "torch.float32",
+          "actual_parameter_tensors": {
+            "mlx.core.bfloat16": 122
+          },
+          "actual_parameter_elements": {
+            "mlx.core.bfloat16": 449964928
+          },
+          "examples": {
+            "mlx.core.bfloat16": [
+              {
+                "name": "model.embed_tokens.weight",
+                "shape": [
+                  151936,
+                  896
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.gate_proj.weight",
+                "shape": [
+                  4864,
+                  896
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.down_proj.weight",
+                "shape": [
+                  896,
+                  4864
+                ]
+              },
+              {
+                "name": "model.layers.0.mlp.up_proj.weight",
+                "shape": [
+                  4864,
+                  896
+                ]
+              },
+              {
+                "name": "model.layers.0.input_layernorm.weight",
+                "shape": [
+                  896
+                ]
+              }
+            ]
+          },
+          "runner_kv_dtype": "mlx.core.float32",
+          "mlx_default_device": "Device(gpu, 0)"
+        }
+      ],
+      "engine_mode": "in-process worker; serialization security defaults retained",
+      "versions": {
+        "vllm": "0.30.0+cpu",
+        "vllm-metal": "0.30.0",
+        "mlx": "0.32.1",
+        "mlx-lm": "0.32.0",
+        "mlx-vlm": "0.6.17"
+      },
+      "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+    },
+    {
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "requested_dtype": "bfloat16",
+      "workers": [
+        {
+          "configured_model_dtype": "torch.bfloat16",
+          "actual_parameter_tensors": {
+            "mlx.core.bfloat16": 275
+          },
+          "actual_parameter_elements": {
+            "mlx.core.bfloat16": 619163904
+          },
+          "examples": {
+            "mlx.core.bfloat16": [
+              {
+                "name": "vision_tower.patch_embed.proj.weight",
+                "shape": [
+                  768,
+                  2,
+                  16,
+                  16,
+                  3
+                ]
+              },
+              {
+                "name": "vision_tower.patch_embed.proj.bias",
+                "shape": [
+                  768
+                ]
+              },
+              {
+                "name": "vision_tower.pos_embed.weight",
+                "shape": [
+                  2304,
+                  768
+                ]
+              },
+              {
+                "name": "vision_tower.blocks.0.norm1.weight",
+                "shape": [
+                  768
+                ]
+              },
+              {
+                "name": "vision_tower.blocks.0.norm1.bias",
+                "shape": [
+                  768
+                ]
+              }
+            ]
+          },
+          "runner_kv_dtype": "mlx.core.bfloat16",
+          "mlx_default_device": "Device(gpu, 0)"
+        }
+      ],
+      "engine_mode": "in-process worker; serialization security defaults retained",
+      "versions": {
+        "vllm": "0.30.0+cpu",
+        "vllm-metal": "0.30.0",
+        "mlx": "0.32.1",
+        "mlx-lm": "0.32.0",
+        "mlx-vlm": "0.6.17"
+      },
+      "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+    },
+    {
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "requested_dtype": "float32",
+      "workers": [
+        {
+          "configured_model_dtype": "torch.float32",
+          "actual_parameter_tensors": {
+            "mlx.core.bfloat16": 275
+          },
+          "actual_parameter_elements": {
+            "mlx.core.bfloat16": 619163904
+          },
+          "examples": {
+            "mlx.core.bfloat16": [
+              {
+                "name": "vision_tower.patch_embed.proj.weight",
+                "shape": [
+                  768,
+                  2,
+                  16,
+                  16,
+                  3
+                ]
+              },
+              {
+                "name": "vision_tower.patch_embed.proj.bias",
+                "shape": [
+                  768
+                ]
+              },
+              {
+                "name": "vision_tower.pos_embed.weight",
+                "shape": [
+                  2304,
+                  768
+                ]
+              },
+              {
+                "name": "vision_tower.blocks.0.norm1.weight",
+                "shape": [
+                  768
+                ]
+              },
+              {
+                "name": "vision_tower.blocks.0.norm1.bias",
+                "shape": [
+                  768
+                ]
+              }
+            ]
+          },
+          "runner_kv_dtype": "mlx.core.float32",
+          "mlx_default_device": "Device(gpu, 0)"
+        }
+      ],
+      "engine_mode": "in-process worker; serialization security defaults retained",
+      "versions": {
+        "vllm": "0.30.0+cpu",
+        "vllm-metal": "0.30.0",
+        "mlx": "0.32.1",
+        "mlx-lm": "0.32.0",
+        "mlx-vlm": "0.6.17"
+      },
+      "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+    }
+  ]
+}
