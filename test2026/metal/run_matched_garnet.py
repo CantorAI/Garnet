@@ -19,7 +19,7 @@ print('matched_prompt',json.dumps(dict(chat=chat,token_ids=ids,stop_token_ids=st
 decoder=None;batch=workload['batch'];limit=workload['max_tokens'];repeats=workload.get('requests',3)
 try:
     decoder=DenseMetalDecoder(folder+'/model.safetensors',config,batch,workload['capacity'])
-    decoder.enable_prefill(workload.get('chunk',16),workload.get('prefill_projection','shared'))
+    decoder.enable_prefill(workload.get('chunk',16),workload.get('prefill_projection','shared'),finer_chunks=workload.get('prefill_finer_chunks',False))
     initialization=time.monotonic()-started
     for request in range(repeats):
         begin=time.monotonic();decoder.reset()

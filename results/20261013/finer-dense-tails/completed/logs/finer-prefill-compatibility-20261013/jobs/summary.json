@@ -1,0 +1,47 @@
+{
+  "scope": "Compatibility only; no speed claim",
+  "records": [
+    {
+      "label": "Qwen3-0.6B-b1",
+      "complete_requests": 3,
+      "exact_complete_outputs": true,
+      "legacy_rejections": true,
+      "qwen35_plan_unchanged": false
+    },
+    {
+      "label": "Qwen2.5-Coder-0.5B-Instruct-b1",
+      "complete_requests": 3,
+      "exact_complete_outputs": true,
+      "legacy_rejections": true,
+      "qwen35_plan_unchanged": false
+    },
+    {
+      "label": "Qwen3.5-0.8B-b1",
+      "complete_requests": 3,
+      "exact_complete_outputs": true,
+      "legacy_rejections": false,
+      "qwen35_plan_unchanged": true
+    },
+    {
+      "label": "Qwen3-0.6B-b2",
+      "complete_requests": 3,
+      "exact_complete_outputs": true,
+      "legacy_rejections": true,
+      "qwen35_plan_unchanged": false
+    },
+    {
+      "label": "Qwen2.5-Coder-0.5B-Instruct-b2",
+      "complete_requests": 3,
+      "exact_complete_outputs": true,
+      "legacy_rejections": true,
+      "qwen35_plan_unchanged": false
+    },
+    {
+      "label": "Qwen3.5-0.8B-b2",
+      "complete_requests": 3,
+      "exact_complete_outputs": true,
+      "legacy_rejections": false,
+      "qwen35_plan_unchanged": true
+    }
+  ]
+}

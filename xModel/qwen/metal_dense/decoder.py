@@ -39,11 +39,27 @@ class DenseMetalDecoder(MetalDecoder):
             if resident:self.enable_resident()
         except:self.close();raise
 
-    def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False):
-        extended=chunk in (32,64) and projection=='shared' and self.config['hidden_size']<=1024 and 'dense_key_split_k' in garnet.backend_info()
+    def _prefill_profiles(self):
+        if self.config['hidden_size']<=1024 and 'dense_key_split_k' in garnet.backend_info():
+            return (2,4,8,16,24,32,48,64)
+        return (2,4,8,16)
+
+    def _prefill_chunk_size(self,remaining,maximum):
+        if not getattr(self,'finer_chunks',False):return MetalDecoder._prefill_chunk_size(self,remaining,maximum)
+        required=min(remaining,maximum)
+        for profile in self._prefill_profiles():
+            if required<=profile<=maximum:return profile
+        raise ValueError('No supported dense tail profile')
+
+    def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False,finer_chunks=False):
+        capable=self.config['hidden_size']<=1024 and 'dense_key_split_k' in garnet.backend_info()
+        extended=chunk in (24,32,48,64) and projection=='shared' and capable
         if chunk not in (2,4,8,16) and not extended:
-            raise ValueError('Dense Qwen prefill supports 2, 4, 8 and 16; 32/64 require the split-key Metal build, shared projection and hidden size <= 1024')
+            raise ValueError('Dense Qwen prefill supports 2, 4, 8 and 16; 24/32/48/64 require the split-key Metal build, shared projection and hidden size <= 1024')
+        if finer_chunks and (not capable or projection!='shared' or self.session is None):
+            raise ValueError('Finer dense tails require a resident split-key Metal session with shared projection')
         MetalDecoder.enable_prefill(self,chunk,projection,False)
+        self.finer_chunks=bool(finer_chunks)
 
     def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):
         from .layers import DensePrefillLayer

@@ -772,6 +772,17 @@ text benchmarks for batches 1/2 sequentially with separate process RSS records. 
 `launch log_directory runtime build source mode`.
 Real checkpoint and image inputs are not committed.
 
+Dense Qwen can opt into finer prefill padding with
+`decoder.enable_prefill(32, 'shared', finer_chunks=True)`. This requires a
+resident decoder, hidden size at most 1024, and the Metal backend's
+`dense_key_split_k` capability. Validated dense profiles include 24 and 48
+alongside 2/4/8/16/32/64. A 22-token prompt can use 24 slots instead of 32;
+a 42-token prompt under maximum 64 can use 48 instead of 64. The option
+defaults to false, and Qwen3.5's existing chunk plans remain unchanged.
+Numerical and complete-request evidence, including the sequential precision
+study and unmet performance targets, is in
+`results/20261013/finer-dense-tails/` at the repository root.
+
 Saved raw command/exit/output evidence is in `results/20261012/`;
 The earlier `benchmarks.json`, `allocation-reuse/benchmarks.json` and
 `chunk-prefill/benchmarks.json` retain tokens, output, per-step/layer/head timings and peak

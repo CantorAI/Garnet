@@ -59,8 +59,18 @@ class MetalDecoder(CPUDecoder):
         self.poisoned=False
         return prediction if predict else None
 
+    def _prefill_profiles(self):
+        return (2,4,8,16,32,64)
+
+    def _prefill_chunk_size(self,remaining,maximum):
+        chunk=maximum
+        if maximum>16 and remaining<maximum:
+            chunk=2
+            while chunk<remaining:chunk*=2
+        return min(chunk,maximum)
+
     def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False):
-        if chunk not in (2,4,8,16,32,64):raise ValueError('Metal prefill chunk must be 2, 4, 8, 16, 32 or 64')
+        if chunk not in self._prefill_profiles():raise ValueError('Unsupported Metal prefill chunk')
         if projection not in ('shared','mps'):raise ValueError('Prefill projection must be shared or mps')
         if hasattr(self,'prefill_graphs') and (getattr(self,'chunk',None)!=chunk or getattr(self,'prefill_projection','shared')!=projection or getattr(self,'linear_chunk',False)!=linear_chunk):
             for graph in self.prefill_graphs.values():graph.close()
@@ -148,10 +158,7 @@ class MetalDecoder(CPUDecoder):
         if len(positions)!=batch or any(len(row)!=count or any(len(p)!=3 for p in row) for row in positions):raise ValueError('invalid prefill THW positions')
         self.prefill_compile_ms=0;self.prefill_inference_ms=0;self.prefill_chunk_plan=[];offset=0;profiles={}
         while offset<count:
-            chunk=maximum
-            if maximum>16 and count-offset<maximum:
-                chunk=2
-                while chunk<count-offset:chunk*=2
+            chunk=self._prefill_chunk_size(count-offset,maximum)
             self.prefill_chunk_plan.append(chunk)
             if chunk not in profiles:profiles[chunk]=self._resident_prefill_graphs(chunk)
             offset+=chunk

@@ -20,12 +20,17 @@ decoder=None;batch=workload['batch'];limit=workload['max_tokens'];repeats=worklo
 try:
     decoder=DenseMetalDecoder(folder+'/model.safetensors',config,batch,workload['capacity'])
     decoder.enable_prefill(workload.get('chunk',16),workload.get('prefill_projection','shared'))
-    for unsupported in (32,64):
+    for unsupported in (24,32,48,64):
         before=decoder.chunk;before_projection=decoder.prefill_projection;before_graphs=decoder.prefill_graphs;before_slots=list(decoder.slots);rejected=False
         try:decoder.enable_prefill(unsupported)
         except ValueError:rejected=True
         assert rejected,'Unvalidated dense profile accepted'
         assert decoder.chunk==before and decoder.prefill_projection==before_projection and decoder.prefill_graphs is before_graphs and decoder.slots==before_slots,'Rejected profile changed decoder state'
+    before=decoder.chunk;before_projection=decoder.prefill_projection;before_graphs=decoder.prefill_graphs;before_slots=list(decoder.slots);rejected=False
+    try:decoder.enable_prefill(16,finer_chunks=True)
+    except ValueError:rejected=True
+    assert rejected,'Legacy backend accepted finer scheduling'
+    assert decoder.chunk==before and decoder.prefill_projection==before_projection and decoder.prefill_graphs is before_graphs and decoder.slots==before_slots,'Rejected scheduling changed decoder state'
     print('dense_profile_guard PASS',flush=True)
     initialization=time.monotonic()-started
     for request in range(repeats):
