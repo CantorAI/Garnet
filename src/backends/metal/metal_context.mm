@@ -52,6 +52,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> concat;
     id<MTLComputePipelineState> normRope,kvUpdate,kvUpdateVector,scores,scoresSerial,attentionContext;
     id<MTLComputePipelineState> vision,visionNorm,visionScores,layout,kvChunk,kvChunkVector,attentionChunk;
+    id<MTLComputePipelineState> visionPackQK,visionSoftmax;
 };
 static std::mutex pipelineMutex;
 static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
@@ -66,6 +67,16 @@ struct MetalContext::Impl {
     std::map<std::array<size_t,4>,MPSMatrixMultiplication*> matmul;
     std::map<std::array<size_t,3>,MPSMatrixMultiplication*> halfMatmul;
     std::map<std::array<size_t,2>,MetalMatrix> halfScratch;
+#ifdef GARNET_METAL_MPS_VISION_SCORES
+    struct VisionScoreScratch {
+        MetalMatrix query,key,scores;
+        MPSMatrix* queryView;
+        MPSMatrix* keyView;
+        MPSMatrix* scoreView;
+        MPSMatrixMultiplication* product;
+    };
+    std::map<std::array<size_t,4>,VisionScoreScratch> visionScores;
+#endif
 };
 static size_t Elements(size_t rows, size_t columns) {
     if (!rows || !columns || rows > std::numeric_limits<size_t>::max()/columns ||
@@ -675,6 +686,33 @@ kernel void vision_scores(device const float* a [[buffer(0)]],device const float
     total=simd_sum(lane<4?partial[lane]:0.0f);
     for(ulong key=tid;key<p.tokens;key+=128)out[row*p.oStride+head*p.tokens+key]=scratch[key]/total;
 }
+kernel void vision_pack_qk(device const float* input [[buffer(0)]],device float* query [[buffer(1)]],
+    device float* key [[buffer(2)]],constant VisionParams& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
+    ulong dim=p.hidden/p.heads,packedRow=ulong(id)/dim,d=ulong(id)%dim;
+    if(packedRow>=p.rows*p.heads)return;
+    ulong row=(packedRow/(p.heads*p.tokens))*p.tokens+packedRow%p.tokens,head=(packedRow/p.tokens)%p.heads;
+    query[packedRow*p.bStride+d]=input[row*p.aStride+head*dim+d];
+    key[packedRow*p.cStride+d]=input[row*p.aStride+p.hidden+head*dim+d];
+}
+kernel void vision_softmax(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],device const float* c [[buffer(2)]],
+    device float* out [[buffer(3)]],constant VisionParams& p [[buffer(4)]],threadgroup float* scratch [[threadgroup(0)]],
+    uint id [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+    if(row>=p.outRows)return;threadgroup float partial[4];
+    ulong packedRow=((row/p.tokens)*p.heads+head)*p.tokens+row%p.tokens;
+    for(ulong key=tid;key<p.tokens;key+=128)scratch[key]=b[packedRow*p.bStride+key]*rsqrt(float(dim));
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float maximum=-INFINITY;for(ulong key=tid;key<p.tokens;key+=128)maximum=max(maximum,scratch[key]);
+    maximum=simd_max(maximum);if(lane==0)partial[simd]=maximum;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    maximum=simd_max(lane<4?partial[lane]:-INFINITY);
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float total=0;for(ulong key=tid;key<p.tokens;key+=128){float v=exp(scratch[key]-maximum);scratch[key]=v;total+=v;}
+    total=simd_sum(total);if(lane==0)partial[simd]=total;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    total=simd_sum(lane<4?partial[lane]:0.0f);
+    for(ulong key=tid;key<p.tokens;key+=128)out[row*p.oStride+head*p.tokens+key]=scratch[key]/total;
+}
 // Input/output matrices contain flattened batch/token rows. The merger copies
 // across padded MPS row boundaries explicitly rather than aliasing row strides.
 kernel void vision_op(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
@@ -766,6 +804,11 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->attentionContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_context"] error:&error];
         impl_->kernels->visionNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_norm"] error:&error];
         impl_->kernels->visionScores=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_scores"] error:&error];
+#ifdef GARNET_METAL_MPS_VISION_SCORES
+        impl_->kernels->visionPackQK=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_pack_qk"] error:&error];
+        impl_->kernels->visionSoftmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_softmax"] error:&error];
+        if(!impl_->kernels->visionPackQK||!impl_->kernels->visionSoftmax)throw std::runtime_error("Cannot create MPS vision score pipelines");
+#endif
         impl_->kernels->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
         impl_->kernels->kvChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk"] error:&error];
         impl_->kernels->kvChunkVector=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk_vector4"] error:&error];
@@ -1088,10 +1131,57 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
     const bool visionScores=operation==10&&visionFields[12]==7&&visionFields[8]<=4096;
     if(visionNorm)pipeline=impl_->kernels->visionNorm;
     if(visionScores)pipeline=impl_->kernels->visionScores;
+#ifdef GARNET_METAL_MPS_VISION_SCORES
+    // Bounded FP32 scratch isolates heads and batches before batched MPS Q*K^T.
+    // Softmax retains the existing SIMD max/sum/exp implementation.
+    MetalMatrix mpsScores;
+    std::array<uint64_t,13> mpsFields{};
+    const bool mpsVisionScores=visionScores&&visionFields[0]<=1024&&visionFields[8]<=512&&
+        visionFields[10]<=16&&visionFields[9]/visionFields[10]<=128;
+    if(mpsVisionScores) {
+        const size_t rows=visionFields[0],tokens=visionFields[8],hidden=visionFields[9],heads=visionFields[10],dim=hidden/heads;
+        const std::array<size_t,4> key{rows,tokens,hidden,heads};
+        auto found=impl_->visionScores.find(key);
+        if(found==impl_->visionScores.end()) {
+            Impl::VisionScoreScratch item;
+            item.query=Allocate(rows*heads,dim);item.key=Allocate(rows*heads,dim);item.scores=Allocate(rows*heads,tokens);
+            const size_t matrices=rows/tokens*heads;
+            auto view=[&](const MetalMatrix& matrix,size_t columns){auto m=matrix.impl_->matrix;
+                auto descriptor=[MPSMatrixDescriptor matrixDescriptorWithRows:tokens columns:columns matrices:matrices
+                    rowBytes:m.rowBytes matrixBytes:tokens*m.rowBytes dataType:MPSDataTypeFloat32];
+                return [[MPSMatrix alloc] initWithBuffer:m.data descriptor:descriptor];};
+            item.queryView=view(item.query,dim);item.keyView=view(item.key,dim);item.scoreView=view(item.scores,tokens);
+            item.product=[[MPSMatrixMultiplication alloc] initWithDevice:impl_->device transposeLeft:NO transposeRight:YES
+                resultRows:tokens resultColumns:tokens interiorColumns:dim alpha:1 beta:0];
+            item.product.batchSize=matrices;
+            if(!item.queryView||!item.keyView||!item.scoreView||!item.product)throw std::runtime_error("MPS vision score allocation failed");
+            found=impl_->visionScores.emplace(key,std::move(item)).first;
+        }
+        auto& item=found->second;
+        std::copy_n(visionFields,13,mpsFields.begin());
+        mpsFields[5]=item.query.impl_->matrix.rowBytes/4;mpsFields[6]=item.key.impl_->matrix.rowBytes/4;
+        auto pack=[impl_->command computeCommandEncoder];
+        if(!pack)throw std::runtime_error("Cannot create vision Q/K packing encoder");
+        [pack setComputePipelineState:impl_->kernels->visionPackQK];
+        [pack setBuffer:inputs[0].impl_->matrix.data offset:0 atIndex:0];
+        [pack setBuffer:item.query.impl_->matrix.data offset:0 atIndex:1];
+        [pack setBuffer:item.key.impl_->matrix.data offset:0 atIndex:2];
+        [pack setBytes:mpsFields.data() length:sizeof(mpsFields) atIndex:3];
+        const size_t count=Elements(rows,hidden);
+        [pack dispatchThreads:MTLSizeMake(count,1,1) threadsPerThreadgroup:MTLSizeMake(std::min(count,size_t(impl_->kernels->visionPackQK.maxTotalThreadsPerThreadgroup)),1,1)];
+        [pack endEncoding];
+        [item.product encodeToCommandBuffer:impl_->command leftMatrix:item.queryView rightMatrix:item.keyView resultMatrix:item.scoreView];
+        mpsScores=item.scores;mpsFields[5]=item.scores.impl_->matrix.rowBytes/4;
+        parameters=mpsFields.data();pipeline=impl_->kernels->visionSoftmax;
+    }
+#endif
     auto encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal state kernel encoder");
     [encoder setComputePipelineState:pipeline];
     for(size_t i=0;i<inputs.size();++i)[encoder setBuffer:inputs[i].impl_->matrix.data offset:0 atIndex:i];
+#ifdef GARNET_METAL_MPS_VISION_SCORES
+    if(mpsVisionScores)[encoder setBuffer:mpsScores.impl_->matrix.data offset:0 atIndex:1];
+#endif
     [encoder setBuffer:c.data offset:0 atIndex:inputs.size()];
     if(secondOutput)[encoder setBuffer:secondOutput->impl_->matrix.data offset:0 atIndex:inputs.size()+1];
     [encoder setBytes:parameters length:parameterBytes atIndex:inputs.size()+1+(secondOutput?1:0)];

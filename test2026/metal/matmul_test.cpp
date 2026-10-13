@@ -10,6 +10,42 @@
 int main() {
     try {
         Garnet::MetalContext gpu;
+#ifdef GARNET_METAL_MPS_VISION_SCORES
+        size_t visionChecks=0;
+        for(size_t tokens:{4,24,216})for(size_t batch:{1,2})for(size_t heads:{2,12})for(size_t dim:{8,64}) {
+            const size_t rows=batch*tokens,hidden=heads*dim,width=3*hidden;
+            std::vector<float> values(rows*width);
+            auto input=gpu.Allocate(rows,width),output=gpu.Allocate(rows,heads*tokens);
+            for(size_t repeat=0;repeat<2;++repeat) {
+                for(size_t i=0;i<values.size();++i)values[i]=std::sin(float(i+repeat*7919)*0.017f)*0.3f;
+                gpu.Update(input,values);
+                if(repeat==1){gpu.Begin();gpu.EncodeVision(7,{input,input,input},output,tokens,hidden,heads,4);gpu.Abort();}
+                gpu.Begin();gpu.EncodeVision(7,{input,input,input},output,tokens,hidden,heads,4);gpu.SubmitAndWait();
+                auto actual=gpu.Download(output);
+                std::vector<double> scores(tokens);
+                for(size_t row=0;row<rows;++row)for(size_t head=0;head<heads;++head) {
+                    double maximum=-std::numeric_limits<double>::infinity();
+                    const size_t base=row/tokens*tokens;
+                    for(size_t key=0;key<tokens;++key) {
+                        double score=0;
+                        for(size_t d=0;d<dim;++d)score+=double(values[row*width+head*dim+d])*values[(base+key)*width+hidden+head*dim+d];
+                        scores[key]=score/std::sqrt(double(dim));maximum=std::max(maximum,scores[key]);
+                    }
+                    double total=0;for(auto& score:scores){score=std::exp(score-maximum);total+=score;}
+                    double actualSum=0;
+                    for(size_t key=0;key<tokens;++key) {
+                        const float value=actual[row*heads*tokens+head*tokens+key];
+                        if(!std::isfinite(value)||value<0||std::abs(value-scores[key]/total)>3e-6)
+                            throw std::runtime_error("Batched vision scores disagree with independent FP64 softmax reference");
+                        actualSum+=value;
+                    }
+                    if(std::abs(actualSum-1)>3e-6)throw std::runtime_error("Batched vision softmax is not normalized");
+                }
+                ++visionChecks;
+            }
+        }
+        std::cout<<"Batched vision attention independent references PASS cases="<<visionChecks<<"\n";
+#endif
         for(bool transpose: {false,true}) {
             const size_t m=3,k=7,n=5;
             std::vector<float> a(m*k),b(k*n);

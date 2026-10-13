@@ -11,6 +11,10 @@ option(GARNET_METAL_EXACT_HALF_PREFILL "Test exact scaled FP16 storage for mixed
 if(GARNET_METAL_EXACT_HALF_PREFILL)
     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_EXACT_HALF_PREFILL=1)
 endif()
+option(GARNET_METAL_MPS_VISION_SCORES "Test FP32 batched MPS vision attention scores" OFF)
+if(GARNET_METAL_MPS_VISION_SCORES)
+    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_MPS_VISION_SCORES=1)
+endif()
 target_include_directories(garnet_metal PUBLIC src/backends/metal)
 target_compile_options(garnet_metal PRIVATE -fobjc-arc)
 target_link_libraries(garnet_metal PUBLIC

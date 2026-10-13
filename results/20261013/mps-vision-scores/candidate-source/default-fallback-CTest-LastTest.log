@@ -1,0 +1,20 @@
+Start testing: Oct 13 19:46 CST
+----------------------------------------------------------
+1/1 Testing: metal_mps_matmul_reference
+1/1 Test: metal_mps_matmul_reference
+Command: "/Users/zsdx/garnet-metal-investigation/build-mps-vision-scores-off/garnet_metal_matmul_test"
+Directory: /Users/zsdx/garnet-metal-investigation/build-mps-vision-scores-off
+"metal_mps_matmul_reference" start time: Oct 13 19:46 CST
+Output:
+----------------------------------------------------------
+Exact scaled half codec checks=8421120
+Metal/MPS matmul reference PASS device=Apple M4
+<end of output>
+Test time =   0.91 sec
+----------------------------------------------------------
+Test Passed.
+"metal_mps_matmul_reference" end time: Oct 13 19:46 CST
+"metal_mps_matmul_reference" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 13 19:46 CST
