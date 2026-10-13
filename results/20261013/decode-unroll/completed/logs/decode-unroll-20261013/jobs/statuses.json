@@ -1,0 +1,95 @@
+[
+  {
+    "name": "shader",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_decode_unroll_shader.py",
+      "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/metal_context.mm",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/combined.metal"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 0.04791154060512781
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/decode_unroll_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/decode_unroll_gpu"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 1.2224172502756119
+  },
+  {
+    "name": "Qwen3-0.6B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.9087098329328
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/decode_unroll_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 7.195112334098667
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.069184875115752
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/decode_unroll_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 5.692032125312835
+  },
+  {
+    "name": "Qwen3.5-0.8B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 3.2534141670912504
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/decode_unroll_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-unroll-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 8.42137579107657
+  }
+]
