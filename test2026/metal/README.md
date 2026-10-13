@@ -16,6 +16,11 @@ additional quantization. F32 checkpoint matrices, decoder vector weights and
 vision projections retain their FP32 path. These remain experimental adapters with measured M4 profiles;
 remaining performance and serving limits are described below.
 
+The next active target is 2× vLLM-Metal decode throughput and half its first-token
+latency on this same Mac and the same checkpoint. The matched comparison policy
+and frozen workloads are in [VLLM_COMPARISON.md](VLLM_COMPARISON.md). The earlier
+2× tables below compare Garnet revisions, not Garnet against vLLM-Metal.
+
 ## Isolation and checkpoint
 
 Windows source: `D:/CantorAI/Garnet-metal`, branch `feature/qwen35-metal`.

@@ -1,0 +1,43 @@
+Running ["/Users/zsdx/garnet-metal-investigation/comparators/vllm/bin/uv", "python", "install", "3.12", "--no-bin"]
+Downloading cpython-3.12.15-macos-aarch64-none (download) (23.9MiB)
+ Downloaded cpython-3.12.15-macos-aarch64-none (download)
+Installed Python 3.12.15 in 42.99s
+ + cpython-3.12.15-macos-aarch64-none
+Running ["/Users/zsdx/garnet-metal-investigation/comparators/vllm/bin/uv", "venv", "--python", "3.12", "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv"]
+Using CPython 3.12.15
+Creating virtual environment at: garnet-metal-investigation/comparators/vllm/venv
+Activate with: source garnet-metal-investigation/comparators/vllm/venv/bin/activate
+Downloading vllm_metal-0.30.0-cp312-cp312-macosx_15_0_arm64.whl 3786065
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/setup_vllm_comparison.py", line 50, in <module>
+    wheel=download(next(a for a in release['assets'] if a['name'].endswith('cp312-cp312-macosx_15_0_arm64.whl')))
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/setup_vllm_comparison.py", line 22, in download
+    with urllib.request.urlopen(asset['browser_download_url'],timeout=180) as response,partial.open('wb') as stream:
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 187, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 487, in open
+    response = self._open(req, data)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 504, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 464, in _call_chain
+    result = func(*args)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 1369, in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        context=self._context)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 1325, in do_open
+    r = h.getresponse()
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 1459, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 305, in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+                             " response")
+http.client.RemoteDisconnected: Remote end closed connection without response

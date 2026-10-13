@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/setup_vllm_comparison.py", line 40, in <module>
+    archive=download(uv_asset);uv=root/'bin/uv';uv.parent.mkdir(parents=True,exist_ok=True)
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/setup_vllm_comparison.py", line 26, in download
+    assert path.stat().st_size==asset['size'] and digest==expected,asset['name']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: uv-aarch64-apple-darwin.tar.gz
