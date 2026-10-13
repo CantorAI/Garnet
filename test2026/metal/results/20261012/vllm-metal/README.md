@@ -462,6 +462,20 @@ scan. The kernels were not integrated; no serving/vLLM gain is claimed.
 The incomplete initial head scan and corrected source provenance remain
 saved. `build-kv-chunk-vector` remains selected and both targets remain unmet.
 
+### Rejected exact-scaled FP16 body decode
+
+`../../20261013/half-body-decode/` records a body matvec using the exact-scaled
+FP16 cache with FP32 accumulation and inverse output scaling. All 11 native
+checks and completed control outputs pass. The initial 72-request native run
+shows larger gains against slowed controls; the clean 48-request text/coder
+repeat shows only 0.4–1.0% decode improvement with slightly worse TTFT. Two
+confirmation attempts are stopped by the unchanged guard when unrelated
+release-test xlang3 processes appear, so image gains remain unproven. The
+candidate is reverted. A launcher error that rebuilt the control is preserved;
+committed source restores the original exact library SHA before corrected
+timing. No new vLLM gain is claimed. The selected build and full unmet goal
+remain unchanged.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

@@ -1,0 +1,97 @@
+diff --git a/cmake/GarnetMetal.cmake b/cmake/GarnetMetal.cmake
+index 221ddf2..2b30cd7 100644
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -11,6 +11,13 @@ option(GARNET_METAL_EXACT_HALF_PREFILL "Test exact scaled FP16 storage for mixed
+ if(GARNET_METAL_EXACT_HALF_PREFILL)
+     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_EXACT_HALF_PREFILL=1)
+ endif()
++option(GARNET_METAL_EXACT_HALF_DECODE "Test exact scaled FP16 body matvec decode" OFF)
++if(GARNET_METAL_EXACT_HALF_DECODE)
++    if(NOT GARNET_METAL_EXACT_HALF_PREFILL)
++        message(FATAL_ERROR "Exact half decode requires the exact half weight cache")
++    endif()
++    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_EXACT_HALF_DECODE=1)
++endif()
+ target_include_directories(garnet_metal PUBLIC src/backends/metal)
+ target_compile_options(garnet_metal PRIVATE -fobjc-arc)
+ target_link_libraries(garnet_metal PUBLIC
+diff --git a/src/backends/metal/metal_context.mm b/src/backends/metal/metal_context.mm
+index dce7fb1..665aa34 100644
+--- a/src/backends/metal/metal_context.mm
++++ b/src/backends/metal/metal_context.mm
+@@ -39,7 +39,7 @@ struct MetalPipelines {
+     id<MTLLibrary> library;
+     id<MTLComputePipelineState> argmax;
+     id<MTLComputePipelineState> bf16Decode,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
+-    id<MTLComputePipelineState> halfRescale;
++    id<MTLComputePipelineState> halfRescale,halfDecode;
+     id<MTLComputePipelineState> rms;
+     id<MTLComputePipelineState> silu;
+     id<MTLComputePipelineState> add;
+@@ -131,6 +131,40 @@ kernel void bf16_decode(device const float* a [[buffer(0)]],device const ushort*
+     sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
+     if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
+ }
++struct HalfDecodeParams {ulong rows,inner,columns,aStride,oStride,wStride;};
++kernel void exact_half_decode(device const float* a [[buffer(0)]],device const half* weight [[buffer(1)]],
++    device float* out [[buffer(2)]],constant HalfDecodeParams& p [[buffer(3)]],device const int* scales [[buffer(4)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    ulong column=ulong(group)*16+simd*4;
++    if(column>=p.columns)return;
++    float4 sum0=0.0f,sum1=0.0f;
++    if(p.inner%4==0) {
++        for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
++            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
++            half4 b0=*(device const half4*)(weight+column*p.wStride+k),b1=half4(0),b2=half4(0),b3=half4(0);
++            if(column+1<p.columns)b1=*(device const half4*)(weight+(column+1)*p.wStride+k);
++            if(column+2<p.columns)b2=*(device const half4*)(weight+(column+2)*p.wStride+k);
++            if(column+3<p.columns)b3=*(device const half4*)(weight+(column+3)*p.wStride+k);
++            for(uint j=0;j<4;++j) {
++                float4 w=float4(b0[j],b1[j],b2[j],b3[j]);
++                sum0+=x[j]*w;if(p.rows==2)sum1+=y[j]*w;
++            }
++        }
++    } else {
++    for(ulong k=lane;k<p.inner;k+=32) {
++        float x=a[k],y=p.rows==2?a[p.aStride+k]:0.0f;
++        float4 w=0.0f;
++        w.x=float(weight[column*p.wStride+k]);
++        if(column+1<p.columns)w.y=float(weight[(column+1)*p.wStride+k]);
++        if(column+2<p.columns)w.z=float(weight[(column+2)*p.wStride+k]);
++        if(column+3<p.columns)w.w=float(weight[(column+3)*p.wStride+k]);
++        sum0+=x*w;if(p.rows==2)sum1+=y*w;
++    }
++    }
++    sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
++    sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
++    if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=ldexp(sum0[j],-scales[column+j]);if(p.rows==2)out[p.oStride+column+j]=ldexp(sum1[j],-scales[column+j]);}
++}
+ // BF16 weights are expanded only inside a small shared-memory tile. FP32
+ // SIMD-group matrix multiply accumulates two 8x8 output tiles per group.
+ kernel void bf16_gemm(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+@@ -744,6 +778,7 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b
+         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
+         impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
+         impl_->kernels->halfRescale=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"half_rescale"] error:&error];
++        impl_->kernels->halfDecode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"exact_half_decode"] error:&error];
+         impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
+         impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
+         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
+@@ -931,6 +966,16 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
+         [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
+         [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
+         [encoder setBytes:&p length:sizeof(p) atIndex:3];
++#ifdef GARNET_METAL_EXACT_HALF_DECODE
++        if(a.rows<=2&&w->exactHalf&&w->halfScales&&impl_->kernels->halfDecode&&
++            impl_->kernels->halfDecode.threadExecutionWidth==32&&impl_->kernels->halfDecode.maxTotalThreadsPerThreadgroup>=128) {
++            struct HalfParams{uint64_t rows,inner,columns,aStride,oStride,wStride;};
++            HalfParams hp{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4,w->exactHalf.rowBytes/2};
++            [encoder setComputePipelineState:impl_->kernels->halfDecode];
++            [encoder setBuffer:w->exactHalf.data offset:0 atIndex:1];
++            [encoder setBytes:&hp length:sizeof(hp) atIndex:3];[encoder setBuffer:w->halfScales offset:0 atIndex:4];
++        }
++#endif
+         [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+15)/16,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
+         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+     }

@@ -1,0 +1,12 @@
+[
+  {
+    "name": "ctest",
+    "command": [
+      "/opt/homebrew/bin/ctest",
+      "--test-dir",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-decode",
+      "--output-on-failure"
+    ],
+    "exit_code": 1
+  }
+]
