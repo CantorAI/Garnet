@@ -77,6 +77,42 @@ branch retains the original GEMM layout.
 | Qwen3-0.6B | 2 | 228.05 | 214.42 |
 | Qwen2.5-Coder-0.5B-Instruct | 2 | 127.74 | 113.86 |
 
+## Rejected decode-address experiment
+
+`u32-decode/` retains a guarded 32-bit index variant of the unchanged BF16
+GEMV arithmetic, with the original 64-bit fallback. The matrix reference
+test (aligned/odd widths, padded rows and batches) and all three pretrained
+vocabulary-head checks passed. All 48 matched requests had exact outputs and
+clean shutdown. Decode rates were 40.35/68.22 tokens/s for text/coder batch 1
+and 28.96/61.59 for batch 2, only 0.4–1.6% above the visible-cache run.
+That difference does not establish a useful gain. The extra kernel/dispatch
+path was reverted; `rejected_kernel.diff` preserves its implementation.
+
+## Qwen3.5 image compatibility
+
+Actual Qwen3.5-0.8B image inference succeeded on vLLM-Metal, using the same
+existing checkpoint and RealWorld-04 image. The first probe reused its image
+identity; those warm timings are not a fresh-frame baseline. The corrected
+probe assigns a unique multimodal UUID per request, which identifies all
+vLLM image/embedding caches, while disabling processor cache, prefix reuse
+and speculation. It executed three requests with 79 prompt tokens and 54
+visual tokens each, matching the native 288x192 profile's token geometry.
+All produced the same 28-token completed caption and shut down cleanly.
+
+The fresh-process first-use TTFT was 264.29 ms. The two loaded fresh-frame
+TTFTs were 195.81 and 195.82 ms, with total response times 751.88 and
+748.76 ms. Initialization and full per-step outputs are saved separately in
+`u32-decode/vllm-qwen35-fresh-image-probe-20261012`. The earlier probe's
+4.42-second first use includes a different compilation/cache state; these
+are fresh-process measurements with filesystem/compiler caches unflushed.
+
+These are compatibility measurements, not a matched Garnet speed claim.
+The comparator opens/preprocesses the source image inside its request timer;
+the previous native image harness consumes prepared FP32 patches. A shared
+preprocessing/timing boundary and repeated native/comparator VL comparison
+are still required. Internal vision arithmetic also differs (native FP32
+versus comparator BF16) despite identical BF16 checkpoint files.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

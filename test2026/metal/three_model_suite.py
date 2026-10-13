@@ -15,6 +15,12 @@ if phase in ('checks','projection-checks'):
     tasks.append(('vision-small',[sys.executable,str(scripts/'test_vision_graph.py'),runtime,build,str(source)]))
     tasks.append(('vision-pretrained',[sys.executable,str(scripts/'test_pretrained_vision_graph.py'),runtime,build,str(source),str(models/'Qwen3.5-0.8B')]))
     tasks.append(('ctest',['/opt/homebrew/bin/ctest','--test-dir',build,'--output-on-failure']))
+elif phase=='index-checks':
+    # The address-width variant retains the same arithmetic and GEMM path.
+    # Cover aligned/odd and padded matrix cases, then the real large heads.
+    tasks.append(('ctest',['/opt/homebrew/bin/ctest','--test-dir',build,'--output-on-failure']))
+    for name in ('Qwen3.5-0.8B','Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
+        tasks.append((name+'-head',[sys.executable,str(scripts/'test_head_bf16.py'),runtime,build,str(source),str(models/name)]))
 elif phase in ('benchmarks','projection-benchmarks'):
     for batch in (1,2):
         for name in ('Qwen3.5-0.8B','Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):

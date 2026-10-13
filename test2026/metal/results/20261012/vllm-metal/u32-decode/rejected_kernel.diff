@@ -1,0 +1,112 @@
+--- visible-cache/metal_context.mm
++++ u32-decode/metal_context.mm
+@@ -26,7 +26,7 @@
+ struct MetalPipelines {
+     id<MTLLibrary> library;
+     id<MTLComputePipelineState> argmax;
+-    id<MTLComputePipelineState> bf16Decode,bf16Gemm;
++    id<MTLComputePipelineState> bf16Decode,bf16DecodeU32,bf16Gemm;
+     id<MTLComputePipelineState> rms;
+     id<MTLComputePipelineState> silu;
+     id<MTLComputePipelineState> add;
+@@ -76,38 +76,49 @@
+ #include <metal_stdlib>
+ using namespace metal;
+ struct BF16Params {ulong rows,inner,columns,aStride,oStride;};
+-kernel void bf16_decode(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+-    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
+-    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
+-    ulong column=ulong(group)*16+simd*4;
+-    if(column>=p.columns)return;
++template<typename Index>
++inline void bf16_decode_impl(device const float* a,device const ushort* weight,
++    device float* out,constant BF16Params& p,uint group,uint simd,uint lane) {
++    const Index inner=Index(p.inner),columns=Index(p.columns),aStride=Index(p.aStride),oStride=Index(p.oStride);
++    Index column=Index(group)*16+simd*4;
++    if(column>=columns)return;
+     float4 sum0=0.0f,sum1=0.0f;
+-    if(p.inner%4==0) {
+-        for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
+-            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
+-            ushort4 b0=*(device const ushort4*)(weight+column*p.inner+k),b1=ushort4(0),b2=ushort4(0),b3=ushort4(0);
+-            if(column+1<p.columns)b1=*(device const ushort4*)(weight+(column+1)*p.inner+k);
+-            if(column+2<p.columns)b2=*(device const ushort4*)(weight+(column+2)*p.inner+k);
+-            if(column+3<p.columns)b3=*(device const ushort4*)(weight+(column+3)*p.inner+k);
++    if(inner%4==0) {
++        for(Index k=Index(lane)*4;k<inner;k+=128) {
++            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+aStride+k):float4(0.0f);
++            ushort4 b0=*(device const ushort4*)(weight+column*inner+k),b1=ushort4(0),b2=ushort4(0),b3=ushort4(0);
++            if(column+1<columns)b1=*(device const ushort4*)(weight+(column+1)*inner+k);
++            if(column+2<columns)b2=*(device const ushort4*)(weight+(column+2)*inner+k);
++            if(column+3<columns)b3=*(device const ushort4*)(weight+(column+3)*inner+k);
+             for(uint j=0;j<4;++j) {
+                 float4 w=as_type<float4>(uint4(b0[j],b1[j],b2[j],b3[j])<<16);
+                 sum0+=x[j]*w;if(p.rows==2)sum1+=y[j]*w;
+             }
+         }
+     } else {
+-    for(ulong k=lane;k<p.inner;k+=32) {
+-        float x=a[k],y=p.rows==2?a[p.aStride+k]:0.0f;
++    for(Index k=lane;k<inner;k+=32) {
++        float x=a[k],y=p.rows==2?a[aStride+k]:0.0f;
+         float4 w=0.0f;
+-        w.x=as_type<float>(uint(weight[column*p.inner+k])<<16);
+-        if(column+1<p.columns)w.y=as_type<float>(uint(weight[(column+1)*p.inner+k])<<16);
+-        if(column+2<p.columns)w.z=as_type<float>(uint(weight[(column+2)*p.inner+k])<<16);
+-        if(column+3<p.columns)w.w=as_type<float>(uint(weight[(column+3)*p.inner+k])<<16);
++        w.x=as_type<float>(uint(weight[column*inner+k])<<16);
++        if(column+1<columns)w.y=as_type<float>(uint(weight[(column+1)*inner+k])<<16);
++        if(column+2<columns)w.z=as_type<float>(uint(weight[(column+2)*inner+k])<<16);
++        if(column+3<columns)w.w=as_type<float>(uint(weight[(column+3)*inner+k])<<16);
+         sum0+=x*w;if(p.rows==2)sum1+=y*w;
+     }
+     }
+     sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
+     sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
+-    if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
++    if(lane==0)for(uint j=0;j<4&&column+j<columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[oStride+column+j]=sum1[j];}
++}
++kernel void bf16_decode(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
++    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    bf16_decode_impl<ulong>(a,weight,out,p,group,simd,lane);
++}
++kernel void bf16_decode_u32(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
++    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    bf16_decode_impl<uint>(a,weight,out,p,group,simd,lane);
+ }
+ // BF16 weights are expanded only inside a small shared-memory tile. FP32
+ // SIMD-group matrix multiply accumulates two 8x8 output tiles per group.
+@@ -565,6 +576,7 @@
+         impl_->kernels->library=library;
+         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
+         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
++        impl_->kernels->bf16DecodeU32=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_u32"] error:&error];
+         impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
+         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
+         impl_->kernels->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
+@@ -587,7 +599,7 @@
+         impl_->kernels->kvChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk"] error:&error];
+         impl_->kernels->attentionChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_chunk"] error:&error];
+         impl_->kernels->layout=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"chunk_layout"] error:&error];
+-        if(!impl_->kernels->argmax||!impl_->kernels->bf16Decode||!impl_->kernels->bf16Gemm||!impl_->kernels->rms||!impl_->kernels->silu||!impl_->kernels->add||!impl_->kernels->mask||!impl_->kernels->conv||!impl_->kernels->delta||!impl_->kernels->slice||
++        if(!impl_->kernels->argmax||!impl_->kernels->bf16Decode||!impl_->kernels->bf16DecodeU32||!impl_->kernels->bf16Gemm||!impl_->kernels->rms||!impl_->kernels->silu||!impl_->kernels->add||!impl_->kernels->mask||!impl_->kernels->conv||!impl_->kernels->delta||!impl_->kernels->slice||
+             !impl_->kernels->prepare||!impl_->kernels->gatedNorm||!impl_->kernels->concat||!impl_->kernels->normRope||!impl_->kernels->kvUpdate||!impl_->kernels->scores||!impl_->kernels->scoresSerial||!impl_->kernels->attentionContext||!impl_->kernels->vision||!impl_->kernels->visionNorm||!impl_->kernels->visionScores||!impl_->kernels->layout||!impl_->kernels->kvChunk||!impl_->kernels->attentionChunk)
+             throw std::runtime_error("Cannot create Qwen Metal pipelines");
+         cached=impl_->kernels;
+@@ -667,7 +679,13 @@
+         if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
+         if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
+             throw std::logic_error("BF16 output belongs to another command batch");
+-        auto pipeline=a.rows<=2?impl_->kernels->bf16Decode:impl_->kernels->bf16Gemm;
++        // Keep the wide-index fallback for buffers outside the uint range.
++        // The guards also leave room for the final loop/group increments.
++        const size_t limit32=std::numeric_limits<uint32_t>::max();
++        const bool compactIndex=a.columns<=limit32-128 && o.columns<=limit32-16 &&
++            w->rows<=limit32/w->columns && a.rowBytes/4<=limit32/a.rows &&
++            o.rowBytes/4<=limit32/o.rows;
++        auto pipeline=a.rows<=2?(compactIndex?impl_->kernels->bf16DecodeU32:impl_->kernels->bf16Decode):impl_->kernels->bf16Gemm;
+         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
+             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
+         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
