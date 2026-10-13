@@ -65,6 +65,25 @@ int main() {
             if(actual[1]!=1||actual[3]!=1)throw std::runtime_error("GPU argmax did not report nonfinite logits");
         }
         auto input=gpu.Upload({1,2,3,4},2,2);
+        // Check aligned vector copies and irregular scalar fallbacks against
+        // independent row/group indexing, including padded matrix rows.
+        for(size_t rows:{1,2,5})for(size_t groups:{1,3})
+            for(size_t width:{7,12,20})for(size_t start:{0,1,4})for(size_t count:{1,3,4,8}) {
+                if(start+count>width)continue;
+                std::vector<float> values(rows*groups*width),expected(rows*groups*count);
+                for(size_t index=0;index<values.size();++index) {
+                    const uint32_t bits=index%2?0x80000000u:0x3f000000u+uint32_t(index);
+                    std::memcpy(&values[index],&bits,sizeof(bits));
+                }
+                for(size_t row=0;row<rows;++row)for(size_t group=0;group<groups;++group)
+                    for(size_t col=0;col<count;++col)
+                        expected[(row*groups+group)*count+col]=values[(row*groups+group)*width+start+col];
+                auto source=gpu.Upload(values,rows,groups*width),slice=gpu.Allocate(rows,groups*count);
+                gpu.Begin();gpu.EncodeSliceGroups(source,slice,groups,width,start,count);gpu.SubmitAndWait();
+                const auto actual=gpu.Download(slice);
+                if(std::memcmp(actual.data(),expected.data(),expected.size()*sizeof(float)))
+                    throw std::runtime_error("Grouped slice differs from independent bitwise reference");
+            }
         auto weight=gpu.Upload({2,0,0,3},2,2);
         auto hidden=gpu.Allocate(2,2),output=gpu.Allocate(2,2);
         for(int request=0;request<2;++request) {

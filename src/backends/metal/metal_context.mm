@@ -41,7 +41,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> mask;
     id<MTLComputePipelineState> conv;
     id<MTLComputePipelineState> delta;
-    id<MTLComputePipelineState> slice;
+    id<MTLComputePipelineState> slice,sliceVector;
     id<MTLComputePipelineState> prepare;
     id<MTLComputePipelineState> gatedNorm;
     id<MTLComputePipelineState> concat;
@@ -488,6 +488,13 @@ kernel void slice_groups(device const float* input [[buffer(0)]],device float* o
     ulong col=id%p.count,group=(id/p.count)%p.groups,row=id/(p.count*p.groups);
     output[row*p.oStride+group*p.count+col]=input[row*p.iStride+group*p.sourceWidth+p.start+col];
 }
+kernel void slice_groups_vector4(device const float4* input [[buffer(0)]],device float4* output [[buffer(1)]],
+    constant SliceParams& p [[buffer(2)]],uint id [[thread_position_in_grid]]) {
+    uint count=uint(p.count/4),groups=uint(p.groups);
+    if(id>=uint(p.batch)*groups*count)return;
+    uint col=id%count,group=(id/count)%groups,row=id/(count*groups);
+    output[row*uint(p.oStride/4)+group*count+col]=input[row*uint(p.iStride/4)+group*uint(p.sourceWidth/4)+uint(p.start/4)+col];
+}
 struct ConvParams {ulong batch,channels,kSize,tStride,wStride,sStride,aStride,oStride;};
 kernel void causal_conv(device const float* token [[buffer(0)]],device const float* weight [[buffer(1)]],
     device const float* state [[buffer(2)]],device const float* active [[buffer(3)]],
@@ -669,6 +676,7 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
         impl_->kernels->delta=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta"] error:&error];
         impl_->kernels->slice=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups"] error:&error];
+        impl_->kernels->sliceVector=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups_vector4"] error:&error];
         impl_->kernels->prepare=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"linear_prepare"] error:&error];
         impl_->kernels->gatedNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_norm"] error:&error];
         impl_->kernels->concat=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"concat_rows"] error:&error];
@@ -919,9 +927,9 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
             throw std::logic_error("Uninitialized Metal state kernel input");
         if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
     }
-    if(operation>14)throw std::invalid_argument("Unknown Metal state kernel");
+    if(operation>15)throw std::invalid_argument("Unknown Metal state kernel");
     id<MTLComputePipelineState> pipelines[]={impl_->kernels->conv,impl_->kernels->delta,impl_->kernels->slice,impl_->kernels->prepare,impl_->kernels->gatedNorm,
-        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector};
+        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector};
     auto pipeline=pipelines[operation];
     const auto* visionFields=static_cast<const uint64_t*>(parameters);
     const bool visionNorm=operation==10&&visionFields[12]==1;
@@ -1013,7 +1021,10 @@ void MetalContext::EncodeSliceGroups(const MetalMatrix& input,const MetalMatrix&
         throw std::invalid_argument("Metal grouped slice shape mismatch");
     struct Params {uint64_t batch,groups,sourceWidth,start,count,iStride,oStride;};
     Params p{i.rows,groups,sourceWidth,start,count,i.rowBytes/4,o.rowBytes/4};
-    EncodeStateKernel(2,{input},output,&p,sizeof(p),Elements(o.rows,o.columns));
+    const size_t limit=std::numeric_limits<uint32_t>::max();
+    const bool vectorized=sourceWidth%4==0&&start%4==0&&count%4==0&&p.iStride%4==0&&p.oStride%4==0&&
+        i.rows<=limit/p.iStride&&o.rows<=limit/p.oStride&&impl_->kernels->sliceVector;
+    EncodeStateKernel(vectorized?15:2,{input},output,&p,sizeof(p),Elements(o.rows,o.columns)/(vectorized?4:1));
 }
 void MetalContext::EncodeGatedDelta(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& value,
     const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,const MetalMatrix& active,

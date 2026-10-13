@@ -1,0 +1,6 @@
+{
+  "scope": "Serialized per-operation attribution only; GPU/cache/dispatch behavior differs from serving",
+  "native_library_sha256": "01ac8c4f04a91f20fcb3108ba451c3e54fc77daf3c6bc0f6103aa803848ab741",
+  "runner_sha256": "b898887c0cf92e740cde42bce6d8e876c153d5eef857cd1de1a72b77563f3826",
+  "flag": "GARNET_METAL_PROFILE_OPS=1"
+}

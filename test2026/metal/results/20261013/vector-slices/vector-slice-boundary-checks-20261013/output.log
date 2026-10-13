@@ -1,0 +1,14 @@
+Executing after successful owned predecessor ["/opt/homebrew/bin/python3", "/Users/zsdx/garnet-metal-investigation/check_vector_boundaries.py"]
+Executing ["/opt/homebrew/bin/cmake", "--build", "/Users/zsdx/garnet-metal-investigation/build-vector-slice", "--target", "garnet_metal_matmul_test", "--parallel", "4"]
+[ 50%] Built target garnet_metal
+[ 75%] Building CXX object CMakeFiles/garnet_metal_matmul_test.dir/test2026/metal/matmul_test.cpp.o
+[100%] Linking CXX executable garnet_metal_matmul_test
+[100%] Built target garnet_metal_matmul_test
+Executing ["/opt/homebrew/bin/ctest", "--test-dir", "/Users/zsdx/garnet-metal-investigation/build-vector-slice", "--output-on-failure"]
+Test project /Users/zsdx/garnet-metal-investigation/build-vector-slice
+    Start 1: metal_mps_matmul_reference
+1/1 Test #1: metal_mps_matmul_reference .......   Passed    0.55 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.55 sec

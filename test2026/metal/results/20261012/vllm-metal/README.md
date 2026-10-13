@@ -378,6 +378,21 @@ transaction test is retained and passed on the selected wide-prefill build.
 GPU execution and data movement remain the larger targets. The full objective
 remains active and unmet.
 
+### Validated vector state slices
+
+`../../20261013/vector-slices/` records serialized operation attribution,
+all 11 native checks, 192 independent bitwise slice checks, 72 native ABBA
+requests and 72 fresh matched vLLM-Metal requests. `build-vector-slice` is now
+selected. Aligned state slices copy four floats per thread, with bounds/layout
+guards and the scalar fallback. Actual image TTFT falls 11.3%/19.6% and decode
+gains 4.4%/10.8% versus the wide-prefill control at batch 1/2; text/coder decode
+is unchanged. All native control outputs match exactly. The updated matched
+image batch-1 result is 45.67 versus 48.06 tokens/s, with TTFT 614.39 versus
+204.99 ms. Image batch 2 retains its different/capped comparator caption.
+All six profiles still fail both targets. Same BF16 weights and the native
+FP32 versus comparator BF16 internal arithmetic limits remain explicit.
+The objective remains active and unmet.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in
