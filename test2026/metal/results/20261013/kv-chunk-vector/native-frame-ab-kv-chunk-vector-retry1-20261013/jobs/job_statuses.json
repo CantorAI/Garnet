@@ -1,0 +1,154 @@
+[
+  {
+    "name": "Qwen3.5-0.8B-b1-garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-kv-chunk-vector",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b1-garnet-0/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 6.959528541658074
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-garnet-control-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b1-garnet-control-0/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 7.026339374948293
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-garnet-control-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b1-garnet-control-1/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 6.93901599990204
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-kv-chunk-vector",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b1-garnet-1/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 6.986195292323828
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-kv-chunk-vector",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b2-garnet-0/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 7.802218624856323
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-garnet-control-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b2-garnet-control-0/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 7.786887167021632
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-garnet-control-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b2-garnet-control-1/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 7.801620583049953
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-kv-chunk-vector",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-ab-kv-chunk-vector-retry1-20261013/jobs/Qwen3.5-0.8B-b2-garnet-1/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 7.784276832826436
+  }
+]

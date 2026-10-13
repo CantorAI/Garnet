@@ -437,6 +437,19 @@ The option remains off by default. Another 72 actual matched vLLM requests
 confirm that all six profiles still miss both targets. Precision and batch-2
 image output caveats remain explicit. The full objective stays active.
 
+### Validated vector chunk KV-cache updates
+
+`../../20261013/kv-chunk-vector/` records aligned float4 copies with guarded
+32-bit addressing, 144 independent bitwise update cases, all 11 native checks,
+72 native ABBA requests and 72 fresh matched vLLM requests. The selected build
+is `build-kv-chunk-vector`, retaining the exact-half prefill option. Against
+the preceding selected build, Qwen3 TTFT falls 20.2%/24.8% for batch 1/2;
+coder falls 3.5–4.4%, and image changes are small. All native outputs match.
+Decode is essentially unchanged. The fresh batch-1 Qwen3 result is 56.92 versus
+74.02 tokens/s, with TTFT 70.00 versus 49.58 ms. All six profiles still miss
+both targets. Failed initial compilation/gated attempts, precision limits and
+the existing batch-2 image-output caveat remain saved. The goal stays active.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

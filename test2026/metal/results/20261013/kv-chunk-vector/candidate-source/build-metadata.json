@@ -1,0 +1,8 @@
+{
+  "native_library_sha256": "564b515ab6b0eb68413ef5a54de6beff47d333f8f1fa6a1188562bf6e5c28ec4",
+  "cmake_options": [
+    "GARNET_METAL:BOOL=ON",
+    "GARNET_METAL_EXACT_HALF_PREFILL:BOOL=ON",
+    "GARNET_METAL_XMODEL:BOOL=ON"
+  ]
+}

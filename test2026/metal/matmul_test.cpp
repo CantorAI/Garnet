@@ -149,6 +149,25 @@ int main() {
                 if(!inPlace)throw std::runtime_error("Split delta accepted in-place state update");
             }
         }
+        for(size_t rows:{1,2})for(size_t heads:{1,3})for(size_t dim:{5,8,128})for(size_t chunk:{2,4,16})for(int pattern=0;pattern<4;++pattern) {
+            const size_t capacity=32,width=heads*capacity*dim;
+            std::vector<float> token(rows*chunk*heads*dim),cache(rows*width),slots(rows*chunk),active(rows*chunk,1),expected;
+            for(size_t i=0;i<token.size();++i)token[i]=float(i)*0.125f+100;
+            for(size_t i=0;i<cache.size();++i){uint32_t bits=i%2?0x80000000u:0x3f000000u+uint32_t(i);std::memcpy(&cache[i],&bits,4);}
+            for(size_t row=0;row<rows;++row)for(size_t t=0;t<chunk;++t) {
+                slots[row*chunk+t]=float(t+2);
+                if(pattern==1&&t>=chunk/2)active[row*chunk+t]=0;
+                if(pattern==2){slots[row*chunk+t]=float((t*3)%capacity);if(t==1)active[row*chunk+t]=0;}
+                if(pattern==3)slots[row*chunk+t]=float((t%2)+5);
+            }
+            expected=cache;
+            for(size_t row=0;row<rows;++row)for(size_t t=0;t<chunk;++t)if(active[row*chunk+t])
+                for(size_t head=0;head<heads;++head)for(size_t col=0;col<dim;++col)
+                    expected[row*width+(head*capacity+size_t(slots[row*chunk+t]))*dim+col]=token[(row*chunk+t)*heads*dim+head*dim+col];
+            auto a=gpu.Upload(token,rows*chunk,heads*dim),c=gpu.Upload(cache,rows,width),s=gpu.Upload(slots,rows,chunk),flags=gpu.Upload(active,rows,chunk),out=gpu.Allocate(rows,width);
+            gpu.Begin();gpu.EncodeKVChunk(a,c,s,flags,out,heads,dim,capacity,chunk,pattern<=1);gpu.SubmitAndWait();const auto actual=gpu.Download(out);
+            if(std::memcmp(actual.data(),expected.data(),expected.size()*sizeof(float)))throw std::runtime_error("Chunk KV copy differs from independent latest-active-write reference");
+        }
         auto input=gpu.Upload({1,2,3,4},2,2);
         // Check aligned vector copies and irregular scalar fallbacks against
         // independent row/group indexing, including padded matrix rows.

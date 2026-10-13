@@ -51,7 +51,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> gatedNorm;
     id<MTLComputePipelineState> concat;
     id<MTLComputePipelineState> normRope,kvUpdate,kvUpdateVector,scores,scoresSerial,attentionContext;
-    id<MTLComputePipelineState> vision,visionNorm,visionScores,layout,kvChunk,attentionChunk;
+    id<MTLComputePipelineState> vision,visionNorm,visionScores,layout,kvChunk,kvChunkVector,attentionChunk;
 };
 static std::mutex pipelineMutex;
 static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
@@ -335,6 +335,26 @@ kernel void kv_chunk(device const float* token [[buffer(0)]],device const float*
         for(uint t=0;t<p.chunk;++t)if(active[row*p.aStride+t]!=0.0f&&slots[row*p.sStride+t]==float(s))latest=int(t);
     }
     output[row*p.oStride+col]=latest<0?cache[row*p.cStride+col]:token[(row*p.chunk+ulong(latest))*p.tStride+h*p.dim+d];
+}
+kernel void kv_chunk_vector4(device const float* token [[buffer(0)]],device const float* cache [[buffer(1)]],
+    device const float* slots [[buffer(2)]],device const float* active [[buffer(3)]],device float* output [[buffer(4)]],
+    constant KVChunkParams& p [[buffer(5)]],uint id [[thread_position_in_grid]]) {
+    const uint dim=uint(p.dim/4),capacity=uint(p.capacity),chunk=uint(p.chunk),width=uint(p.heads)*capacity*dim;
+    if(id>=uint(p.batch)*width)return;
+    uint row=id/width,col=id%width,d=col%dim,s=(col/dim)%capacity,h=col/(capacity*dim);
+    int latest=-1;
+    if(p.contiguous) {
+        if(active[row*uint(p.aStride)]!=0.0f) {
+            int candidate=int(s)-int(slots[row*uint(p.sStride)]);
+            if(candidate>=0&&uint(candidate)<chunk&&active[row*uint(p.aStride)+uint(candidate)]!=0.0f)latest=candidate;
+        }
+    } else {
+        for(uint t=0;t<chunk;++t)if(active[row*uint(p.aStride)+t]!=0.0f&&slots[row*uint(p.sStride)+t]==float(s))latest=int(t);
+    }
+    device const float4* source=(device const float4*)token;
+    device const float4* previous=(device const float4*)cache;
+    device float4* next=(device float4*)output;
+    next[row*uint(p.oStride/4)+col]=latest<0?previous[row*uint(p.cStride/4)+col]:source[(row*chunk+uint(latest))*uint(p.tStride/4)+h*dim+d];
 }
 struct ChunkAttentionParams {ulong batch,chunk,heads,kvHeads,dim,capacity,qStride,kStride,vStride,kcStride,vcStride,sStride,aStride,gStride,oStride,gated;};
 kernel void attention_chunk(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
@@ -748,6 +768,7 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->visionScores=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_scores"] error:&error];
         impl_->kernels->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
         impl_->kernels->kvChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk"] error:&error];
+        impl_->kernels->kvChunkVector=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk_vector4"] error:&error];
         impl_->kernels->attentionChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_chunk"] error:&error];
         impl_->kernels->layout=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"chunk_layout"] error:&error];
         if(!impl_->kernels->argmax||!impl_->kernels->bf16Decode||!impl_->kernels->bf16Gemm||!impl_->kernels->rms||!impl_->kernels->silu||!impl_->kernels->add||!impl_->kernels->mask||!impl_->kernels->conv||!impl_->kernels->delta||!impl_->kernels->slice||
@@ -1058,9 +1079,9 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         for(const auto& input:inputs)if(second->matrix.data==input.impl_->matrix.data)
             throw std::invalid_argument("In-place secondary state output is unsupported");
     }
-    if(operation>16)throw std::invalid_argument("Unknown Metal state kernel");
+    if(operation>17)throw std::invalid_argument("Unknown Metal state kernel");
     id<MTLComputePipelineState> pipelines[]={impl_->kernels->conv,impl_->kernels->delta,impl_->kernels->slice,impl_->kernels->prepare,impl_->kernels->gatedNorm,
-        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector,impl_->kernels->deltaSplit};
+        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector,impl_->kernels->deltaSplit,impl_->kernels->kvChunkVector};
     auto pipeline=pipelines[operation];
     const auto* visionFields=static_cast<const uint64_t*>(parameters);
     const bool visionNorm=operation==10&&visionFields[12]==1;
@@ -1267,7 +1288,11 @@ void MetalContext::EncodeKVChunk(const MetalMatrix& token,const MetalMatrix& cac
         throw std::invalid_argument("Chunk KV layout mismatch");
     struct Params {uint64_t batch,heads,dim,capacity,chunk,tStride,cStride,sStride,aStride,oStride,contiguous;};
     Params p{c.rows,heads,dim,capacity,chunk,t.rowBytes/4,c.rowBytes/4,s.rowBytes/4,a.rowBytes/4,o.rowBytes/4,uint64_t(contiguousSlots)};
-    EncodeStateKernel(12,{token,cache,slots,active},output,&p,sizeof(p),Elements(c.rows,width));
+    const size_t count=Elements(c.rows,width),limit=std::numeric_limits<uint32_t>::max();
+    const bool vector=dim%4==0&&t.rowBytes%16==0&&c.rowBytes%16==0&&o.rowBytes%16==0&&count<=limit&&
+        p.tStride<=limit/t.rows&&p.cStride<=limit/c.rows&&p.oStride<=limit/o.rows&&
+        p.sStride<=limit/s.rows&&p.aStride<=limit/a.rows&&impl_->kernels->kvChunkVector;
+    EncodeStateKernel(vector?17:12,{token,cache,slots,active},output,&p,sizeof(p),vector?count/4:count);
 }
 void MetalContext::EncodeAttentionChunk(const std::vector<MetalMatrix>& inputs,const MetalMatrix& output,
     size_t heads,size_t kvHeads,size_t dim,size_t capacity,size_t chunk,bool gated) {
