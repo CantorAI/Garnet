@@ -487,6 +487,19 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 auto norm=Weight(prefix+".norm.weight");
                 if(slots_[norm].rows!=1||slots_[norm].columns!=vd)throw std::runtime_error("Metal linear norm weight shape mismatch");
                 const size_t qw=vh*kd,vw=vh*vd,pw=2*qw+vw+2*vh;
+                bool chunkConv=false;size_t preparedTokens=0;
+#ifdef GARNET_METAL_LINEAR_CHUNK_CONV
+                chunkConv=isChunk&&kernel<=8;
+                if(chunkConv) {
+                    auto convolution=Allocate(batch*chunk,channels),nextConv=Allocate(batch,channels*kernel);
+                    Op conv{Kind::ConvChunk,qkv,convWeight,convolution};conv.arguments={qkv,convWeight,convState,active};
+                    conv.dimensions={chunk,kernel};conv.auxiliaryOutput=nextConv;ops_.push_back(std::move(conv));convState=nextConv;
+                    auto prepared=Allocate(batch*chunk,pw);
+                    Op prepare{Kind::Prepare,convolution,ap,prepared};prepare.arguments={convolution,ap,bp,aLog,dt};
+                    prepare.dimensions={kh,vh,kd,vd,0};ops_.push_back(std::move(prepare));
+                    preparedTokens=layout(prepared,batch,chunk*pw);
+                }
+#endif
                 size_t accumulated=0;
                 bool directWrite=false;
 #ifdef GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE
@@ -498,12 +511,16 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                         return isChunk?slice(projected,1,chunk*columns,token*columns,columns):projected;
                     };
                     auto tokenActive=isChunk?slice(active,1,chunk,token,1,{int64_t(batch)}):active;
-                    auto tokenQkv=select(qkvTokens,channels),tokenZ=select(zTokens,vw),tokenA=select(aTokens,vh),tokenB=select(bTokens,vh);
-                    auto convPacked=Allocate(batch,channels*(kernel+1));
-                    Op conv{Kind::Conv,tokenQkv,convWeight,convPacked};conv.arguments={tokenQkv,convWeight,convState,tokenActive};conv.dimensions={kernel};ops_.push_back(std::move(conv));
-                    auto prepared=Allocate(batch,pw);
-                    Op prepare{Kind::Prepare,convPacked,tokenA,prepared};prepare.arguments={convPacked,tokenA,tokenB,aLog,dt};
-                    prepare.dimensions={kh,vh,kd,vd,kernel};ops_.push_back(std::move(prepare));
+                    auto tokenZ=select(zTokens,vw);size_t convPacked=0,prepared=0;
+                    if(chunkConv)prepared=select(preparedTokens,pw);
+                    else {
+                        auto tokenQkv=select(qkvTokens,channels),tokenA=select(aTokens,vh),tokenB=select(bTokens,vh);
+                        convPacked=Allocate(batch,channels*(kernel+1));
+                        Op conv{Kind::Conv,tokenQkv,convWeight,convPacked};conv.arguments={tokenQkv,convWeight,convState,tokenActive};conv.dimensions={kernel};ops_.push_back(std::move(conv));
+                        prepared=Allocate(batch,pw);
+                        Op prepare{Kind::Prepare,convPacked,tokenA,prepared};prepare.arguments={convPacked,tokenA,tokenB,aLog,dt};
+                        prepare.dimensions={kh,vh,kd,vd,kernel};ops_.push_back(std::move(prepare));
+                    }
                     auto q=slice(prepared,1,pw,0,qw),k=slice(prepared,1,pw,qw,qw),v=slice(prepared,1,pw,2*qw,vw),
                         g=slice(prepared,1,pw,2*qw+vw,vh),beta=slice(prepared,1,pw,2*qw+vw+vh,vh);
                     auto deltaPacked=Allocate(batch,vw*(kd+1));
@@ -517,7 +534,8 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                         auto joined=Allocate(batch,(token+1)*vw);Op join{Kind::Concat,accumulated,gated,joined};
                         join.arguments={accumulated,gated,gated};join.transpose=false;ops_.push_back(std::move(join));accumulated=joined;
                     }
-                    convState=slice(convPacked,channels,kernel+1,1,kernel);state=slice(deltaPacked,vh,(kd+1)*vd,vd,kd*vd);
+                    if(!chunkConv)convState=slice(convPacked,channels,kernel+1,1,kernel);
+                    state=slice(deltaPacked,vh,(kd+1)*vd,vd,kd*vd);
                 }
                 auto gated=isChunk?layout(accumulated,batch*chunk,vw):accumulated;
                 auto hidden=matmul(gated,Weight(prefix+".out_proj.weight"));
@@ -767,7 +785,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
     // They identify expensive kernels; their latency is not a serving metric.
     const char* profile=std::getenv("GARNET_METAL_PROFILE_OPS");
     const bool profileOps=profile&&std::strcmp(profile,"1")==0;
-    static const char* names[]={"MatMul","BF16MatVec","Norm","Silu","Add","Bias","Mask","Conv","Delta","Slice","Prepare","GateNorm","Concat","NormRope","KVUpdate","KVChunk","AttentionChunk","Scores","AttentionContext","Vision","Layout","DeltaSplit"};
+    static const char* names[]={"MatMul","BF16MatVec","Norm","Silu","Add","Bias","Mask","Conv","Delta","Slice","Prepare","GateNorm","Concat","NormRope","KVUpdate","KVChunk","AttentionChunk","Scores","AttentionContext","Vision","Layout","DeltaSplit","ConvChunk"};
     for(size_t i=0;i<ops_.size();++i) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
@@ -786,6 +804,9 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         else if(op.kind==Kind::Conv) {
             auto& args=op.arguments;gpu.EncodeCausalConv(slots_[args[0]].matrix,slots_[args[1]].matrix,
                 slots_[args[2]].matrix,slots_[args[3]].matrix,out,op.dimensions[0]);
+        }else if(op.kind==Kind::ConvChunk) {
+            auto& args=op.arguments;gpu.EncodeCausalConvChunk(slots_[args[0]].matrix,slots_[args[1]].matrix,
+                slots_[args[2]].matrix,slots_[args[3]].matrix,out,slots_[op.auxiliaryOutput].matrix,op.dimensions[0],op.dimensions[1]);
         }else if(op.kind==Kind::Delta) {
             auto& args=op.arguments;gpu.EncodeGatedDelta(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                 slots_[args[3]].matrix,slots_[args[4]].matrix,slots_[args[5]].matrix,slots_[args[6]].matrix,out,

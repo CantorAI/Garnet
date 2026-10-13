@@ -27,6 +27,10 @@ option(GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE "Write recurrent chunk outputs dir
 if(GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE)
     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=1)
 endif()
+option(GARNET_METAL_LINEAR_CHUNK_CONV "Process causal convolution and preparation across a prompt chunk" OFF)
+if(GARNET_METAL_LINEAR_CHUNK_CONV)
+    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LINEAR_CHUNK_CONV=1)
+endif()
 target_include_directories(garnet_metal PUBLIC src/backends/metal)
 target_compile_options(garnet_metal PRIVATE -fobjc-arc)
 target_link_libraries(garnet_metal PUBLIC

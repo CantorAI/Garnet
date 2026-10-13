@@ -11,7 +11,7 @@ namespace Garnet {
 class MetalCompiledGraph {
     friend class MetalDecoderSession;
     struct Slot {MetalMatrix matrix;size_t rows=0,columns=0;std::vector<int64_t> shape;MetalBF16Weight bf16;};
-    enum class Kind {MatMul,BF16MatVec,Norm,Silu,Add,Bias,Mask,Conv,Delta,Slice,Prepare,GateNorm,Concat,NormRope,KVUpdate,KVChunk,AttentionChunk,Scores,AttentionContext,Vision,Layout,DeltaSplit};
+    enum class Kind {MatMul,BF16MatVec,Norm,Silu,Add,Bias,Mask,Conv,Delta,Slice,Prepare,GateNorm,Concat,NormRope,KVUpdate,KVChunk,AttentionChunk,Scores,AttentionContext,Vision,Layout,DeltaSplit,ConvChunk};
     struct Op {Kind kind;size_t a,b,out;float epsilon=0,offset=0;bool transpose=false;
         std::vector<size_t> arguments={},dimensions={};bool contiguousSlots=false;size_t auxiliaryOutput=SIZE_MAX;};
     std::unique_ptr<MetalContext> gpu_;

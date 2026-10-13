@@ -268,6 +268,39 @@ int main() {
                 if(std::memcmp(actual.data(),expected.data(),expected.size()*sizeof(float)))
                     throw std::runtime_error("Grouped slice differs from independent bitwise reference");
             }
+#ifdef GARNET_METAL_LINEAR_CHUNK_CONV
+        // Compare the full convolution sequence and final state with the
+        // existing one-token kernel, including pause/resume and row padding.
+        for(size_t batch:{size_t(1),size_t(2)})for(size_t channels:{size_t(3),size_t(129)})
+        for(size_t kernel:{size_t(1),size_t(4),size_t(8)})for(size_t chunk:{size_t(1),size_t(4),size_t(16),size_t(64)}) {
+            std::vector<float> tokens(batch*chunk*channels),weight(channels*kernel),initial(batch*channels*kernel),active(batch*chunk);
+            for(size_t i=0;i<tokens.size();++i)tokens[i]=float(int(i%31)-15)*0.125f;
+            for(size_t i=0;i<weight.size();++i)weight[i]=float(int(i%11)-5)*0.0625f;
+            for(size_t i=0;i<initial.size();++i)initial[i]=float(int(i%19)-9)*0.25f;
+            for(size_t row=0;row<batch;++row)for(size_t token=0;token<chunk;++token)
+                active[row*chunk+token]=token+1==chunk?0.0f:(row==1?float(token%3==1):float(token%5!=2));
+            auto w=gpu.Upload(weight,channels,kernel),state=gpu.Upload(initial,batch,channels*kernel);
+            std::vector<float> expected(tokens.size()),lastState=initial;
+            for(size_t token=0;token<chunk;++token) {
+                std::vector<float> one(batch*channels),mask(batch);
+                for(size_t row=0;row<batch;++row){mask[row]=active[row*chunk+token];for(size_t col=0;col<channels;++col)one[row*channels+col]=tokens[(row*chunk+token)*channels+col];}
+                auto t=gpu.Upload(one,batch,channels),a=gpu.Upload(mask,batch,1),packed=gpu.Allocate(batch,channels*(kernel+1));
+                gpu.Begin();gpu.EncodeCausalConv(t,w,state,a,packed,kernel);gpu.SubmitAndWait();auto values=gpu.Download(packed);
+                for(size_t row=0;row<batch;++row)for(size_t col=0;col<channels;++col) {
+                    auto start=(row*channels+col)*(kernel+1);expected[(row*chunk+token)*channels+col]=values[start];
+                    for(size_t j=0;j<kernel;++j)lastState[(row*channels+col)*kernel+j]=values[start+1+j];
+                }
+                state=gpu.Upload(lastState,batch,channels*kernel);
+            }
+            auto t=gpu.Upload(tokens,batch*chunk,channels),a=gpu.Upload(active,batch,chunk),s=gpu.Upload(initial,batch,channels*kernel);
+            auto output=gpu.Allocate(batch*chunk,channels),next=gpu.Allocate(batch,channels*kernel);
+            gpu.Begin();gpu.EncodeCausalConvChunk(t,w,s,a,output,next,chunk,kernel);gpu.SubmitAndWait();
+            auto obtained=gpu.Download(output),finalState=gpu.Download(next);
+            if(std::memcmp(obtained.data(),expected.data(),expected.size()*sizeof(float))||std::memcmp(finalState.data(),lastState.data(),lastState.size()*sizeof(float)))
+                throw std::runtime_error("Chunk convolution differs from sequential convolution");
+        }
+        std::cout<<"Chunk convolution sequential reference PASS 48 cases\n";
+#endif
 #ifdef GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE
         // Multiple token writers must preserve every earlier slot, including
         // padded row layouts and a second batch row.

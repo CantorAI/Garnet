@@ -65,6 +65,9 @@ public:
     // Packed rows retain explicit caller-owned states after the output segment.
     void EncodeCausalConv(const MetalMatrix& token,const MetalMatrix& weight,
         const MetalMatrix& state,const MetalMatrix& active,const MetalMatrix& packed,size_t kernel);
+    void EncodeCausalConvChunk(const MetalMatrix& tokens,const MetalMatrix& weight,
+        const MetalMatrix& state,const MetalMatrix& active,const MetalMatrix& output,
+        const MetalMatrix& nextState,size_t chunk,size_t kernel);
     void EncodeGatedDelta(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& value,
         const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,
         const MetalMatrix& active,const MetalMatrix& packed,size_t heads,size_t keyDim,size_t valueDim);
@@ -72,6 +75,7 @@ public:
         const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,const MetalMatrix& active,
         const MetalMatrix& result,const MetalMatrix& nextState,size_t heads,size_t keyDim,size_t valueDim);
     void EncodeSliceGroups(const MetalMatrix&,const MetalMatrix&,size_t groups,size_t sourceWidth,size_t start,size_t count);
+    // kernel=0 accepts convolution values without interleaved state fields.
     void EncodeLinearPrepare(const MetalMatrix& conv,const MetalMatrix& a,const MetalMatrix& b,
         const MetalMatrix& aLog,const MetalMatrix& dtBias,const MetalMatrix& output,
         size_t keyHeads,size_t valueHeads,size_t keyDim,size_t valueDim,size_t kernel);

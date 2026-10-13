@@ -46,7 +46,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> add;
     id<MTLComputePipelineState> mask;
-    id<MTLComputePipelineState> conv;
+    id<MTLComputePipelineState> conv,convChunk;
     id<MTLComputePipelineState> delta,deltaSplit;
     id<MTLComputePipelineState> deltaSplitParallel;
     id<MTLComputePipelineState> slice,sliceVector;
@@ -591,6 +591,27 @@ kernel void causal_conv(device const float* token [[buffer(0)]],device const flo
     }
     packed[row*p.oStride+col*(p.kSize+1)]=enabled?sum/(1.0f+exp(-sum)):0.0f;
 }
+struct ConvChunkParams {ulong batch,chunk,channels,kSize,tStride,wStride,sStride,aStride,oStride,nStride;};
+kernel void causal_conv_chunk(device const float* tokens [[buffer(0)]],device const float* weight [[buffer(1)]],
+    device const float* state [[buffer(2)]],device const float* active [[buffer(3)]],
+    device float* output [[buffer(4)]],device float* nextState [[buffer(5)]],
+    constant ConvChunkParams& p [[buffer(6)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.batch*p.channels)return;
+    ulong row=id/p.channels,col=id%p.channels;
+    float history[8];
+    for(ulong j=0;j<p.kSize;++j)history[j]=state[row*p.sStride+col*p.kSize+j];
+    for(ulong token=0;token<p.chunk;++token) {
+        bool enabled=active[row*p.aStride+token]!=0.0f;
+        float sum=0.0f;
+        for(ulong j=0;j<p.kSize;++j) {
+            float next=j+1==p.kSize?tokens[(row*p.chunk+token)*p.tStride+col]:history[j+1];
+            if(enabled)history[j]=next;
+            sum+=next*weight[col*p.wStride+j];
+        }
+        output[(row*p.chunk+token)*p.oStride+col]=enabled?sum/(1.0f+exp(-sum)):0.0f;
+    }
+    for(ulong j=0;j<p.kSize;++j)nextState[row*p.nStride+col*p.kSize+j]=history[j];
+}
 struct DeltaParams {ulong batch,heads,keyDim,valueDim,qStride,kStride,vStride,gStride,bStride,sStride,aStride,oStride;};
 kernel void gated_delta(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
     device const float* value [[buffer(2)]],device const float* decay [[buffer(3)]],
@@ -871,6 +892,10 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
         impl_->kernels->mask=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"mask_rows"] error:&error];
         impl_->kernels->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
+#ifdef GARNET_METAL_LINEAR_CHUNK_CONV
+        impl_->kernels->convChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv_chunk"] error:&error];
+        if(!impl_->kernels->convChunk)throw std::runtime_error("Cannot create chunk convolution pipeline");
+#endif
         impl_->kernels->delta=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta"] error:&error];
         impl_->kernels->deltaSplit=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta_split"] error:&error];
 #ifdef GARNET_METAL_PARALLEL_DELTA_SPLIT
@@ -1219,7 +1244,7 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
             throw std::logic_error("Uninitialized Metal state kernel input");
         if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
     }
-    if((operation==16)!=(secondOutput!=nullptr))throw std::invalid_argument("Metal secondary output operation mismatch");
+    if((operation==16||operation==18)!=(secondOutput!=nullptr))throw std::invalid_argument("Metal secondary output operation mismatch");
     if(secondOutput) {
         if(!secondOutput->impl_||secondOutput->impl_->matrix.device!=impl_->device)
             throw std::invalid_argument("Invalid Metal secondary output/device");
@@ -1230,10 +1255,11 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         for(const auto& input:inputs)if(second->matrix.data==input.impl_->matrix.data)
             throw std::invalid_argument("In-place secondary state output is unsupported");
     }
-    if(operation>17)throw std::invalid_argument("Unknown Metal state kernel");
+    if(operation>18)throw std::invalid_argument("Unknown Metal state kernel");
     id<MTLComputePipelineState> pipelines[]={impl_->kernels->conv,impl_->kernels->delta,impl_->kernels->slice,impl_->kernels->prepare,impl_->kernels->gatedNorm,
-        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector,impl_->kernels->deltaSplit,impl_->kernels->kvChunkVector};
+        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector,impl_->kernels->deltaSplit,impl_->kernels->kvChunkVector,impl_->kernels->convChunk};
     auto pipeline=pipelines[operation];
+    if(!pipeline)throw std::runtime_error("Metal state pipeline is unavailable in this build");
 #ifdef GARNET_METAL_PARALLEL_DELTA_SPLIT
     const auto* deltaFields=static_cast<const uint64_t*>(parameters);
     const bool parallelDelta=operation==16&&deltaFields[2]==128&&deltaFields[3]>=16&&deltaFields[3]%16==0&&
@@ -1390,6 +1416,21 @@ void MetalContext::EncodeSliceGroups(const MetalMatrix& input,const MetalMatrix&
         i.rows<=limit/p.iStride&&o.rows<=limit/p.oStride&&impl_->kernels->sliceVector;
     EncodeStateKernel(vectorized?15:2,{input},output,&p,sizeof(p),Elements(o.rows,o.columns)/(vectorized?4:1));
 }
+void MetalContext::EncodeCausalConvChunk(const MetalMatrix& tokens,const MetalMatrix& weight,
+    const MetalMatrix& state,const MetalMatrix& active,const MetalMatrix& output,
+    const MetalMatrix& nextState,size_t chunk,size_t kernel) {
+    if(!tokens.impl_||!weight.impl_||!state.impl_||!active.impl_||!output.impl_||!nextState.impl_||!chunk||chunk>64||!kernel||kernel>8)
+        throw std::invalid_argument("Invalid Metal chunk convolution arguments");
+    auto t=tokens.impl_->matrix,w=weight.impl_->matrix,s=state.impl_->matrix,a=active.impl_->matrix,
+        o=output.impl_->matrix,n=nextState.impl_->matrix;
+    const size_t batch=s.rows,stateWidth=Elements(t.columns,kernel);
+    if(t.rows!=Elements(batch,chunk)||w.rows!=t.columns||w.columns!=kernel||s.columns!=stateWidth||
+        a.rows!=batch||a.columns!=chunk||o.rows!=t.rows||o.columns!=t.columns||n.rows!=batch||n.columns!=stateWidth)
+        throw std::invalid_argument("Metal chunk convolution shape mismatch");
+    struct Params {uint64_t batch,chunk,channels,kSize,tStride,wStride,sStride,aStride,oStride,nStride;};
+    Params p{batch,chunk,t.columns,kernel,t.rowBytes/4,w.rowBytes/4,s.rowBytes/4,a.rowBytes/4,o.rowBytes/4,n.rowBytes/4};
+    EncodeStateKernel(18,{tokens,weight,state,active},output,&p,sizeof(p),Elements(batch,t.columns),&nextState);
+}
 void MetalContext::EncodeGatedDelta(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& value,
     const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,const MetalMatrix& active,
     const MetalMatrix& packed,size_t heads,size_t keyDim,size_t valueDim) {
@@ -1428,7 +1469,7 @@ void MetalContext::EncodeLinearPrepare(const MetalMatrix& conv,const MetalMatrix
     const MetalMatrix& aLog,const MetalMatrix& dtBias,const MetalMatrix& output,
     size_t keyHeads,size_t valueHeads,size_t keyDim,size_t valueDim,size_t kernel) {
     if(!conv.impl_||!a.impl_||!b.impl_||!aLog.impl_||!dtBias.impl_||!output.impl_||!keyHeads||!valueHeads||
-        valueHeads%keyHeads||!keyDim||!valueDim||!kernel||keyHeads>128||valueHeads>128||keyDim>4096||valueDim>4096||kernel>64)
+        valueHeads%keyHeads||!keyDim||!valueDim||keyHeads>128||valueHeads>128||keyDim>4096||valueDim>4096||kernel>64)
         throw std::invalid_argument("Invalid Metal linear preparation arguments");
     auto c=conv.impl_->matrix,ap=a.impl_->matrix,bp=b.impl_->matrix,al=aLog.impl_->matrix,dt=dtBias.impl_->matrix,o=output.impl_->matrix;
     const size_t channels=2*keyHeads*keyDim+valueHeads*valueDim,width=2*valueHeads*keyDim+valueHeads*valueDim+2*valueHeads;
