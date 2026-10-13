@@ -1,0 +1,15 @@
+{
+  "scope": "Native decode single-output SIMD component experiment only, not serving or vLLM timing",
+  "precision": "Unchanged exact BF16 weights, FP32 input/accumulation/output; no quantization",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "source_sha256": {
+    "metal_context.mm": "2fe81ca943105dd91de15dc6adda90a8142c9af4e31d6429ce376f934b158f5e",
+    "decode_single_output_gpu.mm": "0dcca88a18678c3c9b676a1ad015c34cc7dcda48287cfb44f9cadae8368d436c",
+    "make_decode_single_output_shader.py": "79c5f2b3cf2ec3a3ce1317989c6302b90d63e4585b657be77e4b5b0b70a4c2ac",
+    "prepare_decode_tile_probe.py": "787166c08791d675ecc1cea030f0d94e8b8daf150dc6a4490749e3ceb45b5059",
+    "run_decode_single_output_probe.py": "8fb5d8aa817fc2f98dd8fca02a5cc47f4cd6084a9dd1071c7583de7cf6d1bbfc"
+  }
+}
