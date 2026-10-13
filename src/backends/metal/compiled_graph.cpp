@@ -17,6 +17,17 @@ size_t MetalCompiledGraph::Allocate(size_t rows,size_t columns) {
 size_t MetalCompiledGraph::Weight(const std::string& name) {
     auto found=weights_.find(name);if(found!=weights_.end())return found->second;
     auto entry=index_.Find(name);
+    if(!entry)throw std::runtime_error("Metal checkpoint weight missing: "+name);
+    const auto modified=std::filesystem::last_write_time(entry->filePath);
+    const auto bytes=std::filesystem::file_size(entry->filePath);
+    auto shared=sharedWeights_.find(name);
+    if(shared!=sharedWeights_.end()) {
+        const auto& record=shared->second;const auto& metadata=record.metadata;
+        if(metadata.filePath!=entry->filePath||metadata.dataType!=entry->dataType||metadata.shape!=entry->shape||
+            metadata.dataOffset!=entry->dataOffset||metadata.dataSize!=entry->dataSize||record.modified!=modified||record.bytes!=bytes)
+            throw std::runtime_error("Shared Metal checkpoint changed or does not match");
+        auto id=slots_.size();slots_.push_back(record.slot);weights_[name]=id;weightRecords_[name]=record;return id;
+    }
     const bool patch=entry&&name=="model.visual.patch_embed.proj.weight"&&entry->shape.size()==5;
     if(!entry||entry->shape.empty()||(!patch&&(entry->shape.size()>3||
         (entry->shape.size()==3&&entry->shape[1]!=1))))
@@ -44,7 +55,26 @@ size_t MetalCompiledGraph::Weight(const std::string& name) {
     }else throw std::runtime_error("Unsupported initial Metal weight dtype: "+entry->dataType);
     const auto id=slots_.size();slots_.push_back({gpu_->Upload(data,rows,columns),rows,columns,
         std::vector<int64_t>(entry->shape.begin(),entry->shape.end())});
+    if(modified!=std::filesystem::last_write_time(entry->filePath)||bytes!=std::filesystem::file_size(entry->filePath))
+        throw std::runtime_error("Metal checkpoint changed while loading weights");
+    weightRecords_[name]={slots_[id],*entry,modified,bytes};
     weights_[name]=id;return id;
+}
+size_t MetalCompiledGraph::BF16Weight(const std::string& name) {
+    const auto key=name+"|BF16";auto found=weights_.find(key);if(found!=weights_.end())return found->second;
+    auto entry=index_.Find(name);
+    if(!entry||entry->shape.size()!=2||entry->shape[0]<=0||entry->shape[1]<=0)
+        throw std::runtime_error("Invalid vocabulary checkpoint matrix");
+    // F32 fixtures retain their exact original representation through MPS.
+    if(entry->dataType=="F32")return Weight(name);
+    if(entry->dataType!="BF16")throw std::runtime_error("BF16 vocabulary head requires BF16/F32 checkpoint weights");
+    SafeTensorsMappedFile file;std::string error;
+    if(!file.Open(entry->filePath,error))throw std::runtime_error(error);
+    auto data=file.DataAt(entry->dataOffset,entry->dataSize);
+    if(!data)throw std::runtime_error("Vocabulary checkpoint exceeds file bounds");
+    auto weight=gpu_->UploadBF16(data,entry->dataSize,size_t(entry->shape[0]),size_t(entry->shape[1]));
+    auto id=slots_.size();slots_.push_back({MetalMatrix(),size_t(entry->shape[0]),size_t(entry->shape[1]),std::vector<int64_t>(entry->shape.begin(),entry->shape.end()),std::move(weight)});
+    weights_[key]=id;return id;
 }
 size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     auto integer=[&](const char* name,size_t limit){auto v=attrs.Get(name).ToInt64();
@@ -124,11 +154,23 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     return output;
 }
 void MetalCompiledGraph::Clear() {
-    ready_=false;controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();bindings_.clear();slots_.clear();gpu_.reset();
+    ++generation_;ready_=false;outputParts_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
 }
 void MetalCompiledGraph::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string& checkpoint) {
-    std::lock_guard<std::mutex> lock(mutex_);Clear();
+    std::lock_guard<std::mutex> lock(mutex_);return BuildInternal(graph,symbols,checkpoint,{});
+}
+bool MetalCompiledGraph::BuildShared(X::Value graph,X::Value symbols,const std::string& checkpoint,X::Value source) {
+    if(source.runtime()!=Host()->runtime)throw std::invalid_argument("Shared Metal graph runtime mismatch");
+    auto peer=source.NativeData<MetalCompiledGraph>();
+    if(!peer||peer==this)throw std::invalid_argument("Shared Metal weights require another compiled graph");
+    std::scoped_lock lock(mutex_,peer->mutex_);
+    if(!peer->ready_)throw std::invalid_argument("Shared Metal weight source is closed");
+    return BuildInternal(graph,symbols,checkpoint,peer->weightRecords_);
+}
+bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std::string& checkpoint,
+    std::unordered_map<std::string,SharedWeight> shared) {
+    Clear();sharedWeights_=std::move(shared);
     auto start=std::chrono::steady_clock::now();
     try {
         if(graph.runtime()!=Host()->runtime||symbols.runtime()!=Host()->runtime||!symbols.IsList())
@@ -233,6 +275,11 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                         throw std::runtime_error("Metal chunk concat shape mismatch");
                     out=Allocate(slots_[a].rows,slots_[a].columns+slots_[b].columns);as[1]+=bs[1];slots_[out].shape=as;
                     Op op{Kind::Concat,a,b,out};op.arguments={a,b,b};op.transpose=false;ops_.push_back(std::move(op));
+                    for(auto part:{a,b}) {
+                        auto parts=packedParts.find(part);
+                        if(parts==packedParts.end())packedParts[out].push_back(part);
+                        else packedParts[out].insert(packedParts[out].end(),parts->second.begin(),parts->second.end());
+                    }
                     tensors_[TensorId(node.output)]=out;continue;
                 }
                 if(node.name=="qwen35_mask_chunk") {
@@ -486,8 +533,15 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
                 auto activated=Allocate(slots_[gate].rows,slots_[gate].columns);
                 ops_.push_back({Kind::Silu,gate,up,activated});
                 out=matmul(activated,Weight(prefix+".down_proj.weight"));
-            }else if(node.name=="qwen35_tied_head")out=matmul(a,Weight("model.language_model.embed_tokens.weight"));
-            else if(node.name=="qwen_text_head")out=matmul(a,Weight(node.attributes.Get("weight_name").ToString()));
+            }else if(node.name=="qwen35_tied_head"||node.name=="qwen_text_head") {
+                const auto name=node.name=="qwen35_tied_head"?"model.language_model.embed_tokens.weight":node.attributes.Get("weight_name").ToString();
+                const bool bf16=node.attributes.Get("bf16_weight").ToInt64()!=0;
+                auto weight=bf16?BF16Weight(name):Weight(name);
+                if(bf16&&index_.Find(name)->dataType=="BF16") {
+                    if(slots_[a].columns!=slots_[weight].columns||slots_[a].rows>2)throw std::runtime_error("BF16 vocabulary profile requires batch 1/2");
+                    out=Allocate(slots_[a].rows,slots_[weight].rows);ops_.push_back({Kind::BF16MatVec,a,weight,out});
+                }else out=matmul(a,weight);
+            }
             else throw std::runtime_error("Metal lowering not implemented: "+node.name);
             tensors_[TensorId(node.output)]=out;
         }
@@ -496,6 +550,7 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
             output=output.Get(uint64_t(0));
         if(!IsTensor(output))throw std::runtime_error("Initial Metal graph requires one tensor output");
         output_=lookup(output);
+        if(packedParts.count(output_))outputParts_=packedParts.at(output_);
         // All operations write fresh slots. Trace only matrices needed by the
         // returned value, resolving storage aliases before removing unused packs.
         auto canonical=[&](size_t id){while(aliases.count(id))id=aliases.at(id);return id;};
@@ -508,24 +563,33 @@ bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string
             retained.push_back(std::move(*it));
         }
         std::reverse(retained.begin(),retained.end());ops_=std::move(retained);
+        if(outputParts_.size()==3) {
+            std::unordered_set<size_t> needed;
+            for(auto part:outputParts_)needed.insert(canonical(part));
+            residentOps_.assign(ops_.size(),0);
+            for(size_t i=ops_.size();i-->0;) {
+                auto& op=ops_[i];if(!needed.count(canonical(op.out)))continue;
+                residentOps_[i]=1;needed.insert(canonical(op.a));needed.insert(canonical(op.b));
+                for(auto argument:op.arguments)needed.insert(canonical(argument));
+            }
+        }
         for(auto id:inputs_)live.insert(canonical(id));
         for(size_t id=0;id<slots_.size();++id)if(!live.count(canonical(id)))slots_[id].matrix=MetalMatrix();
-        ready_=true;
+        sharedWeights_.clear();ready_=true;
         compileMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
         return true;
     }catch(...){Clear();throw;}
 }
-X::Value MetalCompiledGraph::Run(X::Value inputs) {
-    std::lock_guard<std::mutex> lock(mutex_);
+void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<size_t>& skip) {
     if(!ready_||inputs.runtime()!=Host()->runtime||!inputs.IsList()||inputs.Size()!=inputs_.size())
         throw std::runtime_error("Metal graph not ready or input count invalid");
-    auto start=std::chrono::steady_clock::now();
     std::unordered_map<size_t,std::vector<float>> hostInputs;
     std::unordered_set<size_t> controls;
     for(const auto& op:ops_)if(op.kind==Kind::KVUpdate)
         for(auto i:{2,3,4}){auto id=op.arguments[i];controls.insert(controlSources_.count(id)?controlSources_.at(id).first:id);}
     for(const auto& op:ops_)if(op.kind==Kind::Layout&&op.dimensions[0])controls.insert(op.b);
     for(size_t i=0;i<inputs_.size();++i) {
+        if(skip.count(i))continue;
         X::Tensor tensor(inputs.Get(i));auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
         if(info.symbolic||info.device_type!=0||info.dtype!=X3_TENSOR_FLOAT32||info.rank!=inputShapes_[i].size()||
             !std::equal(inputShapes_[i].begin(),inputShapes_[i].end(),info.shape)||!info.data||!IsContiguousTensor(tensor))
@@ -556,54 +620,66 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
         }
     }
     for(size_t i=0;i<inputs_.size();++i){
+        if(skip.count(i))continue;
         X::Tensor tensor(inputs.Get(i));auto lease=tensor.Acquire();auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
         gpu_->Update(slot.matrix,static_cast<const float*>(info.data),slot.rows*slot.columns);
     }
+}
+void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
+    for(size_t i=0;i<ops_.size();++i) {
+        if(!packedOutput&&!residentOps_[i])continue;
+        const auto& op=ops_[i];
+        auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
+        if(op.kind==Kind::MatMul)gpu.EncodeMatMul(a,b,out,op.transpose);
+        else if(op.kind==Kind::BF16MatVec)gpu.EncodeBF16MatVec(a,slots_[op.b].bf16,out);
+        else if(op.kind==Kind::Layout)gpu.EncodeLayout(a,b,out,op.dimensions[0]);
+        else if(op.kind==Kind::Norm)gpu.EncodeRMSNorm(a,b,out,op.epsilon,op.offset);
+        else if(op.kind==Kind::Silu)gpu.EncodeSiluMul(a,b,out);
+        else if(op.kind==Kind::Add)gpu.EncodeAdd(a,b,out);
+        else if(op.kind==Kind::Bias)gpu.EncodeBias(a,b,out);
+        else if(op.kind==Kind::Mask)gpu.EncodeMaskRows(a,b,out);
+        else if(op.kind==Kind::Conv) {
+            auto& args=op.arguments;gpu.EncodeCausalConv(slots_[args[0]].matrix,slots_[args[1]].matrix,
+                slots_[args[2]].matrix,slots_[args[3]].matrix,out,op.dimensions[0]);
+        }else if(op.kind==Kind::Delta) {
+            auto& args=op.arguments;gpu.EncodeGatedDelta(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                slots_[args[3]].matrix,slots_[args[4]].matrix,slots_[args[5]].matrix,slots_[args[6]].matrix,out,
+                op.dimensions[0],op.dimensions[1],op.dimensions[2]);
+        }else if(op.kind==Kind::Prepare) {
+            auto& args=op.arguments;gpu.EncodeLinearPrepare(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                slots_[args[3]].matrix,slots_[args[4]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
+        }else if(op.kind==Kind::GateNorm) {
+            auto& args=op.arguments;gpu.EncodeGatedNorm(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                out,op.dimensions[0],op.dimensions[1],op.epsilon);
+        }else if(op.kind==Kind::Concat) {
+            auto& args=op.arguments;gpu.EncodeConcat(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,out,op.transpose);
+        }else if(op.kind==Kind::NormRope) {
+            auto& args=op.arguments;gpu.EncodeNormRope(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.epsilon,op.offset,op.dimensions[3]!=0);
+        }else if(op.kind==Kind::KVUpdate) {
+            auto& args=op.arguments;gpu.EncodeKVUpdate(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2]);
+        }else if(op.kind==Kind::Scores) {
+            auto& args=op.arguments;gpu.EncodeAttentionScores(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
+        }else if(op.kind==Kind::Vision) {
+            std::vector<MetalMatrix> args;for(auto id:op.arguments)args.push_back(slots_[id].matrix);
+            gpu.EncodeVision(op.dimensions[0],args,out,op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
+        }else if(op.kind==Kind::AttentionContext) {
+            auto& args=op.arguments;gpu.EncodeAttentionContext(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]!=0);
+        }else {
+            gpu.EncodeSliceGroups(a,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
+        }
+    }
+}
+X::Value MetalCompiledGraph::Run(X::Value inputs) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto start=std::chrono::steady_clock::now();
+    PrepareInputs(inputs);
     gpu_->Begin();
     try {
-        for(const auto& op:ops_) {
-            auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
-            if(op.kind==Kind::MatMul)gpu_->EncodeMatMul(a,b,out,op.transpose);
-            else if(op.kind==Kind::Layout)gpu_->EncodeLayout(a,b,out,op.dimensions[0]);
-            else if(op.kind==Kind::Norm)gpu_->EncodeRMSNorm(a,b,out,op.epsilon,op.offset);
-            else if(op.kind==Kind::Silu)gpu_->EncodeSiluMul(a,b,out);
-            else if(op.kind==Kind::Add)gpu_->EncodeAdd(a,b,out);
-            else if(op.kind==Kind::Bias)gpu_->EncodeBias(a,b,out);
-            else if(op.kind==Kind::Mask)gpu_->EncodeMaskRows(a,b,out);
-            else if(op.kind==Kind::Conv) {
-                auto& args=op.arguments;gpu_->EncodeCausalConv(slots_[args[0]].matrix,slots_[args[1]].matrix,
-                    slots_[args[2]].matrix,slots_[args[3]].matrix,out,op.dimensions[0]);
-            }else if(op.kind==Kind::Delta) {
-                auto& args=op.arguments;gpu_->EncodeGatedDelta(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    slots_[args[3]].matrix,slots_[args[4]].matrix,slots_[args[5]].matrix,slots_[args[6]].matrix,out,
-                    op.dimensions[0],op.dimensions[1],op.dimensions[2]);
-            }else if(op.kind==Kind::Prepare) {
-                auto& args=op.arguments;gpu_->EncodeLinearPrepare(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    slots_[args[3]].matrix,slots_[args[4]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
-            }else if(op.kind==Kind::GateNorm) {
-                auto& args=op.arguments;gpu_->EncodeGatedNorm(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    out,op.dimensions[0],op.dimensions[1],op.epsilon);
-            }else if(op.kind==Kind::Concat) {
-                auto& args=op.arguments;gpu_->EncodeConcat(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,out,op.transpose);
-            }else if(op.kind==Kind::NormRope) {
-                auto& args=op.arguments;gpu_->EncodeNormRope(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.epsilon,op.offset,op.dimensions[3]!=0);
-            }else if(op.kind==Kind::KVUpdate) {
-                auto& args=op.arguments;gpu_->EncodeKVUpdate(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2]);
-            }else if(op.kind==Kind::Scores) {
-                auto& args=op.arguments;gpu_->EncodeAttentionScores(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
-            }else if(op.kind==Kind::Vision) {
-                std::vector<MetalMatrix> args;for(auto id:op.arguments)args.push_back(slots_[id].matrix);
-                gpu_->EncodeVision(op.dimensions[0],args,out,op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
-            }else if(op.kind==Kind::AttentionContext) {
-                auto& args=op.arguments;gpu_->EncodeAttentionContext(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                    out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]!=0);
-            }else {
-                gpu_->EncodeSliceGroups(a,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
-            }
-        }
+        Encode(*gpu_);
         gpu_->SubmitAndWait();
     }catch(...){gpu_->Abort();throw;}
     auto result=gpu_->Download(slots_[output_].matrix);auto& output=slots_[output_];

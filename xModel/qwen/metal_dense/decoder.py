@@ -5,7 +5,8 @@ from xModel.qwen35.vl_0_8b.metal_decoder import MetalDecoder
 from .layers import T,DenseLayer,norm
 
 class DenseMetalDecoder(MetalDecoder):
-    def __init__(self,checkpoint,config,batch=1,capacity=256):
+    def __init__(self,checkpoint,config,batch=1,capacity=256,bf16_head=True,resident=True):
+        self.session=None
         if not garnet.backend_info().startswith('Garnet Metal/MPS '):raise ValueError('Native Metal package required')
         if config.get('model_type') not in ('qwen3','qwen2'):raise ValueError('Only dense Qwen3/Qwen2 supported')
         if config.get('rope_scaling') is not None or config.get('use_sliding_window',False):raise ValueError('Scaled RoPE/sliding-window profiles are not implemented')
@@ -32,9 +33,10 @@ class DenseMetalDecoder(MetalDecoder):
             head_weight='model.embed_tokens.weight' if config.get('tie_word_embeddings',False) else 'lm_head.weight'
             @T.fusion(name='qwen_dense_metal_head',boundary='required')
             def head(hidden):
-                return norm(hidden,'model.norm',config) * T.unary_op('qwen_text_head',weight_name=head_weight)
+                return norm(hidden,'model.norm',config) * T.unary_op('qwen_text_head',weight_name=head_weight,bf16_weight=1 if bf16_head else 0)
             self.head=garnet.compiled_graph();self.head.build(head(symbol),[symbol],checkpoint)
             self.reset()
+            if resident:self.enable_resident()
         except:self.close();raise
 
     def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):

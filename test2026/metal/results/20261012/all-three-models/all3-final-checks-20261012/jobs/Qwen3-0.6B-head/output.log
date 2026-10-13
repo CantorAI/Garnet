@@ -1,0 +1,2 @@
+BF16 full vocabulary PASS {'batch': 1, 'checkpoint': '/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors', 'worst_l2_ratio': 0.0027413982639384847, 'worst_max_ratio': 0.004133104651408374, 'predictions': [69215], 'fp32_ms': 26.594334, 'bf16_ms': 6.890333}
+BF16 full vocabulary PASS {'batch': 2, 'checkpoint': '/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors', 'worst_l2_ratio': 0.0031805112892918184, 'worst_max_ratio': 0.00382966060264803, 'predictions': [115869, 41924], 'fp32_ms': 18.882333, 'bf16_ms': 10.207667}

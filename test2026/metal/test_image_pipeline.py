@@ -82,10 +82,15 @@ for batch in (1,2):
                 hidden,conv,state=linear_block(hidden,conv,state,active,lw,kh,vh,kd,vd)
                 hidden,key,value=attention_block(hidden,key,value,positions,slots,active,fw,heads,kv,dim,8,[2,1,1],10000000)
                 logits=rms_norm(hidden,decoded['final_norm'])@decoded['embedding'].T;prediction=np.argmax(logits,axis=-1)
-                steps.append(dict(item,prediction=prediction.tolist(),states=[a.ravel().tolist() for a in (conv,state,key,value)]))
+                state_files=[]
+                for state_index,array in enumerate((conv,state,key,value)):
+                    path=tmp/('state-'+str(request)+'-'+str(index)+'-'+str(state_index)+'.f32')
+                    array.astype('<f4').tofile(path);state_files.append(dict(path=str(path),count=array.size))
+                steps.append(dict(item,prediction=prediction.tolist(),state_files=state_files))
                 next_tokens=np.where(active!=0,prediction,next_tokens) if index>=8 else prediction
                 slots+=active
-            requests.append(dict(patch_file=str(patch_file),visual=visual.ravel().tolist(),steps=steps))
+            visual_file=tmp/('visual-'+str(request)+'.f32');visual.astype('<f4').tofile(visual_file)
+            requests.append(dict(patch_file=str(patch_file),visual_file=str(visual_file),visual_count=visual.size,steps=steps))
         fixture=tmp/'fixture.json';fixture.write_text(json.dumps(dict(checkpoint=str(checkpoint),config=c,
             vision_config=vc,batch=batch,capacity=capacity,requests=requests)))
         subprocess.run([sys.argv[1],str(Path(__file__).with_name('run_image_pipeline.py')),str(fixture),sys.argv[2],sys.argv[3]],check=True)

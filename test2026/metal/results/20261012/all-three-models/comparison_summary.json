@@ -1,0 +1,50 @@
+[
+  {
+    "model": "Qwen3.5-0.8B",
+    "original_build": "6a5b565",
+    "original_folder": "all3-baseline-image-20261012",
+    "optimized_folder": "all3-final-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-optimized",
+    "old_ttft": 1.93149995803833,
+    "new_ttft": 1.713240146636963,
+    "old_complete": 3.998749017715454,
+    "new_complete": 3.0536491870880127,
+    "old_tps": 13.06218685746595,
+    "new_tps": 20.146362307944923,
+    "old_peak_rss": 5856559104,
+    "new_peak_rss": 3631431680,
+    "exact_token_parity": true,
+    "decode_improvement_percent": 54.234222246100195
+  },
+  {
+    "model": "Qwen3-0.6B",
+    "original_build": "6a5b565",
+    "original_folder": "all3-baseline-text-20261012",
+    "optimized_folder": "all3-final-benchmarks-20261012/jobs/Qwen3-0.6B-b1-optimized",
+    "old_ttft": 0.6074068546295166,
+    "new_ttft": 0.5010859966278076,
+    "old_complete": 1.109292984008789,
+    "new_complete": 0.8106849193572998,
+    "old_tps": 13.949142863115606,
+    "new_tps": 22.61416444646759,
+    "old_peak_rss": 4465491968,
+    "new_peak_rss": 2522742784,
+    "exact_token_parity": true,
+    "decode_improvement_percent": 62.11866684844185
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "original_build": "6a5b565",
+    "original_folder": "all3-baseline-coder-20261012",
+    "optimized_folder": "all3-final-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized",
+    "old_ttft": 0.35948705673217773,
+    "new_ttft": 0.2744779586791992,
+    "old_complete": 1.1505300998687744,
+    "new_complete": 0.7711689472198486,
+    "old_tps": 20.229489675279694,
+    "new_tps": 32.22070427748973,
+    "old_peak_rss": 3594731520,
+    "new_peak_rss": 2088828928,
+    "exact_token_parity": true,
+    "decode_improvement_percent": 59.275912515298025
+  }
+]

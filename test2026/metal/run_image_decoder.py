@@ -21,11 +21,14 @@ suffix=tokenizer.encode('<|vision_end|>Describe the main objects in this image i
 stops=[config['text_config']['eos_token_id'],tokenizer.token_id('<|im_end|>'),tokenizer.token_id('<|endoftext|>')]
 capacity=len(prefix)+mh*mw+len(suffix)+limit
 chunk=int(sys.argv[6]) if len(sys.argv)>6 else 0
+optimization=int(sys.argv[7]) if len(sys.argv)>7 else 2
+resident=optimization>=1;bf16_head=optimization>=2
 vision=None;decoder=None
 try:
     vision=MetalImageEncoder(folder+'/model.safetensors',config['vision_config'],gh,gw,batch)
-    decoder=MetalDecoder(folder+'/model.safetensors',config['text_config'],batch,capacity)
+    decoder=MetalDecoder(folder+'/model.safetensors',config['text_config'],batch,capacity,bf16_head=bf16_head,resident=False)
     if chunk:decoder.enable_prefill(chunk)
+    if resident:decoder.enable_resident()
     initialization=time.time()-start
     print('metal_image_initialization',dict(seconds=initialization,vision_compile_ms=vision.graph.compile_ms,
         batch=batch,capacity=capacity,resized_hw=metadata['resized_hw'],visual_tokens=mh*mw),flush=True)
@@ -52,7 +55,7 @@ try:
         if chunk:next_ids=decoder.prefill_sequence(hidden_tokens,[prompt_positions for b in range(batch)])
         prefill_seconds=time.time()-prefill;ttft=time.time()-request_start
         outputs=[[] for b in range(batch)];active=[1]*batch;durations=[]
-        layer_durations=[];head_durations=[]
+        layer_durations=[];head_durations=[];session_durations=[]
         for i in range(limit):
             for b in range(batch):
                 if active[b]:outputs[b].append(next_ids[b])
@@ -60,17 +63,18 @@ try:
             if not any(active) or i==limit-1:break
             step=time.time();next_ids=decoder.step(next_ids,active=active,positions=[[current]*3 for b in range(batch)])
             current+=1;durations.append(time.time()-step)
-            layer_durations.append(decoder.last_layer_ms);head_durations.append(decoder.last_head_ms)
+            layer_durations.append(decoder.last_layer_ms);head_durations.append(None if resident else decoder.last_head_ms);session_durations.append(decoder.last_session_ms if resident else None)
         decode_seconds=sum(durations)
         print('metal_image_result',json.dumps(dict(request=request,batch=batch,prefill_chunk=chunk,
             prefill_compile_ms=decoder.prefill_compile_ms if chunk else 0,
+            resident_state=resident,bf16_head=bf16_head,session_submissions_per_decode_step=1 if resident else None,
             text=[tokenizer.decode(ids) for ids in outputs],token_ids=outputs,finished=[a==0 for a in active],
             output_tokens=[len(ids) for ids in outputs],image_sha256=metadata['image_sha256'],resized_hw=metadata['resized_hw'],
             visual_tokens=mh*mw,prompt_tokens=len(prefix)+mh*mw+len(suffix),initialization_seconds=initialization,
             vision_seconds=vision_seconds,vision_inference_ms=vision.graph.last_inference_ms,prefill_seconds=prefill_seconds,
             ttft_loaded_seconds=ttft,total_loaded_seconds=time.time()-request_start,decode_step_seconds=durations,
             ttft_first_request_seconds=initialization+ttft if request==0 else None,
-            decode_layer_ms=layer_durations,decode_head_ms=head_durations,
+            decode_layer_ms=layer_durations,decode_head_ms=head_durations,decode_session_ms=session_durations,
             decode_steps_per_second=len(durations)/decode_seconds if decode_seconds>0 else None)),flush=True)
     print('metal_graph_operations',json.dumps(dict(decode=[layer['graph'].operation_count for layer in decoder.layers],prefill=[graph.operation_count for graph in decoder.prefill_graphs.values()] if hasattr(decoder,'prefill_graphs') else [])),flush=True)
 finally:

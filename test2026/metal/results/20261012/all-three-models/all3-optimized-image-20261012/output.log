@@ -1,0 +1,29 @@
+compiled Garnet decoder layer 0 linear_attention ms 43.654834
+compiled Garnet decoder layer 1 linear_attention ms 42.952791
+compiled Garnet decoder layer 2 linear_attention ms 46.139625
+compiled Garnet decoder layer 3 full_attention ms 37.0055
+compiled Garnet decoder layer 4 linear_attention ms 44.904417
+compiled Garnet decoder layer 5 linear_attention ms 44.630292
+compiled Garnet decoder layer 6 linear_attention ms 42.372875
+compiled Garnet decoder layer 7 full_attention ms 36.123875
+compiled Garnet decoder layer 8 linear_attention ms 44.430666
+compiled Garnet decoder layer 9 linear_attention ms 43.837458
+compiled Garnet decoder layer 10 linear_attention ms 46.26
+compiled Garnet decoder layer 11 full_attention ms 37.084583
+compiled Garnet decoder layer 12 linear_attention ms 45.994
+compiled Garnet decoder layer 13 linear_attention ms 44.235708
+compiled Garnet decoder layer 14 linear_attention ms 44.113667
+compiled Garnet decoder layer 15 full_attention ms 36.580583
+compiled Garnet decoder layer 16 linear_attention ms 44.479875
+compiled Garnet decoder layer 17 linear_attention ms 44.824041
+compiled Garnet decoder layer 18 linear_attention ms 43.097667
+compiled Garnet decoder layer 19 full_attention ms 38.192
+compiled Garnet decoder layer 20 linear_attention ms 44.645167
+compiled Garnet decoder layer 21 linear_attention ms 43.423417
+compiled Garnet decoder layer 22 linear_attention ms 43.713666
+compiled Garnet decoder layer 23 full_attention ms 39.016583
+metal_image_initialization {'seconds': 3.1569859981536865, 'vision_compile_ms': 1012.254458, 'batch': 1, 'capacity': 111, 'resized_hw': [288, 192], 'visual_tokens': 54}
+metal_image_result {"request": 0, "batch": 1, "prefill_chunk": 16, "prefill_compile_ms": 1138.4266199999997, "resident_state": true, "bf16_head": true, "session_submissions_per_decode_step": 1, "text": ["A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.<|im_end|>"], "token_ids": [[32, 3349, 33138, 314, 264, 855, 440, 264, 20117, 1901, 6833, 12965, 383, 264, 42401, 50471, 264, 93182, 33218, 3177, 85624, 303, 264, 15822, 757, 17865, 13, 248046]], "finished": [true], "output_tokens": [28], "image_sha256": "eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9", "resized_hw": [288, 192], "visual_tokens": 54, "prompt_tokens": 79, "initialization_seconds": 3.1569859981536865, "vision_seconds": 0.39295101165771484, "vision_inference_ms": 392.1205, "prefill_seconds": 2.8343868255615234, "ttft_loaded_seconds": 3.2273411750793457, "total_loaded_seconds": 4.786636114120483, "decode_step_seconds": [0.06827497482299805, 0.05639481544494629, 0.056320905685424805, 0.05622506141662598, 0.05605912208557129, 0.0563199520111084, 0.05672502517700195, 0.05698108673095703, 0.056455135345458984, 0.05731487274169922, 0.05718493461608887, 0.05698990821838379, 0.05687713623046875, 0.057147979736328125, 0.05739593505859375, 0.056715965270996094, 0.05763506889343262, 0.057708024978637695, 0.05763602256774902, 0.05745196342468262, 0.0581049919128418, 0.05823397636413574, 0.0588231086730957, 0.05853605270385742, 0.05853700637817383, 0.05839395523071289, 0.05862998962402344], "ttft_first_request_seconds": 6.384327173233032, "decode_layer_ms": [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []], "decode_head_ms": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "decode_steps_per_second": 17.317983504469794}
+metal_image_result {"request": 1, "batch": 1, "prefill_chunk": 16, "prefill_compile_ms": 0, "resident_state": true, "bf16_head": true, "session_submissions_per_decode_step": 1, "text": ["A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.<|im_end|>"], "token_ids": [[32, 3349, 33138, 314, 264, 855, 440, 264, 20117, 1901, 6833, 12965, 383, 264, 42401, 50471, 264, 93182, 33218, 3177, 85624, 303, 264, 15822, 757, 17865, 13, 248046]], "finished": [true], "output_tokens": [28], "image_sha256": "eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9", "resized_hw": [288, 192], "visual_tokens": 54, "prompt_tokens": 79, "initialization_seconds": 3.1569859981536865, "vision_seconds": 0.35231900215148926, "vision_inference_ms": 351.632208, "prefill_seconds": 1.5198781490325928, "ttft_loaded_seconds": 1.8721990585327148, "total_loaded_seconds": 3.427574872970581, "decode_step_seconds": [0.06500005722045898, 0.056236982345581055, 0.05607199668884277, 0.056118011474609375, 0.05656790733337402, 0.055770158767700195, 0.05662393569946289, 0.05664205551147461, 0.05664801597595215, 0.05748796463012695, 0.056593894958496094, 0.056748151779174805, 0.05687904357910156, 0.05735492706298828, 0.057598114013671875, 0.05735898017883301, 0.05738997459411621, 0.05762004852294922, 0.05721688270568848, 0.05715322494506836, 0.0584559440612793, 0.058161020278930664, 0.0585329532623291, 0.058493852615356445, 0.05892205238342285, 0.05888509750366211, 0.058630943298339844], "ttft_first_request_seconds": null, "decode_layer_ms": [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []], "decode_head_ms": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "decode_steps_per_second": 17.361533188927556}
+metal_graph_operations {"decode": [27, 27, 27, 22, 27, 27, 27, 22, 27, 27, 27, 22, 27, 27, 27, 22, 27, 27, 27, 22, 27, 27, 27, 22], "prefill": [345, 345, 345, 295, 345, 345, 345, 295, 345, 345, 345, 295, 345, 345, 345, 295, 345, 345, 345, 295, 345, 345, 345, 295]}
+metal_image_process {"exit_code": 0, "wall_seconds": 11.746918250340968, "peak_rss_bytes": 5209292800, "memory_scope": "peak native runtime RSS, macOS bytes; not isolated GPU allocation"}

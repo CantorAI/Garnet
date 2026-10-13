@@ -1,0 +1,43 @@
+"""Run isolated validation/benchmarks and preserve each actual command and exit."""
+import json,subprocess,sys
+from pathlib import Path
+runtime,build,source,phase,output=sys.argv[1:];source=Path(source);output=Path(output);root=source.parent
+scripts=source/'test2026/metal';models=root/'models';tasks=[]
+if phase=='checks':
+    tasks.append(('qwen35-layers',[sys.executable,str(scripts/'test_chunk_graph.py'),runtime,build,str(source),str(models/'Qwen3.5-0.8B')]))
+    for name in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
+        tasks.append((name+'-layers',[sys.executable,str(scripts/'test_dense_reference.py'),runtime,build,str(source),str(models/name)]))
+    tasks.append(('serving',[sys.executable,str(scripts/'test_decoder_model.py'),runtime,build,str(source)]))
+    tasks.append(('mixed-image-pipeline',[sys.executable,str(scripts/'test_image_pipeline.py'),runtime,build,str(source)]))
+    for name in ('Qwen3.5-0.8B','Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
+        tasks.append((name+'-head',[sys.executable,str(scripts/'test_head_bf16.py'),runtime,build,str(source),str(models/name)]))
+    tasks.append(('ctest',['/opt/homebrew/bin/ctest','--test-dir',build,'--output-on-failure']))
+elif phase=='benchmarks':
+    for batch in (1,2):
+        for name in ('Qwen3.5-0.8B','Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
+            for mode in (0,2,2):
+                suffix='control' if mode==0 else 'optimized' if not tasks or not tasks[-1][0].endswith('optimized') else 'repeat'
+                if name=='Qwen3.5-0.8B':
+                    command=[sys.executable,str(scripts/'benchmark_image.py'),runtime,build,str(source),str(models/name),str(root/'images'/('RealWorld-04.batch'+str(batch)+'.json')),'32','16',str(mode)]
+                else:
+                    prompt='What is the capital of France? Answer briefly.' if name=='Qwen3-0.6B' else 'Write a Python function add(a, b) that returns their sum. Output only code.'
+                    command=[sys.executable,str(scripts/'benchmark_dense_text.py'),runtime,build,str(source),str(models/name),str(batch),'64',prompt,'16',str(mode)]
+                tasks.append((name+'-b'+str(batch)+'-'+suffix,command))
+elif phase=='extended':
+    for name,prompt in [('Qwen3-0.6B','Give five numbered, practical tips for writing readable Python. Keep each tip to one sentence.'),
+        ('Qwen2.5-Coder-0.5B-Instruct','Write a Python function factorial(n) using a loop. Output only code.')]:
+        for mode in (0,2):
+            command=[sys.executable,str(scripts/'benchmark_dense_text.py'),runtime,build,str(source),str(models/name),'1','128',prompt,'16',str(mode)]
+            tasks.append((name+'-extended-'+str(mode),command))
+elif phase=='resident':
+    tasks.append(('all-three-resident',[sys.executable,str(scripts/'benchmark_three_resident.py'),runtime,build,str(source)]))
+else:raise ValueError('Unknown suite phase')
+statuses=[]
+for name,command in tasks:
+    folder=output/name;folder.mkdir(parents=True,exist_ok=True)
+    print('Starting isolated job',name,flush=True)
+    with (folder/'output.log').open('w') as log:result=subprocess.run(command,stdout=log,stderr=subprocess.STDOUT)
+    status=dict(name=name,command=command,exit_code=result.returncode);statuses.append(status)
+    (folder/'exit.json').write_text(json.dumps(status,indent=2)+'\n');(output/'job_statuses.json').write_text(json.dumps(statuses,indent=2)+'\n')
+    print('Completed',name,'exit',result.returncode,flush=True)
+    if result.returncode:raise SystemExit(result.returncode)

@@ -11,6 +11,7 @@ if (model/'model.safetensors').stat().st_size!=expected:
 command=[runtime,str(Path(source)/'test2026/metal/run_text_decoder.py'),build,source,str(model),limit,batch]
 if len(sys.argv)>7:command.append(sys.argv[7])
 if len(sys.argv)>8:command.append(sys.argv[8])
+if len(sys.argv)>9:command.append(sys.argv[9])
 started=time.monotonic()
 result=subprocess.run(command)
 print('metal_text_process',json.dumps(dict(exit_code=result.returncode,wall_seconds=time.monotonic()-started,

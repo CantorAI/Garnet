@@ -2,6 +2,7 @@
 #include "xlang3/xlang3.h"
 #include "garnet_tensor.h"
 #include "../backends/metal/compiled_graph.h"
+#include "../backends/metal/decoder_session.h"
 #include "model_tensor_io.h"
 #include "tokenizer_api.h"
 namespace Garnet {
@@ -14,6 +15,7 @@ public:
     BEGIN_PACKAGE(GarnetMetalAPI)
         APISET().AddClass<0,GarnetTensor>("tensor");
         APISET().AddClass<0,MetalCompiledGraph>("compiled_graph");
+        APISET().AddClass<0,MetalDecoderSession>("decoder_session");
         APISET().AddClass<0,ModelTensorIO>("tensor_io");
         APISET().AddClass<0,CPUTokenizer>("tokenizer");
         APISET().AddFunc<0>("backend_info",&GarnetMetalAPI::BackendInfo);

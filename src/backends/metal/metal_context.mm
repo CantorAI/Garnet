@@ -11,17 +11,22 @@
 #include <stdexcept>
 #include <array>
 #include <map>
+#include <unordered_set>
+#include <mutex>
 namespace Garnet {
 struct MetalMatrix::Impl {
     MPSMatrix* matrix;
     bool ready=false;
     bool pending=false;
 };
-struct MetalContext::Impl {
-    id<MTLDevice> device;
-    id<MTLCommandQueue> queue;
-    id<MTLCommandBuffer> command;
-    std::vector<std::shared_ptr<MetalMatrix::Impl>> outputs;
+struct MetalBF16Weight::Impl {
+    id<MTLBuffer> buffer;
+    size_t rows,columns;
+};
+struct MetalPipelines {
+    id<MTLLibrary> library;
+    id<MTLComputePipelineState> argmax;
+    id<MTLComputePipelineState> bf16MatVec;
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> add;
@@ -34,6 +39,16 @@ struct MetalContext::Impl {
     id<MTLComputePipelineState> concat;
     id<MTLComputePipelineState> normRope,kvUpdate,scores,attentionContext;
     id<MTLComputePipelineState> vision,layout;
+};
+static std::mutex pipelineMutex;
+static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
+struct MetalContext::Impl {
+    id<MTLDevice> device;
+    id<MTLCommandQueue> queue;
+    id<MTLCommandBuffer> command;
+    std::vector<std::shared_ptr<MetalMatrix::Impl>> outputs;
+    std::unordered_set<const MetalMatrix::Impl*> pendingOutputs;
+    std::shared_ptr<MetalPipelines> kernels;
     std::map<std::array<size_t,4>,MPSMatrixMultiplication*> matmul;
 };
 static size_t Elements(size_t rows, size_t columns) {
@@ -49,17 +64,61 @@ MetalContext::MetalContext(): impl_(std::make_unique<Impl>()) {
             throw std::runtime_error("No MPS-capable Metal GPU available");
         impl_->queue=[impl_->device newCommandQueue];
         if (!impl_->queue) throw std::runtime_error("Cannot create Metal command queue");
+        // Device kernels are immutable. Contexts retain a shared pipeline set;
+        // the process cache is weak, so closing the last context releases it.
+        std::lock_guard<std::mutex> kernelLock(pipelineMutex);
+        auto& cached=pipelineCache[impl_->device.registryID];
+        impl_->kernels=cached.lock();
+        if(impl_->kernels)return;
+        impl_->kernels=std::make_shared<MetalPipelines>();
         NSString* source=[NSString stringWithUTF8String:R"METAL(
 #include <metal_stdlib>
 using namespace metal;
+struct BF16Params {ulong rows,inner,columns,aStride,oStride;};
+kernel void bf16_matvec(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
+    uint2 group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
+    ulong column=ulong(group.x)*4+simd,row=group.y;
+    if(column>=p.columns||row>=p.rows)return;
+    float sum=0.0f;
+    for(ulong k=lane;k<p.inner;k+=32)
+        sum+=a[row*p.aStride+k]*as_type<float>(uint(weight[column*p.inner+k])<<16);
+    sum=simd_sum(sum);
+    if(lane==0)out[row*p.oStride+column]=sum;
+}
+struct ArgmaxParams {ulong rows,columns,iStride,oStride;};
+kernel void argmax_rows(device const float* input [[buffer(0)]],device float* output [[buffer(1)]],
+    constant ArgmaxParams& p [[buffer(2)]],uint row [[threadgroup_position_in_grid]],
+    uint tid [[thread_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    if(row>=p.rows)return;
+    threadgroup float maximum[4];threadgroup uint indices[4];threadgroup uint invalid[4];
+    float best=-INFINITY;uint index=0xffffffff,bad=0;
+    for(ulong j=tid;j<p.columns;j+=128) {
+        float value=input[row*p.iStride+j];bad|=!isfinite(value);
+        if(value>best||(value==best&&j<index)){best=value;index=uint(j);}
+    }
+    float groupBest=simd_max(best);uint groupIndex=simd_min(best==groupBest?index:0xffffffff);
+    uint groupBad=simd_max(bad);
+    if(lane==0){maximum[simd]=groupBest;indices[simd]=groupIndex;invalid[simd]=groupBad;}
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    best=lane<4?maximum[lane]:-INFINITY;index=lane<4?indices[lane]:0xffffffff;bad=lane<4?invalid[lane]:0;
+    groupBest=simd_max(best);groupIndex=simd_min(best==groupBest?index:0xffffffff);groupBad=simd_max(bad);
+    if(tid==0){output[row*p.oStride]=float(groupIndex);output[row*p.oStride+1]=float(groupBad!=0);}
+}
 struct Params { ulong rows,columns,aStride,bStride,cStride;float epsilon,offset; };
 kernel void rms_norm(device const float* a [[buffer(0)]],device const float* weight [[buffer(1)]],
-    device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint row [[thread_position_in_grid]]) {
+    device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint row [[threadgroup_position_in_grid]],
+    uint tid [[thread_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
     if(row>=p.rows)return;
+    threadgroup float partial[4];
     float sum=0;
-    for(ulong j=0;j<p.columns;++j){float x=a[row*p.aStride+j];sum+=x*x;}
+    for(ulong j=tid;j<p.columns;j+=128){float x=a[row*p.aStride+j];sum+=x*x;}
+    sum=simd_sum(sum);
+    if(lane==0)partial[simd]=sum;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    sum=simd_sum(lane<4?partial[lane]:0.0f);
     float inverse=rsqrt(sum/float(p.columns)+p.epsilon);
-    for(ulong j=0;j<p.columns;++j)c[row*p.cStride+j]=a[row*p.aStride+j]*inverse*(weight[j]+p.offset);
+    for(ulong j=tid;j<p.columns;j+=128)c[row*p.cStride+j]=a[row*p.aStride+j]*inverse*(weight[j]+p.offset);
 }
 kernel void silu_mul(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
     device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
@@ -321,25 +380,29 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         NSError* error=nil;
         auto library=[impl_->device newLibraryWithSource:source options:nil error:&error];
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
-        impl_->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
-        impl_->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
-        impl_->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
-        impl_->mask=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"mask_rows"] error:&error];
-        impl_->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
-        impl_->delta=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta"] error:&error];
-        impl_->slice=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups"] error:&error];
-        impl_->prepare=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"linear_prepare"] error:&error];
-        impl_->gatedNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_norm"] error:&error];
-        impl_->concat=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"concat_rows"] error:&error];
-        impl_->normRope=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"norm_rope"] error:&error];
-        impl_->kvUpdate=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_update"] error:&error];
-        impl_->scores=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_scores"] error:&error];
-        impl_->attentionContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_context"] error:&error];
-        impl_->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
-        impl_->layout=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"chunk_layout"] error:&error];
-        if(!impl_->rms||!impl_->silu||!impl_->add||!impl_->mask||!impl_->conv||!impl_->delta||!impl_->slice||
-            !impl_->prepare||!impl_->gatedNorm||!impl_->concat||!impl_->normRope||!impl_->kvUpdate||!impl_->scores||!impl_->attentionContext||!impl_->vision||!impl_->layout)
+        impl_->kernels->library=library;
+        impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
+        impl_->kernels->bf16MatVec=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_matvec"] error:&error];
+        impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
+        impl_->kernels->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
+        impl_->kernels->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
+        impl_->kernels->mask=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"mask_rows"] error:&error];
+        impl_->kernels->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
+        impl_->kernels->delta=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta"] error:&error];
+        impl_->kernels->slice=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups"] error:&error];
+        impl_->kernels->prepare=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"linear_prepare"] error:&error];
+        impl_->kernels->gatedNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_norm"] error:&error];
+        impl_->kernels->concat=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"concat_rows"] error:&error];
+        impl_->kernels->normRope=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"norm_rope"] error:&error];
+        impl_->kernels->kvUpdate=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_update"] error:&error];
+        impl_->kernels->scores=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_scores"] error:&error];
+        impl_->kernels->attentionContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_context"] error:&error];
+        impl_->kernels->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
+        impl_->kernels->layout=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"chunk_layout"] error:&error];
+        if(!impl_->kernels->argmax||!impl_->kernels->bf16MatVec||!impl_->kernels->rms||!impl_->kernels->silu||!impl_->kernels->add||!impl_->kernels->mask||!impl_->kernels->conv||!impl_->kernels->delta||!impl_->kernels->slice||
+            !impl_->kernels->prepare||!impl_->kernels->gatedNorm||!impl_->kernels->concat||!impl_->kernels->normRope||!impl_->kernels->kvUpdate||!impl_->kernels->scores||!impl_->kernels->attentionContext||!impl_->kernels->vision||!impl_->kernels->layout)
             throw std::runtime_error("Cannot create Qwen Metal pipelines");
+        cached=impl_->kernels;
     }
 }
 MetalContext::~MetalContext() { Abort(); }
@@ -367,6 +430,67 @@ MetalMatrix MetalContext::Allocate(size_t rows,size_t columns) {
     auto storage=std::make_shared<MetalMatrix::Impl>();
     storage->matrix=[[MPSMatrix alloc] initWithBuffer:buffer descriptor:descriptor];
     return MetalMatrix(storage);
+    }
+}
+MetalBF16Weight MetalContext::UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns) {
+    @autoreleasepool {
+        if(!data||bytes!=Elements(rows,columns)*sizeof(uint16_t))throw std::invalid_argument("BF16 weight size mismatch");
+        if(bytes>impl_->device.maxBufferLength)throw std::invalid_argument("BF16 weight exceeds device buffer limit");
+        // Inspect raw bits without introducing alignment requirements on mapped files.
+        for(size_t i=0;i<rows*columns;++i){uint16_t bits;std::memcpy(&bits,static_cast<const char*>(data)+2*i,2);
+            if((bits&0x7f80)==0x7f80)throw std::invalid_argument("Nonfinite BF16 checkpoint weight");}
+        auto value=std::make_shared<MetalBF16Weight::Impl>();value->rows=rows;value->columns=columns;
+        value->buffer=[impl_->device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared];
+        if(!value->buffer)throw std::runtime_error("BF16 weight allocation failed");
+        return MetalBF16Weight(value);
+    }
+}
+void MetalContext::EncodeArgmax(const MetalMatrix& input,const MetalMatrix& output) {
+    @autoreleasepool {
+        if(!impl_->command||!input.impl_||!output.impl_)throw std::invalid_argument("Missing GPU argmax input/batch");
+        auto a=input.impl_->matrix,o=output.impl_->matrix;
+        if(a.device!=impl_->device||o.device!=impl_->device||o.rows!=a.rows||o.columns!=2||a.columns>16777216||a.data==o.data)
+            throw std::invalid_argument("GPU argmax shape/device mismatch");
+        if(!input.impl_->ready&&!(input.impl_->pending&&impl_->pendingOutputs.count(input.impl_.get())!=0))
+            throw std::logic_error("Uninitialized GPU argmax input");
+        if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
+            throw std::logic_error("GPU argmax output belongs to another command batch");
+        auto pipeline=impl_->kernels->argmax;
+        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
+            throw std::runtime_error("GPU argmax requires 32-lane SIMD groups");
+        struct Params{uint64_t rows,columns,iStride,oStride;};Params p{a.rows,a.columns,a.rowBytes/4,o.rowBytes/4};
+        auto encoder=[impl_->command computeCommandEncoder];
+        if(!encoder)throw std::runtime_error("Cannot create GPU argmax encoder");
+        [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];[encoder setBuffer:o.data offset:0 atIndex:1];
+        [encoder setBytes:&p length:sizeof(p) atIndex:2];
+        [encoder dispatchThreadgroups:MTLSizeMake(a.rows,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+        [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+    }
+}
+void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
+    @autoreleasepool {
+        if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
+        auto a=input.impl_->matrix,o=output.impl_->matrix;auto w=weight.impl_;
+        if(a.device!=impl_->device||o.device!=impl_->device||w->buffer.device!=impl_->device||
+            a.columns!=w->columns||o.rows!=a.rows||o.columns!=w->rows||a.rows>2||o.data==a.data)
+            throw std::invalid_argument("BF16 projection shape/device mismatch (batch 1/2)");
+        auto usable=[&](const MetalMatrix& m){return m.impl_->ready||(m.impl_->pending&&
+            impl_->pendingOutputs.count(m.impl_.get())!=0);};
+        if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
+        if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
+            throw std::logic_error("BF16 output belongs to another command batch");
+        auto pipeline=impl_->kernels->bf16MatVec;
+        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
+            throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
+        struct Params{uint64_t rows,inner,columns,aStride,oStride;};
+        Params p{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4};
+        auto encoder=[impl_->command computeCommandEncoder];
+        if(!encoder)throw std::runtime_error("Cannot create BF16 projection encoder");
+        [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
+        [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
+        [encoder setBytes:&p length:sizeof(p) atIndex:3];
+        [encoder dispatchThreadgroups:MTLSizeMake((o.columns+3)/4,o.rows,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+        [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }
 MetalMatrix MetalContext::Upload(const std::vector<float>& values,size_t rows,size_t columns) {
@@ -407,13 +531,13 @@ void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right
         throw std::invalid_argument("Metal matrices belong to another device");
     auto usable=[&](const MetalMatrix& matrix){
         return matrix.impl_->ready || (matrix.impl_->pending &&
-            std::find(impl_->outputs.begin(),impl_->outputs.end(),matrix.impl_)!=impl_->outputs.end());
+            impl_->pendingOutputs.count(matrix.impl_.get())!=0);
     };
     if(!usable(left)||!usable(right))throw std::logic_error("Uninitialized Metal input");
     if(a.columns!=(transposeRight?b.columns:b.rows)||c.rows!=a.rows||
         c.columns!=(transposeRight?b.rows:b.columns))throw std::invalid_argument("Metal matmul shape mismatch");
     if(c.data==a.data||c.data==b.data)throw std::invalid_argument("In-place Metal matmul is unsupported");
-    if(output.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),output.impl_)==impl_->outputs.end())
+    if(output.impl_->pending && impl_->pendingOutputs.count(output.impl_.get())==0)
         throw std::logic_error("Metal output is in another command batch");
     const std::array<size_t,4> key{c.rows,c.columns,a.columns,size_t(transposeRight)};
     auto found=impl_->matmul.find(key);
@@ -426,7 +550,7 @@ void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right
     auto op=found->second;
     [op encodeToCommandBuffer:impl_->command leftMatrix:a rightMatrix:b resultMatrix:c];
     output.impl_->ready=false;output.impl_->pending=true;
-    impl_->outputs.push_back(output.impl_);
+    if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }
 void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& right,
@@ -440,18 +564,18 @@ void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& ri
     if(a.device!=impl_->device||b.device!=impl_->device||c.device!=impl_->device)
         throw std::invalid_argument("Metal matrices belong to another device");
     auto usable=[&](const MetalMatrix& matrix){return matrix.impl_->ready ||
-        (matrix.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),matrix.impl_)!=impl_->outputs.end());};
+        (matrix.impl_->pending && impl_->pendingOutputs.count(matrix.impl_.get())!=0);};
     if(!usable(left)||!usable(right))throw std::logic_error("Uninitialized Metal input");
     if(a.rows!=c.rows||a.columns!=c.columns||b.columns!=(mask?1:a.columns)||b.rows!=((rms||bias)?1:a.rows))
         throw std::invalid_argument("Qwen Metal operation shape mismatch");
     if(rms && (!(epsilon>0)||!std::isfinite(epsilon)||!std::isfinite(offset)))
         throw std::invalid_argument("Invalid RMS normalization parameters");
     if(c.data==a.data||c.data==b.data)throw std::invalid_argument("In-place operation is unsupported");
-    if(output.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),output.impl_)==impl_->outputs.end())
+    if(output.impl_->pending && impl_->pendingOutputs.count(output.impl_.get())==0)
         throw std::logic_error("Metal output is in another command batch");
     struct Params {uint64_t rows,columns,aStride,bStride,cStride;float epsilon,offset;};
     Params p{a.rows,a.columns,a.rowBytes/4,b.rowBytes/4,c.rowBytes/4,epsilon,offset};
-    auto pipeline=rms?impl_->rms:(operation==1?impl_->silu:((operation==2||bias)?impl_->add:impl_->mask));
+    auto pipeline=rms?impl_->kernels->rms:(operation==1?impl_->kernels->silu:((operation==2||bias)?impl_->kernels->add:impl_->kernels->mask));
     id<MTLComputeCommandEncoder> encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal compute encoder");
     [encoder setComputePipelineState:pipeline];
@@ -459,9 +583,13 @@ void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& ri
     [encoder setBuffer:c.data offset:0 atIndex:2];[encoder setBytes:&p length:sizeof(p) atIndex:3];
     const size_t count=rms?a.rows:Elements(a.rows,a.columns);
     const size_t width=std::min(size_t(pipeline.maxTotalThreadsPerThreadgroup),count);
-    [encoder dispatchThreads:MTLSizeMake(count,1,1) threadsPerThreadgroup:MTLSizeMake(width,1,1)];
+    if(rms) {
+        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
+            throw std::runtime_error("Parallel RMS requires 32-lane SIMD groups");
+        [encoder dispatchThreadgroups:MTLSizeMake(a.rows,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+    }else [encoder dispatchThreads:MTLSizeMake(count,1,1) threadsPerThreadgroup:MTLSizeMake(width,1,1)];
     [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;
-    impl_->outputs.push_back(output.impl_);
+    if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }
 void MetalContext::EncodeRMSNorm(const MetalMatrix& input,const MetalMatrix& weight,
@@ -488,19 +616,19 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         throw std::invalid_argument("Invalid Metal state kernel output/grid");
     auto c=output.impl_->matrix;
     if(c.device!=impl_->device)throw std::invalid_argument("Metal output belongs to another device");
-    if(output.impl_->pending && std::find(impl_->outputs.begin(),impl_->outputs.end(),output.impl_)==impl_->outputs.end())
+    if(output.impl_->pending && impl_->pendingOutputs.count(output.impl_.get())==0)
         throw std::logic_error("Metal output is in another command batch");
     for(const auto& input:inputs) {
         if(!input.impl_||input.impl_->matrix.device!=impl_->device)
             throw std::invalid_argument("Invalid Metal state kernel input/device");
         if(!input.impl_->ready && !(input.impl_->pending &&
-            std::find(impl_->outputs.begin(),impl_->outputs.end(),input.impl_)!=impl_->outputs.end()))
+            impl_->pendingOutputs.count(input.impl_.get())!=0))
             throw std::logic_error("Uninitialized Metal state kernel input");
         if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
     }
     if(operation>11)throw std::invalid_argument("Unknown Metal state kernel");
-    id<MTLComputePipelineState> pipelines[]={impl_->conv,impl_->delta,impl_->slice,impl_->prepare,impl_->gatedNorm,
-        impl_->concat,impl_->normRope,impl_->kvUpdate,impl_->scores,impl_->attentionContext,impl_->vision,impl_->layout};
+    id<MTLComputePipelineState> pipelines[]={impl_->kernels->conv,impl_->kernels->delta,impl_->kernels->slice,impl_->kernels->prepare,impl_->kernels->gatedNorm,
+        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout};
     auto pipeline=pipelines[operation];
     auto encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal state kernel encoder");
@@ -510,7 +638,7 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
     [encoder setBytes:parameters length:parameterBytes atIndex:inputs.size()+1];
     [encoder dispatchThreads:MTLSizeMake(threads,1,1)
         threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(pipeline.maxTotalThreadsPerThreadgroup)),1,1)];
-    [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;impl_->outputs.push_back(output.impl_);
+    [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }
 void MetalContext::EncodeLayout(const MetalMatrix& input,const MetalMatrix& flags,const MetalMatrix& output,size_t tokenWidth) {
@@ -679,14 +807,14 @@ void MetalContext::SubmitAndWait() {
     [command commit];[command waitUntilCompleted];
     const bool success=command.status==MTLCommandBufferStatusCompleted;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=success;}
-    impl_->outputs.clear();impl_->command=nil;
+    impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
     if(!success)throw std::runtime_error(command.error ?
         std::string(command.error.localizedDescription.UTF8String):"Metal execution did not complete");
     }
 }
 void MetalContext::Abort() {
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
-    impl_->outputs.clear();impl_->command=nil;
+    impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }
 std::vector<float> MetalContext::Download(const MetalMatrix& value) const {
     if(!value.impl_||!value.impl_->ready||value.impl_->pending)

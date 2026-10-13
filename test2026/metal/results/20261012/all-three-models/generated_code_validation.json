@@ -1,0 +1,82 @@
+[
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "folder": "all3-final-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized",
+    "function": "add",
+    "source": "def add(a, b):\n    return a + b\n",
+    "sha256": "ba1a531f581d2e6094e978ed6f7aca7a8d92eeb62c6e7ad73ee692f7f18bc772",
+    "ast_restricted": true,
+    "tests": [
+      {
+        "inputs": [
+          2,
+          3
+        ],
+        "expected": 5,
+        "actual": 5
+      },
+      {
+        "inputs": [
+          -4,
+          9
+        ],
+        "expected": 5,
+        "actual": 5
+      },
+      {
+        "inputs": [
+          0,
+          0
+        ],
+        "expected": 0,
+        "actual": 0
+      },
+      {
+        "inputs": [
+          1.5,
+          2.5
+        ],
+        "expected": 4.0,
+        "actual": 4.0
+      }
+    ]
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "folder": "all3-extended-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-extended-2",
+    "function": "factorial",
+    "source": "def factorial(n):\n    result = 1\n    for i in range(1, n + 1):\n        result *= i\n    return result\n",
+    "sha256": "cc3445138ba72a203b569b782c36044e3f16bf880ebc220bfdb6854c1fe603f4",
+    "ast_restricted": true,
+    "tests": [
+      {
+        "inputs": [
+          0
+        ],
+        "expected": 1,
+        "actual": 1
+      },
+      {
+        "inputs": [
+          1
+        ],
+        "expected": 1,
+        "actual": 1
+      },
+      {
+        "inputs": [
+          5
+        ],
+        "expected": 120,
+        "actual": 120
+      },
+      {
+        "inputs": [
+          7
+        ],
+        "expected": 5040,
+        "actual": 5040
+      }
+    ]
+  }
+]

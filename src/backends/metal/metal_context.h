@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <cstdint>
 namespace Garnet {
 class MetalMatrix {
     struct Impl;
@@ -13,6 +14,14 @@ class MetalMatrix {
     friend class MetalContext;
 public:
     MetalMatrix() = default;
+};
+class MetalBF16Weight {
+    struct Impl;
+    std::shared_ptr<Impl> impl_;
+    explicit MetalBF16Weight(std::shared_ptr<Impl> impl):impl_(std::move(impl)) {}
+    friend class MetalContext;
+public:
+    MetalBF16Weight()=default;
 };
 // C++ interface keeps Objective-C ownership out of model-facing headers.
 class MetalContext {
@@ -31,6 +40,11 @@ public:
     static std::string AvailableDeviceName();
     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
     MetalMatrix Allocate(size_t rows, size_t columns);
+    MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns);
+    // Preserve checkpoint BF16 values and accumulate the vocabulary projection in FP32.
+    void EncodeBF16MatVec(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
+    // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
+    void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
     // Synchronous host update into an existing allocation, between command batches.
     void Update(const MetalMatrix&,const std::vector<float>& values);
     void Update(const MetalMatrix&,const float* values,size_t count);
