@@ -1,0 +1,1888 @@
+{
+  "scope": "Sequential native ABBA, same frozen text/coder/image workloads and full outputs.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 93.06910401210189,
+          "decode_tps": 51.49982274397572,
+          "initialization_s": 1.6827288754284382
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 90.43286449741572,
+          "decode_tps": 58.515663372939386,
+          "initialization_s": 1.680596416350454
+        }
+      },
+      "decode_ratio": 1.1362303840120374,
+      "ttft_fraction": 0.9716743860095249,
+      "exact_complete_outputs": true
+    }
+  ],
+  "records": [
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6925062090158463,
+      "ttft_seconds": 0.17818091623485088,
+      "total_seconds": 0.3225260409526527,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.028379083145409822,
+        0.020422375295311213,
+        0.018720791675150394,
+        0.019172916654497385,
+        0.01901237526908517,
+        0.019063124898821115,
+        0.019318999722599983
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 48.580860530928845,
+      "decode_window_seconds": 0.1443451247178018,
+      "decode_wall_steps_per_second": 48.49488345162449,
+      "native_decode_ms": [
+        28.183333,
+        19.5955,
+        18.607916,
+        19.070667,
+        18.915167,
+        18.966125,
+        19.223083
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.204708,
+          "encode_ms": 0.515583,
+          "gpu_ms": 17.23487488925457,
+          "wait_ms": 27.459959
+        },
+        {
+          "prepare_ms": 0.154167,
+          "encode_ms": 0.508125,
+          "gpu_ms": 18.1752503849566,
+          "wait_ms": 18.931875
+        },
+        {
+          "prepare_ms": 0.142916,
+          "encode_ms": 0.446792,
+          "gpu_ms": 17.517083324491978,
+          "wait_ms": 18.017208
+        },
+        {
+          "prepare_ms": 0.141125,
+          "encode_ms": 0.435125,
+          "gpu_ms": 18.020208459347486,
+          "wait_ms": 18.493667
+        },
+        {
+          "prepare_ms": 0.13775,
+          "encode_ms": 0.424958,
+          "gpu_ms": 17.87000009790063,
+          "wait_ms": 18.351584
+        },
+        {
+          "prepare_ms": 0.138958,
+          "encode_ms": 0.428584,
+          "gpu_ms": 18.000874668359756,
+          "wait_ms": 18.397916
+        },
+        {
+          "prepare_ms": 0.135708,
+          "encode_ms": 0.420917,
+          "gpu_ms": 18.25175015255809,
+          "wait_ms": 18.665708
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.218583,
+        "encode_ms": 16.089458,
+        "gpu_ms": 63.3931253105402,
+        "wait_ms": 83.78475
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 100.096666,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 0
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6925062090158463,
+      "ttft_seconds": 0.09387983335182071,
+      "total_seconds": 0.23066399991512299,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.019537041895091534,
+        0.019585957750678062,
+        0.019409624859690666,
+        0.019698374904692173,
+        0.019283208064734936,
+        0.01925875013694167,
+        0.019802833907306194
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 51.25359276441938,
+      "decode_window_seconds": 0.13678416656330228,
+      "decode_wall_steps_per_second": 51.17551377381441,
+      "native_decode_ms": [
+        19.393583,
+        19.490167,
+        19.313209,
+        19.6035,
+        19.191125,
+        19.164417,
+        19.711042
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.160292,
+          "encode_ms": 0.440375,
+          "gpu_ms": 18.427416682243347,
+          "wait_ms": 18.79225
+        },
+        {
+          "prepare_ms": 0.138,
+          "encode_ms": 0.422792,
+          "gpu_ms": 18.547166604548693,
+          "wait_ms": 18.928708
+        },
+        {
+          "prepare_ms": 0.137167,
+          "encode_ms": 0.424458,
+          "gpu_ms": 18.264541402459145,
+          "wait_ms": 18.750667
+        },
+        {
+          "prepare_ms": 0.136167,
+          "encode_ms": 0.421167,
+          "gpu_ms": 18.557291477918625,
+          "wait_ms": 19.0455
+        },
+        {
+          "prepare_ms": 0.137083,
+          "encode_ms": 0.4185,
+          "gpu_ms": 18.238500226289034,
+          "wait_ms": 18.634875
+        },
+        {
+          "prepare_ms": 0.138542,
+          "encode_ms": 0.426292,
+          "gpu_ms": 18.215499818325043,
+          "wait_ms": 18.598958
+        },
+        {
+          "prepare_ms": 0.135917,
+          "encode_ms": 0.416166,
+          "gpu_ms": 18.86787498369813,
+          "wait_ms": 19.158292
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.234875,
+        "encode_ms": 5.104375,
+        "gpu_ms": 64.70062490552664,
+        "wait_ms": 65.75425
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 71.094375,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 0
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6925062090158463,
+      "ttft_seconds": 0.09359341580420732,
+      "total_seconds": 0.22918229084461927,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.019118666648864746,
+        0.01916341669857502,
+        0.019162415992468596,
+        0.01931399991735816,
+        0.019162707962095737,
+        0.019444750156253576,
+        0.019898999948054552
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 51.750284319758926,
+      "decode_window_seconds": 0.13558887504041195,
+      "decode_wall_steps_per_second": 51.62665445755536,
+      "native_decode_ms": [
+        18.942208,
+        19.02275,
+        19.023542,
+        19.191583,
+        19.04325,
+        19.295958,
+        19.748208
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.190916,
+          "encode_ms": 0.499125,
+          "gpu_ms": 17.858125269412994,
+          "wait_ms": 18.249334
+        },
+        {
+          "prepare_ms": 0.161416,
+          "encode_ms": 0.499542,
+          "gpu_ms": 17.871124669909477,
+          "wait_ms": 18.358
+        },
+        {
+          "prepare_ms": 0.163583,
+          "encode_ms": 0.490042,
+          "gpu_ms": 17.897041980177164,
+          "wait_ms": 18.367583
+        },
+        {
+          "prepare_ms": 0.161916,
+          "encode_ms": 0.467417,
+          "gpu_ms": 18.114791717380285,
+          "wait_ms": 18.561083
+        },
+        {
+          "prepare_ms": 0.1505,
+          "encode_ms": 0.511958,
+          "gpu_ms": 17.986124847084284,
+          "wait_ms": 18.377125
+        },
+        {
+          "prepare_ms": 0.182583,
+          "encode_ms": 0.547292,
+          "gpu_ms": 18.12345813959837,
+          "wait_ms": 18.562916
+        },
+        {
+          "prepare_ms": 0.19225,
+          "encode_ms": 0.569125,
+          "gpu_ms": 18.57370836660266,
+          "wait_ms": 18.985583
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.220959,
+        "encode_ms": 4.860333,
+        "gpu_ms": 64.54141670837998,
+        "wait_ms": 65.555708
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 70.640167,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 0
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6742472080513835,
+      "ttft_seconds": 0.18298162519931793,
+      "total_seconds": 0.3090832498855889,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.025232040788978338,
+        0.01679424988105893,
+        0.01683566579595208,
+        0.016538457944989204,
+        0.016808541025966406,
+        0.016815791372209787,
+        0.01682162517681718
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 55.62337546592355,
+      "decode_window_seconds": 0.12610162468627095,
+      "decode_wall_steps_per_second": 55.51078360342577,
+      "native_decode_ms": [
+        25.02675,
+        16.66175,
+        16.705875,
+        16.427584,
+        16.700041,
+        16.711209,
+        16.719125
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.230375,
+          "encode_ms": 0.590709,
+          "gpu_ms": 15.018625184893608,
+          "wait_ms": 24.202875
+        },
+        {
+          "prepare_ms": 0.155667,
+          "encode_ms": 0.55,
+          "gpu_ms": 15.482249669730663,
+          "wait_ms": 15.954
+        },
+        {
+          "prepare_ms": 0.147542,
+          "encode_ms": 0.518542,
+          "gpu_ms": 15.563291497528553,
+          "wait_ms": 16.038583
+        },
+        {
+          "prepare_ms": 0.138917,
+          "encode_ms": 0.498708,
+          "gpu_ms": 15.393500216305256,
+          "wait_ms": 15.78875
+        },
+        {
+          "prepare_ms": 0.136291,
+          "encode_ms": 0.481917,
+          "gpu_ms": 15.583875123411417,
+          "wait_ms": 16.080958
+        },
+        {
+          "prepare_ms": 0.133584,
+          "encode_ms": 0.474541,
+          "gpu_ms": 15.706749632954597,
+          "wait_ms": 16.102334
+        },
+        {
+          "prepare_ms": 0.133709,
+          "encode_ms": 0.4625,
+          "gpu_ms": 15.723500400781631,
+          "wait_ms": 16.122125
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.241958,
+        "encode_ms": 16.113084,
+        "gpu_ms": 66.80462509393692,
+        "wait_ms": 85.514083
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 101.8735,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 0
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6742472080513835,
+      "ttft_seconds": 0.09324075002223253,
+      "total_seconds": 0.21401054225862026,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.01741833332926035,
+        0.017396959010511637,
+        0.017112667206674814,
+        0.017307457979768515,
+        0.017204291187226772,
+        0.017333625350147486,
+        0.016789750196039677
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 58.060890221800356,
+      "decode_window_seconds": 0.12076979223638773,
+      "decode_wall_steps_per_second": 57.961513971131204,
+      "native_decode_ms": [
+        17.254708,
+        17.297542,
+        17.018791,
+        17.2125,
+        17.112125,
+        17.238667,
+        16.697458
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.163583,
+          "encode_ms": 0.495333,
+          "gpu_ms": 16.177999787032604,
+          "wait_ms": 16.594709
+        },
+        {
+          "prepare_ms": 0.137917,
+          "encode_ms": 0.468833,
+          "gpu_ms": 16.195375006645918,
+          "wait_ms": 16.690125
+        },
+        {
+          "prepare_ms": 0.1375,
+          "encode_ms": 0.470708,
+          "gpu_ms": 16.005625016987324,
+          "wait_ms": 16.409875
+        },
+        {
+          "prepare_ms": 0.134709,
+          "encode_ms": 0.465083,
+          "gpu_ms": 16.199625097215176,
+          "wait_ms": 16.611875
+        },
+        {
+          "prepare_ms": 0.1435,
+          "encode_ms": 0.4655,
+          "gpu_ms": 16.085749957710505,
+          "wait_ms": 16.502417
+        },
+        {
+          "prepare_ms": 0.134209,
+          "encode_ms": 0.459916,
+          "gpu_ms": 16.191833186894655,
+          "wait_ms": 16.643792
+        },
+        {
+          "prepare_ms": 0.134041,
+          "encode_ms": 0.456,
+          "gpu_ms": 15.709666535258293,
+          "wait_ms": 16.106709
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.329958,
+        "encode_ms": 5.428542,
+        "gpu_ms": 63.89804184436798,
+        "wait_ms": 64.725458
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 70.484917,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 0
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6742472080513835,
+      "ttft_seconds": 0.0876388750039041,
+      "total_seconds": 0.20687024993821979,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.01713108317926526,
+        0.01690537529066205,
+        0.016952375415712595,
+        0.016935292165726423,
+        0.017121249809861183,
+        0.017294166143983603,
+        0.01659279176965356
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 58.85699689750299,
+      "decode_window_seconds": 0.11923137493431568,
+      "decode_wall_steps_per_second": 58.70937917017468,
+      "native_decode_ms": [
+        16.973667,
+        16.810458,
+        16.851583,
+        16.809375,
+        16.991041,
+        17.146583,
+        16.418917
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.159625,
+          "encode_ms": 0.490334,
+          "gpu_ms": 15.901916660368443,
+          "wait_ms": 16.322916
+        },
+        {
+          "prepare_ms": 0.135041,
+          "encode_ms": 0.468292,
+          "gpu_ms": 15.78949997201562,
+          "wait_ms": 16.206417
+        },
+        {
+          "prepare_ms": 0.133375,
+          "encode_ms": 0.459583,
+          "gpu_ms": 15.761958435177803,
+          "wait_ms": 16.256834
+        },
+        {
+          "prepare_ms": 0.145625,
+          "encode_ms": 0.504375,
+          "gpu_ms": 15.715749934315681,
+          "wait_ms": 16.157292
+        },
+        {
+          "prepare_ms": 0.159125,
+          "encode_ms": 0.514708,
+          "gpu_ms": 15.733749605715275,
+          "wait_ms": 16.313708
+        },
+        {
+          "prepare_ms": 0.166667,
+          "encode_ms": 0.541208,
+          "gpu_ms": 16.027916688472033,
+          "wait_ms": 16.433417
+        },
+        {
+          "prepare_ms": 0.170834,
+          "encode_ms": 0.574166,
+          "gpu_ms": 15.289750415831804,
+          "wait_ms": 15.671584
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.189416,
+        "encode_ms": 4.788625,
+        "gpu_ms": 62.189375050365925,
+        "wait_ms": 63.315
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 68.293875,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 0
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6869456246495247,
+      "ttft_seconds": 0.1968867089599371,
+      "total_seconds": 0.3218527501448989,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.02518725022673607,
+        0.016404790803790092,
+        0.016598917078226805,
+        0.01663716696202755,
+        0.01643454236909747,
+        0.016782124992460012,
+        0.01667208317667246
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 56.12712767071812,
+      "decode_window_seconds": 0.1249660411849618,
+      "decode_wall_steps_per_second": 56.01521768333306,
+      "native_decode_ms": [
+        24.301083,
+        16.275667,
+        16.485625,
+        16.532792,
+        16.334917,
+        16.680167,
+        16.563959
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.206583,
+          "encode_ms": 0.593292,
+          "gpu_ms": 14.633499551564455,
+          "wait_ms": 23.498583
+        },
+        {
+          "prepare_ms": 0.154,
+          "encode_ms": 0.528,
+          "gpu_ms": 15.182583127170801,
+          "wait_ms": 15.592459
+        },
+        {
+          "prepare_ms": 0.146375,
+          "encode_ms": 0.506958,
+          "gpu_ms": 15.34279203042388,
+          "wait_ms": 15.831333
+        },
+        {
+          "prepare_ms": 0.138958,
+          "encode_ms": 0.483167,
+          "gpu_ms": 15.455666463822126,
+          "wait_ms": 15.909833
+        },
+        {
+          "prepare_ms": 0.136709,
+          "encode_ms": 0.477125,
+          "gpu_ms": 15.293375123292208,
+          "wait_ms": 15.720291
+        },
+        {
+          "prepare_ms": 0.134208,
+          "encode_ms": 0.474542,
+          "gpu_ms": 15.597624704241753,
+          "wait_ms": 16.0705
+        },
+        {
+          "prepare_ms": 0.158459,
+          "encode_ms": 0.546125,
+          "gpu_ms": 15.353249851614237,
+          "wait_ms": 15.858583
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.240458,
+        "encode_ms": 15.7735,
+        "gpu_ms": 70.2148750424385,
+        "wait_ms": 90.666042
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 106.684167,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 1
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6869456246495247,
+      "ttft_seconds": 0.08995908312499523,
+      "total_seconds": 0.20949512533843517,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.01748833293095231,
+        0.017001458909362555,
+        0.017038707621395588,
+        0.016881541814655066,
+        0.017031542025506496,
+        0.016766624990850687,
+        0.017111292108893394
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 58.66601834937946,
+      "decode_window_seconds": 0.11953604221343994,
+      "decode_wall_steps_per_second": 58.55974374240208,
+      "native_decode_ms": [
+        17.338125,
+        16.896708,
+        16.93975,
+        16.785166,
+        16.935625,
+        16.669584,
+        17.016
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.173291,
+          "encode_ms": 0.498542,
+          "gpu_ms": 16.252874862402678,
+          "wait_ms": 16.66525
+        },
+        {
+          "prepare_ms": 0.13775,
+          "encode_ms": 0.479667,
+          "gpu_ms": 15.846374910324812,
+          "wait_ms": 16.2785
+        },
+        {
+          "prepare_ms": 0.133416,
+          "encode_ms": 0.463209,
+          "gpu_ms": 15.800833236426115,
+          "wait_ms": 16.342416
+        },
+        {
+          "prepare_ms": 0.13425,
+          "encode_ms": 0.462458,
+          "gpu_ms": 15.699583105742931,
+          "wait_ms": 16.187792
+        },
+        {
+          "prepare_ms": 0.134625,
+          "encode_ms": 0.461666,
+          "gpu_ms": 15.86625026538968,
+          "wait_ms": 16.338542
+        },
+        {
+          "prepare_ms": 0.137167,
+          "encode_ms": 0.461167,
+          "gpu_ms": 15.580749604851007,
+          "wait_ms": 16.070583
+        },
+        {
+          "prepare_ms": 0.134125,
+          "encode_ms": 0.458833,
+          "gpu_ms": 15.926625113934278,
+          "wait_ms": 16.422292
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.22,
+        "encode_ms": 5.181125,
+        "gpu_ms": 61.33312499150634,
+        "wait_ms": 62.570417
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 67.972792,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 1
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6869456246495247,
+      "ttft_seconds": 0.09089274983853102,
+      "total_seconds": 0.20987558271735907,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.01734479097649455,
+        0.01700266683474183,
+        0.017135083209723234,
+        0.017082917038351297,
+        0.01651212526485324,
+        0.016845792066305876,
+        0.016752750147134066
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 58.98406244971284,
+      "decode_window_seconds": 0.11898283287882805,
+      "decode_wall_steps_per_second": 58.832016608049585,
+      "native_decode_ms": [
+        17.181917,
+        16.89225,
+        16.985458,
+        16.96125,
+        16.377625,
+        16.708209,
+        16.608084
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.159125,
+          "encode_ms": 0.482,
+          "gpu_ms": 16.157833393663168,
+          "wait_ms": 16.540084
+        },
+        {
+          "prepare_ms": 0.136375,
+          "encode_ms": 0.464167,
+          "gpu_ms": 15.934749972075224,
+          "wait_ms": 16.28775
+        },
+        {
+          "prepare_ms": 0.1565,
+          "encode_ms": 0.556833,
+          "gpu_ms": 15.82933310419321,
+          "wait_ms": 16.270042
+        },
+        {
+          "prepare_ms": 0.159791,
+          "encode_ms": 0.519625,
+          "gpu_ms": 15.835375059396029,
+          "wait_ms": 16.27925
+        },
+        {
+          "prepare_ms": 0.159,
+          "encode_ms": 0.527083,
+          "gpu_ms": 15.234500169754028,
+          "wait_ms": 15.689208
+        },
+        {
+          "prepare_ms": 0.188375,
+          "encode_ms": 0.594959,
+          "gpu_ms": 15.513166785240173,
+          "wait_ms": 15.922541
+        },
+        {
+          "prepare_ms": 0.183209,
+          "encode_ms": 0.59425,
+          "gpu_ms": 15.40412474423647,
+          "wait_ms": 15.8285
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.199417,
+        "encode_ms": 4.998375,
+        "gpu_ms": 64.00920823216438,
+        "wait_ms": 65.003041
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 70.201833,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 1
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6729515418410301,
+      "ttft_seconds": 0.18943520821630955,
+      "total_seconds": 0.3342547919601202,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.029925750102847815,
+        0.01918766601011157,
+        0.01883399998769164,
+        0.019101208075881004,
+        0.018741041887551546,
+        0.019239916931837797,
+        0.01951995911076665
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 48.42630352182986,
+      "decode_window_seconds": 0.14481958374381065,
+      "decode_wall_steps_per_second": 48.33600414418515,
+      "native_decode_ms": [
+        29.722917,
+        19.050084,
+        18.683041,
+        18.991583,
+        18.639083,
+        19.135875,
+        19.421208
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.207125,
+          "encode_ms": 0.5355,
+          "gpu_ms": 17.26137474179268,
+          "wait_ms": 28.977417
+        },
+        {
+          "prepare_ms": 0.153334,
+          "encode_ms": 0.490125,
+          "gpu_ms": 17.965625040233135,
+          "wait_ms": 18.403958
+        },
+        {
+          "prepare_ms": 0.150583,
+          "encode_ms": 0.497625,
+          "gpu_ms": 17.52291666343808,
+          "wait_ms": 18.033333
+        },
+        {
+          "prepare_ms": 0.139541,
+          "encode_ms": 0.460625,
+          "gpu_ms": 17.89229130372405,
+          "wait_ms": 18.3905
+        },
+        {
+          "prepare_ms": 0.137833,
+          "encode_ms": 0.43575,
+          "gpu_ms": 17.602916341274977,
+          "wait_ms": 18.064709
+        },
+        {
+          "prepare_ms": 0.134625,
+          "encode_ms": 0.425375,
+          "gpu_ms": 18.074499908834696,
+          "wait_ms": 18.575125
+        },
+        {
+          "prepare_ms": 0.134,
+          "encode_ms": 0.430875,
+          "gpu_ms": 18.386125098913908,
+          "wait_ms": 18.855583
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.239083,
+        "encode_ms": 16.061167,
+        "gpu_ms": 68.24112497270107,
+        "wait_ms": 87.170583
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 103.475208,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 1
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6729515418410301,
+      "ttft_seconds": 0.09318479197099805,
+      "total_seconds": 0.22911666706204414,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.01945937518030405,
+        0.01931645767763257,
+        0.019310624804347754,
+        0.01947375014424324,
+        0.01948125008493662,
+        0.01932254107668996,
+        0.01935849990695715
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 51.57582610117749,
+      "decode_window_seconds": 0.1359318750910461,
+      "decode_wall_steps_per_second": 51.49638372391652,
+      "native_decode_ms": [
+        19.294791,
+        19.21875,
+        19.216125,
+        19.380083,
+        19.38625,
+        19.227167,
+        19.265917
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.164583,
+          "encode_ms": 0.453333,
+          "gpu_ms": 18.294749781489372,
+          "wait_ms": 18.676125
+        },
+        {
+          "prepare_ms": 0.139208,
+          "encode_ms": 0.437209,
+          "gpu_ms": 18.165916670113802,
+          "wait_ms": 18.641791
+        },
+        {
+          "prepare_ms": 0.133708,
+          "encode_ms": 0.427042,
+          "gpu_ms": 18.2540831156075,
+          "wait_ms": 18.65475
+        },
+        {
+          "prepare_ms": 0.136458,
+          "encode_ms": 0.422375,
+          "gpu_ms": 18.334916792809963,
+          "wait_ms": 18.820542
+        },
+        {
+          "prepare_ms": 0.147542,
+          "encode_ms": 0.421542,
+          "gpu_ms": 18.188999965786934,
+          "wait_ms": 18.8165
+        },
+        {
+          "prepare_ms": 0.135875,
+          "encode_ms": 0.423417,
+          "gpu_ms": 18.16266681998968,
+          "wait_ms": 18.667292
+        },
+        {
+          "prepare_ms": 0.134542,
+          "encode_ms": 0.420458,
+          "gpu_ms": 18.182500265538692,
+          "wait_ms": 18.710292
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.309833,
+        "encode_ms": 5.409292,
+        "gpu_ms": 63.80808353424072,
+        "wait_ms": 64.618333
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 70.338417,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 1
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.6729515418410301,
+      "ttft_seconds": 0.09161837492138147,
+      "total_seconds": 0.22701295791193843,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.019999208860099316,
+        0.01928395824506879,
+        0.018705541267991066,
+        0.01939975004643202,
+        0.01867137523368001,
+        0.019505292177200317,
+        0.019502165727317333
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 51.826018862642506,
+      "decode_window_seconds": 0.13539458299055696,
+      "decode_wall_steps_per_second": 51.700739020616595,
+      "native_decode_ms": [
+        19.783083,
+        19.140458,
+        18.570667,
+        19.270167,
+        18.548875,
+        19.374667,
+        19.348958
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.194333,
+          "encode_ms": 0.508667,
+          "gpu_ms": 18.482166342437267,
+          "wait_ms": 19.077041
+        },
+        {
+          "prepare_ms": 0.163458,
+          "encode_ms": 0.506083,
+          "gpu_ms": 18.018124625086784,
+          "wait_ms": 18.468084
+        },
+        {
+          "prepare_ms": 0.161334,
+          "encode_ms": 0.487833,
+          "gpu_ms": 17.512208316475153,
+          "wait_ms": 17.918375
+        },
+        {
+          "prepare_ms": 0.151292,
+          "encode_ms": 0.474875,
+          "gpu_ms": 18.30870844423771,
+          "wait_ms": 18.641833
+        },
+        {
+          "prepare_ms": 0.157917,
+          "encode_ms": 0.478333,
+          "gpu_ms": 17.51099992543459,
+          "wait_ms": 17.911292
+        },
+        {
+          "prepare_ms": 0.182084,
+          "encode_ms": 0.525166,
+          "gpu_ms": 18.17391626536846,
+          "wait_ms": 18.664792
+        },
+        {
+          "prepare_ms": 0.192583,
+          "encode_ms": 0.555459,
+          "gpu_ms": 18.000291660428047,
+          "wait_ms": 18.597
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.233709,
+        "encode_ms": 5.023208,
+        "gpu_ms": 64.1884165816009,
+        "wait_ms": 65.381667
+      },
+      "prefill_chunk_plan": [
+        24
+      ],
+      "prefill_inference_ms": 70.641709,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 1
+    }
+  ]
+}

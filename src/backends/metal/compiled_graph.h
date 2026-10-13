@@ -42,6 +42,7 @@ class MetalCompiledGraph {
     void Clear();
     void PrepareInputs(X::Value,const std::unordered_set<size_t>& skip={});
     void Encode(MetalContext&,bool packedOutput=true);
+    bool CanUpdateKVInPlace(size_t part) const;
     bool SwapOutputStorage(size_t part,MetalMatrix& replacement);
     bool BuildInternal(X::Value,X::Value,const std::string&,std::unordered_map<std::string,SharedWeight>,bool bf16Projections=false);
 public:

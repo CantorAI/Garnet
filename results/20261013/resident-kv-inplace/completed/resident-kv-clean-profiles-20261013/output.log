@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_resident_kv_profiles.py", line 23, in <module>
+    try:guard()
+        ~~~~~^^
+  File "guard", line 75, in guard
+  File "guard", line 51, in verified_worldsense_service
+NameError: name 'hashlib' is not defined. Did you forget to import 'hashlib'?

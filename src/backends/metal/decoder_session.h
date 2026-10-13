@@ -20,6 +20,7 @@ class MetalDecoderSession {
     MetalMatrix hidden_;
     MetalMatrix prediction_;
     std::vector<int64_t> hiddenShape_;
+    size_t kvInplaceUpdates_=0;
     bool poisoned_=false;
     double inferenceMs_=0,prepareMs_=0,encodeMs_=0,gpuMs_=0,waitMs_=0;
     std::mutex mutex_;
@@ -33,6 +34,7 @@ public:
     X::Value Snapshot(int64_t layer);
     X::Value Hidden();
     void Close();
+    size_t LastKVInplaceUpdates() const {return kvInplaceUpdates_;}
     double LastInferenceMs() const {return inferenceMs_;}
     double PrepareMs() const {return prepareMs_;}
     double EncodeMs() const {return encodeMs_;}
@@ -45,6 +47,7 @@ public:
         APISET().AddFunc<1>("snapshot",&MetalDecoderSession::Snapshot);
         APISET().AddFunc<0>("hidden",&MetalDecoderSession::Hidden);
         APISET().AddFunc<0>("close",&MetalDecoderSession::Close);
+        APISET().AddProp("kv_inplace_updates",&MetalDecoderSession::LastKVInplaceUpdates);
         APISET().AddProp("prepare_ms",&MetalDecoderSession::PrepareMs);
         APISET().AddProp("encode_ms",&MetalDecoderSession::EncodeMs);
         APISET().AddProp("gpu_ms",&MetalDecoderSession::GPUMs);

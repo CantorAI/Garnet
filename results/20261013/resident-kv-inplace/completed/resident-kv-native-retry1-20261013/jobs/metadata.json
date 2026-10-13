@@ -1,0 +1,20 @@
+{
+  "scope": "Sequential native ABBA, same frozen text/coder/image workloads and full outputs.",
+  "library_sha256": {
+    "control": "cc5539990dcb4effbece7c611787a656df56b51271f1f40e1c3e8b5dbf90c8f8",
+    "candidate": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2"
+  },
+  "source_sha256": {
+    "compare_resident_kv_native.py": "7be876df048e3c2c446464748825369bb72cf520d7bf0d54050450337ceec86e",
+    "run_matched_garnet.py": "499aefd85eccd8bd02a20214479587c87c1d66be016c570380f900ba6962056c",
+    "run_matched_frame_process.py": "793a140d3c1545f88da15792f9051d80f9e66d8ffac081242ae2285a19fa785e",
+    "frame_worker_garnet.py": "f4e8b6e5f199c6f9304b8c729ee8ac065cd14e199085351443f8a74de6347977"
+  },
+  "assets": {
+    "Qwen3-0.6B": {
+      "model.safetensors": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+      "tokenizer.json": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+    }
+  }
+}

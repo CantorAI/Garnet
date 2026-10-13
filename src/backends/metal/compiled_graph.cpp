@@ -728,6 +728,31 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
         return true;
     }catch(...){Clear();throw;}
 }
+bool MetalCompiledGraph::CanUpdateKVInPlace(size_t part) const {
+#ifdef GARNET_METAL_RESIDENT_KV_INPLACE
+    if(part<1||part>2||inputs_.size()!=6||inputShapes_[0].size()!=2||
+        part>=outputStorageGroups_.size()||outputStorageGroups_[part].empty())return false;
+    const auto& group=outputStorageGroups_[part];size_t writer=SIZE_MAX;
+    auto member=[&](size_t id){return std::find(group.begin(),group.end(),id)!=group.end();};
+    for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]&&
+        (member(ops_[i].out)||member(ops_[i].auxiliaryOutput))) {
+        const auto& op=ops_[i];
+        if(writer!=SIZE_MAX||op.kind!=Kind::KVUpdate||op.arguments.size()!=5||op.arguments[1]!=inputs_[part])return false;
+        writer=i;
+    }
+    if(writer==SIZE_MAX)return false;
+    // Later operations must consume the updated cache, not its old input view.
+    const auto& source=slots_[inputs_[part]].matrix;
+    for(size_t i=writer+1;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]) {
+        const auto& op=ops_[i];
+        if(source.SharesStorage(slots_[op.a].matrix)||source.SharesStorage(slots_[op.b].matrix))return false;
+        for(auto id:op.arguments)if(source.SharesStorage(slots_[id].matrix))return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
 void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<size_t>& skip) {
     if(!ready_||inputs.runtime()!=Host()->runtime||!inputs.IsList()||inputs.Size()!=inputs_.size())
         throw std::runtime_error("Metal graph not ready or input count invalid");

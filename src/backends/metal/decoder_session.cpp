@@ -20,14 +20,14 @@ X::Value TensorValue(X3PackageHost* host,MetalContext& gpu,const MetalMatrix& ma
 }
 void MetalDecoderSession::Clear() {
     hidden_=MetalMatrix();prediction_=MetalMatrix();hiddenShape_.clear();states_.clear();owners_.clear();head_=nullptr;
-    gpu_.reset();poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
+    gpu_.reset();kvInplaceUpdates_=0;poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
 }
 void MetalDecoderSession::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 void MetalDecoderSession::ResetUnlocked() {
     if(!gpu_)throw std::logic_error("Metal session is closed");
     for(auto& state:states_)for(size_t i=0;i<2;++i)
         gpu_->Update(state.matrix[i],std::vector<float>(state.rows*state.columns[i],0));
-    hidden_=MetalMatrix();hiddenShape_.clear();poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
+    hidden_=MetalMatrix();hiddenShape_.clear();kvInplaceUpdates_=0;poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
 }
 void MetalDecoderSession::Reset() {std::lock_guard<std::mutex> lock(mutex_);ResetUnlocked();}
 bool MetalDecoderSession::Build(X::Value graphs,X::Value head) {
@@ -111,23 +111,39 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
     }
     const auto prepared=std::chrono::steady_clock::now();
     prepareMs_=std::chrono::duration<double,std::milli>(prepared-start).count();
-    poisoned_=true;gpu_->Begin();
+    kvInplaceUpdates_=0;poisoned_=true;gpu_->Begin();
     try {
         auto current=layers[0]->slots_[layers[0]->inputs_[0]].matrix;
         for(size_t i=0;i<layers.size();++i) {
             auto graph=layers[i];std::array<MetalMatrix,3> saved;
+            std::array<bool,2> inplace{false,false};
+            std::vector<std::pair<size_t,MetalMatrix>> savedOutputs;
+            for(size_t k=0;k<2;++k)if(graph->CanUpdateKVInPlace(k+1)) {
+                const auto& group=graph->outputStorageGroups_[k+1];
+                if(!states_[i].matrix[k].CompatibleLayout(graph->slots_[graph->outputParts_[k+1]].matrix))
+                    throw std::logic_error("Private KV cache layout mismatch");
+                for(auto id:group){savedOutputs.emplace_back(id,graph->slots_[id].matrix);}
+                inplace[k]=true;
+            }
+            for(size_t k=0;k<2;++k)if(inplace[k])for(auto id:graph->outputStorageGroups_[k+1])
+                graph->slots_[id].matrix=states_[i].matrix[k];
             for(size_t k=0;k<3;++k)saved[k]=graph->slots_[graph->inputs_[k]].matrix;
             graph->slots_[graph->inputs_[0]].matrix=current;
             graph->slots_[graph->inputs_[1]].matrix=states_[i].matrix[0];
             graph->slots_[graph->inputs_[2]].matrix=states_[i].matrix[1];
+            auto restore=[&](){
+                for(size_t k=0;k<3;++k)graph->slots_[graph->inputs_[k]].matrix=saved[k];
+                for(auto& entry:savedOutputs)graph->slots_[entry.first].matrix=entry.second;
+            };
             try {graph->Encode(*gpu_,false);}
-            catch(...){for(size_t k=0;k<3;++k)graph->slots_[graph->inputs_[k]].matrix=saved[k];throw;}
-            for(size_t k=0;k<3;++k)graph->slots_[graph->inputs_[k]].matrix=saved[k];
+            catch(...){restore();throw;}
+            restore();
+            kvInplaceUpdates_+=size_t(inplace[0])+size_t(inplace[1]);
             current=graph->slots_[graph->outputParts_[0]].matrix;
             // Keep the new state private to this session without copying it
             // back. The previous state becomes this graph's next output
             // storage; graph locks cover the exchange and GPU completion.
-            for(size_t k=0;k<2;++k)if(!graph->SwapOutputStorage(k+1,states_[i].matrix[k]))
+            for(size_t k=0;k<2;++k)if(!inplace[k]&&!graph->SwapOutputStorage(k+1,states_[i].matrix[k]))
                 gpu_->EncodeSliceGroups(graph->slots_[graph->outputParts_[k+1]].matrix,
                     states_[i].matrix[k],1,states_[i].columns[k],0,states_[i].columns[k]);
         }
@@ -144,7 +160,7 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         encodeMs_=std::chrono::duration<double,std::milli>(encoded-prepared).count();
         gpu_->SubmitAndWait();gpuMs_=gpu_->LastGPUMs();
         waitMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-encoded).count();
-    }catch(...){gpu_->Abort();throw;}
+    }catch(...){kvInplaceUpdates_=0;gpu_->Abort();throw;}
     hiddenShape_=inputShape[0];
     auto result=X::Value::List(Host());
     if(predictionToken>=0) {

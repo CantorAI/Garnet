@@ -44,6 +44,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> halfRescale;
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
+    id<MTLComputePipelineState> kvInplace;
     id<MTLComputePipelineState> add;
     id<MTLComputePipelineState> mask;
     id<MTLComputePipelineState> conv,convChunk;
@@ -381,6 +382,17 @@ kernel void kv_update(device const float* token [[buffer(0)]],device const float
     ulong row=id/width,col=id%width,dim=col%p.dim,slot=(col/p.dim)%p.capacity,head=col/(p.capacity*p.dim);
     bool replace=active[row*p.aStride]!=0.0f&&float(slot)==slots[row*p.sStride];
     output[row*p.oStride+col]=replace?token[row*p.tStride+head*p.dim+dim]:cache[row*p.cStride+col];
+}
+// A session-owned cache already contains every untouched slot.
+kernel void kv_update_inplace(device const float* token [[buffer(0)]],device const float* cache [[buffer(1)]],
+ device const float* slots [[buffer(2)]],device const float* active [[buffer(3)]],device float* output [[buffer(4)]],
+ constant KVParams& p [[buffer(5)]],uint id [[thread_position_in_grid]]) {
+ ulong width=p.heads*p.dim;if(id>=p.batch*width)return;
+ ulong row=id/width,head=(id%width)/p.dim,d=id%p.dim;
+ if(active[row*p.aStride]==0.0f)return;
+ float slot=slots[row*p.sStride];
+ if(!isfinite(slot)||slot<0.0f||slot>=float(p.capacity))return;
+ output[row*p.oStride+(head*p.capacity+ulong(slot))*p.dim+d]=token[row*p.tStride+head*p.dim+d];
 }
 struct KVChunkParams {ulong batch,heads,dim,capacity,chunk,tStride,cStride,sStride,aStride,oStride,contiguous;};
 // Bit-preserving cache copies for aligned dimensions fitting uint indices.
@@ -947,6 +959,10 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
+#ifdef GARNET_METAL_RESIDENT_KV_INPLACE
+        impl_->kernels->kvInplace=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_update_inplace"] error:&error];
+        if(!impl_->kernels->kvInplace)throw std::runtime_error("Cannot create private KV update pipeline");
+#endif
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
 #ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
         impl_->kernels->bf16DecodeSmall=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_small"] error:&error];
@@ -1320,13 +1336,19 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
     if(c.device!=impl_->device)throw std::invalid_argument("Metal output belongs to another device");
     if(output.impl_->pending && impl_->pendingOutputs.count(output.impl_.get())==0)
         throw std::logic_error("Metal output is in another command batch");
-    for(const auto& input:inputs) {
+    for(size_t inputIndex=0;inputIndex<inputs.size();++inputIndex) {
+        const auto& input=inputs[inputIndex];
         if(!input.impl_||input.impl_->matrix.device!=impl_->device)
             throw std::invalid_argument("Invalid Metal state kernel input/device");
         if(!input.impl_->ready && !(input.impl_->pending &&
             impl_->pendingOutputs.count(input.impl_.get())!=0))
             throw std::logic_error("Uninitialized Metal state kernel input");
-        if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
+        if(c.data==input.impl_->matrix.data) {
+#ifdef GARNET_METAL_RESIDENT_KV_INPLACE
+            if(operation==20&&inputs.size()==4&&inputIndex==1&&output.CompatibleLayout(inputs[1]))continue;
+#endif
+            throw std::invalid_argument("In-place state kernel is unsupported");
+        }
     }
     if((operation==16||operation==18||operation==19)!=(secondOutput!=nullptr))throw std::invalid_argument("Metal secondary output operation mismatch");
     if(secondOutput) {
@@ -1339,9 +1361,14 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         for(const auto& input:inputs)if(second->matrix.data==input.impl_->matrix.data)
             throw std::invalid_argument("In-place secondary state output is unsupported");
     }
-    if(operation>19)throw std::invalid_argument("Unknown Metal state kernel");
+#ifdef GARNET_METAL_RESIDENT_KV_INPLACE
+    constexpr unsigned maxOperation=20;
+#else
+    constexpr unsigned maxOperation=19;
+#endif
+    if(operation>maxOperation)throw std::invalid_argument("Unknown Metal state kernel");
     id<MTLComputePipelineState> pipelines[]={impl_->kernels->conv,impl_->kernels->delta,impl_->kernels->slice,impl_->kernels->prepare,impl_->kernels->gatedNorm,
-        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector,impl_->kernels->deltaSplit,impl_->kernels->kvChunkVector,impl_->kernels->convChunk,impl_->kernels->deltaChunk};
+        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector,impl_->kernels->deltaSplit,impl_->kernels->kvChunkVector,impl_->kernels->convChunk,impl_->kernels->deltaChunk,impl_->kernels->kvInplace};
     auto pipeline=pipelines[operation];
     if(!pipeline)throw std::runtime_error("Metal state pipeline is unavailable in this build");
 #ifdef GARNET_METAL_PARALLEL_DELTA_SPLIT
@@ -1623,6 +1650,12 @@ void MetalContext::EncodeKVUpdate(const MetalMatrix& token,const MetalMatrix& ca
         o.rows!=c.rows||o.columns!=width)throw std::invalid_argument("Metal KV update shape mismatch");
     struct Params {uint64_t batch,heads,dim,capacity,tStride,cStride,sStride,aStride,oStride;};
     Params p{t.rows,kvHeads,dim,capacity,t.rowBytes/4,c.rowBytes/4,s.rowBytes/4,a.rowBytes/4,o.rowBytes/4};
+#ifdef GARNET_METAL_RESIDENT_KV_INPLACE
+    if(output.SharesStorage(cache)&&output.CompatibleLayout(cache)) {
+        EncodeStateKernel(20,{token,cache,slots,active},output,&p,sizeof(p),Elements(t.rows,t.columns));
+        return;
+    }
+#endif
     const size_t limit32=std::numeric_limits<uint32_t>::max();
     const auto count=Elements(c.rows,width);
     const bool vector=dim%4==0 && t.rowBytes%16==0 && c.rowBytes%16==0 && o.rowBytes%16==0 &&

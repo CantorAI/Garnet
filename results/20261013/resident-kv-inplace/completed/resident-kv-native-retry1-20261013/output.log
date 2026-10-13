@@ -1,0 +1,18 @@
+Starting exclusive native worker Qwen3-0.6B-b1-control-0
+Completed exact native worker Qwen3-0.6B-b1-control-0
+Starting exclusive native worker Qwen3-0.6B-b1-candidate-0
+Completed exact native worker Qwen3-0.6B-b1-candidate-0
+Starting exclusive native worker Qwen3-0.6B-b1-candidate-1
+Completed exact native worker Qwen3-0.6B-b1-candidate-1
+Starting exclusive native worker Qwen3-0.6B-b1-control-1
+Completed exact native worker Qwen3-0.6B-b1-control-1
+{"model": "Qwen3-0.6B", "batch": 1, "means": {"control": {"requests": 4, "ttft_ms": 53.28435404226184, "decode_tps": 55.703686889063505, "initialization_s": 1.6520052084233612}, "candidate": {"requests": 4, "ttft_ms": 51.459989859722555, "decode_tps": 59.842198792384494, "initialization_s": 1.643088957760483}}, "decode_ratio": 1.0742951164357044, "ttft_fraction": 0.9657617284598718, "exact_complete_outputs": true}
+Starting exclusive native worker Qwen3-0.6B-b2-control-0
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_resident_kv_native.py", line 65, in <module>
+    strict_guard();samples.append(dict(elapsed_seconds=time.monotonic()-begin,guard_passed=True))
+    ~~~~~~~~~~~~^^
+  File "owned_guard", line 89, in guard
+    warm={policy:[v for v in records if v['model_name']==model and v['case']['batch']==batch and v['build_policy']==policy and v['request']>0] for policy in builds}
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Another inference runtime is active: ["48471   0.0  18544 ./xlang3"]

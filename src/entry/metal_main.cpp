@@ -16,6 +16,9 @@ public:
 #ifdef GARNET_METAL_QWEN35_EXTENDED_PREFILL
         info+="; qwen35_extended_prefill";
 #endif
+#ifdef GARNET_METAL_RESIDENT_KV_INPLACE
+        info+="; resident_kv_inplace";
+#endif
         return info;
     }
     // Graphs own synchronous queues and release them through close(). There

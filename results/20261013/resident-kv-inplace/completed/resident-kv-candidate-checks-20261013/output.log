@@ -1,0 +1,19 @@
+Starting configure
+Completed configure
+Starting build
+Completed build
+Starting ctest
+Completed ctest
+Starting Qwen3-0.6B-private-kv
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_resident_kv_candidate.py", line 34, in <module>
+    run(model+'-private-kv',[py,str(s/'test_resident_kv_reference.py'),runtime,str(build),str(r/'source'),str(models/model)],True)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_resident_kv_candidate.py", line 22, in run
+    if gpu:guard(name+'-after')
+           ~~~~~^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_resident_kv_candidate.py", line 10, in guard
+    strict_guard()
+    ~~~~~~~~~~~~^^
+  File "owned_guard", line 89, in guard
+RuntimeError: Another inference runtime is active: ["46459   0.0  28000 ./xlang3"]

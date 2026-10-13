@@ -1,0 +1,24 @@
+{
+  "original": {
+    "src/backends/metal/metal_context.mm": "2fe81ca943105dd91de15dc6adda90a8142c9af4e31d6429ce376f934b158f5e",
+    "src/backends/metal/compiled_graph.h": "930789540f9565424096340f98b779192048600d496534f661f88de12023fcf3",
+    "src/backends/metal/compiled_graph.cpp": "c809393d42f168fe3b876d38f9f9a28adcca7c30b72f5deb8a6f07ef934231b5",
+    "src/backends/metal/decoder_session.cpp": "ebf64c1678d901e0fd32bfa98915200fff108fc07e866e4e00262acab7376d5b",
+    "src/entry/metal_main.cpp": "150493b641299512eff6e4591606b74c56ba2469f2701952461412fa2b04c754",
+    "cmake/GarnetMetal.cmake": "fc273fb1519551085bbccc86db8e26314cb35bfc7e48f23c8f306a0049d52d40",
+    "src/backends/metal/decoder_session.h": "170c40bbb0428b5ad937f238531328b9af80f617cc81a626672f2fb12edeb271"
+  },
+  "bundle_sha256": "03b09f8115c75c029fd86712ef87a525f241a622e9812103bca7ba630b2d355b",
+  "files": {
+    "src/backends/metal/metal_context.mm": "3dc37728607efd57c1d70a5d28a3a00dfce9787e6072f7b4e33ceb7e484d74f9",
+    "src/backends/metal/compiled_graph.h": "13c90c384d331031d2e6822e537d5aba1803c84c029bba2d36a69adc7d3e0189",
+    "src/backends/metal/compiled_graph.cpp": "68b3cd2ac6a3c85f216aaa8faa04c0cc4c17e08dba4c30767a6c5aee5d7df36a",
+    "src/backends/metal/decoder_session.cpp": "af8dfc381c4c719439c3694aba98e50e8d72dfe94a4a4f7d6da36e0e80001dff",
+    "src/entry/metal_main.cpp": "23b5af2c8e6e6eb845e3d255bfffd2a6dafb81ad1608f85152b4f0d111162dfb",
+    "cmake/GarnetMetal.cmake": "ce346c0068a3ad7f0c267085904249c409025fd4e3e3ada29052479767813b8e",
+    "src/backends/metal/decoder_session.h": "2c478667bf25958bb2d8ffb3d117711682616e464bf7bfd5729d07c7cde73e05",
+    "test2026/metal/run_resident_kv_reference.py": "df586d7334bebfa013436dc26e60010ff141faed428aa8792705b001563bc429",
+    "test2026/metal/test_resident_kv_reference.py": "0f5b2ba489402c497ddc8782b19a581c639daa721a6042f94aa571fc772aac48",
+    "test2026/metal/run_resident_kv_candidate.py": "d6bceb5ba62628f36e689524ad8965d0306ca054517c45f6381900800065b657"
+  }
+}
