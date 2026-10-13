@@ -11,10 +11,14 @@ def main():
     started=time.monotonic()
     from vllm import LLM,SamplingParams
     model=sys.argv[1];case=json.loads(Path(sys.argv[2]).read_text())
+    dtype=case.get('comparator_dtype','bfloat16')
+    if dtype not in ('bfloat16','float32'):raise ValueError('Unsupported comparator dtype')
+    memory_fraction=case.get('comparator_gpu_memory_utilization',.30)
+    if not .1<=memory_fraction<=.6:raise ValueError('Unsupported comparator memory fraction')
     prompt=next(json.loads(line.split(' ',1)[1]) for line in Path(sys.argv[3]).read_text().splitlines() if line.startswith('matched_prompt '))
-    llm=LLM(model=model,dtype='bfloat16',max_model_len=case['capacity'],max_num_seqs=case['batch'],
+    llm=LLM(model=model,dtype=dtype,max_model_len=case['capacity'],max_num_seqs=case['batch'],
         max_num_batched_tokens=case['capacity'],enable_prefix_caching=False,
-        gpu_memory_utilization=0.30,disable_log_stats=True,seed=0,
+        gpu_memory_utilization=memory_fraction,disable_log_stats=True,seed=0,
         distributed_executor_backend='uni')
     initialization=time.monotonic()-started
     params=SamplingParams(temperature=0,top_p=1,repetition_penalty=1,max_tokens=case['max_tokens'],
@@ -56,7 +60,8 @@ def main():
             decode_steps_per_second=len(durations)/sum(durations) if durations else None,events=events,
             decode_window_seconds=end-first_all,
             decode_wall_steps_per_second=len(durations)/(end-first_all) if durations else None,
-            prefix_caching=False,speculative_decoding=False,weights='BF16 checkpoint; vLLM-Metal BF16 model/KV')),
+            prefix_caching=False,speculative_decoding=False,configured_model_dtype=str(engine.model_config.dtype),
+            weights='BF16 checkpoint; vLLM-Metal BF16 model/KV' if dtype=='bfloat16' else 'Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV')),
             flush=True)
     print('matched_process',json.dumps(dict(peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
         memory_scope='native macOS process RSS bytes; includes library initialization')),flush=True)

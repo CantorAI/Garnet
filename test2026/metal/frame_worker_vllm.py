@@ -7,12 +7,16 @@ def main():
     from PIL import Image
     from vllm import LLM,SamplingParams
     model=sys.argv[1];workload=json.loads(Path(sys.argv[2]).read_text());control=Path(sys.argv[3])
+    dtype=workload.get('comparator_dtype','bfloat16')
+    if dtype not in ('bfloat16','float32'):raise ValueError('Unsupported comparator dtype')
+    memory_fraction=workload.get('comparator_gpu_memory_utilization',.30)
+    if not .1<=memory_fraction<=.6:raise ValueError('Unsupported comparator memory fraction')
     def emit(kind,payload):
         label='ready' if kind=='frame_ready' else str(payload['request'])+'-'+kind
         Path(str(control)+'.event-'+label+'.json').write_text(json.dumps(payload))
     batch=workload['batch'];rh,rw=workload['image_metadata']['resized_hw']
-    llm=LLM(model=model,dtype='bfloat16',max_model_len=workload['capacity'],max_num_seqs=batch,
-        max_num_batched_tokens=workload['capacity'],enable_prefix_caching=False,gpu_memory_utilization=.30,
+    llm=LLM(model=model,dtype=dtype,max_model_len=workload['capacity'],max_num_seqs=batch,
+        max_num_batched_tokens=workload['capacity'],enable_prefix_caching=False,gpu_memory_utilization=memory_fraction,
         disable_log_stats=True,seed=0,distributed_executor_backend='uni',limit_mm_per_prompt={'image':1},
         mm_processor_cache_gb=0,mm_processor_kwargs={'min_pixels':rh*rw,'max_pixels':rh*rw})
     engine=llm.llm_engine
@@ -60,6 +64,7 @@ def main():
             text=[final[row].text for row in range(batch)],finished=[final[row].finish_reason=='stop' for row in range(batch)],
             decode_steps_after_first=calls-first_call,worker_ttft_seconds=first-start,worker_total_seconds=now-start,
             worker_decode_window_seconds=now-first,encoder_cache_identities=identities,events=events,
-            prefix_caching=False,speculative_decoding=False,weights='BF16 checkpoint; BF16 comparator vision/model/KV'))
+            prefix_caching=False,speculative_decoding=False,configured_model_dtype=str(engine.model_config.dtype),
+            weights='BF16 checkpoint; BF16 comparator vision/model/KV' if dtype=='bfloat16' else 'Exact F32 checkpoint expansion; FP32 comparator vision/model/KV'))
 
 if __name__=='__main__':main()

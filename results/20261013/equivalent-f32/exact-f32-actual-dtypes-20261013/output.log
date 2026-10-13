@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_exact_f32_dtype_audit.py", line 56, in <module>
+    run(label,[frontend,str(scripts/'audit_comparator_dtypes.py'),str(root/'models-exact-f32'/model),dtype])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_exact_f32_dtype_audit.py", line 41, in run
+    if result.returncode:raise RuntimeError(name+' failed; retained log')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Qwen3.5-0.8B-float32 failed; retained log
