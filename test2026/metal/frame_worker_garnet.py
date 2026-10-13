@@ -41,6 +41,7 @@ try:
         current=image_base+max(mh,mw)
         for token in suffix:
             hidden.append(decoder.io.embedding([token]*batch));positions.append([current]*3);current+=1
+        assembled=time.monotonic()
         prediction=decoder.prefill_sequence(hidden,[positions for row in range(batch)])
         first=time.monotonic()
         emit('frame_first',dict(request=last,worker_ttft_seconds=first-start))
@@ -59,6 +60,8 @@ try:
             text=decoded,finished=[not flag for flag in active],
             decode_steps_after_first=steps,worker_ttft_seconds=first-start,worker_total_seconds=end-start,
             worker_decode_window_seconds=end-first,vision_seconds=vision_seconds,
+            assembly_seconds=assembled-start-vision_seconds,prefill_wall_seconds=first-assembled,
+            prefill_profile=decoder.prefill_profile,prefill_inference_ms=decoder.prefill_inference_ms,
             vision_reencoded=True,weights='BF16 checkpoint; FP32 native vision/activations/KV'))
 finally:
     if vision is not None:vision.close()
