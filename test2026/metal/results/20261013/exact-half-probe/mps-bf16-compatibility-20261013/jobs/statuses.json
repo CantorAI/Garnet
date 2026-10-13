@@ -1,0 +1,30 @@
+[
+  {
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/mps_bf16_probe",
+      "fp32-control"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/mps_bf16_probe",
+      "mixed"
+    ],
+    "exit_code": -6
+  },
+  {
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/mps_bf16_probe",
+      "bf16-input"
+    ],
+    "exit_code": -6
+  },
+  {
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/mps_bf16_probe",
+      "bf16-all"
+    ],
+    "exit_code": -6
+  }
+]

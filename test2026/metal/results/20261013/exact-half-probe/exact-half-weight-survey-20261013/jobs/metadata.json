@@ -1,0 +1,6 @@
+{
+  "scope": "CPU-only exhaustive BF16 -> scaled FP16 -> BF16 bit-roundtrip survey.\n\nArguments: investigation root, new evidence folder. Does not run inference,\nchange any checkpoint, or establish MPS support/performance.\n",
+  "runner_sha256": "69082af46dce644edc6e301b00fd4024df9c6eb19598e9aa46f4905a5bb320bc",
+  "numpy": "2.3.4",
+  "rows_per_window": 1024
+}

@@ -1,0 +1,19 @@
+{
+  "scope": "Toy MPS mixed FP32 activations/output with exact scaled FP16 weight storage; no model inference or speed claim",
+  "source_sha256": "3cda86fc032d24bad2d6f47fab0d2d4838be4ad931c759f554987e3a309a826e",
+  "compile_command": [
+    "xcrun",
+    "clang++",
+    "-std=c++17",
+    "-fobjc-arc",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/probe_mps_exact_half.mm",
+    "-framework",
+    "Foundation",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-o",
+    "/Users/zsdx/garnet-metal-investigation/mps_exact_half_probe"
+  ]
+}

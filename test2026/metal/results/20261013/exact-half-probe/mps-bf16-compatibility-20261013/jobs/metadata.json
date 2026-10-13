@@ -1,0 +1,20 @@
+{
+  "scope": "MPS BF16 compatibility and toy numerical probe only, no model inference or speed claim",
+  "source_sha256": "3978fc0a82de862bb941e8345f1dd843b6f500e1e4369ad66957d00d43fa21a4",
+  "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+  "compile_command": [
+    "xcrun",
+    "clang++",
+    "-std=c++17",
+    "-fobjc-arc",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/probe_mps_bf16.mm",
+    "-framework",
+    "Foundation",
+    "-framework",
+    "Metal",
+    "-framework",
+    "MetalPerformanceShaders",
+    "-o",
+    "/Users/zsdx/garnet-metal-investigation/mps_bf16_probe"
+  ]
+}

@@ -407,6 +407,19 @@ versus 48.77 tokens/s, with TTFT 596.34 versus 201.29 ms. All six profiles still
 fail both targets; batch-2 comparator output and internal precision caveats
 remain. The full objective stays active and unmet.
 
+### Exact scaled FP16 MPS feasibility
+
+`../../20261013/exact-half-probe/` records actual MPS format probes and an
+exhaustive CPU bit-roundtrip survey of all rank-two BF16 tensors in the three
+checkpoints. Direct BF16 MPS matrix multiplication aborts on this Mac; mixed
+FP32 activation/output with scaled FP16 weight storage passes the toy GPU
+reference checks. The CPU survey preserves every coder/VL matrix value exactly;
+Qwen3 has one exceptional value each in its embedding and head tensors, which
+require an exact fallback. This provides a candidate MPS prefill route without
+rounding checkpoint weights, but no full-model speed gain or integration is
+claimed. `build-delta-split` remains selected, and all performance targets are
+still unmet.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

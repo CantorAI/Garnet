@@ -1,0 +1,2 @@
+mps_bf16_probe {"device":"Apple M4","fp32_output":true,"inner":7,"mode":"fp32-control","numerical_pass":true,"columns":5,"rows":3,"fp32_activations":true,"supported":true,"max_abs_error":4.38558345194906e-09}
+mps_bf16_probe {"device":"Apple M4","fp32_output":true,"inner":1024,"mode":"fp32-control","numerical_pass":true,"columns":64,"rows":16,"fp32_activations":true,"supported":true,"max_abs_error":2.4560536360240803e-07}

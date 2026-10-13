@@ -1,0 +1,2884 @@
+{
+  "model": "Qwen2.5-Coder-0.5B-Instruct",
+  "checkpoint_size": 988097824,
+  "matrices": [
+    {
+      "name": "model.embed_tokens.weight",
+      "shape": [
+        151936,
+        896
+      ],
+      "values": 136134656,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 272269312
+    },
+    {
+      "name": "model.layers.0.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.0.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.0.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.0.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        15,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.0.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.0.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        15,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.0.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.1.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.1.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.1.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.1.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.1.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.1.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.1.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.10.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.10.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.10.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.10.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.10.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.10.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.10.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.11.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.11.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.11.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.11.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.11.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.11.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.11.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.12.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.12.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.12.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.12.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.12.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.12.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.12.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.13.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.13.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.13.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.13.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.13.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.13.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.13.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.14.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.14.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.14.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.14.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.14.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.14.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.14.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.15.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.15.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.15.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.15.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.15.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.15.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.15.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.16.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.16.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.16.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.16.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.16.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.16.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.16.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.17.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.17.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.17.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.17.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.17.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.17.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.17.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.18.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.18.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.18.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.18.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.18.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.18.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.18.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.19.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.19.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.19.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.19.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.19.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.19.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        23
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.19.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.2.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.2.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.2.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.2.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.2.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.2.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.2.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.20.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.20.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.20.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.20.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.20.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.20.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.20.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.21.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.21.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.21.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.21.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.21.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.21.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.21.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.22.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.22.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.22.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.22.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.22.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.22.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.22.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.23.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.23.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.23.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.23.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.23.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.23.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        23
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.23.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.3.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.3.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.3.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.3.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.3.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.3.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        23
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.3.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.4.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        19
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.4.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.4.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.4.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.4.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.4.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        15,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.4.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.5.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.5.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.5.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.5.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.5.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.5.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.5.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.6.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.6.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.6.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.6.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.6.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.6.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.6.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.7.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.7.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.7.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.7.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.7.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.7.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.7.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.8.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.8.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.8.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.8.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.8.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.8.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        15,
+        21
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.8.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        18,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.9.mlp.down_proj.weight",
+      "shape": [
+        896,
+        4864
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.9.mlp.gate_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.9.mlp.up_proj.weight",
+      "shape": [
+        4864,
+        896
+      ],
+      "values": 4358144,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        16,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 8716288
+    },
+    {
+      "name": "model.layers.9.self_attn.k_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    },
+    {
+      "name": "model.layers.9.self_attn.o_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.9.self_attn.q_proj.weight",
+      "shape": [
+        896,
+        896
+      ],
+      "values": 802816,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        17,
+        22
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 1605632
+    },
+    {
+      "name": "model.layers.9.self_attn.v_proj.weight",
+      "shape": [
+        128,
+        896
+      ],
+      "values": 114688,
+      "failed_values": 0,
+      "failed_rows": 0,
+      "all_bits_exact": true,
+      "row_scale_range": [
+        19,
+        20
+      ],
+      "first_failures": [],
+      "checkpoint_bytes": 229376
+    }
+  ],
+  "scope": "All rank-two BF16 checkpoint tensors, including embeddings/vision; not only runtime projections",
+  "values": 493961216,
+  "failed_values": 0,
+  "failed_rows": 0,
+  "all_bits_exact": true
+}
