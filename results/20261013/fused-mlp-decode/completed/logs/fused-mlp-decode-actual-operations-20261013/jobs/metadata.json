@@ -1,0 +1,7 @@
+{
+  "scope": "Serialized per-operation attribution only; GPU/cache/dispatch behavior differs from serving",
+  "native_build": "/Users/zsdx/garnet-metal-investigation/build-fused-mlp-decode",
+  "native_library_sha256": "d14ee49e38414b2c49b73af173504323f13423ab4c6de8f5d5629d3faba6e6a5",
+  "runner_sha256": "5139a98ce86a3454d9e7adf7bd5b372df9d984a3f588fa7424d16682057fa461",
+  "flag": "GARNET_METAL_PROFILE_OPS=1"
+}

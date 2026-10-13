@@ -1,0 +1,51 @@
+{
+  "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+  "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+  "scope": "MLP pair component only",
+  "cases": [
+    {
+      "name": "real-mlp",
+      "columns": 3072,
+      "inner": 1024,
+      "gate_file": "real-gate.bin",
+      "up_file": "real-up.bin",
+      "gate_tensor": "model.layers.0.mlp.gate_proj.weight",
+      "up_tensor": "model.layers.0.mlp.up_proj.weight",
+      "gate_sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b",
+      "up_sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+    },
+    {
+      "name": "synthetic-37",
+      "columns": 19,
+      "inner": 37,
+      "gate_file": "synthetic-37-gate.bin",
+      "up_file": "synthetic-37-up.bin",
+      "gate_tensor": "synthetic",
+      "up_tensor": "synthetic",
+      "gate_sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9",
+      "up_sha256": "80281717be06e22ff4a05c6e9ae69154f4f45b148df68b28e136c5070c90a139"
+    },
+    {
+      "name": "synthetic-129",
+      "columns": 65,
+      "inner": 129,
+      "gate_file": "synthetic-129-gate.bin",
+      "up_file": "synthetic-129-up.bin",
+      "gate_tensor": "synthetic",
+      "up_tensor": "synthetic",
+      "gate_sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe",
+      "up_sha256": "863f89a7f394903b8b4f366268b5eb3497872665c31bb87bb41f96d4b46b2c89"
+    },
+    {
+      "name": "synthetic-132",
+      "columns": 37,
+      "inner": 132,
+      "gate_file": "synthetic-132-gate.bin",
+      "up_file": "synthetic-132-up.bin",
+      "gate_tensor": "synthetic",
+      "up_tensor": "synthetic",
+      "gate_sha256": "fad404ccc61ce3de4f3c801bc31d8397aec221a0479329e07a0588cb9f9b4436",
+      "up_sha256": "50f4ac6b1ee4a48f1689a8a3806c1b373e3dc919123cbbde7484208a337e2577"
+    }
+  ]
+}
