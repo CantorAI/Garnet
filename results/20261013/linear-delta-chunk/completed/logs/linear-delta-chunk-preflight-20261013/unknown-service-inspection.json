@@ -1,0 +1,33 @@
+[
+  {
+    "pid": 17351,
+    "exists": true,
+    "parent": 1,
+    "known_inline_prefix": false,
+    "library_check_exit": 0,
+    "loaded_inference_markers": []
+  },
+  {
+    "pid": 17360,
+    "exists": true,
+    "parent": 17351,
+    "known_inline_prefix": true,
+    "inline_sha256": "751439d940f63c48dafa52f3a707c43c1584af6df675247dc0a5ae913dd6e42a",
+    "library_check_exit": 0,
+    "loaded_inference_markers": []
+  },
+  {
+    "file": "launch.py",
+    "sha256": "9ac0a1fbdfefcba3349ecd5b0e5a00e63222f1cb588290ed55046d4851b70233",
+    "bytes": 3994,
+    "inference_markers": []
+  },
+  {
+    "file": "package_runtime.py",
+    "sha256": "b904bcf8ece0b74dc160a95aa833b58c8d33536ba90f924465a61b95e61238ed",
+    "bytes": 17562,
+    "inference_markers": [
+      "garnet"
+    ]
+  }
+]

@@ -487,7 +487,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 auto norm=Weight(prefix+".norm.weight");
                 if(slots_[norm].rows!=1||slots_[norm].columns!=vd)throw std::runtime_error("Metal linear norm weight shape mismatch");
                 const size_t qw=vh*kd,vw=vh*vd,pw=2*qw+vw+2*vh;
-                bool chunkConv=false;size_t preparedTokens=0;
+                bool chunkConv=false;size_t preparedTokens=0,preparedFlat=0;
 #ifdef GARNET_METAL_LINEAR_CHUNK_CONV
                 chunkConv=isChunk&&kernel<=8;
                 if(chunkConv) {
@@ -495,18 +495,30 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                     Op conv{Kind::ConvChunk,qkv,convWeight,convolution};conv.arguments={qkv,convWeight,convState,active};
                     conv.dimensions={chunk,kernel};conv.auxiliaryOutput=nextConv;ops_.push_back(std::move(conv));convState=nextConv;
                     auto prepared=Allocate(batch*chunk,pw);
+                    preparedFlat=prepared;
                     Op prepare{Kind::Prepare,convolution,ap,prepared};prepare.arguments={convolution,ap,bp,aLog,dt};
                     prepare.dimensions={kh,vh,kd,vd,0};ops_.push_back(std::move(prepare));
                     preparedTokens=layout(prepared,batch,chunk*pw);
+                }
+#endif
+                bool chunkDelta=false;size_t gatedFlat=0;
+#ifdef GARNET_METAL_LINEAR_CHUNK_DELTA
+                chunkDelta=chunkConv&&kd==128&&vd%16==0;
+                if(chunkDelta) {
+                    auto cores=Allocate(batch*chunk,vw),nextState=Allocate(batch,vh*kd*vd);
+                    Op delta{Kind::DeltaChunk,preparedFlat,state,cores};delta.arguments={preparedFlat,state,active};
+                    delta.dimensions={chunk,vh,kd,vd};delta.auxiliaryOutput=nextState;ops_.push_back(std::move(delta));state=nextState;
+                    gatedFlat=Allocate(batch*chunk,vw);
+                    Op gate{Kind::GateNorm,cores,z,gatedFlat,epsilon};gate.arguments={cores,z,norm};gate.dimensions={vh,vd};ops_.push_back(std::move(gate));
                 }
 #endif
                 size_t accumulated=0;
                 bool directWrite=false;
 #ifdef GARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE
                 directWrite=isChunk;
-                if(directWrite)accumulated=Allocate(batch,chunk*vw);
+                if(directWrite&&!chunkDelta)accumulated=Allocate(batch,chunk*vw);
 #endif
-                for(size_t token=0;token<chunk;++token) {
+                for(size_t token=0;token<chunk&&!chunkDelta;++token) {
                     auto select=[&](size_t projected,size_t columns) {
                         return isChunk?slice(projected,1,chunk*columns,token*columns,columns):projected;
                     };
@@ -537,7 +549,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                     if(!chunkConv)convState=slice(convPacked,channels,kernel+1,1,kernel);
                     state=slice(deltaPacked,vh,(kd+1)*vd,vd,kd*vd);
                 }
-                auto gated=isChunk?layout(accumulated,batch*chunk,vw):accumulated;
+                auto gated=chunkDelta?gatedFlat:(isChunk?layout(accumulated,batch*chunk,vw):accumulated);
                 auto hidden=matmul(gated,Weight(prefix+".out_proj.weight"));
                 if(slots_[hidden].columns!=width)throw std::runtime_error("Metal linear output projection shape mismatch");
                 if(isChunk)hidden=layout(hidden,batch,chunk*width);
@@ -785,7 +797,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
     // They identify expensive kernels; their latency is not a serving metric.
     const char* profile=std::getenv("GARNET_METAL_PROFILE_OPS");
     const bool profileOps=profile&&std::strcmp(profile,"1")==0;
-    static const char* names[]={"MatMul","BF16MatVec","Norm","Silu","Add","Bias","Mask","Conv","Delta","Slice","Prepare","GateNorm","Concat","NormRope","KVUpdate","KVChunk","AttentionChunk","Scores","AttentionContext","Vision","Layout","DeltaSplit","ConvChunk"};
+    static const char* names[]={"MatMul","BF16MatVec","Norm","Silu","Add","Bias","Mask","Conv","Delta","Slice","Prepare","GateNorm","Concat","NormRope","KVUpdate","KVChunk","AttentionChunk","Scores","AttentionContext","Vision","Layout","DeltaSplit","ConvChunk","DeltaChunk"};
     for(size_t i=0;i<ops_.size();++i) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
@@ -807,6 +819,9 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         }else if(op.kind==Kind::ConvChunk) {
             auto& args=op.arguments;gpu.EncodeCausalConvChunk(slots_[args[0]].matrix,slots_[args[1]].matrix,
                 slots_[args[2]].matrix,slots_[args[3]].matrix,out,slots_[op.auxiliaryOutput].matrix,op.dimensions[0],op.dimensions[1]);
+        }else if(op.kind==Kind::DeltaChunk) {
+            auto& args=op.arguments;gpu.EncodeGatedDeltaChunk(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                out,slots_[op.auxiliaryOutput].matrix,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
         }else if(op.kind==Kind::Delta) {
             auto& args=op.arguments;gpu.EncodeGatedDelta(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                 slots_[args[3]].matrix,slots_[args[4]].matrix,slots_[args[5]].matrix,slots_[args[6]].matrix,out,

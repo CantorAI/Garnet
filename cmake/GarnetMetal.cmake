@@ -31,6 +31,13 @@ option(GARNET_METAL_LINEAR_CHUNK_CONV "Process causal convolution and preparatio
 if(GARNET_METAL_LINEAR_CHUNK_CONV)
     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LINEAR_CHUNK_CONV=1)
 endif()
+option(GARNET_METAL_LINEAR_CHUNK_DELTA "Keep recurrent delta state in registers across a prompt chunk" OFF)
+if(GARNET_METAL_LINEAR_CHUNK_DELTA)
+    if(NOT GARNET_METAL_LINEAR_CHUNK_CONV OR NOT GARNET_METAL_PARALLEL_DELTA_SPLIT)
+        message(FATAL_ERROR "Chunk delta requires chunk convolution and parallel delta split")
+    endif()
+    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_LINEAR_CHUNK_DELTA=1)
+endif()
 target_include_directories(garnet_metal PUBLIC src/backends/metal)
 target_compile_options(garnet_metal PRIVATE -fobjc-arc)
 target_link_libraries(garnet_metal PUBLIC

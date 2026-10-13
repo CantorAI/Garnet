@@ -268,6 +268,44 @@ int main() {
                 if(std::memcmp(actual.data(),expected.data(),expected.size()*sizeof(float)))
                     throw std::runtime_error("Grouped slice differs from independent bitwise reference");
             }
+#ifdef GARNET_METAL_LINEAR_CHUNK_DELTA
+        for(size_t batch:{size_t(1),size_t(2)})for(size_t vd:{size_t(16),size_t(32),size_t(128)})
+        for(size_t chunk:{size_t(1),size_t(4),size_t(16),size_t(64)})for(int carried:{0,1}) {
+            const size_t heads=2,kd=128,qw=heads*kd,vw=heads*vd,pw=2*qw+vw+2*heads,sw=qw*vd;
+            std::vector<float> prepared(batch*chunk*pw),initial(batch*sw),active(batch*chunk);
+            for(size_t i=0;i<initial.size();++i)initial[i]=carried?float(int(i%17)-8)*0.001f:0.0f;
+            for(size_t row=0;row<batch;++row)for(size_t token=0;token<chunk;++token) {
+                const auto base=(row*chunk+token)*pw;
+                active[row*chunk+token]=(carried&&token+1==chunk)?0.0f:(row==1?float(token%3==1):float(token%5!=2));
+                for(size_t i=0;i<qw;++i){prepared[base+i]=float(int((i+token*3+row)%31)-15)*0.0625f;prepared[base+qw+i]=float(int((i*3+token+row)%23)-11)*0.0625f;}
+                for(size_t i=0;i<vw;++i)prepared[base+2*qw+i]=float(int((i+token*5+row)%19)-9)*0.125f;
+                for(size_t head=0;head<heads;++head){prepared[base+2*qw+vw+head]=-float(token%5+1)*0.0625f;prepared[base+2*qw+vw+heads+head]=float(head+1)*0.125f;}
+            }
+            auto state=gpu.Upload(initial,batch,sw);std::vector<float> expected(batch*chunk*vw),lastState=initial;
+            for(size_t token=0;token<chunk;++token) {
+                std::vector<float> q(batch*qw),k(batch*qw),v(batch*vw),g(batch*heads),beta(batch*heads),mask(batch);
+                for(size_t row=0;row<batch;++row) {
+                    auto base=(row*chunk+token)*pw;mask[row]=active[row*chunk+token];
+                    for(size_t i=0;i<qw;++i){q[row*qw+i]=prepared[base+i];k[row*qw+i]=prepared[base+qw+i];}
+                    for(size_t i=0;i<vw;++i)v[row*vw+i]=prepared[base+2*qw+i];
+                    for(size_t h=0;h<heads;++h){g[row*heads+h]=prepared[base+2*qw+vw+h];beta[row*heads+h]=prepared[base+2*qw+vw+heads+h];}
+                }
+                auto qg=gpu.Upload(q,batch,qw),kg=gpu.Upload(k,batch,qw),vg=gpu.Upload(v,batch,vw),gg=gpu.Upload(g,batch,heads),bg=gpu.Upload(beta,batch,heads),ag=gpu.Upload(mask,batch,1);
+                auto output=gpu.Allocate(batch,vw),next=gpu.Allocate(batch,sw);
+                gpu.Begin();gpu.EncodeGatedDeltaSplit(qg,kg,vg,gg,bg,state,ag,output,next,heads,kd,vd);gpu.SubmitAndWait();
+                auto values=gpu.Download(output);lastState=gpu.Download(next);
+                for(size_t row=0;row<batch;++row)for(size_t i=0;i<vw;++i)expected[(row*chunk+token)*vw+i]=values[row*vw+i];
+                state=gpu.Upload(lastState,batch,sw);
+            }
+            auto a=gpu.Upload(prepared,batch*chunk,pw),s=gpu.Upload(initial,batch,sw),mask=gpu.Upload(active,batch,chunk);
+            auto output=gpu.Allocate(batch*chunk,vw),next=gpu.Allocate(batch,sw);
+            gpu.Begin();gpu.EncodeGatedDeltaChunk(a,s,mask,output,next,chunk,heads,kd,vd);gpu.SubmitAndWait();
+            auto values=gpu.Download(output),states=gpu.Download(next);
+            if(std::memcmp(values.data(),expected.data(),expected.size()*sizeof(float))||std::memcmp(states.data(),lastState.data(),lastState.size()*sizeof(float)))
+                throw std::runtime_error("Chunk delta differs from sequential parallel delta");
+        }
+        std::cout<<"Chunk delta sequential reference PASS 48 cases\n";
+#endif
 #ifdef GARNET_METAL_LINEAR_CHUNK_CONV
         // Compare the full convolution sequence and final state with the
         // existing one-token kernel, including pause/resume and row padding.
