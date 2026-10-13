@@ -9,6 +9,7 @@
 #include "graph_capture.h"
 #include "md5.h"
 #include "trt_builder.h"
+#include "weight_streaming_policy.h"
 #include "openvino_builder.h"
 #include "garnet_tensor.h"
 #include "tensor_helper.h"
@@ -438,6 +439,9 @@ namespace
                  << "precision:" << precision << '\n'
                  << "tensorrt:" << NV_TENSORRT_VERSION << '\n'
                  << entryFunction << '\n';
+        if (backend == "tensorrt") {
+            material << Garnet::TRTWeightStreamingFingerprint();
+        }
         if (backend == "openvino") {
             const char* device = std::getenv("GARNET_OPENVINO_DEVICE");
             material << "openvino_runtime_schema:"

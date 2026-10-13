@@ -5,6 +5,7 @@
 #include "trt_context_pool.h"
 #include "operator_execution_group.h"
 #include "trt_sync_allocator.h"
+#include "weight_streaming_policy.h"
 #include "weight_quantization.h"
 #include "paged_kv_plugin.h"
 #include "gpt_oss_weight_shard.h"
@@ -160,6 +161,7 @@ namespace Garnet {
 
         struct CachedTRTExecution {
             int device = -1;
+            int64_t weightStreamingBudget = -1;
             // Destroyed after the destructor body has released every TRT user.
             std::unique_ptr<TRTSyncAllocator> allocator;
             nvinfer1::IRuntime* runtime = nullptr;
@@ -274,6 +276,11 @@ namespace Garnet {
             const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
             int device = -1;
             if (cudaGetDevice(&device) != cudaSuccess) return nullptr;
+            const auto streamingPolicy = ReadTRTWeightStreamingPolicy();
+            if (!streamingPolicy.valid) {
+                std::cout << "[TRTBuilder] Invalid GARNET_TRT_WEIGHT_STREAMING_BUDGET_MIB" << std::endl;
+                return nullptr;
+            }
             const char* allocatorPolicy = std::getenv("GARNET_TRT_SYNC_ALLOCATOR");
             const bool syncAllocator = allocatorPolicy && std::strcmp(allocatorPolicy, "1") == 0;
             std::shared_ptr<std::mutex> engineLoadMutex;
@@ -282,7 +289,8 @@ namespace Garnet {
                 auto found = g_trtExecutionCache.find(enginePath);
                 if (found != g_trtExecutionCache.end()) {
                     if (auto owner = found->second.lock()) {
-                        if (owner->device != device || bool(owner->allocator) != syncAllocator) return nullptr;
+                        if (owner->device != device || bool(owner->allocator) != syncAllocator ||
+                            owner->weightStreamingBudget != streamingPolicy.budgetBytes) return nullptr;
                         return owner;
                     }
                 }
@@ -297,7 +305,8 @@ namespace Garnet {
                 auto found = g_trtExecutionCache.find(enginePath);
                 if (found != g_trtExecutionCache.end()) {
                     if (auto owner = found->second.lock()) {
-                        if (owner->device != device || bool(owner->allocator) != syncAllocator) return nullptr;
+                        if (owner->device != device || bool(owner->allocator) != syncAllocator ||
+                            owner->weightStreamingBudget != streamingPolicy.budgetBytes) return nullptr;
                         return owner;
                     }
                 }
@@ -312,6 +321,7 @@ namespace Garnet {
             auto owner = std::make_shared<CachedTRTExecution>();
             auto& cached = *owner;
             cached.device = device;
+            cached.weightStreamingBudget = streamingPolicy.budgetBytes;
             cached.runtime = createInferRuntime(gLogger);
             if (!cached.runtime) {
                 std::cout << "[TRTBuilder] createInferRuntime failed for cached engine: " << enginePath << std::endl;
@@ -325,6 +335,19 @@ namespace Garnet {
             if (!cached.engine) {
                 std::cout << "[TRTBuilder] deserializeCudaEngine failed for cached engine: " << enginePath << std::endl;
                 return nullptr;
+            }
+            if (streamingPolicy.Enabled() && cached.engine->getStreamableWeightsSize() > 0) {
+                // Before refit and before any execution context. V2 includes
+                // streaming scratch in the subsequently queried context size.
+                if (!cached.engine->setWeightStreamingBudgetV2(streamingPolicy.budgetBytes)) {
+                    std::cout << "[TRTBuilder] Weight streaming budget rejected: " << enginePath << std::endl;
+                    return nullptr;
+                }
+                std::cout << "[TRTWeightStreaming] resident_weight_budget_bytes="
+                    << cached.engine->getWeightStreamingBudgetV2()
+                    << " streamable_weights_bytes=" << cached.engine->getStreamableWeightsSize()
+                    << " context_device_memory_bytes=" << cached.engine->getDeviceMemorySizeV2()
+                    << " engine=" << enginePath << std::endl;
             }
             if (weightIndex && weightIndex->TensorCount() > 0) {
                 std::unique_ptr<nvinfer1::IRefitter> refitter(
@@ -4401,6 +4424,11 @@ namespace Garnet {
             errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
             return false;
         }
+        const auto streamingPolicy = ReadTRTWeightStreamingPolicy();
+        if (!streamingPolicy.valid) {
+            errorMessage = "Invalid GARNET_TRT_WEIGHT_STREAMING_BUDGET_MIB";
+            return false;
+        }
         builder = createInferBuilder(gLogger);
         if (!builder) {
             errorMessage = "TensorRT createInferBuilder failed";
@@ -4424,6 +4452,9 @@ namespace Garnet {
         config->setMemoryPoolLimit(
             MemoryPoolType::kWORKSPACE, capturedWorkspaceBytes);
         config->setBuilderOptimizationLevel(capturedOptimizationLevel);
+        if (streamingPolicy.Enabled()) {
+            config->setFlag(BuilderFlag::kWEIGHT_STREAMING);
+        }
         if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0) {
             config->setFlag(BuilderFlag::kREFIT_INDIVIDUAL);
             config->setFlag(BuilderFlag::kSTRIP_PLAN);
