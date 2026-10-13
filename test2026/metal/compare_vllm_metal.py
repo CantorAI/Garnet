@@ -20,23 +20,40 @@ def verified_worldsense_service(pid):
     # A generic xlang3 HTTP service is not itself an inference runtime. Identify
     # this observed service by its actual ancestor script and loaded libraries;
     # unknown xlang3 jobs retain the conservative rejection.
-    current=pid;identified=False
+    current=pid;identified=False;root_identity='';service_script=worldsense_script;verification='ancestor script'
     for _ in range(3):
         result=subprocess.run(['/bin/ps','-p',str(current),'-o','ppid=,args='],capture_output=True,text=True)
         fields=result.stdout.strip().split(None,1)
         if result.returncode or len(fields)!=2:break
+        if current==pid:root_identity=fields[1]
         if str(worldsense_script) in fields[1]:identified=True;break
         current=int(fields[0])
         if current<=1:break
-    if not identified or not worldsense_script.is_file():return False
-    source_text=worldsense_script.read_text(errors='replace').lower()
+    # The release also starts the same HTTP application directly with -c;
+    # its original parent may exit. Require the inspected code and entry-file
+    # fingerprints, not a name/WorldSense substring or an orphaned PID alone.
+    inline_sha256=None
+    if not identified:
+        runtime=str(worldsense_script.parents[2]/'xlang3')
+        prefix=runtime+' -B -u -c '
+        launch=worldsense_script.with_name('launch.py')
+        if not root_identity.startswith(prefix) or not launch.is_file():return False
+        payload=root_identity[len(prefix):]
+        inline_sha256=hashlib.sha256(payload.encode()).hexdigest()
+        if inline_sha256!='751439d940f63c48dafa52f3a707c43c1584af6df675247dc0a5ae913dd6e42a':return False
+        if hashlib.sha256(launch.read_bytes()).hexdigest()!='9ac0a1fbdfefcba3349ecd5b0e5a00e63222f1cb588290ed55046d4851b70233':return False
+        identified=True;service_script=launch;verification='exact inline launcher and source fingerprints'
+    if not identified or not service_script.is_file():return False
+    source_text=service_script.read_text(errors='replace').lower()
     if any(marker in source_text for marker in ('garnet','mlx','ollama','vllm','torch','qwen','metal')):return False
     libraries=subprocess.run(['/usr/sbin/lsof','-p',str(pid),'-Fn'],capture_output=True,text=True)
     if libraries.returncode:return False
     if any(marker in libraries.stdout.lower() for marker in
-        ('libgarnet','libmlx','libtorch','metal.framework','metalperformanceshaders.framework','libopenvino')):return False
+        ('libgarnet','libmlx','libtorch','metal.framework','metalperformanceshaders.framework','libopenvino',
+         'coreml.framework','appleneuralengine','ane.framework','bnns')):return False
     background_checks.append(dict(pid=pid,role='WorldSense service without inference/GPU libraries',
-        ancestor_script=str(worldsense_script),script_sha256=hashlib.sha256(worldsense_script.read_bytes()).hexdigest(),
+        ancestor_script=str(service_script),script_sha256=hashlib.sha256(service_script.read_bytes()).hexdigest(),
+        verification=verification,inline_sha256=inline_sha256,
         timestamp=time.time()))
     (output/'background_service_checks.json').write_text(json.dumps(background_checks,indent=2)+'\n')
     return True
