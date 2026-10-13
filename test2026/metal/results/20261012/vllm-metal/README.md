@@ -60,6 +60,23 @@ Against the native baseline, decode improves 4.8–9.0% and TTFT falls
 20.9–27.9%. Neither vLLM-relative target is met. GPU time remains the principal
 decode cost; these gains are not evidence of a 2x comparator advantage.
 
+## Rejected prefill experiment
+
+`transposed-gemm/` retains a column-major shared-weight tile experiment that
+uses a transposed SIMD-group load. All 11 validation jobs and the 48 matched
+requests passed, including exact outputs. However, warm TTFT worsened by
+6.4–22.8% against the visible-cache build. The small decode differences are
+not persuasive because this experiment changes only GEMM prefill. It was
+reverted. `rejected_kernel.diff` records the attempted kernel; the source
+branch retains the original GEMM layout.
+
+| Model | Batch | Experimental Garnet TTFT, ms | Visible-cache TTFT, ms |
+| --- | --- | --- | --- |
+| Qwen3-0.6B | 1 | 136.14 | 118.77 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 92.58 | 75.40 |
+| Qwen3-0.6B | 2 | 228.05 | 214.42 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 127.74 | 113.86 |
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

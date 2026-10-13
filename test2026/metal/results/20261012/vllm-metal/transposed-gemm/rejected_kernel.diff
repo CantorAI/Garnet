@@ -1,0 +1,19 @@
+--- visible-cache/metal_context.mm
++++ transposed-gemm/metal_context.mm
+@@ -120,11 +120,14 @@
+     simdgroup_float8x8 accum1=make_filled_simdgroup_matrix<float,8>(0.0f);
+     for(ulong base=0;base<p.inner;base+=32) {
+         for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,k=base+i%32;left[i]=(row<p.rows&&k<p.inner)?a[row*p.aStride+k]:0.0f;}
+-        for(uint i=tid;i<32*32;i+=128){ulong k=base+i/32,column=colBase+i%32;right[i]=(k<p.inner&&column<p.columns)?as_type<float>(uint(weight[column*p.inner+k])<<16):0.0f;}
++        // Keep the shared weight tile column-major so adjacent lanes read
++        // adjacent BF16 weights. Transpose during the SIMD-group load rather
++        // than scattering contiguous global reads into a strided shared tile.
++        for(uint i=tid;i<32*32;i+=128){ulong k=base+i%32,column=colBase+i/32;right[i]=(k<p.inner&&column<p.columns)?as_type<float>(uint(weight[column*p.inner+k])<<16):0.0f;}
+         threadgroup_barrier(mem_flags::mem_threadgroup);
+         for(uint offset=0;offset<32;offset+=8) {
+             simdgroup_float8x8 l0,l1,r;
+-            simdgroup_load(l0,left+offset,32);simdgroup_load(l1,left+8*32+offset,32);simdgroup_load(r,right+offset*32+simd*8,32);
++            simdgroup_load(l0,left+offset,32);simdgroup_load(l1,left+8*32+offset,32);simdgroup_load(r,right+simd*8*32+offset,32,ulong2(0),true);
+             simdgroup_multiply_accumulate(accum0,l0,r,accum0);simdgroup_multiply_accumulate(accum1,l1,r,accum1);
+         }
+         threadgroup_barrier(mem_flags::mem_threadgroup);
