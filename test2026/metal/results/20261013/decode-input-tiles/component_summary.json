@@ -1,0 +1,101 @@
+{
+  "scope": "Isolated components, not full-model or vLLM performance",
+  "groups": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "tile": 8,
+      "component_sum_ratio": 0.9818378674021525,
+      "full_head_ratio": 0.9937671468936924,
+      "head": "model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "tile": 16,
+      "component_sum_ratio": 0.9850259117990978,
+      "full_head_ratio": 0.9896199429682124,
+      "head": "model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "tile": 8,
+      "component_sum_ratio": 0.9637558477131107,
+      "full_head_ratio": 0.9675360950187739,
+      "head": "model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "tile": 16,
+      "component_sum_ratio": 0.9504395740319219,
+      "full_head_ratio": 0.9552462580165935,
+      "head": "model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "tile": 8,
+      "component_sum_ratio": 1.07010069172915,
+      "full_head_ratio": 1.0812688306835023,
+      "head": "model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "tile": 16,
+      "component_sum_ratio": 0.978189760245618,
+      "full_head_ratio": 0.9791024838571799,
+      "head": "model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "tile": 8,
+      "component_sum_ratio": 0.9975574475670668,
+      "full_head_ratio": 0.9957982563050395,
+      "head": "model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "tile": 16,
+      "component_sum_ratio": 0.9911281276757062,
+      "full_head_ratio": 0.9936678154903513,
+      "head": "model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "tile": 8,
+      "component_sum_ratio": 0.9761255421773808,
+      "full_head_ratio": 0.979131584058076,
+      "head": "model.language_model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "tile": 16,
+      "component_sum_ratio": 0.982903647353347,
+      "full_head_ratio": 0.983504647260053,
+      "head": "model.language_model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "tile": 8,
+      "component_sum_ratio": 0.9791113992622995,
+      "full_head_ratio": 0.9774627338603751,
+      "head": "model.language_model.embed_tokens.weight"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "tile": 16,
+      "component_sum_ratio": 0.9635742579028033,
+      "full_head_ratio": 0.9614766238984077,
+      "head": "model.language_model.embed_tokens.weight"
+    }
+  ]
+}

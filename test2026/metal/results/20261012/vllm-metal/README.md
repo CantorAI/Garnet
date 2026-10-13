@@ -450,6 +450,18 @@ Decode is essentially unchanged. The fresh batch-1 Qwen3 result is 56.92 versus
 both targets. Failed initial compilation/gated attempts, precision limits and
 the existing batch-2 image-output caveat remain saved. The goal stays active.
 
+### Rejected larger decode input tiles
+
+`../../20261013/decode-input-tiles/` records 8/16 input values per lane versus
+the established 4, with the same output geometry, BF16 weights and FP32
+accumulation. The final component scan covers real first-layer projections,
+all runtime-selected heads, batch 1/2 and irregular/padded tails. All 136
+numerical checks pass; no consistent component advantage is established.
+A coder batch-1 head signal does not repeat in the preceding complete-head
+scan. The kernels were not integrated; no serving/vLLM gain is claimed.
+The incomplete initial head scan and corrected source provenance remain
+saved. `build-kv-chunk-vector` remains selected and both targets remain unmet.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

@@ -1,0 +1,15 @@
+{
+  "scope": "Native decode matrix component experiment only, not serving or vLLM timing",
+  "precision": "Unchanged exact BF16 weights, FP32 input/accumulation/output; no quantization",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "source_sha256": {
+    "metal_context.mm": "32f029719f9f15e4c2ae869bdae97eef12bb0dab24889410827755dc3e0a8b37",
+    "decode_tile_gpu.mm": "5b50d6161793580c659994f799c4d077538282a010a7ca0f5ff881243a90b01a",
+    "make_decode_tile_shader.py": "13b2b6d2f47cc549fe8ac8cf8af82aca3dcc2ea880fee88ef3916523dd7df954",
+    "prepare_decode_tile_probe.py": "787166c08791d675ecc1cea030f0d94e8b8daf150dc6a4490749e3ceb45b5059",
+    "run_decode_tile_probe.py": "aedb193dbdd8948a31c2d29651f502f95ce32c4c19686424e455c8d043359bd8"
+  }
+}

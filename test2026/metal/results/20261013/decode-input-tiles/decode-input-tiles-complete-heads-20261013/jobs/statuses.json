@@ -1,0 +1,95 @@
+[
+  {
+    "name": "shader",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_decode_tile_shader.py",
+      "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/metal_context.mm",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/combined.metal"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 0.047754916828125715
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/decode_tile_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/decode_tile_gpu"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 0.9309232910163701
+  },
+  {
+    "name": "Qwen3-0.6B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 1.7475900840945542
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/decode_tile_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 3.4253297499381006
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 1.2849378753453493
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/decode_tile_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.9529041247442365
+  },
+  {
+    "name": "Qwen3.5-0.8B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.18360058311373
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/decode_tile_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-input-tiles-complete-heads-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 4.4205120000988245
+  }
+]

@@ -1,0 +1,84 @@
+{
+  "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+  "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+  "scope": "Actual BF16 matrices, FP32 inputs/accumulation; isolated decode only",
+  "cases": [
+    {
+      "name": "matrix-0",
+      "tensor": "lm_head.weight",
+      "columns": 151936,
+      "inner": 1024,
+      "sha256": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6"
+    },
+    {
+      "name": "matrix-1",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "columns": 1024,
+      "inner": 3072,
+      "sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+    },
+    {
+      "name": "matrix-2",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "columns": 3072,
+      "inner": 1024,
+      "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+    },
+    {
+      "name": "matrix-3",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "columns": 3072,
+      "inner": 1024,
+      "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+    },
+    {
+      "name": "matrix-4",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "columns": 1024,
+      "inner": 1024,
+      "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+    },
+    {
+      "name": "matrix-5",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "columns": 1024,
+      "inner": 2048,
+      "sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+    },
+    {
+      "name": "matrix-6",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "columns": 2048,
+      "inner": 1024,
+      "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+    },
+    {
+      "name": "matrix-7",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "columns": 1024,
+      "inner": 1024,
+      "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+    },
+    {
+      "name": "synthetic-37",
+      "tensor": "synthetic finite BF16 tail fixture",
+      "columns": 19,
+      "inner": 37,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "name": "synthetic-129",
+      "tensor": "synthetic finite BF16 tail fixture",
+      "columns": 65,
+      "inner": 129,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "name": "synthetic-132",
+      "tensor": "synthetic finite BF16 tail fixture",
+      "columns": 37,
+      "inner": 132,
+      "sha256": "fad404ccc61ce3de4f3c801bc31d8397aec221a0479329e07a0588cb9f9b4436"
+    }
+  ]
+}
