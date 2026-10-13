@@ -1,0 +1,791 @@
+{
+  "raw_exit_files": 196,
+  "all_exit_codes_zero": true,
+  "python_files_compiled": 57,
+  "statuses": [
+    {
+      "path": "double-baseline-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3-0.6B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3-0.6B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3-0.6B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3-0.6B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3-0.6B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3-0.6B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3.5-0.8B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3.5-0.8B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3.5-0.8B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3.5-0.8B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3.5-0.8B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-baseline-20261012/jobs/Qwen3.5-0.8B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/control-ctest/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3-0.6B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3-0.6B-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3-0.6B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3-0.6B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3-0.6B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3-0.6B-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3-0.6B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3-0.6B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3.5-0.8B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3.5-0.8B-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3.5-0.8B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3.5-0.8B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3.5-0.8B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3.5-0.8B-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3.5-0.8B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-before-after-20261012/jobs/Qwen3.5-0.8B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/ctest/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/mixed-image-pipeline/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/Qwen3-0.6B-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/Qwen3-0.6B-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/Qwen3.5-0.8B-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/qwen35-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-chunk-checks-20261012/jobs/serving/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-control-build-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3-0.6B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3-0.6B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3-0.6B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3-0.6B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3-0.6B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3-0.6B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-delta-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-extended-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-extended-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-extended-0/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-extended-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-extended-3/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-extended-20261012/jobs/Qwen3-0.6B-extended-0/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-extended-20261012/jobs/Qwen3-0.6B-extended-3/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/control-ctest/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3-0.6B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3-0.6B-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3-0.6B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3-0.6B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3-0.6B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3-0.6B-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3-0.6B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3-0.6B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3.5-0.8B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3.5-0.8B-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3.5-0.8B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3.5-0.8B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3.5-0.8B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3.5-0.8B-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3.5-0.8B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-final-comparison-20261012/jobs/Qwen3.5-0.8B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/control-ctest/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3-0.6B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3-0.6B-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3-0.6B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3-0.6B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3-0.6B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3-0.6B-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3-0.6B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3-0.6B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3.5-0.8B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3.5-0.8B-b1-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3.5-0.8B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3.5-0.8B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3.5-0.8B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3.5-0.8B-b2-control-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3.5-0.8B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-monotonic-comparison-20261012/jobs/Qwen3.5-0.8B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/ctest/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/mixed-image-pipeline/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/Qwen3-0.6B-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/Qwen3-0.6B-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/Qwen3.5-0.8B-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/qwen35-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-parallel-checks-20261012/jobs/serving/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3-0.6B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3-0.6B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3-0.6B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3-0.6B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3-0.6B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3-0.6B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-projection-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-qwen35-text-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-qwen35-text-bf16-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-resident-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-resident-20261012/jobs/all-three-resident/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3-0.6B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3-0.6B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3-0.6B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3-0.6B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3-0.6B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3-0.6B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3.5-0.8B-b1-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-control/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-optimized/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-simd-benchmarks-20261012/jobs/Qwen3.5-0.8B-b2-repeat/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/ctest/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/mixed-image-pipeline/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/Qwen2.5-Coder-0.5B-Instruct-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/Qwen3-0.6B-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/Qwen3-0.6B-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/Qwen3.5-0.8B-head/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/qwen35-layers/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/serving/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/vision-pretrained/exit.json",
+      "exit_code": 0
+    },
+    {
+      "path": "double-vision-checks-20261012/jobs/vision-small/exit.json",
+      "exit_code": 0
+    }
+  ]
+}

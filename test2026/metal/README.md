@@ -10,9 +10,10 @@ state and intermediate hidden values on the GPU across layers, and selects
 answer tokens on the GPU. Executed adapters also include Qwen3-0.6B and
 Qwen2.5-Coder-0.5B-Instruct; the latest three-model measurements are below.
 
-Most learned projections use FP32 MPS matrices. Vocabulary heads retain the
-original BF16 checkpoint values and accumulate in FP32, without additional
-quantization. These remain experimental adapters with measured M4 profiles;
+Decoder matrix projections and vocabulary heads retain the original BF16
+checkpoint values in native Metal storage, with FP32 accumulation and no
+additional quantization. F32 checkpoint matrices, decoder vector weights and
+vision projections retain their FP32 path. These remain experimental adapters with measured M4 profiles;
 remaining performance and serving limits are described below.
 
 ## Isolation and checkpoint
@@ -577,7 +578,7 @@ passes BF16 matvec, parallel RMS, tie-breaking/nonfinite argmax and the existing
 MPS/storage cases. No tolerance was loosened for these optimization changes.
 
 The default constructor enables resident state and BF16 heads. For the
-explicit-state/F32-head comparison use `resident=False,bf16_head=False`.
+explicit-state/F32-head comparison use `resident=False,bf16_head=False,bf16_projections=False`.
 `enable_prefill()` now selects chunk 16; use an explicit argument to select a
 smaller profile. Resident sessions expose `session.snapshot(layer)` for
 intentional CPU state inspection; the old layer state fields become `None`.
@@ -590,7 +591,8 @@ where phase is `checks`, `benchmarks`, `extended` or `resident`.
 `background_test.py` accepts `three-models:phase`, `image-optimized:batch:chunk`
 and `dense-optimized:model_name:batch:chunk`. Native benchmark runners accept
 optimization mode 0 (explicit/F32), 1 (resident/F32) or 2 (resident/BF16), with
-mode 2 now the default. `summarize_three_models.py evidence_directory` parses
+mode 2 was the default for this round; the current default is mode 3, adding
+BF16 decoder projections. `summarize_three_models.py evidence_directory` parses
 raw results and asserts exact output parity for the preserved comparisons.
 
 Evidence is saved in `results/20261012/all-three-models/`, including commands,
@@ -609,17 +611,128 @@ trial is retained, fixed and successfully rerun. A draft shader also used the
 reserved name `thread`; native CTest caught the compilation error before the
 successful final builds. The final artifact has no active investigation jobs.
 
+## Double decode throughput and halve first-token latency — 2026-10-12
+
+The next round meets both requested targets on the measured M4 workloads,
+for batches 1 and 2. Controls are separately rebuilt from `f35f58f`, the previous
+three-model optimization commit. Each configuration runs two native processes,
+each doing two reset requests; the table averages the second request from each
+process. Runs alternate control/optimized/control/optimized, use the same
+checkpoints/photo/prompts/limits and execute without another investigation job.
+Only the control benchmark clocks are patched to `time.monotonic()`; its model
+and native implementation remain the archived commit. Source archive, native
+library and runner hashes are preserved in the evidence.
+
+| Batch-1 model | Decode tokens/s, old → new | Speedup | First token, old → new | Complete answer, old → new | Peak process RSS GiB, old → new |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Qwen3.5-0.8B | 20.10 → 41.10 | 2.05× | 1.722 → 0.668 s | 3.066 → 1.326 s | 3.39 → 2.44 |
+| Qwen3-0.6B | 22.62 → 49.64 | 2.20× | 0.500 → 0.099 s | 0.809 → 0.241 s | 2.35 → 1.51 |
+| Qwen2.5-Coder-0.5B-Instruct | 32.15 → 68.69 | 2.14× | 0.275 → 0.080 s | 0.773 → 0.313 s | 1.95 → 1.26 |
+
+First-token latency is 39%, 20% and 29% of the corresponding control; decode
+throughput is at least twice the control in each case. The image completes
+28 tokens, text 8 and coder 17, all at EOS. The image remains 288 × 192 with
+54 visual tokens and a 79-token prompt, and the vision tower executes anew
+for every request. Network transfer and external image preprocessing are
+excluded, as before; vision inference is included in image first-token time.
+Loaded latency excludes startup and first-use profile compilation. Peak RSS
+covers the complete native process, including initialization; it is not an
+isolated GPU or whole-system memory measurement.
+
+| Batch-2 model | Decode tokens/s per row, old → new | Speedup | First token, old → new | New peak process RSS |
+| --- | ---: | ---: | ---: | ---: |
+| Qwen3.5-0.8B | 16.78 → 33.83 | 2.02× | 2.328 → 1.157 s | 2.46 GiB |
+| Qwen3-0.6B | 19.64 → 40.39 | 2.06× | 0.599 → 0.169 s | 1.51 GiB |
+| Qwen2.5-Coder-0.5B-Instruct | 29.38 → 64.92 | 2.21× | 0.306 → 0.122 s | 1.26 GiB |
+
+Batch 2 repeats the same prompt/photo on both rows. Aggregate throughput is
+twice the per-row value. Batch-2 image first-token time is close to the half-time
+boundary (49.7% of control); these are observed two-repeat means, not guarantees
+for every request or prompt. All **48 native comparison requests** match their
+control's full token IDs and finish flags exactly, including both batch rows.
+
+The implementation changes are:
+
+- BF16 checkpoint storage for decoder projection matrices, sharing immutable
+  buffers with prompt profiles. Vectors and F32 checkpoint fixtures retain their
+  F32 representation; recurrent/KV state and accumulation remain FP32.
+- A decode kernel reuses input values across 16 output columns per threadgroup,
+  uses four-element loads where aligned, and reuses weights for both batch rows.
+  Prompt projections use a 16 × 32 output tile with FP32 SIMD-group matrix
+  multiply; BF16 values are expanded only in small threadgroup tiles. Up to
+  32 flattened prompt rows are supported for the existing batch/chunk profiles.
+- Parallel full-attention scores/softmax, Q/K normalization with RoPE, and gated
+  normalization. Recurrent delta attention computes Q/K norms once per head,
+  with a separate threadgroup per head, instead of repeating them per column.
+- Full-attention prompt queries execute in parallel. Each query reads the latest
+  active cache write up to its own token, preserving cache overwrites, paused
+  rows and causal visibility; the final cache is materialized once per chunk.
+  This path is bounded to capacity 2048, with the original sequential path for
+  larger profiles. Linear recurrence remains sequential across tokens.
+- Parallel vision row normalization and attention scores, retaining the existing
+  FP32 vision projections. Larger vision/attention score grids keep their prior
+  fallback where threadgroup scratch would exceed the selected profile.
+- Native `prepare_ms`, `encode_ms`, `gpu_ms` and `wait_ms` diagnostics distinguish
+  host encoding from GPU execution. Benchmark runners use monotonic timing and
+  check positive durations against the independent native steady-clock timer.
+
+The final numerical suite passes pretrained decoder layers and all 12 vision
+blocks/merger at the original tolerances, full vocabulary logits, paused/resumed
+rows, partial tails, invalid controls, reset/session isolation and image-to-mixed
+layer integration. Reference tests now include three requests with deliberate
+cache-slot overwrites and capacity 64. Native CTest additionally covers BF16
+projection rows 1/2/3/4/5/16/32, widths 7/128/1024/1031 and output-column tails,
+against the independent FP64 oracle. Earlier F32 and BF16-layer suites are kept
+alongside the final checks; numerical tolerances have not been relaxed.
+
+`MetalDecoder` and `DenseMetalDecoder` now default to
+`resident=True,bf16_head=True,bf16_projections=True`. Use
+`bf16_projections=False` for the F32 projection path. Benchmark mode 0 keeps
+explicit states/F32 head/projections; 1 adds resident execution; 2 also enables
+the BF16 vocabulary head; 3 enables BF16 decoder projections and is the default.
+The shared parallel kernels apply to all modes in the final library. The
+before/after table therefore uses a separate original build, rather than mode 2
+of the final library as its original control. CPU/OpenVINO and TensorRT paths
+retain their existing behavior; the new chunk operators are selected by Metal.
+
+Reproduce the isolated comparison with:
+`benchmark_before_after.py runtime build source control_build control_source output_folder`.
+Run the numerical suite with
+`three_model_suite.py runtime build source projection-checks output_folder`.
+Then `summarize_speed_target.py evidence_directory` checks exact output parity,
+positive/native-consistent timing and both targets. Raw commands, statuses,
+metadata, full token IDs, per-step timings and memory are saved in
+`results/20261012/double-speed/`; `target_comparison.json` is the parsed comparison.
+
+Longer text (55 tokens) and coder factorial (37 tokens) also reach EOS with
+exact token parity against the explicit F32 path. The generated `add` and
+`factorial` functions pass eight executed cases after restricted AST validation.
+All three models remain loaded together in one native process, reach EOS on
+all six interleaved requests, and match the isolated controls; peak process RSS
+is 4.36 GiB including initialization. Qwen3.5 text-only batch 2 also passes with
+BF16 projections, returning Paris/EOS on both rows in both reset requests.
+These postchecks are recorded in `post_validation.json`; reproduce its checks
+with `summarize_speed_validation.py evidence_directory`.
+
+An early baseline's batch-2 measurements overlapped a rebuild/checks and are
+excluded. Intermediate GEMV/padded-tile trials are retained but superseded.
+A wall-clock adjustment produced a negative token duration and an inflated
+59.2 tokens/s image result in an earlier run; **that timing is excluded**.
+Both control and optimized runs were repeated with monotonic clocks. The
+measurement exclusions are recorded in `measurement_notes.json`.
+
 ## Limits and next performance work
 
 The default decoder keeps recurrent/KV state and intermediate hidden values
 on the GPU, with one synchronous submission per output token or prompt chunk.
-Warm isolated image first-token time is about 1.71 s, including approximately
-0.35 s vision encoding; prefill still dominates this delay. Most projection
-weights remain expanded FP32. The vocabulary head retains BF16 storage and
-prefill graphs share decoder weights, substantially reducing process RSS.
-Further work includes BF16/quantized kernels for the other projections,
-parallel causal prefill attention, KV/state allocation reduction and longer
-context profiling. Other Apple GPUs remain unmeasured.
+Warm isolated image first-token time is about 0.67 s, including approximately
+0.08 s vision encoding; prefill still dominates this delay. Decoder projection matrices now retain BF16 storage, with native FP32
+accumulation. Vision projection matrices and vector weights remain FP32.
+Prefill graphs share decoder weights, and full attention processes prompt
+queries in parallel; linear recurrent attention remains sequential across
+tokens. Further work includes KV/state allocation reduction, projection
+fusion, optional quantization with quality validation and longer context
+profiling. Other Apple GPUs remain unmeasured.
 Batch 2 improves aggregate throughput while increasing per-request latency;
 only batches 1/2 have been executed. No batch-4, multi-client concurrency,
 production service, streaming camera or other Apple device claim is made.

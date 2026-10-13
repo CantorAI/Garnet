@@ -20,14 +20,14 @@ X::Value TensorValue(X3PackageHost* host,MetalContext& gpu,const MetalMatrix& ma
 }
 void MetalDecoderSession::Clear() {
     hidden_=MetalMatrix();prediction_=MetalMatrix();hiddenShape_.clear();states_.clear();owners_.clear();head_=nullptr;
-    gpu_.reset();poisoned_=false;inferenceMs_=0;
+    gpu_.reset();poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
 }
 void MetalDecoderSession::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 void MetalDecoderSession::ResetUnlocked() {
     if(!gpu_)throw std::logic_error("Metal session is closed");
     for(auto& state:states_)for(size_t i=0;i<2;++i)
         gpu_->Update(state.matrix[i],std::vector<float>(state.rows*state.columns[i],0));
-    hidden_=MetalMatrix();hiddenShape_.clear();poisoned_=false;inferenceMs_=0;
+    hidden_=MetalMatrix();hiddenShape_.clear();poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
 }
 void MetalDecoderSession::Reset() {std::lock_guard<std::mutex> lock(mutex_);ResetUnlocked();}
 bool MetalDecoderSession::Build(X::Value graphs,X::Value head) {
@@ -89,7 +89,7 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
     // Validate and upload every host input before encoding or changing state.
     for(size_t i=0;i<layers.size();++i) {
         auto graph=layers[i];const auto& state=states_[i];
-        if(!graph->ready_||graph->outputParts_.size()!=3||graph->inputShapes_[0]!=inputShape[0]||
+        if(!graph->ready_||graph->outputParts_.size()!=3||graph->inputShapes_.size()<3||graph->inputShapes_[0]!=inputShape[0]||
             graph->inputShapes_[1]!=state.shape[0]||graph->inputShapes_[2]!=state.shape[1])
             throw std::invalid_argument("Metal session layer/state profile mismatch");
         auto inputs=X::Value::List(Host());inputs.Append(i?X::Value():hidden);inputs.Append(X::Value());inputs.Append(X::Value());
@@ -109,6 +109,8 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         const auto& slot=layers[0]->slots_[layers[0]->inputs_[0]];
         hidden_=gpu_->Allocate(slot.rows,slot.columns);
     }
+    const auto prepared=std::chrono::steady_clock::now();
+    prepareMs_=std::chrono::duration<double,std::milli>(prepared-start).count();
     poisoned_=true;gpu_->Begin();
     try {
         auto current=layers[0]->slots_[layers[0]->inputs_[0]].matrix;
@@ -134,7 +136,10 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
             head_->Encode(*gpu_);
             gpu_->EncodeArgmax(head_->slots_[head_->output_].matrix,prediction_);
         }
-        gpu_->SubmitAndWait();
+        const auto encoded=std::chrono::steady_clock::now();
+        encodeMs_=std::chrono::duration<double,std::milli>(encoded-prepared).count();
+        gpu_->SubmitAndWait();gpuMs_=gpu_->LastGPUMs();
+        waitMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-encoded).count();
     }catch(...){gpu_->Abort();throw;}
     hiddenShape_=inputShape[0];
     auto result=X::Value::List(Host());

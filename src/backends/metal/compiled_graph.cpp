@@ -18,6 +18,8 @@ size_t MetalCompiledGraph::Weight(const std::string& name) {
     auto found=weights_.find(name);if(found!=weights_.end())return found->second;
     auto entry=index_.Find(name);
     if(!entry)throw std::runtime_error("Metal checkpoint weight missing: "+name);
+    if(bf16Projections_&&entry->dataType=="BF16"&&entry->shape.size()==2&&
+        (name.rfind("model.language_model.layers.",0)==0||name.rfind("model.layers.",0)==0))return BF16Weight(name);
     const auto modified=std::filesystem::last_write_time(entry->filePath);
     const auto bytes=std::filesystem::file_size(entry->filePath);
     auto shared=sharedWeights_.find(name);
@@ -68,13 +70,24 @@ size_t MetalCompiledGraph::BF16Weight(const std::string& name) {
     // F32 fixtures retain their exact original representation through MPS.
     if(entry->dataType=="F32")return Weight(name);
     if(entry->dataType!="BF16")throw std::runtime_error("BF16 vocabulary head requires BF16/F32 checkpoint weights");
+    const auto modified=std::filesystem::last_write_time(entry->filePath);
+    const auto bytes=std::filesystem::file_size(entry->filePath);
+    auto shared=sharedWeights_.find(key);
+    if(shared!=sharedWeights_.end()) {
+        const auto& record=shared->second;const auto& metadata=record.metadata;
+        if(metadata.filePath!=entry->filePath||metadata.dataType!=entry->dataType||metadata.shape!=entry->shape||
+            metadata.dataOffset!=entry->dataOffset||metadata.dataSize!=entry->dataSize||record.modified!=modified||record.bytes!=bytes)
+            throw std::runtime_error("Shared BF16 checkpoint changed or does not match");
+        const auto id=slots_.size();slots_.push_back(record.slot);weights_[key]=id;weightRecords_[key]=record;return id;
+    }
     SafeTensorsMappedFile file;std::string error;
     if(!file.Open(entry->filePath,error))throw std::runtime_error(error);
     auto data=file.DataAt(entry->dataOffset,entry->dataSize);
     if(!data)throw std::runtime_error("Vocabulary checkpoint exceeds file bounds");
     auto weight=gpu_->UploadBF16(data,entry->dataSize,size_t(entry->shape[0]),size_t(entry->shape[1]));
     auto id=slots_.size();slots_.push_back({MetalMatrix(),size_t(entry->shape[0]),size_t(entry->shape[1]),std::vector<int64_t>(entry->shape.begin(),entry->shape.end()),std::move(weight)});
-    weights_[key]=id;return id;
+    if(modified!=std::filesystem::last_write_time(entry->filePath)||bytes!=std::filesystem::file_size(entry->filePath))throw std::runtime_error("BF16 checkpoint changed while loading");
+    weightRecords_[key]={slots_[id],*entry,modified,bytes};weights_[key]=id;return id;
 }
 size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     auto integer=[&](const char* name,size_t limit){auto v=attrs.Get(name).ToInt64();
@@ -154,11 +167,14 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     return output;
 }
 void MetalCompiledGraph::Clear() {
-    ++generation_;ready_=false;outputParts_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
+    ++generation_;ready_=false;bf16Projections_=false;outputParts_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
 }
 void MetalCompiledGraph::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string& checkpoint) {
     std::lock_guard<std::mutex> lock(mutex_);return BuildInternal(graph,symbols,checkpoint,{});
+}
+bool MetalCompiledGraph::BuildBF16(X::Value graph,X::Value symbols,const std::string& checkpoint) {
+    std::lock_guard<std::mutex> lock(mutex_);return BuildInternal(graph,symbols,checkpoint,{},true);
 }
 bool MetalCompiledGraph::BuildShared(X::Value graph,X::Value symbols,const std::string& checkpoint,X::Value source) {
     if(source.runtime()!=Host()->runtime)throw std::invalid_argument("Shared Metal graph runtime mismatch");
@@ -166,11 +182,11 @@ bool MetalCompiledGraph::BuildShared(X::Value graph,X::Value symbols,const std::
     if(!peer||peer==this)throw std::invalid_argument("Shared Metal weights require another compiled graph");
     std::scoped_lock lock(mutex_,peer->mutex_);
     if(!peer->ready_)throw std::invalid_argument("Shared Metal weight source is closed");
-    return BuildInternal(graph,symbols,checkpoint,peer->weightRecords_);
+    return BuildInternal(graph,symbols,checkpoint,peer->weightRecords_,peer->bf16Projections_);
 }
 bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std::string& checkpoint,
-    std::unordered_map<std::string,SharedWeight> shared) {
-    Clear();sharedWeights_=std::move(shared);
+    std::unordered_map<std::string,SharedWeight> shared,bool bf16Projections) {
+    Clear();sharedWeights_=std::move(shared);bf16Projections_=bf16Projections;
     auto start=std::chrono::steady_clock::now();
     try {
         if(graph.runtime()!=Host()->runtime||symbols.runtime()!=Host()->runtime||!symbols.IsList())
@@ -334,7 +350,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 if(std::find(inputs_.begin(),inputs_.end(),a)!=inputs_.end())controlSources_[out]={a,size_t(index)};
             }else if(node.name=="qwen35_vision_encoder") {
                 out=LowerVision(a,node.attributes);
-            }else if(node.name=="qwen35_attention_step"||node.name=="qwen_text_attention_step") {
+            }else if(node.name=="qwen35_attention_step"||node.name=="qwen_text_attention_step"||node.name=="qwen35_attention_chunk"||node.name=="qwen_text_attention_chunk") {
                 auto integer=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
                     if(v<=0||uint64_t(v)>limit)throw std::runtime_error(std::string("Invalid Metal attention dimension: ")+name);
                     return size_t(v);};
@@ -350,17 +366,23 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                     return it->second;};
                 auto key=require("qwen35_attention_bind_key"),value=require("qwen35_attention_bind_value"),positions=require("qwen35_attention_bind_positions"),
                     slot=require("qwen35_attention_bind_slots"),active=require("qwen35_attention_bind_active");
+                const bool isChunk=node.name=="qwen35_attention_chunk"||node.name=="qwen_text_attention_chunk";
                 const auto hs=slots_[a].shape,cs=slots_[key].shape;
-                if(hs.size()!=2||cs.size()!=4||cs[0]!=hs[0]||uint64_t(cs[1])!=kv||cs[2]<=0||cs[2]>8192||uint64_t(cs[3])!=dim||
-                    slots_[value].shape!=cs||slots_[positions].shape!=std::vector<int64_t>{hs[0],3}||
-                    slots_[slot].shape!=std::vector<int64_t>{hs[0]}||slots_[active].shape!=slots_[slot].shape)
+                const size_t chunk=isChunk&&hs.size()==3?size_t(hs[1]):1;
+                if(hs.size()!=(isChunk?3:2)||cs.size()!=4||cs[0]!=hs[0]||uint64_t(cs[1])!=kv||cs[2]<=0||cs[2]>8192||uint64_t(cs[3])!=dim||
+                    slots_[value].shape!=cs||slots_[positions].shape!=(isChunk?std::vector<int64_t>{hs[0],int64_t(chunk),3}:std::vector<int64_t>{hs[0],3})||
+                    slots_[slot].shape!=(isChunk?std::vector<int64_t>{hs[0],int64_t(chunk)}:std::vector<int64_t>{hs[0]})||slots_[active].shape!=slots_[slot].shape||
+                    (isChunk&&(chunk>16||cs[2]>2048)))
                     throw std::runtime_error("Metal full attention state shapes invalid");
                 // Control tensors must be explicit host inputs for pre-dispatch bounds checks.
                 for(auto control:{positions,slot,active})if(std::find(inputs_.begin(),inputs_.end(),control)==inputs_.end()&&!controlSources_.count(control))
                     throw std::runtime_error("Metal attention control tensors must be graph inputs");
-                const size_t batch=hs[0],capacity=cs[2],cacheWidth=kv*capacity*dim;
+                const size_t batch=hs[0],capacity=cs[2],cacheWidth=kv*capacity*dim,rows=batch*chunk,width=hs.back();
+                auto flatten=[&](size_t input,size_t columns){auto output=Allocate(rows,columns);Op op{Kind::Layout,input,input,output};op.dimensions={0};ops_.push_back(std::move(op));return output;};
+                if(isChunk)a=flatten(a,width);
+                const auto ropePositions=isChunk?flatten(positions,3):positions;
                 auto prefix=node.attributes.Get("weight_prefix").ToString();
-                const bool text=node.name=="qwen_text_attention_step",normalize=!text||node.attributes.Get("qk_norm").ToInt64()!=0;
+                const bool text=node.name=="qwen_text_attention_step"||node.name=="qwen_text_attention_chunk",normalize=!text||node.attributes.Get("qk_norm").ToInt64()!=0;
                 auto qg=matmul(a,Weight(prefix+".q_proj.weight")),kp=matmul(a,Weight(prefix+".k_proj.weight")),vp=matmul(a,Weight(prefix+".v_proj.weight"));
                 if(text&&node.attributes.Get("attention_bias").ToInt64()!=0) {
                     auto bias=[&](size_t input,const std::string& name){auto weight=Weight(name);
@@ -381,21 +403,27 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                     frequencies[rotary/2+i]=(i%3==1&&i<size_t(h)*3)?1.0f:((i%3==2&&i<size_t(w)*3)?2.0f:0.0f);
                 }
                 auto freq=slots_.size();slots_.push_back({gpu_->Upload(frequencies,2,rotary/2),2,rotary/2,{2,int64_t(rotary/2)}});
-                auto qr=Allocate(batch,heads*dim),kr=Allocate(batch,kv*dim);
-                Op qrope{Kind::NormRope,q,qw,qr,float(epsilon)};qrope.arguments={q,qw,positions,freq};qrope.dimensions={heads,dim,rotary,size_t(normalize)};qrope.offset=text?0:1;ops_.push_back(std::move(qrope));
-                Op krope{Kind::NormRope,kp,kw,kr,float(epsilon)};krope.arguments={kp,kw,positions,freq};krope.dimensions={kv,dim,rotary,size_t(normalize)};krope.offset=text?0:1;ops_.push_back(std::move(krope));
+                auto qr=Allocate(rows,heads*dim),kr=Allocate(rows,kv*dim);
+                Op qrope{Kind::NormRope,q,qw,qr,float(epsilon)};qrope.arguments={q,qw,ropePositions,freq};qrope.dimensions={heads,dim,rotary,size_t(normalize)};qrope.offset=text?0:1;ops_.push_back(std::move(qrope));
+                Op krope{Kind::NormRope,kp,kw,kr,float(epsilon)};krope.arguments={kp,kw,ropePositions,freq};krope.dimensions={kv,dim,rotary,size_t(normalize)};krope.offset=text?0:1;ops_.push_back(std::move(krope));
                 auto nextKey=Allocate(batch,cacheWidth),nextValue=Allocate(batch,cacheWidth);
                 for(auto pair:{std::make_pair(kr,std::make_pair(key,nextKey)),std::make_pair(vp,std::make_pair(value,nextValue))}) {
-                    Op update{Kind::KVUpdate,pair.first,pair.second.first,pair.second.second};
-                    update.arguments={pair.first,pair.second.first,slot,active,positions};update.dimensions={kv,dim,capacity};ops_.push_back(std::move(update));
+                    Op update{isChunk?Kind::KVChunk:Kind::KVUpdate,pair.first,pair.second.first,pair.second.second};
+                    update.arguments={pair.first,pair.second.first,slot,active,positions};update.dimensions={kv,dim,capacity,chunk};ops_.push_back(std::move(update));
                 }
-                auto probabilities=Allocate(batch,heads*capacity);
-                Op scores{Kind::Scores,qr,nextKey,probabilities};scores.arguments={qr,nextKey,slot,active};scores.dimensions={heads,kv,dim,capacity};ops_.push_back(std::move(scores));
-                auto context=Allocate(batch,heads*dim);
-                Op attend{Kind::AttentionContext,probabilities,nextValue,context};attend.arguments={probabilities,nextValue,gate};attend.dimensions={heads,kv,dim,capacity,size_t(!text)};ops_.push_back(std::move(attend));
+                auto context=Allocate(rows,heads*dim);
+                if(isChunk) {
+                    Op attend{Kind::AttentionChunk,qr,key,context};attend.arguments={qr,kr,vp,key,value,slot,active,gate};
+                    attend.dimensions={heads,kv,dim,capacity,chunk,size_t(!text)};ops_.push_back(std::move(attend));
+                } else {
+                    auto probabilities=Allocate(batch,heads*capacity);
+                    Op scores{Kind::Scores,qr,nextKey,probabilities};scores.arguments={qr,nextKey,slot,active};scores.dimensions={heads,kv,dim,capacity};ops_.push_back(std::move(scores));
+                    Op attend{Kind::AttentionContext,probabilities,nextValue,context};attend.arguments={probabilities,nextValue,gate};attend.dimensions={heads,kv,dim,capacity,size_t(!text)};ops_.push_back(std::move(attend));
+                }
                 auto hidden=matmul(context,Weight(prefix+".o_proj.weight"));
-                if(slots_[hidden].columns!=uint64_t(hs[1]))throw std::runtime_error("Metal attention output projection shape mismatch");
-                out=Allocate(batch,size_t(hs[1])+2*cacheWidth);
+                if(slots_[hidden].columns!=width)throw std::runtime_error("Metal attention output projection shape mismatch");
+                if(isChunk) {auto packed=Allocate(batch,chunk*width);Op op{Kind::Layout,hidden,hidden,packed};op.dimensions={0};ops_.push_back(std::move(op));hidden=packed;}
+                out=Allocate(batch,chunk*width+2*cacheWidth);
                 Op pack{Kind::Concat,hidden,nextKey,out};pack.arguments={hidden,nextKey,nextValue};pack.transpose=true;packedParts[out]=pack.arguments;ops_.push_back(std::move(pack));
             }else if(node.name=="qwen35_attention_output"||node.name=="qwen35_attention_key_cache"||node.name=="qwen35_attention_value_cache") {
                 auto dimension=[&](const char* name,size_t limit){auto n=node.attributes.Get(name).ToInt64();
@@ -585,7 +613,7 @@ void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<
         throw std::runtime_error("Metal graph not ready or input count invalid");
     std::unordered_map<size_t,std::vector<float>> hostInputs;
     std::unordered_set<size_t> controls;
-    for(const auto& op:ops_)if(op.kind==Kind::KVUpdate)
+    for(const auto& op:ops_)if(op.kind==Kind::KVUpdate||op.kind==Kind::KVChunk)
         for(auto i:{2,3,4}){auto id=op.arguments[i];controls.insert(controlSources_.count(id)?controlSources_.at(id).first:id);}
     for(const auto& op:ops_)if(op.kind==Kind::Layout&&op.dimensions[0])controls.insert(op.b);
     for(size_t i=0;i<inputs_.size();++i) {
@@ -608,7 +636,7 @@ void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<
             output.columns,selected.data()+row*output.columns);
         hostInputs[entry.first]=std::move(selected);
     }
-    for(const auto& op:ops_)if(op.kind==Kind::KVUpdate) {
+    for(const auto& op:ops_)if(op.kind==Kind::KVUpdate||op.kind==Kind::KVChunk) {
         const auto& positions=hostInputs.at(op.arguments[4]);const auto& slots=hostInputs.at(op.arguments[2]);
         const auto& active=hostInputs.at(op.arguments[3]);
         for(size_t row=0;row<active.size();++row) {
@@ -630,7 +658,10 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
         auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
-        if(op.kind==Kind::MatMul)gpu.EncodeMatMul(a,b,out,op.transpose);
+        if(op.kind==Kind::MatMul) {
+            if(slots_[op.b].bf16.Valid()){if(!op.transpose)throw std::logic_error("BF16 projection must transpose checkpoint rows");gpu.EncodeBF16MatVec(a,slots_[op.b].bf16,out);}
+            else gpu.EncodeMatMul(a,b,out,op.transpose);
+        }
         else if(op.kind==Kind::BF16MatVec)gpu.EncodeBF16MatVec(a,slots_[op.b].bf16,out);
         else if(op.kind==Kind::Layout)gpu.EncodeLayout(a,b,out,op.dimensions[0]);
         else if(op.kind==Kind::Norm)gpu.EncodeRMSNorm(a,b,out,op.epsilon,op.offset);
@@ -656,6 +687,12 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         }else if(op.kind==Kind::NormRope) {
             auto& args=op.arguments;gpu.EncodeNormRope(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                 slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.epsilon,op.offset,op.dimensions[3]!=0);
+        }else if(op.kind==Kind::KVChunk) {
+            auto& args=op.arguments;gpu.EncodeKVChunk(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
+        }else if(op.kind==Kind::AttentionChunk) {
+            std::vector<MetalMatrix> args;for(auto id:op.arguments)args.push_back(slots_[id].matrix);
+            gpu.EncodeAttentionChunk(args,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4],op.dimensions[5]!=0);
         }else if(op.kind==Kind::KVUpdate) {
             auto& args=op.arguments;gpu.EncodeKVUpdate(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                 slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2]);

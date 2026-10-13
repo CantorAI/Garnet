@@ -1,0 +1,32 @@
+dense reference full_attention batch 1 chunk 1 max_abs_error 9.5367431640625e-07 hidden_l2_worst_ratio 0.0008740762438459326 value_l2_worst_ratio 0.0015885216517839253 worst_ratio 0.0031817396479020634 ms 1.947459
+dense reference full_attention batch 1 chunk 1 max_abs_error 0.0 hidden_l2_worst_ratio 0 value_l2_worst_ratio 0 worst_ratio 0 ms 1.830833
+dense reference full_attention batch 1 chunk 1 max_abs_error 4.76837158203125e-07 hidden_l2_worst_ratio 0.001102157456901804 value_l2_worst_ratio 0.0017262636074584703 worst_ratio 0.002192063979171723 ms 1.920166
+pretrained dense PASS full_attention 1 1
+dense reference full_attention batch 1 chunk 16 max_abs_error 1.52587890625e-05 hidden_l2_worst_ratio 0.004224074137802758 value_l2_worst_ratio 0.008963926212039017 worst_ratio 0.017175641402095983 ms 2.90275
+dense reference full_attention batch 1 chunk 16 max_abs_error 7.62939453125e-06 hidden_l2_worst_ratio 0.004393513229194013 value_l2_worst_ratio 0.011145176524344139 worst_ratio 0.015258993109538094 ms 4.17175
+dense reference full_attention batch 1 chunk 16 max_abs_error 7.62939453125e-06 hidden_l2_worst_ratio 0.004821173093351032 value_l2_worst_ratio 0.01114766110994019 worst_ratio 0.026382153578534122 ms 4.172458
+pretrained dense PASS full_attention 1 16
+dense reference full_attention batch 2 chunk 1 max_abs_error 4.76837158203125e-07 hidden_l2_worst_ratio 0.0009239160082862798 value_l2_worst_ratio 0.0018110716198264218 worst_ratio 0.004928373234570044 ms 1.985459
+dense reference full_attention batch 2 chunk 1 max_abs_error 0.0 hidden_l2_worst_ratio 0 value_l2_worst_ratio 0 worst_ratio 0 ms 1.75625
+dense reference full_attention batch 2 chunk 1 max_abs_error 9.5367431640625e-07 hidden_l2_worst_ratio 0.0010069757014790949 value_l2_worst_ratio 0.0022139908208415513 worst_ratio 0.004332717846779963 ms 2.08
+pretrained dense PASS full_attention 2 1
+dense reference full_attention batch 2 chunk 16 max_abs_error 7.62939453125e-06 hidden_l2_worst_ratio 0.005041446082726023 value_l2_worst_ratio 0.010720697192174533 worst_ratio 0.05030124650526437 ms 5.412292
+dense reference full_attention batch 2 chunk 16 max_abs_error 7.62939453125e-06 hidden_l2_worst_ratio 0.00508985166176591 value_l2_worst_ratio 0.011612113574321578 worst_ratio 0.02975051913132603 ms 3.3605
+dense reference full_attention batch 2 chunk 16 max_abs_error 1.52587890625e-05 hidden_l2_worst_ratio 0.004588921312667684 value_l2_worst_ratio 0.009407488569494044 worst_ratio 0.025050234299692296 ms 3.379833
+pretrained dense PASS full_attention 2 16
+dense reference full_attention batch 1 chunk 1 max_abs_error 1.621246337890625e-05 hidden_l2_worst_ratio 0.006268267421020092 value_l2_worst_ratio 0.0028736363988795676 worst_ratio 0.013303239513975346 ms 2.05275
+dense reference full_attention batch 1 chunk 1 max_abs_error 0.0 hidden_l2_worst_ratio 0 value_l2_worst_ratio 0 worst_ratio 0 ms 1.921583
+dense reference full_attention batch 1 chunk 1 max_abs_error 1.9073486328125e-05 hidden_l2_worst_ratio 0.006726929306904883 value_l2_worst_ratio 0.0027825511772098794 worst_ratio 0.02310466341422452 ms 1.972
+pretrained dense PASS full_attention 1 1
+dense reference full_attention batch 1 chunk 16 max_abs_error 7.82012939453125e-05 hidden_l2_worst_ratio 0.04138488854005829 value_l2_worst_ratio 0.0123461831846805 worst_ratio 0.0905116533604425 ms 4.20025
+dense reference full_attention batch 1 chunk 16 max_abs_error 0.00011444091796875 hidden_l2_worst_ratio 0.03579977149584991 value_l2_worst_ratio 0.012545292538719909 worst_ratio 0.12407734659741364 ms 3.887583
+dense reference full_attention batch 1 chunk 16 max_abs_error 9.72747802734375e-05 hidden_l2_worst_ratio 0.039848347296932395 value_l2_worst_ratio 0.012464821096531254 worst_ratio 0.10851238333644633 ms 3.775417
+pretrained dense PASS full_attention 1 16
+dense reference full_attention batch 2 chunk 1 max_abs_error 6.198883056640625e-06 hidden_l2_worst_ratio 0.007066265929276197 value_l2_worst_ratio 0.0021842148211325724 worst_ratio 0.013561480102482829 ms 1.867375
+dense reference full_attention batch 2 chunk 1 max_abs_error 0.0 hidden_l2_worst_ratio 0 value_l2_worst_ratio 0 worst_ratio 0 ms 1.94275
+dense reference full_attention batch 2 chunk 1 max_abs_error 1.1444091796875e-05 hidden_l2_worst_ratio 0.008515681241734968 value_l2_worst_ratio 0.0030565032549246 worst_ratio 0.02809856036892618 ms 1.633208
+pretrained dense PASS full_attention 2 1
+dense reference full_attention batch 2 chunk 16 max_abs_error 0.000148773193359375 hidden_l2_worst_ratio 0.04343088222351126 value_l2_worst_ratio 0.01527853082573865 worst_ratio 0.16558182434110455 ms 3.751666
+dense reference full_attention batch 2 chunk 16 max_abs_error 0.00011444091796875 hidden_l2_worst_ratio 0.04302369790336584 value_l2_worst_ratio 0.014083945495866666 worst_ratio 0.2675877854154512 ms 5.872833
+dense reference full_attention batch 2 chunk 16 max_abs_error 0.000118255615234375 hidden_l2_worst_ratio 0.04179765277015942 value_l2_worst_ratio 0.014043885451163881 worst_ratio 0.12719535738420154 ms 5.527416
+pretrained dense PASS full_attention 2 16

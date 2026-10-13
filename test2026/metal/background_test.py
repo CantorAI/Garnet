@@ -15,7 +15,10 @@ if mode=='launch':
       stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
  pidfile.write_text(str(process.pid));print('Started test PID',process.pid,flush=True)
 elif mode=='run':
- if batch=='chunk-suite':
+ if batch=='before-after':
+  root=Path(source).parent
+  command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_before_after.py'),runtime,build,source,str(root/'speed2-control-f35f58f-build'),str(root/'speed2-control-f35f58f-source'),str(folder/'jobs')]
+ elif batch=='chunk-suite':
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_chunk.py'),runtime,build,source,str(folder)]
  elif batch=='optimization-suite':
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_optimization.py'),runtime,build,source,str(folder)]
@@ -43,7 +46,7 @@ elif mode=='run':
   parts=batch.split(':');name=parts[1];prompt='What is the capital of France? Answer briefly.' if name=='Qwen3-0.6B' else 'Write a Python function add(a, b) that returns their sum. Output only code.'
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_dense_text.py'),runtime,build,source,str(Path(source).parent/'models'/name),parts[2],'64',prompt,parts[3]]
   if batch.startswith('dense-resident:'):command.append('1')
-  if batch.startswith('dense-optimized:'):command.append('2')
+  if batch.startswith('dense-optimized:'):command.append('3')
  elif batch=='pretrained':
   command=[sys.executable,str(Path(source)/'test2026/metal/test_pretrained_graph.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B')]
@@ -59,7 +62,7 @@ elif mode=='run':
  elif batch.startswith('image-chunk:') or batch.startswith('image-resident:') or batch.startswith('image-optimized:'):
   parts=batch.split(':');command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_image.py'),runtime,build,source,str(Path(source).parent/'models/Qwen3.5-0.8B'),str(Path(source).parent/'images'/('RealWorld-04.batch'+parts[1]+'.json')),'32',parts[2]]
   if batch.startswith('image-resident:'):command.append('1')
-  if batch.startswith('image-optimized:'):command.append('2')
+  if batch.startswith('image-optimized:'):command.append('3')
  elif batch.startswith('image:') or batch.startswith('image-long:'):
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_image.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B'),str(Path(source).parent/'images'/('RealWorld-04.batch'+batch.split(':')[1]+'.json'))]
@@ -67,7 +70,7 @@ elif mode=='run':
  elif batch.startswith('text-chunk:'):
   parts=batch.split(':');command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,str(Path(source).parent/'models/Qwen3.5-0.8B'),parts[1],'32','Explain three benefits of running language models locally.',parts[2]]
  elif batch.startswith('qwen35-text-smoke:'):
-  command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,str(Path(source).parent/'models/Qwen3.5-0.8B'),batch.split(':')[1],'32','What is the capital of France? Answer briefly.','16','2']
+  command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,str(Path(source).parent/'models/Qwen3.5-0.8B'),batch.split(':')[1],'32','What is the capital of France? Answer briefly.','16','3']
  elif batch.startswith('text:') or batch.startswith('text-long:'):
   command=[sys.executable,str(Path(source)/'test2026/metal/benchmark_text.py'),runtime,build,source,
       str(Path(source).parent/'models/Qwen3.5-0.8B'),batch.split(':')[1]]

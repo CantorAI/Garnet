@@ -1,0 +1,12 @@
+{
+  "performance_source": "double-monotonic-comparison-20261012",
+  "excluded_from_target_comparison": {
+    "double-baseline-20261012": "Batch 2 overlapped a library rebuild and numerical tests; all target controls were rebuilt and rerun separately.",
+    "double-projection-benchmarks-20261012": "Initial multi-row GEMV made prompt processing slower; replaced with tiled SIMD-group GEMM.",
+    "double-before-after-20261012": "Superseded padded GEMM layout; wall-clock timing was not used for final targets.",
+    "double-final-comparison-20261012": "A clock adjustment produced a negative token duration (-0.177426815 s) and an inflated image decode rate; rerun with monotonic clocks.",
+    "other_trials": "Intermediate numerical/performance checks retained; only the isolated monotonic comparison defines the final targets."
+  },
+  "numerical_tolerances": "Unchanged from f35f58f; added a third reference request with cache overwrite and capacity 64.",
+  "control_source": "f35f58f native/model implementation; only the two benchmark scripts replace time.time() with time.monotonic()."
+}

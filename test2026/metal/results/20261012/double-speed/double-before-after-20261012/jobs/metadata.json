@@ -1,0 +1,16 @@
+{
+  "control_commit": "f35f58f",
+  "runtime": "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+  "builds": {
+    "control": {
+      "build": "/Users/zsdx/garnet-metal-investigation/speed2-control-f35f58f-build",
+      "source": "/Users/zsdx/garnet-metal-investigation/speed2-control-f35f58f-source",
+      "native_sha256": "78a8d17a396a448928b321a524e5596cc4fabababb37dd6b8c252c4e6d6a8d55"
+    },
+    "optimized": {
+      "build": "/Users/zsdx/garnet-metal-investigation/build",
+      "source": "/Users/zsdx/garnet-metal-investigation/source",
+      "native_sha256": "6663aaf75fcf95becbebff6aecebe92efff00d25777a404f0971344c6c3873e8"
+    }
+  }
+}

@@ -7,10 +7,11 @@ c=f['config'];batch=f['batch'];chunk=f['chunk'];capacity=f['capacity'];shapes=f[
 symbols=[tensor.input('chunk_'+str(i),shape=s,dtype=tensor.float32) for i,s in enumerate(shapes)]
 @T.fusion(name='metal_prefill_reference',boundary='required')
 def forward(hidden,state1,state2,positions,slots,active):
- return PrefillLayer(hidden,state1,state2,positions,slots,active,c,idx,batch,chunk,capacity,kind)
+ return PrefillLayer(hidden,state1,state2,positions,slots,active,c,idx,batch,chunk,capacity,kind,parallel_attention=True)
 graph=garnet.compiled_graph();session=garnet.decoder_session()
 try:
- graph.build(forward(*symbols),symbols,f['checkpoint'])
+ if len(sys.argv)>4 and sys.argv[4]=='bf16':graph.build_bf16(forward(*symbols),symbols,f['checkpoint'])
+ else:graph.build(forward(*symbols),symbols,f['checkpoint'])
  session.build([graph],None)
  for files in f['invalid_inputs']:
   inputs=[garnet.tensor_io().read_f32(path,s) for path,s in zip(files,shapes)];rejected=False

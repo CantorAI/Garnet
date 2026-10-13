@@ -21,7 +21,7 @@ class MetalDecoderSession {
     MetalMatrix prediction_;
     std::vector<int64_t> hiddenShape_;
     bool poisoned_=false;
-    double inferenceMs_=0;
+    double inferenceMs_=0,prepareMs_=0,encodeMs_=0,gpuMs_=0,waitMs_=0;
     std::mutex mutex_;
     void Clear();
     void ResetUnlocked();
@@ -34,6 +34,10 @@ public:
     X::Value Hidden();
     void Close();
     double LastInferenceMs() const {return inferenceMs_;}
+    double PrepareMs() const {return prepareMs_;}
+    double EncodeMs() const {return encodeMs_;}
+    double GPUMs() const {return gpuMs_;}
+    double WaitMs() const {return waitMs_;}
     BEGIN_PACKAGE(MetalDecoderSession)
         APISET().AddFunc<2>("build",&MetalDecoderSession::Build);
         APISET().AddFunc<6>("run",&MetalDecoderSession::Run);
@@ -41,6 +45,10 @@ public:
         APISET().AddFunc<1>("snapshot",&MetalDecoderSession::Snapshot);
         APISET().AddFunc<0>("hidden",&MetalDecoderSession::Hidden);
         APISET().AddFunc<0>("close",&MetalDecoderSession::Close);
+        APISET().AddProp("prepare_ms",&MetalDecoderSession::PrepareMs);
+        APISET().AddProp("encode_ms",&MetalDecoderSession::EncodeMs);
+        APISET().AddProp("gpu_ms",&MetalDecoderSession::GPUMs);
+        APISET().AddProp("wait_ms",&MetalDecoderSession::WaitMs);
         APISET().AddProp("last_inference_ms",&MetalDecoderSession::LastInferenceMs);
     END_PACKAGE
 };

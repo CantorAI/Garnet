@@ -1,0 +1,17 @@
+{
+  "name": "Qwen2.5-Coder-0.5B-Instruct-b2-optimized",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_dense_text.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+    "2",
+    "64",
+    "Write a Python function add(a, b) that returns their sum. Output only code.",
+    "16",
+    "3"
+  ],
+  "exit_code": 0
+}

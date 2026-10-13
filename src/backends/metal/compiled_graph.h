@@ -11,7 +11,7 @@ namespace Garnet {
 class MetalCompiledGraph {
     friend class MetalDecoderSession;
     struct Slot {MetalMatrix matrix;size_t rows=0,columns=0;std::vector<int64_t> shape;MetalBF16Weight bf16;};
-    enum class Kind {MatMul,BF16MatVec,Norm,Silu,Add,Bias,Mask,Conv,Delta,Slice,Prepare,GateNorm,Concat,NormRope,KVUpdate,Scores,AttentionContext,Vision,Layout};
+    enum class Kind {MatMul,BF16MatVec,Norm,Silu,Add,Bias,Mask,Conv,Delta,Slice,Prepare,GateNorm,Concat,NormRope,KVUpdate,KVChunk,AttentionChunk,Scores,AttentionContext,Vision,Layout};
     struct Op {Kind kind;size_t a,b,out;float epsilon=0,offset=0;bool transpose=false;
         std::vector<size_t> arguments={},dimensions={};};
     std::unique_ptr<MetalContext> gpu_;
@@ -31,7 +31,7 @@ class MetalCompiledGraph {
     std::vector<uint8_t> residentOps_;
     uint64_t generation_=0;
     double compileMs_=0,inferenceMs_=0;
-    bool ready_=false;
+    bool ready_=false,bf16Projections_=false;
     std::mutex mutex_;
     SafeTensorsIndex index_;
     size_t Weight(const std::string&);
@@ -41,9 +41,10 @@ class MetalCompiledGraph {
     void Clear();
     void PrepareInputs(X::Value,const std::unordered_set<size_t>& skip={});
     void Encode(MetalContext&,bool packedOutput=true);
-    bool BuildInternal(X::Value,X::Value,const std::string&,std::unordered_map<std::string,SharedWeight>);
+    bool BuildInternal(X::Value,X::Value,const std::string&,std::unordered_map<std::string,SharedWeight>,bool bf16Projections=false);
 public:
     bool Build(X::Value graph,X::Value symbols,const std::string& checkpoint);
+    bool BuildBF16(X::Value graph,X::Value symbols,const std::string& checkpoint);
     bool BuildShared(X::Value graph,X::Value symbols,const std::string& checkpoint,X::Value source);
     X::Value Run(X::Value inputs);
     void Close();
@@ -53,6 +54,7 @@ public:
     size_t OperationCount() const {return ops_.size();}
     BEGIN_PACKAGE(MetalCompiledGraph)
         APISET().AddFunc<3>("build",&MetalCompiledGraph::Build);
+        APISET().AddFunc<3>("build_bf16",&MetalCompiledGraph::BuildBF16);
         APISET().AddFunc<4>("build_shared",&MetalCompiledGraph::BuildShared);
         APISET().AddFunc<1>("run",&MetalCompiledGraph::Run);
         APISET().AddFunc<0>("close",&MetalCompiledGraph::Close);

@@ -5,8 +5,8 @@ from .cpu_decoder import CPUDecoder
 from .decoder_layer import T,norm,Qwen35LinearDecoderLayer,Qwen35FullDecoderLayer
 
 class MetalDecoder(CPUDecoder):
-    def __init__(self,checkpoint,config,batch=1,capacity=256,bf16_head=True,resident=True):
-        self.session=None
+    def __init__(self,checkpoint,config,batch=1,capacity=256,bf16_head=True,resident=True,bf16_projections=True):
+        self.session=None;self.bf16_projections=bf16_projections
         if not garnet.backend_info().startswith('Garnet Metal/MPS '):
             raise ValueError('MetalDecoder requires the native Garnet Metal package')
         CPUDecoder.__init__(self,checkpoint,config,batch,capacity)
@@ -20,6 +20,10 @@ class MetalDecoder(CPUDecoder):
             if resident:self.enable_resident()
         except:
             self.close();raise
+
+    def _build_graph(self,graph,output,symbols,checkpoint):
+        if self.bf16_projections:graph.build_bf16(output,symbols,checkpoint)
+        else:graph.build(output,symbols,checkpoint)
 
     def enable_resident(self):
         if self.session is not None:return
@@ -65,7 +69,7 @@ class MetalDecoder(CPUDecoder):
 
     def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):
         from .prefill_layer import PrefillLayer
-        return PrefillLayer(hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind)
+        return PrefillLayer(hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind,parallel_attention=True)
 
     def prefill_sequence(self,hidden_tokens,positions,predict=True):
         if self.session is not None:return self._resident_prefill(hidden_tokens,positions,predict)
@@ -131,7 +135,7 @@ class MetalDecoder(CPUDecoder):
                 except:graph.close();raise
                 self.prefill_graphs[key]=graph;self.prefill_compile_ms+=graph.compile_ms
             graphs.append(graph)
-        self.poisoned=True;prediction=None
+        self.poisoned=True;prediction=None;self.prefill_profile=dict(prepare_ms=0,encode_ms=0,gpu_ms=0,wait_ms=0)
         for offset in range(0,count,chunk):
             values=hidden_tokens[offset:offset+chunk];length=len(values)
             while len(values)<chunk:values.append(self.io.zeros([batch,width]))
@@ -142,6 +146,7 @@ class MetalDecoder(CPUDecoder):
             slots=tensor.tensor([slot+offset+min(i,length) for slot in self.slots for i in range(chunk)],shape=[batch,chunk],dtype=tensor.float32)
             prediction=self.session.run(graphs,hidden,position,slots,flag,length-1 if predict and offset+length==count else -1)
             self.prefill_inference_ms+=self.session.last_inference_ms
+            for key in self.prefill_profile:self.prefill_profile[key]+=getattr(self.session,key)
         for b in range(batch):self.slots[b]+=count
         self.poisoned=False
         return prediction if predict else None
@@ -157,7 +162,7 @@ class MetalDecoder(CPUDecoder):
             def forward(hidden,key,value,positions,slots,active):
                 return Qwen35FullDecoderLayer(hidden,key,value,positions,slots,active,config,idx,capacity)
         graph=garnet.compiled_graph()
-        try:graph.build(forward(*symbols),symbols,checkpoint)
+        try:self._build_graph(graph,forward(*symbols),symbols,checkpoint)
         except:graph.close();raise
         return graph
 

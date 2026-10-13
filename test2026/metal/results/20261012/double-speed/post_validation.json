@@ -1,0 +1,522 @@
+{
+  "extended": [
+    {
+      "model": "Qwen3-0.6B",
+      "requests": 2,
+      "exact_tokens": true,
+      "finished": [
+        true
+      ],
+      "output_tokens": [
+        55
+      ],
+      "prompt": "Give five numbered, practical tips for writing readable Python. Keep each tip to one sentence.",
+      "text": [
+        "1. Use descriptive variable names to improve readability.  \n2. Write comments to explain the purpose of code.  \n3. Avoid unnecessary whitespace in code.  \n4. Use consistent indentation for readability.  \n5. Test your code thoroughly to ensure it works as expected.<|im_end|>"
+      ],
+      "ttft_seconds": 0.13161387480795383,
+      "tokens_per_second": 42.7161342036266,
+      "process": {
+        "exit_code": 0,
+        "wall_seconds": 4.0459023751318455,
+        "peak_rss_bytes": 1616592896,
+        "memory_scope": "peak native runtime RSS, macOS bytes; not isolated GPU allocation"
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "requests": 2,
+      "exact_tokens": true,
+      "finished": [
+        true
+      ],
+      "output_tokens": [
+        37
+      ],
+      "prompt": "Write a Python function factorial(n) using a loop. Output only code.",
+      "text": [
+        "```python\ndef factorial(n):\n    result = 1\n    for i in range(1, n + 1):\n        result *= i\n    return result\n```<|im_end|>"
+      ],
+      "ttft_seconds": 0.08629554230719805,
+      "tokens_per_second": 66.02243880747442,
+      "process": {
+        "exit_code": 0,
+        "wall_seconds": 2.3288535410538316,
+        "peak_rss_bytes": 1355825152,
+        "memory_scope": "peak native runtime RSS, macOS bytes; not isolated GPU allocation"
+      }
+    }
+  ],
+  "resident": {
+    "exact_tokens": true,
+    "requests": 6,
+    "results": [
+      {
+        "model": "Qwen3.5-0.8B",
+        "timing_clock": "time.monotonic",
+        "request": 0,
+        "models_loaded": 3,
+        "token_ids": [
+          [
+            32,
+            3349,
+            33138,
+            314,
+            264,
+            855,
+            440,
+            264,
+            20117,
+            1901,
+            6833,
+            12965,
+            383,
+            264,
+            42401,
+            50471,
+            264,
+            93182,
+            33218,
+            3177,
+            85624,
+            303,
+            264,
+            15822,
+            757,
+            17865,
+            13,
+            248046
+          ]
+        ],
+        "text": [
+          "A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.<|im_end|>"
+        ],
+        "finished": [
+          true
+        ],
+        "output_tokens": [
+          28
+        ],
+        "ttft_loaded_seconds": 0.9150548749603331,
+        "total_loaded_seconds": 1.5648622917942703,
+        "prefill_chunk": 16,
+        "decode_steps_per_second": 41.55910261586627
+      },
+      {
+        "model": "Qwen3-0.6B",
+        "timing_clock": "time.monotonic",
+        "request": 0,
+        "models_loaded": 3,
+        "token_ids": [
+          [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ]
+        ],
+        "text": [
+          "The capital of France is Paris.<|im_end|>"
+        ],
+        "finished": [
+          true
+        ],
+        "output_tokens": [
+          8
+        ],
+        "ttft_loaded_seconds": 0.17094154097139835,
+        "total_loaded_seconds": 0.30838108295574784,
+        "prefill_chunk": 16,
+        "decode_steps_per_second": 50.95377597556505
+      },
+      {
+        "model": "Qwen2.5-Coder-0.5B-Instruct",
+        "timing_clock": "time.monotonic",
+        "request": 0,
+        "models_loaded": 3,
+        "token_ids": [
+          [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ]
+        ],
+        "text": [
+          "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+        ],
+        "finished": [
+          true
+        ],
+        "output_tokens": [
+          17
+        ],
+        "ttft_loaded_seconds": 0.13962120795622468,
+        "total_loaded_seconds": 0.3691359576769173,
+        "prefill_chunk": 16,
+        "decode_steps_per_second": 69.7416561997906
+      },
+      {
+        "model": "Qwen3.5-0.8B",
+        "timing_clock": "time.monotonic",
+        "request": 1,
+        "models_loaded": 3,
+        "token_ids": [
+          [
+            32,
+            3349,
+            33138,
+            314,
+            264,
+            855,
+            440,
+            264,
+            20117,
+            1901,
+            6833,
+            12965,
+            383,
+            264,
+            42401,
+            50471,
+            264,
+            93182,
+            33218,
+            3177,
+            85624,
+            303,
+            264,
+            15822,
+            757,
+            17865,
+            13,
+            248046
+          ]
+        ],
+        "text": [
+          "A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.<|im_end|>"
+        ],
+        "finished": [
+          true
+        ],
+        "output_tokens": [
+          28
+        ],
+        "ttft_loaded_seconds": 0.6682253750041127,
+        "total_loaded_seconds": 1.3390473332256079,
+        "prefill_chunk": 16,
+        "decode_steps_per_second": 40.256936123125406
+      },
+      {
+        "model": "Qwen3-0.6B",
+        "timing_clock": "time.monotonic",
+        "request": 1,
+        "models_loaded": 3,
+        "token_ids": [
+          [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ]
+        ],
+        "text": [
+          "The capital of France is Paris.<|im_end|>"
+        ],
+        "finished": [
+          true
+        ],
+        "output_tokens": [
+          8
+        ],
+        "ttft_loaded_seconds": 0.12087449990212917,
+        "total_loaded_seconds": 0.2601187499240041,
+        "prefill_chunk": 16,
+        "decode_steps_per_second": 50.28716013925493
+      },
+      {
+        "model": "Qwen2.5-Coder-0.5B-Instruct",
+        "timing_clock": "time.monotonic",
+        "request": 1,
+        "models_loaded": 3,
+        "token_ids": [
+          [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ]
+        ],
+        "text": [
+          "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+        ],
+        "finished": [
+          true
+        ],
+        "output_tokens": [
+          17
+        ],
+        "ttft_loaded_seconds": 0.09930412471294403,
+        "total_loaded_seconds": 0.33039649995043874,
+        "prefill_chunk": 16,
+        "decode_steps_per_second": 69.26037170373301
+      }
+    ],
+    "process": {
+      "exit_code": 0,
+      "wall_seconds": 8.235286499839276,
+      "peak_rss_bytes": 4684218368,
+      "memory_scope": "peak macOS process RSS bytes, all three loaded"
+    }
+  },
+  "qwen35_text_batch2": {
+    "exact_tokens": true,
+    "requests": 2,
+    "results": [
+      {
+        "model": "Qwen3.5-0.8B",
+        "resident_state": true,
+        "bf16_head": true,
+        "bf16_projections": true,
+        "prefill_profile": {
+          "prepare_ms": 0.898084,
+          "encode_ms": 15.318416,
+          "gpu_ms": 370.7951665855944,
+          "wait_ms": 403.614875
+        },
+        "decode_phase_ms": [
+          {
+            "prepare_ms": 0.131375,
+            "encode_ms": 0.573125,
+            "gpu_ms": 27.69162505865097,
+            "wait_ms": 30.996667
+          }
+        ],
+        "timing_clock": "time.monotonic",
+        "request": 0,
+        "batch": 2,
+        "prompt": "What is the capital of France? Answer briefly.",
+        "prefill_chunk": 16,
+        "prefill_compile_ms": 110.021125,
+        "text": [
+          " Paris<|im_end|>",
+          " Paris<|im_end|>"
+        ],
+        "token_ids": [
+          [
+            11751,
+            248046
+          ],
+          [
+            11751,
+            248046
+          ]
+        ],
+        "prompt_tokens": 22,
+        "output_tokens": [
+          2,
+          2
+        ],
+        "finished": [
+          true,
+          true
+        ],
+        "initialization_seconds": 1.3409406249411404,
+        "ttft_loaded_seconds": 0.6374249579384923,
+        "total_loaded_seconds": 0.6694040829315782,
+        "ttft_first_request_seconds": 1.9783655828796327,
+        "decode_step_seconds": [
+          0.031924250070005655
+        ],
+        "decode_layer_ms": [
+          []
+        ],
+        "decode_head_ms": [
+          null
+        ],
+        "decode_session_ms": [
+          31.703209
+        ],
+        "decode_steps_per_second": 31.324150067961888
+      },
+      {
+        "model": "Qwen3.5-0.8B",
+        "resident_state": true,
+        "bf16_head": true,
+        "bf16_projections": true,
+        "prefill_profile": {
+          "prepare_ms": 0.470958,
+          "encode_ms": 10.443876,
+          "gpu_ms": 368.10616636648774,
+          "wait_ms": 370.326624
+        },
+        "decode_phase_ms": [
+          {
+            "prepare_ms": 0.121625,
+            "encode_ms": 0.552792,
+            "gpu_ms": 27.72687515243888,
+            "wait_ms": 28.186042
+          }
+        ],
+        "timing_clock": "time.monotonic",
+        "request": 1,
+        "batch": 2,
+        "prompt": "What is the capital of France? Answer briefly.",
+        "prefill_chunk": 16,
+        "prefill_compile_ms": 0,
+        "text": [
+          " Paris<|im_end|>",
+          " Paris<|im_end|>"
+        ],
+        "token_ids": [
+          [
+            11751,
+            248046
+          ],
+          [
+            11751,
+            248046
+          ]
+        ],
+        "prompt_tokens": 22,
+        "output_tokens": [
+          2,
+          2
+        ],
+        "finished": [
+          true,
+          true
+        ],
+        "initialization_seconds": 1.3409406249411404,
+        "ttft_loaded_seconds": 0.3822092078626156,
+        "total_loaded_seconds": 0.4113105828873813,
+        "ttft_first_request_seconds": null,
+        "decode_step_seconds": [
+          0.029048750177025795
+        ],
+        "decode_layer_ms": [
+          []
+        ],
+        "decode_head_ms": [
+          null
+        ],
+        "decode_session_ms": [
+          28.862417
+        ],
+        "decode_steps_per_second": 34.424888985099415
+      }
+    ]
+  },
+  "generated_code": [
+    {
+      "function": "add",
+      "source": "def add(a, b):\n    return a + b\n",
+      "sha256": "ba1a531f581d2e6094e978ed6f7aca7a8d92eeb62c6e7ad73ee692f7f18bc772",
+      "ast_restricted": true,
+      "tests": [
+        {
+          "inputs": [
+            2,
+            3
+          ],
+          "expected": 5,
+          "actual": 5
+        },
+        {
+          "inputs": [
+            -4,
+            9
+          ],
+          "expected": 5,
+          "actual": 5
+        },
+        {
+          "inputs": [
+            0,
+            0
+          ],
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "inputs": [
+            1.5,
+            2.5
+          ],
+          "expected": 4.0,
+          "actual": 4.0
+        }
+      ]
+    },
+    {
+      "function": "factorial",
+      "source": "def factorial(n):\n    result = 1\n    for i in range(1, n + 1):\n        result *= i\n    return result\n",
+      "sha256": "cc3445138ba72a203b569b782c36044e3f16bf880ebc220bfdb6854c1fe603f4",
+      "ast_restricted": true,
+      "tests": [
+        {
+          "inputs": [
+            0
+          ],
+          "expected": 1,
+          "actual": 1
+        },
+        {
+          "inputs": [
+            1
+          ],
+          "expected": 1,
+          "actual": 1
+        },
+        {
+          "inputs": [
+            5
+          ],
+          "expected": 120,
+          "actual": 120
+        },
+        {
+          "inputs": [
+            7
+          ],
+          "expected": 5040,
+          "actual": 5040
+        }
+      ]
+    }
+  ]
+}

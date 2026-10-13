@@ -1,0 +1,34 @@
+Context leak detected, msgtracer returned -1
+Context leak detected, msgtracer returned -1
+compiled Garnet decoder layer 0 linear_attention ms 22.148958
+compiled Garnet decoder layer 1 linear_attention ms 22.771083
+compiled Garnet decoder layer 2 linear_attention ms 22.322458
+compiled Garnet decoder layer 3 full_attention ms 18.099375
+compiled Garnet decoder layer 4 linear_attention ms 22.815083
+compiled Garnet decoder layer 5 linear_attention ms 22.904959
+compiled Garnet decoder layer 6 linear_attention ms 21.746584
+compiled Garnet decoder layer 7 full_attention ms 18.885708
+compiled Garnet decoder layer 8 linear_attention ms 24.707125
+compiled Garnet decoder layer 9 linear_attention ms 23.20325
+compiled Garnet decoder layer 10 linear_attention ms 24.985334
+compiled Garnet decoder layer 11 full_attention ms 19.007042
+compiled Garnet decoder layer 12 linear_attention ms 21.602958
+compiled Garnet decoder layer 13 linear_attention ms 23.360833
+compiled Garnet decoder layer 14 linear_attention ms 23.033333
+compiled Garnet decoder layer 15 full_attention ms 18.015083
+compiled Garnet decoder layer 16 linear_attention ms 24.924125
+compiled Garnet decoder layer 17 linear_attention ms 22.977125
+compiled Garnet decoder layer 18 linear_attention ms 21.922
+compiled Garnet decoder layer 19 full_attention ms 19.533125
+compiled Garnet decoder layer 20 linear_attention ms 22.819667
+compiled Garnet decoder layer 21 linear_attention ms 23.342875
+compiled Garnet decoder layer 22 linear_attention ms 22.22275
+compiled Garnet decoder layer 23 full_attention ms 19.465709
+metal_three_resident_initialization {"seconds": 3.651074416935444, "models_loaded": 3}
+metal_three_resident_result {"model": "Qwen3.5-0.8B", "timing_clock": "time.monotonic", "request": 0, "models_loaded": 3, "token_ids": [[32, 3349, 33138, 314, 264, 855, 440, 264, 20117, 1901, 6833, 12965, 383, 264, 42401, 50471, 264, 93182, 33218, 3177, 85624, 303, 264, 15822, 757, 17865, 13, 248046]], "text": ["A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.<|im_end|>"], "finished": [true], "output_tokens": [28], "ttft_loaded_seconds": 0.9150548749603331, "total_loaded_seconds": 1.5648622917942703, "prefill_chunk": 16, "decode_steps_per_second": 41.55910261586627}
+metal_three_resident_result {"model": "Qwen3-0.6B", "timing_clock": "time.monotonic", "request": 0, "models_loaded": 3, "token_ids": [[785, 6722, 315, 9625, 374, 12095, 13, 151645]], "text": ["The capital of France is Paris.<|im_end|>"], "finished": [true], "output_tokens": [8], "ttft_loaded_seconds": 0.17094154097139835, "total_loaded_seconds": 0.30838108295574784, "prefill_chunk": 16, "decode_steps_per_second": 50.95377597556505}
+metal_three_resident_result {"model": "Qwen2.5-Coder-0.5B-Instruct", "timing_clock": "time.monotonic", "request": 0, "models_loaded": 3, "token_ids": [[73594, 12669, 198, 750, 912, 2877, 11, 293, 982, 262, 470, 264, 488, 293, 198, 73594, 151645]], "text": ["```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"], "finished": [true], "output_tokens": [17], "ttft_loaded_seconds": 0.13962120795622468, "total_loaded_seconds": 0.3691359576769173, "prefill_chunk": 16, "decode_steps_per_second": 69.7416561997906}
+metal_three_resident_result {"model": "Qwen3.5-0.8B", "timing_clock": "time.monotonic", "request": 1, "models_loaded": 3, "token_ids": [[32, 3349, 33138, 314, 264, 855, 440, 264, 20117, 1901, 6833, 12965, 383, 264, 42401, 50471, 264, 93182, 33218, 3177, 85624, 303, 264, 15822, 757, 17865, 13, 248046]], "text": ["A large statue of a man with a golden headband stands on a balcony overlooking a densely populated city nestled in a mountainous landscape.<|im_end|>"], "finished": [true], "output_tokens": [28], "ttft_loaded_seconds": 0.6682253750041127, "total_loaded_seconds": 1.3390473332256079, "prefill_chunk": 16, "decode_steps_per_second": 40.256936123125406}
+metal_three_resident_result {"model": "Qwen3-0.6B", "timing_clock": "time.monotonic", "request": 1, "models_loaded": 3, "token_ids": [[785, 6722, 315, 9625, 374, 12095, 13, 151645]], "text": ["The capital of France is Paris.<|im_end|>"], "finished": [true], "output_tokens": [8], "ttft_loaded_seconds": 0.12087449990212917, "total_loaded_seconds": 0.2601187499240041, "prefill_chunk": 16, "decode_steps_per_second": 50.28716013925493}
+metal_three_resident_result {"model": "Qwen2.5-Coder-0.5B-Instruct", "timing_clock": "time.monotonic", "request": 1, "models_loaded": 3, "token_ids": [[73594, 12669, 198, 750, 912, 2877, 11, 293, 982, 262, 470, 264, 488, 293, 198, 73594, 151645]], "text": ["```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"], "finished": [true], "output_tokens": [17], "ttft_loaded_seconds": 0.09930412471294403, "total_loaded_seconds": 0.33039649995043874, "prefill_chunk": 16, "decode_steps_per_second": 69.26037170373301}
+metal_three_resident_process {"exit_code": 0, "wall_seconds": 8.235286499839276, "peak_rss_bytes": 4684218368, "memory_scope": "peak macOS process RSS bytes, all three loaded"}

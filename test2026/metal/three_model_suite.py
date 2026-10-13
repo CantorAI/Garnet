@@ -3,20 +3,23 @@ import json,subprocess,sys
 from pathlib import Path
 runtime,build,source,phase,output=sys.argv[1:];source=Path(source);output=Path(output);root=source.parent
 scripts=source/'test2026/metal';models=root/'models';tasks=[]
-if phase=='checks':
-    tasks.append(('qwen35-layers',[sys.executable,str(scripts/'test_chunk_graph.py'),runtime,build,str(source),str(models/'Qwen3.5-0.8B')]))
+if phase in ('checks','projection-checks'):
+    extra=['bf16'] if phase=='projection-checks' else []
+    tasks.append(('qwen35-layers',[sys.executable,str(scripts/'test_chunk_graph.py'),runtime,build,str(source),str(models/'Qwen3.5-0.8B')]+extra))
     for name in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
-        tasks.append((name+'-layers',[sys.executable,str(scripts/'test_dense_reference.py'),runtime,build,str(source),str(models/name)]))
+        tasks.append((name+'-layers',[sys.executable,str(scripts/'test_dense_reference.py'),runtime,build,str(source),str(models/name)]+extra))
     tasks.append(('serving',[sys.executable,str(scripts/'test_decoder_model.py'),runtime,build,str(source)]))
     tasks.append(('mixed-image-pipeline',[sys.executable,str(scripts/'test_image_pipeline.py'),runtime,build,str(source)]))
     for name in ('Qwen3.5-0.8B','Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
         tasks.append((name+'-head',[sys.executable,str(scripts/'test_head_bf16.py'),runtime,build,str(source),str(models/name)]))
+    tasks.append(('vision-small',[sys.executable,str(scripts/'test_vision_graph.py'),runtime,build,str(source)]))
+    tasks.append(('vision-pretrained',[sys.executable,str(scripts/'test_pretrained_vision_graph.py'),runtime,build,str(source),str(models/'Qwen3.5-0.8B')]))
     tasks.append(('ctest',['/opt/homebrew/bin/ctest','--test-dir',build,'--output-on-failure']))
-elif phase=='benchmarks':
+elif phase in ('benchmarks','projection-benchmarks'):
     for batch in (1,2):
         for name in ('Qwen3.5-0.8B','Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
-            for mode in (0,2,2):
-                suffix='control' if mode==0 else 'optimized' if not tasks or not tasks[-1][0].endswith('optimized') else 'repeat'
+            for mode in ((2,3,3) if phase=='projection-benchmarks' else (0,3,3)):
+                suffix='control' if mode==(2 if phase=='projection-benchmarks' else 0) else 'optimized' if not tasks or not tasks[-1][0].endswith('optimized') else 'repeat'
                 if name=='Qwen3.5-0.8B':
                     command=[sys.executable,str(scripts/'benchmark_image.py'),runtime,build,str(source),str(models/name),str(root/'images'/('RealWorld-04.batch'+str(batch)+'.json')),'32','16',str(mode)]
                 else:
@@ -26,7 +29,7 @@ elif phase=='benchmarks':
 elif phase=='extended':
     for name,prompt in [('Qwen3-0.6B','Give five numbered, practical tips for writing readable Python. Keep each tip to one sentence.'),
         ('Qwen2.5-Coder-0.5B-Instruct','Write a Python function factorial(n) using a loop. Output only code.')]:
-        for mode in (0,2):
+        for mode in (0,3):
             command=[sys.executable,str(scripts/'benchmark_dense_text.py'),runtime,build,str(source),str(models/name),'1','128',prompt,'16',str(mode)]
             tasks.append((name+'-extended-'+str(mode),command))
 elif phase=='resident':

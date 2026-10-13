@@ -4,14 +4,14 @@ import garnet
 from .tensor_compat import tensor
 T=tensor()
 @T.fusion(name='qwen35_full_attention_step',role='attention',boundary='required')
-def Qwen35FullAttentionStep(hidden,key_cache,value_cache,positions,slots,active,config,layer_idx):
+def Qwen35FullAttentionStep(hidden,key_cache,value_cache,positions,slots,active,config,layer_idx,chunk=False):
     bound=hidden * T.binary_op('qwen35_attention_bind_key') * key_cache
     bound=bound * T.binary_op('qwen35_attention_bind_value') * value_cache
     bound=bound * T.binary_op('qwen35_attention_bind_positions') * positions
     bound=bound * T.binary_op('qwen35_attention_bind_slots') * slots
     bound=bound * T.binary_op('qwen35_attention_bind_active') * active
     rope=config['rope_parameters']
-    return bound * T.unary_op('qwen35_attention_step',
+    return bound * T.unary_op('qwen35_attention_chunk' if chunk else 'qwen35_attention_step',
         weight_prefix='model.language_model.layers.'+str(layer_idx)+'.self_attn',
         num_heads=config['num_attention_heads'],num_kv_heads=config['num_key_value_heads'],head_dim=config['head_dim'],
         rotary_dim=int(config['head_dim']*rope['partial_rotary_factor']),rope_theta=rope['rope_theta'],

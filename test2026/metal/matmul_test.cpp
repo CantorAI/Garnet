@@ -25,7 +25,7 @@ int main() {
         bool rejected=false;
         try {gpu.MatMul({}, {}, 0, 7, 5);}catch(const std::invalid_argument&){rejected=true;}
         if(!rejected)throw std::runtime_error("Invalid dimensions were accepted");
-        for(size_t batch:{1,2})for(size_t width:{7,1031}) {
+        for(size_t batch:{1,2,3,4,5,16,32})for(size_t width:{7,128,1024,1031}) {
             const size_t vocabulary=37;
             std::vector<float> values(batch*width),weights(vocabulary*width);
             std::vector<uint16_t> bits(weights.size());

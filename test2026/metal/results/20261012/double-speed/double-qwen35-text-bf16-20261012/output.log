@@ -1,0 +1,28 @@
+compiled Garnet decoder layer 0 linear_attention ms 25.21075
+compiled Garnet decoder layer 1 linear_attention ms 21.893208
+compiled Garnet decoder layer 2 linear_attention ms 22.308542
+compiled Garnet decoder layer 3 full_attention ms 18.944209
+compiled Garnet decoder layer 4 linear_attention ms 23.337166
+compiled Garnet decoder layer 5 linear_attention ms 25.089708
+compiled Garnet decoder layer 6 linear_attention ms 22.706917
+compiled Garnet decoder layer 7 full_attention ms 21.376333
+compiled Garnet decoder layer 8 linear_attention ms 23.277083
+compiled Garnet decoder layer 9 linear_attention ms 23.421917
+compiled Garnet decoder layer 10 linear_attention ms 22.382083
+compiled Garnet decoder layer 11 full_attention ms 19.087375
+compiled Garnet decoder layer 12 linear_attention ms 23.123667
+compiled Garnet decoder layer 13 linear_attention ms 22.522209
+compiled Garnet decoder layer 14 linear_attention ms 22.702
+compiled Garnet decoder layer 15 full_attention ms 19.262875
+compiled Garnet decoder layer 16 linear_attention ms 23.816208
+compiled Garnet decoder layer 17 linear_attention ms 23.825458
+compiled Garnet decoder layer 18 linear_attention ms 22.51825
+compiled Garnet decoder layer 19 full_attention ms 17.878959
+compiled Garnet decoder layer 20 linear_attention ms 22.483
+compiled Garnet decoder layer 21 linear_attention ms 22.805917
+compiled Garnet decoder layer 22 linear_attention ms 22.734042
+compiled Garnet decoder layer 23 full_attention ms 18.281167
+metal_text_initialization {'seconds': 1.3409406249411404, 'batch': 2, 'prompt_tokens': 22}
+metal_text_result {"model": "Qwen3.5-0.8B", "resident_state": true, "bf16_head": true, "bf16_projections": true, "prefill_profile": {"prepare_ms": 0.898084, "encode_ms": 15.318416, "gpu_ms": 370.7951665855944, "wait_ms": 403.614875}, "decode_phase_ms": [{"prepare_ms": 0.131375, "encode_ms": 0.573125, "gpu_ms": 27.69162505865097, "wait_ms": 30.996667}], "timing_clock": "time.monotonic", "request": 0, "batch": 2, "prompt": "What is the capital of France? Answer briefly.", "prefill_chunk": 16, "prefill_compile_ms": 110.021125, "text": [" Paris<|im_end|>", " Paris<|im_end|>"], "token_ids": [[11751, 248046], [11751, 248046]], "prompt_tokens": 22, "output_tokens": [2, 2], "finished": [true, true], "initialization_seconds": 1.3409406249411404, "ttft_loaded_seconds": 0.6374249579384923, "total_loaded_seconds": 0.6694040829315782, "ttft_first_request_seconds": 1.9783655828796327, "decode_step_seconds": [0.031924250070005655], "decode_layer_ms": [[]], "decode_head_ms": [null], "decode_session_ms": [31.703209], "decode_steps_per_second": 31.324150067961888}
+metal_text_result {"model": "Qwen3.5-0.8B", "resident_state": true, "bf16_head": true, "bf16_projections": true, "prefill_profile": {"prepare_ms": 0.470958, "encode_ms": 10.443876, "gpu_ms": 368.10616636648774, "wait_ms": 370.326624}, "decode_phase_ms": [{"prepare_ms": 0.121625, "encode_ms": 0.552792, "gpu_ms": 27.72687515243888, "wait_ms": 28.186042}], "timing_clock": "time.monotonic", "request": 1, "batch": 2, "prompt": "What is the capital of France? Answer briefly.", "prefill_chunk": 16, "prefill_compile_ms": 0, "text": [" Paris<|im_end|>", " Paris<|im_end|>"], "token_ids": [[11751, 248046], [11751, 248046]], "prompt_tokens": 22, "output_tokens": [2, 2], "finished": [true, true], "initialization_seconds": 1.3409406249411404, "ttft_loaded_seconds": 0.3822092078626156, "total_loaded_seconds": 0.4113105828873813, "ttft_first_request_seconds": null, "decode_step_seconds": [0.029048750177025795], "decode_layer_ms": [[]], "decode_head_ms": [null], "decode_session_ms": [28.862417], "decode_steps_per_second": 34.424888985099415}
+metal_text_process {"exit_code": 0, "wall_seconds": 2.7218964998610318, "peak_rss_bytes": 2185920512, "memory_scope": "peak native runtime RSS, macOS bytes; not isolated GPU allocation"}

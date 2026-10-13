@@ -10,7 +10,8 @@ def forward(hidden,state1,state2,positions,slots,active):
  return PrefillLayer(hidden,state1,state2,positions,slots,active,c,idx,batch,chunk,capacity,kind)
 graph=garnet.compiled_graph();session=garnet.decoder_session()
 try:
- graph.build(forward(*symbols),symbols,f['checkpoint'])
+ if len(sys.argv)>4 and sys.argv[4]=='bf16':graph.build_bf16(forward(*symbols),symbols,f['checkpoint'])
+ else:graph.build(forward(*symbols),symbols,f['checkpoint'])
  session.build([graph],None)
  for files in f['invalid_inputs']:
   inputs=[garnet.tensor_io().read_f32(path,s) for path,s in zip(files,shapes)];rejected=False

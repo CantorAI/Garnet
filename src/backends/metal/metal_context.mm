@@ -26,7 +26,7 @@ struct MetalBF16Weight::Impl {
 struct MetalPipelines {
     id<MTLLibrary> library;
     id<MTLComputePipelineState> argmax;
-    id<MTLComputePipelineState> bf16MatVec;
+    id<MTLComputePipelineState> bf16Decode,bf16Gemm;
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> add;
@@ -37,8 +37,8 @@ struct MetalPipelines {
     id<MTLComputePipelineState> prepare;
     id<MTLComputePipelineState> gatedNorm;
     id<MTLComputePipelineState> concat;
-    id<MTLComputePipelineState> normRope,kvUpdate,scores,attentionContext;
-    id<MTLComputePipelineState> vision,layout;
+    id<MTLComputePipelineState> normRope,kvUpdate,scores,scoresSerial,attentionContext;
+    id<MTLComputePipelineState> vision,visionNorm,visionScores,layout,kvChunk,attentionChunk;
 };
 static std::mutex pipelineMutex;
 static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
@@ -46,6 +46,7 @@ struct MetalContext::Impl {
     id<MTLDevice> device;
     id<MTLCommandQueue> queue;
     id<MTLCommandBuffer> command;
+    double gpuMs=0;
     std::vector<std::shared_ptr<MetalMatrix::Impl>> outputs;
     std::unordered_set<const MetalMatrix::Impl*> pendingOutputs;
     std::shared_ptr<MetalPipelines> kernels;
@@ -75,16 +76,62 @@ MetalContext::MetalContext(): impl_(std::make_unique<Impl>()) {
 #include <metal_stdlib>
 using namespace metal;
 struct BF16Params {ulong rows,inner,columns,aStride,oStride;};
-kernel void bf16_matvec(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+kernel void bf16_decode(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
     device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
-    uint2 group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
-    ulong column=ulong(group.x)*4+simd,row=group.y;
-    if(column>=p.columns||row>=p.rows)return;
-    float sum=0.0f;
-    for(ulong k=lane;k<p.inner;k+=32)
-        sum+=a[row*p.aStride+k]*as_type<float>(uint(weight[column*p.inner+k])<<16);
-    sum=simd_sum(sum);
-    if(lane==0)out[row*p.oStride+column]=sum;
+    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
+    ulong column=ulong(group)*16+simd*4;
+    if(column>=p.columns)return;
+    float4 sum0=0.0f,sum1=0.0f;
+    if(p.inner%4==0) {
+        for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
+            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
+            ushort4 b0=*(device const ushort4*)(weight+column*p.inner+k),b1=ushort4(0),b2=ushort4(0),b3=ushort4(0);
+            if(column+1<p.columns)b1=*(device const ushort4*)(weight+(column+1)*p.inner+k);
+            if(column+2<p.columns)b2=*(device const ushort4*)(weight+(column+2)*p.inner+k);
+            if(column+3<p.columns)b3=*(device const ushort4*)(weight+(column+3)*p.inner+k);
+            for(uint j=0;j<4;++j) {
+                float4 w=as_type<float4>(uint4(b0[j],b1[j],b2[j],b3[j])<<16);
+                sum0+=x[j]*w;if(p.rows==2)sum1+=y[j]*w;
+            }
+        }
+    } else {
+    for(ulong k=lane;k<p.inner;k+=32) {
+        float x=a[k],y=p.rows==2?a[p.aStride+k]:0.0f;
+        float4 w=0.0f;
+        w.x=as_type<float>(uint(weight[column*p.inner+k])<<16);
+        if(column+1<p.columns)w.y=as_type<float>(uint(weight[(column+1)*p.inner+k])<<16);
+        if(column+2<p.columns)w.z=as_type<float>(uint(weight[(column+2)*p.inner+k])<<16);
+        if(column+3<p.columns)w.w=as_type<float>(uint(weight[(column+3)*p.inner+k])<<16);
+        sum0+=x*w;if(p.rows==2)sum1+=y*w;
+    }
+    }
+    sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
+    sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
+    if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
+}
+// BF16 weights are expanded only inside a small shared-memory tile. FP32
+// SIMD-group matrix multiply accumulates two 8x8 output tiles per group.
+kernel void bf16_gemm(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
+    uint2 group [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    threadgroup float left[16*32],right[32*32],result[16*32];
+    ulong rowBase=ulong(group.y)*16,colBase=ulong(group.x)*32;
+    simdgroup_float8x8 accum0=make_filled_simdgroup_matrix<float,8>(0.0f);
+    simdgroup_float8x8 accum1=make_filled_simdgroup_matrix<float,8>(0.0f);
+    for(ulong base=0;base<p.inner;base+=32) {
+        for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,k=base+i%32;left[i]=(row<p.rows&&k<p.inner)?a[row*p.aStride+k]:0.0f;}
+        for(uint i=tid;i<32*32;i+=128){ulong k=base+i/32,column=colBase+i%32;right[i]=(k<p.inner&&column<p.columns)?as_type<float>(uint(weight[column*p.inner+k])<<16):0.0f;}
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+        for(uint offset=0;offset<32;offset+=8) {
+            simdgroup_float8x8 l0,l1,r;
+            simdgroup_load(l0,left+offset,32);simdgroup_load(l1,left+8*32+offset,32);simdgroup_load(r,right+offset*32+simd*8,32);
+            simdgroup_multiply_accumulate(accum0,l0,r,accum0);simdgroup_multiply_accumulate(accum1,l1,r,accum1);
+        }
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+    simdgroup_store(accum0,result+simd*8,32);simdgroup_store(accum1,result+8*32+simd*8,32);
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,column=colBase+i%32;if(row<p.rows&&column<p.columns)out[row*p.oStride+column]=result[i];}
 }
 struct ArgmaxParams {ulong rows,columns,iStride,oStride;};
 kernel void argmax_rows(device const float* input [[buffer(0)]],device float* output [[buffer(1)]],
@@ -142,13 +189,14 @@ kernel void mask_rows(device const float* a [[buffer(0)]],device const float* b 
 struct RopeParams {ulong batch,heads,dim,rotary,iStride,pStride,fStride,oStride;float epsilon,weightOffset;ulong normalize;};
 kernel void norm_rope(device const float* input [[buffer(0)]],device const float* weight [[buffer(1)]],
     device const float* positions [[buffer(2)]],device const float* frequencies [[buffer(3)]],
-    device float* output [[buffer(4)]],constant RopeParams& p [[buffer(5)]],uint id [[thread_position_in_grid]]) {
+    device float* output [[buffer(4)]],constant RopeParams& p [[buffer(5)]],uint id [[threadgroup_position_in_grid]],uint lane [[thread_index_in_simdgroup]]) {
     if(id>=p.batch*p.heads)return;
     ulong row=id/p.heads,head=id%p.heads,base=row*p.iStride+head*p.dim;
     float sum=0.0f;
-    for(ulong j=0;j<p.dim;++j){float x=input[base+j];sum+=x*x;}
+    for(ulong j=lane;j<p.dim;j+=32){float x=input[base+j];sum+=x*x;}
+    sum=simd_sum(sum);
     float inverse=p.normalize?rsqrt(sum/float(p.dim)+p.epsilon):1.0f;
-    for(ulong j=0;j<p.dim;++j) {
+    for(ulong j=lane;j<p.dim;j+=32) {
         float x=input[base+j]*inverse*(p.normalize?(p.weightOffset+weight[j]):1.0f);
         if(j<p.rotary) {
             ulong halfWidth=p.rotary/2,frequency=j%halfWidth,other=j<halfWidth?j+halfWidth:j-halfWidth;
@@ -170,8 +218,60 @@ kernel void kv_update(device const float* token [[buffer(0)]],device const float
     bool replace=active[row*p.aStride]!=0.0f&&float(slot)==slots[row*p.sStride];
     output[row*p.oStride+col]=replace?token[row*p.tStride+head*p.dim+dim]:cache[row*p.cStride+col];
 }
+struct KVChunkParams {ulong batch,heads,dim,capacity,chunk,tStride,cStride,sStride,aStride,oStride;};
+kernel void kv_chunk(device const float* token [[buffer(0)]],device const float* cache [[buffer(1)]],
+    device const float* slots [[buffer(2)]],device const float* active [[buffer(3)]],device float* output [[buffer(4)]],
+    constant KVChunkParams& p [[buffer(5)]],uint id [[thread_position_in_grid]]) {
+    ulong width=p.heads*p.capacity*p.dim;if(id>=p.batch*width)return;
+    ulong row=id/width,col=id%width,d=col%p.dim,s=(col/p.dim)%p.capacity,h=col/(p.capacity*p.dim);
+    int latest=-1;
+    for(uint t=0;t<p.chunk;++t)if(active[row*p.aStride+t]!=0.0f&&slots[row*p.sStride+t]==float(s))latest=int(t);
+    output[row*p.oStride+col]=latest<0?cache[row*p.cStride+col]:token[(row*p.chunk+ulong(latest))*p.tStride+h*p.dim+d];
+}
+struct ChunkAttentionParams {ulong batch,chunk,heads,kvHeads,dim,capacity,qStride,kStride,vStride,kcStride,vcStride,sStride,aStride,gStride,oStride,gated;};
+kernel void attention_chunk(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
+    device const float* value [[buffer(2)]],device const float* keyCache [[buffer(3)]],device const float* valueCache [[buffer(4)]],
+    device const float* slots [[buffer(5)]],device const float* active [[buffer(6)]],device const float* gate [[buffer(7)]],
+    device float* output [[buffer(8)]],constant ChunkAttentionParams& p [[buffer(9)]],
+    threadgroup float* scratch [[threadgroup(0)]],threadgroup int* selected [[threadgroup(1)]],
+    uint id [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],
+    uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    ulong flatRow=id/p.heads,head=id%p.heads,row=flatRow/p.chunk,token=flatRow%p.chunk,kv=head/(p.heads/p.kvHeads);
+    if(flatRow>=p.batch*p.chunk)return;
+    if(active[row*p.aStride+token]==0.0f){for(ulong d=tid;d<p.dim;d+=128)output[flatRow*p.oStride+head*p.dim+d]=0.0f;return;}
+    threadgroup float partial[4];
+    for(ulong s=simd;s<p.capacity;s+=4) {
+        int latest=-1;for(uint t=0;t<=token;++t)if(active[row*p.aStride+t]!=0.0f&&slots[row*p.sStride+t]==float(s))latest=int(t);
+        float score=-1e30f;
+        if(float(s)<=slots[row*p.sStride+token]) {
+            score=0.0f;
+            for(ulong d=lane;d<p.dim;d+=32) {
+                float k=latest<0?keyCache[row*p.kcStride+(kv*p.capacity+s)*p.dim+d]:key[(row*p.chunk+ulong(latest))*p.kStride+kv*p.dim+d];
+                score+=query[flatRow*p.qStride+head*p.dim+d]*k;
+            }
+            score=simd_sum(score)*rsqrt(float(p.dim));
+        }
+        if(lane==0){scratch[s]=score;selected[s]=latest;}
+    }
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float maximum=-INFINITY;for(ulong s=tid;s<p.capacity;s+=128)maximum=max(maximum,scratch[s]);
+    maximum=simd_max(maximum);if(lane==0)partial[simd]=maximum;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    maximum=simd_max(lane<4?partial[lane]:-INFINITY);
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float denominator=0.0f;
+    for(ulong s=tid;s<p.capacity;s+=128){float probability=exp(scratch[s]-maximum);scratch[s]=probability;denominator+=probability;}
+    denominator=simd_sum(denominator);if(lane==0)partial[simd]=denominator;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    denominator=simd_sum(lane<4?partial[lane]:0.0f);
+    for(ulong d=tid;d<p.dim;d+=128) {
+        float sum=0.0f;
+        for(ulong s=0;s<p.capacity;++s){int latest=selected[s];float v=latest<0?valueCache[row*p.vcStride+(kv*p.capacity+s)*p.dim+d]:value[(row*p.chunk+ulong(latest))*p.vStride+kv*p.dim+d];sum+=scratch[s]/denominator*v;}
+        output[flatRow*p.oStride+head*p.dim+d]=p.gated?sum/(1.0f+exp(-gate[flatRow*p.gStride+head*p.dim+d])):sum;
+    }
+}
 struct ScoresParams {ulong batch,heads,kvHeads,dim,capacity,qStride,kStride,sStride,aStride,oStride;};
-kernel void attention_scores(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
+kernel void attention_scores_serial(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
     device const float* slots [[buffer(2)]],device const float* active [[buffer(3)]],device float* output [[buffer(4)]],
     constant ScoresParams& p [[buffer(5)]],uint id [[thread_position_in_grid]]) {
     if(id>=p.batch*p.heads)return;
@@ -190,6 +290,38 @@ kernel void attention_scores(device const float* query [[buffer(0)]],device cons
     float denominator=0.0f;
     for(ulong s=0;s<p.capacity;++s){float probability=exp(output[base+s]-maximum);output[base+s]=probability;denominator+=probability;}
     for(ulong s=0;s<p.capacity;++s)output[base+s]/=denominator;
+}
+kernel void attention_scores(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
+    device const float* slots [[buffer(2)]],device const float* active [[buffer(3)]],device float* output [[buffer(4)]],
+    constant ScoresParams& p [[buffer(5)]],threadgroup float* scratch [[threadgroup(0)]],
+    uint id [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],
+    uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    if(id>=p.batch*p.heads)return;
+    ulong row=id/p.heads,head=id%p.heads,kv=head/(p.heads/p.kvHeads),base=row*p.oStride+head*p.capacity;
+    if(active[row*p.aStride]==0.0f){for(ulong s=tid;s<p.capacity;s+=128)output[base+s]=0.0f;return;}
+    threadgroup float partial[4];
+    for(ulong s=simd;s<p.capacity;s+=4) {
+        float score=-1e30f;
+        if(float(s)<=slots[row*p.sStride]) {
+            score=0.0f;
+            for(ulong j=lane;j<p.dim;j+=32)score+=query[row*p.qStride+head*p.dim+j]*key[row*p.kStride+(kv*p.capacity+s)*p.dim+j];
+            score=simd_sum(score)*rsqrt(float(p.dim));
+        }
+        if(lane==0)scratch[s]=score;
+    }
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float maximum=-INFINITY;for(ulong s=tid;s<p.capacity;s+=128)maximum=max(maximum,scratch[s]);
+    maximum=simd_max(maximum);if(lane==0)partial[simd]=maximum;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    maximum=simd_max(lane<4?partial[lane]:-INFINITY);
+    // All threads consume the max before partial storage is reused for sums.
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float denominator=0.0f;
+    for(ulong s=tid;s<p.capacity;s+=128){float probability=exp(scratch[s]-maximum);scratch[s]=probability;denominator+=probability;}
+    denominator=simd_sum(denominator);if(lane==0)partial[simd]=denominator;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    denominator=simd_sum(lane<4?partial[lane]:0.0f);
+    for(ulong s=tid;s<p.capacity;s+=128)output[base+s]=scratch[s]/denominator;
 }
 struct AttentionParams {ulong batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,oStride,gated;};
 kernel void attention_context(device const float* probabilities [[buffer(0)]],device const float* value [[buffer(1)]],
@@ -229,13 +361,14 @@ kernel void linear_prepare(device const float* conv [[buffer(0)]],device const f
 struct GateParams {ulong batch,heads,valueDim,cStride,zStride,oStride;float epsilon;};
 kernel void gated_norm(device const float* core [[buffer(0)]],device const float* z [[buffer(1)]],
     device const float* norm [[buffer(2)]],device float* output [[buffer(3)]],
-    constant GateParams& p [[buffer(4)]],uint id [[thread_position_in_grid]]) {
+    constant GateParams& p [[buffer(4)]],uint id [[threadgroup_position_in_grid]],uint lane [[thread_index_in_simdgroup]]) {
     if(id>=p.batch*p.heads)return;
     ulong row=id/p.heads,head=id%p.heads;
     float sum=0.0f;
-    for(ulong j=0;j<p.valueDim;++j){float x=core[row*p.cStride+head*p.valueDim+j];sum+=x*x;}
+    for(ulong j=lane;j<p.valueDim;j+=32){float x=core[row*p.cStride+head*p.valueDim+j];sum+=x*x;}
+    sum=simd_sum(sum);
     float inverse=rsqrt(sum/float(p.valueDim)+p.epsilon);
-    for(ulong j=0;j<p.valueDim;++j) {
+    for(ulong j=lane;j<p.valueDim;j+=32) {
         float gate=z[row*p.zStride+head*p.valueDim+j];
         output[row*p.oStride+head*p.valueDim+j]=core[row*p.cStride+head*p.valueDim+j]*inverse*norm[j]*gate/(1.0f+exp(-gate));
     }
@@ -277,23 +410,30 @@ kernel void gated_delta(device const float* query [[buffer(0)]],device const flo
     device const float* value [[buffer(2)]],device const float* decay [[buffer(3)]],
     device const float* beta [[buffer(4)]],device const float* state [[buffer(5)]],
     device const float* active [[buffer(6)]],device float* packed [[buffer(7)]],
-    constant DeltaParams& p [[buffer(8)]],uint id [[thread_position_in_grid]]) {
-    if(id>=p.batch*p.heads*p.valueDim)return;
-    ulong column=id%p.valueDim,head=(id/p.valueDim)%p.heads,row=id/(p.heads*p.valueDim);
+    constant DeltaParams& p [[buffer(8)]],uint id [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],
+    uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    if(id>=p.batch*p.heads)return;
+    ulong head=id%p.heads,row=id/p.heads;
     ulong stateBase=row*p.sStride+head*p.keyDim*p.valueDim;
     ulong outputBase=row*p.oStride+head*(p.keyDim+1)*p.valueDim;
     ulong outBase=outputBase+p.valueDim;
     if(active[row*p.aStride]==0.0f) {
-        packed[outputBase+column]=0.0f;
-        for(ulong j=0;j<p.keyDim;++j)packed[outBase+j*p.valueDim+column]=state[stateBase+j*p.valueDim+column];
+        for(ulong column=tid;column<p.valueDim;column+=128) {
+            packed[outputBase+column]=0.0f;
+            for(ulong j=0;j<p.keyDim;++j)packed[outBase+j*p.valueDim+column]=state[stateBase+j*p.valueDim+column];
+        }
         return;
     }
-    float qs=1e-6f,ks=1e-6f;
-    for(ulong j=0;j<p.keyDim;++j) {
-        float q=query[row*p.qStride+head*p.keyDim+j],k=key[row*p.kStride+head*p.keyDim+j];
-        qs+=q*q;ks+=k*k;
+    threadgroup float qPartial[4],kPartial[4];
+    float qs=0.0f,ks=0.0f;
+    for(ulong j=tid;j<p.keyDim;j+=128) {
+        float q=query[row*p.qStride+head*p.keyDim+j],k=key[row*p.kStride+head*p.keyDim+j];qs+=q*q;ks+=k*k;
     }
+    qs=simd_sum(qs);ks=simd_sum(ks);if(lane==0){qPartial[simd]=qs;kPartial[simd]=ks;}
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    qs=simd_sum(lane<4?qPartial[lane]:0.0f)+1e-6f;ks=simd_sum(lane<4?kPartial[lane]:0.0f)+1e-6f;
     float qi=rsqrt(qs)*rsqrt(float(p.keyDim)),ki=rsqrt(ks);
+    for(ulong column=tid;column<p.valueDim;column+=128) {
     float factor=exp(decay[row*p.gStride+head]),memory=0.0f;
     for(ulong j=0;j<p.keyDim;++j)
         memory+=state[stateBase+j*p.valueDim+column]*factor*key[row*p.kStride+head*p.keyDim+j]*ki;
@@ -305,6 +445,7 @@ kernel void gated_delta(device const float* query [[buffer(0)]],device const flo
         result+=next*query[row*p.qStride+head*p.keyDim+j]*qi;
     }
     packed[outputBase+column]=result;
+    }
 }
 struct LayoutParams {ulong aRows,aColumns,aStride,bStride,oRows,oColumns,oStride,tokenWidth;};
 kernel void chunk_layout(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
@@ -316,6 +457,43 @@ kernel void chunk_layout(device const float* a [[buffer(0)]],device const float*
  out[row*p.oStride+col]=value;
 }
 struct VisionParams {ulong rows,columns,outRows,outColumns,aStride,bStride,cStride,oStride,tokens,hidden,heads,unit,mode;};
+kernel void vision_norm(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],device const float* c [[buffer(2)]],
+    device float* out [[buffer(3)]],constant VisionParams& p [[buffer(4)]],uint row [[threadgroup_position_in_grid]],
+    uint tid [[thread_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    if(row>=p.outRows)return;threadgroup float partial[4];
+    float mean=0.0f;for(ulong j=tid;j<p.columns;j+=128)mean+=a[row*p.aStride+j];
+    mean=simd_sum(mean);if(lane==0)partial[simd]=mean;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    mean=simd_sum(lane<4?partial[lane]:0.0f)/float(p.columns);
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float variance=0.0f;for(ulong j=tid;j<p.columns;j+=128){float x=a[row*p.aStride+j]-mean;variance+=x*x;}
+    variance=simd_sum(variance);if(lane==0)partial[simd]=variance;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    variance=simd_sum(lane<4?partial[lane]:0.0f);
+    float inverse=rsqrt(variance/float(p.columns)+1e-6f);
+    for(ulong j=tid;j<p.columns;j+=128)out[row*p.oStride+j]=(a[row*p.aStride+j]-mean)*inverse*b[j]+c[j];
+}
+kernel void vision_scores(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],device const float* c [[buffer(2)]],
+    device float* out [[buffer(3)]],constant VisionParams& p [[buffer(4)]],threadgroup float* scratch [[threadgroup(0)]],
+    uint id [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+    if(row>=p.outRows)return;threadgroup float partial[4];
+    for(ulong key=simd;key<p.tokens;key+=4) {
+        float score=0;for(ulong d=lane;d<dim;d+=32)score+=a[row*p.aStride+head*dim+d]*a[(batchBase+key)*p.aStride+p.hidden+head*dim+d];
+        score=simd_sum(score)*rsqrt(float(dim));if(lane==0)scratch[key]=score;
+    }
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float maximum=-INFINITY;for(ulong key=tid;key<p.tokens;key+=128)maximum=max(maximum,scratch[key]);
+    maximum=simd_max(maximum);if(lane==0)partial[simd]=maximum;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    maximum=simd_max(lane<4?partial[lane]:-INFINITY);
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float total=0;for(ulong key=tid;key<p.tokens;key+=128){float v=exp(scratch[key]-maximum);scratch[key]=v;total+=v;}
+    total=simd_sum(total);if(lane==0)partial[simd]=total;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    total=simd_sum(lane<4?partial[lane]:0.0f);
+    for(ulong key=tid;key<p.tokens;key+=128)out[row*p.oStride+head*p.tokens+key]=scratch[key]/total;
+}
 // Input/output matrices contain flattened batch/token rows. The merger copies
 // across padded MPS row boundaries explicitly rather than aliasing row strides.
 kernel void vision_op(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
@@ -382,7 +560,8 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
-        impl_->kernels->bf16MatVec=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_matvec"] error:&error];
+        impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
+        impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
         impl_->kernels->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
         impl_->kernels->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
@@ -396,11 +575,16 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->normRope=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"norm_rope"] error:&error];
         impl_->kernels->kvUpdate=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_update"] error:&error];
         impl_->kernels->scores=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_scores"] error:&error];
+        impl_->kernels->scoresSerial=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_scores_serial"] error:&error];
         impl_->kernels->attentionContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_context"] error:&error];
+        impl_->kernels->visionNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_norm"] error:&error];
+        impl_->kernels->visionScores=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_scores"] error:&error];
         impl_->kernels->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
+        impl_->kernels->kvChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk"] error:&error];
+        impl_->kernels->attentionChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_chunk"] error:&error];
         impl_->kernels->layout=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"chunk_layout"] error:&error];
-        if(!impl_->kernels->argmax||!impl_->kernels->bf16MatVec||!impl_->kernels->rms||!impl_->kernels->silu||!impl_->kernels->add||!impl_->kernels->mask||!impl_->kernels->conv||!impl_->kernels->delta||!impl_->kernels->slice||
-            !impl_->kernels->prepare||!impl_->kernels->gatedNorm||!impl_->kernels->concat||!impl_->kernels->normRope||!impl_->kernels->kvUpdate||!impl_->kernels->scores||!impl_->kernels->attentionContext||!impl_->kernels->vision||!impl_->kernels->layout)
+        if(!impl_->kernels->argmax||!impl_->kernels->bf16Decode||!impl_->kernels->bf16Gemm||!impl_->kernels->rms||!impl_->kernels->silu||!impl_->kernels->add||!impl_->kernels->mask||!impl_->kernels->conv||!impl_->kernels->delta||!impl_->kernels->slice||
+            !impl_->kernels->prepare||!impl_->kernels->gatedNorm||!impl_->kernels->concat||!impl_->kernels->normRope||!impl_->kernels->kvUpdate||!impl_->kernels->scores||!impl_->kernels->scoresSerial||!impl_->kernels->attentionContext||!impl_->kernels->vision||!impl_->kernels->visionNorm||!impl_->kernels->visionScores||!impl_->kernels->layout||!impl_->kernels->kvChunk||!impl_->kernels->attentionChunk)
             throw std::runtime_error("Cannot create Qwen Metal pipelines");
         cached=impl_->kernels;
     }
@@ -472,14 +656,14 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
         auto a=input.impl_->matrix,o=output.impl_->matrix;auto w=weight.impl_;
         if(a.device!=impl_->device||o.device!=impl_->device||w->buffer.device!=impl_->device||
-            a.columns!=w->columns||o.rows!=a.rows||o.columns!=w->rows||a.rows>2||o.data==a.data)
-            throw std::invalid_argument("BF16 projection shape/device mismatch (batch 1/2)");
+            a.columns!=w->columns||o.rows!=a.rows||o.columns!=w->rows||a.rows>32||o.data==a.data)
+            throw std::invalid_argument("BF16 projection shape/device mismatch (rows 1..32)");
         auto usable=[&](const MetalMatrix& m){return m.impl_->ready||(m.impl_->pending&&
             impl_->pendingOutputs.count(m.impl_.get())!=0);};
         if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
         if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
             throw std::logic_error("BF16 output belongs to another command batch");
-        auto pipeline=impl_->kernels->bf16MatVec;
+        auto pipeline=a.rows<=2?impl_->kernels->bf16Decode:impl_->kernels->bf16Gemm;
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
@@ -489,7 +673,7 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
         [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
         [encoder setBytes:&p length:sizeof(p) atIndex:3];
-        [encoder dispatchThreadgroups:MTLSizeMake((o.columns+3)/4,o.rows,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+15)/16,1,1):MTLSizeMake((o.columns+31)/32,(o.rows+15)/16,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }
@@ -626,17 +810,39 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
             throw std::logic_error("Uninitialized Metal state kernel input");
         if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
     }
-    if(operation>11)throw std::invalid_argument("Unknown Metal state kernel");
+    if(operation>13)throw std::invalid_argument("Unknown Metal state kernel");
     id<MTLComputePipelineState> pipelines[]={impl_->kernels->conv,impl_->kernels->delta,impl_->kernels->slice,impl_->kernels->prepare,impl_->kernels->gatedNorm,
-        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout};
+        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk};
     auto pipeline=pipelines[operation];
+    const auto* visionFields=static_cast<const uint64_t*>(parameters);
+    const bool visionNorm=operation==10&&visionFields[12]==1;
+    const bool visionScores=operation==10&&visionFields[12]==7&&visionFields[8]<=4096;
+    if(visionNorm)pipeline=impl_->kernels->visionNorm;
+    if(visionScores)pipeline=impl_->kernels->visionScores;
     auto encoder=[impl_->command computeCommandEncoder];
     if(!encoder)throw std::runtime_error("Cannot create Metal state kernel encoder");
     [encoder setComputePipelineState:pipeline];
     for(size_t i=0;i<inputs.size();++i)[encoder setBuffer:inputs[i].impl_->matrix.data offset:0 atIndex:i];
     [encoder setBuffer:c.data offset:0 atIndex:inputs.size()];
     [encoder setBytes:parameters length:parameterBytes atIndex:inputs.size()+1];
-    [encoder dispatchThreads:MTLSizeMake(threads,1,1)
+    if(visionNorm||visionScores) {
+        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)throw std::runtime_error("Parallel vision requires 32-lane SIMD groups");
+        if(visionScores)[encoder setThreadgroupMemoryLength:((visionFields[8]*sizeof(float)+15)&~size_t(15)) atIndex:0];
+        [encoder dispatchThreadgroups:MTLSizeMake(visionFields[0]*(visionScores?visionFields[10]:1),1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+    } else if(operation==1||operation==4||operation==6||operation==8||operation==13) {
+        const auto* fields=static_cast<const uint64_t*>(parameters);
+        const size_t capacity=operation==8?fields[4]:(operation==13?fields[5]:0);
+        if(operation==8&&capacity>4096) {
+            [encoder setComputePipelineState:impl_->kernels->scoresSerial];
+            [encoder dispatchThreads:MTLSizeMake(threads,1,1) threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(impl_->kernels->scoresSerial.maxTotalThreadsPerThreadgroup)),1,1)];
+        } else {
+            const size_t width=(operation==1||operation==8||operation==13)?128:32;
+            if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<width)throw std::runtime_error("Parallel attention requires 32-lane SIMD groups");
+            if(operation==8||operation==13)[encoder setThreadgroupMemoryLength:((capacity*sizeof(float)+15)&~size_t(15)) atIndex:0];
+            if(operation==13)[encoder setThreadgroupMemoryLength:((capacity*sizeof(int)+15)&~size_t(15)) atIndex:1];
+            [encoder dispatchThreadgroups:MTLSizeMake(operation==1?threads/fields[3]:threads,1,1) threadsPerThreadgroup:MTLSizeMake(width,1,1)];
+        }
+    } else [encoder dispatchThreads:MTLSizeMake(threads,1,1)
         threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(pipeline.maxTotalThreadsPerThreadgroup)),1,1)];
     [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
@@ -777,6 +983,31 @@ void MetalContext::EncodeKVUpdate(const MetalMatrix& token,const MetalMatrix& ca
     Params p{t.rows,kvHeads,dim,capacity,t.rowBytes/4,c.rowBytes/4,s.rowBytes/4,a.rowBytes/4,o.rowBytes/4};
     EncodeStateKernel(7,{token,cache,slots,active},output,&p,sizeof(p),Elements(c.rows,width));
 }
+void MetalContext::EncodeKVChunk(const MetalMatrix& token,const MetalMatrix& cache,const MetalMatrix& slots,
+    const MetalMatrix& active,const MetalMatrix& output,size_t heads,size_t dim,size_t capacity,size_t chunk) {
+    if(!token.impl_||!cache.impl_||!slots.impl_||!active.impl_||!output.impl_||!chunk||chunk>16)throw std::invalid_argument("Invalid chunk KV inputs");
+    auto t=token.impl_->matrix,c=cache.impl_->matrix,s=slots.impl_->matrix,a=active.impl_->matrix,o=output.impl_->matrix;
+    const auto width=Elements(Elements(heads,capacity),dim);
+    if(t.rows!=c.rows*chunk||t.columns!=Elements(heads,dim)||c.columns!=width||s.rows!=c.rows||s.columns!=chunk||a.rows!=c.rows||a.columns!=chunk||o.rows!=c.rows||o.columns!=width)
+        throw std::invalid_argument("Chunk KV layout mismatch");
+    struct Params {uint64_t batch,heads,dim,capacity,chunk,tStride,cStride,sStride,aStride,oStride;};
+    Params p{c.rows,heads,dim,capacity,chunk,t.rowBytes/4,c.rowBytes/4,s.rowBytes/4,a.rowBytes/4,o.rowBytes/4};
+    EncodeStateKernel(12,{token,cache,slots,active},output,&p,sizeof(p),Elements(c.rows,width));
+}
+void MetalContext::EncodeAttentionChunk(const std::vector<MetalMatrix>& inputs,const MetalMatrix& output,
+    size_t heads,size_t kvHeads,size_t dim,size_t capacity,size_t chunk,bool gated) {
+    if(inputs.size()!=8||!output.impl_||!chunk||chunk>16||!capacity||capacity>2048||!kvHeads||heads%kvHeads)throw std::invalid_argument("Invalid chunk attention profile");
+    for(auto& input:inputs)if(!input.impl_)throw std::invalid_argument("Missing chunk attention input");
+    auto q=inputs[0].impl_->matrix,k=inputs[1].impl_->matrix,v=inputs[2].impl_->matrix,kc=inputs[3].impl_->matrix,vc=inputs[4].impl_->matrix,
+        s=inputs[5].impl_->matrix,a=inputs[6].impl_->matrix,g=inputs[7].impl_->matrix,o=output.impl_->matrix;
+    const auto cacheWidth=Elements(Elements(kvHeads,capacity),dim);
+    if(q.rows!=kc.rows*chunk||q.columns!=Elements(heads,dim)||k.rows!=q.rows||k.columns!=Elements(kvHeads,dim)||v.rows!=k.rows||v.columns!=k.columns||
+        kc.columns!=cacheWidth||vc.rows!=kc.rows||vc.columns!=cacheWidth||s.rows!=kc.rows||s.columns!=chunk||a.rows!=s.rows||a.columns!=chunk||
+        g.rows!=q.rows||g.columns!=q.columns||o.rows!=q.rows||o.columns!=q.columns)throw std::invalid_argument("Chunk attention layout mismatch");
+    struct Params {uint64_t batch,chunk,heads,kvHeads,dim,capacity,qStride,kStride,vStride,kcStride,vcStride,sStride,aStride,gStride,oStride,gated;};
+    Params p{kc.rows,chunk,heads,kvHeads,dim,capacity,q.rowBytes/4,k.rowBytes/4,v.rowBytes/4,kc.rowBytes/4,vc.rowBytes/4,s.rowBytes/4,a.rowBytes/4,g.rowBytes/4,o.rowBytes/4,uint64_t(gated)};
+    EncodeStateKernel(13,inputs,output,&p,sizeof(p),Elements(q.rows,heads));
+}
 void MetalContext::EncodeAttentionScores(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& slots,
     const MetalMatrix& active,const MetalMatrix& output,size_t heads,size_t kvHeads,size_t dim,size_t capacity) {
     if(!query.impl_||!key.impl_||!slots.impl_||!active.impl_||!output.impl_||!kvHeads||!heads||heads%kvHeads)
@@ -806,12 +1037,14 @@ void MetalContext::SubmitAndWait() {
     auto command=impl_->command;
     [command commit];[command waitUntilCompleted];
     const bool success=command.status==MTLCommandBufferStatusCompleted;
+    impl_->gpuMs=success?(command.GPUEndTime-command.GPUStartTime)*1000.0:0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=success;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
     if(!success)throw std::runtime_error(command.error ?
         std::string(command.error.localizedDescription.UTF8String):"Metal execution did not complete");
     }
 }
+double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;

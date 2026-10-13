@@ -22,6 +22,7 @@ class MetalBF16Weight {
     friend class MetalContext;
 public:
     MetalBF16Weight()=default;
+    bool Valid() const {return bool(impl_);}
 };
 // C++ interface keeps Objective-C ownership out of model-facing headers.
 class MetalContext {
@@ -41,7 +42,7 @@ public:
     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
     MetalMatrix Allocate(size_t rows, size_t columns);
     MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns);
-    // Preserve checkpoint BF16 values and accumulate the vocabulary projection in FP32.
+    // Preserve BF16 checkpoint values; use SIMD matvec for decode and FP32 tiled GEMM for up to 32 prompt rows.
     void EncodeBF16MatVec(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
     void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
@@ -75,12 +76,17 @@ public:
         const MetalMatrix&,size_t heads,size_t dim,size_t rotary,float epsilon,float weightOffset=1,bool normalize=true);
     void EncodeKVUpdate(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         const MetalMatrix&,size_t kvHeads,size_t dim,size_t capacity);
+    void EncodeKVChunk(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
+        const MetalMatrix&,size_t kvHeads,size_t dim,size_t capacity,size_t chunk);
+    void EncodeAttentionChunk(const std::vector<MetalMatrix>&,const MetalMatrix&,size_t heads,size_t kvHeads,
+        size_t dim,size_t capacity,size_t chunk,bool gated);
     void EncodeAttentionScores(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         const MetalMatrix&,size_t heads,size_t kvHeads,size_t dim,size_t capacity);
     void EncodeAttentionContext(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         size_t heads,size_t kvHeads,size_t dim,size_t capacity,bool gated=true);
     void EncodeLayout(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,size_t tokenWidth=0);
     void SubmitAndWait();
+    double LastGPUMs() const;
     // Fixed-grid image operators; projections continue to use MPS matmul.
     void EncodeVision(unsigned operation,const std::vector<MetalMatrix>& inputs,
         const MetalMatrix& output,size_t tokens,size_t hidden,size_t heads,size_t mergeUnit);

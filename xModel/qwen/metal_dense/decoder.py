@@ -5,8 +5,8 @@ from xModel.qwen35.vl_0_8b.metal_decoder import MetalDecoder
 from .layers import T,DenseLayer,norm
 
 class DenseMetalDecoder(MetalDecoder):
-    def __init__(self,checkpoint,config,batch=1,capacity=256,bf16_head=True,resident=True):
-        self.session=None
+    def __init__(self,checkpoint,config,batch=1,capacity=256,bf16_head=True,resident=True,bf16_projections=True):
+        self.session=None;self.bf16_projections=bf16_projections
         if not garnet.backend_info().startswith('Garnet Metal/MPS '):raise ValueError('Native Metal package required')
         if config.get('model_type') not in ('qwen3','qwen2'):raise ValueError('Only dense Qwen3/Qwen2 supported')
         if config.get('rope_scaling') is not None or config.get('use_sliding_window',False):raise ValueError('Scaled RoPE/sliding-window profiles are not implemented')
@@ -26,7 +26,7 @@ class DenseMetalDecoder(MetalDecoder):
                 def forward(hidden,key,value,positions,slots,active):
                     return DenseLayer(hidden,key,value,positions,slots,active,config,idx,capacity)
                 graph=garnet.compiled_graph()
-                try:graph.build(forward(*symbols),symbols,checkpoint)
+                try:self._build_graph(graph,forward(*symbols),symbols,checkpoint)
                 except:graph.close();raise
                 self.layers.append(dict(graph=graph,kind='full_attention',shapes=shapes))
             symbol=tensor.input('dense_final_hidden',shape=[batch,config['hidden_size']],dtype=tensor.float32)
