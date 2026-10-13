@@ -1,0 +1,7 @@
+{
+  "scope": "Serialized per-operation attribution only; GPU/cache/dispatch behavior differs from serving",
+  "native_build": "/Users/zsdx/garnet-metal-investigation/build-half-vision",
+  "native_library_sha256": "44a461bebe04f30e99637b2cd5814252ca0e919e90a074298b1fd63b61b7729c",
+  "runner_sha256": "ba6a72685fe8bfe252691cced7c5d1ca7770bf5adfa0fb1902cb7c71fe21f75b",
+  "flag": "GARNET_METAL_PROFILE_OPS=1"
+}
