@@ -1,0 +1,103 @@
+[
+  {
+    "name": "shader",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_decode_accumulators_shader.py",
+      "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/metal_context.mm",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/combined.metal"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 0.657104582991451
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/decode_accumulators_head_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/decode_accumulators_head_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 1.3307749591767788
+  },
+  {
+    "name": "Qwen3-0.6B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 2.0102607076987624
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/decode_accumulators_head_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 2.671475250273943
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 1.343381583224982
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/decode_accumulators_head_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 1.3351635411381721
+  },
+  {
+    "name": "Qwen3.5-0.8B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decode_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 2.709323624614626
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/decode_accumulators_head_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decode-accumulators-head-confirm-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 2.718491124920547
+  }
+]
