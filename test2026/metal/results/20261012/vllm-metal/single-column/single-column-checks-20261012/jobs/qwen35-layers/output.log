@@ -1,0 +1,64 @@
+chunk reference linear_attention batch 1 chunk 2 worst_ratio 0.08604720480818012 ms 3.31875
+chunk reference linear_attention batch 1 chunk 2 worst_ratio 0.08218853268607124 ms 3.134958
+chunk reference linear_attention batch 1 chunk 2 worst_ratio 0.09398502925169729 ms 3.514917
+pretrained chunk PASS linear_attention 1 2
+chunk reference linear_attention batch 1 chunk 4 worst_ratio 0.1765642390440698 ms 3.986333
+chunk reference linear_attention batch 1 chunk 4 worst_ratio 0.19452757374239052 ms 5.353708
+chunk reference linear_attention batch 1 chunk 4 worst_ratio 0.22793151299190673 ms 5.347292
+pretrained chunk PASS linear_attention 1 4
+chunk reference linear_attention batch 1 chunk 8 worst_ratio 0.2590768289778923 ms 7.720458
+chunk reference linear_attention batch 1 chunk 8 worst_ratio 0.26172763777172053 ms 7.405875
+chunk reference linear_attention batch 1 chunk 8 worst_ratio 0.2235458970515818 ms 7.498125
+pretrained chunk PASS linear_attention 1 8
+chunk reference linear_attention batch 1 chunk 16 worst_ratio 0.1961680628825017 ms 11.741625
+chunk reference linear_attention batch 1 chunk 16 worst_ratio 0.2357782577671839 ms 11.587667
+chunk reference linear_attention batch 1 chunk 16 worst_ratio 0.26882118920472786 ms 8.233208
+pretrained chunk PASS linear_attention 1 16
+chunk reference linear_attention batch 2 chunk 2 worst_ratio 0.17865895906261994 ms 5.875
+chunk reference linear_attention batch 2 chunk 2 worst_ratio 0.15793876704511778 ms 5.609375
+chunk reference linear_attention batch 2 chunk 2 worst_ratio 0.2054147224743791 ms 5.035542
+pretrained chunk PASS linear_attention 2 2
+chunk reference linear_attention batch 2 chunk 4 worst_ratio 0.2768640770768789 ms 7.440958
+chunk reference linear_attention batch 2 chunk 4 worst_ratio 0.5601583183021176 ms 7.301083
+chunk reference linear_attention batch 2 chunk 4 worst_ratio 0.19505833931336514 ms 7.092833
+pretrained chunk PASS linear_attention 2 4
+chunk reference linear_attention batch 2 chunk 8 worst_ratio 0.2575488810417477 ms 7.709916
+chunk reference linear_attention batch 2 chunk 8 worst_ratio 0.2321145915642062 ms 8.087541
+chunk reference linear_attention batch 2 chunk 8 worst_ratio 0.4157835849766465 ms 7.643916
+pretrained chunk PASS linear_attention 2 8
+chunk reference linear_attention batch 2 chunk 16 worst_ratio 0.18022395777673508 ms 16.261083
+chunk reference linear_attention batch 2 chunk 16 worst_ratio 0.20500123959699437 ms 12.798708
+chunk reference linear_attention batch 2 chunk 16 worst_ratio 0.18624722180209732 ms 13.549084
+pretrained chunk PASS linear_attention 2 16
+chunk reference full_attention batch 1 chunk 2 worst_ratio 0.13581328777597176 ms 2.364667
+chunk reference full_attention batch 1 chunk 2 worst_ratio 0.06138419694459914 ms 2.299875
+chunk reference full_attention batch 1 chunk 2 worst_ratio 0.10271061372400835 ms 2.265209
+pretrained chunk PASS full_attention 1 2
+chunk reference full_attention batch 1 chunk 4 worst_ratio 0.31321675835599855 ms 3.222792
+chunk reference full_attention batch 1 chunk 4 worst_ratio 0.2990248738332945 ms 2.592083
+chunk reference full_attention batch 1 chunk 4 worst_ratio 0.18095636527003728 ms 2.809958
+pretrained chunk PASS full_attention 1 4
+chunk reference full_attention batch 1 chunk 8 worst_ratio 0.28032006585653946 ms 3.33625
+chunk reference full_attention batch 1 chunk 8 worst_ratio 0.3281247397531773 ms 3.256208
+chunk reference full_attention batch 1 chunk 8 worst_ratio 0.4234471935050057 ms 3.319625
+pretrained chunk PASS full_attention 1 8
+chunk reference full_attention batch 1 chunk 16 worst_ratio 0.3124554018326153 ms 3.729084
+chunk reference full_attention batch 1 chunk 16 worst_ratio 0.3686311805709018 ms 3.733083
+chunk reference full_attention batch 1 chunk 16 worst_ratio 0.270857217559213 ms 3.925666
+pretrained chunk PASS full_attention 1 16
+chunk reference full_attention batch 2 chunk 2 worst_ratio 0.15686371022465564 ms 3.351666
+chunk reference full_attention batch 2 chunk 2 worst_ratio 0.15014391021065746 ms 3.340458
+chunk reference full_attention batch 2 chunk 2 worst_ratio 0.1936731478970327 ms 3.28075
+pretrained chunk PASS full_attention 2 2
+chunk reference full_attention batch 2 chunk 4 worst_ratio 0.36086029284577575 ms 3.518333
+chunk reference full_attention batch 2 chunk 4 worst_ratio 0.44899772899593204 ms 3.427417
+chunk reference full_attention batch 2 chunk 4 worst_ratio 0.37414678031276305 ms 3.376625
+pretrained chunk PASS full_attention 2 4
+chunk reference full_attention batch 2 chunk 8 worst_ratio 0.3630956408126041 ms 3.914292
+chunk reference full_attention batch 2 chunk 8 worst_ratio 0.21278707497941562 ms 3.507167
+chunk reference full_attention batch 2 chunk 8 worst_ratio 0.3573292017429919 ms 3.728416
+pretrained chunk PASS full_attention 2 8
+chunk reference full_attention batch 2 chunk 16 worst_ratio 0.2719283511042936 ms 2.465042
+chunk reference full_attention batch 2 chunk 16 worst_ratio 0.3531047527314994 ms 5.018292
+chunk reference full_attention batch 2 chunk 16 worst_ratio 0.37544151105522894 ms 5.255125
+pretrained chunk PASS full_attention 2 16

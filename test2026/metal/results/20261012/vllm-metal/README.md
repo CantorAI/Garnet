@@ -248,6 +248,50 @@ The VL measurement gap is now closed. Its optimization gap and batch-2 output
 discrepancy remain open, alongside the text/coder speed targets. The full goal
 remains active and unmet.
 
+## Rejected VL MPS-prefill and decode-geometry experiments
+
+The optional MPS-prefill policy executed 24 fresh-frame requests in
+`vl-mps-roofline/vllm-matched-vl-mps-prefill-20261012`. Batch-1 native TTFT
+was 789.36 ms versus 698.28 ms with shared BF16 prefill; batch 2 was
+1195.74 ms versus 1186.70 ms. Decode did not improve. The same batch-2
+comparator caption/output-cap discrepancy persisted. The profile is not
+selected for this VL workload; its raw results remain preserved.
+
+`single-column/` retains a decode geometry experiment with one output column
+per SIMD group and compile-time batch specialization. All 11 checks passed,
+as did 48 native ABBA requests with exact outputs. Decode gains were only
+1.0–2.7%, while TTFT increased 2.5–8.8%. The kernel was reverted.
+`rejected_kernel.diff` records the implementation; these are native-control
+results, not a vLLM advantage.
+
+## Streaming constraint and exact packing feasibility
+
+Apple advertises 120 GB/s for the M4 Mac mini:
+[official specifications](https://support.apple.com/en-gb/121555).
+The exact checkpoint headers identify 1,191,968,768 BF16 projection/head bytes
+for text, 987,922,432 for coder and 1,503,789,056 for Qwen3.5 VL. Reading every
+such value once per decode step gives optimistic streaming ceilings of
+100.67, 121.47 and 79.80 steps/s, before other traffic or arithmetic. The 2x
+comparator targets exceed these ceilings. This is a conditional streaming
+roofline, not a universal algorithmic lower bound: caching, exact pruning or
+lossless packing can change the assumed bytes read. Header inventories and
+the calculation are saved in `vl-mps-roofline/decode-streaming-roofline-20261012`.
+
+`probe_lossless_bf16_codec.py` implements a CPU-only exact-bit prototype:
+8 sign/mantissa bits, 3 exponent tags, full exponent escapes and 64-bit
+metadata per 256-value block. It round-trips all 65,536 bit patterns, including
+signed zeros, subnormals, infinities and NaN payloads, plus non-aligned tails.
+Every sampled BF16 matrix block from the real local Qwen3.5 checkpoint also
+reconstructs exactly. The weighted sampled storage ratio is 1.3971x
+(11.4521 bits/value, roughly 28.4% fewer bytes). This is not quantization.
+The report is `vl-mps-roofline/lossless-bf16-codec-report.json`.
+
+No GPU packing kernel or packed-model speed improvement has been demonstrated.
+The CPU prototype establishes representation correctness only; compression,
+GPU unpacking cost and full-model numerical/performance validation remain
+required before it could count toward the goal. All 2x/half-TTFT targets
+remain unmet.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

@@ -1,0 +1,1978 @@
+{
+  "scope": "Exact CPU roundtrip feasibility only; no GPU codec or inference speed demonstrated",
+  "all_65536_bit_patterns_passed": true,
+  "tail_cases_passed": true,
+  "checkpoint": "work\\models\\Qwen3.5-0.8B\\model.safetensors",
+  "weighted_estimated_bits_per_weight": 11.452134358112078,
+  "weighted_storage_ratio": 1.3971194800615012,
+  "tensors": [
+    {
+      "tensor": "model.language_model.embed_tokens.weight",
+      "elements": 254279680,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46832,
+      "ratio": 1.3993850358729074
+    },
+    {
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23403,
+      "ratio": 1.4001623723454257
+    },
+    {
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23507,
+      "ratio": 1.3939677542859574
+    },
+    {
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46977,
+      "ratio": 1.395065670434468
+    },
+    {
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46905,
+      "ratio": 1.3972071207760366
+    },
+    {
+      "tensor": "model.language_model.layers.0.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47054,
+      "ratio": 1.392782760232924
+    },
+    {
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46835,
+      "ratio": 1.3992953987402583
+    },
+    {
+      "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46874,
+      "ratio": 1.3981311601314161
+    },
+    {
+      "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46807,
+      "ratio": 1.400132458820262
+    },
+    {
+      "tensor": "model.language_model.layers.1.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23476,
+      "ratio": 1.3958084852615438
+    },
+    {
+      "tensor": "model.language_model.layers.1.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23486,
+      "ratio": 1.3952141701439156
+    },
+    {
+      "tensor": "model.language_model.layers.1.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46949,
+      "ratio": 1.395897676201836
+    },
+    {
+      "tensor": "model.language_model.layers.1.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46879,
+      "ratio": 1.3979820388660167
+    },
+    {
+      "tensor": "model.language_model.layers.1.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47039,
+      "ratio": 1.3932268968302897
+    },
+    {
+      "tensor": "model.language_model.layers.1.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46787,
+      "ratio": 1.4007309722786243
+    },
+    {
+      "tensor": "model.language_model.layers.1.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46977,
+      "ratio": 1.395065670434468
+    },
+    {
+      "tensor": "model.language_model.layers.1.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46873,
+      "ratio": 1.3981609882021633
+    },
+    {
+      "tensor": "model.language_model.layers.10.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23459,
+      "ratio": 1.396819983801526
+    },
+    {
+      "tensor": "model.language_model.layers.10.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23507,
+      "ratio": 1.3939677542859574
+    },
+    {
+      "tensor": "model.language_model.layers.10.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46993,
+      "ratio": 1.3945906837188518
+    },
+    {
+      "tensor": "model.language_model.layers.10.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46928,
+      "ratio": 1.3965223320831912
+    },
+    {
+      "tensor": "model.language_model.layers.10.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46921,
+      "ratio": 1.3967306749643016
+    },
+    {
+      "tensor": "model.language_model.layers.10.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46920,
+      "ratio": 1.3967604433077578
+    },
+    {
+      "tensor": "model.language_model.layers.10.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46905,
+      "ratio": 1.3972071207760366
+    },
+    {
+      "tensor": "model.language_model.layers.10.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46943,
+      "ratio": 1.3960760922821294
+    },
+    {
+      "tensor": "model.language_model.layers.11.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46904,
+      "ratio": 1.3972369094320314
+    },
+    {
+      "tensor": "model.language_model.layers.11.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46924,
+      "ratio": 1.3966413775466713
+    },
+    {
+      "tensor": "model.language_model.layers.11.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46891,
+      "ratio": 1.3976242775799195
+    },
+    {
+      "tensor": "model.language_model.layers.11.self_attn.k_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46972,
+      "ratio": 1.3952141701439156
+    },
+    {
+      "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46957,
+      "ratio": 1.3956598590199545
+    },
+    {
+      "tensor": "model.language_model.layers.11.self_attn.q_proj.weight",
+      "elements": 4194304,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47019,
+      "ratio": 1.393819519768604
+    },
+    {
+      "tensor": "model.language_model.layers.11.self_attn.v_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47058,
+      "ratio": 1.3926643716265035
+    },
+    {
+      "tensor": "model.language_model.layers.12.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23460,
+      "ratio": 1.3967604433077578
+    },
+    {
+      "tensor": "model.language_model.layers.12.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23427,
+      "ratio": 1.398727963460964
+    },
+    {
+      "tensor": "model.language_model.layers.12.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46973,
+      "ratio": 1.3951844676729186
+    },
+    {
+      "tensor": "model.language_model.layers.12.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46932,
+      "ratio": 1.3964033069121282
+    },
+    {
+      "tensor": "model.language_model.layers.12.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47005,
+      "ratio": 1.3942346558876715
+    },
+    {
+      "tensor": "model.language_model.layers.12.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46921,
+      "ratio": 1.3967306749643016
+    },
+    {
+      "tensor": "model.language_model.layers.12.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46898,
+      "ratio": 1.3974156680455456
+    },
+    {
+      "tensor": "model.language_model.layers.12.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46937,
+      "ratio": 1.396254553976607
+    },
+    {
+      "tensor": "model.language_model.layers.13.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23474,
+      "ratio": 1.3959274090483087
+    },
+    {
+      "tensor": "model.language_model.layers.13.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23454,
+      "ratio": 1.3971177624285835
+    },
+    {
+      "tensor": "model.language_model.layers.13.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46906,
+      "ratio": 1.3971773333901847
+    },
+    {
+      "tensor": "model.language_model.layers.13.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46882,
+      "ratio": 1.3978925813745147
+    },
+    {
+      "tensor": "model.language_model.layers.13.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46978,
+      "ratio": 1.395035974285836
+    },
+    {
+      "tensor": "model.language_model.layers.13.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46880,
+      "ratio": 1.3979522184300341
+    },
+    {
+      "tensor": "model.language_model.layers.13.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46997,
+      "ratio": 1.3944719875736749
+    },
+    {
+      "tensor": "model.language_model.layers.13.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46895,
+      "ratio": 1.397505064505811
+    },
+    {
+      "tensor": "model.language_model.layers.14.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23428,
+      "ratio": 1.3986682602014684
+    },
+    {
+      "tensor": "model.language_model.layers.14.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23523,
+      "ratio": 1.3930195978404114
+    },
+    {
+      "tensor": "model.language_model.layers.14.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46932,
+      "ratio": 1.3964033069121282
+    },
+    {
+      "tensor": "model.language_model.layers.14.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46914,
+      "ratio": 1.3969390800187578
+    },
+    {
+      "tensor": "model.language_model.layers.14.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47019,
+      "ratio": 1.393819519768604
+    },
+    {
+      "tensor": "model.language_model.layers.14.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47039,
+      "ratio": 1.3932268968302897
+    },
+    {
+      "tensor": "model.language_model.layers.14.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46945,
+      "ratio": 1.396016615187986
+    },
+    {
+      "tensor": "model.language_model.layers.14.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46978,
+      "ratio": 1.395035974285836
+    },
+    {
+      "tensor": "model.language_model.layers.15.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46918,
+      "ratio": 1.396819983801526
+    },
+    {
+      "tensor": "model.language_model.layers.15.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46977,
+      "ratio": 1.395065670434468
+    },
+    {
+      "tensor": "model.language_model.layers.15.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46959,
+      "ratio": 1.3956004173853787
+    },
+    {
+      "tensor": "model.language_model.layers.15.self_attn.k_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46923,
+      "ratio": 1.3966711420838396
+    },
+    {
+      "tensor": "model.language_model.layers.15.self_attn.o_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47056,
+      "ratio": 1.3927235634138049
+    },
+    {
+      "tensor": "model.language_model.layers.15.self_attn.q_proj.weight",
+      "elements": 4194304,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46922,
+      "ratio": 1.3967009078896893
+    },
+    {
+      "tensor": "model.language_model.layers.15.self_attn.v_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47189,
+      "ratio": 1.3887982368772382
+    },
+    {
+      "tensor": "model.language_model.layers.16.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23475,
+      "ratio": 1.3958679446219382
+    },
+    {
+      "tensor": "model.language_model.layers.16.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23499,
+      "ratio": 1.3944423166943274
+    },
+    {
+      "tensor": "model.language_model.layers.16.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46971,
+      "ratio": 1.3952438738796278
+    },
+    {
+      "tensor": "model.language_model.layers.16.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46931,
+      "ratio": 1.3964330613027636
+    },
+    {
+      "tensor": "model.language_model.layers.16.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47122,
+      "ratio": 1.3907728873986673
+    },
+    {
+      "tensor": "model.language_model.layers.16.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46877,
+      "ratio": 1.398041683554835
+    },
+    {
+      "tensor": "model.language_model.layers.16.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46882,
+      "ratio": 1.3978925813745147
+    },
+    {
+      "tensor": "model.language_model.layers.16.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46951,
+      "ratio": 1.3958382143085344
+    },
+    {
+      "tensor": "model.language_model.layers.17.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23482,
+      "ratio": 1.3954518354484287
+    },
+    {
+      "tensor": "model.language_model.layers.17.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23458,
+      "ratio": 1.396879529371643
+    },
+    {
+      "tensor": "model.language_model.layers.17.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46902,
+      "ratio": 1.3972964905547738
+    },
+    {
+      "tensor": "model.language_model.layers.17.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46897,
+      "ratio": 1.397445465594814
+    },
+    {
+      "tensor": "model.language_model.layers.17.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47180,
+      "ratio": 1.389063162356931
+    },
+    {
+      "tensor": "model.language_model.layers.17.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46891,
+      "ratio": 1.3976242775799195
+    },
+    {
+      "tensor": "model.language_model.layers.17.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46890,
+      "ratio": 1.3976540840264449
+    },
+    {
+      "tensor": "model.language_model.layers.17.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46866,
+      "ratio": 1.3983698203388384
+    },
+    {
+      "tensor": "model.language_model.layers.18.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23456,
+      "ratio": 1.3969986357435198
+    },
+    {
+      "tensor": "model.language_model.layers.18.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23472,
+      "ratio": 1.3960463531015679
+    },
+    {
+      "tensor": "model.language_model.layers.18.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46936,
+      "ratio": 1.3962843020282938
+    },
+    {
+      "tensor": "model.language_model.layers.18.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46892,
+      "ratio": 1.3975944724046745
+    },
+    {
+      "tensor": "model.language_model.layers.18.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47117,
+      "ratio": 1.390920474563321
+    },
+    {
+      "tensor": "model.language_model.layers.18.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46867,
+      "ratio": 1.3983399833571597
+    },
+    {
+      "tensor": "model.language_model.layers.18.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46896,
+      "ratio": 1.3974752644148756
+    },
+    {
+      "tensor": "model.language_model.layers.18.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46861,
+      "ratio": 1.3985190243486054
+    },
+    {
+      "tensor": "model.language_model.layers.19.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46861,
+      "ratio": 1.3985190243486054
+    },
+    {
+      "tensor": "model.language_model.layers.19.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46858,
+      "ratio": 1.3986085620384994
+    },
+    {
+      "tensor": "model.language_model.layers.19.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46874,
+      "ratio": 1.3981311601314161
+    },
+    {
+      "tensor": "model.language_model.layers.19.self_attn.k_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46934,
+      "ratio": 1.3963438019346317
+    },
+    {
+      "tensor": "model.language_model.layers.19.self_attn.o_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47006,
+      "ratio": 1.3942049951070077
+    },
+    {
+      "tensor": "model.language_model.layers.19.self_attn.q_proj.weight",
+      "elements": 4194304,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46944,
+      "ratio": 1.3960463531015679
+    },
+    {
+      "tensor": "model.language_model.layers.19.self_attn.v_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47220,
+      "ratio": 1.3878864887759423
+    },
+    {
+      "tensor": "model.language_model.layers.2.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23473,
+      "ratio": 1.3959868785413028
+    },
+    {
+      "tensor": "model.language_model.layers.2.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23451,
+      "ratio": 1.3972964905547738
+    },
+    {
+      "tensor": "model.language_model.layers.2.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46891,
+      "ratio": 1.3976242775799195
+    },
+    {
+      "tensor": "model.language_model.layers.2.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46895,
+      "ratio": 1.397505064505811
+    },
+    {
+      "tensor": "model.language_model.layers.2.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47113,
+      "ratio": 1.3910385668499141
+    },
+    {
+      "tensor": "model.language_model.layers.2.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46863,
+      "ratio": 1.3984593389240978
+    },
+    {
+      "tensor": "model.language_model.layers.2.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46915,
+      "ratio": 1.396909304060535
+    },
+    {
+      "tensor": "model.language_model.layers.2.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46882,
+      "ratio": 1.3978925813745147
+    },
+    {
+      "tensor": "model.language_model.layers.20.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23500,
+      "ratio": 1.3943829787234043
+    },
+    {
+      "tensor": "model.language_model.layers.20.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23431,
+      "ratio": 1.3984891809995306
+    },
+    {
+      "tensor": "model.language_model.layers.20.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46917,
+      "ratio": 1.3968497559520003
+    },
+    {
+      "tensor": "model.language_model.layers.20.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46922,
+      "ratio": 1.3967009078896893
+    },
+    {
+      "tensor": "model.language_model.layers.20.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47148,
+      "ratio": 1.3900059387460761
+    },
+    {
+      "tensor": "model.language_model.layers.20.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46854,
+      "ratio": 1.398727963460964
+    },
+    {
+      "tensor": "model.language_model.layers.20.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46936,
+      "ratio": 1.3962843020282938
+    },
+    {
+      "tensor": "model.language_model.layers.20.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46845,
+      "ratio": 1.3989966912157115
+    },
+    {
+      "tensor": "model.language_model.layers.21.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23557,
+      "ratio": 1.3910090418983743
+    },
+    {
+      "tensor": "model.language_model.layers.21.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23487,
+      "ratio": 1.395154766466556
+    },
+    {
+      "tensor": "model.language_model.layers.21.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46870,
+      "ratio": 1.3982504800512054
+    },
+    {
+      "tensor": "model.language_model.layers.21.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46898,
+      "ratio": 1.3974156680455456
+    },
+    {
+      "tensor": "model.language_model.layers.21.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47093,
+      "ratio": 1.3916293291996686
+    },
+    {
+      "tensor": "model.language_model.layers.21.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46819,
+      "ratio": 1.3997735961895812
+    },
+    {
+      "tensor": "model.language_model.layers.21.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46868,
+      "ratio": 1.3983101476487156
+    },
+    {
+      "tensor": "model.language_model.layers.21.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46831,
+      "ratio": 1.3994149174691977
+    },
+    {
+      "tensor": "model.language_model.layers.22.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23496,
+      "ratio": 1.3946203609124956
+    },
+    {
+      "tensor": "model.language_model.layers.22.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23482,
+      "ratio": 1.3954518354484287
+    },
+    {
+      "tensor": "model.language_model.layers.22.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46929,
+      "ratio": 1.3964925738882141
+    },
+    {
+      "tensor": "model.language_model.layers.22.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46904,
+      "ratio": 1.3972369094320314
+    },
+    {
+      "tensor": "model.language_model.layers.22.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47054,
+      "ratio": 1.392782760232924
+    },
+    {
+      "tensor": "model.language_model.layers.22.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46860,
+      "ratio": 1.3985488689714043
+    },
+    {
+      "tensor": "model.language_model.layers.22.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46863,
+      "ratio": 1.3984593389240978
+    },
+    {
+      "tensor": "model.language_model.layers.22.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46845,
+      "ratio": 1.3989966912157115
+    },
+    {
+      "tensor": "model.language_model.layers.23.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46915,
+      "ratio": 1.396909304060535
+    },
+    {
+      "tensor": "model.language_model.layers.23.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46880,
+      "ratio": 1.3979522184300341
+    },
+    {
+      "tensor": "model.language_model.layers.23.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46871,
+      "ratio": 1.3982206481619766
+    },
+    {
+      "tensor": "model.language_model.layers.23.self_attn.k_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47044,
+      "ratio": 1.393078819828246
+    },
+    {
+      "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47189,
+      "ratio": 1.3887982368772382
+    },
+    {
+      "tensor": "model.language_model.layers.23.self_attn.q_proj.weight",
+      "elements": 4194304,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46951,
+      "ratio": 1.3958382143085344
+    },
+    {
+      "tensor": "model.language_model.layers.23.self_attn.v_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47112,
+      "ratio": 1.391068093054848
+    },
+    {
+      "tensor": "model.language_model.layers.3.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46927,
+      "ratio": 1.3965520915464444
+    },
+    {
+      "tensor": "model.language_model.layers.3.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46903,
+      "ratio": 1.39726669935825
+    },
+    {
+      "tensor": "model.language_model.layers.3.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46945,
+      "ratio": 1.396016615187986
+    },
+    {
+      "tensor": "model.language_model.layers.3.self_attn.k_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46842,
+      "ratio": 1.3990862900815508
+    },
+    {
+      "tensor": "model.language_model.layers.3.self_attn.o_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47009,
+      "ratio": 1.3941160203365313
+    },
+    {
+      "tensor": "model.language_model.layers.3.self_attn.q_proj.weight",
+      "elements": 4194304,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46905,
+      "ratio": 1.3972071207760366
+    },
+    {
+      "tensor": "model.language_model.layers.3.self_attn.v_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46979,
+      "ratio": 1.3950062794014346
+    },
+    {
+      "tensor": "model.language_model.layers.4.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23470,
+      "ratio": 1.3961653174265019
+    },
+    {
+      "tensor": "model.language_model.layers.4.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23486,
+      "ratio": 1.3952141701439156
+    },
+    {
+      "tensor": "model.language_model.layers.4.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46905,
+      "ratio": 1.3972071207760366
+    },
+    {
+      "tensor": "model.language_model.layers.4.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46909,
+      "ratio": 1.3970879788526722
+    },
+    {
+      "tensor": "model.language_model.layers.4.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47083,
+      "ratio": 1.3919248985833528
+    },
+    {
+      "tensor": "model.language_model.layers.4.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46927,
+      "ratio": 1.3965520915464444
+    },
+    {
+      "tensor": "model.language_model.layers.4.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46906,
+      "ratio": 1.3971773333901847
+    },
+    {
+      "tensor": "model.language_model.layers.4.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46858,
+      "ratio": 1.3986085620384994
+    },
+    {
+      "tensor": "model.language_model.layers.5.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23509,
+      "ratio": 1.3938491641499
+    },
+    {
+      "tensor": "model.language_model.layers.5.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23468,
+      "ratio": 1.3962843020282938
+    },
+    {
+      "tensor": "model.language_model.layers.5.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46956,
+      "ratio": 1.3956895817360933
+    },
+    {
+      "tensor": "model.language_model.layers.5.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46884,
+      "ratio": 1.3978329494070472
+    },
+    {
+      "tensor": "model.language_model.layers.5.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47063,
+      "ratio": 1.3925164141682427
+    },
+    {
+      "tensor": "model.language_model.layers.5.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46895,
+      "ratio": 1.397505064505811
+    },
+    {
+      "tensor": "model.language_model.layers.5.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46943,
+      "ratio": 1.3960760922821294
+    },
+    {
+      "tensor": "model.language_model.layers.5.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46950,
+      "ratio": 1.3958679446219382
+    },
+    {
+      "tensor": "model.language_model.layers.6.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23448,
+      "ratio": 1.3974752644148756
+    },
+    {
+      "tensor": "model.language_model.layers.6.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23465,
+      "ratio": 1.396462816961432
+    },
+    {
+      "tensor": "model.language_model.layers.6.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46898,
+      "ratio": 1.3974156680455456
+    },
+    {
+      "tensor": "model.language_model.layers.6.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46936,
+      "ratio": 1.3962843020282938
+    },
+    {
+      "tensor": "model.language_model.layers.6.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47026,
+      "ratio": 1.3936120444009696
+    },
+    {
+      "tensor": "model.language_model.layers.6.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46898,
+      "ratio": 1.3974156680455456
+    },
+    {
+      "tensor": "model.language_model.layers.6.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46920,
+      "ratio": 1.3967604433077578
+    },
+    {
+      "tensor": "model.language_model.layers.6.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46960,
+      "ratio": 1.3955706984667802
+    },
+    {
+      "tensor": "model.language_model.layers.7.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46862,
+      "ratio": 1.3984891809995306
+    },
+    {
+      "tensor": "model.language_model.layers.7.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46920,
+      "ratio": 1.3967604433077578
+    },
+    {
+      "tensor": "model.language_model.layers.7.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46914,
+      "ratio": 1.3969390800187578
+    },
+    {
+      "tensor": "model.language_model.layers.7.self_attn.k_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46871,
+      "ratio": 1.3982206481619766
+    },
+    {
+      "tensor": "model.language_model.layers.7.self_attn.o_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47005,
+      "ratio": 1.3942346558876715
+    },
+    {
+      "tensor": "model.language_model.layers.7.self_attn.q_proj.weight",
+      "elements": 4194304,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46907,
+      "ratio": 1.397147547274394
+    },
+    {
+      "tensor": "model.language_model.layers.7.self_attn.v_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47115,
+      "ratio": 1.3909795182001485
+    },
+    {
+      "tensor": "model.language_model.layers.8.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23500,
+      "ratio": 1.3943829787234043
+    },
+    {
+      "tensor": "model.language_model.layers.8.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23468,
+      "ratio": 1.3962843020282938
+    },
+    {
+      "tensor": "model.language_model.layers.8.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46971,
+      "ratio": 1.3952438738796278
+    },
+    {
+      "tensor": "model.language_model.layers.8.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46952,
+      "ratio": 1.3958084852615438
+    },
+    {
+      "tensor": "model.language_model.layers.8.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46973,
+      "ratio": 1.3951844676729186
+    },
+    {
+      "tensor": "model.language_model.layers.8.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46859,
+      "ratio": 1.3985787148680082
+    },
+    {
+      "tensor": "model.language_model.layers.8.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46848,
+      "ratio": 1.3989071038251366
+    },
+    {
+      "tensor": "model.language_model.layers.8.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46944,
+      "ratio": 1.3960463531015679
+    },
+    {
+      "tensor": "model.language_model.layers.9.linear_attn.in_proj_a.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23486,
+      "ratio": 1.3952141701439156
+    },
+    {
+      "tensor": "model.language_model.layers.9.linear_attn.in_proj_b.weight",
+      "elements": 16384,
+      "sampled_weights": 16384,
+      "original_bytes": 32768,
+      "packed_bytes": 23417,
+      "ratio": 1.3993252765085193
+    },
+    {
+      "tensor": "model.language_model.layers.9.linear_attn.in_proj_qkv.weight",
+      "elements": 6291456,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47000,
+      "ratio": 1.3943829787234043
+    },
+    {
+      "tensor": "model.language_model.layers.9.linear_attn.in_proj_z.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46912,
+      "ratio": 1.3969986357435198
+    },
+    {
+      "tensor": "model.language_model.layers.9.linear_attn.out_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46943,
+      "ratio": 1.3960760922821294
+    },
+    {
+      "tensor": "model.language_model.layers.9.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46884,
+      "ratio": 1.3978329494070472
+    },
+    {
+      "tensor": "model.language_model.layers.9.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46916,
+      "ratio": 1.396879529371643
+    },
+    {
+      "tensor": "model.language_model.layers.9.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46945,
+      "ratio": 1.396016615187986
+    },
+    {
+      "tensor": "model.visual.blocks.0.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47416,
+      "ratio": 1.38214948540577
+    },
+    {
+      "tensor": "model.visual.blocks.0.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47404,
+      "ratio": 1.3824993671420134
+    },
+    {
+      "tensor": "model.visual.blocks.0.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47410,
+      "ratio": 1.382324404134149
+    },
+    {
+      "tensor": "model.visual.blocks.0.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47377,
+      "ratio": 1.3832872490871098
+    },
+    {
+      "tensor": "model.visual.blocks.1.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47022,
+      "ratio": 1.3937305941899536
+    },
+    {
+      "tensor": "model.visual.blocks.1.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47065,
+      "ratio": 1.3924572399872517
+    },
+    {
+      "tensor": "model.visual.blocks.1.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47027,
+      "ratio": 1.3935824101048333
+    },
+    {
+      "tensor": "model.visual.blocks.1.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47096,
+      "ratio": 1.3915406828605401
+    },
+    {
+      "tensor": "model.visual.blocks.10.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46852,
+      "ratio": 1.3987876718176384
+    },
+    {
+      "tensor": "model.visual.blocks.10.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46923,
+      "ratio": 1.3966711420838396
+    },
+    {
+      "tensor": "model.visual.blocks.10.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46933,
+      "ratio": 1.3963735537894446
+    },
+    {
+      "tensor": "model.visual.blocks.10.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46925,
+      "ratio": 1.3966116142781033
+    },
+    {
+      "tensor": "model.visual.blocks.11.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46927,
+      "ratio": 1.3965520915464444
+    },
+    {
+      "tensor": "model.visual.blocks.11.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46858,
+      "ratio": 1.3986085620384994
+    },
+    {
+      "tensor": "model.visual.blocks.11.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46836,
+      "ratio": 1.3992655222478436
+    },
+    {
+      "tensor": "model.visual.blocks.11.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46954,
+      "ratio": 1.3957490309664777
+    },
+    {
+      "tensor": "model.visual.blocks.2.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46953,
+      "ratio": 1.395778757480885
+    },
+    {
+      "tensor": "model.visual.blocks.2.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46989,
+      "ratio": 1.3947094000723574
+    },
+    {
+      "tensor": "model.visual.blocks.2.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46958,
+      "ratio": 1.395630137569743
+    },
+    {
+      "tensor": "model.visual.blocks.2.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47070,
+      "ratio": 1.392309326534948
+    },
+    {
+      "tensor": "model.visual.blocks.3.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46903,
+      "ratio": 1.39726669935825
+    },
+    {
+      "tensor": "model.visual.blocks.3.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46924,
+      "ratio": 1.3966413775466713
+    },
+    {
+      "tensor": "model.visual.blocks.3.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46942,
+      "ratio": 1.3961058327297515
+    },
+    {
+      "tensor": "model.visual.blocks.3.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47001,
+      "ratio": 1.3943533116316673
+    },
+    {
+      "tensor": "model.visual.blocks.4.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46941,
+      "ratio": 1.3961355744445154
+    },
+    {
+      "tensor": "model.visual.blocks.4.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46888,
+      "ratio": 1.3977137007336633
+    },
+    {
+      "tensor": "model.visual.blocks.4.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46899,
+      "ratio": 1.3973858717669887
+    },
+    {
+      "tensor": "model.visual.blocks.4.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46954,
+      "ratio": 1.3957490309664777
+    },
+    {
+      "tensor": "model.visual.blocks.5.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46841,
+      "ratio": 1.3991161589206038
+    },
+    {
+      "tensor": "model.visual.blocks.5.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46926,
+      "ratio": 1.3965818522780549
+    },
+    {
+      "tensor": "model.visual.blocks.5.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46885,
+      "ratio": 1.3978031353311293
+    },
+    {
+      "tensor": "model.visual.blocks.5.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46998,
+      "ratio": 1.3944423166943274
+    },
+    {
+      "tensor": "model.visual.blocks.6.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46874,
+      "ratio": 1.3981311601314161
+    },
+    {
+      "tensor": "model.visual.blocks.6.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46907,
+      "ratio": 1.397147547274394
+    },
+    {
+      "tensor": "model.visual.blocks.6.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46869,
+      "ratio": 1.3982803132134247
+    },
+    {
+      "tensor": "model.visual.blocks.6.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47044,
+      "ratio": 1.393078819828246
+    },
+    {
+      "tensor": "model.visual.blocks.7.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46889,
+      "ratio": 1.3976838917443324
+    },
+    {
+      "tensor": "model.visual.blocks.7.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46895,
+      "ratio": 1.397505064505811
+    },
+    {
+      "tensor": "model.visual.blocks.7.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46898,
+      "ratio": 1.3974156680455456
+    },
+    {
+      "tensor": "model.visual.blocks.7.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47047,
+      "ratio": 1.3929899887346695
+    },
+    {
+      "tensor": "model.visual.blocks.8.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46916,
+      "ratio": 1.396879529371643
+    },
+    {
+      "tensor": "model.visual.blocks.8.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46861,
+      "ratio": 1.3985190243486054
+    },
+    {
+      "tensor": "model.visual.blocks.8.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46895,
+      "ratio": 1.397505064505811
+    },
+    {
+      "tensor": "model.visual.blocks.8.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46999,
+      "ratio": 1.3944126470775975
+    },
+    {
+      "tensor": "model.visual.blocks.9.attn.proj.weight",
+      "elements": 589824,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46921,
+      "ratio": 1.3967306749643016
+    },
+    {
+      "tensor": "model.visual.blocks.9.attn.qkv.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46903,
+      "ratio": 1.39726669935825
+    },
+    {
+      "tensor": "model.visual.blocks.9.mlp.linear_fc1.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46946,
+      "ratio": 1.3959868785413028
+    },
+    {
+      "tensor": "model.visual.blocks.9.mlp.linear_fc2.weight",
+      "elements": 2359296,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46953,
+      "ratio": 1.395778757480885
+    },
+    {
+      "tensor": "model.visual.merger.linear_fc1.weight",
+      "elements": 9437184,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46893,
+      "ratio": 1.397564668500629
+    },
+    {
+      "tensor": "model.visual.merger.linear_fc2.weight",
+      "elements": 3145728,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46832,
+      "ratio": 1.3993850358729074
+    },
+    {
+      "tensor": "model.visual.pos_embed.weight",
+      "elements": 1769472,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47911,
+      "ratio": 1.367869591534303
+    },
+    {
+      "tensor": "mtp.fc.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47114,
+      "ratio": 1.3910090418983743
+    },
+    {
+      "tensor": "mtp.layers.0.mlp.down_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47072,
+      "ratio": 1.3922501699524132
+    },
+    {
+      "tensor": "mtp.layers.0.mlp.gate_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46855,
+      "ratio": 1.3986981111941095
+    },
+    {
+      "tensor": "mtp.layers.0.mlp.up_proj.weight",
+      "elements": 3670016,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46949,
+      "ratio": 1.395897676201836
+    },
+    {
+      "tensor": "mtp.layers.0.self_attn.k_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46908,
+      "ratio": 1.3971177624285835
+    },
+    {
+      "tensor": "mtp.layers.0.self_attn.o_proj.weight",
+      "elements": 2097152,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 47194,
+      "ratio": 1.3886510997160657
+    },
+    {
+      "tensor": "mtp.layers.0.self_attn.q_proj.weight",
+      "elements": 4194304,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46938,
+      "ratio": 1.3962248071924666
+    },
+    {
+      "tensor": "mtp.layers.0.self_attn.v_proj.weight",
+      "elements": 524288,
+      "sampled_weights": 32768,
+      "original_bytes": 65536,
+      "packed_bytes": 46953,
+      "ratio": 1.395778757480885
+    }
+  ]
+}

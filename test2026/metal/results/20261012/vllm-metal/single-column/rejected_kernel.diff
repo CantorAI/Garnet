@@ -1,0 +1,81 @@
+--- state-handoff/metal_context.mm
++++ single-column/metal_context.mm
+@@ -34,7 +34,7 @@
+ struct MetalPipelines {
+     id<MTLLibrary> library;
+     id<MTLComputePipelineState> argmax;
+-    id<MTLComputePipelineState> bf16Decode,bf16Gemm;
++    id<MTLComputePipelineState> bf16Decode,bf16DecodeOne1,bf16DecodeOne2,bf16Gemm;
+     id<MTLComputePipelineState> rms;
+     id<MTLComputePipelineState> silu;
+     id<MTLComputePipelineState> add;
+@@ -117,6 +117,32 @@
+     sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
+     if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
+ }
++// One output column per SIMD group reduces live accumulators and avoids the
++// four-column weight transpose. Batch specialization removes unused row work.
++template<uint Rows>
++inline void bf16_decode_one(device const float* a,device const ushort* weight,device float* out,
++    constant BF16Params& p,uint group,uint simd,uint lane) {
++    ulong column=ulong(group)*4+simd;if(column>=p.columns)return;
++    float sum0=0.0f,sum1=0.0f;
++    device const ushort* row=weight+column*p.inner;
++    for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
++        float4 w=as_type<float4>(uint4(*(device const ushort4*)(row+k))<<16);
++        float4 x=*(device const float4*)(a+k);sum0+=dot(x,w);
++        if(Rows==2){float4 y=*(device const float4*)(a+p.aStride+k);sum1+=dot(y,w);}
++    }
++    sum0=simd_sum(sum0);if(Rows==2)sum1=simd_sum(sum1);
++    if(lane==0){out[column]=sum0;if(Rows==2)out[p.oStride+column]=sum1;}
++}
++kernel void bf16_decode_one1(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
++    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    bf16_decode_one<1>(a,weight,out,p,group,simd,lane);
++}
++kernel void bf16_decode_one2(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
++    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    bf16_decode_one<2>(a,weight,out,p,group,simd,lane);
++}
+ // BF16 weights are expanded only inside a small shared-memory tile. FP32
+ // SIMD-group matrix multiply accumulates two 8x8 output tiles per group.
+ kernel void bf16_gemm(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+@@ -593,6 +619,8 @@
+         impl_->kernels->library=library;
+         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
+         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
++        impl_->kernels->bf16DecodeOne1=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_one1"] error:&error];
++        impl_->kernels->bf16DecodeOne2=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_one2"] error:&error];
+         impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
+         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
+         impl_->kernels->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
+@@ -616,7 +644,7 @@
+         impl_->kernels->kvChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk"] error:&error];
+         impl_->kernels->attentionChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"attention_chunk"] error:&error];
+         impl_->kernels->layout=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"chunk_layout"] error:&error];
+-        if(!impl_->kernels->argmax||!impl_->kernels->bf16Decode||!impl_->kernels->bf16Gemm||!impl_->kernels->rms||!impl_->kernels->silu||!impl_->kernels->add||!impl_->kernels->mask||!impl_->kernels->conv||!impl_->kernels->delta||!impl_->kernels->slice||
++        if(!impl_->kernels->argmax||!impl_->kernels->bf16Decode||!impl_->kernels->bf16DecodeOne1||!impl_->kernels->bf16DecodeOne2||!impl_->kernels->bf16Gemm||!impl_->kernels->rms||!impl_->kernels->silu||!impl_->kernels->add||!impl_->kernels->mask||!impl_->kernels->conv||!impl_->kernels->delta||!impl_->kernels->slice||
+             !impl_->kernels->prepare||!impl_->kernels->gatedNorm||!impl_->kernels->concat||!impl_->kernels->normRope||!impl_->kernels->kvUpdate||!impl_->kernels->kvUpdateVector||!impl_->kernels->scores||!impl_->kernels->scoresSerial||!impl_->kernels->attentionContext||!impl_->kernels->vision||!impl_->kernels->visionNorm||!impl_->kernels->visionScores||!impl_->kernels->layout||!impl_->kernels->kvChunk||!impl_->kernels->attentionChunk)
+             throw std::runtime_error("Cannot create Qwen Metal pipelines");
+         cached=impl_->kernels;
+@@ -696,7 +724,8 @@
+         if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
+         if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
+             throw std::logic_error("BF16 output belongs to another command batch");
+-        auto pipeline=a.rows<=2?impl_->kernels->bf16Decode:impl_->kernels->bf16Gemm;
++        const bool singleColumn=a.rows<=2&&a.columns%4==0&&a.rowBytes%16==0;
++        auto pipeline=a.rows<=2?(singleColumn?(a.rows==1?impl_->kernels->bf16DecodeOne1:impl_->kernels->bf16DecodeOne2):impl_->kernels->bf16Decode):impl_->kernels->bf16Gemm;
+         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
+             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
+         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
+@@ -706,7 +735,7 @@
+         [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
+         [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
+         [encoder setBytes:&p length:sizeof(p) atIndex:3];
+-        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+15)/16,1,1):MTLSizeMake((o.columns+31)/32,(o.rows+15)/16,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
++        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake(singleColumn?(o.columns+3)/4:(o.columns+15)/16,1,1):MTLSizeMake((o.columns+31)/32,(o.rows+15)/16,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+     }
+ }
