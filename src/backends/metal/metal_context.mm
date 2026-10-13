@@ -46,6 +46,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> mask;
     id<MTLComputePipelineState> conv;
     id<MTLComputePipelineState> delta,deltaSplit;
+    id<MTLComputePipelineState> deltaSplitParallel;
     id<MTLComputePipelineState> slice,sliceVector;
     id<MTLComputePipelineState> prepare;
     id<MTLComputePipelineState> gatedNorm;
@@ -639,6 +640,47 @@ kernel void gated_delta_split(device const float* query [[buffer(0)]],device con
     resultOutput[outputBase+column]=result;
     }
 }
+kernel void gated_delta_split_parallel(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
+    device const float* value [[buffer(2)]],device const float* decay [[buffer(3)]],
+    device const float* beta [[buffer(4)]],device const float* state [[buffer(5)]],
+    device const float* active [[buffer(6)]],device float* resultOutput [[buffer(7)]],device float* nextState [[buffer(8)]],
+    constant DeltaSplitParams& p [[buffer(9)]],uint id [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],
+    uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    ulong tiles=p.valueDim/16,headId=ulong(id)/tiles;
+    if(headId>=p.batch*p.heads)return;
+    ulong head=headId%p.heads,row=headId/p.heads,column=(ulong(id)%tiles)*16+simd*4;
+    ulong stateBase=row*p.sStride+head*p.keyDim*p.valueDim;
+    ulong outputBase=row*p.oStride+head*p.valueDim;
+    ulong outBase=row*p.nextStride+head*p.keyDim*p.valueDim;
+    if(active[row*p.aStride]==0.0f) {
+        for(ulong j=lane;j<p.keyDim;j+=32)
+            *(device float4*)(nextState+outBase+j*p.valueDim+column)=*(device const float4*)(state+stateBase+j*p.valueDim+column);
+        if(lane==0)*(device float4*)(resultOutput+outputBase+column)=float4(0.0f);
+        return;
+    }
+    threadgroup float qPartial[4],kPartial[4];
+    float qs=0.0f,ks=0.0f;
+    for(ulong j=tid;j<p.keyDim;j+=128) {
+        float q=query[row*p.qStride+head*p.keyDim+j],k=key[row*p.kStride+head*p.keyDim+j];qs+=q*q;ks+=k*k;
+    }
+    qs=simd_sum(qs);ks=simd_sum(ks);if(lane==0){qPartial[simd]=qs;kPartial[simd]=ks;}
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    qs=simd_sum(lane<4?qPartial[lane]:0.0f)+1e-6f;ks=simd_sum(lane<4?kPartial[lane]:0.0f)+1e-6f;
+    float qi=rsqrt(qs)*rsqrt(float(p.keyDim)),ki=rsqrt(ks);
+    float factor=exp(decay[row*p.gStride+head]);float4 memory=0.0f;
+    for(ulong j=lane;j<p.keyDim;j+=32)
+        memory+=*(device const float4*)(state+stateBase+j*p.valueDim+column)*factor*key[row*p.kStride+head*p.keyDim+j]*ki;
+    memory=float4(simd_sum(memory.x),simd_sum(memory.y),simd_sum(memory.z),simd_sum(memory.w));
+    float4 change=(*(device const float4*)(value+row*p.vStride+head*p.valueDim+column)-memory)*beta[row*p.bStride+head];
+    float4 result=0.0f;
+    for(ulong j=lane;j<p.keyDim;j+=32) {
+        float4 next=*(device const float4*)(state+stateBase+j*p.valueDim+column)*factor+key[row*p.kStride+head*p.keyDim+j]*ki*change;
+        *(device float4*)(nextState+outBase+j*p.valueDim+column)=next;
+        result+=next*query[row*p.qStride+head*p.keyDim+j]*qi;
+    }
+    result=float4(simd_sum(result.x),simd_sum(result.y),simd_sum(result.z),simd_sum(result.w));
+    if(lane==0)*(device float4*)(resultOutput+outputBase+column)=result;
+}
 struct LayoutParams {ulong aRows,aColumns,aStride,bStride,oRows,oColumns,oStride,tokenWidth;};
 kernel void chunk_layout(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
  device float* out [[buffer(2)]],constant LayoutParams& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
@@ -791,6 +833,10 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
         impl_->kernels->delta=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta"] error:&error];
         impl_->kernels->deltaSplit=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta_split"] error:&error];
+#ifdef GARNET_METAL_PARALLEL_DELTA_SPLIT
+        impl_->kernels->deltaSplitParallel=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta_split_parallel"] error:&error];
+        if(!impl_->kernels->deltaSplitParallel)throw std::runtime_error("Cannot create parallel recurrent pipeline");
+#endif
         impl_->kernels->slice=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups"] error:&error];
         impl_->kernels->sliceVector=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups_vector4"] error:&error];
         impl_->kernels->prepare=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"linear_prepare"] error:&error];
@@ -1126,6 +1172,12 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
     id<MTLComputePipelineState> pipelines[]={impl_->kernels->conv,impl_->kernels->delta,impl_->kernels->slice,impl_->kernels->prepare,impl_->kernels->gatedNorm,
         impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector,impl_->kernels->deltaSplit,impl_->kernels->kvChunkVector};
     auto pipeline=pipelines[operation];
+#ifdef GARNET_METAL_PARALLEL_DELTA_SPLIT
+    const auto* deltaFields=static_cast<const uint64_t*>(parameters);
+    const bool parallelDelta=operation==16&&deltaFields[2]==128&&deltaFields[3]>=16&&deltaFields[3]%16==0&&
+        deltaFields[9]%4==0&&deltaFields[11]%4==0&&deltaFields[12]%4==0;
+    if(parallelDelta)pipeline=impl_->kernels->deltaSplitParallel;
+#endif
     const auto* visionFields=static_cast<const uint64_t*>(parameters);
     const bool visionNorm=operation==10&&visionFields[12]==1;
     const bool visionScores=operation==10&&visionFields[12]==7&&visionFields[8]<=4096;
@@ -1189,6 +1241,12 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)throw std::runtime_error("Parallel vision requires 32-lane SIMD groups");
         if(visionScores)[encoder setThreadgroupMemoryLength:((visionFields[8]*sizeof(float)+15)&~size_t(15)) atIndex:0];
         [encoder dispatchThreadgroups:MTLSizeMake(visionFields[0]*(visionScores?visionFields[10]:1),1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+
+#ifdef GARNET_METAL_PARALLEL_DELTA_SPLIT
+    } else if(parallelDelta) {
+        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)throw std::runtime_error("Parallel recurrent reduction requires 32-lane SIMD groups");
+        [encoder dispatchThreadgroups:MTLSizeMake(threads/16,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+#endif
     } else if(operation==1||operation==16||operation==4||operation==6||operation==8||operation==13) {
         const auto* fields=static_cast<const uint64_t*>(parameters);
         const size_t capacity=operation==8?fields[4]:(operation==13?fields[5]:0);

@@ -1,0 +1,43 @@
+Test project /Users/zsdx/garnet-metal-investigation/build-parallel-delta
+    Start 1: metal_mps_matmul_reference
+1/1 Test #1: metal_mps_matmul_reference .......***Failed    0.11 sec
+program_source:441:85: error: use of undeclared identifier 'uionvParams'
+    output[row*uint(p.oStride/4)+group*count+col]=input[row*uint(p.iStride/4)+group*uionvParams {ulong batch,channels,kSize,tStride,wStride,sStride,aStride,oStride;};
+                                                                                    ^
+program_source:441:97: error: expected ']'
+    output[row*uint(p.oStride/4)+group*count+col]=input[row*uint(p.iStride/4)+group*uionvParams {ulong batch,channels,kSize,tStride,wStride,sStride,aStride,oStride;};
+                                                                                                ^
+program_source:441:56: note: to match this '['
+    output[row*uint(p.oStride/4)+group*count+col]=input[row*uint(p.iStride/4)+group*uionvParams {ulong batch,channels,kSize,tStride,wStride,sStride,aStride,oStride;};
+                                                       ^
+program_source:442:1: error: expected expression
+kernel void causal_conv(device const float* token [[buffer(0)]],device const float* weight [[buffer(1)]],
+^
+program_source:457:1: error: expected expression
+kernel void gated_delta(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
+^
+program_source:499:1: error: expected expression
+kernel void gated_delta_split(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
+^
+program_source:541:1: error: expected expression
+kernel void chunk_layout(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+^
+program_source:550:1: error: expected expression
+kernel void vision_norm(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],device const float* c [[buffer(2)]],
+^
+program_source:673:2: error: expected '}'
+}
+ ^
+program_source:437:80: note: to match this '{'
+    constant SliceParams& p [[buffer(2)]],uint id [[thread_position_in_grid]]) {
+                                                                               ^
+
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.12 sec
+
+The following tests FAILED:
+	  1 - metal_mps_matmul_reference (Failed)
+Errors while running CTest

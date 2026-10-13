@@ -15,6 +15,10 @@ option(GARNET_METAL_MPS_VISION_SCORES "Test FP32 batched MPS vision attention sc
 if(GARNET_METAL_MPS_VISION_SCORES)
     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_MPS_VISION_SCORES=1)
 endif()
+option(GARNET_METAL_PARALLEL_DELTA_SPLIT "Test parallel FP32 recurrent dot reductions" OFF)
+if(GARNET_METAL_PARALLEL_DELTA_SPLIT)
+    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_PARALLEL_DELTA_SPLIT=1)
+endif()
 target_include_directories(garnet_metal PUBLIC src/backends/metal)
 target_compile_options(garnet_metal PRIVATE -fobjc-arc)
 target_link_libraries(garnet_metal PUBLIC

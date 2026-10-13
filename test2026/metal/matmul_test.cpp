@@ -147,7 +147,7 @@ int main() {
             gpu.Begin();gpu.EncodeArgmax(a,out);gpu.SubmitAndWait();auto actual=gpu.Download(out);
             if(actual[1]!=1||actual[3]!=1)throw std::runtime_error("GPU argmax did not report nonfinite logits");
         }
-        for(size_t rows:{1,2})for(size_t heads:{1,3})for(size_t kd:{7,128})for(size_t vd:{5,128})for(bool paused:{false,true}) {
+        for(size_t rows:{1,2})for(size_t heads:{1,3})for(size_t kd:{7,128})for(size_t vd:{5,16,64,128})for(bool paused:{false,true}) {
             const size_t qw=heads*kd,vw=heads*vd,sw=heads*kd*vd;
             std::vector<float> q(rows*qw),k(rows*qw),v(rows*vw),s(rows*sw),g(rows*heads,-0.25f),beta(rows*heads,0.5f),flags(rows,1);
             for(size_t i=0;i<q.size();++i){q[i]=float(int(i%11)-5)*0.125f;k[i]=float(int(i%7)-3)*0.25f;}
@@ -167,11 +167,34 @@ int main() {
             gpu.SubmitAndWait();const auto actual=gpu.Download(result),actualState=gpu.Download(next);
             for(size_t row=0;row<rows;++row)for(size_t head=0;head<heads;++head) {
                 const size_t base=row*(vw+sw)+head*(kd+1)*vd;
+#ifdef GARNET_METAL_PARALLEL_DELTA_SPLIT
+                if(kd==128&&vd%16==0&&flags[row]) {
+                    double qs=0,ks=0;
+                    for(size_t j=0;j<kd;++j){const double qv=q[row*qw+head*kd+j],kv=k[row*qw+head*kd+j];qs+=qv*qv;ks+=kv*kv;}
+                    const double qi=1/std::sqrt(qs+1e-6)/std::sqrt(double(kd)),ki=1/std::sqrt(ks+1e-6),factor=std::exp(double(g[row*heads+head]));
+                    for(size_t column=0;column<vd;++column) {
+                        double memory=0;
+                        for(size_t j=0;j<kd;++j)memory+=double(s[row*sw+(head*kd+j)*vd+column])*factor*k[row*qw+head*kd+j]*ki;
+                        const double change=(v[row*vw+head*vd+column]-memory)*beta[row*heads+head];double wantedOutput=0;
+                        for(size_t j=0;j<kd;++j) {
+                            const size_t index=row*sw+(head*kd+j)*vd+column;
+                            const double wanted=double(s[index])*factor+k[row*qw+head*kd+j]*ki*change;
+                            if(!std::isfinite(actualState[index])||std::abs(actualState[index]-wanted)>3e-6)
+                                throw std::runtime_error("Parallel recurrent state differs from independent FP64 reference");
+                            wantedOutput+=wanted*q[row*qw+head*kd+j]*qi;
+                        }
+                        const float value=actual[row*vw+head*vd+column];
+                        if(!std::isfinite(value)||std::abs(value-wantedOutput)>3e-6)
+                            throw std::runtime_error("Parallel recurrent output differs from independent FP64 reference");
+                    }
+                    continue;
+                }
+#endif
                 if(std::memcmp(actual.data()+row*vw+head*vd,reference.data()+base,vd*sizeof(float))||
                     std::memcmp(actualState.data()+row*sw+head*kd*vd,reference.data()+base+vd,kd*vd*sizeof(float)))
                     throw std::runtime_error("Split delta differs from packed kernel bits");
             }
-            if(rows==2&&heads==3&&kd==7&&vd==5&&paused) {
+            if(rows==2&&heads==3&&((kd==7&&vd==5)||(kd==128&&vd==128))&&paused) {
                 gpu.Begin();gpu.EncodeGatedDeltaSplit(query,key,value,decay,update,state,active,result,next,heads,kd,vd);gpu.Abort();
                 for(const auto& output:{result,next}) {
                     bool abandoned=false;try {gpu.Download(output);}catch(const std::logic_error&){abandoned=true;}
