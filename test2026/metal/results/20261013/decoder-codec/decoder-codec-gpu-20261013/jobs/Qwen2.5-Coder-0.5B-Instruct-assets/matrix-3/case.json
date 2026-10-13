@@ -1,0 +1,22 @@
+{
+  "name": "matrix-3",
+  "rows": 128,
+  "inner": 896,
+  "count": 114688,
+  "finite": true,
+  "block": 128,
+  "codec": "nibble-fastpath",
+  "raw_bytes": 229376,
+  "packed_bytes": 179211,
+  "storage_ratio": 1.2799214333941555,
+  "escape_free_block_fraction": 0.9877232142857143,
+  "cpu_full_bit_roundtrip": true,
+  "sha256": {
+    "raw.bin": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896",
+    "metadata.bin": "18631bcb4b828a86039ffe8f7a7e387863e293af81045ade18df8cb3d8770b95",
+    "exceptions.bin": "a3370f7adbfbea72d809133bb9ed51fb98ba77612592b9b046638f68f974ccb6",
+    "payload.bin": "b222aa68a07261df23079781f810143a1e6fa025b73b9082c07852b712c4aff8",
+    "packed.bin": "ce392342ad991683edcbef03fc54a6a560329b2dc15fccce0f2a2d7a61d28393"
+  },
+  "tensor": "model.layers.0.self_attn.k_proj.weight"
+}

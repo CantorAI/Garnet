@@ -1,0 +1,22 @@
+{
+  "name": "matrix-13",
+  "rows": 4096,
+  "inner": 1024,
+  "count": 4194304,
+  "finite": true,
+  "block": 128,
+  "codec": "nibble-fastpath",
+  "raw_bytes": 8388608,
+  "packed_bytes": 6554016,
+  "storage_ratio": 1.2799187551571434,
+  "escape_free_block_fraction": 0.987396240234375,
+  "cpu_full_bit_roundtrip": true,
+  "sha256": {
+    "raw.bin": "b0dde4ab3eee4dc2abdf2e2fe8cd6b474d52c4559e38bb8fc9c8589c1b0a7176",
+    "metadata.bin": "830f7c88e311125c0f32c1ea1c15fda5455834ff0cd2341c6e6ec2678b676798",
+    "exceptions.bin": "db65aa11d6a7ecaafd7824785a1cc9dce5b98d3d35370b373c179691f082e5d4",
+    "payload.bin": "00e58f942d2abc721df31d85322aabe8bf7c196265548d3a1fefe25d48020855",
+    "packed.bin": "b1dee0eaef9aeb246d2818c0e77f5df80c814ec98239536a52ce90e65a1f163d"
+  },
+  "tensor": "model.language_model.layers.3.self_attn.q_proj.weight"
+}

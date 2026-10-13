@@ -1,0 +1,87 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/lossless_gpu_probe.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/lossless_gpu_probe"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 1.1711390409618616
+  },
+  {
+    "name": "Qwen3-0.6B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decoder_codec_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.9726093751378357
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/lossless_gpu_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets",
+      "single"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 1.8028414156287909
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decoder_codec_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.4205563333816826
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/lossless_gpu_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets",
+      "single"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 1.155190167017281
+  },
+  {
+    "name": "Qwen3.5-0.8B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_decoder_codec_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 5.553601250052452
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/lossless_gpu_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets",
+      "single"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.515999666880816
+  }
+]

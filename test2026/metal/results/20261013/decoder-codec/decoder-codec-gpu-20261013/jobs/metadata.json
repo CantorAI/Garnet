@@ -1,0 +1,18 @@
+{
+  "scope": "Exact decoder matrix-vector component test; no full-model speed claim",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "source_sha256": {
+    "metal_context.mm": "585403ed76a604f653478b1f7be8de9e4089d7c37474daf8b23366aad74b5b67",
+    "lossless_gpu_probe.mm": "d8a0cfead76a16275637c3571e8342274b98e78303d624ede93e56de9a83217a",
+    "lossless_gpu_probe.metal": "f0d5716255b3e3fafda5a74646008127c04f6736eb7064ab80cafb83fd29266f",
+    "prepare_decoder_codec_probe.py": "5d95f1d50be1ef42a5b38e5ca6a9c81d532ddfb73d96467ce911901fb977028b",
+    "prepare_lossless_gpu_probe.py": "dfa3f302eb21da1f18351c484cdd043214239ed4c3fc5f0360e0f6d6da1d2719",
+    "probe_lossless_nibble_bf16_codec.py": "76585569813a4deabd6e8d10474e687b46d3e900c29f5e075d2994698515dd9f",
+    "run_decoder_codec_probe.py": "f3ef97eeaa1458fcf22354dea428a756a429b92db9575e3b8e49cde7217f8c30"
+  },
+  "raw_kernel_sha256": "0caada234e7feac6d02c15b031a1c875983888dee767cc41d76459bbd1273446",
+  "codec": "lossless nibble; one output column per SIMD group"
+}

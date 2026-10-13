@@ -354,6 +354,19 @@ remains active and unmet. `prefill-tiles/README.md` provides the current selecte
 implementation, complete metrics, precision limits, source snapshots and
 first-use/warm accounting.
 
+### Rejected whole-decoder lossless packing
+
+The subsequent `../../20261013/decoder-codec/` evidence tested exact packing on
+29 real projection matrices, then an actual native decoder implementation.
+All 58 matrix checks, all 11 native validations and all 72 native-control
+requests passed with exact outputs. The isolated 1.66–1.93x projection ratios
+did not transfer to full inference: text gained about 4–5% decode, coder
+batch 1 about 3%, while text/coder TTFT, initialization and memory regressed.
+VL decode slowed about 2%. The implementation and CMake option were reverted.
+`build-prefill-wide` remains the selected native candidate; all full-goal
+targets remain unmet. The rejected source, commands and complete results are
+retained in the later report.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

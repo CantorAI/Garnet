@@ -1,0 +1,156 @@
+diff --git a/cmake/GarnetMetal.cmake b/cmake/GarnetMetal.cmake
+index 1ebd7f3..c7ea7dc 100644
+--- a/cmake/GarnetMetal.cmake
++++ b/cmake/GarnetMetal.cmake
+@@ -7,6 +7,10 @@ find_library(GARNET_METAL_FRAMEWORK Metal REQUIRED)
+ find_library(GARNET_MPS_FRAMEWORK MetalPerformanceShaders REQUIRED)
+ find_library(GARNET_FOUNDATION_FRAMEWORK Foundation REQUIRED)
+ add_library(garnet_metal STATIC src/backends/metal/metal_context.mm)
++option(GARNET_METAL_LOSSLESS_DECODE "Experimental exact BF16 packing for decoder projections" OFF)
++if(GARNET_METAL_LOSSLESS_DECODE)
++    target_compile_definitions(garnet_metal PRIVATE GARNET_METAL_LOSSLESS_DECODE=1)
++endif()
+ target_include_directories(garnet_metal PUBLIC src/backends/metal)
+ target_compile_options(garnet_metal PRIVATE -fobjc-arc)
+ target_link_libraries(garnet_metal PUBLIC
+diff --git a/src/backends/metal/metal_context.mm b/src/backends/metal/metal_context.mm
+index 8b42dea..96515ea 100644
+--- a/src/backends/metal/metal_context.mm
++++ b/src/backends/metal/metal_context.mm
+@@ -29,12 +29,13 @@ bool MetalMatrix::CompatibleLayout(const MetalMatrix& other) const {
+ }
+ struct MetalBF16Weight::Impl {
+     id<MTLBuffer> buffer;
++    id<MTLBuffer> packedPayload,packedTags,packedMetadata,packedEscapes;
+     size_t rows,columns;
+ };
+ struct MetalPipelines {
+     id<MTLLibrary> library;
+     id<MTLComputePipelineState> argmax;
+-    id<MTLComputePipelineState> bf16Decode,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
++    id<MTLComputePipelineState> bf16Decode,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide,bf16PackedDecode;
+     id<MTLComputePipelineState> rms;
+     id<MTLComputePipelineState> silu;
+     id<MTLComputePipelineState> add;
+@@ -117,6 +118,41 @@ kernel void bf16_decode(device const float* a [[buffer(0)]],device const ushort*
+     sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
+     if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
+ }
++inline ushort4 lossless_unpack4(device const uchar* payload,device const ushort* tags,
++    device const ulong* metadata,device const uchar* exceptions,ulong block,uint lane) {
++    uint packed=uint(tags[block*32+lane]);
++    ushort4 tag=ushort4(packed,packed>>4,packed>>8,packed>>12)&15;
++    ulong meta=metadata[block];ushort base=ushort(meta&255);
++    ushort4 low=ushort4(*(device const uchar4*)(payload+block*128+lane*4));
++    ushort4 exponents=base-tag;
++    // Uniform per SIMD group; most real checkpoint blocks take this path.
++    if((meta>>63)==0) {
++        uint4 escaped=uint4(tag==15);
++        uint count=escaped.x+escaped.y+escaped.z+escaped.w;
++        uint prefix=simd_prefix_exclusive_sum(count);
++        ulong offset=((meta&0x7ffffffffffffffful)>>8)+prefix;
++        for(uint j=0;j<4;++j)if(escaped[j])exponents[j]=ushort(exceptions[offset++]);
++    }
++    return (low&127)|((low&128)<<8)|(exponents<<7);
++}
++kernel void bf16_packed_decode(device const float* a [[buffer(0)]],device const uchar* payload [[buffer(1)]],
++    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
++    device const ushort* tags [[buffer(4)]],device const ulong* metadata [[buffer(5)]],
++    device const uchar* exceptions [[buffer(6)]],uint group [[threadgroup_position_in_grid]],
++    uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
++    ulong column=ulong(group)*4+simd;
++    if(column>=p.columns)return;
++    float sum0=0.0f,sum1=0.0f;
++    for(ulong base=0;base<p.inner;base+=128) {
++        ulong k=base+lane*4;
++        float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
++        ushort4 bits=lossless_unpack4(payload,tags,metadata,exceptions,(column*p.inner+base)/128,lane);
++        float4 w=as_type<float4>(uint4(bits)<<16);
++        for(uint j=0;j<4;++j){sum0+=x[j]*w[j];if(p.rows==2)sum1+=y[j]*w[j];}
++    }
++    sum0=simd_sum(sum0);sum1=simd_sum(sum1);
++    if(lane==0){out[column]=sum0;if(p.rows==2)out[p.oStride+column]=sum1;}
++}
+ // BF16 weights are expanded only inside a small shared-memory tile. FP32
+ // SIMD-group matrix multiply accumulates two 8x8 output tiles per group.
+ kernel void bf16_gemm(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+@@ -659,6 +695,9 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b
+         impl_->kernels->library=library;
+         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
+         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
++#ifdef GARNET_METAL_LOSSLESS_DECODE
++        impl_->kernels->bf16PackedDecode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_packed_decode"] error:&error];
++#endif
+         impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
+         impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
+         impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
+@@ -727,6 +766,46 @@ MetalBF16Weight MetalContext::UploadBF16(const void* data,size_t bytes,size_t ro
+         auto value=std::make_shared<MetalBF16Weight::Impl>();value->rows=rows;value->columns=columns;
+         value->buffer=[impl_->device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared];
+         if(!value->buffer)throw std::runtime_error("BF16 weight allocation failed");
++#ifdef GARNET_METAL_LOSSLESS_DECODE
++        // Keep raw weights for prefill/public fallback. Pack only bounded
++        // decoder-sized matrices, never the large vocabulary projection.
++        if(columns%128==0&&bytes<=16*1024*1024&&impl_->kernels->bf16PackedDecode) {
++            const size_t count=rows*columns;
++            std::vector<uint8_t> payload(count),escapes;
++            std::vector<uint16_t> tags(count/4,0);
++            std::vector<uint64_t> metadata(count/128);
++            auto readBits=[&](size_t index){uint16_t bits;std::memcpy(&bits,static_cast<const char*>(data)+2*index,2);return bits;};
++            for(size_t block=0;block<count/128;++block) {
++                std::array<uint32_t,256> histogram{};
++                for(size_t i=0;i<128;++i)++histogram[(readBits(block*128+i)>>7)&255];
++                uint32_t current=0,best=0,base=0;
++                for(uint32_t exponent=0;exponent<256;++exponent){current+=histogram[exponent];if(exponent>=15)current-=histogram[exponent-15];if(current>best){best=current;base=exponent;}}
++                const size_t start=escapes.size();
++                for(size_t i=0;i<128;++i) {
++                    size_t index=block*128+i;uint16_t bits=readBits(index);uint32_t exponent=(bits>>7)&255;
++                    int delta=int(base)-int(exponent);uint16_t tag=delta>=0&&delta<=14?uint16_t(delta):15;
++                    payload[index]=uint8_t((bits&127)|((bits>>8)&128));tags[index/4]|=uint16_t(tag<<(4*(index%4)));
++                    if(tag==15)escapes.push_back(uint8_t(exponent));
++                }
++                metadata[block]=(uint64_t(start)<<8)|base;
++                if(escapes.size()==start)metadata[block]|=uint64_t(1)<<63;
++                // Exact host reconstruction is a load-time gate, outside
++                // request timing. It also catches escape-offset mistakes.
++                size_t cursor=start;
++                for(size_t i=0;i<128;++i) {
++                    size_t index=block*128+i;uint32_t tag=(tags[index/4]>>(4*(index%4)))&15;
++                    uint32_t exponent=tag==15?escapes[cursor++]:base-tag;
++                    uint16_t rebuilt=uint16_t((payload[index]&127)|((uint32_t(payload[index])&128)<<8)|(exponent<<7));
++                    if(rebuilt!=readBits(index))throw std::runtime_error("Lossless BF16 host roundtrip failed");
++                }
++            }
++            value->packedPayload=[impl_->device newBufferWithBytes:payload.data() length:payload.size() options:MTLResourceStorageModeShared];
++            value->packedTags=[impl_->device newBufferWithBytes:tags.data() length:tags.size()*2 options:MTLResourceStorageModeShared];
++            value->packedMetadata=[impl_->device newBufferWithBytes:metadata.data() length:metadata.size()*8 options:MTLResourceStorageModeShared];
++            value->packedEscapes=escapes.empty()?[impl_->device newBufferWithLength:1 options:MTLResourceStorageModeShared]:[impl_->device newBufferWithBytes:escapes.data() length:escapes.size() options:MTLResourceStorageModeShared];
++            if(!value->packedPayload||!value->packedTags||!value->packedMetadata||!value->packedEscapes)throw std::runtime_error("Lossless BF16 buffer allocation failed");
++        }
++#endif
+         return MetalBF16Weight(value);
+     }
+ }
+@@ -771,7 +850,8 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
+         auto widePipeline=a.rows>16?impl_->kernels->bf16Gemm32Wide:impl_->kernels->bf16Gemm16Wide;
+         if(a.rows>=16&&o.columns>=64&&widePipeline&&widePipeline.threadExecutionWidth==32&&
+             widePipeline.maxTotalThreadsPerThreadgroup>=256&&widePipeline.staticThreadgroupMemoryLength<=impl_->device.maxThreadgroupMemoryLength)wide=true;
+-        auto pipeline=a.rows<=2?impl_->kernels->bf16Decode:wide?widePipeline:impl_->kernels->bf16Gemm;
++        bool packed=a.rows<=2&&w->packedPayload&&w->packedTags&&w->packedMetadata&&w->packedEscapes&&impl_->kernels->bf16PackedDecode;
++        auto pipeline=a.rows<=2?(packed?impl_->kernels->bf16PackedDecode:impl_->kernels->bf16Decode):wide?widePipeline:impl_->kernels->bf16Gemm;
+         size_t threads=wide?256:128,tileRows=wide&&a.rows>16?32:16,tileColumns=wide?64:32;
+         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)
+             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
+@@ -780,9 +860,10 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
+         auto encoder=[impl_->command computeCommandEncoder];
+         if(!encoder)throw std::runtime_error("Cannot create BF16 projection encoder");
+         [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
+-        [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
++        [encoder setBuffer:packed?w->packedPayload:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
++        if(packed){[encoder setBuffer:w->packedTags offset:0 atIndex:4];[encoder setBuffer:w->packedMetadata offset:0 atIndex:5];[encoder setBuffer:w->packedEscapes offset:0 atIndex:6];}
+         [encoder setBytes:&p length:sizeof(p) atIndex:3];
+-        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+15)/16,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
++        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+(packed?3:15))/(packed?4:16),1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
+         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+     }
+ }

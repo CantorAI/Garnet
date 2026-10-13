@@ -1,0 +1,22 @@
+{
+  "name": "matrix-6",
+  "rows": 3584,
+  "inner": 1024,
+  "count": 3670016,
+  "finite": true,
+  "block": 128,
+  "codec": "nibble-fastpath",
+  "raw_bytes": 7340032,
+  "packed_bytes": 5734748,
+  "storage_ratio": 1.279922326142317,
+  "escape_free_block_fraction": 0.9878627232142857,
+  "cpu_full_bit_roundtrip": true,
+  "sha256": {
+    "raw.bin": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140",
+    "metadata.bin": "ae8b74b94eb0fd180f6998e11bb273d8e34f9f7d5d7f5aff203dc9b6eb09034f",
+    "exceptions.bin": "575e08772092df04d98deb210563f022c78e2ec42add8da7208c254b47c77c7f",
+    "payload.bin": "b56573662b462c1289bf56fb933a9906037204248b9aa292ca21536db6943bab",
+    "packed.bin": "2889ba8165f827a346e0f64c35ab0664e9524a8d8a5053efae13d0d67ca1502c"
+  },
+  "tensor": "model.language_model.layers.0.mlp.gate_proj.weight"
+}

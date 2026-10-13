@@ -1,0 +1,22 @@
+{
+  "name": "matrix-14",
+  "rows": 512,
+  "inner": 1024,
+  "count": 524288,
+  "finite": true,
+  "block": 128,
+  "codec": "nibble-fastpath",
+  "raw_bytes": 1048576,
+  "packed_bytes": 819267,
+  "storage_ratio": 1.2798953210613877,
+  "escape_free_block_fraction": 0.98388671875,
+  "cpu_full_bit_roundtrip": true,
+  "sha256": {
+    "raw.bin": "459514e89bd3142fca159b73b936cc0e444e6e9cb0dff082be0ecb8462d6a1b7",
+    "metadata.bin": "764974ae254540ee83cee9f2ae35a8efe469f87f5e325e5fd990441b4b92f61b",
+    "exceptions.bin": "f2b2c50c3ea1fbb43396f9f1e884cadf168ea7344773cdfb71a11e3c83c2ce9c",
+    "payload.bin": "b8d950783575b83539968917608974065d9da8c2f6648ec4ac5e95fcbb81b9dd",
+    "packed.bin": "e0936244d20d5aa790fa0efc89146eb1a52f281626946f956437747247159bb8"
+  },
+  "tensor": "model.language_model.layers.3.self_attn.v_proj.weight"
+}
