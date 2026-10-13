@@ -1,0 +1,15 @@
+{
+  "scope": "Native decode work-distribution component experiment only, not serving or vLLM timing",
+  "precision": "Unchanged exact BF16 weights, FP32 input/accumulation/output; no quantization",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "source_sha256": {
+    "metal_context.mm": "1409ffd7d599ca228470f0f664e1ca9962ffa839dae90c3692cb7ab676fb0a98",
+    "decode_occupancy_gpu.mm": "2193a5d2125ca664960b633a60ff2a9763339e73765e3ee5b9f6aaf261c4e1d2",
+    "make_decode_occupancy_shader.py": "0f64650630fe12b89b0eb89f4366ac3b5d3539789c880e7d2cc1e82b08a8e776",
+    "prepare_decode_tile_probe.py": "787166c08791d675ecc1cea030f0d94e8b8daf150dc6a4490749e3ceb45b5059",
+    "run_decode_occupancy_probe.py": "020c78c0549f2afe896cb7fa56f3142b43ba8463f2c79d07405aab7e85476a6f"
+  }
+}
