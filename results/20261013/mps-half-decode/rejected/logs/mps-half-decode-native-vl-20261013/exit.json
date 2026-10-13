@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_after_owned_job.py",
+    "/Users/zsdx/garnet-metal-investigation/logs/mps-half-decode-native-text-20261013",
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/compare_linear_direct_write_frames.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-mps-half-decode",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/logs/mps-half-decode-native-vl-20261013/jobs",
+    "shared",
+    "/Users/zsdx/garnet-metal-investigation/build-linear-delta-chunk",
+    "vl"
+  ],
+  "exit_code": 0
+}
