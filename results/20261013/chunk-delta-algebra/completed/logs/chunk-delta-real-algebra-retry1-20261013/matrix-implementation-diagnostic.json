@@ -1,0 +1,77 @@
+{
+  "scope": "Diagnostic only, same formula with alternative matrix implementation",
+  "rows": [
+    {
+      "policy": "blas",
+      "repeat": 0,
+      "max_abs_error": [
+        0.035490863025188446,
+        1.67528235912323
+      ],
+      "finite": [
+        true,
+        true
+      ]
+    },
+    {
+      "policy": "blas",
+      "repeat": 1,
+      "max_abs_error": [
+        0.035493433475494385,
+        0.01462438702583313
+      ],
+      "finite": [
+        true,
+        true
+      ]
+    },
+    {
+      "policy": "blas",
+      "repeat": 2,
+      "max_abs_error": [
+        0.035493433475494385,
+        0.36683928966522217
+      ],
+      "finite": [
+        true,
+        true
+      ]
+    },
+    {
+      "policy": "einsum",
+      "repeat": 0,
+      "max_abs_error": [
+        1.1175870895385742e-08,
+        5.550682544708252e-07
+      ],
+      "finite": [
+        true,
+        true
+      ]
+    },
+    {
+      "policy": "einsum",
+      "repeat": 1,
+      "max_abs_error": [
+        1.1175870895385742e-08,
+        5.550682544708252e-07
+      ],
+      "finite": [
+        true,
+        true
+      ]
+    },
+    {
+      "policy": "einsum",
+      "repeat": 2,
+      "max_abs_error": [
+        1.1175870895385742e-08,
+        5.550682544708252e-07
+      ],
+      "finite": [
+        true,
+        true
+      ]
+    }
+  ]
+}
