@@ -19,7 +19,7 @@ print('matched_prompt',json.dumps(dict(chat=chat,token_ids=ids,stop_token_ids=st
 decoder=None;batch=workload['batch'];limit=workload['max_tokens'];repeats=workload.get('requests',3)
 try:
     decoder=DenseMetalDecoder(folder+'/model.safetensors',config,batch,workload['capacity'])
-    decoder.enable_prefill(workload.get('chunk',16))
+    decoder.enable_prefill(workload.get('chunk',16),workload.get('prefill_projection','shared'))
     initialization=time.monotonic()-started
     for request in range(repeats):
         begin=time.monotonic();decoder.reset()
@@ -48,7 +48,7 @@ try:
             decode_window_seconds=decode_window,
             decode_wall_steps_per_second=len(durations)/decode_window if durations else None,
             native_decode_ms=native_ms,decode_phases=phases,prefill_profile=decoder.prefill_profile,
-            weights='checkpoint BF16 projections/head; FP32 accumulation/activations/KV')
+            weights='checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV')
         result['case']=workload
         print('matched_result',json.dumps(result),flush=True)
 finally:

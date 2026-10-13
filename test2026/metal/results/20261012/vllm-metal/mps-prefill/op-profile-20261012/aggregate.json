@@ -1,0 +1,165 @@
+{
+  "scope": "serialized-operation diagnostic; not serving latency",
+  "groups": [
+    {
+      "kind": "MatMul",
+      "many_rows": false,
+      "large_output": false,
+      "count": 1372,
+      "gpu_ms": 75.8919161721,
+      "mean_ms": 0.05531480770561224
+    },
+    {
+      "kind": "MatMul",
+      "many_rows": true,
+      "large_output": false,
+      "count": 392,
+      "gpu_ms": 71.6981673535,
+      "mean_ms": 0.18290348814668367
+    },
+    {
+      "kind": "KVUpdate",
+      "many_rows": false,
+      "large_output": true,
+      "count": 392,
+      "gpu_ms": 35.1086636079,
+      "mean_ms": 0.08956291736709183
+    },
+    {
+      "kind": "KVChunk",
+      "many_rows": true,
+      "large_output": true,
+      "count": 112,
+      "gpu_ms": 32.798580358,
+      "mean_ms": 0.2928444674821429
+    },
+    {
+      "kind": "BF16MatVec",
+      "many_rows": false,
+      "large_output": true,
+      "count": 8,
+      "gpu_ms": 23.89241661,
+      "mean_ms": 2.98655207625
+    },
+    {
+      "kind": "Mask",
+      "many_rows": false,
+      "large_output": false,
+      "count": 196,
+      "gpu_ms": 12.35191896428,
+      "mean_ms": 0.06301999471571429
+    },
+    {
+      "kind": "Layout",
+      "many_rows": false,
+      "large_output": false,
+      "count": 336,
+      "gpu_ms": 7.06441700675,
+      "mean_ms": 0.021025050615327383
+    },
+    {
+      "kind": "NormRope",
+      "many_rows": false,
+      "large_output": false,
+      "count": 392,
+      "gpu_ms": 4.2674555439,
+      "mean_ms": 0.010886366183418367
+    },
+    {
+      "kind": "AttentionChunk",
+      "many_rows": true,
+      "large_output": false,
+      "count": 56,
+      "gpu_ms": 4.0994994358,
+      "mean_ms": 0.07320534706785715
+    },
+    {
+      "kind": "Layout",
+      "many_rows": false,
+      "large_output": true,
+      "count": 112,
+      "gpu_ms": 3.9284629749,
+      "mean_ms": 0.035075562275892855
+    },
+    {
+      "kind": "AttentionContext",
+      "many_rows": false,
+      "large_output": false,
+      "count": 196,
+      "gpu_ms": 3.7546302191,
+      "mean_ms": 0.019156276628061224
+    },
+    {
+      "kind": "Scores",
+      "many_rows": false,
+      "large_output": false,
+      "count": 196,
+      "gpu_ms": 3.4217946241,
+      "mean_ms": 0.017458135837244898
+    },
+    {
+      "kind": "Norm",
+      "many_rows": false,
+      "large_output": false,
+      "count": 400,
+      "gpu_ms": 3.15620703623,
+      "mean_ms": 0.007890517590575
+    },
+    {
+      "kind": "Add",
+      "many_rows": false,
+      "large_output": false,
+      "count": 448,
+      "gpu_ms": 2.99958558744,
+      "mean_ms": 0.006695503543392857
+    },
+    {
+      "kind": "Layout",
+      "many_rows": true,
+      "large_output": false,
+      "count": 168,
+      "gpu_ms": 2.42096092447,
+      "mean_ms": 0.014410481693273811
+    },
+    {
+      "kind": "NormRope",
+      "many_rows": true,
+      "large_output": false,
+      "count": 112,
+      "gpu_ms": 1.51066854582,
+      "mean_ms": 0.01348811201625
+    },
+    {
+      "kind": "Silu",
+      "many_rows": true,
+      "large_output": false,
+      "count": 56,
+      "gpu_ms": 1.1352924629,
+      "mean_ms": 0.02027307969464286
+    },
+    {
+      "kind": "Silu",
+      "many_rows": false,
+      "large_output": false,
+      "count": 196,
+      "gpu_ms": 0.91199949379,
+      "mean_ms": 0.004653058641785715
+    },
+    {
+      "kind": "Norm",
+      "many_rows": true,
+      "large_output": false,
+      "count": 112,
+      "gpu_ms": 0.90187787996,
+      "mean_ms": 0.008052481071071428
+    },
+    {
+      "kind": "Add",
+      "many_rows": true,
+      "large_output": false,
+      "count": 56,
+      "gpu_ms": 0.56916847828,
+      "mean_ms": 0.01016372282642857
+    }
+  ]
+}

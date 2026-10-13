@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/await_vllm_baseline.py",
+    "/Users/zsdx/garnet-metal-investigation/logs/vllm-qwen35-fresh-image-probe-20261012",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-visible-cache",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-mps-prefill-20261012/jobs",
+    "mps"
+  ],
+  "exit_code": 0
+}

@@ -59,13 +59,21 @@ class MetalDecoder(CPUDecoder):
         self.poisoned=False
         return prediction if predict else None
 
-    def enable_prefill(self,chunk=16):
+    def enable_prefill(self,chunk=16,projection='shared'):
         if chunk not in (2,4,8,16):raise ValueError('Metal prefill chunk must be 2, 4, 8 or 16')
-        if hasattr(self,'prefill_graphs') and getattr(self,'chunk',None)!=chunk:
+        if projection not in ('shared','mps'):raise ValueError('Prefill projection must be shared or mps')
+        if hasattr(self,'prefill_graphs') and (getattr(self,'chunk',None)!=chunk or getattr(self,'prefill_projection','shared')!=projection):
             for graph in self.prefill_graphs.values():graph.close()
             self.prefill_graphs={}
-        self.chunk=chunk
+        self.chunk=chunk;self.prefill_projection=projection
         if not hasattr(self,'prefill_graphs'):self.prefill_graphs={}
+
+    def _build_prefill_graph(self,graph,output,symbols,layer_graph):
+        # Experimental MPS policy expands the original BF16 values exactly to
+        # FP32 once. Decode still uses its existing resident BF16 weights.
+        # This consumes additional memory and is not the default policy.
+        if self.prefill_projection=='mps':graph.build(output,symbols,self.checkpoint)
+        else:graph.build_shared(output,symbols,self.checkpoint,layer_graph)
 
     def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):
         from .prefill_layer import PrefillLayer
@@ -89,7 +97,7 @@ class MetalDecoder(CPUDecoder):
             graph=self.prefill_graphs.get(key);next_hidden=[]
             if graph is None:
                 graph=garnet.compiled_graph()
-                try:graph.build_shared(forward(*symbols),symbols,self.checkpoint,layer['graph'])
+                try:self._build_prefill_graph(graph,forward(*symbols),symbols,layer['graph'])
                 except:graph.close();raise
                 self.prefill_graphs[key]=graph
                 self.prefill_compile_ms+=graph.compile_ms
@@ -131,7 +139,7 @@ class MetalDecoder(CPUDecoder):
                 def forward(hidden,state1,state2,position,slots,active):
                     return self._prefill_layer(hidden,state1,state2,position,slots,active,config,idx,batch,chunk,capacity,kind)
                 graph=garnet.compiled_graph()
-                try:graph.build_shared(forward(*symbols),symbols,self.checkpoint,layer['graph'])
+                try:self._build_prefill_graph(graph,forward(*symbols),symbols,layer['graph'])
                 except:graph.close();raise
                 self.prefill_graphs[key]=graph;self.prefill_compile_ms+=graph.compile_ms
             graphs.append(graph)

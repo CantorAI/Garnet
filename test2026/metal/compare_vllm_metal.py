@@ -5,7 +5,9 @@ Arguments: xlang3, native build, source, vLLM Python, evidence folder.
 import hashlib,json,os,platform,signal,subprocess,sys,time
 from pathlib import Path
 
-runtime,build,source,python,output=sys.argv[1:];source=Path(source);root=source.parent;output=Path(output)
+runtime,build,source,python,output=sys.argv[1:6];source=Path(source);root=source.parent;output=Path(output)
+prefill_projection=sys.argv[6] if len(sys.argv)>6 else 'shared'
+if prefill_projection not in ('shared','mps'):raise ValueError('Unknown prefill projection policy')
 output.mkdir(parents=True,exist_ok=True);scripts=source/'test2026/metal';statuses=[]
 background_checks=[]
 worldsense_script=Path('/Users/zsdx/cantorai-release-tests/current/bin/WorldSense/Backend/package_runtime.py')
@@ -80,7 +82,7 @@ for name in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
 for batch in (1,2):
     for name,prompt in [('Qwen3-0.6B','What is the capital of France? Answer briefly.'),
         ('Qwen2.5-Coder-0.5B-Instruct','Write a Python function add(a, b) that returns their sum. Output only code.')]:
-        case=dict(prompt=prompt,batch=batch,max_tokens=64,capacity=256,chunk=16,requests=3)
+        case=dict(prompt=prompt,batch=batch,max_tokens=64,capacity=256,chunk=16,requests=3,prefill_projection=prefill_projection)
         model=root/'models'/name;casefile=output/(name+'-b'+str(batch)+'-case.json')
         casefile.write_text(json.dumps(case,indent=2)+'\n')
         native_log=None

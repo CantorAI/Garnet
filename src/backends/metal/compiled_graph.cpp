@@ -10,6 +10,8 @@
 #include <cmath>
 #include <unordered_set>
 #include <map>
+#include <cstdlib>
+#include <cstdio>
 namespace Garnet {
 size_t MetalCompiledGraph::Allocate(size_t rows,size_t columns) {
     auto id=slots_.size();slots_.push_back({gpu_->Allocate(rows,columns),rows,columns,{int64_t(rows),int64_t(columns)}});return id;
@@ -654,6 +656,11 @@ void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<
     }
 }
 void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
+    // Opt-in isolated-operation diagnostics deliberately split submissions.
+    // They identify expensive kernels; their latency is not a serving metric.
+    const char* profile=std::getenv("GARNET_METAL_PROFILE_OPS");
+    const bool profileOps=profile&&std::strcmp(profile,"1")==0;
+    static const char* names[]={"MatMul","BF16MatVec","Norm","Silu","Add","Bias","Mask","Conv","Delta","Slice","Prepare","GateNorm","Concat","NormRope","KVUpdate","KVChunk","AttentionChunk","Scores","AttentionContext","Vision","Layout"};
     for(size_t i=0;i<ops_.size();++i) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
@@ -707,6 +714,14 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
                 slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]!=0);
         }else {
             gpu.EncodeSliceGroups(a,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
+        }
+        if(profileOps) {
+            gpu.SubmitAndWait();
+            std::fprintf(stderr,"metal_op_profile {\"kind\":\"%s\",\"a_rows\":%zu,\"a_cols\":%zu,\"out_rows\":%zu,\"out_cols\":%zu,\"bf16\":%s,\"gpu_ms\":%.9g,\"serialized_diagnostic\":true}\n",
+                names[size_t(op.kind)],slots_[op.a].rows,slots_[op.a].columns,
+                slots_[op.out].rows,slots_[op.out].columns,
+                slots_[op.b].bf16.Valid()?"true":"false",gpu.LastGPUMs());
+            gpu.Begin();
         }
     }
 }

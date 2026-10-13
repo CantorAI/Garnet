@@ -113,6 +113,42 @@ preprocessing/timing boundary and repeated native/comparator VL comparison
 are still required. Internal vision arithmetic also differs (native FP32
 versus comparator BF16) despite identical BF16 checkpoint files.
 
+## Optional MPS prefill and operation profiling
+
+`mps-prefill/vllm-matched-mps-prefill-20261012` executed another 48 matched
+requests with exact token outputs and clean shutdown. The optional `mps`
+prefill policy expands original BF16 weights exactly into FP32 MPS matrices;
+decode retains BF16 weights and the default policy remains `shared`.
+
+| Model | Batch | MPS-prefill Garnet TTFT, ms | vLLM TTFT, ms | Native process RSS, GiB |
+| --- | --- | --- | --- | --- |
+| Qwen3-0.6B | 1 | 113.91 | 49.54 | 3.00 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 67.54 | 34.56 | 2.38 |
+| Qwen3-0.6B | 2 | 181.87 | 64.93 | 3.11 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 84.99 | 37.74 | 2.39 |
+
+Warm TTFT falls 4.1–25.4% against the visible-cache shared-weight profile,
+at roughly twice its native RSS. Decode does not improve. First-use conversion
+cost remains in the first request's timing. Neither comparator target is met;
+the three-model resident-memory scenario has not been validated with this
+optional policy.
+
+An opt-in serialized-operation diagnostic (`GARNET_METAL_PROFILE_OPS=1`)
+passed the default matrix test and retained the exact 8-token native text
+output. It deliberately submits and waits after each operation, so its timings
+are not serving performance or a comparator result. Raw commands, operation
+timings and aggregation are in `mps-prefill/op-profile-20261012` and
+`mps-prefill/op-profile-build-checks-20261012`.
+
+The diagnostic points to both projection and KV-update cost. Across this
+22-token prefill plus 7 subsequent decode steps, prefill matrix operations
+sum to 71.70 ms and chunk KV updates to 32.80 ms. Decode matrix operations
+sum to 75.89 ms, single-token KV updates to 35.11 ms, and 8 vocabulary-head
+projections to 23.89 ms. These isolated sums include different submission
+overhead/cache behavior; they guide the next experiment rather than replacing
+the normal end-to-end timers. The current chunk KV kernel scans all input
+tokens separately for every output cache element, even for contiguous slots.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

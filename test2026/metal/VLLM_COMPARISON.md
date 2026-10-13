@@ -28,6 +28,17 @@ decoder projections/head in BF16; vLLM-Metal executes a BF16 model/KV profile.
 This is a matched checkpoint/weight-precision comparison, not a claim that all
 internal arithmetic is bit-identical.
 
+The optional `mps` prefill policy expands those BF16 checkpoint values exactly
+into FP32 MPS matrices once, while decode/head keep their BF16 storage. It
+changes representation and memory use, not the checkpoint values. The default
+`shared` policy keeps the existing shared BF16 prefill projections. Case JSON
+and native output record the selected policy; first-use conversion/compilation
+and warm timing are kept separate. This experiment does not change vLLM's
+execution policy or dtype.
+
+`GARNET_METAL_PROFILE_OPS=1` enables serialized per-operation GPU diagnostics.
+This splits command submissions and is excluded from all speed comparisons.
+
 Run each configuration in two separate native processes, alternating
 Garnet/vLLM-Metal/Garnet/vLLM-Metal. Each process handles one first-use request
 and two warm requests. First-use latency and initialization are recorded
