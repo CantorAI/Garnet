@@ -1,12 +1,19 @@
 """Serialized diagnostic GPU attribution, never serving/benchmark timing.
 
-Arguments: investigation root, new output directory. Run one actual native
+Arguments: investigation root, new output directory, optional build directory
+name, optional model name, optional batch. Run one actual native
 workload at a time and require the unchanged complete baseline outputs.
 """
 import hashlib,json,os,subprocess,sys,time
 from pathlib import Path
 root=Path(sys.argv[1]).resolve();output=Path(sys.argv[2]).resolve();output.mkdir(parents=True,exist_ok=False)
-scripts=root/'source/test2026/metal';build=root/'build-prefill-wide';runtime='/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3'
+scripts=root/'source/test2026/metal';build=root/(sys.argv[3] if len(sys.argv)>3 else 'build-vector-slice');runtime='/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3'
+models=('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct','Qwen3.5-0.8B')
+if len(sys.argv)>4:
+    assert sys.argv[4] in models;models=(sys.argv[4],)
+batches=(1,2)
+if len(sys.argv)>5:
+    assert int(sys.argv[5]) in batches;batches=(int(sys.argv[5]),)
 frontend=str(root/'comparators/vllm/venv/bin/python');statuses=[];summaries=[]
 
 def guard(label):
@@ -31,11 +38,12 @@ def guard(label):
         if any(marker in fields[1] for marker in ('run_matched_vllm.py','vllm serve','vllm.entrypoints.openai','EngineCore::','frame_worker_vllm.py')):raise RuntimeError('Other inference worker PID '+fields[0])
 
 metadata=dict(scope='Serialized per-operation attribution only; GPU/cache/dispatch behavior differs from serving',
+    native_build=str(build),
     native_library_sha256=hashlib.sha256((build/'libgarnet.dylib').read_bytes()).hexdigest(),
     runner_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),flag='GARNET_METAL_PROFILE_OPS=1')
 (output/'metadata.json').write_text(json.dumps(metadata,indent=2)+'\n')
-for model in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct','Qwen3.5-0.8B'):
-    for batch in (1,2):
+for model in models:
+    for batch in batches:
         label=model+'-b'+str(batch);folder=output/label;folder.mkdir();vl=model=='Qwen3.5-0.8B'
         baseline=root/'logs'/('vllm-matched-vl-prefill-wide-20261013' if vl else 'vllm-matched-text-prefill-wide-20261013')/'jobs'
         case=json.loads((baseline/(label+'-case.json')).read_text());case['requests']=1

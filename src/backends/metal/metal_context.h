@@ -33,7 +33,7 @@ class MetalContext {
     void EncodePointwise(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&,
         unsigned operation, float epsilon, float offset);
     void EncodeStateKernel(unsigned operation,const std::vector<MetalMatrix>&,
-        const MetalMatrix&,const void* parameters,size_t parameterBytes,size_t threads);
+        const MetalMatrix&,const void* parameters,size_t parameterBytes,size_t threads,const MetalMatrix* secondOutput=nullptr);
 public:
     MetalContext();
     ~MetalContext();
@@ -67,6 +67,9 @@ public:
     void EncodeGatedDelta(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& value,
         const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,
         const MetalMatrix& active,const MetalMatrix& packed,size_t heads,size_t keyDim,size_t valueDim);
+    void EncodeGatedDeltaSplit(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& value,
+        const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,const MetalMatrix& active,
+        const MetalMatrix& result,const MetalMatrix& nextState,size_t heads,size_t keyDim,size_t valueDim);
     void EncodeSliceGroups(const MetalMatrix&,const MetalMatrix&,size_t groups,size_t sourceWidth,size_t start,size_t count);
     void EncodeLinearPrepare(const MetalMatrix& conv,const MetalMatrix& a,const MetalMatrix& b,
         const MetalMatrix& aLog,const MetalMatrix& dtBias,const MetalMatrix& output,

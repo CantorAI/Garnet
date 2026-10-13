@@ -584,10 +584,41 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
         // All operations write fresh slots. Trace only matrices needed by the
         // returned value, resolving storage aliases before removing unused packs.
         auto canonical=[&](size_t id){while(aliases.count(id))id=aliases.at(id);return id;};
+        // A delta temporary consumed only by its complete output/state slices
+        // can write those independent matrices directly, without packing/copying.
+        std::unordered_set<size_t> removedSlices;
+        for(size_t index=0;index<ops_.size();++index) {
+            auto& delta=ops_[index];if(delta.kind!=Kind::Delta)continue;
+            const auto packed=canonical(delta.out),heads=delta.dimensions[0],kd=delta.dimensions[1],vd=delta.dimensions[2];
+            if(packed==canonical(output_))continue;
+            size_t core=SIZE_MAX,state=SIZE_MAX;bool eligible=true;
+            for(size_t consumer=0;consumer<ops_.size();++consumer) {
+                if(consumer==index)continue;
+                const auto& op=ops_[consumer];
+                bool uses=canonical(op.a)==packed||canonical(op.b)==packed;
+                for(auto arg:op.arguments)uses=uses||canonical(arg)==packed;
+                if(!uses)continue;
+                if(op.kind!=Kind::Slice||consumer<=index||op.dimensions.size()!=4||
+                    op.dimensions[0]!=heads||op.dimensions[1]!=(kd+1)*vd){eligible=false;break;}
+                if(op.dimensions[2]==0&&op.dimensions[3]==vd&&core==SIZE_MAX)core=consumer;
+                else if(op.dimensions[2]==vd&&op.dimensions[3]==kd*vd&&state==SIZE_MAX)state=consumer;
+                else {eligible=false;break;}
+            }
+            if(eligible&&core!=SIZE_MAX&&state!=SIZE_MAX) {
+                delta.kind=Kind::DeltaSplit;delta.out=ops_[core].out;delta.auxiliaryOutput=ops_[state].out;
+                removedSlices.insert(core);removedSlices.insert(state);
+            }
+        }
+        if(!removedSlices.empty()) {
+            std::vector<Op> fused;
+            for(size_t index=0;index<ops_.size();++index)if(!removedSlices.count(index))fused.push_back(std::move(ops_[index]));
+            ops_=std::move(fused);
+        }
         std::unordered_set<size_t> live={canonical(output_)};
         std::vector<Op> retained;
         for(auto it=ops_.rbegin();it!=ops_.rend();++it) {
-            if(!live.count(canonical(it->out)))continue;
+            if(!live.count(canonical(it->out))&&(it->auxiliaryOutput==SIZE_MAX||!live.count(canonical(it->auxiliaryOutput))))continue;
+            live.insert(canonical(it->out));if(it->auxiliaryOutput!=SIZE_MAX)live.insert(canonical(it->auxiliaryOutput));
             live.insert(canonical(it->a));live.insert(canonical(it->b));
             for(auto arg:it->arguments)live.insert(canonical(arg));
             retained.push_back(std::move(*it));
@@ -598,7 +629,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
             for(auto part:outputParts_)needed.insert(canonical(part));
             residentOps_.assign(ops_.size(),0);
             for(size_t i=ops_.size();i-->0;) {
-                auto& op=ops_[i];if(!needed.count(canonical(op.out)))continue;
+                auto& op=ops_[i];if(!needed.count(canonical(op.out))&&(op.auxiliaryOutput==SIZE_MAX||!needed.count(canonical(op.auxiliaryOutput))))continue;
                 residentOps_[i]=1;needed.insert(canonical(op.a));needed.insert(canonical(op.b));
                 for(auto argument:op.arguments)needed.insert(canonical(argument));
             }
@@ -617,7 +648,8 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 if(!matrix.CompatibleLayout(slots_[id].matrix)||std::find(inputs_.begin(),inputs_.end(),id)!=inputs_.end())eligible=false;
             }
             for(size_t other=0;other<outputParts_.size();++other)if(other!=part&&matrix.SharesStorage(slots_[outputParts_[other]].matrix))eligible=false;
-            for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]&&std::find(group.begin(),group.end(),ops_[i].out)!=group.end())writer=true;
+            for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]&&
+                (std::find(group.begin(),group.end(),ops_[i].out)!=group.end()||std::find(group.begin(),group.end(),ops_[i].auxiliaryOutput)!=group.end()))writer=true;
             if(eligible&&writer)outputStorageGroups_[part]=std::move(group);
         }
         sharedWeights_.clear();ready_=true;
@@ -694,7 +726,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
     // They identify expensive kernels; their latency is not a serving metric.
     const char* profile=std::getenv("GARNET_METAL_PROFILE_OPS");
     const bool profileOps=profile&&std::strcmp(profile,"1")==0;
-    static const char* names[]={"MatMul","BF16MatVec","Norm","Silu","Add","Bias","Mask","Conv","Delta","Slice","Prepare","GateNorm","Concat","NormRope","KVUpdate","KVChunk","AttentionChunk","Scores","AttentionContext","Vision","Layout"};
+    static const char* names[]={"MatMul","BF16MatVec","Norm","Silu","Add","Bias","Mask","Conv","Delta","Slice","Prepare","GateNorm","Concat","NormRope","KVUpdate","KVChunk","AttentionChunk","Scores","AttentionContext","Vision","Layout","DeltaSplit"};
     for(size_t i=0;i<ops_.size();++i) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
@@ -717,6 +749,10 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
             auto& args=op.arguments;gpu.EncodeGatedDelta(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                 slots_[args[3]].matrix,slots_[args[4]].matrix,slots_[args[5]].matrix,slots_[args[6]].matrix,out,
                 op.dimensions[0],op.dimensions[1],op.dimensions[2]);
+        }else if(op.kind==Kind::DeltaSplit) {
+            auto& args=op.arguments;gpu.EncodeGatedDeltaSplit(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
+                slots_[args[3]].matrix,slots_[args[4]].matrix,slots_[args[5]].matrix,slots_[args[6]].matrix,out,
+                slots_[op.auxiliaryOutput].matrix,op.dimensions[0],op.dimensions[1],op.dimensions[2]);
         }else if(op.kind==Kind::Prepare) {
             auto& args=op.arguments;gpu.EncodeLinearPrepare(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
                 slots_[args[3]].matrix,slots_[args[4]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);

@@ -393,6 +393,20 @@ All six profiles still fail both targets. Same BF16 weights and the native
 FP32 versus comparator BF16 internal arithmetic limits remain explicit.
 The objective remains active and unmet.
 
+### Validated direct recurrent-state outputs
+
+`../../20261013/delta-split/` records a two-output delta kernel and graph fusion,
+all 11 native checks, 32 bitwise kernel configurations, transaction checks,
+24 native image ABBA requests, a serialized execution diagnostic and 72 fresh
+matched vLLM-Metal requests. `build-delta-split` is now selected. It removes
+3,852 slice dispatches in the actual batch-2 image diagnostic and writes state
+directly to its independent output. Against `build-vector-slice`, image TTFT
+falls another 3.65%/6.84% and decode gains 1.77%/3.69% at batch 1/2, preserving
+all complete native captions. The fresh matched batch-1 image result is 46.77
+versus 48.77 tokens/s, with TTFT 596.34 versus 201.29 ms. All six profiles still
+fail both targets; batch-2 comparator output and internal precision caveats
+remain. The full objective stays active and unmet.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

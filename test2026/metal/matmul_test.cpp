@@ -64,6 +64,44 @@ int main() {
             gpu.Begin();gpu.EncodeArgmax(a,out);gpu.SubmitAndWait();auto actual=gpu.Download(out);
             if(actual[1]!=1||actual[3]!=1)throw std::runtime_error("GPU argmax did not report nonfinite logits");
         }
+        for(size_t rows:{1,2})for(size_t heads:{1,3})for(size_t kd:{7,128})for(size_t vd:{5,128})for(bool paused:{false,true}) {
+            const size_t qw=heads*kd,vw=heads*vd,sw=heads*kd*vd;
+            std::vector<float> q(rows*qw),k(rows*qw),v(rows*vw),s(rows*sw),g(rows*heads,-0.25f),beta(rows*heads,0.5f),flags(rows,1);
+            for(size_t i=0;i<q.size();++i){q[i]=float(int(i%11)-5)*0.125f;k[i]=float(int(i%7)-3)*0.25f;}
+            for(size_t i=0;i<v.size();++i)v[i]=float(int(i%13)-6)*0.0625f;
+            for(size_t i=0;i<s.size();++i)s[i]=float(int(i%17)-8)*0.03125f;
+            if(paused)flags[rows-1]=0;
+            auto query=gpu.Upload(q,rows,qw),key=gpu.Upload(k,rows,qw),value=gpu.Upload(v,rows,vw),state=gpu.Upload(s,rows,sw);
+            auto decay=gpu.Upload(g,rows,heads),update=gpu.Upload(beta,rows,heads),active=gpu.Upload(flags,rows,1);
+            auto packed=gpu.Allocate(rows,vw+sw),result=gpu.Allocate(rows,vw),next=gpu.Allocate(rows,sw);
+            gpu.Begin();gpu.EncodeGatedDelta(query,key,value,decay,update,state,active,packed,heads,kd,vd);gpu.SubmitAndWait();
+            const auto reference=gpu.Download(packed);
+            gpu.Begin();gpu.EncodeGatedDeltaSplit(query,key,value,decay,update,state,active,result,next,heads,kd,vd);
+            for(const auto& output:{result,next}) {
+                bool pending=false;try {gpu.Download(output);}catch(const std::logic_error&){pending=true;}
+                if(!pending)throw std::runtime_error("Pending split delta output was readable");
+            }
+            gpu.SubmitAndWait();const auto actual=gpu.Download(result),actualState=gpu.Download(next);
+            for(size_t row=0;row<rows;++row)for(size_t head=0;head<heads;++head) {
+                const size_t base=row*(vw+sw)+head*(kd+1)*vd;
+                if(std::memcmp(actual.data()+row*vw+head*vd,reference.data()+base,vd*sizeof(float))||
+                    std::memcmp(actualState.data()+row*sw+head*kd*vd,reference.data()+base+vd,kd*vd*sizeof(float)))
+                    throw std::runtime_error("Split delta differs from packed kernel bits");
+            }
+            if(rows==2&&heads==3&&kd==7&&vd==5&&paused) {
+                gpu.Begin();gpu.EncodeGatedDeltaSplit(query,key,value,decay,update,state,active,result,next,heads,kd,vd);gpu.Abort();
+                for(const auto& output:{result,next}) {
+                    bool abandoned=false;try {gpu.Download(output);}catch(const std::logic_error&){abandoned=true;}
+                    if(!abandoned)throw std::runtime_error("Aborted split delta output was readable");
+                }
+                gpu.Begin();gpu.EncodeGatedDeltaSplit(query,key,value,decay,update,state,active,result,next,heads,kd,vd);gpu.SubmitAndWait();
+                if(gpu.Download(result)!=actual||gpu.Download(next)!=actualState)throw std::runtime_error("Split delta failed recovery after abort");
+                gpu.Begin();bool inPlace=false;
+                try {gpu.EncodeGatedDeltaSplit(query,key,value,decay,update,state,active,result,state,heads,kd,vd);}
+                catch(const std::invalid_argument&){inPlace=true;}gpu.Abort();
+                if(!inPlace)throw std::runtime_error("Split delta accepted in-place state update");
+            }
+        }
         auto input=gpu.Upload({1,2,3,4},2,2);
         // Check aligned vector copies and irregular scalar fallbacks against
         // independent row/group indexing, including padded matrix rows.

@@ -40,7 +40,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> add;
     id<MTLComputePipelineState> mask;
     id<MTLComputePipelineState> conv;
-    id<MTLComputePipelineState> delta;
+    id<MTLComputePipelineState> delta,deltaSplit;
     id<MTLComputePipelineState> slice,sliceVector;
     id<MTLComputePipelineState> prepare;
     id<MTLComputePipelineState> gatedNorm;
@@ -552,6 +552,48 @@ kernel void gated_delta(device const float* query [[buffer(0)]],device const flo
     packed[outputBase+column]=result;
     }
 }
+struct DeltaSplitParams {ulong batch,heads,keyDim,valueDim,qStride,kStride,vStride,gStride,bStride,sStride,aStride,oStride,nextStride;};
+kernel void gated_delta_split(device const float* query [[buffer(0)]],device const float* key [[buffer(1)]],
+    device const float* value [[buffer(2)]],device const float* decay [[buffer(3)]],
+    device const float* beta [[buffer(4)]],device const float* state [[buffer(5)]],
+    device const float* active [[buffer(6)]],device float* resultOutput [[buffer(7)]],device float* nextState [[buffer(8)]],
+    constant DeltaSplitParams& p [[buffer(9)]],uint id [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],
+    uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    if(id>=p.batch*p.heads)return;
+    ulong head=id%p.heads,row=id/p.heads;
+    ulong stateBase=row*p.sStride+head*p.keyDim*p.valueDim;
+    ulong outputBase=row*p.oStride+head*p.valueDim;
+    ulong outBase=row*p.nextStride+head*p.keyDim*p.valueDim;
+    if(active[row*p.aStride]==0.0f) {
+        for(ulong column=tid;column<p.valueDim;column+=128) {
+            resultOutput[outputBase+column]=0.0f;
+            for(ulong j=0;j<p.keyDim;++j)nextState[outBase+j*p.valueDim+column]=state[stateBase+j*p.valueDim+column];
+        }
+        return;
+    }
+    threadgroup float qPartial[4],kPartial[4];
+    float qs=0.0f,ks=0.0f;
+    for(ulong j=tid;j<p.keyDim;j+=128) {
+        float q=query[row*p.qStride+head*p.keyDim+j],k=key[row*p.kStride+head*p.keyDim+j];qs+=q*q;ks+=k*k;
+    }
+    qs=simd_sum(qs);ks=simd_sum(ks);if(lane==0){qPartial[simd]=qs;kPartial[simd]=ks;}
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    qs=simd_sum(lane<4?qPartial[lane]:0.0f)+1e-6f;ks=simd_sum(lane<4?kPartial[lane]:0.0f)+1e-6f;
+    float qi=rsqrt(qs)*rsqrt(float(p.keyDim)),ki=rsqrt(ks);
+    for(ulong column=tid;column<p.valueDim;column+=128) {
+    float factor=exp(decay[row*p.gStride+head]),memory=0.0f;
+    for(ulong j=0;j<p.keyDim;++j)
+        memory+=state[stateBase+j*p.valueDim+column]*factor*key[row*p.kStride+head*p.keyDim+j]*ki;
+    float change=(value[row*p.vStride+head*p.valueDim+column]-memory)*beta[row*p.bStride+head];
+    float result=0.0f;
+    for(ulong j=0;j<p.keyDim;++j) {
+        float next=state[stateBase+j*p.valueDim+column]*factor+key[row*p.kStride+head*p.keyDim+j]*ki*change;
+        nextState[outBase+j*p.valueDim+column]=next;
+        result+=next*query[row*p.qStride+head*p.keyDim+j]*qi;
+    }
+    resultOutput[outputBase+column]=result;
+    }
+}
 struct LayoutParams {ulong aRows,aColumns,aStride,bStride,oRows,oColumns,oStride,tokenWidth;};
 kernel void chunk_layout(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
  device float* out [[buffer(2)]],constant LayoutParams& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
@@ -675,6 +717,7 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->mask=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"mask_rows"] error:&error];
         impl_->kernels->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
         impl_->kernels->delta=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta"] error:&error];
+        impl_->kernels->deltaSplit=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gated_delta_split"] error:&error];
         impl_->kernels->slice=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups"] error:&error];
         impl_->kernels->sliceVector=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"slice_groups_vector4"] error:&error];
         impl_->kernels->prepare=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"linear_prepare"] error:&error];
@@ -910,7 +953,7 @@ void MetalContext::EncodeMaskRows(const MetalMatrix& a,const MetalMatrix& mask,c
     EncodePointwise(a,mask,out,3,0,0);
 }
 void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalMatrix>& inputs,
-    const MetalMatrix& output,const void* parameters,size_t parameterBytes,size_t threads) {
+    const MetalMatrix& output,const void* parameters,size_t parameterBytes,size_t threads,const MetalMatrix* secondOutput) {
     @autoreleasepool {
     if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
     if(!output.impl_||!threads||threads>std::numeric_limits<uint32_t>::max())
@@ -927,9 +970,20 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
             throw std::logic_error("Uninitialized Metal state kernel input");
         if(c.data==input.impl_->matrix.data)throw std::invalid_argument("In-place state kernel is unsupported");
     }
-    if(operation>15)throw std::invalid_argument("Unknown Metal state kernel");
+    if((operation==16)!=(secondOutput!=nullptr))throw std::invalid_argument("Metal secondary output operation mismatch");
+    if(secondOutput) {
+        if(!secondOutput->impl_||secondOutput->impl_->matrix.device!=impl_->device)
+            throw std::invalid_argument("Invalid Metal secondary output/device");
+        const auto& second=secondOutput->impl_;
+        if(second->pending&&impl_->pendingOutputs.count(second.get())==0)
+            throw std::logic_error("Metal secondary output is in another command batch");
+        if(second->matrix.data==c.data)throw std::invalid_argument("Metal outputs overlap");
+        for(const auto& input:inputs)if(second->matrix.data==input.impl_->matrix.data)
+            throw std::invalid_argument("In-place secondary state output is unsupported");
+    }
+    if(operation>16)throw std::invalid_argument("Unknown Metal state kernel");
     id<MTLComputePipelineState> pipelines[]={impl_->kernels->conv,impl_->kernels->delta,impl_->kernels->slice,impl_->kernels->prepare,impl_->kernels->gatedNorm,
-        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector};
+        impl_->kernels->concat,impl_->kernels->normRope,impl_->kernels->kvUpdate,impl_->kernels->scores,impl_->kernels->attentionContext,impl_->kernels->vision,impl_->kernels->layout,impl_->kernels->kvChunk,impl_->kernels->attentionChunk,impl_->kernels->kvUpdateVector,impl_->kernels->sliceVector,impl_->kernels->deltaSplit};
     auto pipeline=pipelines[operation];
     const auto* visionFields=static_cast<const uint64_t*>(parameters);
     const bool visionNorm=operation==10&&visionFields[12]==1;
@@ -941,27 +995,29 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
     [encoder setComputePipelineState:pipeline];
     for(size_t i=0;i<inputs.size();++i)[encoder setBuffer:inputs[i].impl_->matrix.data offset:0 atIndex:i];
     [encoder setBuffer:c.data offset:0 atIndex:inputs.size()];
-    [encoder setBytes:parameters length:parameterBytes atIndex:inputs.size()+1];
+    if(secondOutput)[encoder setBuffer:secondOutput->impl_->matrix.data offset:0 atIndex:inputs.size()+1];
+    [encoder setBytes:parameters length:parameterBytes atIndex:inputs.size()+1+(secondOutput?1:0)];
     if(visionNorm||visionScores) {
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)throw std::runtime_error("Parallel vision requires 32-lane SIMD groups");
         if(visionScores)[encoder setThreadgroupMemoryLength:((visionFields[8]*sizeof(float)+15)&~size_t(15)) atIndex:0];
         [encoder dispatchThreadgroups:MTLSizeMake(visionFields[0]*(visionScores?visionFields[10]:1),1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
-    } else if(operation==1||operation==4||operation==6||operation==8||operation==13) {
+    } else if(operation==1||operation==16||operation==4||operation==6||operation==8||operation==13) {
         const auto* fields=static_cast<const uint64_t*>(parameters);
         const size_t capacity=operation==8?fields[4]:(operation==13?fields[5]:0);
         if(operation==8&&capacity>4096) {
             [encoder setComputePipelineState:impl_->kernels->scoresSerial];
             [encoder dispatchThreads:MTLSizeMake(threads,1,1) threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(impl_->kernels->scoresSerial.maxTotalThreadsPerThreadgroup)),1,1)];
         } else {
-            const size_t width=(operation==1||operation==8||operation==13)?128:32;
+            const size_t width=(operation==1||operation==16||operation==8||operation==13)?128:32;
             if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<width)throw std::runtime_error("Parallel attention requires 32-lane SIMD groups");
             if(operation==8||operation==13)[encoder setThreadgroupMemoryLength:((capacity*sizeof(float)+15)&~size_t(15)) atIndex:0];
             if(operation==13)[encoder setThreadgroupMemoryLength:((capacity*sizeof(int)+15)&~size_t(15)) atIndex:1];
-            [encoder dispatchThreadgroups:MTLSizeMake(operation==1?threads/fields[3]:threads,1,1) threadsPerThreadgroup:MTLSizeMake(width,1,1)];
+            [encoder dispatchThreadgroups:MTLSizeMake((operation==1||operation==16)?threads/fields[3]:threads,1,1) threadsPerThreadgroup:MTLSizeMake(width,1,1)];
         }
     } else [encoder dispatchThreads:MTLSizeMake(threads,1,1)
         threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(pipeline.maxTotalThreadsPerThreadgroup)),1,1)];
     [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+    if(secondOutput){const auto& second=secondOutput->impl_;second->ready=false;second->pending=true;if(impl_->pendingOutputs.insert(second.get()).second)impl_->outputs.push_back(second);}
     }
 }
 void MetalContext::EncodeLayout(const MetalMatrix& input,const MetalMatrix& flags,const MetalMatrix& output,size_t tokenWidth) {
@@ -1042,6 +1098,23 @@ void MetalContext::EncodeGatedDelta(const MetalMatrix& query,const MetalMatrix& 
     Params p{q.rows,heads,keyDim,valueDim,q.rowBytes/4,k.rowBytes/4,v.rowBytes/4,g.rowBytes/4,b.rowBytes/4,
         s.rowBytes/4,a.rowBytes/4,o.rowBytes/4};
     EncodeStateKernel(1,{query,key,value,decay,beta,state,active},packed,&p,sizeof(p),Elements(q.rows,vWidth));
+}
+void MetalContext::EncodeGatedDeltaSplit(const MetalMatrix& query,const MetalMatrix& key,const MetalMatrix& value,
+    const MetalMatrix& decay,const MetalMatrix& beta,const MetalMatrix& state,const MetalMatrix& active,
+    const MetalMatrix& result,const MetalMatrix& nextState,size_t heads,size_t keyDim,size_t valueDim) {
+    if(!query.impl_||!key.impl_||!value.impl_||!decay.impl_||!beta.impl_||!state.impl_||!active.impl_||!result.impl_||!nextState.impl_)
+        throw std::invalid_argument("Empty Metal gated delta argument");
+    auto q=query.impl_->matrix,k=key.impl_->matrix,v=value.impl_->matrix,g=decay.impl_->matrix,
+        b=beta.impl_->matrix,s=state.impl_->matrix,a=active.impl_->matrix,o=result.impl_->matrix,next=nextState.impl_->matrix;
+    const auto qWidth=Elements(heads,keyDim),vWidth=Elements(heads,valueDim),sWidth=Elements(qWidth,valueDim);
+    if(sWidth>std::numeric_limits<size_t>::max()-vWidth||q.columns!=qWidth||k.rows!=q.rows||k.columns!=qWidth||
+        v.rows!=q.rows||v.columns!=vWidth||g.rows!=q.rows||g.columns!=heads||b.rows!=q.rows||b.columns!=heads||
+        s.rows!=q.rows||s.columns!=sWidth||a.rows!=q.rows||a.columns!=1||o.rows!=q.rows||o.columns!=vWidth||next.rows!=q.rows||next.columns!=sWidth)
+        throw std::invalid_argument("Metal gated delta shape mismatch");
+    struct Params {uint64_t batch,heads,keyDim,valueDim,qStride,kStride,vStride,gStride,bStride,sStride,aStride,oStride,nextStride;};
+    Params p{q.rows,heads,keyDim,valueDim,q.rowBytes/4,k.rowBytes/4,v.rowBytes/4,g.rowBytes/4,b.rowBytes/4,
+        s.rowBytes/4,a.rowBytes/4,o.rowBytes/4,next.rowBytes/4};
+    EncodeStateKernel(16,{query,key,value,decay,beta,state,active},result,&p,sizeof(p),Elements(q.rows,vWidth),&nextState);
 }
 void MetalContext::EncodeLinearPrepare(const MetalMatrix& conv,const MetalMatrix& a,const MetalMatrix& b,
     const MetalMatrix& aLog,const MetalMatrix& dtBias,const MetalMatrix& output,
