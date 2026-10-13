@@ -9,11 +9,16 @@ def token(value,index):return value * T.unary_op('qwen35_chunk_token',index=inde
 def concat(left,right):return left * T.binary_op('qwen35_concat_sequence') * right
 
 @T.fusion(name='qwen35_prefill_layer',role='decoder_layer',boundary='required')
-def PrefillLayer(hidden,state1,state2,positions,slots,active,config,layer_idx,batch,chunk,capacity,kind,parallel_attention=False):
+def PrefillLayer(hidden,state1,state2,positions,slots,active,config,layer_idx,batch,chunk,capacity,kind,parallel_attention=False,parallel_linear=False):
     width=config['hidden_size'];prefix='model.language_model.layers.'+str(layer_idx)
     hidden=hidden * T.binary_op('qwen35_mask_chunk') * active
     normalized=reshape(norm(reshape(hidden,[batch*chunk,width]),prefix+'.input_layernorm',config),[batch,chunk,width])
     outputs=None
+    if parallel_linear and kind=='linear_attention':
+        packed=Qwen35LinearAttentionStep(normalized,state1,state2,active,config,layer_idx,chunk=True)
+        packed_config=dict(config);packed_config['hidden_size']=chunk*width
+        outputs,state1,state2=linear_unpack(packed,packed_config)
+        outputs=reshape(outputs,[batch,chunk,width])
     if parallel_attention and kind!='linear_attention' and capacity<=2048:
         packed=Qwen35FullAttentionStep(normalized,state1,state2,positions,slots,active,config,layer_idx,chunk=True)
         packed_config=dict(config);packed_config['hidden_size']=chunk*width

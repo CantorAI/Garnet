@@ -59,13 +59,13 @@ class MetalDecoder(CPUDecoder):
         self.poisoned=False
         return prediction if predict else None
 
-    def enable_prefill(self,chunk=16,projection='shared'):
-        if chunk not in (2,4,8,16):raise ValueError('Metal prefill chunk must be 2, 4, 8 or 16')
+    def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False):
+        if chunk not in (2,4,8,16,32,64):raise ValueError('Metal prefill chunk must be 2, 4, 8, 16, 32 or 64')
         if projection not in ('shared','mps'):raise ValueError('Prefill projection must be shared or mps')
-        if hasattr(self,'prefill_graphs') and (getattr(self,'chunk',None)!=chunk or getattr(self,'prefill_projection','shared')!=projection):
+        if hasattr(self,'prefill_graphs') and (getattr(self,'chunk',None)!=chunk or getattr(self,'prefill_projection','shared')!=projection or getattr(self,'linear_chunk',False)!=linear_chunk):
             for graph in self.prefill_graphs.values():graph.close()
             self.prefill_graphs={}
-        self.chunk=chunk;self.prefill_projection=projection
+        self.chunk=chunk;self.prefill_projection=projection;self.linear_chunk=linear_chunk
         if not hasattr(self,'prefill_graphs'):self.prefill_graphs={}
 
     def _build_prefill_graph(self,graph,output,symbols,layer_graph):
@@ -77,7 +77,7 @@ class MetalDecoder(CPUDecoder):
 
     def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):
         from .prefill_layer import PrefillLayer
-        return PrefillLayer(hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind,parallel_attention=True)
+        return PrefillLayer(hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind,parallel_attention=True,parallel_linear=self.linear_chunk)
 
     def prefill_sequence(self,hidden_tokens,positions,predict=True):
         if self.session is not None:return self._resident_prefill(hidden_tokens,positions,predict)
@@ -123,12 +123,8 @@ class MetalDecoder(CPUDecoder):
         self.poisoned=False
         return prediction
 
-    def _resident_prefill(self,hidden_tokens,positions,predict):
-        if self.poisoned:raise ValueError('reset after failed prefill')
-        count=len(hidden_tokens);chunk=self.chunk;batch=self.batch;config=self.config;capacity=self.capacity
-        if count<1 or any(slot+count>capacity for slot in self.slots):raise ValueError('invalid prefill length/capacity')
-        if len(positions)!=batch or any(len(row)!=count or any(len(p)!=3 for p in row) for row in positions):raise ValueError('invalid prefill THW positions')
-        width=config['hidden_size'];self.prefill_compile_ms=0;self.prefill_inference_ms=0;graphs=[]
+    def _resident_prefill_graphs(self,chunk):
+        batch=self.batch;config=self.config;capacity=self.capacity;width=config['hidden_size'];graphs=[]
         for idx,layer in enumerate(self.layers):
             shapes=[[batch,chunk,width],layer['shapes'][1],layer['shapes'][2],[batch,chunk,3],[batch,chunk],[batch,chunk]]
             key=str(chunk)+'-'+str(idx);graph=self.prefill_graphs.get(key)
@@ -143,8 +139,26 @@ class MetalDecoder(CPUDecoder):
                 except:graph.close();raise
                 self.prefill_graphs[key]=graph;self.prefill_compile_ms+=graph.compile_ms
             graphs.append(graph)
+        return graphs
+
+    def _resident_prefill(self,hidden_tokens,positions,predict):
+        if self.poisoned:raise ValueError('reset after failed prefill')
+        count=len(hidden_tokens);maximum=self.chunk;batch=self.batch;width=self.config['hidden_size']
+        if count<1 or any(slot+count>self.capacity for slot in self.slots):raise ValueError('invalid prefill length/capacity')
+        if len(positions)!=batch or any(len(row)!=count or any(len(p)!=3 for p in row) for row in positions):raise ValueError('invalid prefill THW positions')
+        self.prefill_compile_ms=0;self.prefill_inference_ms=0;self.prefill_chunk_plan=[];offset=0;profiles={}
+        while offset<count:
+            chunk=maximum
+            if maximum>16 and count-offset<maximum:
+                chunk=2
+                while chunk<count-offset:chunk*=2
+            self.prefill_chunk_plan.append(chunk)
+            if chunk not in profiles:profiles[chunk]=self._resident_prefill_graphs(chunk)
+            offset+=chunk
         self.poisoned=True;prediction=None;self.prefill_profile=dict(prepare_ms=0,encode_ms=0,gpu_ms=0,wait_ms=0)
-        for offset in range(0,count,chunk):
+        offset=0
+        for chunk in self.prefill_chunk_plan:
+            graphs=profiles[chunk]
             values=hidden_tokens[offset:offset+chunk];length=len(values)
             while len(values)<chunk:values.append(self.io.zeros([batch,width]))
             hidden=self.io.stack_tokens(values)
@@ -155,6 +169,7 @@ class MetalDecoder(CPUDecoder):
             prediction=self.session.run(graphs,hidden,position,slots,flag,length-1 if predict and offset+length==count else -1)
             self.prefill_inference_ms+=self.session.last_inference_ms
             for key in self.prefill_profile:self.prefill_profile[key]+=getattr(self.session,key)
+            offset+=length
         for b in range(batch):self.slots[b]+=count
         self.poisoned=False
         return prediction if predict else None

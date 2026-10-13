@@ -39,6 +39,11 @@ class DenseMetalDecoder(MetalDecoder):
             if resident:self.enable_resident()
         except:self.close();raise
 
+    def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False):
+        if chunk not in (2,4,8,16):
+            raise ValueError('Dense Qwen prefill supports validated chunk profiles 2, 4, 8 and 16')
+        MetalDecoder.enable_prefill(self,chunk,projection,False)
+
     def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):
         from .layers import DensePrefillLayer
         return DensePrefillLayer(hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind)

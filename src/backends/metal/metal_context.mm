@@ -969,8 +969,8 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
         auto a=input.impl_->matrix,o=output.impl_->matrix;auto w=weight.impl_;
         if(a.device!=impl_->device||o.device!=impl_->device||w->buffer.device!=impl_->device||
-            a.columns!=w->columns||o.rows!=a.rows||o.columns!=w->rows||a.rows>32||o.data==a.data)
-            throw std::invalid_argument("BF16 projection shape/device mismatch (rows 1..32)");
+            a.columns!=w->columns||o.rows!=a.rows||o.columns!=w->rows||a.rows>128||o.data==a.data)
+            throw std::invalid_argument("BF16 projection shape/device mismatch (rows 1..128)");
         auto usable=[&](const MetalMatrix& m){return m.impl_->ready||(m.impl_->pending&&
             impl_->pendingOutputs.count(m.impl_.get())!=0);};
         if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
@@ -1429,7 +1429,7 @@ void MetalContext::EncodeKVUpdate(const MetalMatrix& token,const MetalMatrix& ca
 }
 void MetalContext::EncodeKVChunk(const MetalMatrix& token,const MetalMatrix& cache,const MetalMatrix& slots,
     const MetalMatrix& active,const MetalMatrix& output,size_t heads,size_t dim,size_t capacity,size_t chunk,bool contiguousSlots) {
-    if(!token.impl_||!cache.impl_||!slots.impl_||!active.impl_||!output.impl_||!chunk||chunk>16)throw std::invalid_argument("Invalid chunk KV inputs");
+    if(!token.impl_||!cache.impl_||!slots.impl_||!active.impl_||!output.impl_||!chunk||chunk>64)throw std::invalid_argument("Invalid chunk KV inputs");
     auto t=token.impl_->matrix,c=cache.impl_->matrix,s=slots.impl_->matrix,a=active.impl_->matrix,o=output.impl_->matrix;
     const auto width=Elements(Elements(heads,capacity),dim);
     if(t.rows!=c.rows*chunk||t.columns!=Elements(heads,dim)||c.columns!=width||s.rows!=c.rows||s.columns!=chunk||a.rows!=c.rows||a.columns!=chunk||o.rows!=c.rows||o.columns!=width)
@@ -1444,7 +1444,7 @@ void MetalContext::EncodeKVChunk(const MetalMatrix& token,const MetalMatrix& cac
 }
 void MetalContext::EncodeAttentionChunk(const std::vector<MetalMatrix>& inputs,const MetalMatrix& output,
     size_t heads,size_t kvHeads,size_t dim,size_t capacity,size_t chunk,bool gated) {
-    if(inputs.size()!=8||!output.impl_||!chunk||chunk>16||!capacity||capacity>2048||!kvHeads||heads%kvHeads)throw std::invalid_argument("Invalid chunk attention profile");
+    if(inputs.size()!=8||!output.impl_||!chunk||chunk>64||!capacity||capacity>2048||!kvHeads||heads%kvHeads)throw std::invalid_argument("Invalid chunk attention profile");
     for(auto& input:inputs)if(!input.impl_)throw std::invalid_argument("Missing chunk attention input");
     auto q=inputs[0].impl_->matrix,k=inputs[1].impl_->matrix,v=inputs[2].impl_->matrix,kc=inputs[3].impl_->matrix,vc=inputs[4].impl_->matrix,
         s=inputs[5].impl_->matrix,a=inputs[6].impl_->matrix,g=inputs[7].impl_->matrix,o=output.impl_->matrix;

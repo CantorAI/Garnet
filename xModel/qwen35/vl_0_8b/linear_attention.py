@@ -9,11 +9,11 @@ from .tensor_compat import tensor
 T=tensor()
 
 @T.fusion(name="qwen35_linear_attention_step",role="linear_attention",boundary="required")
-def Qwen35LinearAttentionStep(hidden,conv_state,recurrent_state,active_rows,config,layer_idx):
+def Qwen35LinearAttentionStep(hidden,conv_state,recurrent_state,active_rows,config,layer_idx,chunk=False):
     bound=hidden * T.binary_op("qwen35_conv_bind_state") * conv_state
     bound=bound * T.binary_op("qwen35_delta_bind_state") * recurrent_state
     bound=bound * T.binary_op("qwen35_conv_bind_active") * active_rows
-    return bound * T.unary_op("qwen35_linear_step",
+    return bound * T.unary_op("qwen35_linear_chunk" if chunk else "qwen35_linear_step",
         weight_prefix="model.language_model.layers."+str(layer_idx)+".linear_attn",
         key_heads=config["linear_num_key_heads"],value_heads=config["linear_num_value_heads"],
         key_dim=config["linear_key_head_dim"],value_dim=config["linear_value_head_dim"],

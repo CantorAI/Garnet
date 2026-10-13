@@ -1,0 +1,15 @@
+Executing ["/opt/homebrew/bin/cmake", "--build", "/Users/zsdx/garnet-metal-investigation/build-linear-chunk", "--parallel", "4"]
+[ 15%] Built target garnet_metal
+[ 30%] Built target garnet_metal_matmul_test
+[ 38%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/compiled_graph.cpp.o
+[ 46%] Linking CXX shared library libgarnet.dylib
+[100%] Built target garnet
+Executing ["/opt/homebrew/bin/ctest", "--test-dir", "/Users/zsdx/garnet-metal-investigation/build-linear-chunk", "--output-on-failure"]
+Test project /Users/zsdx/garnet-metal-investigation/build-linear-chunk
+    Start 1: metal_mps_matmul_reference
+1/1 Test #1: metal_mps_matmul_reference .......   Passed    0.58 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.58 sec
+Final formatted source produces byte-identical tested binary

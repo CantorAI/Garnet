@@ -374,7 +374,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 if(hs.size()!=(isChunk?3:2)||cs.size()!=4||cs[0]!=hs[0]||uint64_t(cs[1])!=kv||cs[2]<=0||cs[2]>8192||uint64_t(cs[3])!=dim||
                     slots_[value].shape!=cs||slots_[positions].shape!=(isChunk?std::vector<int64_t>{hs[0],int64_t(chunk),3}:std::vector<int64_t>{hs[0],3})||
                     slots_[slot].shape!=(isChunk?std::vector<int64_t>{hs[0],int64_t(chunk)}:std::vector<int64_t>{hs[0]})||slots_[active].shape!=slots_[slot].shape||
-                    (isChunk&&(chunk>16||cs[2]>2048)))
+                    (isChunk&&(chunk>64||cs[2]>2048)))
                     throw std::runtime_error("Metal full attention state shapes invalid");
                 // Control tensors must be explicit host inputs for pre-dispatch bounds checks.
                 for(auto control:{positions,slot,active})if(std::find(inputs_.begin(),inputs_.end(),control)==inputs_.end()&&!controlSources_.count(control))
@@ -437,13 +437,15 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 if(node.name=="qwen35_attention_output")out=slice(a,1,width,0,hidden,{batch,int64_t(hidden)});
                 else out=slice(a,1,width,hidden+(node.name=="qwen35_attention_value_cache"?cache:0),cache,
                     {batch,int64_t(kv),int64_t(capacity),int64_t(dim)});
-            }else if(node.name=="qwen35_linear_step") {
+            }else if(node.name=="qwen35_linear_step"||node.name=="qwen35_linear_chunk") {
                 auto integer=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
                     if(v<=0||uint64_t(v)>limit)throw std::runtime_error(std::string("Invalid Metal linear dimension: ")+name);
                     return size_t(v);};
                 const auto kh=integer("key_heads",128),vh=integer("value_heads",128),kd=integer("key_dim",4096),vd=integer("value_dim",4096);
                 if(vh%kh)throw std::runtime_error("Metal linear head grouping mismatch");
                 const auto hiddenShape=slots_[a].shape;
+                const bool isChunk=node.name=="qwen35_linear_chunk";
+                const size_t chunk=isChunk&&hiddenShape.size()==3?size_t(hiddenShape[1]):1;
                 const auto bound=bindings_[TensorId(node.inputs[0])];
                 auto require=[&](const char* name){auto it=bound.find(name);
                     if(it==bound.end())throw std::runtime_error(std::string("Metal linear missing binding: ")+name);
@@ -451,39 +453,66 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 auto convState=require("qwen35_conv_bind_state"),state=require("qwen35_delta_bind_state"),active=require("qwen35_conv_bind_active");
                 const auto cs=slots_[convState].shape;
                 const size_t channels=2*kh*kd+vh*vd;
-                if(hiddenShape.size()!=2||cs.size()!=3||cs[0]!=hiddenShape[0]||uint64_t(cs[1])!=channels||cs[2]<=0||cs[2]>64||
+                if(hiddenShape.size()!=(isChunk?3:2)||chunk>64||cs.size()!=3||cs[0]!=hiddenShape[0]||uint64_t(cs[1])!=channels||cs[2]<=0||cs[2]>64||
                     slots_[state].shape!=std::vector<int64_t>{hiddenShape[0],int64_t(vh),int64_t(kd),int64_t(vd)}||
-                    slots_[active].shape!=std::vector<int64_t>{hiddenShape[0]})throw std::runtime_error("Metal linear state logical shape mismatch");
+                    slots_[active].shape!=(isChunk?std::vector<int64_t>{hiddenShape[0],int64_t(chunk)}:std::vector<int64_t>{hiddenShape[0]}))throw std::runtime_error("Metal linear state logical shape mismatch");
                 const auto batch=size_t(hiddenShape[0]),kernel=size_t(cs[2]);
+                const size_t width=size_t(hiddenShape.back());
+                auto layout=[&](size_t source,size_t rows,size_t columns) {
+                    auto result=Allocate(rows,columns);Op op{Kind::Layout,source,source,result};op.dimensions={0};ops_.push_back(std::move(op));return result;
+                };
+                auto source=isChunk?layout(a,batch*chunk,width):a;
                 const auto prefix=node.attributes.Get("weight_prefix").ToString();
                 const auto epsilon=float(node.attributes.Get("eps").ToDouble());
                 if(!(epsilon>0)||!std::isfinite(epsilon))throw std::runtime_error("Invalid Metal linear epsilon");
-                auto qkv=matmul(a,Weight(prefix+".in_proj_qkv.weight"));
-                auto z=matmul(a,Weight(prefix+".in_proj_z.weight"));
-                auto ap=matmul(a,Weight(prefix+".in_proj_a.weight")),bp=matmul(a,Weight(prefix+".in_proj_b.weight"));
+                auto qkv=matmul(source,Weight(prefix+".in_proj_qkv.weight"));
+                auto z=matmul(source,Weight(prefix+".in_proj_z.weight"));
+                auto ap=matmul(source,Weight(prefix+".in_proj_a.weight")),bp=matmul(source,Weight(prefix+".in_proj_b.weight"));
                 auto convWeight=Weight(prefix+".conv1d.weight"),aLog=Weight(prefix+".A_log"),dt=Weight(prefix+".dt_bias");
                 if(slots_[qkv].columns!=channels||slots_[z].columns!=vh*vd||slots_[ap].columns!=vh||slots_[bp].columns!=vh||
                     slots_[convWeight].rows!=channels||slots_[convWeight].columns!=kernel||slots_[aLog].columns!=vh||slots_[dt].columns!=vh)
                     throw std::runtime_error("Metal linear checkpoint projection shape mismatch");
-                auto convPacked=Allocate(batch,channels*(kernel+1));
-                Op conv{Kind::Conv,qkv,convWeight,convPacked};conv.arguments={qkv,convWeight,convState,active};conv.dimensions={kernel};ops_.push_back(std::move(conv));
-                const size_t qw=vh*kd,vw=vh*vd,pw=2*qw+vw+2*vh;
-                auto prepared=Allocate(batch,pw);
-                Op prepare{Kind::Prepare,convPacked,ap,prepared};prepare.arguments={convPacked,ap,bp,aLog,dt};
-                prepare.dimensions={kh,vh,kd,vd,kernel};ops_.push_back(std::move(prepare));
-                auto q=slice(prepared,1,pw,0,qw),k=slice(prepared,1,pw,qw,qw),v=slice(prepared,1,pw,2*qw,vw),
-                    g=slice(prepared,1,pw,2*qw+vw,vh),beta=slice(prepared,1,pw,2*qw+vw+vh,vh);
-                auto deltaPacked=Allocate(batch,vw*(kd+1));
-                Op delta{Kind::Delta,q,k,deltaPacked};delta.arguments={q,k,v,g,beta,state,active};delta.dimensions={vh,kd,vd};ops_.push_back(std::move(delta));
-                auto core=slice(deltaPacked,vh,(kd+1)*vd,0,vd);
-                auto gated=Allocate(batch,vw),norm=Weight(prefix+".norm.weight");
+                // Projections share weights across all tokens. State updates
+                // retain causal order and honor every row's active mask.
+                auto qkvTokens=isChunk?layout(qkv,batch,chunk*channels):qkv;
+                auto zTokens=isChunk?layout(z,batch,chunk*vh*vd):z;
+                auto aTokens=isChunk?layout(ap,batch,chunk*vh):ap;
+                auto bTokens=isChunk?layout(bp,batch,chunk*vh):bp;
+                auto norm=Weight(prefix+".norm.weight");
                 if(slots_[norm].rows!=1||slots_[norm].columns!=vd)throw std::runtime_error("Metal linear norm weight shape mismatch");
-                Op gate{Kind::GateNorm,core,z,gated,epsilon};gate.arguments={core,z,norm};gate.dimensions={vh,vd};ops_.push_back(std::move(gate));
+                const size_t qw=vh*kd,vw=vh*vd,pw=2*qw+vw+2*vh;
+                size_t accumulated=0;
+                for(size_t token=0;token<chunk;++token) {
+                    auto select=[&](size_t projected,size_t columns) {
+                        return isChunk?slice(projected,1,chunk*columns,token*columns,columns):projected;
+                    };
+                    auto tokenActive=isChunk?slice(active,1,chunk,token,1,{int64_t(batch)}):active;
+                    auto tokenQkv=select(qkvTokens,channels),tokenZ=select(zTokens,vw),tokenA=select(aTokens,vh),tokenB=select(bTokens,vh);
+                    auto convPacked=Allocate(batch,channels*(kernel+1));
+                    Op conv{Kind::Conv,tokenQkv,convWeight,convPacked};conv.arguments={tokenQkv,convWeight,convState,tokenActive};conv.dimensions={kernel};ops_.push_back(std::move(conv));
+                    auto prepared=Allocate(batch,pw);
+                    Op prepare{Kind::Prepare,convPacked,tokenA,prepared};prepare.arguments={convPacked,tokenA,tokenB,aLog,dt};
+                    prepare.dimensions={kh,vh,kd,vd,kernel};ops_.push_back(std::move(prepare));
+                    auto q=slice(prepared,1,pw,0,qw),k=slice(prepared,1,pw,qw,qw),v=slice(prepared,1,pw,2*qw,vw),
+                        g=slice(prepared,1,pw,2*qw+vw,vh),beta=slice(prepared,1,pw,2*qw+vw+vh,vh);
+                    auto deltaPacked=Allocate(batch,vw*(kd+1));
+                    Op delta{Kind::Delta,q,k,deltaPacked};delta.arguments={q,k,v,g,beta,state,tokenActive};delta.dimensions={vh,kd,vd};ops_.push_back(std::move(delta));
+                    auto core=slice(deltaPacked,vh,(kd+1)*vd,0,vd);
+                    auto gated=Allocate(batch,vw);
+                    Op gate{Kind::GateNorm,core,tokenZ,gated,epsilon};gate.arguments={core,tokenZ,norm};gate.dimensions={vh,vd};ops_.push_back(std::move(gate));
+                    if(token==0)accumulated=gated;
+                    else {
+                        auto joined=Allocate(batch,(token+1)*vw);Op join{Kind::Concat,accumulated,gated,joined};
+                        join.arguments={accumulated,gated,gated};join.transpose=false;ops_.push_back(std::move(join));accumulated=joined;
+                    }
+                    convState=slice(convPacked,channels,kernel+1,1,kernel);state=slice(deltaPacked,vh,(kd+1)*vd,vd,kd*vd);
+                }
+                auto gated=isChunk?layout(accumulated,batch*chunk,vw):accumulated;
                 auto hidden=matmul(gated,Weight(prefix+".out_proj.weight"));
-                if(slots_[hidden].columns!=slots_[a].columns)throw std::runtime_error("Metal linear output projection shape mismatch");
-                auto nextConv=slice(convPacked,channels,kernel+1,1,kernel),nextState=slice(deltaPacked,vh,(kd+1)*vd,vd,kd*vd);
-                out=Allocate(batch,slots_[hidden].columns+slots_[nextConv].columns+slots_[nextState].columns);
-                Op pack{Kind::Concat,hidden,nextConv,out};pack.arguments={hidden,nextConv,nextState};pack.transpose=true;packedParts[out]=pack.arguments;ops_.push_back(std::move(pack));
+                if(slots_[hidden].columns!=width)throw std::runtime_error("Metal linear output projection shape mismatch");
+                if(isChunk)hidden=layout(hidden,batch,chunk*width);
+                out=Allocate(batch,slots_[hidden].columns+slots_[convState].columns+slots_[state].columns);
+                Op pack{Kind::Concat,hidden,convState,out};pack.arguments={hidden,convState,state};pack.transpose=true;packedParts[out]=pack.arguments;ops_.push_back(std::move(pack));
             }else if(node.name=="qwen35_linear_output"||node.name=="qwen35_linear_conv_state"||node.name=="qwen35_linear_recurrent_state") {
                 auto dim=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
                     if(v<=0||uint64_t(v)>limit)throw std::runtime_error("Invalid Metal linear unpack dimension");

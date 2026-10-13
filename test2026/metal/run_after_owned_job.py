@@ -11,7 +11,12 @@ deadline=time.monotonic()+1800
 while not (prior/'exit.json').exists():
     if time.monotonic()>deadline:raise TimeoutError('Owned predecessor did not finish in 30 minutes')
     pid=int((prior/'pid').read_text())
-    identity=subprocess.check_output(['/bin/ps','-p',str(pid),'-o','args='],text=True)
+    probe=subprocess.run(['/bin/ps','-p',str(pid),'-o','args='],capture_output=True,text=True)
+    # The wrapper can publish its result and exit between the first file
+    # check and ps. Prefer that authoritative terminal result to a stale PID.
+    if (prior/'exit.json').exists():break
+    if probe.returncode:raise RuntimeError('Owned predecessor stopped without publishing an exit result')
+    identity=probe.stdout
     assert 'background_comparison.py run' in identity and str(prior) in identity
     time.sleep(5)
 status=json.loads((prior/'exit.json').read_text())

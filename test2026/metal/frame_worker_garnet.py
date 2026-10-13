@@ -22,7 +22,7 @@ vision=None;decoder=None;last=-1
 try:
     vision=MetalImageEncoder(folder+'/model.safetensors',config['vision_config'],gh,gw,batch)
     decoder=MetalDecoder(folder+'/model.safetensors',config['text_config'],batch,workload['capacity'])
-    decoder.enable_prefill(workload['chunk'],workload.get('prefill_projection','shared'))
+    decoder.enable_prefill(workload['chunk'],workload.get('prefill_projection','shared'),workload.get('prefill_linear_chunk',False))
     emit('frame_ready',dict(prompt_token_ids=prompt,stop_token_ids=stops,visual_tokens=mh*mw))
     while True:
         time.sleep(0.001)
@@ -62,6 +62,7 @@ try:
             worker_decode_window_seconds=end-first,vision_seconds=vision_seconds,
             assembly_seconds=assembled-start-vision_seconds,prefill_wall_seconds=first-assembled,
             prefill_profile=decoder.prefill_profile,prefill_inference_ms=decoder.prefill_inference_ms,
+            prefill_chunk_plan=decoder.prefill_chunk_plan,
             vision_reencoded=True,weights='BF16 checkpoint; FP32 native vision/activations/KV'))
 finally:
     if vision is not None:vision.close()

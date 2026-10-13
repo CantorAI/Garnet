@@ -62,7 +62,7 @@ int main() {
         bool rejected=false;
         try {gpu.MatMul({}, {}, 0, 7, 5);}catch(const std::invalid_argument&){rejected=true;}
         if(!rejected)throw std::runtime_error("Invalid dimensions were accepted");
-        for(size_t batch:{1,2,3,4,5,16,32})for(size_t width:{7,128,1024,1031}) {
+        for(size_t batch:{1,2,3,4,5,16,32,64,128})for(size_t width:{7,128,1024,1031}) {
             const size_t vocabulary=37;
             std::vector<float> values(batch*width),weights(vocabulary*width);
             std::vector<uint16_t> bits(weights.size());
@@ -208,8 +208,8 @@ int main() {
                 if(!inPlace)throw std::runtime_error("Split delta accepted in-place state update");
             }
         }
-        for(size_t rows:{1,2})for(size_t heads:{1,3})for(size_t dim:{5,8,128})for(size_t chunk:{2,4,16})for(int pattern=0;pattern<4;++pattern) {
-            const size_t capacity=32,width=heads*capacity*dim;
+        for(size_t rows:{1,2})for(size_t heads:{1,3})for(size_t dim:{5,8,128})for(size_t chunk:{2,4,16,32,64})for(int pattern=0;pattern<4;++pattern) {
+            const size_t capacity=std::max(size_t(32),chunk+16),width=heads*capacity*dim;
             std::vector<float> token(rows*chunk*heads*dim),cache(rows*width),slots(rows*chunk),active(rows*chunk,1),expected;
             for(size_t i=0;i<token.size();++i)token[i]=float(i)*0.125f+100;
             for(size_t i=0;i<cache.size();++i){uint32_t bits=i%2?0x80000000u:0x3f000000u+uint32_t(i);std::memcpy(&cache[i],&bits,4);}
