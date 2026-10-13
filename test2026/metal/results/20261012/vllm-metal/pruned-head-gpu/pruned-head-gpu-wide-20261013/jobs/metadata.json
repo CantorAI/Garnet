@@ -1,0 +1,36 @@
+{
+  "scope": "Isolated native greedy-head prototype, not full-model inference or a vLLM speed claim",
+  "columns_per_simd": 4,
+  "reuse_assets": "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "timed_pruned_operations": [
+    "8192-row exact native seed projection",
+    "GPU seed maximum and hidden residual norms",
+    "shared-row partial bounds and projection",
+    "unchanged native greedy argmax"
+  ],
+  "timed_control_operations": [
+    "complete unchanged native BF16 head projection",
+    "unchanged native greedy argmax"
+  ],
+  "excluded": [
+    "normalization common to both policies",
+    "weight norm preparation/upload",
+    "asset preparation",
+    "source compilation",
+    "CPU validation/readback"
+  ],
+  "raw_kernel_sha256": "0caada234e7feac6d02c15b031a1c875983888dee767cc41d76459bbd1273446",
+  "argmax_kernel_sha256": "6a6820e937fe3d7ee8960813dd5fa236f86e0dcbc1abcbfdf540f5a6615038fa",
+  "source_sha256": {
+    "metal_context.mm": "faca27f8e2260b4f0dc312c294329f5017534adef65e28d7c7a7246e9969aed1",
+    "pruned_head_gpu.mm": "d1a19781ff033eaee651213ddd076bdfd8e1ecf313e870152c7f4d1ab786ae9f",
+    "pruned_head_gpu.metal": "f2d87b945e21400c1fa06fd50982821ce20bb0859f9b01aa794ef1cacadbf0ac",
+    "pruned_head_gpu_wide.metal": "83b423553028b19eec0afef50f65958c5d4a9ede6823a731f18ba62c7371b8ac",
+    "prepare_pruned_head_gpu.py": "373838d795e4f9931e2f41d2833739218b7b806a18395be820f1cdfe5d1e3d0a",
+    "run_pruned_head_gpu.py": "6b45731efade4866a469ca54e2c02e7c3ed5ef6e463789db06e22f51a31fdc19"
+  }
+}

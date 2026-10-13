@@ -315,9 +315,27 @@ tested partial Cauchy bound covers every actual GPU logit across 72 sampled
 row/step queries; the earlier approximate CPU-normalization limitation is
 removed. Offline fixed-seed estimates suggest 23–36% fewer head weight reads
 at 32-value block granularity, before bound/gather/dispatch and batch-sharing
-costs. No pruned GPU kernel, full-model speed gain or target completion is
-claimed. Exact sources, failed setup attempts, commands, full-logit hashes and
+costs. At this stage no pruned GPU kernel or full-model speed gain had been
+demonstrated. Exact sources, failed setup attempts, commands, full-logit hashes and
 limitations are saved in `partial-head/README.md`.
+
+### Actual GPU partial-head measurements
+
+`pruned-head-gpu/` executed four layouts/cadences, including actual seed
+projection, GPU norm/bound preparation, shared batch reads and the native
+argmax. All 204 head checks passed: raw and retained logits are bit-exact,
+pruned candidates cannot beat the observed seed, and selected tokens match
+the complete native head. The checks include 312 row/state instances and
+mixed-state batch pairs. They do not constitute accelerated full-model output
+or serving validation.
+
+The best text batch-1 component ratio was 1.076x; most other profiles were
+near break-even or slower. Lower weight-element visits did not yield a broad
+advantage once bound costs were timed. The profiles are rejected for broad
+integration. No production source was changed; full-model throughput and
+TTFT remain at the previously measured values, with all targets unmet.
+Commands, source snapshots, timings and limitations are in
+`pruned-head-gpu/README.md`.
 
 ## Comparator teardown compatibility
 

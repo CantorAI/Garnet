@@ -1,0 +1,181 @@
+{
+  "terminal_suites": 4,
+  "head_requests_checked": 204,
+  "row_state_instances_checked": 312,
+  "source_digests_verified": true,
+  "all_greedy_predictions_exact": true,
+  "all_retained_logit_bits_exact": true,
+  "full_model_pruned_generation_executed": false,
+  "production_integration": false,
+  "goal_targets_met": false,
+  "profiles": [
+    {
+      "suite": "pruned-head-gpu-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.9884074218471535,
+      "shared_weight_element_fraction_median": 0.7595646475
+    },
+    {
+      "suite": "pruned-head-gpu-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.820102079949037,
+      "shared_weight_element_fraction_median": 0.7595646475
+    },
+    {
+      "suite": "pruned-head-gpu-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.9861037358939376,
+      "shared_weight_element_fraction_median": 0.7430015759999999
+    },
+    {
+      "suite": "pruned-head-gpu-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.8352568479621486,
+      "shared_weight_element_fraction_median": 0.7430015759999999
+    },
+    {
+      "suite": "pruned-head-gpu-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.8483013003980866,
+      "shared_weight_element_fraction_median": 0.8085255419999999
+    },
+    {
+      "suite": "pruned-head-gpu-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.7644731061476358,
+      "shared_weight_element_fraction_median": 0.8085255419999999
+    },
+    {
+      "suite": "pruned-head-gpu-interval2-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.9983250123994083,
+      "shared_weight_element_fraction_median": 0.846680275
+    },
+    {
+      "suite": "pruned-head-gpu-interval2-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.9525094053942944,
+      "shared_weight_element_fraction_median": 0.846680275
+    },
+    {
+      "suite": "pruned-head-gpu-interval2-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 1.0761388764917448,
+      "shared_weight_element_fraction_median": 0.770497117
+    },
+    {
+      "suite": "pruned-head-gpu-interval2-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 1.0090339739072771,
+      "shared_weight_element_fraction_median": 0.770497117
+    },
+    {
+      "suite": "pruned-head-gpu-interval2-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.9528856956744173,
+      "shared_weight_element_fraction_median": 0.8597006885
+    },
+    {
+      "suite": "pruned-head-gpu-interval2-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.913113546296609,
+      "shared_weight_element_fraction_median": 0.8597006885
+    },
+    {
+      "suite": "pruned-head-gpu-no-final-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.9939185803014834,
+      "shared_weight_element_fraction_median": 0.7595646475
+    },
+    {
+      "suite": "pruned-head-gpu-no-final-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.8800018878962048,
+      "shared_weight_element_fraction_median": 0.7595646475
+    },
+    {
+      "suite": "pruned-head-gpu-no-final-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 1.0586832853405395,
+      "shared_weight_element_fraction_median": 0.7430015759999999
+    },
+    {
+      "suite": "pruned-head-gpu-no-final-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.8900863596534085,
+      "shared_weight_element_fraction_median": 0.7430015759999999
+    },
+    {
+      "suite": "pruned-head-gpu-no-final-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.8807254287843513,
+      "shared_weight_element_fraction_median": 0.8085255419999999
+    },
+    {
+      "suite": "pruned-head-gpu-no-final-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.8030846872132543,
+      "shared_weight_element_fraction_median": 0.8085255419999999
+    },
+    {
+      "suite": "pruned-head-gpu-wide-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 1.060669923060622,
+      "shared_weight_element_fraction_median": 0.7595646475
+    },
+    {
+      "suite": "pruned-head-gpu-wide-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.8907059271935429,
+      "shared_weight_element_fraction_median": 0.7595646475
+    },
+    {
+      "suite": "pruned-head-gpu-wide-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.9826794132496295,
+      "shared_weight_element_fraction_median": 0.7430015759999999
+    },
+    {
+      "suite": "pruned-head-gpu-wide-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.8943577109634729,
+      "shared_weight_element_fraction_median": 0.7430015759999999
+    },
+    {
+      "suite": "pruned-head-gpu-wide-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "head_gpu_speed_ratio_median": 0.892841908952112,
+      "shared_weight_element_fraction_median": 0.8085255419999999
+    },
+    {
+      "suite": "pruned-head-gpu-wide-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "head_gpu_speed_ratio_median": 0.8215559109315462,
+      "shared_weight_element_fraction_median": 0.8085255419999999
+    }
+  ]
+}

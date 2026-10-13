@@ -1,0 +1,33 @@
+{
+  "scope": "Isolated native greedy-head prototype, not full-model inference or a vLLM speed claim",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "timed_pruned_operations": [
+    "8192-row exact native seed projection",
+    "GPU seed maximum and hidden residual norms",
+    "shared-row partial bounds and projection",
+    "unchanged native greedy argmax"
+  ],
+  "timed_control_operations": [
+    "complete unchanged native BF16 head projection",
+    "unchanged native greedy argmax"
+  ],
+  "excluded": [
+    "normalization common to both policies",
+    "weight norm preparation/upload",
+    "asset preparation",
+    "source compilation",
+    "CPU validation/readback"
+  ],
+  "raw_kernel_sha256": "0caada234e7feac6d02c15b031a1c875983888dee767cc41d76459bbd1273446",
+  "argmax_kernel_sha256": "6a6820e937fe3d7ee8960813dd5fa236f86e0dcbc1abcbfdf540f5a6615038fa",
+  "source_sha256": {
+    "metal_context.mm": "faca27f8e2260b4f0dc312c294329f5017534adef65e28d7c7a7246e9969aed1",
+    "pruned_head_gpu.mm": "766b6f2ac3d51d1852317a3ad209b40dd8a3a395afa146f662d2cf5dbe85e3c8",
+    "pruned_head_gpu.metal": "f2d87b945e21400c1fa06fd50982821ce20bb0859f9b01aa794ef1cacadbf0ac",
+    "prepare_pruned_head_gpu.py": "373838d795e4f9931e2f41d2833739218b7b806a18395be820f1cdfe5d1e3d0a",
+    "run_pruned_head_gpu.py": "c604a4b304ae9c32f035d0dba5d5dbe795eb82910e30c46483b9d54ae1ec4f48"
+  }
+}

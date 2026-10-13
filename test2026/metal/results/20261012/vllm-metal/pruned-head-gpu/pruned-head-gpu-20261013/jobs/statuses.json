@@ -1,0 +1,87 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/pruned_head_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/pruned_head_gpu"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 1.1112417499534786
+  },
+  {
+    "name": "Qwen3-0.6B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_pruned_head_gpu.py",
+      "/Users/zsdx/garnet-metal-investigation",
+      "Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.6114861657842994
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/pruned_head_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 6.053415874950588
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_pruned_head_gpu.py",
+      "/Users/zsdx/garnet-metal-investigation",
+      "Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 2.4877083338797092
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/pruned_head_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 5.059349666815251
+  },
+  {
+    "name": "Qwen3.5-0.8B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_pruned_head_gpu.py",
+      "/Users/zsdx/garnet-metal-investigation",
+      "Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 4.232259875163436
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/pruned_head_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 9.178151917178184
+  }
+]
