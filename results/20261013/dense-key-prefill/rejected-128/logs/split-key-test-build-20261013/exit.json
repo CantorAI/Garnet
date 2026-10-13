@@ -1,0 +1,10 @@
+{
+  "command": [
+    "/opt/homebrew/bin/cmake",
+    "--build",
+    "/Users/zsdx/garnet-metal-investigation/build-split-key-prefill",
+    "--parallel",
+    "4"
+  ],
+  "exit_code": 0
+}

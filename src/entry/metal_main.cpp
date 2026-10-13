@@ -8,7 +8,13 @@
 namespace Garnet {
 class GarnetMetalAPI {
 public:
-    std::string BackendInfo() const {return "Garnet Metal/MPS "+MetalContext::AvailableDeviceName();}
+    std::string BackendInfo() const {
+        auto info="Garnet Metal/MPS "+MetalContext::AvailableDeviceName();
+#ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
+        info+="; dense_key_split_k";
+#endif
+        return info;
+    }
     // Graphs own synchronous queues and release them through close(). There
     // is no package-global executor to drain, unlike asynchronous backends.
     bool Shutdown() const {return true;}

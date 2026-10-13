@@ -78,6 +78,27 @@ int main() {
                     throw std::runtime_error("BF16 vocabulary projection differs from FP64 reference");
             }
         }
+#ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
+        {
+            size_t checks=0;
+            for(size_t rows:{3,4,16,32,64,128})for(size_t inner:{4,37,129,896,1024,1025})for(size_t columns:{1,8,37,128}) {
+                std::vector<float> input(rows*inner),weight(columns*inner);
+                std::vector<uint16_t> bits(weight.size());
+                for(size_t i=0;i<input.size();++i)input[i]=float(int((i*7+i/inner)%17)-8)/32;
+                for(size_t i=0;i<weight.size();++i){weight[i]=float(int((i*11+i/inner)%19)-9)/64;uint32_t raw;std::memcpy(&raw,&weight[i],4);bits[i]=uint16_t(raw>>16);}
+                auto a=gpu.Upload(input,rows,inner),out=gpu.Allocate(rows,columns);
+                auto w=gpu.UploadBF16(bits.data(),bits.size()*2,columns,inner,true);
+                if(w.ExactHalfReady())throw std::runtime_error("Forced FP32 prefill unexpectedly has half storage");
+                gpu.Begin();gpu.EncodeBF16MatVec(a,w,out);gpu.SubmitAndWait();auto actual=gpu.Download(out);
+                for(size_t row=0;row<rows;++row)for(size_t col=0;col<columns;++col) {
+                    double expected=0;for(size_t k=0;k<inner;++k)expected+=double(input[row*inner+k])*weight[col*inner+k];
+                    if(actual[row*columns+col]!=expected)throw std::runtime_error("Split key projection differs from exact dyadic FP64 oracle");
+                }
+                ++checks;
+            }
+            std::cout<<"Split key exact dyadic checks="<<checks<<"\n";
+        }
+#endif
         uint16_t nonfinite=0x7f80;bool bf16Rejected=false;
 #ifdef GARNET_METAL_EXACT_HALF_PREFILL
         {

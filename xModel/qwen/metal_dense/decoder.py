@@ -40,8 +40,9 @@ class DenseMetalDecoder(MetalDecoder):
         except:self.close();raise
 
     def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False):
-        if chunk not in (2,4,8,16):
-            raise ValueError('Dense Qwen prefill supports validated chunk profiles 2, 4, 8 and 16')
+        extended=chunk in (32,64) and projection=='shared' and self.config['hidden_size']<=1024 and 'dense_key_split_k' in garnet.backend_info()
+        if chunk not in (2,4,8,16) and not extended:
+            raise ValueError('Dense Qwen prefill supports 2, 4, 8 and 16; 32/64 require the split-key Metal build, shared projection and hidden size <= 1024')
         MetalDecoder.enable_prefill(self,chunk,projection,False)
 
     def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):

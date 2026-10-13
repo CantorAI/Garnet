@@ -1,0 +1,30 @@
+[
+  {
+    "model": "Qwen3-0.6B",
+    "command": [
+      "/opt/homebrew/bin/python3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_extended_dense_reference_numpy.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-split-key64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "bf16",
+      "/Users/zsdx/garnet-metal-investigation/logs/split-key64-extended-dense-checks-20261013/jobs/failures/Qwen3-0.6B"
+    ],
+    "exit_code": 0
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "command": [
+      "/opt/homebrew/bin/python3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_extended_dense_reference_numpy.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-split-key64-prefill",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "bf16",
+      "/Users/zsdx/garnet-metal-investigation/logs/split-key64-extended-dense-checks-20261013/jobs/failures/Qwen2.5-Coder-0.5B-Instruct"
+    ],
+    "exit_code": 0
+  }
+]

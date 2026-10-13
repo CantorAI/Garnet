@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_after_owned_job.py",
+    "/Users/zsdx/garnet-metal-investigation/logs/dense-single-native-confirm-20261013",
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/compare_equivalent_f32_single_prefill.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-dense-single-prefill",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/logs/equivalent-f32-single-prefill-text-20261013/jobs"
+  ],
+  "exit_code": 0
+}

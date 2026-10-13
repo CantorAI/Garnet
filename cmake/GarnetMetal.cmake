@@ -19,6 +19,10 @@ option(GARNET_METAL_PARALLEL_DELTA_SPLIT "Test parallel FP32 recurrent dot reduc
 if(GARNET_METAL_PARALLEL_DELTA_SPLIT)
     target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_PARALLEL_DELTA_SPLIT=1)
 endif()
+option(GARNET_METAL_FLOAT_DENSE_KEY_PREFILL "Test FP32 split-K dense key projections during prefill" OFF)
+if(GARNET_METAL_FLOAT_DENSE_KEY_PREFILL)
+    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_FLOAT_DENSE_KEY_PREFILL=1)
+endif()
 target_include_directories(garnet_metal PUBLIC src/backends/metal)
 target_compile_options(garnet_metal PRIVATE -fobjc-arc)
 target_link_libraries(garnet_metal PUBLIC

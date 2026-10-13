@@ -44,7 +44,7 @@ public:
     static std::string AvailableDeviceName();
     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
     MetalMatrix Allocate(size_t rows, size_t columns);
-    MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns);
+    MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false);
     // Preserve BF16 checkpoint values; use SIMD matvec for decode and FP32 tiled GEMM for up to 128 prompt rows.
     void EncodeBF16MatVec(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.

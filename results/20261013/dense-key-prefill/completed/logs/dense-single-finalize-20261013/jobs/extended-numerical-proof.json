@@ -1,0 +1,540 @@
+[
+  {
+    "model": "Qwen3-0.6B",
+    "checks": [
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 32,
+        "step": 0,
+        "max_abs_error": 9.1552734375e-05,
+        "hidden_l2_worst_ratio": 0.008480493565018558,
+        "value_l2_worst_ratio": 0.014257255058424411,
+        "worst_ratio": 0.48478058530733054,
+        "key_pair_ratio": 0.48478058530733054
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 32,
+        "step": 1,
+        "max_abs_error": 9.1552734375e-05,
+        "hidden_l2_worst_ratio": 0.007867084754487495,
+        "value_l2_worst_ratio": 0.015350496279872155,
+        "worst_ratio": 0.31028138003378036,
+        "key_pair_ratio": 0.31028138003378036
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 32,
+        "step": 2,
+        "max_abs_error": 9.1552734375e-05,
+        "hidden_l2_worst_ratio": 0.007276374069989372,
+        "value_l2_worst_ratio": 0.015710072650000687,
+        "worst_ratio": 0.4052244577150438,
+        "key_pair_ratio": 0.4052244577150438
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 64,
+        "step": 0,
+        "max_abs_error": 9.1552734375e-05,
+        "hidden_l2_worst_ratio": 0.00841571204711588,
+        "value_l2_worst_ratio": 0.01480355322030096,
+        "worst_ratio": 0.5166421645163638,
+        "key_pair_ratio": 0.5166421645163638
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 64,
+        "step": 1,
+        "max_abs_error": 7.62939453125e-05,
+        "hidden_l2_worst_ratio": 0.0077491741720577675,
+        "value_l2_worst_ratio": 0.01652070135407434,
+        "worst_ratio": 0.9926648323921115,
+        "key_pair_ratio": 0.9926648323921115
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 64,
+        "step": 2,
+        "max_abs_error": 8.392333984375e-05,
+        "hidden_l2_worst_ratio": 0.007712106896975753,
+        "value_l2_worst_ratio": 0.017405693159613458,
+        "worst_ratio": 0.6284283741394188,
+        "key_pair_ratio": 0.6284283741394188
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 32,
+        "step": 0,
+        "max_abs_error": 0.0001220703125,
+        "hidden_l2_worst_ratio": 0.007831653941217055,
+        "value_l2_worst_ratio": 0.01584531192085367,
+        "worst_ratio": 0.5204169028829942,
+        "key_pair_ratio": 0.5204169028829942
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 32,
+        "step": 1,
+        "max_abs_error": 0.0001068115234375,
+        "hidden_l2_worst_ratio": 0.007635341379976183,
+        "value_l2_worst_ratio": 0.016191730487696745,
+        "worst_ratio": 0.4202961053899338,
+        "key_pair_ratio": 0.4202961053899338
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 32,
+        "step": 2,
+        "max_abs_error": 9.918212890625e-05,
+        "hidden_l2_worst_ratio": 0.00824015084564852,
+        "value_l2_worst_ratio": 0.01628369262352478,
+        "worst_ratio": 0.18528803579684439,
+        "key_pair_ratio": 0.18528803579684439
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 64,
+        "step": 0,
+        "max_abs_error": 9.72747802734375e-05,
+        "hidden_l2_worst_ratio": 0.00842403931903527,
+        "value_l2_worst_ratio": 0.015786157932808926,
+        "worst_ratio": 0.7626448861636365,
+        "key_pair_ratio": 0.7626448861636365
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 64,
+        "step": 1,
+        "max_abs_error": 9.1552734375e-05,
+        "hidden_l2_worst_ratio": 0.00868288090777882,
+        "value_l2_worst_ratio": 0.015493207694959248,
+        "worst_ratio": 0.5267188567218725,
+        "key_pair_ratio": 0.5267188567218725
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 64,
+        "step": 2,
+        "max_abs_error": 9.1552734375e-05,
+        "hidden_l2_worst_ratio": 0.007886555208450554,
+        "value_l2_worst_ratio": 0.017126562894798338,
+        "worst_ratio": 0.813139846752656,
+        "key_pair_ratio": 0.813139846752656
+      },
+      {
+        "layer": 27,
+        "batch": 1,
+        "chunk": 32,
+        "step": 0,
+        "max_abs_error": 0.003662109375,
+        "hidden_l2_worst_ratio": 0.0723275607114854,
+        "value_l2_worst_ratio": 0.016085538924026817,
+        "worst_ratio": 0.23414581529405973,
+        "key_pair_ratio": 0.2340391905921174
+      },
+      {
+        "layer": 27,
+        "batch": 1,
+        "chunk": 32,
+        "step": 1,
+        "max_abs_error": 0.0062255859375,
+        "hidden_l2_worst_ratio": 0.09662775887703579,
+        "value_l2_worst_ratio": 0.01551713319754411,
+        "worst_ratio": 0.2133765707019928,
+        "key_pair_ratio": 0.15112997807527073
+      },
+      {
+        "layer": 27,
+        "batch": 1,
+        "chunk": 32,
+        "step": 2,
+        "max_abs_error": 0.00732421875,
+        "hidden_l2_worst_ratio": 0.1533292665726451,
+        "value_l2_worst_ratio": 0.01665910187493524,
+        "worst_ratio": 0.29226186828589906,
+        "key_pair_ratio": 0.14028289041300518
+      },
+      {
+        "layer": 27,
+        "batch": 1,
+        "chunk": 64,
+        "step": 0,
+        "max_abs_error": 0.002685546875,
+        "hidden_l2_worst_ratio": 0.09871930896768631,
+        "value_l2_worst_ratio": 0.015862254943707355,
+        "worst_ratio": 0.3865381379888258,
+        "key_pair_ratio": 0.15672915339859553
+      },
+      {
+        "layer": 27,
+        "batch": 1,
+        "chunk": 64,
+        "step": 1,
+        "max_abs_error": 0.0067138671875,
+        "hidden_l2_worst_ratio": 0.08405229950201434,
+        "value_l2_worst_ratio": 0.015593621243334473,
+        "worst_ratio": 0.33877324234879724,
+        "key_pair_ratio": 0.21764187252044656
+      },
+      {
+        "layer": 27,
+        "batch": 1,
+        "chunk": 64,
+        "step": 2,
+        "max_abs_error": 0.00244140625,
+        "hidden_l2_worst_ratio": 0.08854909071225563,
+        "value_l2_worst_ratio": 0.015218127646863928,
+        "worst_ratio": 0.3789522762312944,
+        "key_pair_ratio": 0.23072916504010663
+      },
+      {
+        "layer": 27,
+        "batch": 2,
+        "chunk": 32,
+        "step": 0,
+        "max_abs_error": 0.00439453125,
+        "hidden_l2_worst_ratio": 0.10920627070282488,
+        "value_l2_worst_ratio": 0.01633284658630214,
+        "worst_ratio": 0.3879401958708743,
+        "key_pair_ratio": 0.3408294845327938
+      },
+      {
+        "layer": 27,
+        "batch": 2,
+        "chunk": 32,
+        "step": 1,
+        "max_abs_error": 0.002685546875,
+        "hidden_l2_worst_ratio": 0.08643118205139239,
+        "value_l2_worst_ratio": 0.017794948844022492,
+        "worst_ratio": 0.35201480669416096,
+        "key_pair_ratio": 0.16856774380422848
+      },
+      {
+        "layer": 27,
+        "batch": 2,
+        "chunk": 32,
+        "step": 2,
+        "max_abs_error": 0.0107421875,
+        "hidden_l2_worst_ratio": 0.09611292909906065,
+        "value_l2_worst_ratio": 0.016740747739443406,
+        "worst_ratio": 0.27381512778381567,
+        "key_pair_ratio": 0.154968428347007
+      },
+      {
+        "layer": 27,
+        "batch": 2,
+        "chunk": 64,
+        "step": 0,
+        "max_abs_error": 0.01220703125,
+        "hidden_l2_worst_ratio": 0.11368213057527819,
+        "value_l2_worst_ratio": 0.01709125464503383,
+        "worst_ratio": 0.5882763465524969,
+        "key_pair_ratio": 0.18348941561497376
+      },
+      {
+        "layer": 27,
+        "batch": 2,
+        "chunk": 64,
+        "step": 1,
+        "max_abs_error": 0.008056640625,
+        "hidden_l2_worst_ratio": 0.16924570434542316,
+        "value_l2_worst_ratio": 0.016847059525695724,
+        "worst_ratio": 0.4729283991509853,
+        "key_pair_ratio": 0.19120631268363517
+      },
+      {
+        "layer": 27,
+        "batch": 2,
+        "chunk": 64,
+        "step": 2,
+        "max_abs_error": 0.0068359375,
+        "hidden_l2_worst_ratio": 0.10185913825580521,
+        "value_l2_worst_ratio": 0.016464939982638142,
+        "worst_ratio": 0.5287831309154877,
+        "key_pair_ratio": 0.24166918641974441
+      }
+    ]
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "checks": [
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 32,
+        "step": 0,
+        "max_abs_error": 7.62939453125e-06,
+        "hidden_l2_worst_ratio": 0.003884204234269443,
+        "value_l2_worst_ratio": 0.011145176524344139,
+        "worst_ratio": 0.015258993109538094,
+        "key_pair_ratio": 0.006867463623407431
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 32,
+        "step": 1,
+        "max_abs_error": 7.62939453125e-06,
+        "hidden_l2_worst_ratio": 0.004353221448382768,
+        "value_l2_worst_ratio": 0.01114766110994019,
+        "worst_ratio": 0.013014831767356237,
+        "key_pair_ratio": 0.007007278214402243
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 32,
+        "step": 2,
+        "max_abs_error": 7.62939453125e-06,
+        "hidden_l2_worst_ratio": 0.003960539224983158,
+        "value_l2_worst_ratio": 0.010720697192174533,
+        "worst_ratio": 0.01681132289668796,
+        "key_pair_ratio": 0.0065629370802817956
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 64,
+        "step": 0,
+        "max_abs_error": 1.52587890625e-05,
+        "hidden_l2_worst_ratio": 0.005148299034485812,
+        "value_l2_worst_ratio": 0.011612113574321578,
+        "worst_ratio": 0.01615469022950693,
+        "key_pair_ratio": 0.011027695748876907
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 64,
+        "step": 1,
+        "max_abs_error": 1.52587890625e-05,
+        "hidden_l2_worst_ratio": 0.005545999213705362,
+        "value_l2_worst_ratio": 0.01053499535962931,
+        "worst_ratio": 0.025196253619441826,
+        "key_pair_ratio": 0.01421448389226313
+      },
+      {
+        "layer": 0,
+        "batch": 1,
+        "chunk": 64,
+        "step": 2,
+        "max_abs_error": 1.52587890625e-05,
+        "hidden_l2_worst_ratio": 0.0055128050637117555,
+        "value_l2_worst_ratio": 0.010453466790831851,
+        "worst_ratio": 0.02823466890846515,
+        "key_pair_ratio": 0.008639994994148891
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 32,
+        "step": 0,
+        "max_abs_error": 7.62939453125e-06,
+        "hidden_l2_worst_ratio": 0.0050384838055699864,
+        "value_l2_worst_ratio": 0.010140893853840057,
+        "worst_ratio": 0.021395017927598684,
+        "key_pair_ratio": 0.012882674109314768
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 32,
+        "step": 1,
+        "max_abs_error": 7.62939453125e-06,
+        "hidden_l2_worst_ratio": 0.0059776439565237096,
+        "value_l2_worst_ratio": 0.011615587843607205,
+        "worst_ratio": 0.023653167099245986,
+        "key_pair_ratio": 0.014591844488202279
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 32,
+        "step": 2,
+        "max_abs_error": 1.52587890625e-05,
+        "hidden_l2_worst_ratio": 0.005181147193146943,
+        "value_l2_worst_ratio": 0.010163411935941967,
+        "worst_ratio": 0.02057929996016446,
+        "key_pair_ratio": 0.00705596422884565
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 64,
+        "step": 0,
+        "max_abs_error": 1.52587890625e-05,
+        "hidden_l2_worst_ratio": 0.005766641972585313,
+        "value_l2_worst_ratio": 0.010995865836848537,
+        "worst_ratio": 0.023650233214274,
+        "key_pair_ratio": 0.008099073832996283
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 64,
+        "step": 1,
+        "max_abs_error": 3.0517578125e-05,
+        "hidden_l2_worst_ratio": 0.006105817653859914,
+        "value_l2_worst_ratio": 0.010907051693983948,
+        "worst_ratio": 0.019483119032908492,
+        "key_pair_ratio": 0.014751316767800511
+      },
+      {
+        "layer": 0,
+        "batch": 2,
+        "chunk": 64,
+        "step": 2,
+        "max_abs_error": 1.52587890625e-05,
+        "hidden_l2_worst_ratio": 0.005649763502293165,
+        "value_l2_worst_ratio": 0.010790748666182414,
+        "worst_ratio": 0.02214366073178598,
+        "key_pair_ratio": 0.016051853679446754
+      },
+      {
+        "layer": 23,
+        "batch": 1,
+        "chunk": 32,
+        "step": 0,
+        "max_abs_error": 0.00012969970703125,
+        "hidden_l2_worst_ratio": 0.0411406324633042,
+        "value_l2_worst_ratio": 0.015163074369950832,
+        "worst_ratio": 0.11097907491276568,
+        "key_pair_ratio": 0.07249494983872828
+      },
+      {
+        "layer": 23,
+        "batch": 1,
+        "chunk": 32,
+        "step": 1,
+        "max_abs_error": 0.00011444091796875,
+        "hidden_l2_worst_ratio": 0.03417505353240839,
+        "value_l2_worst_ratio": 0.01324723507230694,
+        "worst_ratio": 0.08811978766422365,
+        "key_pair_ratio": 0.08811978766422365
+      },
+      {
+        "layer": 23,
+        "batch": 1,
+        "chunk": 32,
+        "step": 2,
+        "max_abs_error": 0.00017547607421875,
+        "hidden_l2_worst_ratio": 0.04287866591303624,
+        "value_l2_worst_ratio": 0.01581480171097489,
+        "worst_ratio": 0.07310422665145277,
+        "key_pair_ratio": 0.07310422665145277
+      },
+      {
+        "layer": 23,
+        "batch": 1,
+        "chunk": 64,
+        "step": 0,
+        "max_abs_error": 0.00018310546875,
+        "hidden_l2_worst_ratio": 0.045334879285101076,
+        "value_l2_worst_ratio": 0.01517574822786698,
+        "worst_ratio": 0.07544982574352947,
+        "key_pair_ratio": 0.04250183068924161
+      },
+      {
+        "layer": 23,
+        "batch": 1,
+        "chunk": 64,
+        "step": 1,
+        "max_abs_error": 0.00018310546875,
+        "hidden_l2_worst_ratio": 0.04825254861061354,
+        "value_l2_worst_ratio": 0.015025202281421006,
+        "worst_ratio": 0.09549275955284074,
+        "key_pair_ratio": 0.06273347478546482
+      },
+      {
+        "layer": 23,
+        "batch": 1,
+        "chunk": 64,
+        "step": 2,
+        "max_abs_error": 0.0001373291015625,
+        "hidden_l2_worst_ratio": 0.038497152589443785,
+        "value_l2_worst_ratio": 0.014803511787981232,
+        "worst_ratio": 0.07707744753407844,
+        "key_pair_ratio": 0.048307614200383285
+      },
+      {
+        "layer": 23,
+        "batch": 2,
+        "chunk": 32,
+        "step": 0,
+        "max_abs_error": 0.000156402587890625,
+        "hidden_l2_worst_ratio": 0.04325043340468721,
+        "value_l2_worst_ratio": 0.014288499854720589,
+        "worst_ratio": 0.07181243306417812,
+        "key_pair_ratio": 0.07181243306417812
+      },
+      {
+        "layer": 23,
+        "batch": 2,
+        "chunk": 32,
+        "step": 1,
+        "max_abs_error": 0.000141143798828125,
+        "hidden_l2_worst_ratio": 0.04068362113898498,
+        "value_l2_worst_ratio": 0.01517652549750103,
+        "worst_ratio": 0.06550063265129333,
+        "key_pair_ratio": 0.06550063265129333
+      },
+      {
+        "layer": 23,
+        "batch": 2,
+        "chunk": 32,
+        "step": 2,
+        "max_abs_error": 0.00012969970703125,
+        "hidden_l2_worst_ratio": 0.04020804385011419,
+        "value_l2_worst_ratio": 0.014170662210871881,
+        "worst_ratio": 0.10158414218404185,
+        "key_pair_ratio": 0.04389271434304707
+      },
+      {
+        "layer": 23,
+        "batch": 2,
+        "chunk": 64,
+        "step": 0,
+        "max_abs_error": 0.000152587890625,
+        "hidden_l2_worst_ratio": 0.04241792181517224,
+        "value_l2_worst_ratio": 0.017227668572069206,
+        "worst_ratio": 0.1674497677037676,
+        "key_pair_ratio": 0.1674497677037676
+      },
+      {
+        "layer": 23,
+        "batch": 2,
+        "chunk": 64,
+        "step": 1,
+        "max_abs_error": 0.000152587890625,
+        "hidden_l2_worst_ratio": 0.042937861002131546,
+        "value_l2_worst_ratio": 0.014824203929918206,
+        "worst_ratio": 0.09758049671965184,
+        "key_pair_ratio": 0.08546811078888046
+      },
+      {
+        "layer": 23,
+        "batch": 2,
+        "chunk": 64,
+        "step": 2,
+        "max_abs_error": 0.00014495849609375,
+        "hidden_l2_worst_ratio": 0.04354375251484775,
+        "value_l2_worst_ratio": 0.01893969128496859,
+        "worst_ratio": 0.08511148092538719,
+        "key_pair_ratio": 0.058078086620126146
+      }
+    ]
+  }
+]

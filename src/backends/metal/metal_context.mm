@@ -33,12 +33,14 @@ struct MetalBF16Weight::Impl {
     MPSMatrix* exactHalf;
     id<MTLBuffer> halfScales;
     size_t rows,columns;
+    bool floatPrefill=false;
 };
 bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&impl_->halfScales;}
 struct MetalPipelines {
     id<MTLLibrary> library;
     id<MTLComputePipelineState> argmax;
     id<MTLComputePipelineState> bf16Decode,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
+    id<MTLComputePipelineState> bf16Split,bf16SplitReduce;
     id<MTLComputePipelineState> halfRescale;
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
@@ -68,6 +70,7 @@ struct MetalContext::Impl {
     std::map<std::array<size_t,4>,MPSMatrixMultiplication*> matmul;
     std::map<std::array<size_t,3>,MPSMatrixMultiplication*> halfMatmul;
     std::map<std::array<size_t,2>,MetalMatrix> halfScratch;
+    std::map<std::array<size_t,3>,MetalMatrix> splitScratch;
 #ifdef GARNET_METAL_MPS_VISION_SCORES
     struct VisionScoreScratch {
         MetalMatrix query,key,scores;
@@ -166,6 +169,38 @@ kernel void bf16_gemm(device const float* a [[buffer(0)]],device const ushort* w
     simdgroup_store(accum0,result+simd*8,32);simdgroup_store(accum1,result+8*32+simd*8,32);
     threadgroup_barrier(mem_flags::mem_threadgroup);
     for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,column=colBase+i%32;if(row<p.rows&&column<p.columns)out[row*p.oStride+column]=result[i];}
+}
+struct SplitParams {ulong rows,inner,columns,aStride,oStride,parts;};
+kernel void bf16_split_key(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+    device float* out [[buffer(2)]],constant SplitParams& p [[buffer(3)]],
+    uint3 group [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    threadgroup float left[16*32],right[32*32],result[16*32];
+    ulong rowBase=ulong(group.y)*16,colBase=ulong(group.x)*32,begin=ulong(group.z)*64,end=min(begin+64,p.inner);
+    simdgroup_float8x8 accum0=make_filled_simdgroup_matrix<float,8>(0.0f);
+    simdgroup_float8x8 accum1=make_filled_simdgroup_matrix<float,8>(0.0f);
+    for(ulong base=begin;base<end;base+=32) {
+        for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,k=base+i%32;left[i]=(row<p.rows&&k<end)?a[row*p.aStride+k]:0.0f;}
+        for(uint i=tid;i<32*32;i+=128){ulong k=base+i/32,column=colBase+i%32;right[i]=(k<end&&column<p.columns)?as_type<float>(uint(weight[column*p.inner+k])<<16):0.0f;}
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+        for(uint offset=0;offset<32;offset+=8) {
+            simdgroup_float8x8 l0,l1,r;
+            simdgroup_load(l0,left+offset,32);simdgroup_load(l1,left+8*32+offset,32);simdgroup_load(r,right+offset*32+simd*8,32);
+            simdgroup_multiply_accumulate(accum0,l0,r,accum0);simdgroup_multiply_accumulate(accum1,l1,r,accum1);
+        }
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+    simdgroup_store(accum0,result+simd*8,32);simdgroup_store(accum1,result+8*32+simd*8,32);
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,column=colBase+i%32;if(row<p.rows&&column<p.columns)out[(ulong(group.z)*p.rows+row)*p.oStride+column]=result[i];}
+}
+struct SplitReduceParams {ulong rows,columns,iStride,oStride,parts;};
+kernel void bf16_split_reduce(device const float* partial [[buffer(0)]],device float* out [[buffer(1)]],
+    constant SplitReduceParams& p [[buffer(2)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.rows*p.columns)return;
+    ulong row=ulong(id)/p.columns,col=ulong(id)%p.columns;
+    float terms[16];for(uint i=0;i<16;++i)terms[i]=i<p.parts?partial[(ulong(i)*p.rows+row)*p.iStride+col]:0.0f;
+    for(uint width=8;width>0;width/=2)for(uint i=0;i<width;++i)terms[i]=terms[2*i]+terms[2*i+1];
+    out[row*p.oStride+col]=terms[0];
 }
 kernel void gemm_16_64_64(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
 device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
@@ -823,6 +858,11 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
         impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
+#ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
+        impl_->kernels->bf16Split=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_split_key"] error:&error];
+        impl_->kernels->bf16SplitReduce=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_split_reduce"] error:&error];
+        if(!impl_->kernels->bf16Split||!impl_->kernels->bf16SplitReduce)throw std::runtime_error("Cannot create split key projection pipelines");
+#endif
         impl_->kernels->halfRescale=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"half_rescale"] error:&error];
         impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
         impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
@@ -893,20 +933,20 @@ MetalMatrix MetalContext::Allocate(size_t rows,size_t columns) {
     return MetalMatrix(storage);
     }
 }
-MetalBF16Weight MetalContext::UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns) {
+MetalBF16Weight MetalContext::UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill) {
     @autoreleasepool {
         if(!data||bytes!=Elements(rows,columns)*sizeof(uint16_t))throw std::invalid_argument("BF16 weight size mismatch");
         if(bytes>impl_->device.maxBufferLength)throw std::invalid_argument("BF16 weight exceeds device buffer limit");
         // Inspect raw bits without introducing alignment requirements on mapped files.
         for(size_t i=0;i<rows*columns;++i){uint16_t bits;std::memcpy(&bits,static_cast<const char*>(data)+2*i,2);
             if((bits&0x7f80)==0x7f80)throw std::invalid_argument("Nonfinite BF16 checkpoint weight");}
-        auto value=std::make_shared<MetalBF16Weight::Impl>();value->rows=rows;value->columns=columns;
+        auto value=std::make_shared<MetalBF16Weight::Impl>();value->rows=rows;value->columns=columns;value->floatPrefill=floatPrefill;
         value->buffer=[impl_->device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared];
         if(!value->buffer)throw std::runtime_error("BF16 weight allocation failed");
 #ifdef GARNET_METAL_EXACT_HALF_PREFILL
         // Preserve original BF16 decode storage. Pack only modest body matrices;
         // a single nonexact value disables the optional representation entirely.
-        if(bytes<=16*1024*1024&&impl_->kernels->halfRescale) {
+        if(!floatPrefill&&bytes<=16*1024*1024&&impl_->kernels->halfRescale) {
             const auto stride=[MPSMatrixDescriptor rowBytesFromColumns:columns dataType:MPSDataTypeFloat16];
             if(stride<=impl_->device.maxBufferLength/rows) {
                 id<MTLBuffer> encoded=[impl_->device newBufferWithLength:rows*stride options:MTLResourceStorageModeShared];
@@ -976,6 +1016,28 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
         if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
             throw std::logic_error("BF16 output belongs to another command batch");
+#ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
+        if(w->floatPrefill&&a.rows>2&&a.columns<=1024) {
+            const size_t parts=(a.columns+63)/64;
+            const std::array<size_t,3> key{a.rows,o.columns,parts};auto scratch=impl_->splitScratch.find(key);
+            if(scratch==impl_->splitScratch.end())scratch=impl_->splitScratch.emplace(key,Allocate(a.rows*parts,o.columns)).first;
+            auto partial=scratch->second.impl_->matrix;
+            struct Params{uint64_t rows,inner,columns,aStride,oStride,parts;};
+            Params p{a.rows,a.columns,o.columns,a.rowBytes/4,partial.rowBytes/4,parts};
+            auto encoder=[impl_->command computeCommandEncoder];
+            if(!encoder)throw std::runtime_error("Cannot create split key projection encoder");
+            [encoder setComputePipelineState:impl_->kernels->bf16Split];[encoder setBuffer:a.data offset:0 atIndex:0];
+            [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:partial.data offset:0 atIndex:2];[encoder setBytes:&p length:sizeof(p) atIndex:3];
+            [encoder dispatchThreadgroups:MTLSizeMake((o.columns+31)/32,(a.rows+15)/16,parts) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
+            struct Reduce{uint64_t rows,columns,iStride,oStride,parts;};Reduce r{a.rows,o.columns,partial.rowBytes/4,o.rowBytes/4,parts};
+            encoder=[impl_->command computeCommandEncoder];if(!encoder)throw std::runtime_error("Cannot create split key reduction encoder");
+            [encoder setComputePipelineState:impl_->kernels->bf16SplitReduce];[encoder setBuffer:partial.data offset:0 atIndex:0];[encoder setBuffer:o.data offset:0 atIndex:1];
+            [encoder setBytes:&r length:sizeof(r) atIndex:2];
+            const auto total=Elements(o.rows,o.columns);[encoder dispatchThreads:MTLSizeMake(total,1,1) threadsPerThreadgroup:MTLSizeMake(std::min(total,size_t(impl_->kernels->bf16SplitReduce.maxTotalThreadsPerThreadgroup)),1,1)];[encoder endEncoding];
+            output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+            return;
+        }
+#endif
 #ifdef GARNET_METAL_EXACT_HALF_PREFILL
         if(a.rows>2&&w->exactHalf&&w->halfScales) {
             const std::array<size_t,3> key{a.rows,o.columns,a.columns};

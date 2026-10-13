@@ -86,7 +86,13 @@ size_t MetalCompiledGraph::BF16Weight(const std::string& name) {
     if(!file.Open(entry->filePath,error))throw std::runtime_error(error);
     auto data=file.DataAt(entry->dataOffset,entry->dataSize);
     if(!data)throw std::runtime_error("Vocabulary checkpoint exceeds file bounds");
-    auto weight=gpu_->UploadBF16(data,entry->dataSize,size_t(entry->shape[0]),size_t(entry->shape[1]));
+    bool floatPrefill=false;
+#ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
+    const std::string keySuffix=".self_attn.k_proj.weight";
+    floatPrefill=name.rfind("model.layers.",0)==0&&name.size()>=keySuffix.size()&&
+        name.compare(name.size()-keySuffix.size(),keySuffix.size(),keySuffix)==0;
+#endif
+    auto weight=gpu_->UploadBF16(data,entry->dataSize,size_t(entry->shape[0]),size_t(entry->shape[1]),floatPrefill);
     auto id=slots_.size();slots_.push_back({MetalMatrix(),size_t(entry->shape[0]),size_t(entry->shape[1]),std::vector<int64_t>(entry->shape.begin(),entry->shape.end()),std::move(weight)});
     if(modified!=std::filesystem::last_write_time(entry->filePath)||bytes!=std::filesystem::file_size(entry->filePath))throw std::runtime_error("BF16 checkpoint changed while loading");
     weightRecords_[key]={slots_[id],*entry,modified,bytes};weights_[key]=id;return id;
