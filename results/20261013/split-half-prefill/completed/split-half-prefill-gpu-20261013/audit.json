@@ -1,0 +1,752 @@
+{
+  "terminal_exit": 1,
+  "completed_check_count": 80,
+  "worst_ratio": 0.296439417,
+  "admission": [
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "admission",
+      "unsafe_input_rejected": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "admission",
+      "unsafe_input_rejected": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "admission",
+      "unsafe_input_rejected": true
+    }
+  ],
+  "unsupported_weight_case": {
+    "name": "matrix-2",
+    "tensor": "model.language_model.layers.0.linear_attn.in_proj_qkv.weight",
+    "columns": 6144,
+    "inner": 1024,
+    "sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+  },
+  "checks": [
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.210498506,
+      "max_abs_error": 2.2649765e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.218122109,
+      "max_abs_error": 4.64916229e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.226702961,
+      "max_abs_error": 4.88758087e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.242768743,
+      "max_abs_error": 4.88758087e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.124276862,
+      "max_abs_error": 2.32458115e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.124276862,
+      "max_abs_error": 2.32458115e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.173590132,
+      "max_abs_error": 2.32458115e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.173590132,
+      "max_abs_error": 2.32458115e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-2",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0704938784,
+      "max_abs_error": 1.1920929e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-2",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0704938784,
+      "max_abs_error": 1.25169754e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-2",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.116293859,
+      "max_abs_error": 1.25169754e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-2",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.116293859,
+      "max_abs_error": 1.25169754e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-3",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0853806558,
+      "max_abs_error": 3.09944153e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-3",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0853806558,
+      "max_abs_error": 3.09944153e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-3",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.112863325,
+      "max_abs_error": 3.09944153e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-3",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.126000944,
+      "max_abs_error": 3.09944153e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-4",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.184310266,
+      "max_abs_error": 2.74181366e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-4",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.184310266,
+      "max_abs_error": 2.74181366e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-4",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.184310266,
+      "max_abs_error": 2.74181366e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-4",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.184310266,
+      "max_abs_error": 2.74181366e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-5",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.125629963,
+      "max_abs_error": 2.74181366e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-5",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.125629963,
+      "max_abs_error": 2.74181366e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-5",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.125629963,
+      "max_abs_error": 2.74181366e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-5",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.125629963,
+      "max_abs_error": 2.74181366e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-6",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0659289941,
+      "max_abs_error": 9.53674316e-07
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-6",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0851745928,
+      "max_abs_error": 9.53674316e-07
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-6",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0851745928,
+      "max_abs_error": 1.31130219e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "matrix-6",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0851745928,
+      "max_abs_error": 1.31130219e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "synthetic-37",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0301223591,
+      "max_abs_error": 7.15255737e-07
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "synthetic-37",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0323902847,
+      "max_abs_error": 9.53674316e-07
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "synthetic-37",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0548970792,
+      "max_abs_error": 9.53674316e-07
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "synthetic-37",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0548970792,
+      "max_abs_error": 9.53674316e-07
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "synthetic-129",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.118486246,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "synthetic-129",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.118486246,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "synthetic-129",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.118486246,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "check",
+      "name": "synthetic-129",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.11850978,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.040832597,
+      "max_abs_error": 7.4505806e-07
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.040832597,
+      "max_abs_error": 7.4505806e-07
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0619591202,
+      "max_abs_error": 8.64267349e-07
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0619591202,
+      "max_abs_error": 8.64267349e-07
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0274259284,
+      "max_abs_error": 3.27825546e-07
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0274259284,
+      "max_abs_error": 3.87430191e-07
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0274259284,
+      "max_abs_error": 3.87430191e-07
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0274259284,
+      "max_abs_error": 3.87430191e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.178482995,
+      "max_abs_error": 1.37090683e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.247141593,
+      "max_abs_error": 3.57627869e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.296439417,
+      "max_abs_error": 1.12056732e-05
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-0",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.296439417,
+      "max_abs_error": 1.12056732e-05
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0892980718,
+      "max_abs_error": 1.78813934e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0892980718,
+      "max_abs_error": 1.90734863e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.112692059,
+      "max_abs_error": 2.38418579e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-1",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.112692059,
+      "max_abs_error": 2.38418579e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-2",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0704267112,
+      "max_abs_error": 8.64267349e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-2",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0704267112,
+      "max_abs_error": 8.64267349e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-2",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0733898364,
+      "max_abs_error": 9.23871994e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-2",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0733898364,
+      "max_abs_error": 9.23871994e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-3",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.099291577,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-3",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.099291577,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-3",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.107543155,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-3",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.126472222,
+      "max_abs_error": 4.29153442e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-4",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0378643916,
+      "max_abs_error": 5.36441803e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-4",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0378643916,
+      "max_abs_error": 5.36441803e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-4",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0550494449,
+      "max_abs_error": 5.36441803e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-4",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0550494449,
+      "max_abs_error": 6.2584877e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-5",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.139720512,
+      "max_abs_error": 4.05311584e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-5",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.139720512,
+      "max_abs_error": 4.05311584e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-5",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.145083725,
+      "max_abs_error": 5.12599945e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-5",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.163348236,
+      "max_abs_error": 5.12599945e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-6",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0329426,
+      "max_abs_error": 3.87430191e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-6",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0329426,
+      "max_abs_error": 3.87430191e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-6",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0329426,
+      "max_abs_error": 5.96046448e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "matrix-6",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0329426,
+      "max_abs_error": 5.96046448e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "synthetic-37",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0301223591,
+      "max_abs_error": 7.15255737e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "synthetic-37",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0323902847,
+      "max_abs_error": 9.53674316e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "synthetic-37",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0548970792,
+      "max_abs_error": 9.53674316e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "synthetic-37",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.0548970792,
+      "max_abs_error": 9.53674316e-07
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "synthetic-129",
+      "rows": 24,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.118486246,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "synthetic-129",
+      "rows": 32,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.118486246,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "synthetic-129",
+      "rows": 64,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.118486246,
+      "max_abs_error": 3.81469727e-06
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "kind": "check",
+      "name": "synthetic-129",
+      "rows": 80,
+      "activation_bits_exact": true,
+      "worst_ratio": 0.11850978,
+      "max_abs_error": 3.81469727e-06
+    }
+  ],
+  "scope": "Partial component experiment; VL stops at incompatible weight row; no full-model speed claim"
+}

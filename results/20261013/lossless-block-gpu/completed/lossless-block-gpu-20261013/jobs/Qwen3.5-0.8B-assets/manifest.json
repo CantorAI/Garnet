@@ -1,0 +1,93 @@
+{
+  "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+  "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+  "small": false,
+  "cases": [
+    {
+      "name": "all-bit-patterns",
+      "rows": 512,
+      "inner": 128,
+      "count": 65536,
+      "finite": false,
+      "block": 128,
+      "codec": "whole-block-fallback",
+      "raw_bytes": 131072,
+      "packed_bytes": 102400,
+      "storage_ratio": 1.28,
+      "escape_free_block_fraction": 1.0,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "68e419472d25e0b85e9917ccf692fd58245c5e95e9a46f07d1df81d2e9da246b",
+        "metadata.bin": "2686b640f496c7c4dc55c9ef57c3e902bbbe00a2c0c144dae847fa04295dc3f6",
+        "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload.bin": "93d06eb9485f16d4db47b114f83fd031e7adac3282c35a13f4c6c125499cf7b8",
+        "packed.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "random-tail",
+      "rows": 1,
+      "inner": 4097,
+      "count": 4097,
+      "finite": false,
+      "block": 128,
+      "codec": "whole-block-fallback",
+      "raw_bytes": 8194,
+      "packed_bytes": 8712,
+      "storage_ratio": 0.9405417814508723,
+      "escape_free_block_fraction": 0.0,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "8ec1b6b77b65f31493e237b09fb29988d34227783dce7a28cac8509063b88723",
+        "metadata.bin": "4c15559c2547e0ea161562e4ea91921866f65f6edb6b909091af910e30978a96",
+        "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload.bin": "7d0f7a058e18542dd3d08cc5d25aefd685abeeec0ff67f8c471b7eb8ce90ec93",
+        "packed.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "matrix-0",
+      "rows": 1024,
+      "inner": 3584,
+      "count": 3670016,
+      "finite": true,
+      "block": 128,
+      "codec": "whole-block-fallback",
+      "raw_bytes": 7340032,
+      "packed_bytes": 5745280,
+      "storage_ratio": 1.2775760276261556,
+      "escape_free_block_fraction": 0.9940708705357143,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac",
+        "metadata.bin": "31a5289d72301dd2dadfe9773bf1a602513f48f0271b8c2292244d09a750b377",
+        "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload.bin": "81912c5badfc0d9516c1006019937a3cbaf36e8785dd4b66b67f72480c3a422c",
+        "packed.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight"
+    },
+    {
+      "name": "matrix-1",
+      "rows": 248320,
+      "inner": 1024,
+      "count": 254279680,
+      "finite": true,
+      "block": 128,
+      "codec": "whole-block-fallback",
+      "raw_bytes": 508559360,
+      "packed_bytes": 398153600,
+      "storage_ratio": 1.2772943909084333,
+      "escape_free_block_fraction": 0.9933805170747423,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "3247e63f0f265462e2fba5316dfb2819941ea8ed62ab5b2c4904e4aab5b9d7aa",
+        "metadata.bin": "6c7bb7aae5b6365e5a80972839bcb0f0a17fc38be31cb5ddf42e62f251b49ab0",
+        "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload.bin": "5159b5e925a13a2c8cbb52cd81ff7e113f7c1b9418441cb9a73aa39360176ac7",
+        "packed.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "tensor": "model.language_model.embed_tokens.weight"
+    }
+  ]
+}

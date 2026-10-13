@@ -1,0 +1,21 @@
+{
+  "name": "matrix-0",
+  "rows": 1024,
+  "inner": 3072,
+  "count": 3145728,
+  "finite": true,
+  "block": 128,
+  "codec": "whole-block-fallback",
+  "raw_bytes": 6291456,
+  "packed_bytes": 4927552,
+  "storage_ratio": 1.276791396620472,
+  "escape_free_block_fraction": 0.9921468098958334,
+  "cpu_full_bit_roundtrip": true,
+  "sha256": {
+    "raw.bin": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b",
+    "metadata.bin": "3d9cdf3e32f78bece88b7de26dc2ed17890a5f722c3e812c94e9039920916b53",
+    "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "payload.bin": "46b96ffe73f9e2c8f0f33fe5e0e88f8cf7e34736ad2b991aa84f0986f570b083",
+    "packed.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

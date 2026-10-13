@@ -1,0 +1,233 @@
+{
+  "scope": "Exact GPU codec and isolated matrix-vector feasibility only; not full-model inference",
+  "results": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "case": "matrix-0",
+      "batch": 1,
+      "rows": 1024,
+      "inner": 3584,
+      "storage_ratio": 1.2775760276261556,
+      "raw_gpu_ms": 0.130802044,
+      "packed_gpu_ms": 0.232468825,
+      "isolated_gpu_speedup": 0.5626648820546153,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-0",
+        "batch": 1,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "case": "matrix-0",
+      "batch": 2,
+      "rows": 1024,
+      "inner": 3584,
+      "storage_ratio": 1.2775760276261556,
+      "raw_gpu_ms": 0.1867188835,
+      "packed_gpu_ms": 0.227885554,
+      "isolated_gpu_speedup": 0.8193537511377311,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-0",
+        "batch": 2,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "case": "matrix-1",
+      "batch": 1,
+      "rows": 248320,
+      "inner": 1024,
+      "storage_ratio": 1.2772943909084333,
+      "raw_gpu_ms": 4.86915617,
+      "packed_gpu_ms": 5.996020745,
+      "isolated_gpu_speedup": 0.8120645970180012,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-1",
+        "batch": 1,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "case": "matrix-1",
+      "batch": 2,
+      "rows": 248320,
+      "inner": 1024,
+      "storage_ratio": 1.2772943909084333,
+      "raw_gpu_ms": 4.877197905,
+      "packed_gpu_ms": 5.96002082,
+      "isolated_gpu_speedup": 0.8183189375167317,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-1",
+        "batch": 2,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "case": "matrix-0",
+      "batch": 1,
+      "rows": 1024,
+      "inner": 3072,
+      "storage_ratio": 1.276791396620472,
+      "raw_gpu_ms": 0.08695840369999999,
+      "packed_gpu_ms": 0.0926979119,
+      "isolated_gpu_speedup": 0.9380837380005751,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-0",
+        "batch": 1,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "case": "matrix-0",
+      "batch": 2,
+      "rows": 1024,
+      "inner": 3072,
+      "storage_ratio": 1.276791396620472,
+      "raw_gpu_ms": 0.09016657715000001,
+      "packed_gpu_ms": 0.0933853444,
+      "isolated_gpu_speedup": 0.9655324154910973,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-0",
+        "batch": 2,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "case": "matrix-1",
+      "batch": 1,
+      "rows": 151936,
+      "inner": 1024,
+      "storage_ratio": 1.2772259072938148,
+      "raw_gpu_ms": 2.9385832599999997,
+      "packed_gpu_ms": 3.521458365,
+      "isolated_gpu_speedup": 0.8344790582239355,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-1",
+        "batch": 1,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "case": "matrix-1",
+      "batch": 2,
+      "rows": 151936,
+      "inner": 1024,
+      "storage_ratio": 1.2772259072938148,
+      "raw_gpu_ms": 2.94222927,
+      "packed_gpu_ms": 3.6158540749999997,
+      "isolated_gpu_speedup": 0.8137024362632777,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-1",
+        "batch": 2,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "case": "matrix-0",
+      "batch": 1,
+      "rows": 896,
+      "inner": 4864,
+      "storage_ratio": 1.2774427133651618,
+      "raw_gpu_ms": 0.0794790685,
+      "packed_gpu_ms": 0.09205192325,
+      "isolated_gpu_speedup": 0.8634156212483045,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-0",
+        "batch": 1,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "case": "matrix-0",
+      "batch": 2,
+      "rows": 896,
+      "inner": 4864,
+      "storage_ratio": 1.2774427133651618,
+      "raw_gpu_ms": 0.08018757215,
+      "packed_gpu_ms": 0.09401049465,
+      "isolated_gpu_speedup": 0.8529640488387751,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-0",
+        "batch": 2,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "case": "matrix-1",
+      "batch": 1,
+      "rows": 151936,
+      "inner": 896,
+      "storage_ratio": 1.2773166972018704,
+      "raw_gpu_ms": 2.59206234,
+      "packed_gpu_ms": 3.143635225,
+      "isolated_gpu_speedup": 0.8245429747657824,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-1",
+        "batch": 1,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "case": "matrix-1",
+      "batch": 2,
+      "rows": 151936,
+      "inner": 896,
+      "storage_ratio": 1.2773166972018704,
+      "raw_gpu_ms": 2.60997913,
+      "packed_gpu_ms": 3.105000015,
+      "isolated_gpu_speedup": 0.8405729846671193,
+      "gpu_weight_bits_exact": true,
+      "projection_check": {
+        "kind": "projection_check",
+        "case": "matrix-1",
+        "batch": 2,
+        "output_bits_exact": true,
+        "max_abs_error": 0
+      }
+    }
+  ]
+}
