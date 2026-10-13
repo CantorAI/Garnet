@@ -239,8 +239,9 @@ kernel void attention_chunk(device const float* query [[buffer(0)]],device const
     ulong flatRow=id/p.heads,head=id%p.heads,row=flatRow/p.chunk,token=flatRow%p.chunk,kv=head/(p.heads/p.kvHeads);
     if(flatRow>=p.batch*p.chunk)return;
     if(active[row*p.aStride+token]==0.0f){for(ulong d=tid;d<p.dim;d+=128)output[flatRow*p.oStride+head*p.dim+d]=0.0f;return;}
+    const ulong visible=min(p.capacity,ulong(slots[row*p.sStride+token])+1);
     threadgroup float partial[4];
-    for(ulong s=simd;s<p.capacity;s+=4) {
+    for(ulong s=simd;s<visible;s+=4) {
         int latest=-1;for(uint t=0;t<=token;++t)if(active[row*p.aStride+t]!=0.0f&&slots[row*p.sStride+t]==float(s))latest=int(t);
         float score=-1e30f;
         if(float(s)<=slots[row*p.sStride+token]) {
@@ -254,19 +255,19 @@ kernel void attention_chunk(device const float* query [[buffer(0)]],device const
         if(lane==0){scratch[s]=score;selected[s]=latest;}
     }
     threadgroup_barrier(mem_flags::mem_threadgroup);
-    float maximum=-INFINITY;for(ulong s=tid;s<p.capacity;s+=128)maximum=max(maximum,scratch[s]);
+    float maximum=-INFINITY;for(ulong s=tid;s<visible;s+=128)maximum=max(maximum,scratch[s]);
     maximum=simd_max(maximum);if(lane==0)partial[simd]=maximum;
     threadgroup_barrier(mem_flags::mem_threadgroup);
     maximum=simd_max(lane<4?partial[lane]:-INFINITY);
     threadgroup_barrier(mem_flags::mem_threadgroup);
     float denominator=0.0f;
-    for(ulong s=tid;s<p.capacity;s+=128){float probability=exp(scratch[s]-maximum);scratch[s]=probability;denominator+=probability;}
+    for(ulong s=tid;s<visible;s+=128){float probability=exp(scratch[s]-maximum);scratch[s]=probability;denominator+=probability;}
     denominator=simd_sum(denominator);if(lane==0)partial[simd]=denominator;
     threadgroup_barrier(mem_flags::mem_threadgroup);
     denominator=simd_sum(lane<4?partial[lane]:0.0f);
     for(ulong d=tid;d<p.dim;d+=128) {
         float sum=0.0f;
-        for(ulong s=0;s<p.capacity;++s){int latest=selected[s];float v=latest<0?valueCache[row*p.vcStride+(kv*p.capacity+s)*p.dim+d]:value[(row*p.chunk+ulong(latest))*p.vStride+kv*p.dim+d];sum+=scratch[s]/denominator*v;}
+        for(ulong s=0;s<visible;++s){int latest=selected[s];float v=latest<0?valueCache[row*p.vcStride+(kv*p.capacity+s)*p.dim+d]:value[(row*p.chunk+ulong(latest))*p.vStride+kv*p.dim+d];sum+=scratch[s]/denominator*v;}
         output[flatRow*p.oStride+head*p.dim+d]=p.gated?sum/(1.0f+exp(-gate[flatRow*p.gStride+head*p.dim+d])):sum;
     }
 }
@@ -299,8 +300,9 @@ kernel void attention_scores(device const float* query [[buffer(0)]],device cons
     if(id>=p.batch*p.heads)return;
     ulong row=id/p.heads,head=id%p.heads,kv=head/(p.heads/p.kvHeads),base=row*p.oStride+head*p.capacity;
     if(active[row*p.aStride]==0.0f){for(ulong s=tid;s<p.capacity;s+=128)output[base+s]=0.0f;return;}
+    const ulong visible=min(p.capacity,ulong(slots[row*p.sStride])+1);
     threadgroup float partial[4];
-    for(ulong s=simd;s<p.capacity;s+=4) {
+    for(ulong s=simd;s<visible;s+=4) {
         float score=-1e30f;
         if(float(s)<=slots[row*p.sStride]) {
             score=0.0f;
@@ -310,27 +312,29 @@ kernel void attention_scores(device const float* query [[buffer(0)]],device cons
         if(lane==0)scratch[s]=score;
     }
     threadgroup_barrier(mem_flags::mem_threadgroup);
-    float maximum=-INFINITY;for(ulong s=tid;s<p.capacity;s+=128)maximum=max(maximum,scratch[s]);
+    float maximum=-INFINITY;for(ulong s=tid;s<visible;s+=128)maximum=max(maximum,scratch[s]);
     maximum=simd_max(maximum);if(lane==0)partial[simd]=maximum;
     threadgroup_barrier(mem_flags::mem_threadgroup);
     maximum=simd_max(lane<4?partial[lane]:-INFINITY);
     // All threads consume the max before partial storage is reused for sums.
     threadgroup_barrier(mem_flags::mem_threadgroup);
     float denominator=0.0f;
-    for(ulong s=tid;s<p.capacity;s+=128){float probability=exp(scratch[s]-maximum);scratch[s]=probability;denominator+=probability;}
+    for(ulong s=tid;s<visible;s+=128){float probability=exp(scratch[s]-maximum);scratch[s]=probability;denominator+=probability;}
     denominator=simd_sum(denominator);if(lane==0)partial[simd]=denominator;
     threadgroup_barrier(mem_flags::mem_threadgroup);
     denominator=simd_sum(lane<4?partial[lane]:0.0f);
-    for(ulong s=tid;s<p.capacity;s+=128)output[base+s]=scratch[s]/denominator;
+    for(ulong s=tid;s<p.capacity;s+=128)output[base+s]=s<visible?scratch[s]/denominator:0.0f;
 }
-struct AttentionParams {ulong batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,oStride,gated;};
+struct AttentionParams {ulong batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,sStride,oStride,gated;};
 kernel void attention_context(device const float* probabilities [[buffer(0)]],device const float* value [[buffer(1)]],
-    device const float* gate [[buffer(2)]],device float* output [[buffer(3)]],constant AttentionParams& p [[buffer(4)]],
+    device const float* gate [[buffer(2)]],device const float* slots [[buffer(3)]],device float* output [[buffer(4)]],constant AttentionParams& p [[buffer(5)]],
     uint id [[thread_position_in_grid]]) {
     if(id>=p.batch*p.heads*p.dim)return;
     ulong row=id/(p.heads*p.dim),head=(id/p.dim)%p.heads,col=id%p.dim,kv=head/(p.heads/p.kvHeads);
+    const float slot=slots[row*p.sStride];
+    const ulong visible=isfinite(slot)&&slot>=0.0f&&slot<float(p.capacity)?ulong(slot)+1:p.capacity;
     float result=0.0f;
-    for(ulong s=0;s<p.capacity;++s)result+=probabilities[row*p.pStride+head*p.capacity+s]*value[row*p.vStride+(kv*p.capacity+s)*p.dim+col];
+    for(ulong s=0;s<visible;++s)result+=probabilities[row*p.pStride+head*p.capacity+s]*value[row*p.vStride+(kv*p.capacity+s)*p.dim+col];
     output[row*p.oStride+head*p.dim+col]=p.gated?result/(1.0f+exp(-gate[row*p.gStride+head*p.dim+col])):result;
 }
 struct PrepareParams {ulong batch,keyHeads,valueHeads,keyDim,valueDim,kSize,cStride,aStride,bStride,oStride,width;};
@@ -1021,15 +1025,15 @@ void MetalContext::EncodeAttentionScores(const MetalMatrix& query,const MetalMat
     EncodeStateKernel(8,{query,key,slots,active},output,&p,sizeof(p),Elements(q.rows,heads));
 }
 void MetalContext::EncodeAttentionContext(const MetalMatrix& probabilities,const MetalMatrix& value,const MetalMatrix& gate,
-    const MetalMatrix& output,size_t heads,size_t kvHeads,size_t dim,size_t capacity,bool gated) {
-    if(!probabilities.impl_||!value.impl_||!gate.impl_||!output.impl_||!kvHeads||!heads||heads%kvHeads)
+    const MetalMatrix& slots,const MetalMatrix& output,size_t heads,size_t kvHeads,size_t dim,size_t capacity,bool gated) {
+    if(!probabilities.impl_||!value.impl_||!gate.impl_||!slots.impl_||!output.impl_||!kvHeads||!heads||heads%kvHeads)
         throw std::invalid_argument("Invalid Metal attention context arguments");
-    auto p=probabilities.impl_->matrix,v=value.impl_->matrix,g=gate.impl_->matrix,o=output.impl_->matrix;
+    auto p=probabilities.impl_->matrix,v=value.impl_->matrix,g=gate.impl_->matrix,s=slots.impl_->matrix,o=output.impl_->matrix;
     if(p.columns!=Elements(heads,capacity)||v.rows!=p.rows||v.columns!=Elements(Elements(kvHeads,capacity),dim)||g.rows!=p.rows||
-        g.columns!=Elements(heads,dim)||o.rows!=p.rows||o.columns!=g.columns)throw std::invalid_argument("Metal attention context shape mismatch");
-    struct Params {uint64_t batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,oStride,gated;};
-    Params params{p.rows,heads,kvHeads,dim,capacity,p.rowBytes/4,v.rowBytes/4,g.rowBytes/4,o.rowBytes/4,uint64_t(gated)};
-    EncodeStateKernel(9,{probabilities,value,gate},output,&params,sizeof(params),Elements(o.rows,o.columns));
+        g.columns!=Elements(heads,dim)||s.rows!=p.rows||s.columns!=1||o.rows!=p.rows||o.columns!=g.columns)throw std::invalid_argument("Metal attention context shape mismatch");
+    struct Params {uint64_t batch,heads,kvHeads,dim,capacity,pStride,vStride,gStride,sStride,oStride,gated;};
+    Params params{p.rows,heads,kvHeads,dim,capacity,p.rowBytes/4,v.rowBytes/4,g.rowBytes/4,s.rowBytes/4,o.rowBytes/4,uint64_t(gated)};
+    EncodeStateKernel(9,{probabilities,value,gate,slots},output,&params,sizeof(params),Elements(o.rows,o.columns));
 }
 void MetalContext::SubmitAndWait() {
     @autoreleasepool {

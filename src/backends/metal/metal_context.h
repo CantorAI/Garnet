@@ -82,7 +82,7 @@ public:
         size_t dim,size_t capacity,size_t chunk,bool gated);
     void EncodeAttentionScores(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         const MetalMatrix&,size_t heads,size_t kvHeads,size_t dim,size_t capacity);
-    void EncodeAttentionContext(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
+    void EncodeAttentionContext(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         size_t heads,size_t kvHeads,size_t dim,size_t capacity,bool gated=true);
     void EncodeLayout(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,size_t tokenWidth=0);
     void SubmitAndWait();

@@ -39,6 +39,27 @@ or unique GPU memory. Two existing WorldSense service processes were verified
 to have no inference/GPU libraries and left running; their CPU/RSS snapshots
 are saved. Competing inference runtimes never overlap.
 
+## Visible-cache optimization
+
+Attention now scores and accumulates only the causal visible prefix. Cache
+storage, slot bounds, state reset, weight precision and context capacity stay
+the same. The inactive-row controls retain their previous fallback behavior.
+All 11 numerical/serving/vision validation jobs passed, followed by another
+48-request matched suite with identical outputs and clean shutdown. Evidence:
+`visible-cache/visible-cache-checks-20261012` and
+`visible-cache/vllm-matched-visible-cache-20261012/jobs/summary.json`.
+
+| Model | Batch | Garnet tokens/s per row | vLLM tokens/s per row | Garnet TTFT, ms | vLLM TTFT, ms |
+| --- | --- | --- | --- | --- | --- |
+| Qwen3-0.6B | 1 | 40.18 | 74.40 | 118.77 | 51.51 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 67.73 | 92.33 | 75.40 | 34.72 |
+| Qwen3-0.6B | 2 | 28.49 | 75.53 | 214.42 | 70.55 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 61.01 | 92.00 | 113.86 | 38.30 |
+
+Against the native baseline, decode improves 4.8–9.0% and TTFT falls
+20.9–27.9%. Neither vLLM-relative target is met. GPU time remains the principal
+decode cost; these gains are not evidence of a 2x comparator advantage.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

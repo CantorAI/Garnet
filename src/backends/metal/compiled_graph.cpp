@@ -418,7 +418,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 } else {
                     auto probabilities=Allocate(batch,heads*capacity);
                     Op scores{Kind::Scores,qr,nextKey,probabilities};scores.arguments={qr,nextKey,slot,active};scores.dimensions={heads,kv,dim,capacity};ops_.push_back(std::move(scores));
-                    Op attend{Kind::AttentionContext,probabilities,nextValue,context};attend.arguments={probabilities,nextValue,gate};attend.dimensions={heads,kv,dim,capacity,size_t(!text)};ops_.push_back(std::move(attend));
+                    Op attend{Kind::AttentionContext,probabilities,nextValue,context};attend.arguments={probabilities,nextValue,gate,slot};attend.dimensions={heads,kv,dim,capacity,size_t(!text)};ops_.push_back(std::move(attend));
                 }
                 auto hidden=matmul(context,Weight(prefix+".o_proj.weight"));
                 if(slots_[hidden].columns!=width)throw std::runtime_error("Metal attention output projection shape mismatch");
@@ -704,7 +704,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
             gpu.EncodeVision(op.dimensions[0],args,out,op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]);
         }else if(op.kind==Kind::AttentionContext) {
             auto& args=op.arguments;gpu.EncodeAttentionContext(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]!=0);
+                slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4]!=0);
         }else {
             gpu.EncodeSliceGroups(a,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
         }
