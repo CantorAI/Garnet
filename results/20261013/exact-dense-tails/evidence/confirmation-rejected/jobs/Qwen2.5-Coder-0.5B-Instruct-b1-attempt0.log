@@ -1,0 +1,9 @@
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b1-control-0
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_exact_dense_tail_native.py", line 62, in <module>
+    strict_guard();samples.append(dict(elapsed_seconds=time.monotonic()-begin,guard_passed=True))
+    ~~~~~~~~~~~~^^
+  File "owned_guard", line 89, in guard
+    means={policy:dict(requests=len(values),ttft_ms=statistics.mean(v['ttft_seconds'] for v in values)*1000,decode_tps=statistics.mean(v['decode_wall_steps_per_second'] for v in values),initialization_s=statistics.mean(v['initialization_seconds'] for v in values)) for policy,values in warm.items()}
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Another inference runtime is active: ["65739  20.5  29504 /Users/zsdx/cantorai-release-tests/current/bin/xlang3"]

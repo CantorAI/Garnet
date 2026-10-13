@@ -336,7 +336,7 @@
       "reused_clean_profile": false
     }
   ],
-  "clean_requests": 60,
+  "clean_requests": 84,
   "confirmation_profiles": [
     {
       "model": "Qwen3-0.6B",
@@ -360,9 +360,64 @@
       "exact_complete_outputs": true,
       "evidence": "/Users/zsdx/garnet-metal-investigation/logs/exact-dense-tail-native-confirm-20261013/jobs/Qwen3-0.6B-b2-attempt0",
       "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 39.29903090465814,
+          "decode_tps": 72.28898336136214,
+          "initialization_s": 1.3829020415432751
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 38.336718920618296,
+          "decode_tps": 72.31608192799033,
+          "initialization_s": 1.4015783125068992
+        }
+      },
+      "decode_ratio": 1.000374864403511,
+      "ttft_fraction": 0.9755130861528247,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/exact-dense-tail-native-confirm-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-attempt1",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 62.69580195657909,
+          "decode_tps": 71.44317599354211,
+          "initialization_s": 1.385743000311777
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 58.19217721000314,
+          "decode_tps": 71.10768313094425,
+          "initialization_s": 1.3865964584983885
+        }
+      },
+      "decode_ratio": 0.9953040600738664,
+      "ttft_fraction": 0.9281670445862547,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/exact-dense-tail-native-confirm-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0",
+      "reused_clean_profile": false
     }
   ],
-  "confirmation_exit": null,
-  "confirmation_complete": false,
+  "confirmation_exit": {
+    "command": [
+      "/opt/homebrew/bin/python3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_exact_dense_tail_profiles.py",
+      "/Users/zsdx/garnet-metal-investigation",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-dense-tail-native-confirm-20261013/jobs",
+      "--confirm"
+    ],
+    "exit_code": 0
+  },
+  "confirmation_complete": true,
   "library_sha256": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2"
 }

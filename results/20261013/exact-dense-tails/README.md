@@ -1,4 +1,4 @@
-# Exact dense prefill tails: validated, confirmation partly pending
+# Exact dense prefill tails: validated modest latency gains
 
 Dense Qwen can opt into 22- and 26-token prefill profiles to remove padding
 for the existing matched text and coder prompts:
@@ -39,14 +39,20 @@ hardware is the same M4 Mac mini with 16 GiB and macOS 15.6.1.
 
 Text batch 2 has a separate clean confirmation: 91.86 -> 86.50 ms, a
 5.84% reduction; decode is 58.38 -> 58.65 steps/s/row (ratio 1.0045).
-All 12 confirmation requests preserve complete outputs and prompt IDs.
+All 36 confirmation requests preserve complete outputs and prompt IDs.
 Text batch 1 showed no useful gain and was not repeated to seek a favorable
-result. Coder gains remain provisional until their confirmation completes.
+result. Coder confirmation reduces batch-1 TTFT from 39.30 to 38.34 ms
+(2.45%) and batch-2 TTFT from 62.70 to 58.19 ms (7.18%). Their decode ratios
+are 1.0004 and 0.9953. The coder latency direction repeats, with a smaller
+batch-1 effect than the initial run. These are prompt-specific results;
+they do not establish a benefit for arbitrary lengths or larger models.
 Decode throughput is effectively unchanged in this experiment.
 
-The confirmation manager is still waiting at this evidence checkpoint.
+The confirmation manager completed with exit code 0.
 Coder batch-1 attempt 0 was interrupted and discarded when a separate
 release-test runtime appeared. No measurements from that attempt are used.
+The external runtime finished, and the manager automatically executed the
+remaining clean profiles. Failed-attempt logs are retained separately.
 The external process was not stopped or exempted based on its low CPU usage.
 The manager waits for a five-second clear interval, monitors workers every
 0.5 seconds and has a 900-second quiet-window deadline. It retries only
@@ -74,8 +80,9 @@ python3 run_exact_dense_tail_profiles.py INVESTIGATION_ROOT OUTPUT_DIR --confirm
 These commands execute in the isolated Mac investigation. Exact runtime
 commands, checkpoint/library/source hashes and original frozen prompts are
 in the evidence. The archive SHA256 is recorded in `archive-sha256.txt`.
-At this checkpoint `evidence-proof.json` verifies 48 references and 60 clean
-timed requests and explicitly records `confirmation_complete: false`.
+`evidence-proof.json` verifies 48 references and 84 clean timed requests
+and explicitly records `confirmation_complete: true`. Only the local
+experiment's confirmation is complete; the full comparator goal is unmet.
 
 Two initial reference-run failures are retained: the guard helper initially
 lacked its output binding, before inference; then a 64-slot reference fixture
