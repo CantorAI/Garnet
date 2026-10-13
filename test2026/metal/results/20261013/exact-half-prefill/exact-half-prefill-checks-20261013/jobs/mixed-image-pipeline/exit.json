@@ -1,0 +1,11 @@
+{
+  "name": "mixed-image-pipeline",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_image_pipeline.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill",
+    "/Users/zsdx/garnet-metal-investigation/source"
+  ],
+  "exit_code": 0
+}

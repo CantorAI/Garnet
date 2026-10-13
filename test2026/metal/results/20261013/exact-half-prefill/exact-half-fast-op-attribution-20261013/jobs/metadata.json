@@ -1,0 +1,7 @@
+{
+  "scope": "Serialized per-operation attribution only; GPU/cache/dispatch behavior differs from serving",
+  "native_build": "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+  "native_library_sha256": "6f2d71219bad93b71911895b17c70ba222218019174b5ac15106235c6b9ac562",
+  "runner_sha256": "ba6a72685fe8bfe252691cced7c5d1ca7770bf5adfa0fb1902cb7c71fe21f75b",
+  "flag": "GARNET_METAL_PROFILE_OPS=1"
+}

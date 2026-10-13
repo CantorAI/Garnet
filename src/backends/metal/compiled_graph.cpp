@@ -787,10 +787,11 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         }
         if(profileOps) {
             gpu.SubmitAndWait();
-            std::fprintf(stderr,"metal_op_profile {\"kind\":\"%s\",\"a_rows\":%zu,\"a_cols\":%zu,\"out_rows\":%zu,\"out_cols\":%zu,\"bf16\":%s,\"gpu_ms\":%.9g,\"serialized_diagnostic\":true}\n",
+            std::fprintf(stderr,"metal_op_profile {\"kind\":\"%s\",\"a_rows\":%zu,\"a_cols\":%zu,\"out_rows\":%zu,\"out_cols\":%zu,\"bf16\":%s,\"exact_half_prefill\":%s,\"gpu_ms\":%.9g,\"serialized_diagnostic\":true}\n",
                 names[size_t(op.kind)],slots_[op.a].rows,slots_[op.a].columns,
                 slots_[op.out].rows,slots_[op.out].columns,
-                slots_[op.b].bf16.Valid()?"true":"false",gpu.LastGPUMs());
+                slots_[op.b].bf16.Valid()?"true":"false",
+                slots_[op.a].rows>2&&slots_[op.b].bf16.ExactHalfReady()?"true":"false",gpu.LastGPUMs());
             gpu.Begin();
         }
     }

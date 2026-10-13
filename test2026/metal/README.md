@@ -21,6 +21,16 @@ latency on this same Mac and the same checkpoint. The matched comparison policy
 and frozen workloads are in [VLLM_COMPARISON.md](VLLM_COMPARISON.md). The earlier
 2× tables below compare Garnet revisions, not Garnet against vLLM-Metal.
 
+The optional `GARNET_METAL_EXACT_HALF_PREFILL=ON` build uses exact scaled FP16
+body-weight storage for mixed FP32 MPS prefill, retaining raw BF16 decode and
+heads. On the M4, repeated three-model controls show lower warm first-token
+latency with unchanged complete outputs. It adds about 0.7–0.8 GiB to the
+measured text/coder processes and increases initialization time, so the flag
+remains off by default. The selected investigation build enables it; complete
+validation, startup/memory costs and fresh vLLM measurements are in
+[the exact-half evidence](results/20261013/exact-half-prefill/README.md).
+Both vLLM-relative targets remain unmet.
+
 ## Isolation and checkpoint
 
 Windows source: `D:/CantorAI/Garnet-metal`, branch `feature/qwen35-metal`.

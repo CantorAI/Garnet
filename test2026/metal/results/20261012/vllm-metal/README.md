@@ -420,6 +420,23 @@ rounding checkpoint weights, but no full-model speed gain or integration is
 claimed. `build-delta-split` remains selected, and all performance targets are
 still unmet.
 
+### Validated exact scaled FP16 MPS prefill
+
+`../../20261013/exact-half-prefill/` contains the initial prototype, integer
+packing and final pointer-hoisted implementation. The selected investigation
+build is `build-exact-half-prefill-hoisted`, configured with the optional
+`GARNET_METAL_EXACT_HALF_PREFILL=ON`. Exact per-row weight encoding feeds mixed
+FP32-activation/output MPS prefill while raw BF16 decode/large heads stay
+unchanged. All 11 native checks pass; the integer codec agrees with an
+independent oracle in 8,421,120 cases. All 72 native control outputs match.
+Warm TTFT falls 11.9–22.7% for text/coder and 5.7–6.1% for actual images.
+Decode is essentially unchanged. Removing per-element Metal buffer.contents
+calls reduces packing-related initialization from 9–13 s to about 1.4–3.0 s;
+startup still exceeds the raw control and text/coder RSS adds 0.7–0.8 GiB.
+The option remains off by default. Another 72 actual matched vLLM requests
+confirm that all six profiles still miss both targets. Precision and batch-2
+image output caveats remain explicit. The full objective stays active.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

@@ -1,0 +1,258 @@
+[
+  {
+    "name": "Qwen3-0.6B-b1-garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen3-0.6B-b1-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 10.994558499660343
+  },
+  {
+    "name": "Qwen3-0.6B-b1-garnet-control-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-delta-split",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen3-0.6B-b1-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 2.0713160829618573
+  },
+  {
+    "name": "Qwen3-0.6B-b1-garnet-control-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-delta-split",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen3-0.6B-b1-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 2.06473608314991
+  },
+  {
+    "name": "Qwen3-0.6B-b1-garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen3-0.6B-b1-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 10.947101083118469
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 9.260467041283846
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-garnet-control-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-delta-split",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 2.071147082839161
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-garnet-control-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-delta-split",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 2.067841749638319
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 9.25103058386594
+  },
+  {
+    "name": "Qwen3-0.6B-b2-garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen3-0.6B-b2-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 11.2448500841856
+  },
+  {
+    "name": "Qwen3-0.6B-b2-garnet-control-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-delta-split",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen3-0.6B-b2-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 2.309165125247091
+  },
+  {
+    "name": "Qwen3-0.6B-b2-garnet-control-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-delta-split",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen3-0.6B-b2-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 2.311366125009954
+  },
+  {
+    "name": "Qwen3-0.6B-b2-garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen3-0.6B-b2-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 11.226678541861475
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 9.346868125256151
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-garnet-control-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-delta-split",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 2.222805208992213
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-garnet-control-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-delta-split",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 2.1913826251402497
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-ab-exact-half-fast-pack-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-case.json"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 9.391834124922752
+  }
+]

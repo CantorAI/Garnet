@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "metal_context.h"
+#include "exact_half_codec.h"
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 #import <MetalPerformanceShaders/MetalPerformanceShaders.h>
@@ -29,12 +30,16 @@ bool MetalMatrix::CompatibleLayout(const MetalMatrix& other) const {
 }
 struct MetalBF16Weight::Impl {
     id<MTLBuffer> buffer;
+    MPSMatrix* exactHalf;
+    id<MTLBuffer> halfScales;
     size_t rows,columns;
 };
+bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&impl_->halfScales;}
 struct MetalPipelines {
     id<MTLLibrary> library;
     id<MTLComputePipelineState> argmax;
     id<MTLComputePipelineState> bf16Decode,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
+    id<MTLComputePipelineState> halfRescale;
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> add;
@@ -59,6 +64,8 @@ struct MetalContext::Impl {
     std::unordered_set<const MetalMatrix::Impl*> pendingOutputs;
     std::shared_ptr<MetalPipelines> kernels;
     std::map<std::array<size_t,4>,MPSMatrixMultiplication*> matmul;
+    std::map<std::array<size_t,3>,MPSMatrixMultiplication*> halfMatmul;
+    std::map<std::array<size_t,2>,MetalMatrix> halfScratch;
 };
 static size_t Elements(size_t rows, size_t columns) {
     if (!rows || !columns || rows > std::numeric_limits<size_t>::max()/columns ||
@@ -84,6 +91,13 @@ MetalContext::MetalContext(): impl_(std::make_unique<Impl>()) {
 #include <metal_stdlib>
 using namespace metal;
 struct BF16Params {ulong rows,inner,columns,aStride,oStride;};
+struct HalfRescaleParams {ulong rows,columns,iStride,oStride;};
+kernel void half_rescale(device const float* input [[buffer(0)]],device const int* scales [[buffer(1)]],
+    device float* output [[buffer(2)]],constant HalfRescaleParams& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.rows*p.columns)return;
+    ulong row=id/p.columns,column=id%p.columns;
+    output[row*p.oStride+column]=ldexp(input[row*p.iStride+column],-scales[column]);
+}
 kernel void bf16_decode(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
     device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
     uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
@@ -709,6 +723,7 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
         impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
+        impl_->kernels->halfRescale=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"half_rescale"] error:&error];
         impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
         impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
@@ -778,6 +793,42 @@ MetalBF16Weight MetalContext::UploadBF16(const void* data,size_t bytes,size_t ro
         auto value=std::make_shared<MetalBF16Weight::Impl>();value->rows=rows;value->columns=columns;
         value->buffer=[impl_->device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared];
         if(!value->buffer)throw std::runtime_error("BF16 weight allocation failed");
+#ifdef GARNET_METAL_EXACT_HALF_PREFILL
+        // Preserve original BF16 decode storage. Pack only modest body matrices;
+        // a single nonexact value disables the optional representation entirely.
+        if(bytes<=16*1024*1024&&impl_->kernels->halfRescale) {
+            const auto stride=[MPSMatrixDescriptor rowBytesFromColumns:columns dataType:MPSDataTypeFloat16];
+            if(stride<=impl_->device.maxBufferLength/rows) {
+                id<MTLBuffer> encoded=[impl_->device newBufferWithLength:rows*stride options:MTLResourceStorageModeShared];
+                if(!encoded)throw std::runtime_error("Exact half weight allocation failed");
+                auto* encodedBytes=static_cast<char*>(encoded.contents);
+                std::memset(encodedBytes,0,rows*stride);
+                std::vector<int32_t> scales(rows);bool exact=true;
+                for(size_t row=0;row<rows&&exact;++row) {
+                    uint16_t largest=0;
+                    for(size_t col=0;col<columns;++col) {
+                        uint16_t bits;std::memcpy(&bits,static_cast<const char*>(data)+2*(row*columns+col),2);
+                        largest=std::max(largest,uint16_t(bits&0x7fff));
+                    }
+                    int32_t scale=0;
+                    if(!ExactHalfRowScale(largest,scale)){exact=false;break;}
+                    scales[row]=scale;
+                    for(size_t col=0;col<columns;++col) {
+                        uint16_t bits;std::memcpy(&bits,static_cast<const char*>(data)+2*(row*columns+col),2);
+                        uint16_t half;
+                        if(!EncodeExactScaledHalf(bits,scale,half)){exact=false;break;}
+                        std::memcpy(encodedBytes+row*stride+col*2,&half,2);
+                    }
+                }
+                if(exact) {
+                    auto descriptor=[MPSMatrixDescriptor matrixDescriptorWithRows:rows columns:columns rowBytes:stride dataType:MPSDataTypeFloat16];
+                    value->exactHalf=[[MPSMatrix alloc] initWithBuffer:encoded descriptor:descriptor];
+                    value->halfScales=[impl_->device newBufferWithBytes:scales.data() length:rows*sizeof(int32_t) options:MTLResourceStorageModeShared];
+                    if(!value->exactHalf||!value->halfScales)throw std::runtime_error("Exact half metadata allocation failed");
+                }
+            }
+        }
+#endif
         return MetalBF16Weight(value);
     }
 }
@@ -815,6 +866,32 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
         if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
             throw std::logic_error("BF16 output belongs to another command batch");
+#ifdef GARNET_METAL_EXACT_HALF_PREFILL
+        if(a.rows>2&&w->exactHalf&&w->halfScales) {
+            const std::array<size_t,3> key{a.rows,o.columns,a.columns};
+            auto found=impl_->halfMatmul.find(key);
+            if(found==impl_->halfMatmul.end()) {
+                auto product=[[MPSMatrixMultiplication alloc] initWithDevice:impl_->device transposeLeft:NO
+                    transposeRight:YES resultRows:a.rows resultColumns:o.columns interiorColumns:a.columns alpha:1 beta:0];
+                found=impl_->halfMatmul.emplace(key,product).first;
+            }
+            const std::array<size_t,2> shape{a.rows,o.columns};auto scratch=impl_->halfScratch.find(shape);
+            if(scratch==impl_->halfScratch.end())scratch=impl_->halfScratch.emplace(shape,Allocate(a.rows,o.columns)).first;
+            auto temporary=scratch->second.impl_->matrix;
+            [found->second encodeToCommandBuffer:impl_->command leftMatrix:a rightMatrix:w->exactHalf resultMatrix:temporary];
+            struct Params{uint64_t rows,columns,iStride,oStride;};Params p{a.rows,o.columns,temporary.rowBytes/4,o.rowBytes/4};
+            auto encoder=[impl_->command computeCommandEncoder];
+            if(!encoder)throw std::runtime_error("Cannot create exact half rescale encoder");
+            [encoder setComputePipelineState:impl_->kernels->halfRescale];
+            [encoder setBuffer:temporary.data offset:0 atIndex:0];[encoder setBuffer:w->halfScales offset:0 atIndex:1];
+            [encoder setBuffer:o.data offset:0 atIndex:2];[encoder setBytes:&p length:sizeof(p) atIndex:3];
+            const auto total=Elements(o.rows,o.columns);
+            [encoder dispatchThreads:MTLSizeMake(total,1,1) threadsPerThreadgroup:MTLSizeMake(std::min(total,size_t(impl_->kernels->halfRescale.maxTotalThreadsPerThreadgroup)),1,1)];
+            [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;
+            if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+            return;
+        }
+#endif
         // Wide tiles share more input/weight loading at chunk sizes 16/32.
         // Keep the established small-row/small-output path and fall back if
         // a device cannot encode the optional 256-thread pipelines.

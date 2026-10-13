@@ -1,0 +1,86 @@
+[
+  {
+    "label": "Qwen3-0.6B-b1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-half-hoisted-op-attribution-20261013/jobs/Qwen3-0.6B-b1/case.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 3.683081042021513
+  },
+  {
+    "label": "Qwen3-0.6B-b2",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-half-hoisted-op-attribution-20261013/jobs/Qwen3-0.6B-b2/case.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 3.802045457996428
+  },
+  {
+    "label": "Qwen2.5-Coder-0.5B-Instruct-b1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-half-hoisted-op-attribution-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1/case.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 4.291724250186235
+  },
+  {
+    "label": "Qwen2.5-Coder-0.5B-Instruct-b2",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-half-hoisted-op-attribution-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2/case.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 4.40368412528187
+  },
+  {
+    "label": "Qwen3.5-0.8B-b1",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-half-hoisted-op-attribution-20261013/jobs/Qwen3.5-0.8B-b1/case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-half-hoisted-op-attribution-20261013/jobs/Qwen3.5-0.8B-b1/protocol"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 14.604503999929875
+  },
+  {
+    "label": "Qwen3.5-0.8B-b2",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-hoisted",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-half-hoisted-op-attribution-20261013/jobs/Qwen3.5-0.8B-b2/case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/exact-half-hoisted-op-attribution-20261013/jobs/Qwen3.5-0.8B-b2/protocol"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 15.006187832914293
+  }
+]

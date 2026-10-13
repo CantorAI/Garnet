@@ -1,0 +1,340 @@
+{
+  "model": "Qwen3-0.6B",
+  "batch": 1,
+  "exact_complete_native_output": true,
+  "scope": "Serialized per-operation attribution only; GPU/cache/dispatch behavior differs from serving",
+  "operations": 5308,
+  "exact_half_prefill_operations": 392,
+  "ranking": [
+    {
+      "kind": "MatMul",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 3072,
+      "bf16": true,
+      "count": 392,
+      "total_gpu_ms": 28.17408647569999
+    },
+    {
+      "kind": "BF16MatVec",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 151936,
+      "bf16": true,
+      "count": 8,
+      "total_gpu_ms": 23.90933362
+    },
+    {
+      "kind": "KVChunk",
+      "a_rows": 16,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 262144,
+      "bf16": false,
+      "count": 112,
+      "total_gpu_ms": 22.940580271999984
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 16,
+      "a_cols": 1024,
+      "out_rows": 16,
+      "out_cols": 3072,
+      "bf16": true,
+      "count": 112,
+      "total_gpu_ms": 15.615666291000004
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 1,
+      "a_cols": 3072,
+      "out_rows": 1,
+      "out_cols": 1024,
+      "bf16": true,
+      "count": 196,
+      "total_gpu_ms": 14.266956597200009
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 1024,
+      "bf16": true,
+      "count": 392,
+      "total_gpu_ms": 11.506665499099997
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 1,
+      "a_cols": 2048,
+      "out_rows": 1,
+      "out_cols": 1024,
+      "bf16": true,
+      "count": 196,
+      "total_gpu_ms": 11.366672348199998
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 2048,
+      "bf16": true,
+      "count": 196,
+      "total_gpu_ms": 10.146627202099996
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 16,
+      "a_cols": 3072,
+      "out_rows": 16,
+      "out_cols": 1024,
+      "bf16": true,
+      "count": 56,
+      "total_gpu_ms": 7.5829164141
+    },
+    {
+      "kind": "KVUpdate",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 262144,
+      "bf16": false,
+      "count": 392,
+      "total_gpu_ms": 7.572712375300009
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 16,
+      "a_cols": 1024,
+      "out_rows": 16,
+      "out_cols": 1024,
+      "bf16": true,
+      "count": 112,
+      "total_gpu_ms": 7.3434584785
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 16,
+      "a_cols": 2048,
+      "out_rows": 16,
+      "out_cols": 1024,
+      "bf16": true,
+      "count": 56,
+      "total_gpu_ms": 6.4525413323
+    },
+    {
+      "kind": "MatMul",
+      "a_rows": 16,
+      "a_cols": 1024,
+      "out_rows": 16,
+      "out_cols": 2048,
+      "bf16": true,
+      "count": 56,
+      "total_gpu_ms": 6.251208484099999
+    },
+    {
+      "kind": "Layout",
+      "a_rows": 1,
+      "a_cols": 262144,
+      "out_rows": 1,
+      "out_cols": 262144,
+      "bf16": false,
+      "count": 112,
+      "total_gpu_ms": 3.9813332264000003
+    },
+    {
+      "kind": "AttentionChunk",
+      "a_rows": 16,
+      "a_cols": 2048,
+      "out_rows": 16,
+      "out_cols": 2048,
+      "bf16": false,
+      "count": 56,
+      "total_gpu_ms": 3.8587916627999994
+    },
+    {
+      "kind": "AttentionContext",
+      "a_rows": 1,
+      "a_cols": 4096,
+      "out_rows": 1,
+      "out_cols": 2048,
+      "bf16": false,
+      "count": 196,
+      "total_gpu_ms": 3.7799617269999977
+    },
+    {
+      "kind": "Scores",
+      "a_rows": 1,
+      "a_cols": 2048,
+      "out_rows": 1,
+      "out_cols": 4096,
+      "bf16": false,
+      "count": 196,
+      "total_gpu_ms": 3.3903759896
+    },
+    {
+      "kind": "Norm",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 1024,
+      "bf16": false,
+      "count": 400,
+      "total_gpu_ms": 2.9361685731300002
+    },
+    {
+      "kind": "NormRope",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 1024,
+      "bf16": false,
+      "count": 196,
+      "total_gpu_ms": 2.093619666830001
+    },
+    {
+      "kind": "NormRope",
+      "a_rows": 1,
+      "a_cols": 2048,
+      "out_rows": 1,
+      "out_cols": 2048,
+      "bf16": false,
+      "count": 196,
+      "total_gpu_ms": 2.0836666230800005
+    },
+    {
+      "kind": "Layout",
+      "a_rows": 1,
+      "a_cols": 16384,
+      "out_rows": 16,
+      "out_cols": 1024,
+      "bf16": false,
+      "count": 168,
+      "total_gpu_ms": 1.783165149630001
+    },
+    {
+      "kind": "Layout",
+      "a_rows": 16,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 16384,
+      "bf16": false,
+      "count": 168,
+      "total_gpu_ms": 1.7703347844000001
+    },
+    {
+      "kind": "Add",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 1024,
+      "bf16": false,
+      "count": 392,
+      "total_gpu_ms": 1.709079369819997
+    },
+    {
+      "kind": "Silu",
+      "a_rows": 16,
+      "a_cols": 3072,
+      "out_rows": 16,
+      "out_cols": 3072,
+      "bf16": false,
+      "count": 56,
+      "total_gpu_ms": 1.5744576236
+    },
+    {
+      "kind": "NormRope",
+      "a_rows": 16,
+      "a_cols": 2048,
+      "out_rows": 16,
+      "out_cols": 2048,
+      "bf16": false,
+      "count": 56,
+      "total_gpu_ms": 1.4452901662000008
+    },
+    {
+      "kind": "Add",
+      "a_rows": 16,
+      "a_cols": 1024,
+      "out_rows": 16,
+      "out_cols": 1024,
+      "bf16": false,
+      "count": 56,
+      "total_gpu_ms": 1.0135415939199999
+    },
+    {
+      "kind": "Mask",
+      "a_rows": 1,
+      "a_cols": 1024,
+      "out_rows": 1,
+      "out_cols": 1024,
+      "bf16": false,
+      "count": 196,
+      "total_gpu_ms": 0.9322059344600009
+    },
+    {
+      "kind": "Silu",
+      "a_rows": 1,
+      "a_cols": 3072,
+      "out_rows": 1,
+      "out_cols": 3072,
+      "bf16": false,
+      "count": 196,
+      "total_gpu_ms": 0.9182109498800001
+    },
+    {
+      "kind": "Norm",
+      "a_rows": 16,
+      "a_cols": 1024,
+      "out_rows": 16,
+      "out_cols": 1024,
+      "bf16": false,
+      "count": 112,
+      "total_gpu_ms": 0.90628769256
+    },
+    {
+      "kind": "Layout",
+      "a_rows": 1,
+      "a_cols": 16384,
+      "out_rows": 1,
+      "out_cols": 16384,
+      "bf16": false,
+      "count": 112,
+      "total_gpu_ms": 0.8259592578
+    },
+    {
+      "kind": "NormRope",
+      "a_rows": 16,
+      "a_cols": 1024,
+      "out_rows": 16,
+      "out_cols": 1024,
+      "bf16": false,
+      "count": 56,
+      "total_gpu_ms": 0.69112470342
+    },
+    {
+      "kind": "Add",
+      "a_rows": 1,
+      "a_cols": 16384,
+      "out_rows": 1,
+      "out_cols": 16384,
+      "bf16": false,
+      "count": 56,
+      "total_gpu_ms": 0.32087508584999996
+    },
+    {
+      "kind": "Layout",
+      "a_rows": 1,
+      "a_cols": 48,
+      "out_rows": 16,
+      "out_cols": 3,
+      "bf16": false,
+      "count": 56,
+      "total_gpu_ms": 0.31720940022000016
+    }
+  ]
+}

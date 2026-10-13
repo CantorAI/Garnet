@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "metal_context.h"
+#include "exact_half_codec.h"
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -42,6 +43,52 @@ int main() {
             }
         }
         uint16_t nonfinite=0x7f80;bool bf16Rejected=false;
+#ifdef GARNET_METAL_EXACT_HALF_PREFILL
+        {
+            size_t checks=0;
+            for(uint32_t word=0;word<65536;++word)for(int32_t scale=-64;scale<=64;++scale) {
+                uint16_t actual=0;const bool encoded=Garnet::EncodeExactScaledHalf(uint16_t(word),scale,actual);
+                if((word&0x7f80)==0x7f80){if(encoded)throw std::runtime_error("Half codec accepted nonfinite BF16");continue;}
+                uint32_t raw=word<<16;float original;std::memcpy(&original,&raw,4);
+                const __fp16 half=(__fp16)std::ldexp(original,scale);
+                const float recovered=std::ldexp(float(half),-scale);
+                const bool expected=std::isfinite(float(half))&&!std::memcmp(&original,&recovered,4);
+                uint16_t reference;std::memcpy(&reference,&half,2);
+                if(encoded!=expected||(encoded&&actual!=reference))throw std::runtime_error("Integer half codec disagrees with floating bit-roundtrip oracle");
+                ++checks;
+            }
+            std::cout<<"Exact scaled half codec checks="<<checks<<"\n";
+            for(uint32_t magnitude=0;magnitude<0x7f80;++magnitude) {
+                int32_t actualScale=0;const bool actual=Garnet::ExactHalfRowScale(uint16_t(magnitude),actualScale);
+                uint32_t raw=magnitude<<16;float value;std::memcpy(&value,&raw,4);
+                int exponent=0;if(value)std::frexp(value,&exponent);
+                const int32_t expectedScale=value?16-exponent:0;
+                const bool expected=expectedScale>=-64&&expectedScale<=64;
+                if(actual!=expected||(actual&&actualScale!=expectedScale))throw std::runtime_error("Integer row scaling disagrees with independent frexp reference");
+            }
+        }
+        {
+            std::vector<float> values={0.37f,-0.25f,2,0.25f,0.5f,1,2,3,4,5,-1,0.5f,0.75f,-2,0.125f};
+            std::vector<float> weights={0,-0.0f,0.25f,0.5f,0.125f,std::ldexp(1.0f,-25),std::ldexp(3.0f,-25),std::ldexp(-4.0f,-25),0,0,0,0,0,0,0};
+            std::vector<uint16_t> bits(weights.size());
+            for(size_t i=0;i<bits.size();++i){uint32_t raw;std::memcpy(&raw,&weights[i],4);bits[i]=uint16_t(raw>>16);}
+            auto w=gpu.UploadBF16(bits.data(),bits.size()*2,3,5);
+            if(!w.ExactHalfReady())throw std::runtime_error("Lossless normal/zero/odd-row half storage unavailable");
+            auto a=gpu.Upload(values,3,5),out=gpu.Allocate(3,3);
+            gpu.Begin();gpu.EncodeBF16MatVec(a,w,out);gpu.SubmitAndWait();const auto actual=gpu.Download(out);
+            for(size_t row=0;row<3;++row)for(size_t col=0;col<3;++col) {
+                double expected=0;for(size_t inner=0;inner<5;++inner)expected+=double(values[row*5+inner])*weights[col*5+inner];
+                if(!std::isfinite(actual[row*3+col])||std::abs(actual[row*3+col]-expected)>1e-6)
+                    throw std::runtime_error("Exact half rescaling disagrees with independent FP64 reference");
+            }
+            const uint16_t exceptional[]={0x3f80,0x0080};
+            auto fallback=gpu.UploadBF16(exceptional,4,1,2);
+            if(fallback.ExactHalfReady())throw std::runtime_error("Nonexact half encoding was accepted");
+            auto fa=gpu.Upload({1,2,3,4,5,6},3,2),fo=gpu.Allocate(3,1);
+            gpu.Begin();gpu.EncodeBF16MatVec(fa,fallback,fo);gpu.SubmitAndWait();
+            if(gpu.Download(fo)!=std::vector<float>{1,3,5})throw std::runtime_error("Rejected half encoding did not retain raw BF16 fallback");
+        }
+#endif
         try {gpu.UploadBF16(&nonfinite,2,1,1);}catch(const std::invalid_argument&){bf16Rejected=true;}
         if(!bf16Rejected)throw std::runtime_error("Nonfinite BF16 weight accepted");
         for(size_t width:{7,1031})for(float offset:{0.0f,1.0f}) {

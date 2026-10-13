@@ -25,6 +25,7 @@ class MetalBF16Weight {
 public:
     MetalBF16Weight()=default;
     bool Valid() const {return bool(impl_);}
+    bool ExactHalfReady() const;
 };
 // C++ interface keeps Objective-C ownership out of model-facing headers.
 class MetalContext {

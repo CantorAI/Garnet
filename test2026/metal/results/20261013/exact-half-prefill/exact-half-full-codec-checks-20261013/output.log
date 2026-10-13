@@ -1,0 +1,28 @@
+Executing after successful owned predecessor ["/opt/homebrew/bin/python3", "/Users/zsdx/garnet-metal-investigation/check_exact_half_full_codec.py"]
+Executing ["/opt/homebrew/bin/cmake", "--build", "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack", "--target", "garnet_metal_matmul_test", "--parallel", "4"]
+[ 50%] Built target garnet_metal
+[ 75%] Building CXX object CMakeFiles/garnet_metal_matmul_test.dir/test2026/metal/matmul_test.cpp.o
+[100%] Linking CXX executable garnet_metal_matmul_test
+[100%] Built target garnet_metal_matmul_test
+Executing ["/opt/homebrew/bin/ctest", "--test-dir", "/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack", "--output-on-failure", "-V"]
+UpdateCTestConfiguration  from :/Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack/DartConfiguration.tcl
+Test project /Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: metal_mps_matmul_reference
+
+1: Test command: /Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack/garnet_metal_matmul_test
+1: Working Directory: /Users/zsdx/garnet-metal-investigation/build-exact-half-prefill-fast-pack
+1: Test timeout computed to be: 10000000
+1: Exact scaled half codec checks=8421120
+1: Metal/MPS matmul reference PASS device=Apple M4
+1/1 Test #1: metal_mps_matmul_reference .......   Passed    0.67 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.67 sec

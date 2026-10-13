@@ -1,0 +1,85 @@
+{
+  "groups": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "garnet": {
+        "initialization_seconds": 9.900927500566468,
+        "first_use_ttft_seconds": 0.19017245806753635,
+        "peak_child_rss_gib": 2.3286895751953125
+      },
+      "garnet-control": {
+        "initialization_seconds": 0.9939443536568433,
+        "first_use_ttft_seconds": 0.18929345859214664,
+        "peak_child_rss_gib": 1.5058135986328125
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "garnet": {
+        "initialization_seconds": 9.947305312613025,
+        "first_use_ttft_seconds": 0.2519983749371022,
+        "peak_child_rss_gib": 2.374053955078125
+      },
+      "garnet-control": {
+        "initialization_seconds": 1.0162411867640913,
+        "first_use_ttft_seconds": 0.2540611873846501,
+        "peak_child_rss_gib": 1.5431442260742188
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "garnet": {
+        "initialization_seconds": 8.024904270423576,
+        "first_use_ttft_seconds": 0.15412981249392033,
+        "peak_child_rss_gib": 1.9312973022460938
+      },
+      "garnet-control": {
+        "initialization_seconds": 0.8025839158799499,
+        "first_use_ttft_seconds": 0.14215620793402195,
+        "peak_child_rss_gib": 1.2629013061523438
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "garnet": {
+        "initialization_seconds": 8.047450707992539,
+        "first_use_ttft_seconds": 0.16965966671705246,
+        "peak_child_rss_gib": 1.932281494140625
+      },
+      "garnet-control": {
+        "initialization_seconds": 0.8430178745184094,
+        "first_use_ttft_seconds": 0.16794256307184696,
+        "peak_child_rss_gib": 1.2629470825195312
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "garnet": {
+        "initialization_seconds": 12.105260541429743,
+        "first_use_ttft_seconds": 0.8711818750016391
+      },
+      "garnet-control": {
+        "initialization_seconds": 2.143671333324164,
+        "first_use_ttft_seconds": 0.8737764789257199
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "garnet": {
+        "initialization_seconds": 12.155403999844566,
+        "first_use_ttft_seconds": 1.0618844791315496
+      },
+      "garnet-control": {
+        "initialization_seconds": 2.1488108749035746,
+        "first_use_ttft_seconds": 1.1013688745442778
+      }
+    }
+  ],
+  "memory_scope": "Individual native text/coder child high-water RSS, not unique GPU allocation"
+}

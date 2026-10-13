@@ -80,7 +80,8 @@ for model in models:
             value=grouped.setdefault(key,dict(count=0,total_gpu_ms=0));value['count']+=1;value['total_gpu_ms']+=operation['gpu_ms']
         ranking=[dict(kind=key[0],a_rows=key[1],a_cols=key[2],out_rows=key[3],out_cols=key[4],bf16=key[5],**value) for key,value in grouped.items()]
         ranking.sort(key=lambda r:r['total_gpu_ms'],reverse=True)
-        report=dict(model=model,batch=batch,exact_complete_native_output=True,scope=metadata['scope'],operations=len(operations),ranking=ranking)
+        report=dict(model=model,batch=batch,exact_complete_native_output=True,scope=metadata['scope'],operations=len(operations),
+            exact_half_prefill_operations=sum(bool(v.get('exact_half_prefill')) for v in operations),ranking=ranking)
         (folder/'attribution.json').write_text(json.dumps(report,indent=2)+'\n');summaries.append(report)
         (output/'summary.json').write_text(json.dumps(dict(scope=metadata['scope'],profiles=summaries),indent=2)+'\n')
         print('Completed diagnostic',label,'operations',len(operations),'top',ranking[:3],flush=True)
