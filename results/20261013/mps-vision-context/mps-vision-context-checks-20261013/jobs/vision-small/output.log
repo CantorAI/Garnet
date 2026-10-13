@@ -1,0 +1,12 @@
+vision reference max_abs_error 2.384185791015625e-07 relative_l2 1.6037534529669678e-07 worst_tolerance_ratio 0.03072503227315492
+vision reference max_abs_error 4.76837158203125e-07 relative_l2 2.6127031211463604e-07 worst_tolerance_ratio 0.02020382344428236
+actual Garnet vision graph batch 1 grid 2 2 PASS compile_ms 6.444708 inference_ms [16.11325, 1.15725]
+vision reference max_abs_error 3.5762786865234375e-07 relative_l2 2.1380464125369348e-07 worst_tolerance_ratio 0.0476522480214296
+vision reference max_abs_error 4.76837158203125e-07 relative_l2 2.794412065383094e-07 worst_tolerance_ratio 0.04821592763882156
+actual Garnet vision graph batch 1 grid 4 6 PASS compile_ms 6.40125 inference_ms [16.545583, 1.705333]
+vision reference max_abs_error 2.682209014892578e-07 relative_l2 2.243309411427006e-07 worst_tolerance_ratio 0.03347278840823948
+vision reference max_abs_error 2.682209014892578e-07 relative_l2 2.1017035527567397e-07 worst_tolerance_ratio 0.02158478566163939
+actual Garnet vision graph batch 2 grid 2 2 PASS compile_ms 6.679208 inference_ms [15.55525, 1.687708]
+vision reference max_abs_error 4.917383193969727e-07 relative_l2 2.7543123804748537e-07 worst_tolerance_ratio 0.04096468389540225
+vision reference max_abs_error 4.917383193969727e-07 relative_l2 2.6954415539714506e-07 worst_tolerance_ratio 0.035676904889685224
+actual Garnet vision graph batch 2 grid 4 6 PASS compile_ms 6.52925 inference_ms [16.870667, 1.789041]
