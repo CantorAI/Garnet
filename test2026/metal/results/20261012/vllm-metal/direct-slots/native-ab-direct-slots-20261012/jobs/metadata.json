@@ -1,0 +1,60 @@
+{
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "native_build": "/Users/zsdx/garnet-metal-investigation/build-direct-slots",
+  "native_library_sha256": "8533468defbfefae113fa85d9f14a96751c29413887959a1e60520f34dfb079a",
+  "policy": "Only one runtime process alive. Identical BF16 checkpoint and native prompt token IDs. Prefix cache/speculation disabled.",
+  "models": {
+    "Qwen3-0.6B": {
+      "model.safetensors": {
+        "bytes": 1503300328,
+        "sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+      },
+      "config.json": {
+        "bytes": 726,
+        "sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+      },
+      "tokenizer.json": {
+        "bytes": 11422654,
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+      },
+      "tokenizer_config.json": {
+        "bytes": 9732,
+        "sha256": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101"
+      }
+    },
+    "Qwen2.5-Coder-0.5B-Instruct": {
+      "model.safetensors": {
+        "bytes": 988097824,
+        "sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44"
+      },
+      "config.json": {
+        "bytes": 659,
+        "sha256": "b1e58593cd31852f7da5c2fc31ddf6135b9c066c0fd9177a4bbe95717083adff"
+      },
+      "tokenizer.json": {
+        "bytes": 7031645,
+        "sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539"
+      },
+      "tokenizer_config.json": {
+        "bytes": 7305,
+        "sha256": "959e7f1d9a1b7641a6d6ce05ca97b75c7894fcb66cbe5a040406458fb1128ee4"
+      }
+    }
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184",
+    "hw.physicalcpu": "10",
+    "hw.logicalcpu": "10"
+  },
+  "runner_sha256": {
+    "run_matched_garnet.py": "7f8c316c9092c3192a375475078646afd1529b0a675607f8ecb542e89b65c7ec",
+    "run_matched_vllm.py": "43677bad89831815526f465c56b8bf23ee809fe1695a47b034e02a4b132ceb80",
+    "benchmark_matched_process.py": "9a678e833dbb69da5169c24208cfb6f074be23c4db6454844b1080659282e494",
+    "summarize_vllm_comparison.py": "916107ecb58d1025c85a5a2c2b6d6a8302cf348def363f024dcf8b79924c1dc1"
+  },
+  "comparison_kind": "native ABBA; no vLLM speed claim",
+  "native_control_build": "/Users/zsdx/garnet-metal-investigation/build-visible-cache",
+  "native_control_library_sha256": "a713cc206960908ec558bba2d1b3ccf5f830da39b0c63ea9aaf19d0e0d0c9ad8",
+  "comparator_cleanup_source_sha256": "c84780087b05fcccf8c266a75fe1f7633f447155412e5d514b634d0b229bbf24"
+}

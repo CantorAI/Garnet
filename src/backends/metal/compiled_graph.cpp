@@ -169,7 +169,7 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     return output;
 }
 void MetalCompiledGraph::Clear() {
-    ++generation_;ready_=false;bf16Projections_=false;outputParts_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
+    ++generation_;ready_=false;bf16Projections_=false;outputParts_.clear();outputStorageGroups_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
 }
 void MetalCompiledGraph::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string& checkpoint) {
@@ -605,6 +605,21 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
         }
         for(auto id:inputs_)live.insert(canonical(id));
         for(size_t id=0;id<slots_.size();++id)if(!live.count(canonical(id)))slots_[id].matrix=MetalMatrix();
+        // Exchange only fresh, independently written output storage. Keep
+        // aliases together and retain the copy path for inputs/constants or
+        // storage shared by two returned parts.
+        outputStorageGroups_.resize(outputParts_.size());
+        for(size_t part=0;part<outputParts_.size();++part) {
+            const auto& matrix=slots_[outputParts_[part]].matrix;std::vector<size_t> group;
+            bool eligible=true,writer=false;
+            for(size_t id=0;id<slots_.size();++id)if(matrix.SharesStorage(slots_[id].matrix)) {
+                group.push_back(id);
+                if(!matrix.CompatibleLayout(slots_[id].matrix)||std::find(inputs_.begin(),inputs_.end(),id)!=inputs_.end())eligible=false;
+            }
+            for(size_t other=0;other<outputParts_.size();++other)if(other!=part&&matrix.SharesStorage(slots_[outputParts_[other]].matrix))eligible=false;
+            for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]&&std::find(group.begin(),group.end(),ops_[i].out)!=group.end())writer=true;
+            if(eligible&&writer)outputStorageGroups_[part]=std::move(group);
+        }
         sharedWeights_.clear();ready_=true;
         compileMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
         return true;
@@ -638,7 +653,7 @@ void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<
             output.columns,selected.data()+row*output.columns);
         hostInputs[entry.first]=std::move(selected);
     }
-    for(const auto& op:ops_)if(op.kind==Kind::KVUpdate||op.kind==Kind::KVChunk) {
+    for(auto& op:ops_)if(op.kind==Kind::KVUpdate||op.kind==Kind::KVChunk) {
         const auto& positions=hostInputs.at(op.arguments[4]);const auto& slots=hostInputs.at(op.arguments[2]);
         const auto& active=hostInputs.at(op.arguments[3]);
         for(size_t row=0;row<active.size();++row) {
@@ -648,12 +663,31 @@ void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<
             for(size_t axis=0;axis<3;++axis)if(!std::isfinite(positions[row*3+axis]))
                 throw std::runtime_error("Metal RoPE position must be finite");
         }
+        if(op.kind==Kind::KVChunk) {
+            // Direct slot lookup requires a contiguous active prefix in every
+            // row. Overwrites, gaps and paused/resumed rows keep the scan.
+            const size_t chunk=op.dimensions[3];op.contiguousSlots=true;
+            for(size_t base=0;base<active.size();base+=chunk) {
+                bool paused=false;
+                for(size_t t=0;t<chunk;++t) {
+                    if(active[base+t]==0)paused=true;
+                    else if(paused||slots[base+t]!=slots[base]+float(t))op.contiguousSlots=false;
+                }
+            }
+        }
     }
     for(size_t i=0;i<inputs_.size();++i){
         if(skip.count(i))continue;
         X::Tensor tensor(inputs.Get(i));auto lease=tensor.Acquire();auto info=tensor.Info();auto& slot=slots_[inputs_[i]];
         gpu_->Update(slot.matrix,static_cast<const float*>(info.data),slot.rows*slot.columns);
     }
+}
+bool MetalCompiledGraph::SwapOutputStorage(size_t part,MetalMatrix& replacement) {
+    if(part>=outputStorageGroups_.size()||outputStorageGroups_[part].empty())return false;
+    const auto finished=slots_[outputParts_[part]].matrix;
+    if(!finished.CompatibleLayout(replacement))return false;
+    for(auto id:outputStorageGroups_[part])slots_[id].matrix=replacement;
+    replacement=finished;return true;
 }
 void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
     // Opt-in isolated-operation diagnostics deliberately split submissions.
@@ -696,7 +730,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
                 slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.epsilon,op.offset,op.dimensions[3]!=0);
         }else if(op.kind==Kind::KVChunk) {
             auto& args=op.arguments;gpu.EncodeKVChunk(slots_[args[0]].matrix,slots_[args[1]].matrix,slots_[args[2]].matrix,
-                slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3]);
+                slots_[args[3]].matrix,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.contiguousSlots);
         }else if(op.kind==Kind::AttentionChunk) {
             std::vector<MetalMatrix> args;for(auto id:op.arguments)args.push_back(slots_[id].matrix);
             gpu.EncodeAttentionChunk(args,out,op.dimensions[0],op.dimensions[1],op.dimensions[2],op.dimensions[3],op.dimensions[4],op.dimensions[5]!=0);

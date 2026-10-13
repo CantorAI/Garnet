@@ -14,6 +14,8 @@ class MetalMatrix {
     friend class MetalContext;
 public:
     MetalMatrix() = default;
+    bool SharesStorage(const MetalMatrix&) const;
+    bool CompatibleLayout(const MetalMatrix&) const;
 };
 class MetalBF16Weight {
     struct Impl;
@@ -77,7 +79,7 @@ public:
     void EncodeKVUpdate(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         const MetalMatrix&,size_t kvHeads,size_t dim,size_t capacity);
     void EncodeKVChunk(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
-        const MetalMatrix&,size_t kvHeads,size_t dim,size_t capacity,size_t chunk);
+        const MetalMatrix&,size_t kvHeads,size_t dim,size_t capacity,size_t chunk,bool contiguousSlots=false);
     void EncodeAttentionChunk(const std::vector<MetalMatrix>&,const MetalMatrix&,size_t heads,size_t kvHeads,
         size_t dim,size_t capacity,size_t chunk,bool gated);
     void EncodeAttentionScores(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,

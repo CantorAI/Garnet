@@ -3,8 +3,8 @@ import json,subprocess,sys
 from pathlib import Path
 runtime,build,source,phase,output=sys.argv[1:];source=Path(source);output=Path(output);root=source.parent
 scripts=source/'test2026/metal';models=root/'models';tasks=[]
-if phase in ('checks','projection-checks'):
-    extra=['bf16'] if phase=='projection-checks' else []
+if phase in ('checks','projection-checks','handoff-checks'):
+    extra=['bf16'] if phase in ('projection-checks','handoff-checks') else []
     tasks.append(('qwen35-layers',[sys.executable,str(scripts/'test_chunk_graph.py'),runtime,build,str(source),str(models/'Qwen3.5-0.8B')]+extra))
     for name in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
         tasks.append((name+'-layers',[sys.executable,str(scripts/'test_dense_reference.py'),runtime,build,str(source),str(models/name)]+extra))
@@ -15,6 +15,9 @@ if phase in ('checks','projection-checks'):
     tasks.append(('vision-small',[sys.executable,str(scripts/'test_vision_graph.py'),runtime,build,str(source)]))
     tasks.append(('vision-pretrained',[sys.executable,str(scripts/'test_pretrained_vision_graph.py'),runtime,build,str(source),str(models/'Qwen3.5-0.8B')]))
     tasks.append(('ctest',['/opt/homebrew/bin/ctest','--test-dir',build,'--output-on-failure']))
+    if phase=='handoff-checks':
+        early=('ctest','serving','mixed-image-pipeline')
+        tasks=[next(task for task in tasks if task[0]==name) for name in early]+[task for task in tasks if task[0] not in early]
 elif phase=='index-checks':
     # The address-width variant retains the same arithmetic and GEMM path.
     # Cover aligned/odd and padded matrix cases, then the real large heads.

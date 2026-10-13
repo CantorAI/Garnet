@@ -124,8 +124,12 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
             catch(...){for(size_t k=0;k<3;++k)graph->slots_[graph->inputs_[k]].matrix=saved[k];throw;}
             for(size_t k=0;k<3;++k)graph->slots_[graph->inputs_[k]].matrix=saved[k];
             current=graph->slots_[graph->outputParts_[0]].matrix;
-            for(size_t k=0;k<2;++k)gpu_->EncodeSliceGroups(graph->slots_[graph->outputParts_[k+1]].matrix,
-                states_[i].matrix[k],1,states_[i].columns[k],0,states_[i].columns[k]);
+            // Keep the new state private to this session without copying it
+            // back. The previous state becomes this graph's next output
+            // storage; graph locks cover the exchange and GPU completion.
+            for(size_t k=0;k<2;++k)if(!graph->SwapOutputStorage(k+1,states_[i].matrix[k]))
+                gpu_->EncodeSliceGroups(graph->slots_[graph->outputParts_[k+1]].matrix,
+                    states_[i].matrix[k],1,states_[i].columns[k],0,states_[i].columns[k]);
         }
         const size_t hiddenWidth=size_t(inputShape[0].back())*chunk;
         gpu_->EncodeSliceGroups(current,hidden_,1,hiddenWidth,0,hiddenWidth);

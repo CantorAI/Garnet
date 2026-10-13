@@ -1,0 +1,35 @@
+{
+  "model": "Qwen3.5-0.8B",
+  "scope": "Sampled feasibility only, approximate CPU head normalization with 0.1% margin; no pruning kernel or speed gain demonstrated",
+  "row_norm_quantiles": [
+    0.346599981373623,
+    0.5537530924736522,
+    0.6225227496124079,
+    0.7108997080745638,
+    1.0570894295154765
+  ],
+  "samples": [
+    {
+      "step": 0,
+      "prediction": 11751,
+      "normalized_hidden_norm": 140.28451458724714,
+      "full_max": 19.90840721130371,
+      "seed_max": 16.078689575195312,
+      "ideal_bound_prunable_fraction": 0.0,
+      "fixed_seed_bound_prunable_fraction": 0.0,
+      "top8_energy_fraction": 0.08226459542643315,
+      "top32_energy_fraction": 0.22238115960714971
+    },
+    {
+      "step": 1,
+      "prediction": 248046,
+      "normalized_hidden_norm": 131.70416282488006,
+      "full_max": 23.535476684570312,
+      "seed_max": 23.442577362060547,
+      "ideal_bound_prunable_fraction": 0.0,
+      "fixed_seed_bound_prunable_fraction": 0.0,
+      "top8_energy_fraction": 0.135568248181317,
+      "top32_energy_fraction": 0.28152880724197255
+    }
+  ]
+}

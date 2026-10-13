@@ -1,0 +1,15 @@
+{
+  "name": "Qwen3-0.6B-b2-vllm-metal-1",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+    "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+    "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-direct-slots-20261012/jobs/Qwen3-0.6B-b2-case.json",
+    "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-direct-slots-20261012/jobs/Qwen3-0.6B-b2-garnet-1/output.log"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "process_seconds": 19.551986875012517
+}

@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/await_vllm_baseline.py",
+    "/Users/zsdx/garnet-metal-investigation/logs/direct-slots-checks-20261012",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-direct-slots",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-direct-slots-20261012/jobs",
+    "shared"
+  ],
+  "exit_code": 0
+}

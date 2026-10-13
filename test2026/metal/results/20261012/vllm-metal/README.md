@@ -149,6 +149,58 @@ overhead/cache behavior; they guide the next experiment rather than replacing
 the normal end-to-end timers. The current chunk KV kernel scans all input
 tokens separately for every output cache element, even for contiguous slots.
 
+## Direct slots, aligned copies and private state-buffer handoff
+
+The direct-slot path checks the host controls for a contiguous active prefix
+before replacing the per-element chunk scan with direct lookup. Gaps,
+overwrites and paused/resumed rows retain the original scan. All 11 checks
+and 48 native/vLLM requests passed. A close native ABBA comparison then
+confirmed text-model warm TTFT reductions of 9.3% (batch 1) and 8.1% (batch 2),
+with unchanged decode speed. Coder reductions were 1.6% and 0.4%.
+`direct-slots/` saves those commands, libraries, exact outputs, controls and
+the tested source snapshot; these native ABBA gains are not vLLM-relative gains.
+
+The next build adds bit-preserving float4 cache copies where alignment and
+uint-index bounds permit, with the scalar fallback retained. Resident sessions
+now exchange independently written output buffers with their private state
+instead of copying every layer's entire state back. Storage aliases move
+together; input/constant storage and overlapping output parts retain the copy
+path. The private session state remains protected by the graph/session locks.
+
+All 11 validation jobs passed, including paused rows, resets, chunk/profile
+replacement, shared-graph session isolation and independent hidden snapshots.
+The mixed image pipeline and pretrained layer/head references passed too.
+Another 48 matched native/vLLM requests produced exact outputs and clean
+shutdown. `state-handoff/` retains the complete evidence.
+
+| Model | Batch | Garnet tokens/s per row | vLLM tokens/s per row | Garnet TTFT, ms | vLLM TTFT, ms |
+| --- | --- | --- | --- | --- | --- |
+| Qwen3-0.6B | 1 | 56.94 | 74.52 | 105.69 | 49.74 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | 72.69 | 92.18 | 74.26 | 34.79 |
+| Qwen3-0.6B | 2 | 51.88 | 75.85 | 188.86 | 70.82 |
+| Qwen2.5-Coder-0.5B-Instruct | 2 | 70.44 | 92.25 | 112.33 | 37.99 |
+
+Against the preceding direct-slot build, native decode improves about 42%
+and 84% for text batch 1/2, and 7% and 16% for coder. Memory remains close to
+the shared-weight profile. These are meaningful native improvements, but
+Garnet still trails vLLM-Metal and every 2x/half-TTFT flag remains false.
+
+## Remaining investigation
+
+The native CLI cannot import NumPy in this SDK build. The actual preprocessing
+probe failed before producing any patches; its raw failure is in
+`direct-slots/xlang-image-preprocessing-probe-20261012`. A common CPU image
+frontend feeding resident native/MLX workers is still needed to establish a
+fair image-to-result timing boundary. The runtime/SDK were not modified.
+
+Real full-head query/score samples from all three checkpoints are saved in
+`state-handoff/head-bound-feasibility-20261012`. The basic whole-row Cauchy
+norm bound prunes no rows in the sampled queries, even when supplied the
+true maximum score. No pruning kernel or pruning speed advantage is claimed.
+The approximate CPU normalization and 0.1% margin make this feasibility data,
+not production proof. Further projection/attention optimization and the
+matched VL comparison remain open. The full goal is active and unmet.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

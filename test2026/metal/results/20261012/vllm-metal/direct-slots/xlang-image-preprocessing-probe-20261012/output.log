@@ -1,0 +1,140 @@
+Executing after successful owned predecessor ["/opt/homebrew/bin/python3", "/Users/zsdx/garnet-metal-investigation/run_xlang_preprocessing_probe.py"]
+Native preprocessing probe command ["/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3", "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/probe_xlang_image_preprocessing.py", "/Users/zsdx/garnet-metal-investigation/source", "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B", "/Users/zsdx/garnet-metal-investigation/images/RealWorld-04.batch1.json", "/Users/zsdx/garnet-metal-investigation/logs/xlang-image-preprocessing-20261012/patches.f32"]
+
+runtime: uncaught exception in <module> (/Users/zsdx/garnet-metal-investigation/source/test2026/metal/probe_xlang_image_preprocessing.py:1): <class 'ModuleNotFoundError'>: module 'numpy' not found; native package candidates tried:
+module 'numpy' not found; native package candidates tried:
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libnumpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/numpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libnumpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/numpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libnumpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/numpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libnumpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/numpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libnumpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/numpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libnumpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/numpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libnumpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/numpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libnumpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libnumpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libnumpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libnumpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libnumpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libnumpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libnumpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libnumpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libnumpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libnumpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libnumpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libnumpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libnumpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/numpy.so
+module 'numpy' not found; native package candidates tried:
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libnumpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/numpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libnumpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/numpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libnumpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/numpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libnumpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/numpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libxlang_numpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/xlang_numpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libxlang_numpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/xlang_numpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libxlang_numpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/xlang_numpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/libxlang_numpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/pi5b/xlang_numpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libnumpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/numpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libnumpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/numpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libnumpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/numpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libnumpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/numpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libxlang_numpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/xlang_numpy.x3pkg.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libxlang_numpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/xlang_numpy.dylib
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libxlang_numpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/xlang_numpy.x3pkg.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/libxlang_numpy.so
+  /Users/zsdx/garnet-metal-investigation/source/test2026/metal/xlang_numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libnumpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libnumpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libnumpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libnumpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libxlang_numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/xlang_numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libxlang_numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/xlang_numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libxlang_numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/xlang_numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/libxlang_numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/lib/python3.14/xlang_numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libnumpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libnumpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libnumpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libnumpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libxlang_numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/xlang_numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libxlang_numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/xlang_numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libxlang_numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/xlang_numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/libxlang_numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/modules/xlang_numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libnumpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libnumpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libnumpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libnumpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang_numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang_numpy.x3pkg.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang_numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang_numpy.dylib
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang_numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang_numpy.x3pkg.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang_numpy.so
+  /Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang_numpy.so
+
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/run_xlang_preprocessing_probe.py", line 10, in <module>
+    assert result.returncode==0 and 'xlang_image_preparation_complete' in result.stdout
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_after_owned_job.py", line 20, in <module>
+    subprocess.run(command,check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/opt/homebrew/bin/python3', '/Users/zsdx/garnet-metal-investigation/run_xlang_preprocessing_probe.py']' returned non-zero exit status 1.

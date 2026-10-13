@@ -1,0 +1,239 @@
+[
+  {
+    "model": "Qwen3-0.6B",
+    "scope": "Sampled feasibility only, approximate CPU head normalization with 0.1% margin; no pruning kernel or speed gain demonstrated",
+    "row_norm_quantiles": [
+      0.3023715898147991,
+      0.8212511698954484,
+      0.9356043939265601,
+      1.060455914818822,
+      1.380575327541352
+    ],
+    "samples": [
+      {
+        "step": 0,
+        "prediction": 785,
+        "normalized_hidden_norm": 156.1289327266425,
+        "full_max": 24.76238250732422,
+        "seed_max": 24.76238250732422,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.40673052702727897,
+        "top32_energy_fraction": 0.5662162335041218
+      },
+      {
+        "step": 1,
+        "prediction": 6722,
+        "normalized_hidden_norm": 127.98558592264675,
+        "full_max": 27.336902618408203,
+        "seed_max": 27.336902618408203,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.5117583640529977,
+        "top32_energy_fraction": 0.6370241782561928
+      },
+      {
+        "step": 2,
+        "prediction": 315,
+        "normalized_hidden_norm": 104.09273476113172,
+        "full_max": 26.318130493164062,
+        "seed_max": 26.318130493164062,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.2842265850589205,
+        "top32_energy_fraction": 0.45947811865412974
+      },
+      {
+        "step": 3,
+        "prediction": 9625,
+        "normalized_hidden_norm": 125.74088268234581,
+        "full_max": 27.151905059814453,
+        "seed_max": 16.005508422851562,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.5283480049085125,
+        "top32_energy_fraction": 0.6515456186447266
+      },
+      {
+        "step": 4,
+        "prediction": 374,
+        "normalized_hidden_norm": 120.64552812252974,
+        "full_max": 28.68600082397461,
+        "seed_max": 28.68600082397461,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.330179225984567,
+        "top32_energy_fraction": 0.5064948739750738
+      },
+      {
+        "step": 5,
+        "prediction": 12095,
+        "normalized_hidden_norm": 140.9039728913239,
+        "full_max": 20.56044578552246,
+        "seed_max": 17.85892105102539,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.2857681397283647,
+        "top32_energy_fraction": 0.4012862573351339
+      },
+      {
+        "step": 6,
+        "prediction": 13,
+        "normalized_hidden_norm": 128.98410395827224,
+        "full_max": 28.155162811279297,
+        "seed_max": 28.155162811279297,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.45453514972100306,
+        "top32_energy_fraction": 0.5841852851974024
+      },
+      {
+        "step": 7,
+        "prediction": 151645,
+        "normalized_hidden_norm": 154.49275792455776,
+        "full_max": 34.2373161315918,
+        "seed_max": 19.093402862548828,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.4294460128133981,
+        "top32_energy_fraction": 0.5823197227916237
+      }
+    ]
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "scope": "Sampled feasibility only, approximate CPU head normalization with 0.1% margin; no pruning kernel or speed gain demonstrated",
+    "row_norm_quantiles": [
+      0.3080414800482335,
+      0.43024163797819664,
+      0.5145336319552372,
+      0.6002407317727148,
+      0.9509725238369838
+    ],
+    "samples": [
+      {
+        "step": 0,
+        "prediction": 73594,
+        "normalized_hidden_norm": 178.5025260979949,
+        "full_max": 19.545656204223633,
+        "seed_max": 19.002056121826172,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.41114277778742936,
+        "top32_energy_fraction": 0.5587693930465312
+      },
+      {
+        "step": 1,
+        "prediction": 12669,
+        "normalized_hidden_norm": 170.47316006161122,
+        "full_max": 23.261436462402344,
+        "seed_max": 16.70816421508789,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.4278480022511187,
+        "top32_energy_fraction": 0.5874594153111478
+      },
+      {
+        "step": 2,
+        "prediction": 198,
+        "normalized_hidden_norm": 138.3979868300024,
+        "full_max": 20.25870704650879,
+        "seed_max": 20.25870704650879,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.13607284367823774,
+        "top32_energy_fraction": 0.2990306996081313
+      },
+      {
+        "step": 3,
+        "prediction": 750,
+        "normalized_hidden_norm": 175.93083150079573,
+        "full_max": 22.116531372070312,
+        "seed_max": 22.116531372070312,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.4737941978738532,
+        "top32_energy_fraction": 0.6272661839577258
+      },
+      {
+        "step": 4,
+        "prediction": 912,
+        "normalized_hidden_norm": 156.95797477795398,
+        "full_max": 21.617666244506836,
+        "seed_max": 21.617666244506836,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.32613381640412337,
+        "top32_energy_fraction": 0.5228407896413375
+      },
+      {
+        "step": 5,
+        "prediction": 2877,
+        "normalized_hidden_norm": 186.2835608903074,
+        "full_max": 22.68635368347168,
+        "seed_max": 22.68635368347168,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.5466123754231306,
+        "top32_energy_fraction": 0.7096543648968197
+      },
+      {
+        "step": 6,
+        "prediction": 11,
+        "normalized_hidden_norm": 141.65130888520437,
+        "full_max": 21.82354164123535,
+        "seed_max": 21.82354164123535,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.2461701182747525,
+        "top32_energy_fraction": 0.42958656295319947
+      },
+      {
+        "step": 7,
+        "prediction": 293,
+        "normalized_hidden_norm": 154.96318042708157,
+        "full_max": 23.912479400634766,
+        "seed_max": 23.912479400634766,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.35473164449032213,
+        "top32_energy_fraction": 0.5500931625771431
+      }
+    ]
+  },
+  {
+    "model": "Qwen3.5-0.8B",
+    "scope": "Sampled feasibility only, approximate CPU head normalization with 0.1% margin; no pruning kernel or speed gain demonstrated",
+    "row_norm_quantiles": [
+      0.346599981373623,
+      0.5537530924736522,
+      0.6225227496124079,
+      0.7108997080745638,
+      1.0570894295154765
+    ],
+    "samples": [
+      {
+        "step": 0,
+        "prediction": 11751,
+        "normalized_hidden_norm": 140.28451458724714,
+        "full_max": 19.90840721130371,
+        "seed_max": 16.078689575195312,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.08226459542643315,
+        "top32_energy_fraction": 0.22238115960714971
+      },
+      {
+        "step": 1,
+        "prediction": 248046,
+        "normalized_hidden_norm": 131.70416282488006,
+        "full_max": 23.535476684570312,
+        "seed_max": 23.442577362060547,
+        "ideal_bound_prunable_fraction": 0.0,
+        "fixed_seed_bound_prunable_fraction": 0.0,
+        "top8_energy_fraction": 0.135568248181317,
+        "top32_energy_fraction": 0.28152880724197255
+      }
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "name": "qwen35-layers",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_chunk_graph.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+    "bf16"
+  ],
+  "exit_code": 0
+}

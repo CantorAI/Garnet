@@ -1,13 +1,16 @@
 """Run Garnet and vLLM-Metal one process at a time, using identical checkpoint paths.
 
-Arguments: xlang3, native build, source, vLLM Python, evidence folder.
+Arguments: xlang3, native build, source, vLLM Python, evidence folder,
+optional prefill policy and optional native control build for an ABBA check.
 """
 import hashlib,json,os,platform,signal,subprocess,sys,time
 from pathlib import Path
 
 runtime,build,source,python,output=sys.argv[1:6];source=Path(source);root=source.parent;output=Path(output)
 prefill_projection=sys.argv[6] if len(sys.argv)>6 else 'shared'
+native_control=Path(sys.argv[7]) if len(sys.argv)>7 else None
 if prefill_projection not in ('shared','mps'):raise ValueError('Unknown prefill projection policy')
+if os.environ.get('GARNET_METAL_PROFILE_OPS')=='1':raise RuntimeError('Serialized GPU diagnostics cannot be used for speed comparisons')
 output.mkdir(parents=True,exist_ok=True);scripts=source/'test2026/metal';statuses=[]
 background_checks=[]
 worldsense_script=Path('/Users/zsdx/cantorai-release-tests/current/bin/WorldSense/Backend/package_runtime.py')
@@ -71,6 +74,10 @@ manifest['hardware']={key:subprocess.check_output(['/usr/sbin/sysctl','-n',key],
     for key in ('machdep.cpu.brand_string','hw.memsize','hw.physicalcpu','hw.logicalcpu')}
 manifest['runner_sha256']={name:hashlib.sha256((scripts/name).read_bytes()).hexdigest()
     for name in ('run_matched_garnet.py','run_matched_vllm.py','benchmark_matched_process.py','summarize_vllm_comparison.py')}
+if native_control is not None:
+    manifest['comparison_kind']='native ABBA; no vLLM speed claim'
+    manifest['native_control_build']=str(native_control)
+    manifest['native_control_library_sha256']=hashlib.file_digest((native_control/'libgarnet.dylib').open('rb'),'sha256').hexdigest()
 cleanup=Path(python).parent.parent/'lib/python3.12/site-packages/vllm/distributed/parallel_state.py'
 manifest['comparator_cleanup_source_sha256']=hashlib.sha256(cleanup.read_bytes()).hexdigest()
 for name in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
@@ -87,11 +94,14 @@ for batch in (1,2):
         casefile.write_text(json.dumps(case,indent=2)+'\n')
         native_log=None
         for repeat in range(2):
-            for backend in ('garnet','vllm-metal'):
+            order=('garnet','vllm-metal') if native_control is None else (('garnet','garnet-control') if repeat==0 else ('garnet-control','garnet'))
+            for backend in order:
                 guard();folder=output/(name+'-b'+str(batch)+'-'+backend+'-'+str(repeat))
                 folder.mkdir(parents=True,exist_ok=True)
                 (folder/'preflight.txt').write_text(snapshot())
-                if backend=='garnet':command=[runtime,str(scripts/'run_matched_garnet.py'),build,str(source),str(model),str(casefile)]
+                if backend in ('garnet','garnet-control'):
+                    selected_build=build if backend=='garnet' else str(native_control)
+                    command=[runtime,str(scripts/'run_matched_garnet.py'),selected_build,str(source),str(model),str(casefile)]
                 else:command=[python,str(scripts/'run_matched_vllm.py'),str(model),str(casefile),str(native_log)]
                 command=[sys.executable,str(scripts/'benchmark_matched_process.py'),*command]
                 print('Starting exclusive comparison',folder.name,flush=True);begin=time.monotonic()

@@ -13,7 +13,7 @@ class MetalCompiledGraph {
     struct Slot {MetalMatrix matrix;size_t rows=0,columns=0;std::vector<int64_t> shape;MetalBF16Weight bf16;};
     enum class Kind {MatMul,BF16MatVec,Norm,Silu,Add,Bias,Mask,Conv,Delta,Slice,Prepare,GateNorm,Concat,NormRope,KVUpdate,KVChunk,AttentionChunk,Scores,AttentionContext,Vision,Layout};
     struct Op {Kind kind;size_t a,b,out;float epsilon=0,offset=0;bool transpose=false;
-        std::vector<size_t> arguments={},dimensions={};};
+        std::vector<size_t> arguments={},dimensions={};bool contiguousSlots=false;};
     std::unique_ptr<MetalContext> gpu_;
     std::vector<Slot> slots_;
     std::vector<Op> ops_;
@@ -28,6 +28,7 @@ class MetalCompiledGraph {
     std::unordered_map<size_t,std::pair<size_t,size_t>> controlSources_;
     size_t output_=0;
     std::vector<size_t> outputParts_;
+    std::vector<std::vector<size_t>> outputStorageGroups_;
     std::vector<uint8_t> residentOps_;
     uint64_t generation_=0;
     double compileMs_=0,inferenceMs_=0;
@@ -41,6 +42,7 @@ class MetalCompiledGraph {
     void Clear();
     void PrepareInputs(X::Value,const std::unordered_set<size_t>& skip={});
     void Encode(MetalContext&,bool packedOutput=true);
+    bool SwapOutputStorage(size_t part,MetalMatrix& replacement);
     bool BuildInternal(X::Value,X::Value,const std::string&,std::unordered_map<std::string,SharedWeight>,bool bf16Projections=false);
 public:
     bool Build(X::Value graph,X::Value symbols,const std::string& checkpoint);
