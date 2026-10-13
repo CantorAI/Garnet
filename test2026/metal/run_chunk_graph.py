@@ -8,11 +8,11 @@ symbols=[tensor.input('chunk_'+str(i),shape=s,dtype=tensor.float32) for i,s in e
 @T.fusion(name='metal_prefill_reference',boundary='required')
 def forward(hidden,state1,state2,positions,slots,active):
  return PrefillLayer(hidden,state1,state2,positions,slots,active,c,idx,batch,chunk,capacity,kind,parallel_attention=True,parallel_linear=len(sys.argv)>5 and sys.argv[5]=='linear-chunk')
-graph=garnet.compiled_graph();session=garnet.decoder_session()
+graph=garnet.compiled_graph();session=garnet.decoder_session();session_built=False
 try:
  if len(sys.argv)>4 and sys.argv[4]=='bf16':graph.build_bf16(forward(*symbols),symbols,f['checkpoint'])
  else:graph.build(forward(*symbols),symbols,f['checkpoint'])
- session.build([graph],None)
+ session.build([graph],None);session_built=True
  for files in f['invalid_inputs']:
   inputs=[garnet.tensor_io().read_f32(path,s) for path,s in zip(files,shapes)];rejected=False
   try:graph.run(inputs)
@@ -46,10 +46,11 @@ try:
   assert not failures,str(failures)
  print('pretrained chunk PASS',kind,batch,chunk,flush=True)
 finally:
- session.reset()
- assert all(v==0 for state in session.snapshot(0) for v in state.tolist()),'Resident reset retained state'
- graph.close();rejected=False
- try:session.run([graph],inputs[0],inputs[3],inputs[4],inputs[5],-1)
- except Exception:rejected=True
- assert rejected,'Closed resident graph accepted'
+ if session_built:
+  session.reset()
+  assert all(v==0 for state in session.snapshot(0) for v in state.tolist()),'Resident reset retained state'
+  graph.close();rejected=False
+  try:session.run([graph],inputs[0],inputs[3],inputs[4],inputs[5],-1)
+  except Exception:rejected=True
+  assert rejected,'Closed resident graph accepted'
  session.close()

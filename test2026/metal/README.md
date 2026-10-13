@@ -772,6 +772,17 @@ text benchmarks for batches 1/2 sequentially with separate process RSS records. 
 `launch log_directory runtime build source mode`.
 Real checkpoint and image inputs are not committed.
 
+Qwen3.5 on the measured M4 can use an experimental single 80-slot prefill
+for the 79-token image prompt. Build with
+`GARNET_METAL_QWEN35_EXTENDED_PREFILL=ON` and the retained convolution/delta
+chunk options, then call `enable_prefill(80, 'shared', linear_chunk=True)`.
+This requires a resident session, hidden size <= 1024 and batch*chunk <= 128.
+The option defaults OFF. Repeated batch-1 warm TTFT improves 2.7–4.0%;
+decode remains flat. Keep maximum 32 at batch 2: two 40-slot chunks did not
+improve warm latency. Numerical, first-use, resource and fresh comparator
+evidence is at repository-root `results/20261013/qwen35-extended-prefill/`;
+the full 2x/half-TTFT goal remains unmet.
+
 Dense Qwen can opt into finer prefill padding with
 `decoder.enable_prefill(32, 'shared', finer_chunks=True)`. This requires a
 resident decoder, hidden size at most 1024, and the Metal backend's

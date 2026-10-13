@@ -1,0 +1,19 @@
+{
+  "name": "Qwen3.5-0.8B-b2-vllm-metal-1",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/build-qwen35-extended-prefill",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3.5-0.8B",
+    "/Users/zsdx/garnet-metal-investigation/logs/equivalent-f32-qwen35-extended-prefill-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+    "vllm-metal",
+    "/Users/zsdx/garnet-metal-investigation/logs/equivalent-f32-qwen35-extended-prefill-20261013/jobs/Qwen3.5-0.8B-b2-vllm-metal-1/protocol"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "process_seconds": 43.17190079204738
+}

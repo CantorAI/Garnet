@@ -13,6 +13,9 @@ public:
 #ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
         info+="; dense_key_split_k";
 #endif
+#ifdef GARNET_METAL_QWEN35_EXTENDED_PREFILL
+        info+="; qwen35_extended_prefill";
+#endif
         return info;
     }
     // Graphs own synchronous queues and release them through close(). There

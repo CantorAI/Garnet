@@ -23,7 +23,22 @@ try:
     vision=MetalImageEncoder(folder+'/model.safetensors',config['vision_config'],gh,gw,batch)
     decoder=MetalDecoder(folder+'/model.safetensors',config['text_config'],batch,workload['capacity'])
     decoder.enable_prefill(workload['chunk'],workload.get('prefill_projection','shared'),workload.get('prefill_linear_chunk',False))
-    emit('frame_ready',dict(prompt_token_ids=prompt,stop_token_ids=stops,visual_tokens=mh*mw))
+    admission=None
+    if workload.get('check_extended_prefill_admission',False):
+        extended='qwen35_extended_prefill' in garnet.backend_info()
+        checks=[(80,'mps',True),(40,'shared',False)]
+        if not extended:checks.extend([(40,'shared',True),(80,'shared',True)])
+        elif batch==2:checks.append((80,'shared',True))
+        before=(decoder.chunk,decoder.prefill_projection,decoder.linear_chunk,decoder.prefill_graphs,list(decoder.slots))
+        rejected=[]
+        for size,projection,linear in checks:
+            try:decoder.enable_prefill(size,projection,linear)
+            except ValueError:rejected.append([size,projection,linear])
+            else:raise AssertionError('Unvalidated extended prefill admitted')
+            assert decoder.chunk==before[0] and decoder.prefill_projection==before[1] and decoder.linear_chunk==before[2]
+            assert decoder.prefill_graphs is before[3] and decoder.slots==before[4],'Rejected profile changed state'
+        admission=dict(extended_build=extended,rejected_profiles=rejected,state_preserved=True)
+    emit('frame_ready',dict(prompt_token_ids=prompt,stop_token_ids=stops,visual_tokens=mh*mw,extended_admission=admission))
     while True:
         time.sleep(0.001)
         with open(sys.argv[5]) as stream:message=json.load(stream)

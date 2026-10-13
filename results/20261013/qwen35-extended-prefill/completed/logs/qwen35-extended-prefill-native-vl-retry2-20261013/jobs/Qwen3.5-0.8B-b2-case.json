@@ -1,0 +1,47 @@
+{
+  "prompt": "Describe the main objects in this image in one sentence.",
+  "batch": 2,
+  "max_tokens": 32,
+  "capacity": 256,
+  "chunk": 32,
+  "requests": 3,
+  "prefill_projection": "shared",
+  "prefill_linear_chunk": true,
+  "image_metadata": {
+    "image": "/Users/zsdx/garnet-metal-investigation/images/RealWorld-04.png",
+    "image_sha256": "eba5d9b6124fbd3b2a809e1c664886c29d842406134bb4c1b281414d0c7101b9",
+    "patch_file": "/Users/zsdx/garnet-metal-investigation/images/RealWorld-04.batch2.f32",
+    "patch_sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5",
+    "shape": [
+      2,
+      216,
+      1536
+    ],
+    "grid_thw": [
+      1,
+      18,
+      12
+    ],
+    "source_hw": [
+      1818,
+      1372
+    ],
+    "resized_hw": [
+      288,
+      192
+    ],
+    "resize": "Pillow bicubic",
+    "min_pixels": 65536,
+    "max_pixels": 65536,
+    "mean": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "std": [
+      0.5,
+      0.5,
+      0.5
+    ]
+  }
+}

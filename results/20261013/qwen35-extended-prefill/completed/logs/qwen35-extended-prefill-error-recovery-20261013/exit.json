@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/run_extended_chunk_recovery.py",
+    "/Users/zsdx/garnet-metal-investigation/logs/qwen35-extended-prefill-numerical-20261013/jobs/failures/layer-0-b1-c80/fixture.json",
+    "/Users/zsdx/garnet-metal-investigation/build-qwen35-extended-prefill",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "bf16",
+    "linear-chunk"
+  ],
+  "exit_code": 1
+}

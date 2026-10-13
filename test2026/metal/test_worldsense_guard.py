@@ -54,7 +54,7 @@ scope['worldsense_script']=ChangedSource()
 check('changed launcher source',False,Probe())
 scope['worldsense_script']=service;scope['subprocess']=subprocess
 supervisor_bytes=service.read_bytes()
-assert hashlib.sha256(supervisor_bytes).hexdigest()=='b904bcf8ece0b74dc160a95aa833b58c8d33536ba90f924465a61b95e61238ed','Supervisor changed; inspect it before extending the guard'
+assert hashlib.sha256(supervisor_bytes).hexdigest() in ('b904bcf8ece0b74dc160a95aa833b58c8d33536ba90f924465a61b95e61238ed','6ce05f32376832f579e5908399a9787d5957cc1b08bff31b6394c09fff9b80ec'),'Supervisor changed; inspect it before extending the guard'
 class SupervisorSource:
  parents=service.parents
  def __init__(self,data):self.data=data

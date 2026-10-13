@@ -380,7 +380,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 if(hs.size()!=(isChunk?3:2)||cs.size()!=4||cs[0]!=hs[0]||uint64_t(cs[1])!=kv||cs[2]<=0||cs[2]>8192||uint64_t(cs[3])!=dim||
                     slots_[value].shape!=cs||slots_[positions].shape!=(isChunk?std::vector<int64_t>{hs[0],int64_t(chunk),3}:std::vector<int64_t>{hs[0],3})||
                     slots_[slot].shape!=(isChunk?std::vector<int64_t>{hs[0],int64_t(chunk)}:std::vector<int64_t>{hs[0]})||slots_[active].shape!=slots_[slot].shape||
-                    (isChunk&&(chunk>64||cs[2]>2048)))
+                    (isChunk&&(chunk>kMetalPrefillChunkLimit||cs[2]>2048)))
                     throw std::runtime_error("Metal full attention state shapes invalid");
                 // Control tensors must be explicit host inputs for pre-dispatch bounds checks.
                 for(auto control:{positions,slot,active})if(std::find(inputs_.begin(),inputs_.end(),control)==inputs_.end()&&!controlSources_.count(control))
@@ -437,7 +437,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 auto dimension=[&](const char* name,size_t limit){auto n=node.attributes.Get(name).ToInt64();
                     if(n<=0||uint64_t(n)>limit)throw std::runtime_error("Invalid Metal attention unpack dimension");
                     return size_t(n);};
-                auto hidden=dimension("hidden_dim",65536),kv=dimension("num_kv_heads",128),dim=dimension("head_dim",4096),capacity=dimension("capacity",8192);
+                auto hidden=dimension("hidden_dim",kMetalPrefillPackedHiddenLimit),kv=dimension("num_kv_heads",128),dim=dimension("head_dim",4096),capacity=dimension("capacity",8192);
                 const size_t cache=kv*dim*capacity,width=hidden+2*cache;const auto batch=int64_t(slots_[a].rows);
                 if(slots_[a].columns!=width)throw std::runtime_error("Metal attention packed shape mismatch");
                 if(node.name=="qwen35_attention_output")out=slice(a,1,width,0,hidden,{batch,int64_t(hidden)});
@@ -459,7 +459,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 auto convState=require("qwen35_conv_bind_state"),state=require("qwen35_delta_bind_state"),active=require("qwen35_conv_bind_active");
                 const auto cs=slots_[convState].shape;
                 const size_t channels=2*kh*kd+vh*vd;
-                if(hiddenShape.size()!=(isChunk?3:2)||chunk>64||cs.size()!=3||cs[0]!=hiddenShape[0]||uint64_t(cs[1])!=channels||cs[2]<=0||cs[2]>64||
+                if(hiddenShape.size()!=(isChunk?3:2)||chunk>kMetalPrefillChunkLimit||cs.size()!=3||cs[0]!=hiddenShape[0]||uint64_t(cs[1])!=channels||cs[2]<=0||cs[2]>64||
                     slots_[state].shape!=std::vector<int64_t>{hiddenShape[0],int64_t(vh),int64_t(kd),int64_t(vd)}||
                     slots_[active].shape!=(isChunk?std::vector<int64_t>{hiddenShape[0],int64_t(chunk)}:std::vector<int64_t>{hiddenShape[0]}))throw std::runtime_error("Metal linear state logical shape mismatch");
                 const auto batch=size_t(hiddenShape[0]),kernel=size_t(cs[2]);
@@ -559,7 +559,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 auto dim=[&](const char* name,size_t limit){auto v=node.attributes.Get(name).ToInt64();
                     if(v<=0||uint64_t(v)>limit)throw std::runtime_error("Invalid Metal linear unpack dimension");
                     return size_t(v);};
-                const auto h=dim("hidden_dim",65536),kh=dim("key_heads",128),vh=dim("value_heads",128),kd=dim("key_dim",4096),
+                const auto h=dim("hidden_dim",kMetalPrefillPackedHiddenLimit),kh=dim("key_heads",128),vh=dim("value_heads",128),kd=dim("key_dim",4096),
                     vd=dim("value_dim",4096),kernel=dim("kernel_size",64),channels=2*kh*kd+vh*vd,conv=channels*kernel,state=vh*kd*vd;
                 if(vh%kh||slots_[a].columns!=h+conv+state)throw std::runtime_error("Metal linear packed dimensions mismatch");
                 const auto batch=int64_t(slots_[a].rows);

@@ -1,0 +1,11 @@
+{
+  "scope": "CPU-only planner/admission checks; no model/speed evidence",
+  "existing_dense_cases": 4096,
+  "extended_qwen35_cases": 768,
+  "legacy_defaults_preserved": true,
+  "invalid_extensions_preserve_state": true,
+  "source_sha256": {
+    "xModel/qwen35/vl_0_8b/metal_decoder.py": "f164ebe563d5889fbe57a5586aba1a9bd1301c925c10854b1b0fc6f108aebfca",
+    "xModel/qwen/metal_dense/decoder.py": "b9e91673b33a476e12c9a3502f504fd9ab2977104ab4e8d2fc53c3b65408e468"
+  }
+}

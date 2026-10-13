@@ -1506,7 +1506,7 @@ void MetalContext::EncodeSliceGroups(const MetalMatrix& input,const MetalMatrix&
 void MetalContext::EncodeCausalConvChunk(const MetalMatrix& tokens,const MetalMatrix& weight,
     const MetalMatrix& state,const MetalMatrix& active,const MetalMatrix& output,
     const MetalMatrix& nextState,size_t chunk,size_t kernel) {
-    if(!tokens.impl_||!weight.impl_||!state.impl_||!active.impl_||!output.impl_||!nextState.impl_||!chunk||chunk>64||!kernel||kernel>8)
+    if(!tokens.impl_||!weight.impl_||!state.impl_||!active.impl_||!output.impl_||!nextState.impl_||!chunk||chunk>kMetalPrefillChunkLimit||!kernel||kernel>8)
         throw std::invalid_argument("Invalid Metal chunk convolution arguments");
     auto t=tokens.impl_->matrix,w=weight.impl_->matrix,s=state.impl_->matrix,a=active.impl_->matrix,
         o=output.impl_->matrix,n=nextState.impl_->matrix;
@@ -1554,7 +1554,7 @@ void MetalContext::EncodeGatedDeltaSplit(const MetalMatrix& query,const MetalMat
 }
 void MetalContext::EncodeGatedDeltaChunk(const MetalMatrix& prepared,const MetalMatrix& state,const MetalMatrix& active,
     const MetalMatrix& output,const MetalMatrix& nextState,size_t chunk,size_t heads,size_t keyDim,size_t valueDim) {
-    if(!prepared.impl_||!state.impl_||!active.impl_||!output.impl_||!nextState.impl_||!chunk||chunk>64||!heads||heads>128||keyDim!=128||!valueDim||valueDim>4096||valueDim%16)
+    if(!prepared.impl_||!state.impl_||!active.impl_||!output.impl_||!nextState.impl_||!chunk||chunk>kMetalPrefillChunkLimit||!heads||heads>128||keyDim!=128||!valueDim||valueDim>4096||valueDim%16)
         throw std::invalid_argument("Invalid Metal recurrent chunk arguments");
     auto a=prepared.impl_->matrix,s=state.impl_->matrix,mask=active.impl_->matrix,o=output.impl_->matrix,n=nextState.impl_->matrix;
     const size_t batch=s.rows,qw=Elements(heads,keyDim),vw=Elements(heads,valueDim),stateWidth=Elements(qw,valueDim);
@@ -1632,7 +1632,7 @@ void MetalContext::EncodeKVUpdate(const MetalMatrix& token,const MetalMatrix& ca
 }
 void MetalContext::EncodeKVChunk(const MetalMatrix& token,const MetalMatrix& cache,const MetalMatrix& slots,
     const MetalMatrix& active,const MetalMatrix& output,size_t heads,size_t dim,size_t capacity,size_t chunk,bool contiguousSlots) {
-    if(!token.impl_||!cache.impl_||!slots.impl_||!active.impl_||!output.impl_||!chunk||chunk>64)throw std::invalid_argument("Invalid chunk KV inputs");
+    if(!token.impl_||!cache.impl_||!slots.impl_||!active.impl_||!output.impl_||!chunk||chunk>kMetalPrefillChunkLimit)throw std::invalid_argument("Invalid chunk KV inputs");
     auto t=token.impl_->matrix,c=cache.impl_->matrix,s=slots.impl_->matrix,a=active.impl_->matrix,o=output.impl_->matrix;
     const auto width=Elements(Elements(heads,capacity),dim);
     if(t.rows!=c.rows*chunk||t.columns!=Elements(heads,dim)||c.columns!=width||s.rows!=c.rows||s.columns!=chunk||a.rows!=c.rows||a.columns!=chunk||o.rows!=c.rows||o.columns!=width)
@@ -1647,7 +1647,7 @@ void MetalContext::EncodeKVChunk(const MetalMatrix& token,const MetalMatrix& cac
 }
 void MetalContext::EncodeAttentionChunk(const std::vector<MetalMatrix>& inputs,const MetalMatrix& output,
     size_t heads,size_t kvHeads,size_t dim,size_t capacity,size_t chunk,bool gated) {
-    if(inputs.size()!=8||!output.impl_||!chunk||chunk>64||!capacity||capacity>2048||!kvHeads||heads%kvHeads)throw std::invalid_argument("Invalid chunk attention profile");
+    if(inputs.size()!=8||!output.impl_||!chunk||chunk>kMetalPrefillChunkLimit||!capacity||capacity>2048||!kvHeads||heads%kvHeads)throw std::invalid_argument("Invalid chunk attention profile");
     for(auto& input:inputs)if(!input.impl_)throw std::invalid_argument("Missing chunk attention input");
     auto q=inputs[0].impl_->matrix,k=inputs[1].impl_->matrix,v=inputs[2].impl_->matrix,kc=inputs[3].impl_->matrix,vc=inputs[4].impl_->matrix,
         s=inputs[5].impl_->matrix,a=inputs[6].impl_->matrix,g=inputs[7].impl_->matrix,o=output.impl_->matrix;

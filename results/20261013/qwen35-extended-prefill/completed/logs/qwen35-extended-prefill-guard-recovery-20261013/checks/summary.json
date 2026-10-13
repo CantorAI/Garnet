@@ -1,0 +1,113 @@
+{
+  "scope": "Guard identity/rejection checks; no GPU inference",
+  "checks": [
+    {
+      "name": "exact inspected inline launcher",
+      "passed": true,
+      "expected": true
+    },
+    {
+      "name": "same name with altered code",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "WorldSense name alone",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "wrong executable",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "missing PID",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "unreadable loaded libraries",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject libgarnet",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject libmlx",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject libtorch",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject Metal.framework",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject MetalPerformanceShaders.framework",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject libopenvino",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject CoreML.framework",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject AppleNeuralEngine",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject ANE.framework",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "reject BNNS",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "changed launcher source",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "pinned forwarding-only supervisor",
+      "passed": true,
+      "expected": true
+    },
+    {
+      "name": "supervisor with loaded inference library",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "changed supervisor with forwarding marker",
+      "passed": true,
+      "expected": false
+    },
+    {
+      "name": "actual live read-only verification",
+      "passed": true,
+      "expected": true
+    }
+  ],
+  "comparison_source_sha256": "1ee0a35e4c67fc01e8e30ad6537d18bfbaa5d405737d4386c3c0078b8b972b29",
+  "live_pid": 36408,
+  "all_passed": true
+}

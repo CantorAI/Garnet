@@ -60,6 +60,7 @@ class MetalDecoder(CPUDecoder):
         return prediction if predict else None
 
     def _prefill_profiles(self):
+        if 'qwen35_extended_prefill' in garnet.backend_info():return (2,4,8,16,32,40,64,80)
         return (2,4,8,16,32,64)
 
     def _prefill_chunk_size(self,remaining,maximum):
@@ -72,6 +73,8 @@ class MetalDecoder(CPUDecoder):
     def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False):
         if chunk not in self._prefill_profiles():raise ValueError('Unsupported Metal prefill chunk')
         if projection not in ('shared','mps'):raise ValueError('Prefill projection must be shared or mps')
+        if chunk in (40,80) and (projection!='shared' or not linear_chunk or self.session is None or self.batch*chunk>128 or self.config['hidden_size']>1024):
+            raise ValueError('Extended Qwen3.5 chunks require resident shared chunk recurrence and batch*chunk <= 128, hidden size <= 1024')
         if hasattr(self,'prefill_graphs') and (getattr(self,'chunk',None)!=chunk or getattr(self,'prefill_projection','shared')!=projection or getattr(self,'linear_chunk',False)!=linear_chunk):
             for graph in self.prefill_graphs.values():graph.close()
             self.prefill_graphs={}

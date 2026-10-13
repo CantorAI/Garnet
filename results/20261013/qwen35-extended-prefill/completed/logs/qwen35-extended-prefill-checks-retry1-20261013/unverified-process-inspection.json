@@ -1,0 +1,37 @@
+{
+  "utc": 1791923600.695539,
+  "processes": [
+    {
+      "pid": 36373,
+      "present": true,
+      "process_snapshot": "36373   0.1 138992 /Users/zsdx/cantorai-release-tests/current/bin/xlang3",
+      "args_sha256": "bb515f75063df4a534a120e6608072bd1ec41578b667ae6fd38311f8ad6e32d3",
+      "known_script_markers": [
+        "package_runtime.py"
+      ],
+      "lsof_exit": 0,
+      "inference_library_markers": []
+    },
+    {
+      "pid": 36408,
+      "present": true,
+      "process_snapshot": "36408   1.6 313808 /Users/zsdx/cantorai-release-tests/current/bin/xlang3",
+      "args_sha256": "124861e486b02f52da574b58a74149dfc433914e7d25a1f0e41eee255367abba",
+      "known_script_markers": [
+        "launch.py"
+      ],
+      "lsof_exit": 0,
+      "inference_library_markers": []
+    },
+    {
+      "pid": 36886,
+      "present": false,
+      "process_snapshot": "",
+      "args_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "known_script_markers": [],
+      "lsof_exit": 1,
+      "inference_library_markers": []
+    }
+  ],
+  "external_processes_modified": false
+}

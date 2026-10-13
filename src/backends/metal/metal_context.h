@@ -7,6 +7,13 @@
 #include <utility>
 #include <cstdint>
 namespace Garnet {
+#ifdef GARNET_METAL_QWEN35_EXTENDED_PREFILL
+inline constexpr size_t kMetalPrefillChunkLimit=80;
+inline constexpr size_t kMetalPrefillPackedHiddenLimit=80*1024;
+#else
+inline constexpr size_t kMetalPrefillChunkLimit=64;
+inline constexpr size_t kMetalPrefillPackedHiddenLimit=65536;
+#endif
 class MetalMatrix {
     struct Impl;
     std::shared_ptr<Impl> impl_;
