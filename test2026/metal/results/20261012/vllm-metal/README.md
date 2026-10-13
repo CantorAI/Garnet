@@ -337,6 +337,23 @@ TTFT remain at the previously measured values, with all targets unmet.
 Commands, source snapshots, timings and limitations are in
 `pruned-head-gpu/README.md`.
 
+### Validated wide prefill tiles
+
+`prefill-tiles/` records five exact-value tile experiments, 840 bit-exact checks,
+all 11 native validations, and 144 actual full-model requests across native
+controls and updated vLLM comparisons. The selected wide tiles reduce warm
+TTFT by 8.9% for text batch 2, 10.3% for coder batch 2 and 4.5% for real-image
+VL batch 2 in close native ABBA tests; batch-1 changes are smaller. All native
+control outputs remain exact and complete. Decode speed is effectively
+unchanged. The candidate is retained in `build-prefill-wide`; the prior
+`build-state-handoff` remains intact as its control.
+
+The updated matched vLLM runs still fail every 2x/half-TTFT target. The VL
+batch-2 different/capped comparator caption also persists. The full objective
+remains active and unmet. `prefill-tiles/README.md` provides the current selected
+implementation, complete metrics, precision limits, source snapshots and
+first-use/warm accounting.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

@@ -34,7 +34,7 @@ struct MetalBF16Weight::Impl {
 struct MetalPipelines {
     id<MTLLibrary> library;
     id<MTLComputePipelineState> argmax;
-    id<MTLComputePipelineState> bf16Decode,bf16Gemm;
+    id<MTLComputePipelineState> bf16Decode,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> add;
@@ -140,6 +140,72 @@ kernel void bf16_gemm(device const float* a [[buffer(0)]],device const ushort* w
     simdgroup_store(accum0,result+simd*8,32);simdgroup_store(accum1,result+8*32+simd*8,32);
     threadgroup_barrier(mem_flags::mem_threadgroup);
     for(uint i=tid;i<16*32;i+=128){ulong row=rowBase+i/32,column=colBase+i%32;if(row<p.rows&&column<p.columns)out[row*p.oStride+column]=result[i];}
+}
+kernel void gemm_16_64_64(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
+uint2 group [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+threadgroup float left[1024],right[4096],result[1024];
+ulong rowBase=ulong(group.y)*16,colBase=ulong(group.x)*64;
+simdgroup_float8x8 accum0=make_filled_simdgroup_matrix<float,8>(0.0f);
+simdgroup_float8x8 accum1=make_filled_simdgroup_matrix<float,8>(0.0f);
+for(ulong base=0;base<p.inner;base+=64) {
+for(uint i=tid;i<1024;i+=256){ulong row=rowBase+i/64,k=base+i%64;left[i]=(row<p.rows&&k<p.inner)?a[row*p.aStride+k]:0.0f;}
+for(uint i=tid;i<4096;i+=256){ulong k=base+i/64,column=colBase+i%64;right[i]=(k<p.inner&&column<p.columns)?as_type<float>(uint(weight[column*p.inner+k])<<16):0.0f;}
+threadgroup_barrier(mem_flags::mem_threadgroup);
+for(uint offset=0;offset<64;offset+=8) {
+simdgroup_float8x8 r;
+simdgroup_load(r,right+offset*64+simd*8,64);
+simdgroup_float8x8 l0;
+simdgroup_load(l0,left+0+offset,64);
+simdgroup_multiply_accumulate(accum0,l0,r,accum0);
+simdgroup_float8x8 l1;
+simdgroup_load(l1,left+512+offset,64);
+simdgroup_multiply_accumulate(accum1,l1,r,accum1);
+}
+threadgroup_barrier(mem_flags::mem_threadgroup);
+}
+simdgroup_store(accum0,result+0+simd*8,64);
+simdgroup_store(accum1,result+512+simd*8,64);
+threadgroup_barrier(mem_flags::mem_threadgroup);
+for(uint i=tid;i<1024;i+=256){ulong row=rowBase+i/64,column=colBase+i%64;if(row<p.rows&&column<p.columns)out[row*p.oStride+column]=result[i];}
+}
+kernel void gemm_32_64_32(device const float* a [[buffer(0)]],device const ushort* weight [[buffer(1)]],
+device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
+uint2 group [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+threadgroup float left[1024],right[2048],result[2048];
+ulong rowBase=ulong(group.y)*32,colBase=ulong(group.x)*64;
+simdgroup_float8x8 accum0=make_filled_simdgroup_matrix<float,8>(0.0f);
+simdgroup_float8x8 accum1=make_filled_simdgroup_matrix<float,8>(0.0f);
+simdgroup_float8x8 accum2=make_filled_simdgroup_matrix<float,8>(0.0f);
+simdgroup_float8x8 accum3=make_filled_simdgroup_matrix<float,8>(0.0f);
+for(ulong base=0;base<p.inner;base+=32) {
+for(uint i=tid;i<1024;i+=256){ulong row=rowBase+i/32,k=base+i%32;left[i]=(row<p.rows&&k<p.inner)?a[row*p.aStride+k]:0.0f;}
+for(uint i=tid;i<2048;i+=256){ulong k=base+i/64,column=colBase+i%64;right[i]=(k<p.inner&&column<p.columns)?as_type<float>(uint(weight[column*p.inner+k])<<16):0.0f;}
+threadgroup_barrier(mem_flags::mem_threadgroup);
+for(uint offset=0;offset<32;offset+=8) {
+simdgroup_float8x8 r;
+simdgroup_load(r,right+offset*64+simd*8,64);
+simdgroup_float8x8 l0;
+simdgroup_load(l0,left+0+offset,32);
+simdgroup_multiply_accumulate(accum0,l0,r,accum0);
+simdgroup_float8x8 l1;
+simdgroup_load(l1,left+256+offset,32);
+simdgroup_multiply_accumulate(accum1,l1,r,accum1);
+simdgroup_float8x8 l2;
+simdgroup_load(l2,left+512+offset,32);
+simdgroup_multiply_accumulate(accum2,l2,r,accum2);
+simdgroup_float8x8 l3;
+simdgroup_load(l3,left+768+offset,32);
+simdgroup_multiply_accumulate(accum3,l3,r,accum3);
+}
+threadgroup_barrier(mem_flags::mem_threadgroup);
+}
+simdgroup_store(accum0,result+0+simd*8,64);
+simdgroup_store(accum1,result+512+simd*8,64);
+simdgroup_store(accum2,result+1024+simd*8,64);
+simdgroup_store(accum3,result+1536+simd*8,64);
+threadgroup_barrier(mem_flags::mem_threadgroup);
+for(uint i=tid;i<2048;i+=256){ulong row=rowBase+i/64,column=colBase+i%64;if(row<p.rows&&column<p.columns)out[row*p.oStride+column]=result[i];}
 }
 struct ArgmaxParams {ulong rows,columns,iStride,oStride;};
 kernel void argmax_rows(device const float* input [[buffer(0)]],device float* output [[buffer(1)]],
@@ -594,6 +660,8 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
         impl_->kernels->bf16Gemm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_gemm"] error:&error];
+        impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
+        impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
         impl_->kernels->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
         impl_->kernels->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
@@ -696,8 +764,16 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
         if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
             throw std::logic_error("BF16 output belongs to another command batch");
-        auto pipeline=a.rows<=2?impl_->kernels->bf16Decode:impl_->kernels->bf16Gemm;
-        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
+        // Wide tiles share more input/weight loading at chunk sizes 16/32.
+        // Keep the established small-row/small-output path and fall back if
+        // a device cannot encode the optional 256-thread pipelines.
+        bool wide=false;
+        auto widePipeline=a.rows>16?impl_->kernels->bf16Gemm32Wide:impl_->kernels->bf16Gemm16Wide;
+        if(a.rows>=16&&o.columns>=64&&widePipeline&&widePipeline.threadExecutionWidth==32&&
+            widePipeline.maxTotalThreadsPerThreadgroup>=256&&widePipeline.staticThreadgroupMemoryLength<=impl_->device.maxThreadgroupMemoryLength)wide=true;
+        auto pipeline=a.rows<=2?impl_->kernels->bf16Decode:wide?widePipeline:impl_->kernels->bf16Gemm;
+        size_t threads=wide?256:128,tileRows=wide&&a.rows>16?32:16,tileColumns=wide?64:32;
+        if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)
             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
         Params p{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4};
@@ -706,7 +782,7 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
         [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
         [encoder setBytes:&p length:sizeof(p) atIndex:3];
-        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+15)/16,1,1):MTLSizeMake((o.columns+31)/32,(o.rows+15)/16,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+        [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+15)/16,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }

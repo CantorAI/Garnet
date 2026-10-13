@@ -1,0 +1,15 @@
+{
+  "scope": "Native prefill matrix component experiment only, not serving or vLLM timing",
+  "precision": "Unchanged exact BF16 weights, FP32 input/accumulation/output; no quantization",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "source_sha256": {
+    "metal_context.mm": "faca27f8e2260b4f0dc312c294329f5017534adef65e28d7c7a7246e9969aed1",
+    "prefill_tile_gpu.mm": "53dc5d47716d20036696f41b8e642b3539e4973c6dada79f140272661dfca4c0",
+    "make_prefill_tile_shader.py": "ab757e38a43f47c05c2a6e280b3ff2ad37aaf2fdb05383aa8e72f5bedd355a51",
+    "prepare_prefill_tile_probe.py": "1b55566d4738099ed87e10bc0f149c75555a7aceabeecc1e5f41af6a68598bd8",
+    "run_prefill_tile_probe.py": "ba25333b1df59dec7c2dd4e473a208d563166af4dbc8ac884f36376d3d8c4911"
+  }
+}

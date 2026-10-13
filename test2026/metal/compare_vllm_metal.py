@@ -10,7 +10,6 @@ runtime,build,source,python,output=sys.argv[1:6];source=Path(source);root=source
 prefill_projection=sys.argv[6] if len(sys.argv)>6 else 'shared'
 native_control=Path(sys.argv[7]) if len(sys.argv)>7 and sys.argv[7]!='-' else None
 image_mode=len(sys.argv)>8 and sys.argv[8]=='vl'
-if image_mode and native_control is not None:raise ValueError('VL native-control profile is not implemented')
 if prefill_projection not in ('shared','mps'):raise ValueError('Unknown prefill projection policy')
 if os.environ.get('GARNET_METAL_PROFILE_OPS')=='1':raise RuntimeError('Serialized GPU diagnostics cannot be used for speed comparisons')
 output.mkdir(parents=True,exist_ok=True);scripts=source/'test2026/metal';statuses=[]
@@ -76,6 +75,7 @@ manifest['hardware']={key:subprocess.check_output(['/usr/sbin/sysctl','-n',key],
     for key in ('machdep.cpu.brand_string','hw.memsize','hw.physicalcpu','hw.logicalcpu')}
 manifest['runner_sha256']={name:hashlib.sha256((scripts/name).read_bytes()).hexdigest()
     for name in ('run_matched_garnet.py','run_matched_vllm.py','benchmark_matched_process.py','summarize_vllm_comparison.py')}
+manifest['runner_sha256']['compare_vllm_metal.py']=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 if image_mode:
     manifest['comparison_kind']='VL common CPU frontend and persistent workers'
     manifest['runner_sha256'].update({name:hashlib.sha256((scripts/name).read_bytes()).hexdigest() for name in
@@ -111,8 +111,11 @@ for batch in (1,2):
                 folder.mkdir(parents=True,exist_ok=True)
                 (folder/'preflight.txt').write_text(snapshot())
                 if image_mode:
-                    executable=runtime if backend=='garnet' else python
-                    command=[python,str(scripts/'run_matched_frame_process.py'),executable,build,str(source),str(model),str(casefile),backend,str(folder/'protocol')]
+                    native_backend=backend in ('garnet','garnet-control')
+                    executable=runtime if native_backend else python
+                    selected_build=str(native_control) if backend=='garnet-control' else build
+                    worker_backend='garnet' if native_backend else backend
+                    command=[python,str(scripts/'run_matched_frame_process.py'),executable,selected_build,str(source),str(model),str(casefile),worker_backend,str(folder/'protocol')]
                 elif backend in ('garnet','garnet-control'):
                     selected_build=build if backend=='garnet' else str(native_control)
                     command=[runtime,str(scripts/'run_matched_garnet.py'),selected_build,str(source),str(model),str(casefile)]
