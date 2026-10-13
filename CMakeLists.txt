@@ -28,6 +28,15 @@ project("garnet" LANGUAGES CXX CUDA)
 include(GNUInstallDirs)
 enable_testing()
 
+add_executable(garnet_weight_streaming_policy_test
+    test2026/native/weight_streaming_policy_test.cpp)
+target_include_directories(garnet_weight_streaming_policy_test PRIVATE src/backends/tensorrt)
+set_target_properties(garnet_weight_streaming_policy_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/native-tests"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/native-tests")
+add_test(NAME garnet_weight_streaming_policy COMMAND garnet_weight_streaming_policy_test)
+set_tests_properties(garnet_weight_streaming_policy PROPERTIES TIMEOUT 30)
+
 # Find CUDA package
 find_package(CUDA REQUIRED)
 find_package(CUDAToolkit REQUIRED)
