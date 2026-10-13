@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_after_owned_job.py",
+    "/Users/zsdx/garnet-metal-investigation/logs/delta-norm-cache-build-20261013",
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/three_model_suite_guarded_fused_mlp.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-delta-norm-cache",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "handoff-checks",
+    "/Users/zsdx/garnet-metal-investigation/logs/delta-norm-cache-checks-20261013/jobs"
+  ],
+  "exit_code": 0
+}

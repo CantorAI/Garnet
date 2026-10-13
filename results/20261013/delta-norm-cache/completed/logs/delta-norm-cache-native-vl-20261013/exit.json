@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_after_owned_job.py",
+    "/Users/zsdx/garnet-metal-investigation/logs/delta-norm-cache-extended-numerical-20261013",
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/compare_delta_norm_cache_frames.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-delta-norm-cache",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/logs/delta-norm-cache-native-vl-20261013/jobs",
+    "shared",
+    "/Users/zsdx/garnet-metal-investigation/build-qwen35-extended-prefill",
+    "vl"
+  ],
+  "exit_code": 0
+}
