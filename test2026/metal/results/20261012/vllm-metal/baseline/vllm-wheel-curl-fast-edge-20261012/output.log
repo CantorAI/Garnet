@@ -1,0 +1,11 @@
+Verified pinned wheel llvmlite-0.47.0-cp312-cp312-macosx_11_0_arm64.whl
+Verified pinned wheel opencv_python-5.0.0.93-cp37-abi3-macosx_13_0_arm64.whl
+Verified pinned wheel opencv_python_headless-5.0.0.93-cp37-abi3-macosx_13_0_arm64.whl
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/fetch_comparator_wheels.py", line 27, in <module>
+    rank(a)[:2]<=os_version]
+    ~~~~^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/fetch_comparator_wheels.py", line 24, in rank
+    return tuple(map(int,match.groups()))+(1 if '-cp312-' in asset['filename'] else 0,)
+                         ^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'groups'

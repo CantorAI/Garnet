@@ -36,6 +36,8 @@ measurements rather than a claim of cold storage. Warm weights never imply
 reused KV/vision state. Compare first
 prediction time and decode calls after the first prediction using monotonic
 clocks; save every engine step so stop-token accounting can be checked.
+Garnet's per-request state reset is inside the request timer, as is vLLM's
+request submission and cache preparation; loaded weights do not exclude that work.
 Decode throughput uses the entire wall interval from first to final prediction,
 including time between calls, since vLLM engine workers may execute asynchronously.
 Individual call durations remain diagnostics, not the primary speed denominator.

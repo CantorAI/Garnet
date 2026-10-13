@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/fetch_comparator_wheels.py",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm",
+    "/Users/zsdx/garnet-metal-investigation/logs/vllm-wheel-curl-edges-20261012",
+    "llvmlite",
+    "opencv-python",
+    "opencv-python-headless",
+    "scipy",
+    "torch"
+  ],
+  "exit_code": 1
+}

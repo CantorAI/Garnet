@@ -1,0 +1,79 @@
+Running ["/Users/zsdx/garnet-metal-investigation/comparators/vllm/bin/uv", "python", "install", "3.12", "--no-bin"]
+Python 3.12 is already installed
+Running ["/Users/zsdx/garnet-metal-investigation/comparators/vllm/bin/uv", "pip", "install", "--python", "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python", "/Users/zsdx/garnet-metal-investigation/comparators/vllm/downloads/vllm-0.30.0+cpu-cp312-cp312-macosx_11_0_arm64.whl", "/Users/zsdx/garnet-metal-investigation/comparators/vllm/downloads/vllm_metal-0.30.0-cp312-cp312-macosx_15_0_arm64.whl"]
+Using Python 3.12.15 environment at: garnet-metal-investigation/comparators/vllm/venv
+   Updating https://github.com/ml-explore/mlx-lm (9e6acca691e64d6d8bb808c328fcdea459099cca)
+    Updated https://github.com/ml-explore/mlx-lm (9e6acca691e64d6d8bb808c328fcdea459099cca)
+Resolved 161 packages in 34.79s
+   Building mlx-lm @ git+https://github.com/ml-explore/mlx-lm@9e6acca691e64d6d8bb808c328fcdea459099cca
+Downloading tokenizers (3.0MiB)
+Downloading pygments (1.2MiB)
+Downloading networkx (2.0MiB)
+Downloading hf-xet (3.4MiB)
+Downloading anthropic (1.9MiB)
+Downloading pydantic-core (1.9MiB)
+Downloading llvmlite (35.5MiB)
+Downloading transformers (12.0MiB)
+Downloading torchcodec (4.0MiB)
+Downloading pillow (4.6MiB)
+Downloading torchvision (1.8MiB)
+Downloading cryptography (3.7MiB)
+Downloading xgrammar (1.3MiB)
+Downloading uvloop (1.3MiB)
+Downloading sympy (6.0MiB)
+Downloading apache-tvm-ffi (2.8MiB)
+Downloading mlx-vlm (2.5MiB)
+Downloading numba (2.6MiB)
+Downloading openai (2.1MiB)
+Downloading opencv-python-headless (46.1MiB)
+Downloading sentencepiece (1.3MiB)
+Downloading pyzmq (1.4MiB)
+Downloading mlx-metal (40.4MiB)
+Downloading grpcio (11.8MiB)
+Downloading llguidance (3.0MiB)
+Downloading opencv-python (46.1MiB)
+Downloading mistral-common (6.3MiB)
+Downloading numpy (4.9MiB)
+Downloading torch (106.1MiB)
+Downloading pycountry (7.7MiB)
+Downloading mlx-audio (2.0MiB)
+Downloading outlines-core (2.0MiB)
+Downloading scipy (19.5MiB)
+Downloading setuptools (1.2MiB)
+      Built mlx-lm @ git+https://github.com/ml-explore/mlx-lm@9e6acca691e64d6d8bb808c328fcdea459099cca
+Downloading openai-harmony (2.5MiB)
+ Downloaded pygments
+ Downloaded setuptools
+ Downloaded uvloop
+ Downloaded xgrammar
+ Downloaded sentencepiece
+ Downloaded pyzmq
+ Downloaded torchvision
+ Downloaded anthropic
+ Downloaded pydantic-core
+ Downloaded openai
+ Downloaded outlines-core
+ Downloaded networkx
+ Downloaded mlx-audio
+ Downloaded mlx-vlm
+ Downloaded numba
+ Downloaded openai-harmony
+ Downloaded apache-tvm-ffi
+ Downloaded tokenizers
+ Downloaded llguidance
+ Downloaded hf-xet
+ Downloaded cryptography
+ Downloaded torchcodec
+ Downloaded pillow
+ Downloaded numpy
+ Downloaded sympy
+ Downloaded mistral-common
+ Downloaded pycountry
+ Downloaded grpcio
+ Downloaded transformers
+Downloading torch (106.1MiB)
+Downloading opencv-python-headless (46.1MiB)
+Downloading mlx-metal (40.4MiB)
+Downloading llvmlite (35.5MiB)
+Downloading scipy (19.5MiB)
+Downloading opencv-python (46.1MiB)

@@ -7,6 +7,7 @@ import hashlib,json,os,platform,re,subprocess,sys,tarfile,urllib.request,urllib.
 from pathlib import Path
 
 root=Path(sys.argv[1]).resolve();evidence=Path(sys.argv[2]).resolve()
+offline='--offline-wheels' in sys.argv[3:]
 root.mkdir(parents=True,exist_ok=True);evidence.mkdir(parents=True,exist_ok=True)
 manifest={'platform':platform.platform(),'commands':[],'downloads':[]}
 cached_path=root/'downloads/release_metadata.json'
@@ -14,6 +15,7 @@ cached=json.loads(cached_path.read_text()) if cached_path.exists() else None
 
 def fetch_json(url):
     if cached and url in cached['sources']:return cached['sources'][url]
+    if offline:raise RuntimeError('Offline setup requires cached release metadata')
     with urllib.request.urlopen(url,timeout=90) as response:return json.load(response)
 
 def download(asset):
@@ -71,7 +73,12 @@ try:
         manifest['downloads'].append(dict(name=core_name,url=core_asset['browser_download_url'],size=core_asset['size'],
             digest=core_asset['digest'],verification='uv direct-URL SHA256 constraint'))
     manifest.update(uv_version=uv_release['tag_name'],metal_release=tag,core_release=core_tag)
-    run([uv,'pip','install','--python',root/'venv/bin/python',core_wheel,wheel],env)
+    if offline:
+        requirements=root/'downloads/requirements.txt'
+        manifest['locked_requirements_sha256']=hashlib.file_digest(requirements.open('rb'),'sha256').hexdigest()
+        run([uv,'pip','install','--offline','--find-links',root/'downloads','--python',root/'venv/bin/python',
+            '--requirement',requirements],env)
+    else:run([uv,'pip','install','--python',root/'venv/bin/python',core_wheel,wheel],env)
     run([root/'venv/bin/python','-c','import importlib.metadata as m,platform; print(platform.machine()); print({n:m.version(n) for n in ["vllm","vllm-metal","mlx","mlx-lm","torch"]})'],env)
     run([root/'venv/bin/python','-c','import vllm,vllm_metal,torch; import mlx.core as mx; assert mx.metal.is_available(); print("Comparator imports passed; Metal device", mx.metal.device_info()["device_name"])'],env)
     with (evidence/'packages.json').open('w') as stream:

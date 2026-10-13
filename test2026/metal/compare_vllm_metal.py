@@ -7,6 +7,33 @@ from pathlib import Path
 
 runtime,build,source,python,output=sys.argv[1:];source=Path(source);root=source.parent;output=Path(output)
 output.mkdir(parents=True,exist_ok=True);scripts=source/'test2026/metal';statuses=[]
+background_checks=[]
+worldsense_script=Path('/Users/zsdx/cantorai-release-tests/current/bin/WorldSense/Backend/package_runtime.py')
+
+def verified_worldsense_service(pid):
+    # A generic xlang3 HTTP service is not itself an inference runtime. Identify
+    # this observed service by its actual ancestor script and loaded libraries;
+    # unknown xlang3 jobs retain the conservative rejection.
+    current=pid;identified=False
+    for _ in range(3):
+        result=subprocess.run(['/bin/ps','-p',str(current),'-o','ppid=,args='],capture_output=True,text=True)
+        fields=result.stdout.strip().split(None,1)
+        if result.returncode or len(fields)!=2:break
+        if str(worldsense_script) in fields[1]:identified=True;break
+        current=int(fields[0])
+        if current<=1:break
+    if not identified or not worldsense_script.is_file():return False
+    source_text=worldsense_script.read_text(errors='replace').lower()
+    if any(marker in source_text for marker in ('garnet','mlx','ollama','vllm','torch','qwen','metal')):return False
+    libraries=subprocess.run(['/usr/sbin/lsof','-p',str(pid),'-Fn'],capture_output=True,text=True)
+    if libraries.returncode:return False
+    if any(marker in libraries.stdout.lower() for marker in
+        ('libgarnet','libmlx','libtorch','metal.framework','metalperformanceshaders.framework','libopenvino')):return False
+    background_checks.append(dict(pid=pid,role='WorldSense service without inference/GPU libraries',
+        ancestor_script=str(worldsense_script),script_sha256=hashlib.sha256(worldsense_script.read_bytes()).hexdigest(),
+        timestamp=time.time()))
+    (output/'background_service_checks.json').write_text(json.dumps(background_checks,indent=2)+'\n')
+    return True
 
 def snapshot():
     # Process names only: never dump command lines, environment or credentials.
@@ -16,7 +43,9 @@ def guard():
     lines=snapshot().splitlines();active=[]
     for line in lines:
         name=line.split()[-1].lower() if line.split() else ''
-        if name.endswith('/xlang3') or name.endswith('/ollama') or name.endswith('/vllm'):
+        if name.endswith('/xlang3'):
+            if not verified_worldsense_service(int(line.split()[0])):active.append(line)
+        elif name.endswith('/ollama') or name.endswith('/vllm'):
             active.append(line)
     # Python workers need argument inspection to identify their role. Never
     # print or save their arguments, which may belong to unrelated user jobs.
@@ -38,6 +67,10 @@ manifest=dict(platform=platform.platform(),native_build=build,native_library_sha
     policy='Only one runtime process alive. Identical BF16 checkpoint and native prompt token IDs. Prefix cache/speculation disabled.',models={})
 manifest['hardware']={key:subprocess.check_output(['/usr/sbin/sysctl','-n',key],text=True).strip()
     for key in ('machdep.cpu.brand_string','hw.memsize','hw.physicalcpu','hw.logicalcpu')}
+manifest['runner_sha256']={name:hashlib.sha256((scripts/name).read_bytes()).hexdigest()
+    for name in ('run_matched_garnet.py','run_matched_vllm.py','benchmark_matched_process.py','summarize_vllm_comparison.py')}
+cleanup=Path(python).parent.parent/'lib/python3.12/site-packages/vllm/distributed/parallel_state.py'
+manifest['comparator_cleanup_source_sha256']=hashlib.sha256(cleanup.read_bytes()).hexdigest()
 for name in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
     model=root/'models'/name
     manifest['models'][name]={file:dict(bytes=(model/file).stat().st_size,sha256=hashlib.file_digest((model/file).open('rb'),'sha256').hexdigest())

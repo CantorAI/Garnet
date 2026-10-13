@@ -1,0 +1,25 @@
+Waiting for owned comparator setup /Users/zsdx/garnet-metal-investigation/logs/vllm-setup-offline-20261012
+Running comparator import/device check
+INFO 10-13 10:21:06 [__init__.py:52] Available plugins for group vllm.platform_plugins:
+INFO 10-13 10:21:06 [__init__.py:54] - metal -> vllm_metal:register
+INFO 10-13 10:21:06 [__init__.py:57] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 10-13 10:21:09 [__init__.py:272] Platform plugin metal is activated
+mx.metal.device_info is deprecated and will be removed in a future version. Use mx.device_info instead.
+Comparator imports passed; Metal device Apple M4
+Running matched exclusive baseline ["/opt/homebrew/opt/python@3.14/bin/python3.14", "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_vllm_metal.py", "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3", "/Users/zsdx/garnet-metal-investigation/build", "/Users/zsdx/garnet-metal-investigation/source", "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python", "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-offline-baseline-20261012/jobs"]
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_vllm_metal.py", line 56, in <module>
+    guard();folder=output/(name+'-b'+str(batch)+'-'+backend+'-'+str(repeat))
+    ~~~~~^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_vllm_metal.py", line 32, in guard
+    if active:raise RuntimeError('Another inference runtime is active: '+json.dumps(active))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Another inference runtime is active: ["35464   0.1  14416 /Users/zsdx/cantorai-release-tests/current/bin/xlang3", "35626   3.4 251616 /Users/zsdx/cantorai-release-tests/current/bin/xlang3"]
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/await_vllm_baseline.py", line 25, in <module>
+    subprocess.run(command,check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_vllm_metal.py', '/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3', '/Users/zsdx/garnet-metal-investigation/build', '/Users/zsdx/garnet-metal-investigation/source', '/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python', '/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-offline-baseline-20261012/jobs']' returned non-zero exit status 1.

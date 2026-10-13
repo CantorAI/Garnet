@@ -1,0 +1,6 @@
+{
+  "path": "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/lib/python3.12/site-packages/vllm/distributed/parallel_state.py",
+  "before_sha256": "d9b10ad56833ebc08a753e1a050ef0989c30d4134021b7b7b00150b7bd01adc6",
+  "after_sha256": "c84780087b05fcccf8c266a75fe1f7633f447155412e5d514b634d0b229bbf24",
+  "scope": "Only distributed resource teardown; skip Torch accelerator cleanup for an out-of-tree platform with Torch CPU device type. MLX forward/model/cache execution unchanged."
+}

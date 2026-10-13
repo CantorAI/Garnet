@@ -1,0 +1,46 @@
+Waiting for owned comparator setup /Users/zsdx/garnet-metal-investigation/logs/vllm-setup-offline-20261012
+Running comparator import/device check
+INFO 10-13 10:34:57 [__init__.py:52] Available plugins for group vllm.platform_plugins:
+INFO 10-13 10:34:57 [__init__.py:54] - metal -> vllm_metal:register
+INFO 10-13 10:34:57 [__init__.py:57] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 10-13 10:34:59 [__init__.py:272] Platform plugin metal is activated
+mx.metal.device_info is deprecated and will be removed in a future version. Use mx.device_info instead.
+Comparator imports passed; Metal device Apple M4
+Running matched exclusive baseline ["/opt/homebrew/opt/python@3.14/bin/python3.14", "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_vllm_metal.py", "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3", "/Users/zsdx/garnet-metal-investigation/build", "/Users/zsdx/garnet-metal-investigation/source", "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python", "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-clean-baseline-20261012/jobs"]
+Starting exclusive comparison Qwen3-0.6B-b1-garnet-0
+Completed Qwen3-0.6B-b1-garnet-0 exit 0
+Starting exclusive comparison Qwen3-0.6B-b1-vllm-metal-0
+Completed Qwen3-0.6B-b1-vllm-metal-0 exit 0
+Starting exclusive comparison Qwen3-0.6B-b1-garnet-1
+Completed Qwen3-0.6B-b1-garnet-1 exit 0
+Starting exclusive comparison Qwen3-0.6B-b1-vllm-metal-1
+Completed Qwen3-0.6B-b1-vllm-metal-1 exit 0
+Starting exclusive comparison Qwen2.5-Coder-0.5B-Instruct-b1-garnet-0
+Completed Qwen2.5-Coder-0.5B-Instruct-b1-garnet-0 exit 0
+Starting exclusive comparison Qwen2.5-Coder-0.5B-Instruct-b1-vllm-metal-0
+Completed Qwen2.5-Coder-0.5B-Instruct-b1-vllm-metal-0 exit 0
+Starting exclusive comparison Qwen2.5-Coder-0.5B-Instruct-b1-garnet-1
+Completed Qwen2.5-Coder-0.5B-Instruct-b1-garnet-1 exit 0
+Starting exclusive comparison Qwen2.5-Coder-0.5B-Instruct-b1-vllm-metal-1
+Completed Qwen2.5-Coder-0.5B-Instruct-b1-vllm-metal-1 exit 0
+Starting exclusive comparison Qwen3-0.6B-b2-garnet-0
+Completed Qwen3-0.6B-b2-garnet-0 exit 0
+Starting exclusive comparison Qwen3-0.6B-b2-vllm-metal-0
+Completed Qwen3-0.6B-b2-vllm-metal-0 exit 0
+Starting exclusive comparison Qwen3-0.6B-b2-garnet-1
+Completed Qwen3-0.6B-b2-garnet-1 exit 0
+Starting exclusive comparison Qwen3-0.6B-b2-vllm-metal-1
+Completed Qwen3-0.6B-b2-vllm-metal-1 exit 0
+Starting exclusive comparison Qwen2.5-Coder-0.5B-Instruct-b2-garnet-0
+Completed Qwen2.5-Coder-0.5B-Instruct-b2-garnet-0 exit 0
+Starting exclusive comparison Qwen2.5-Coder-0.5B-Instruct-b2-vllm-metal-0
+Completed Qwen2.5-Coder-0.5B-Instruct-b2-vllm-metal-0 exit 0
+Starting exclusive comparison Qwen2.5-Coder-0.5B-Instruct-b2-garnet-1
+Completed Qwen2.5-Coder-0.5B-Instruct-b2-garnet-1 exit 0
+Starting exclusive comparison Qwen2.5-Coder-0.5B-Instruct-b2-vllm-metal-1
+Completed Qwen2.5-Coder-0.5B-Instruct-b2-vllm-metal-1 exit 0
+{"model": "Qwen3-0.6B", "batch": 1, "garnet": {"ttft_seconds": 0.15022413525730371, "decode_steps_per_second": 37.620962811861986, "total_seconds": 0.3363240105099976, "peak_process_rss_gib": 1.5065231323242188}, "vllm": {"ttft_seconds": 0.05207396869082004, "decode_steps_per_second": 73.828095752253, "total_seconds": 0.14691688539460301, "peak_process_rss_gib": 3.6850967407226562}, "decode_ratio": 0.509575147896374, "ttft_fraction": 2.884822091230129, "exact_outputs": true, "exact_prompt_ids": true, "one_prediction_per_step": true, "clean_backend_shutdown": true, "output_tokens_including_stop": [8], "requests": 12, "decode_target_met": false, "ttft_target_met": false}
+{"model": "Qwen2.5-Coder-0.5B-Instruct", "batch": 1, "garnet": {"ttft_seconds": 0.0967875310452655, "decode_steps_per_second": 62.10991077734455, "total_seconds": 0.3544085418106988, "peak_process_rss_gib": 1.2647781372070312}, "vllm": {"ttft_seconds": 0.03476832283195108, "decode_steps_per_second": 92.24074595907928, "total_seconds": 0.20823858364019543, "peak_process_rss_gib": 3.7261581420898438}, "decode_ratio": 0.6733457121530473, "ttft_fraction": 2.7837848697240166, "exact_outputs": true, "exact_prompt_ids": true, "one_prediction_per_step": true, "clean_backend_shutdown": true, "output_tokens_including_stop": [17], "requests": 12, "decode_target_met": false, "ttft_target_met": false}
+{"model": "Qwen3-0.6B", "batch": 2, "garnet": {"ttft_seconds": 0.2806153022684157, "decode_steps_per_second": 27.19946238337564, "total_seconds": 0.5379786667181179, "peak_process_rss_gib": 1.5055618286132812}, "vllm": {"ttft_seconds": 0.07112210406921804, "decode_steps_per_second": 75.33907163937565, "total_seconds": 0.16407278121914715, "peak_process_rss_gib": 3.6975326538085938}, "decode_ratio": 0.3610273101528365, "ttft_fraction": 3.9455427527188025, "exact_outputs": true, "exact_prompt_ids": true, "one_prediction_per_step": true, "clean_backend_shutdown": true, "output_tokens_including_stop": [8, 8], "requests": 12, "decode_target_met": false, "ttft_target_met": false}
+{"model": "Qwen2.5-Coder-0.5B-Instruct", "batch": 2, "garnet": {"ttft_seconds": 0.15784919797442853, "decode_steps_per_second": 55.833434106360954, "total_seconds": 0.4444194792304188, "peak_process_rss_gib": 1.262542724609375}, "vllm": {"ttft_seconds": 0.03802680200897157, "decode_steps_per_second": 92.3641392818224, "total_seconds": 0.2112673851661384, "peak_process_rss_gib": 3.7353286743164062}, "decode_ratio": 0.6044925502526626, "ttft_fraction": 4.1509984967231155, "exact_outputs": true, "exact_prompt_ids": true, "one_prediction_per_step": true, "clean_backend_shutdown": true, "output_tokens_including_stop": [17, 17], "requests": 12, "decode_target_met": false, "ttft_target_met": false}
+All 2x/half-TTFT targets met: False
