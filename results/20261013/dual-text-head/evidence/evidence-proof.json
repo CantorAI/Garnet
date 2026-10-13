@@ -1,0 +1,449 @@
+{
+  "checks": {
+    "Qwen3-0.6B": {
+      "private_cache_profiles": 8,
+      "vocabulary_reference_profiles": [
+        {
+          "batch": 1,
+          "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+          "worst_l2_ratio": 0.0022630620573275808,
+          "worst_max_ratio": 0.0030998284885562803,
+          "predictions": [
+            69215
+          ],
+          "fp32_ms": 32.239833,
+          "bf16_ms": 11.167458
+        },
+        {
+          "batch": 2,
+          "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+          "worst_l2_ratio": 0.0031291500995178708,
+          "worst_max_ratio": 0.004097857744466565,
+          "predictions": [
+            115869,
+            41924
+          ],
+          "fp32_ms": 20.057875,
+          "bf16_ms": 8.77675
+        }
+      ]
+    },
+    "Qwen2.5-Coder-0.5B-Instruct": {
+      "private_cache_profiles": 8,
+      "vocabulary_reference_profiles": [
+        {
+          "batch": 1,
+          "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+          "worst_l2_ratio": 0.0029642598229049294,
+          "worst_max_ratio": 0.004105865302490182,
+          "predictions": [
+            35523
+          ],
+          "fp32_ms": 27.771,
+          "bf16_ms": 9.687542
+        },
+        {
+          "batch": 2,
+          "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+          "worst_l2_ratio": 0.00352560251988865,
+          "worst_max_ratio": 0.004687242840813233,
+          "predictions": [
+            39715,
+            72839
+          ],
+          "fp32_ms": 19.659083,
+          "bf16_ms": 7.823375
+        }
+      ]
+    },
+    "Qwen3.5-0.8B": {
+      "private_cache_profiles": 8,
+      "vocabulary_reference_profiles": [
+        {
+          "batch": 1,
+          "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+          "worst_l2_ratio": 0.0031495381963267334,
+          "worst_max_ratio": 0.003934705420724043,
+          "predictions": [
+            1247
+          ],
+          "fp32_ms": 41.647042,
+          "bf16_ms": 15.226417
+        },
+        {
+          "batch": 2,
+          "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+          "worst_l2_ratio": 0.0033562404346109275,
+          "worst_max_ratio": 0.003817894495936981,
+          "predictions": [
+            232423,
+            6111
+          ],
+          "fp32_ms": 29.388375,
+          "bf16_ms": 14.176833
+        }
+      ]
+    }
+  },
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 54.23669796437025,
+          "decode_tps": 58.60218614526837,
+          "initialization_s": 1.7158209164626896
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 54.23704150598496,
+          "decode_tps": 58.524488349904324,
+          "initialization_s": 1.7176130004227161
+        }
+      },
+      "decode_ratio": 0.9986741485177457,
+      "ttft_fraction": 1.0000063341174446,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/dual-text-head-native-20261013/jobs/Qwen3-0.6B-b1-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 89.43673991598189,
+          "decode_tps": 56.95963657810935,
+          "initialization_s": 1.7471949998289347
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 89.21884384471923,
+          "decode_tps": 57.96596716455407,
+          "initialization_s": 1.7407713958527893
+        }
+      },
+      "decode_ratio": 1.0176674334125138,
+      "ttft_fraction": 0.9975636849971572,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/dual-text-head-native-20261013/jobs/Qwen3-0.6B-b2-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 38.47932303324342,
+          "decode_tps": 71.65406215670284,
+          "initialization_s": 1.387861000141129
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 37.747322814539075,
+          "decode_tps": 71.2826758948153,
+          "initialization_s": 1.3890390624292195
+        }
+      },
+      "decode_ratio": 0.9948169545353153,
+      "ttft_fraction": 0.9809767906240984,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/dual-text-head-native-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 60.92364632058889,
+          "decode_tps": 70.96796604384546,
+          "initialization_s": 1.3881510836072266
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 61.07446865644306,
+          "decode_tps": 70.22883950319445,
+          "initialization_s": 1.3954961460549384
+        }
+      },
+      "decode_ratio": 0.9895850679982238,
+      "ttft_fraction": 1.0024755960117773,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/dual-text-head-native-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 224.79513543657959,
+          "decode_tps": 48.38499590742563,
+          "initialization_s": 3.0663904591929168
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 222.51844790298492,
+          "decode_tps": 48.37231055032181,
+          "initialization_s": 3.036379750352353
+        }
+      },
+      "decode_ratio": 0.9997378245700775,
+      "ttft_fraction": 0.9898721672549851,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 387.04590627457947,
+          "decode_tps": 44.774150696543,
+          "initialization_s": 3.0776582087855786
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 387.12913531344384,
+          "decode_tps": 44.51858065171576,
+          "initialization_s": 3.0207295631989837
+        }
+      },
+      "decode_ratio": 0.9942920180315787,
+      "ttft_fraction": 1.0002150366081002,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0",
+      "reused_clean_profile": false
+    }
+  ],
+  "clean_requests": 72,
+  "omitted_files": {
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-0.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-1.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-2.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-0.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-1.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-2.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-0.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-1.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-2.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-0.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-1.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-2.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-0.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-1.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-2.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-0.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-1.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-2.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-0.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-1.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-2.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-0.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-1.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-2.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/dual-text-head-native-20261013/jobs/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    }
+  },
+  "libraries": {
+    "candidate_sha256": "80fa97a68f83eb069279c4d634704875495feae115bbf7e6aa4a9bfcd9c4cffc",
+    "control_sha256": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2",
+    "options": [
+      "METAL",
+      "METAL_XMODEL",
+      "METAL_EXACT_HALF_PREFILL",
+      "METAL_MPS_VISION_SCORES",
+      "METAL_PARALLEL_DELTA_SPLIT",
+      "METAL_FLOAT_DENSE_KEY_PREFILL",
+      "METAL_LINEAR_CHUNK_DIRECT_WRITE",
+      "METAL_LINEAR_CHUNK_CONV",
+      "METAL_LINEAR_CHUNK_DELTA",
+      "METAL_SMALL_OUTPUT_DECODE",
+      "METAL_QWEN35_EXTENDED_PREFILL",
+      "METAL_RESIDENT_KV_INPLACE",
+      "METAL_DUAL_TEXT_HEAD"
+    ],
+    "source_sha256": {
+      "src/backends/metal/metal_context.mm": "eb2ce72c3e4e2419f829458fc7912d7e15e6691a6f79b0097d17d0c50a9a278f",
+      "cmake/GarnetMetal.cmake": "8f1f1f3bc172ff402cda711b1acb7862d5d09ebf414fc963fe788175f6f56f37",
+      "src/entry/metal_main.cpp": "a46ba0eae40459c6b4f42f9d42e19aa0e62415150e089e862d98be7600b7dc94",
+      "test2026/metal/run_dual_text_head_checks.py": "a2eeee72a8dd92aeedbc415100786f9b10bdcff366bd4564a0b0fc16f951aadc"
+    }
+  },
+  "decision": "Reject: affected text batch-1 decode ratio 0.99867, TTFT fraction 1.00001; no full-model gain. No confirmation or new vLLM study warranted."
+}

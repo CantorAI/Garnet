@@ -1,0 +1,25 @@
+{
+  "candidate_sha256": "80fa97a68f83eb069279c4d634704875495feae115bbf7e6aa4a9bfcd9c4cffc",
+  "control_sha256": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2",
+  "options": [
+    "METAL",
+    "METAL_XMODEL",
+    "METAL_EXACT_HALF_PREFILL",
+    "METAL_MPS_VISION_SCORES",
+    "METAL_PARALLEL_DELTA_SPLIT",
+    "METAL_FLOAT_DENSE_KEY_PREFILL",
+    "METAL_LINEAR_CHUNK_DIRECT_WRITE",
+    "METAL_LINEAR_CHUNK_CONV",
+    "METAL_LINEAR_CHUNK_DELTA",
+    "METAL_SMALL_OUTPUT_DECODE",
+    "METAL_QWEN35_EXTENDED_PREFILL",
+    "METAL_RESIDENT_KV_INPLACE",
+    "METAL_DUAL_TEXT_HEAD"
+  ],
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "eb2ce72c3e4e2419f829458fc7912d7e15e6691a6f79b0097d17d0c50a9a278f",
+    "cmake/GarnetMetal.cmake": "8f1f1f3bc172ff402cda711b1acb7862d5d09ebf414fc963fe788175f6f56f37",
+    "src/entry/metal_main.cpp": "a46ba0eae40459c6b4f42f9d42e19aa0e62415150e089e862d98be7600b7dc94",
+    "test2026/metal/run_dual_text_head_checks.py": "a2eeee72a8dd92aeedbc415100786f9b10bdcff366bd4564a0b0fc16f951aadc"
+  }
+}
