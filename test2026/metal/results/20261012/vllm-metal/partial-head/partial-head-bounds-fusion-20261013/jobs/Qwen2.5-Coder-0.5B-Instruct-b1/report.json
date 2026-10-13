@@ -1,0 +1,7753 @@
+{
+  "scope": "Offline counterfactual partial bounds on captured queries only; no pruned GPU kernel, generated pruning result or latency gain",
+  "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+  "batch": 1,
+  "head_weight": "model.embed_tokens.weight",
+  "head_shape": [
+    151936,
+    896
+  ],
+  "queries": 8,
+  "normalized_inputs": "Actual native GPU RMS output; separate complete projection verified bit-exact",
+  "full_gpu_logits_sha256": {
+    "step-0.scores.json": "87cb74e94334c95421ee4bce8cce864b084bc21ec34b5782885a80a9f2199c12",
+    "step-1.scores.json": "4a51e24e8b7bd4eac377906c6bcdc59818441c793d603486db2e7a8775836a18",
+    "step-2.scores.json": "40e2715cae7968be3cbb3007052f921fde823f373a57145c4c4c4fabab9a7a7e",
+    "step-3.scores.json": "7925b276208c6062aa6d49c8149fe661f5d6fafd67ed11489fcea5c0b4801f9f",
+    "step-4.scores.json": "4ed2e62dcd12210512485149b25f7d9c8c9d2e5aee3a8516c5edb9dc5c382dee",
+    "step-5.scores.json": "ef9067bccdabc5bf4b723c2855f8e4934317cd7d146cf329fe0e6f9443c00969",
+    "step-6.scores.json": "14dfed0091251725b363c8ca3ad83c20942748928e9ef0112d6d9731f0a4c506",
+    "step-7.scores.json": "48eeb3db0621bd0e20ab54ccf56185c7b6347c8d8d3a384c228c68c7d5a97601"
+  },
+  "all_actual_gpu_logits_within_fp32_error_envelope": true,
+  "all_partial_bounds_cover_every_actual_gpu_logit": true,
+  "actual_winners_preserved": true,
+  "maximum_bound_violation": -0.004716745867277217,
+  "fp32_gamma": 0.0001106384602178433,
+  "maximum_full_logit_error": 2.476048646116169e-06,
+  "maximum_error_budget_fraction": 0.00031547261127718823,
+  "oracle_warning": "Uses an unavailable full-head winner threshold; optimistic feasibility only",
+  "omitted_costs": [
+    "bound metadata reads",
+    "norm/reduction arithmetic",
+    "dispatches",
+    "noncontiguous gather overhead",
+    "session integration"
+  ],
+  "aggregates": [
+    {
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "weight_fraction_min": 0.6670694051630762,
+      "weight_fraction_median": 0.714351531471898,
+      "weight_fraction_max": 0.8575744298351186
+    },
+    {
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "weight_fraction_min": 0.6670694051630762,
+      "weight_fraction_median": 0.714351531471898,
+      "weight_fraction_max": 0.8378034172283066
+    },
+    {
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "weight_fraction_min": 0.5566462664731014,
+      "weight_fraction_median": 0.6382308998525694,
+      "weight_fraction_max": 0.7272380664038994
+    },
+    {
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "weight_fraction_min": 0.5566462664731014,
+      "weight_fraction_median": 0.6243881352298712,
+      "weight_fraction_max": 0.6900917867673607
+    },
+    {
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "weight_fraction_min": 0.6840018165543387,
+      "weight_fraction_median": 0.7324444408924058,
+      "weight_fraction_max": 0.861558720213022
+    },
+    {
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "weight_fraction_min": 0.6840018165543387,
+      "weight_fraction_median": 0.7324444408924058,
+      "weight_fraction_max": 0.8490139645264171
+    },
+    {
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "weight_fraction_min": 0.6050940621615116,
+      "weight_fraction_median": 0.6853962006559153,
+      "weight_fraction_max": 0.7476470355939343
+    },
+    {
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "weight_fraction_min": 0.6050940621615116,
+      "weight_fraction_median": 0.6717428955048743,
+      "weight_fraction_max": 0.7210850997412445
+    },
+    {
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "weight_fraction_min": 0.7132063124323024,
+      "weight_fraction_median": 0.7589031847996148,
+      "weight_fraction_max": 0.8673717881213142
+    },
+    {
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "weight_fraction_min": 0.7132063124323024,
+      "weight_fraction_median": 0.7589031847996148,
+      "weight_fraction_max": 0.8577841045853893
+    },
+    {
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "weight_fraction_min": 0.6592804113009989,
+      "weight_fraction_median": 0.7382807798772415,
+      "weight_fraction_max": 0.8094630069803828
+    },
+    {
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "weight_fraction_min": 0.6592804113009989,
+      "weight_fraction_median": 0.7282507108256108,
+      "weight_fraction_max": 0.7732992839090144
+    }
+  ],
+  "results": [
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 19.002056121826172,
+      "counterfactual_weight_fraction": 0.8415639291731857,
+      "counterfactual_weight_bytes": 229132032,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 139517
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 136918
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 132140
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 121844
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 89215
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 29
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 7
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 19.545656204223633,
+      "counterfactual_weight_fraction": 0.8378034172283066,
+      "counterfactual_weight_bytes": 228108160,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 138781
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 136216
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 131096
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 117576
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 79980
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 18
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 7
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 3
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 19.002056121826172,
+      "counterfactual_weight_fraction": 0.6967764622698279,
+      "counterfactual_weight_bytes": 189710848,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 139629
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 136821
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 133667
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 127420
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 106142
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 58869
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 16955
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 2682
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 210
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 26
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 10
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 6
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 19.545656204223633,
+      "counterfactual_weight_fraction": 0.6900917867673607,
+      "counterfactual_weight_bytes": 187890816,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143743
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 138929
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 136073
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 132613
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 124559
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 98173
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 49296
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 12462
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 1735
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 133
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 15
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 8
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 16.70816421508789,
+      "counterfactual_weight_fraction": 0.8575744298351186,
+      "counterfactual_weight_bytes": 233491200,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 143736
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 136465
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 134046
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 126823
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 2695
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 257
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 20
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.261436462402344,
+      "counterfactual_weight_fraction": 0.8100398476050066,
+      "counterfactual_weight_bytes": 220548992,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 139449
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 138428
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 137276
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 134592
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 131017
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 115456
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 83798
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 36764
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 12
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 16.70816421508789,
+      "counterfactual_weight_fraction": 0.7272380664038994,
+      "counterfactual_weight_bytes": 198004608,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143714
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 139091
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136563
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 133488
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 124856
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 96354
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 55689
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 19034
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 2893
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 299
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 38
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 7
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.261436462402344,
+      "counterfactual_weight_fraction": 0.6311720066343723,
+      "counterfactual_weight_bytes": 171848768,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143743
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 139417
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 137719
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 134630
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 131456
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 125301
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 102197
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 65226
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 28331
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 8486
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 1693
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 110
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 3
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.6922153312673005,
+      "counterfactual_weight_bytes": 188468992,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 139492
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 138107
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 136433
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131992
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 126897
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 108123
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 51178
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 13430
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 1066
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 61
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.6922153312673005,
+      "counterfactual_weight_bytes": 188468992,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 139492
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 138107
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 136433
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131992
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 126897
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 108123
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 51178
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 13430
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 1066
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 61
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.6588575358797689,
+      "counterfactual_weight_bytes": 179386688,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 140880
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138635
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 136900
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 134896
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 131703
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 123798
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 102592
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 57691
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 20512
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4277
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 451
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 21
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.6588575358797689,
+      "counterfactual_weight_bytes": 179386688,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 140880
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138635
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 136900
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 134896
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 131703
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 123798
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 102592
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 57691
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 20512
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4277
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 451
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 21
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.7965393323504634,
+      "counterfactual_weight_bytes": 216873216,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 140623
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 138884
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 137554
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 134371
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 130046
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 107752
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 55105
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 15024
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.7965393323504634,
+      "counterfactual_weight_bytes": 216873216,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 140623
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 138884
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 137554
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 134371
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 130046
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 107752
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 55105
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 15024
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.6643330556474907,
+      "counterfactual_weight_bytes": 180877504,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 139150
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136652
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 133994
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 125163
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 105812
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 59046
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 23327
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4448
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 491
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 73
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 7
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.6643330556474907,
+      "counterfactual_weight_bytes": 180877504,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 139150
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136652
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 133994
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 125163
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 105812
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 59046
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 23327
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4448
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 491
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 73
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 7
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.6746515450114334,
+      "counterfactual_weight_bytes": 183686912,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 141040
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 138685
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 137063
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 135491
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 129386
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 118218
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 83606
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 27314
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4671
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 295
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 31
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.6746515450114334,
+      "counterfactual_weight_bytes": 183686912,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 141040
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 138685
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 137063
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 135491
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 129386
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 118218
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 83606
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 27314
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4671
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 295
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 31
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.61760426382537,
+      "counterfactual_weight_bytes": 168154688,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 139665
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 138474
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 136533
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 134111
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 131817
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 123492
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 95085
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 46108
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 13202
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 1872
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 222
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 19
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.61760426382537,
+      "counterfactual_weight_bytes": 168154688,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 139665
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 138474
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 136533
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 134111
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 131817
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 123492
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 95085
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 46108
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 13202
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 1872
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 222
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 19
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.7364877316764954,
+      "counterfactual_weight_bytes": 200523008,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143719
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 139346
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136033
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 134168
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 128053
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 108917
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 68162
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 25694
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 6490
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 789
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 9
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.7364877316764954,
+      "counterfactual_weight_bytes": 200523008,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143719
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 139346
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136033
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 134168
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 128053
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 108917
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 68162
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 25694
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 6490
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 789
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 9
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.6124674675051149,
+      "counterfactual_weight_bytes": 166756096,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 139478
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 137483
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 134984
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 129823
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 114828
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 83121
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 38033
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 13471
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 3372
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 384
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 27
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.6124674675051149,
+      "counterfactual_weight_bytes": 166756096,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 139478
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 137483
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 134984
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 129823
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 114828
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 83121
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 38033
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 13471
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 3372
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 384
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 27
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.6842004434197858,
+      "counterfactual_weight_bytes": 186286784,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 140592
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138769
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 137297
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136317
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 134735
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131145
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 123821
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 99147
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 44467
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 11954
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 1829
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 90
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 6
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.6842004434197858,
+      "counterfactual_weight_bytes": 186286784,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 140592
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138769
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 137297
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136317
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 134735
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131145
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 123821
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 99147
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 44467
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 11954
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 1829
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 90
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 6
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.606758061665062,
+      "counterfactual_weight_bytes": 165201600,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 140180
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 138401
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 136166
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 133607
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 127786
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 112014
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 81204
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 35708
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 8387
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 954
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 41
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 8
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.606758061665062,
+      "counterfactual_weight_bytes": 165201600,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 140180
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 138401
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 136166
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 133607
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 127786
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 112014
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 81204
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 35708
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 8387
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 954
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 41
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 8
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.6670694051630762,
+      "counterfactual_weight_bytes": 181622528,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140009
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 138643
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 137518
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 134471
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 122507
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 104428
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 70239
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 26921
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 7440
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 1290
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 78
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 32,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.6670694051630762,
+      "counterfactual_weight_bytes": 181622528,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140009
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 138643
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 137518
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 134471
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 122507
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 104428
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 70239
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 26921
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 7440
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 1290
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 78
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.5566462664731014,
+      "counterfactual_weight_bytes": 151557696,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 140127
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 138814
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 136321
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 132107
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 120620
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 96004
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 51945
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 22256
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 5915
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 847
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 52
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 6
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 32,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.5566462664731014,
+      "counterfactual_weight_bytes": 151557696,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 32,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 96,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 160,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 224,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 288,
+          "remaining_rows": 140127
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 138814
+        },
+        {
+          "computed_columns": 352,
+          "remaining_rows": 136321
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 132107
+        },
+        {
+          "computed_columns": 416,
+          "remaining_rows": 120620
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 96004
+        },
+        {
+          "computed_columns": 480,
+          "remaining_rows": 51945
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 22256
+        },
+        {
+          "computed_columns": 544,
+          "remaining_rows": 5915
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 847
+        },
+        {
+          "computed_columns": 608,
+          "remaining_rows": 52
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 6
+        },
+        {
+          "computed_columns": 672,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 736,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 800,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 864,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 19.002056121826172,
+      "counterfactual_weight_fraction": 0.8513565862317969,
+      "counterfactual_weight_bytes": 231798272,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 136918
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 121844
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 29
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 19.545656204223633,
+      "counterfactual_weight_fraction": 0.8490139645264171,
+      "counterfactual_weight_bytes": 231160448,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 136216
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 117576
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 18
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 3
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 19.002056121826172,
+      "counterfactual_weight_fraction": 0.7280748849139488,
+      "counterfactual_weight_bytes": 198232448,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 139471
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 134695
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 116781
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 35686
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 1149
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 11
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 19.545656204223633,
+      "counterfactual_weight_fraction": 0.7210850997412445,
+      "counterfactual_weight_bytes": 196329344,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 138837
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 133896
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 111286
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 28197
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 699
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 10
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 16.70816421508789,
+      "counterfactual_weight_fraction": 0.861558720213022,
+      "counterfactual_weight_bytes": 234576000,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 143736
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 134046
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 2695
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 20
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.261436462402344,
+      "counterfactual_weight_fraction": 0.8256262975388133,
+      "counterfactual_weight_bytes": 224792704,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 139449
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 137276
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 131017
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 83798
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 12
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 16.70816421508789,
+      "counterfactual_weight_fraction": 0.7476470355939343,
+      "counterfactual_weight_bytes": 203561344,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 137657
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 127851
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 56752
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 3362
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 57
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.261436462402344,
+      "counterfactual_weight_fraction": 0.6595041897340234,
+      "counterfactual_weight_bytes": 179562752,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 137381
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 133419
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 116229
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 37107
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 1536
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 8
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.7111119155433867,
+      "counterfactual_weight_bytes": 193613952,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 138107
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131992
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 108123
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 13430
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 61
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.7111119155433867,
+      "counterfactual_weight_bytes": 193613952,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 138107
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131992
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 108123
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 13430
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 61
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.6868108000361054,
+      "counterfactual_weight_bytes": 186997504,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143743
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136085
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 126970
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 71227
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 5720
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 21
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.6868108000361054,
+      "counterfactual_weight_bytes": 186997504,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143743
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136085
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 126970
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 71227
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 5720
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 21
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.8123594332952221,
+      "counterfactual_weight_bytes": 221180544,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 140623
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 137554
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 130046
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 55105
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.8123594332952221,
+      "counterfactual_weight_bytes": 221180544,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 140623
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 137554
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 130046
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 55105
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.6939599568239259,
+      "counterfactual_weight_bytes": 188944000,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140517
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136497
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 129428
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 84557
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 7899
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 75
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.6939599568239259,
+      "counterfactual_weight_bytes": 188944000,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140517
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136497
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 129428
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 84557
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 7899
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 75
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.6924668469430738,
+      "counterfactual_weight_bytes": 188537472,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 141040
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 137063
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 129386
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 83606
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4671
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 31
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.6924668469430738,
+      "counterfactual_weight_bytes": 188537472,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 141040
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 137063
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 129386
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 83606
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4671
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 31
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.6562443585268986,
+      "counterfactual_weight_bytes": 178675200,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140536
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 135965
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 118008
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 23379
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 857
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 3
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.6562443585268986,
+      "counterfactual_weight_bytes": 178675200,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140536
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 135965
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 118008
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 23379
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 857
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 3
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.753776966241425,
+      "counterfactual_weight_bytes": 205230336,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143719
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136033
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 128053
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 68162
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 6490
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 9
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.753776966241425,
+      "counterfactual_weight_bytes": 205230336,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 143719
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136033
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 128053
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 68162
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 6490
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 9
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.6839816012757252,
+      "counterfactual_weight_bytes": 186227200,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136465
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 126434
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 65469
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 5621
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 15
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.6839816012757252,
+      "counterfactual_weight_bytes": 186227200,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136465
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 126434
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 65469
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 5621
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 15
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.7026337217174149,
+      "counterfactual_weight_bytes": 191305600,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138769
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136317
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131145
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 99147
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 11954
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 90
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.7026337217174149,
+      "counterfactual_weight_bytes": 191305600,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138769
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 136317
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131145
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 99147
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 11954
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 90
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.6431946909977133,
+      "counterfactual_weight_bytes": 175122176,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138256
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 133439
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 102219
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 16717
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 355
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.6431946909977133,
+      "counterfactual_weight_bytes": 175122176,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138256
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 133439
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 102219
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 16717
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 355
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 4
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.6840018165543387,
+      "counterfactual_weight_bytes": 186232704,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140009
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 137518
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 122507
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 70239
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 7440
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 78
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 64,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.6840018165543387,
+      "counterfactual_weight_bytes": 186232704,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140009
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 137518
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 122507
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 70239
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 7440
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 78
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.6050940621615116,
+      "counterfactual_weight_bytes": 164748544,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 140773
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 134093
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 121103
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 56352
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 1360
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 9
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 64,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.6050940621615116,
+      "counterfactual_weight_bytes": 164748544,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 64,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 192,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 320,
+          "remaining_rows": 140773
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 134093
+        },
+        {
+          "computed_columns": 448,
+          "remaining_rows": 121103
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 56352
+        },
+        {
+          "computed_columns": 576,
+          "remaining_rows": 1360
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 9
+        },
+        {
+          "computed_columns": 704,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 832,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 19.002056121826172,
+      "counterfactual_weight_fraction": 0.8584544996389457,
+      "counterfactual_weight_bytes": 233730816,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 136918
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 29
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 19.545656204223633,
+      "counterfactual_weight_fraction": 0.8577841045853893,
+      "counterfactual_weight_bytes": 233548288,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 136216
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 18
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 19.002056121826172,
+      "counterfactual_weight_fraction": 0.7832292168130942,
+      "counterfactual_weight_bytes": 213249280,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136155
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 64501
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 29
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 0,
+      "row": 0,
+      "prediction": 73594,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 19.545656204223633,
+      "counterfactual_weight_fraction": 0.7732992839090144,
+      "counterfactual_weight_bytes": 210545664,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 135512
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 54590
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 22
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 16.70816421508789,
+      "counterfactual_weight_fraction": 0.8673717881213142,
+      "counterfactual_weight_bytes": 236158720,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 143736
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 2695
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.261436462402344,
+      "counterfactual_weight_fraction": 0.8488517721747503,
+      "counterfactual_weight_bytes": 231116288,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 139449
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 131017
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 12
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 16.70816421508789,
+      "counterfactual_weight_fraction": 0.8094630069803828,
+      "counterfactual_weight_bytes": 220391936,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 138334
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 90169
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 83
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 1,
+      "row": 0,
+      "prediction": 12669,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.261436462402344,
+      "counterfactual_weight_fraction": 0.7187941915392947,
+      "counterfactual_weight_bytes": 195705600,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 125475
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 6678
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 2
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 1
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.7312684288121314,
+      "counterfactual_weight_bytes": 199101952,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131992
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 13430
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.7312684288121314,
+      "counterfactual_weight_bytes": 199101952,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131992
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 13430
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.7393028267541221,
+      "counterfactual_weight_bytes": 201289472,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 134077
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 19890
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "row": 0,
+      "prediction": 198,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 20.25870704650879,
+      "counterfactual_weight_fraction": 0.7393028267541221,
+      "counterfactual_weight_bytes": 201289472,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 134077
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 19890
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.8490360602960645,
+      "counterfactual_weight_bytes": 231166464,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 140623
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 130046
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.8490360602960645,
+      "counterfactual_weight_bytes": 231166464,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 140623
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 130046
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 5
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.7388543296425563,
+      "counterfactual_weight_bytes": 201167360,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136340
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 17147
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 3
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "row": 0,
+      "prediction": 750,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.116531372070312,
+      "counterfactual_weight_fraction": 0.7388543296425563,
+      "counterfactual_weight_bytes": 201167360,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136340
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 17147
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 3
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.7180401146347334,
+      "counterfactual_weight_bytes": 195500288,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 141040
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 129386
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4671
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.7180401146347334,
+      "counterfactual_weight_bytes": 195500288,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 141040
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 129386
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 4671
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.7095036255867132,
+      "counterfactual_weight_bytes": 193176064,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 139177
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 125521
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 1320
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "row": 0,
+      "prediction": 912,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.617666244506836,
+      "counterfactual_weight_fraction": 0.7095036255867132,
+      "counterfactual_weight_bytes": 193176064,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 139177
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 125521
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 1320
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.7865379407870984,
+      "counterfactual_weight_bytes": 214150144,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136033
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 68162
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 9
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.7865379407870984,
+      "counterfactual_weight_bytes": 214150144,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 136033
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 68162
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 9
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.7377072301119268,
+      "counterfactual_weight_bytes": 200855040,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 132506
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 19764
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "row": 0,
+      "prediction": 2877,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 22.68635368347168,
+      "counterfactual_weight_fraction": 0.7377072301119268,
+      "counterfactual_weight_bytes": 200855040,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 132506
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 19764
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.7244074572752437,
+      "counterfactual_weight_bytes": 197233920,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138769
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131145
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 11954
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.7244074572752437,
+      "counterfactual_weight_bytes": 197233920,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138769
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 131145
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 11954
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 1
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.6999554323624985,
+      "counterfactual_weight_bytes": 190576384,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138608
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 115804
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 1451
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "row": 0,
+      "prediction": 11,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 21.82354164123535,
+      "counterfactual_weight_fraction": 0.6999554323624985,
+      "counterfactual_weight_bytes": 190576384,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 138608
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 115804
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 1451
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.7132063124323024,
+      "counterfactual_weight_bytes": 194184192,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140009
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 122507
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 7440
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 128,
+      "order": "contiguous",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.7132063124323024,
+      "counterfactual_weight_bytes": 194184192,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 140009
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 122507
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 7440
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "fixed-8192-seed",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.6592804113009989,
+      "counterfactual_weight_bytes": 179501824,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 136555
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 76025
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 23
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "row": 0,
+      "prediction": 293,
+      "block_size": 128,
+      "order": "hidden-energy",
+      "threshold": "oracle-full-max",
+      "seed_max": 23.912479400634766,
+      "counterfactual_weight_fraction": 0.6592804113009989,
+      "counterfactual_weight_bytes": 179501824,
+      "includes_full_seed_cost": true,
+      "curve": [
+        {
+          "computed_columns": 128,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 256,
+          "remaining_rows": 143744
+        },
+        {
+          "computed_columns": 384,
+          "remaining_rows": 136555
+        },
+        {
+          "computed_columns": 512,
+          "remaining_rows": 76025
+        },
+        {
+          "computed_columns": 640,
+          "remaining_rows": 23
+        },
+        {
+          "computed_columns": 768,
+          "remaining_rows": 0
+        },
+        {
+          "computed_columns": 896,
+          "remaining_rows": 0
+        }
+      ]
+    }
+  ]
+}

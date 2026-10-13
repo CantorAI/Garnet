@@ -1,0 +1,20 @@
+{
+  "scope": "Actual full native inference captures plus offline counterfactual partial bounds; no pruning speed claim",
+  "build": "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+  "native_library_sha256": "98bf4ea74162851308159cc9a87f21221c9e7f82861cc87f34caaa4ed6498d09",
+  "source_sha256": {
+    "capture_head_pruning_queries.py": "2b7b0758b1c0aa48c55c2d6e0f2f2155267dd75971a54af5995da26784d17897",
+    "analyze_partial_head_bounds.py": "d4c1d8de2be27733fd9aece8b25eb7dbfa7e5da2877dde7ba34213f972115c30",
+    "run_partial_head_probe.py": "0586fd1f856e05cdc7aa9391a71e8c33bcef0482661967a3bb685f342284882d"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "models": {
+    "Qwen3-0.6B": {
+      "bytes": 1503300328,
+      "sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+    }
+  }
+}

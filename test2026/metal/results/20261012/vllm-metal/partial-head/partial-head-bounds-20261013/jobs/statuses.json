@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Qwen3-0.6B-b1-capture",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/capture_head_pruning_queries.py",
+      "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-20261013/jobs/Qwen3-0.6B-b1/case.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-20261013/jobs/Qwen3-0.6B-b1"
+    ],
+    "exit_code": 1,
+    "diagnostic_wall_seconds": 0.025752374902367592
+  }
+]

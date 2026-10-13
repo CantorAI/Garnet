@@ -1,0 +1,28 @@
+{
+  "scope": "Actual full native inference captures plus offline counterfactual partial bounds; no pruning speed claim",
+  "build": "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+  "native_library_sha256": "98bf4ea74162851308159cc9a87f21221c9e7f82861cc87f34caaa4ed6498d09",
+  "source_sha256": {
+    "capture_head_pruning_queries.py": "0afd3cf4b79ed3298e71588ae9bc65a8fcd67dfcc3b32232e60c0170611000c3",
+    "analyze_partial_head_bounds.py": "d4c1d8de2be27733fd9aece8b25eb7dbfa7e5da2877dde7ba34213f972115c30",
+    "run_partial_head_probe.py": "0586fd1f856e05cdc7aa9391a71e8c33bcef0482661967a3bb685f342284882d"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "models": {
+    "Qwen3-0.6B": {
+      "bytes": 1503300328,
+      "sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+    },
+    "Qwen2.5-Coder-0.5B-Instruct": {
+      "bytes": 988097824,
+      "sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44"
+    },
+    "Qwen3.5-0.8B": {
+      "bytes": 1746942600,
+      "sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+    }
+  }
+}

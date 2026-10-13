@@ -1,0 +1,158 @@
+[
+  {
+    "name": "Qwen3-0.6B-b1-capture",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/capture_head_pruning_queries.py",
+      "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3-0.6B-b1/case.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3-0.6B-b1"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 11.342342167161405
+  },
+  {
+    "name": "Qwen3-0.6B-b1-analyze",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/analyze_partial_head_bounds.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3-0.6B-b1/queries.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3-0.6B-b1/report.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 24.461775499861687
+  },
+  {
+    "name": "Qwen3-0.6B-b2-capture",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/capture_head_pruning_queries.py",
+      "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3-0.6B-b2/case.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3-0.6B-b2"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 20.953377208672464
+  },
+  {
+    "name": "Qwen3-0.6B-b2-analyze",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/analyze_partial_head_bounds.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3-0.6B-b2/queries.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3-0.6B-b2/report.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 47.94998241728172
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-capture",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/capture_head_pruning_queries.py",
+      "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1/case.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 11.061310249846429
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-analyze",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/analyze_partial_head_bounds.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1/queries.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b1/report.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 18.336264708079398
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-capture",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/capture_head_pruning_queries.py",
+      "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2/case.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 20.374402082990855
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-analyze",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/analyze_partial_head_bounds.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2/queries.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-b2/report.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 35.99110333388671
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-capture",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/capture_head_pruning_queries.py",
+      "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3.5-0.8B-b1/case.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3.5-0.8B-b1"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 19.275145083200186
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-analyze",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/analyze_partial_head_bounds.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3.5-0.8B-b1/queries.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3.5-0.8B-b1/report.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 40.30384050030261
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-capture",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/capture_head_pruning_queries.py",
+      "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3.5-0.8B-b2/case.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3.5-0.8B-b2"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 35.36458249995485
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-analyze",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/analyze_partial_head_bounds.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3.5-0.8B-b2/queries.json",
+      "/Users/zsdx/garnet-metal-investigation/logs/partial-head-bounds-fusion-20261013/jobs/Qwen3.5-0.8B-b2/report.json"
+    ],
+    "exit_code": 0,
+    "diagnostic_wall_seconds": 81.1186308329925
+  }
+]

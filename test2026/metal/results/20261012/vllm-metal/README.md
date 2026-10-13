@@ -306,6 +306,19 @@ Exact commands, source snapshots, hashes, timing windows and limitations are
 retained in `lossless-gpu/README.md`. Production native code was not changed;
 the matched throughput and TTFT targets remain unmet.
 
+### Partial output-head bounds on actual native queries
+
+`partial-head/` captures actual native normalized head inputs and full GPU
+logits from all three models in batches 1/2, including real-image VL inference.
+All six complete output sequences match the saved native baselines. Every
+tested partial Cauchy bound covers every actual GPU logit across 72 sampled
+row/step queries; the earlier approximate CPU-normalization limitation is
+removed. Offline fixed-seed estimates suggest 23–36% fewer head weight reads
+at 32-value block granularity, before bound/gather/dispatch and batch-sharing
+costs. No pruned GPU kernel, full-model speed gain or target completion is
+claimed. Exact sources, failed setup attempts, commands, full-logit hashes and
+limitations are saved in `partial-head/README.md`.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

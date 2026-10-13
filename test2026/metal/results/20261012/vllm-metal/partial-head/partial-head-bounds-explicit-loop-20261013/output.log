@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_partial_head_probe.py", line 77, in <module>
+    run(name+'-capture',[str(runtime),str(scripts/'capture_head_pruning_queries.py'),str(build),str(root/'source'),str(checkpoint.parent),str(folder/'case.json'),str(folder)])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_partial_head_probe.py", line 55, in run
+    if code:raise RuntimeError(name+' failed; retained diagnostic log')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Qwen3-0.6B-b1-capture failed; retained diagnostic log
