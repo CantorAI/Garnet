@@ -41,25 +41,32 @@ class DenseMetalDecoder(MetalDecoder):
 
     def _prefill_profiles(self):
         if self.config['hidden_size']<=1024 and 'dense_key_split_k' in garnet.backend_info():
-            return (2,4,8,16,24,32,48,64)
+            return (2,4,8,16,22,24,26,32,48,64)
         return (2,4,8,16)
 
     def _prefill_chunk_size(self,remaining,maximum):
         if not getattr(self,'finer_chunks',False):return MetalDecoder._prefill_chunk_size(self,remaining,maximum)
         required=min(remaining,maximum)
         for profile in self._prefill_profiles():
+            if profile in (22,26) and not getattr(self,'exact_tail',False):continue
             if required<=profile<=maximum:return profile
         raise ValueError('No supported dense tail profile')
 
-    def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False,finer_chunks=False):
+    def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False,finer_chunks=False,exact_tail=False):
         capable=self.config['hidden_size']<=1024 and 'dense_key_split_k' in garnet.backend_info()
-        extended=chunk in (24,32,48,64) and projection=='shared' and capable
+        extended=(chunk in (24,32,48,64) or (exact_tail and chunk in (22,26))) and projection=='shared' and capable
         if chunk not in (2,4,8,16) and not extended:
             raise ValueError('Dense Qwen prefill supports 2, 4, 8 and 16; 24/32/48/64 require the split-key Metal build, shared projection and hidden size <= 1024')
         if finer_chunks and (not capable or projection!='shared' or self.session is None):
             raise ValueError('Finer dense tails require a resident split-key Metal session with shared projection')
+        if exact_tail and (not finer_chunks or not capable or projection!='shared' or self.session is None):
+            raise ValueError('Exact dense tails require finer scheduling and a resident split-key Metal session with shared projection')
+        changed=getattr(self,'exact_tail',False)!=bool(exact_tail)
         MetalDecoder.enable_prefill(self,chunk,projection,False)
-        self.finer_chunks=bool(finer_chunks)
+        if changed:
+            for graph in self.prefill_graphs.values():graph.close()
+            self.prefill_graphs={}
+        self.finer_chunks=bool(finer_chunks);self.exact_tail=bool(exact_tail)
 
     def _prefill_layer(self,hidden,state1,state2,positions,slots,active,config,idx,batch,chunk,capacity,kind):
         from .layers import DensePrefillLayer

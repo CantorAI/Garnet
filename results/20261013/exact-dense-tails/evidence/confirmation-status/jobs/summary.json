@@ -1,0 +1,29 @@
+{
+  "scope": "Four native exact-tail profiles; discard contention and retain only clean ABBA.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 91.86108317226171,
+          "decode_tps": 58.38486136219511,
+          "initialization_s": 1.6690022295806557
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 86.49944781791419,
+          "decode_tps": 58.64743247278901,
+          "initialization_s": 1.6785588548518717
+        }
+      },
+      "decode_ratio": 1.0044972464516961,
+      "ttft_fraction": 0.9416332230233649,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/exact-dense-tail-native-confirm-20261013/jobs/Qwen3-0.6B-b2-attempt0",
+      "reused_clean_profile": false
+    }
+  ],
+  "guarded_interval_seconds": 0.5
+}

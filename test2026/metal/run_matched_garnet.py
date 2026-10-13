@@ -19,7 +19,17 @@ print('matched_prompt',json.dumps(dict(chat=chat,token_ids=ids,stop_token_ids=st
 decoder=None;batch=workload['batch'];limit=workload['max_tokens'];repeats=workload.get('requests',3)
 try:
     decoder=DenseMetalDecoder(folder+'/model.safetensors',config,batch,workload['capacity'])
-    decoder.enable_prefill(workload.get('chunk',16),workload.get('prefill_projection','shared'),finer_chunks=workload.get('prefill_finer_chunks',False))
+    decoder.enable_prefill(workload.get('chunk',16),workload.get('prefill_projection','shared'),finer_chunks=workload.get('prefill_finer_chunks',False),exact_tail=workload.get('prefill_exact_tail',False))
+    if workload.get('check_exact_tail_admission',False):
+        before=(decoder.chunk,decoder.prefill_projection,decoder.prefill_graphs,list(decoder.slots),decoder.finer_chunks,decoder.exact_tail)
+        invalid=[(22,'shared',True,False),(26,'shared',True,False),(32,'shared',False,True),(32,'mps',True,True)]
+        for size,projection,finer,exact in invalid:
+            rejected=False
+            try:decoder.enable_prefill(size,projection,finer_chunks=finer,exact_tail=exact)
+            except ValueError:rejected=True
+            assert rejected,'Unvalidated exact-tail profile admitted'
+            assert before==(decoder.chunk,decoder.prefill_projection,decoder.prefill_graphs,decoder.slots,decoder.finer_chunks,decoder.exact_tail),'Rejected exact-tail profile changed state'
+        print('exact_tail_admission PASS',flush=True)
     initialization=time.monotonic()-started
     for request in range(repeats):
         begin=time.monotonic();decoder.reset()

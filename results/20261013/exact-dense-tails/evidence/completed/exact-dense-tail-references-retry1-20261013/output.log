@@ -1,0 +1,6 @@
+Starting independent exact-tail references Qwen3-0.6B
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_exact_dense_tail_checks.py", line 17, in <module>
+    statuses.append(dict(model=model,command=command,exit_code=result.returncode));(out/'statuses.json').write_text(json.dumps(statuses,indent=2));assert result.returncode==0,model
+                                                                                                                                                          ^^^^^^^^^^^^^^^^^^^^
+AssertionError: Qwen3-0.6B
