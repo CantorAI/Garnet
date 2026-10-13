@@ -1,0 +1,18 @@
+{
+  "scope": "One matched equivalent-FP32 profile, sequential Garnet/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n",
+  "counts_as_default_bf16_speedup": false,
+  "native_library_sha256": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2",
+  "learned_values_bit_exact": true,
+  "source_checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+  "comparator_checkpoint_sha256": "ff48a55dc77f531f4d6629570c0f3351c61e411edf484041115d372dd9cc0495",
+  "equivalence_proof_sha256": "ea490e51436bdc6f153ed9ae9407c8d3be81762a33b829f3c321a4d02be8138b",
+  "source_sha256": {
+    "compare_resident_kv_vllm.py": "6dcf1ccd7efeebb0a417bb966a6681a9594fd9f057c5e14f1571696a52b5369e",
+    "run_matched_garnet.py": "499aefd85eccd8bd02a20214479587c87c1d66be016c570380f900ba6962056c",
+    "run_matched_vllm.py": "685ad3e5eec0d0b4fd121088f9ab316fe07b1c4449ee27c09ad76092885ffd24",
+    "frame_worker_garnet.py": "f4e8b6e5f199c6f9304b8c729ee8ac065cd14e199085351443f8a74de6347977",
+    "frame_worker_vllm.py": "7654dd031852e28b1c8bc130e42d2e14ed50b1f02362068953c65e825b21bac4",
+    "run_matched_frame_process.py": "793a140d3c1545f88da15792f9051d80f9e66d8ffac081242ae2285a19fa785e",
+    "benchmark_matched_process.py": "9a678e833dbb69da5169c24208cfb6f074be23c4db6454844b1080659282e494"
+  }
+}

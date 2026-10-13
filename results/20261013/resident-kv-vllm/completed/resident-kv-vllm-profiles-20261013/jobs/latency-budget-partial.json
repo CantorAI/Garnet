@@ -1,0 +1,102 @@
+[
+  {
+    "model": "Qwen3-0.6B",
+    "batch": 1,
+    "current": {
+      "requests": 4,
+      "ttft_ms": 51.87754170037806,
+      "decode_tps": 59.77781520516262,
+      "initialization_s": 2.52528268750757,
+      "peak_child_rss_bytes": 2444369920
+    },
+    "target_decode_tps": 75.61844626381207,
+    "target_ttft_ms": 37.53355203662068,
+    "prefill_profile": {
+      "prepare_ms": 0.24377125,
+      "encode_ms": 5.2038227500000005,
+      "gpu_ms": 37.35354170203209,
+      "wait_ms": 38.329187250000004
+    },
+    "decode_phases": {
+      "prepare_ms": 0.13658767857142856,
+      "encode_ms": 0.4716325,
+      "gpu_ms": 15.526497054712049,
+      "wait_ms": 15.97533925
+    }
+  },
+  {
+    "model": "Qwen3-0.6B",
+    "batch": 2,
+    "current": {
+      "requests": 4,
+      "ttft_ms": 91.29022911656648,
+      "decode_tps": 58.3592483251501,
+      "initialization_s": 1.772775916615501,
+      "peak_child_rss_bytes": 2491555840
+    },
+    "target_decode_tps": 51.91700109947948,
+    "target_ttft_ms": 48.79136977251619,
+    "prefill_profile": {
+      "prepare_ms": 0.2448855,
+      "encode_ms": 5.3066875,
+      "gpu_ms": 60.871531371958554,
+      "wait_ms": 61.848125249999995
+    },
+    "decode_phases": {
+      "prepare_ms": 0.14989442857142857,
+      "encode_ms": 0.4892737142857143,
+      "gpu_ms": 15.867888411906149,
+      "wait_ms": 16.34409392857143
+    }
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 1,
+    "current": {
+      "requests": 4,
+      "ttft_ms": 39.730395656079054,
+      "decode_tps": 72.10410149363433,
+      "initialization_s": 1.3927718542981893,
+      "peak_child_rss_bytes": 2069053440
+    },
+    "target_decode_tps": 94.73330411920399,
+    "target_ttft_ms": 29.28788011195138,
+    "prefill_profile": {
+      "prepare_ms": 0.22489575,
+      "encode_ms": 4.72857325,
+      "gpu_ms": 32.09317696746439,
+      "wait_ms": 33.01731225
+    },
+    "decode_phases": {
+      "prepare_ms": 0.12025326562500001,
+      "encode_ms": 0.472615890625,
+      "gpu_ms": 12.710917959338985,
+      "wait_ms": 13.15319140625
+    }
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 2,
+    "current": {
+      "requests": 4,
+      "ttft_ms": 64.65476064477116,
+      "decode_tps": 71.60810176875121,
+      "initialization_s": 1.3941436039749533,
+      "peak_child_rss_bytes": 2069118976
+    },
+    "target_decode_tps": 57.27587618846706,
+    "target_ttft_ms": 38.182276126462966,
+    "prefill_profile": {
+      "prepare_ms": 0.2835315,
+      "encode_ms": 5.005854,
+      "gpu_ms": 54.978312575258315,
+      "wait_ms": 56.038594
+    },
+    "decode_phases": {
+      "prepare_ms": 0.122516265625,
+      "encode_ms": 0.459444609375,
+      "gpu_ms": 12.809388674213551,
+      "wait_ms": 13.251955734375
+    }
+  }
+]

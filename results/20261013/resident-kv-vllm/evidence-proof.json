@@ -1,0 +1,976 @@
+{
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "means": {
+        "garnet": {
+          "requests": 4,
+          "ttft_ms": 51.87754170037806,
+          "decode_tps": 59.77781520516262,
+          "initialization_s": 2.52528268750757,
+          "peak_child_rss_bytes": 2444369920
+        },
+        "vllm-metal": {
+          "requests": 4,
+          "ttft_ms": 75.06710407324135,
+          "decode_tps": 37.80922313190604,
+          "initialization_s": 18.031490104738623,
+          "peak_child_rss_bytes": 3596976128
+        }
+      },
+      "decode_ratio": 1.5810379122737903,
+      "ttft_fraction": 0.6910822302371258,
+      "decode_target_met": false,
+      "ttft_target_met": false,
+      "exact_complete_outputs": true,
+      "counts_as_default_bf16_speedup": false,
+      "scope": "One matched equivalent-FP32 profile, sequential Garnet/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "garnet": {
+          "requests": 4,
+          "ttft_ms": 91.29022911656648,
+          "decode_tps": 58.3592483251501,
+          "initialization_s": 1.772775916615501,
+          "peak_child_rss_bytes": 2491555840
+        },
+        "vllm-metal": {
+          "requests": 4,
+          "ttft_ms": 97.58273954503238,
+          "decode_tps": 25.95850054973974,
+          "initialization_s": 16.993121687322855,
+          "peak_child_rss_bytes": 3754442752
+        }
+      },
+      "decode_ratio": 2.248174859457944,
+      "ttft_fraction": 0.9355161531864757,
+      "decode_target_met": true,
+      "ttft_target_met": false,
+      "exact_complete_outputs": true,
+      "counts_as_default_bf16_speedup": false,
+      "scope": "One matched equivalent-FP32 profile, sequential Garnet/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "garnet": {
+          "requests": 4,
+          "ttft_ms": 39.730395656079054,
+          "decode_tps": 72.10410149363433,
+          "initialization_s": 1.3927718542981893,
+          "peak_child_rss_bytes": 2069053440
+        },
+        "vllm-metal": {
+          "requests": 4,
+          "ttft_ms": 58.57576022390276,
+          "decode_tps": 47.366652059601996,
+          "initialization_s": 15.982311125146225,
+          "peak_child_rss_bytes": 3843399680
+        }
+      },
+      "decode_ratio": 1.5222545474167126,
+      "ttft_fraction": 0.6782736665168614,
+      "decode_target_met": false,
+      "ttft_target_met": false,
+      "exact_complete_outputs": true,
+      "counts_as_default_bf16_speedup": false,
+      "scope": "One matched equivalent-FP32 profile, sequential Garnet/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "garnet": {
+          "requests": 4,
+          "ttft_ms": 64.65476064477116,
+          "decode_tps": 71.60810176875121,
+          "initialization_s": 1.3941436039749533,
+          "peak_child_rss_bytes": 2069118976
+        },
+        "vllm-metal": {
+          "requests": 4,
+          "ttft_ms": 76.36455225292593,
+          "decode_tps": 28.63793809423353,
+          "initialization_s": 15.930205228971317,
+          "peak_child_rss_bytes": 3821903872
+        }
+      },
+      "decode_ratio": 2.5004629011042545,
+      "ttft_fraction": 0.8466593299811287,
+      "decode_target_met": true,
+      "ttft_target_met": false,
+      "exact_complete_outputs": true,
+      "counts_as_default_bf16_speedup": false,
+      "scope": "One matched equivalent-FP32 profile, sequential Garnet/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "means": {
+        "garnet": {
+          "requests": 4,
+          "ttft_ms": 220.2082503354177,
+          "decode_tps": 48.14991682988508,
+          "initialization_s": 4.090728292008862,
+          "peak_child_rss_bytes": 3609280512
+        },
+        "vllm-metal": {
+          "requests": 4,
+          "ttft_ms": 266.4309374522418,
+          "decode_tps": 26.59892322160723,
+          "initialization_s": 33.727152437670156,
+          "peak_child_rss_bytes": 5928607744
+        }
+      },
+      "decode_ratio": 1.8102205276780237,
+      "ttft_fraction": 0.8265115622125918,
+      "decode_target_met": false,
+      "ttft_target_met": false,
+      "exact_complete_outputs": true,
+      "counts_as_default_bf16_speedup": false,
+      "scope": "One matched equivalent-FP32 profile, sequential Garnet/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "garnet": {
+          "requests": 4,
+          "ttft_ms": 391.56541659031063,
+          "decode_tps": 44.309969806981876,
+          "initialization_s": 4.153347687562928,
+          "peak_child_rss_bytes": 3647840256
+        },
+        "vllm-metal": {
+          "requests": 4,
+          "ttft_ms": 432.9283335246146,
+          "decode_tps": 17.301696019589727,
+          "initialization_s": 33.21137141645886,
+          "peak_child_rss_bytes": 5788778496
+        }
+      },
+      "decode_ratio": 2.561018859469743,
+      "ttft_fraction": 0.9044578196174998,
+      "decode_target_met": true,
+      "ttft_target_met": false,
+      "exact_complete_outputs": true,
+      "counts_as_default_bf16_speedup": false,
+      "scope": "One matched equivalent-FP32 profile, sequential Garnet/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"
+    }
+  ],
+  "omitted_files": {
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-0/protocol/frame-0.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-0/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-0/protocol/frame-1.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-0/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-0/protocol/frame-2.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-0/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-1/protocol/frame-0.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-1/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-1/protocol/frame-1.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-1/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-1/protocol/frame-2.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/garnet-1/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-0/protocol/frame-0.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-0/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-0/protocol/frame-1.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-0/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-0/protocol/frame-2.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-0/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-1/protocol/frame-0.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-1/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-1/protocol/frame-1.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-1/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-1/protocol/frame-2.f32": {
+      "size": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-1/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-0/protocol/frame-0.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-0/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-0/protocol/frame-1.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-0/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-0/protocol/frame-2.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-0/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-1/protocol/frame-0.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-1/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-1/protocol/frame-1.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-1/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-1/protocol/frame-2.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/garnet-1/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-0/protocol/frame-0.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-0/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-0/protocol/frame-1.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-0/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-0/protocol/frame-2.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-0/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-1/protocol/frame-0.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-1/protocol/frame-0.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-1/protocol/frame-1.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-1/protocol/frame-1.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-1/protocol/frame-2.f32": {
+      "size": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    "logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-b2-0/vllm-metal-1/protocol/frame-2.rgb": {
+      "size": 165888,
+      "sha256": "82be1148eb31c7c2cf9c4d5f52774db832d58f5f2ae17e7f40882403c67ccfcd"
+    }
+  },
+  "counts_as_default_bf16_speedup": false,
+  "clean_requests": 72,
+  "dtype_audits": [
+    {
+      "model": "Qwen3-0.6B",
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3-0.6B-dtype-0",
+      "report": {
+        "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+        "requested_dtype": "float32",
+        "workers": [
+          {
+            "configured_model_dtype": "torch.float32",
+            "actual_parameter_tensors": {
+              "mlx.core.float32": 310
+            },
+            "actual_parameter_elements": {
+              "mlx.core.float32": 596049920
+            },
+            "examples": {
+              "mlx.core.float32": [
+                {
+                  "name": "model.embed_tokens.weight",
+                  "shape": [
+                    151936,
+                    1024
+                  ]
+                },
+                {
+                  "name": "model.layers.0.mlp.gate_proj.weight",
+                  "shape": [
+                    3072,
+                    1024
+                  ]
+                },
+                {
+                  "name": "model.layers.0.mlp.down_proj.weight",
+                  "shape": [
+                    1024,
+                    3072
+                  ]
+                },
+                {
+                  "name": "model.layers.0.mlp.up_proj.weight",
+                  "shape": [
+                    3072,
+                    1024
+                  ]
+                },
+                {
+                  "name": "model.layers.0.input_layernorm.weight",
+                  "shape": [
+                    1024
+                  ]
+                }
+              ]
+            },
+            "registered_parameter_tensors": 142,
+            "wrapped_attention_owners": [
+              {
+                "name": "model.layers.27.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.26.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.25.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.24.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.23.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.22.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.21.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.20.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.19.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.18.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.17.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.16.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.15.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.14.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.13.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.12.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.11.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.10.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.9.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.8.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.7.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.6.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.5.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.4.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.3.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.2.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.1.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "model.layers.0.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              }
+            ],
+            "activation_dtype_probes": {
+              "embedding_output_dtype": "mlx.core.float32",
+              "first_norm_output_dtype": "mlx.core.float32",
+              "first_attention_projection_dtype": "mlx.core.float32"
+            },
+            "runner_kv_dtype": "mlx.core.float32",
+            "mlx_default_device": "Device(gpu, 0)"
+          }
+        ],
+        "engine_mode": "in-process worker; serialization security defaults retained",
+        "gpu_memory_utilization": 0.3,
+        "versions": {
+          "vllm": "0.30.0+cpu",
+          "vllm-metal": "0.30.0",
+          "mlx": "0.32.1",
+          "mlx-lm": "0.32.0",
+          "mlx-vlm": "0.6.17"
+        },
+        "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/resident-kv-vllm-profiles-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-dtype-0",
+      "report": {
+        "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+        "requested_dtype": "float32",
+        "workers": [
+          {
+            "configured_model_dtype": "torch.float32",
+            "actual_parameter_tensors": {
+              "mlx.core.float32": 290
+            },
+            "actual_parameter_elements": {
+              "mlx.core.float32": 494032768
+            },
+            "examples": {
+              "mlx.core.float32": [
+                {
+                  "name": "model.embed_tokens.weight",
+                  "shape": [
+                    151936,
+                    896
+                  ]
+                },
+                {
+                  "name": "model.layers.0.mlp.gate_proj.weight",
+                  "shape": [
+                    4864,
+                    896
+                  ]
+                },
+                {
+                  "name": "model.layers.0.mlp.down_proj.weight",
+                  "shape": [
+                    896,
+                    4864
+                  ]
+                },
+                {
+                  "name": "model.layers.0.mlp.up_proj.weight",
+                  "shape": [
+                    4864,
+                    896
+                  ]
+                },
+                {
+                  "name": "model.layers.0.input_layernorm.weight",
+                  "shape": [
+                    896
+                  ]
+                }
+              ]
+            },
+            "registered_parameter_tensors": 122,
+            "wrapped_attention_owners": [
+              {
+                "name": "model.layers.23.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.22.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.21.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.20.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.19.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.18.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.17.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.16.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.15.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.14.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.13.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.12.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.11.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.10.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.9.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.8.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.7.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.6.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.5.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.4.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.3.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.2.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.1.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              },
+              {
+                "name": "model.layers.0.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 7
+              }
+            ],
+            "activation_dtype_probes": {
+              "embedding_output_dtype": "mlx.core.float32",
+              "first_norm_output_dtype": "mlx.core.float32",
+              "first_attention_projection_dtype": "mlx.core.float32"
+            },
+            "runner_kv_dtype": "mlx.core.float32",
+            "mlx_default_device": "Device(gpu, 0)"
+          }
+        ],
+        "engine_mode": "in-process worker; serialization security defaults retained",
+        "gpu_memory_utilization": 0.3,
+        "versions": {
+          "vllm": "0.30.0+cpu",
+          "vllm-metal": "0.30.0",
+          "mlx": "0.32.1",
+          "mlx-lm": "0.32.0",
+          "mlx-vlm": "0.6.17"
+        },
+        "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/resident-kv-vllm-profiles-20261013/jobs/Qwen3.5-0.8B-dtype-0",
+      "report": {
+        "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3.5-0.8B",
+        "requested_dtype": "float32",
+        "workers": [
+          {
+            "configured_model_dtype": "torch.float32",
+            "actual_parameter_tensors": {
+              "mlx.core.float32": 473
+            },
+            "actual_parameter_elements": {
+              "mlx.core.float32": 852985920
+            },
+            "examples": {
+              "mlx.core.float32": [
+                {
+                  "name": "vision_tower.patch_embed.proj.weight",
+                  "shape": [
+                    768,
+                    2,
+                    16,
+                    16,
+                    3
+                  ]
+                },
+                {
+                  "name": "vision_tower.patch_embed.proj.bias",
+                  "shape": [
+                    768
+                  ]
+                },
+                {
+                  "name": "vision_tower.pos_embed.weight",
+                  "shape": [
+                    2304,
+                    768
+                  ]
+                },
+                {
+                  "name": "vision_tower.blocks.0.norm1.weight",
+                  "shape": [
+                    768
+                  ]
+                },
+                {
+                  "name": "vision_tower.blocks.0.norm1.bias",
+                  "shape": [
+                    768
+                  ]
+                }
+              ]
+            },
+            "registered_parameter_tensors": 275,
+            "wrapped_attention_owners": [
+              {
+                "name": "language_model.model.layers.23.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "language_model.model.layers.22.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.21.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.20.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.19.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "language_model.model.layers.18.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.17.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.16.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.15.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "language_model.model.layers.14.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.13.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.12.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.11.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "language_model.model.layers.10.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.9.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.8.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.7.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "language_model.model.layers.6.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.5.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.4.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.3.self_attn",
+                "type": "SDPAPagedAttentionWrapper",
+                "parameter_tensors": 6
+              },
+              {
+                "name": "language_model.model.layers.2.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.1.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              },
+              {
+                "name": "language_model.model.layers.0.linear_attn",
+                "type": "GDNPagedAttentionWrapper",
+                "parameter_tensors": 9
+              }
+            ],
+            "activation_dtype_probes": {
+              "embedding_output_dtype": "mlx.core.float32",
+              "first_norm_output_dtype": "mlx.core.float32",
+              "first_attention_projection_dtype": "mlx.core.float32"
+            },
+            "runner_kv_dtype": "mlx.core.float32",
+            "mlx_default_device": "Device(gpu, 0)"
+          }
+        ],
+        "engine_mode": "in-process worker; serialization security defaults retained",
+        "gpu_memory_utilization": 0.45,
+        "versions": {
+          "vllm": "0.30.0+cpu",
+          "vllm-metal": "0.30.0",
+          "mlx": "0.32.1",
+          "mlx-lm": "0.32.0",
+          "mlx-vlm": "0.6.17"
+        },
+        "scope": "Read-only loaded-model dtype audit; no inference speed claim"
+      }
+    }
+  ]
+}
