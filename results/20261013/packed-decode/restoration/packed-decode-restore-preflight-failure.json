@@ -1,0 +1,16 @@
+{
+  "scope": "GPU exclusivity guard denied a restoration preflight; no inference or source mutation executed",
+  "pid": 97071,
+  "ancestry_flags": [
+    {
+      "pid": 97071,
+      "ppid": 1,
+      "uses_investigation": false,
+      "worldsense_ancestor": false,
+      "release_test_binary": true,
+      "argv_bytes": 299
+    }
+  ],
+  "gpu_library_names": [],
+  "lsof_exit": 0
+}

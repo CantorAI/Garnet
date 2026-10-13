@@ -1,0 +1,14 @@
+{
+  "candidate_sha256": "6bed77dcbd5dbfe1e6bb875062bce55d42db5e819f04badaeafe701694a55ba9",
+  "control_sha256": "26f2120c3570a28607969f855f6950d626372b388361325ac49096eb30d60671",
+  "original_assets_match_prior_control": true,
+  "cmake_options": [
+    "GARNET_METAL:BOOL=ON",
+    "GARNET_METAL_EXACT_HALF_PREFILL:BOOL=ON",
+    "GARNET_METAL_FRAMEWORK:FILEPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework",
+    "GARNET_METAL_MPS_VISION_SCORES:BOOL=ON",
+    "GARNET_METAL_PACKED_DECODE:BOOL=ON",
+    "GARNET_METAL_PARALLEL_DELTA_SPLIT:BOOL=ON",
+    "GARNET_METAL_XMODEL:BOOL=ON"
+  ]
+}

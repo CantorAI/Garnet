@@ -1,0 +1,13 @@
+{
+  "scope": "Source-only restoration; no GPU job started; inference guard unchanged",
+  "restored_source_sha256": {
+    "cmake/GarnetMetal.cmake": "ac89d396f7ef2ff58b3a715df8355a098293353a9bd54f1d56b3ff7c2f434868",
+    "src/backends/metal/metal_context.mm": "c22b6ff37e0af18109416b5594cfe772df56419a0c210b8d40ed5263bcc4a159",
+    "src/backends/metal/metal_context.h": "6cbc869c6f03d85f3d35226ab9856ef7b779951d1b471d4eb66d507ff61390f3",
+    "test2026/metal/matmul_test.cpp": "4d83d0ece5e1fb4556ac9edbd5a81220aaf7388be1a80187fa004f87b8b25ed4"
+  },
+  "selected_library_sha256": "26f2120c3570a28607969f855f6950d626372b388361325ac49096eb30d60671",
+  "probe_removed": true,
+  "all_owned_experiment_jobs_terminal": true,
+  "active_owned_jobs": []
+}
