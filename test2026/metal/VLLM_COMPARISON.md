@@ -39,6 +39,26 @@ execution policy or dtype.
 `GARNET_METAL_PROFILE_OPS=1` enables serialized per-operation GPU diagnostics.
 This splits command submissions and is excluded from all speed comparisons.
 
+The VL profile uses Qwen3.5-0.8B, RealWorld-04, 288x192 RGB, 54 visual tokens,
+79 total prompt tokens, capacity 256, chunk 16, output cap 32 and batches 1/2.
+The same isolated CPython frontend opens/resizes/normalizes each source frame,
+then supplies native FP32 patches or the identical resized RGB bytes to a
+persistent worker. Both frontends execute the same common preparation and save
+pixel/patch hashes. vLLM's processor is constrained to the already prepared
+pixel dimensions; its normal GPU vision/model path remains active. Every
+row/frame has a new MM UUID, with processor/prefix caches and speculation off.
+Native vision encoding runs again on every frame. GPU model work never overlaps.
+
+Both workers communicate through owned command/event files because native CLI
+stdout buffering prevents reliable streaming markers. Parent `time.monotonic`
+timestamps observe small first/done events before parsing bulky diagnostics.
+Common preparation, file transport, reset/cache preparation and inference are
+inside image-to-result timing. Worker-only timing is retained separately.
+Polling is 1 ms and is part of the observed serving interface, not sub-ms kernel
+precision. Fresh-process initialization is recorded separately; filesystem and
+compiler caches are not flushed. The native FP32 versus comparator BF16
+vision/activation/KV difference remains explicit despite identical weights.
+
 Run each configuration in two separate native processes, alternating
 Garnet/vLLM-Metal/Garnet/vLLM-Metal. Each process handles one first-use request
 and two warm requests. First-use latency and initialization are recorded

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_vllm_metal.py",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/build-state-handoff",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-vl-file-events-20261012/jobs",
+    "shared",
+    "-",
+    "vl"
+  ],
+  "exit_code": 0
+}

@@ -1,0 +1,38 @@
+compiled Garnet decoder layer 0 linear_attention ms 23.039667
+compiled Garnet decoder layer 1 linear_attention ms 23.704084
+compiled Garnet decoder layer 2 linear_attention ms 23.264
+compiled Garnet decoder layer 3 full_attention ms 18.678375
+compiled Garnet decoder layer 4 linear_attention ms 22.304792
+compiled Garnet decoder layer 5 linear_attention ms 22.67075
+compiled Garnet decoder layer 6 linear_attention ms 22.853083
+compiled Garnet decoder layer 7 full_attention ms 20.3085
+compiled Garnet decoder layer 8 linear_attention ms 22.6255
+compiled Garnet decoder layer 9 linear_attention ms 22.733125
+compiled Garnet decoder layer 10 linear_attention ms 23.2905
+compiled Garnet decoder layer 11 full_attention ms 19.35875
+compiled Garnet decoder layer 12 linear_attention ms 21.822792
+compiled Garnet decoder layer 13 linear_attention ms 22.382416
+compiled Garnet decoder layer 14 linear_attention ms 21.724208
+compiled Garnet decoder layer 15 full_attention ms 18.156333
+compiled Garnet decoder layer 16 linear_attention ms 22.278583
+compiled Garnet decoder layer 17 linear_attention ms 21.26375
+compiled Garnet decoder layer 18 linear_attention ms 20.716458
+compiled Garnet decoder layer 19 full_attention ms 18.450917
+compiled Garnet decoder layer 20 linear_attention ms 23.227334
+compiled Garnet decoder layer 21 linear_attention ms 22.422334
+compiled Garnet decoder layer 22 linear_attention ms 21.479584
+compiled Garnet decoder layer 23 full_attention ms 19.725792
+frame_ready {"prompt_token_ids": [248045, 846, 198, 248053, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248056, 248054, 72240, 279, 1822, 5978, 303, 411, 2099, 303, 799, 11316, 13, 248046, 198, 248045, 74455, 198, 248068, 271, 248069, 271], "stop_token_ids": [248044, 248046, 248044], "visual_tokens": 54}
+frame_initialization {"seconds": 207.50391320791095, "command": ["/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3", "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/frame_worker_garnet.py", "/Users/zsdx/garnet-metal-investigation/build-state-handoff", "/Users/zsdx/garnet-metal-investigation/source", "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B", "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-vl-private-frontend-20261012/jobs/Qwen3.5-0.8B-b1-case.json", "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-vl-private-frontend-20261012/jobs/Qwen3.5-0.8B-b1-garnet-0/protocol/command.json"], "backend": "garnet"}
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py", line 65, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py", line 46, in main
+    first,observed_first=receive('frame_first')
+                         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py", line 28, in receive
+    if not line:raise RuntimeError('Image worker ended before '+marker)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Image worker ended before frame_first
+matched_process {"command": ["/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python", "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py", "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3", "/Users/zsdx/garnet-metal-investigation/build-state-handoff", "/Users/zsdx/garnet-metal-investigation/source", "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B", "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-vl-private-frontend-20261012/jobs/Qwen3.5-0.8B-b1-case.json", "garnet", "/Users/zsdx/garnet-metal-investigation/logs/vllm-matched-vl-private-frontend-20261012/jobs/Qwen3.5-0.8B-b1-garnet-0/protocol"], "exit_code": 1, "wall_seconds": 207.70661737490445, "peak_rss_bytes": 2608070656, "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"}

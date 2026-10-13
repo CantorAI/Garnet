@@ -193,6 +193,9 @@ probe failed before producing any patches; its raw failure is in
 frontend feeding resident native/MLX workers is still needed to establish a
 fair image-to-result timing boundary. The runtime/SDK were not modified.
 
+The common frontend and persistent-worker comparison has subsequently executed;
+see the matched VL section below. The failed direct-import probe remains intact.
+
 Real full-head query/score samples from all three checkpoints are saved in
 `state-handoff/head-bound-feasibility-20261012`. The basic whole-row Cauchy
 norm bound prunes no rows in the sampled queries, even when supplied the
@@ -200,6 +203,50 @@ true maximum score. No pruning kernel or pruning speed advantage is claimed.
 The approximate CPU normalization and 0.1% margin make this feasibility data,
 not production proof. Further projection/attention optimization and the
 matched VL comparison remain open. The full goal is active and unmet.
+
+## Matched fresh-frame VL comparison
+
+`vl-frames/vllm-matched-vl-file-events-20261012` executed 24 actual requests:
+two fresh processes per runtime/batch, each with one first-use and two warm
+frames. Every process exited cleanly. Both runtimes received identical resized
+RGB pixels and the same 79 prompt IDs/54 visual tokens. Native patch bytes
+match the canonical fixture exactly, in batches 1 and 2. Source preparation,
+reset and worker transport are included in the parent monotonic first/done
+timers; compiler/filesystem caches were not flushed. All learned native
+operators execute in Garnet. The common CPU frontend uses the isolated
+comparator Python for both runtimes, without importing an inference framework.
+
+| Batch | Garnet tokens/s per row | vLLM tokens/s per row | Garnet TTFT, ms | vLLM TTFT, ms | Garnet total, ms | vLLM total, ms |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 43.47 | 48.59 | 698.28 | 200.47 | 1319.33 | 756.18 |
+| 2 | 37.62 | 47.32 | 1186.70 | 327.12 | 1904.38 | 982.92 |
+
+Batch 1 produced exactly the same completed 28-token caption in all 12
+requests. Batch 2 native requests produced that same 28-token caption in
+both rows, while comparator requests generated a different 32-token caption
+and reached the common output cap. Thus batch-2 exact-output/completion checks
+fail and its timing is a matched-input measurement with that quality/length
+limitation. Neither profile meets either target. Internal native FP32 versus
+comparator BF16 arithmetic is disclosed; identical checkpoints are not a claim
+of bit-identical internal model execution.
+
+Common source-image preparation costs about 50–54 ms per warm request. Native
+batch-1 vision alone costs about 79–82 ms; most remaining TTFT is model prefill.
+Each native frame is re-encoded and each comparator row/frame has a unique
+encoder-cache identity. The first/done event protocol polls at 1 ms. Diagnostics
+are read after the observed done event, so larger comparator logs do not
+inflate its response timer. Per-worker times, all captions/token IDs, process
+snapshots and input hashes remain available in `frame_summary.json`.
+
+Two earlier attempts are retained: the system-Python frontend lacked Pillow,
+and the native stdout ready marker was buffered. The second worker was stopped
+through its verified owned control file before any request inference; the
+interruption record and terminal failure are preserved. The successful run
+uses the isolated frontend and event files. No SDK/runtime was changed.
+
+The VL measurement gap is now closed. Its optimization gap and batch-2 output
+discrepancy remain open, alongside the text/coder speed targets. The full goal
+remains active and unmet.
 
 ## Comparator teardown compatibility
 
