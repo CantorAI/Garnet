@@ -367,6 +367,17 @@ VL decode slowed about 2%. The implementation and CMake option were reverted.
 targets remain unmet. The rejected source, commands and complete results are
 retained in the later report.
 
+### Rejected compute encoder reuse
+
+`../../20261013/encoder-reuse/` records a serial shared-encoder prototype, all
+11 existing validations, a new custom-compute abort/recovery test, and 72
+actual native ABBA requests. All outputs matched, but decode/TTFT changes were
+under about 0.5%. CPU encoding saved roughly 0.08 ms against 13–18 ms of GPU
+work/wait per decode step. The reuse implementation was reverted; the focused
+transaction test is retained and passed on the selected wide-prefill build.
+GPU execution and data movement remain the larger targets. The full objective
+remains active and unmet.
+
 ## Comparator teardown compatibility
 
 The preceding 48-request suite in

@@ -82,6 +82,14 @@ int main() {
         bool abortedRejected=false;
         try {gpu.Download(output);}catch(const std::logic_error&){abortedRejected=true;}
         if(!abortedRejected)throw std::runtime_error("Aborted GPU output was readable");
+        gpu.Begin();gpu.EncodeAdd(input,weight,output);gpu.Abort();
+        bool customAbortRejected=false;
+        try {gpu.Download(output);}catch(const std::logic_error&){customAbortRejected=true;}
+        if(!customAbortRejected)throw std::runtime_error("Aborted custom compute output was readable");
+        gpu.Begin();gpu.EncodeAdd(input,weight,output);gpu.SubmitAndWait();
+        auto inputValues=gpu.Download(input),weightValues=gpu.Download(weight),resumed=gpu.Download(output);
+        for(size_t index=0;index<resumed.size();++index)
+            if(resumed[index]!=inputValues[index]+weightValues[index])throw std::runtime_error("Custom compute did not recover after abort");
         auto updated=gpu.Allocate(3,5);
         std::vector<float> padded(15);
         for(size_t i=0;i<padded.size();++i)padded[i]=float(i)-7;

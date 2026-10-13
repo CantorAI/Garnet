@@ -1,0 +1,28 @@
+{
+  "build": "/Users/zsdx/garnet-metal-investigation/build-prefill-wide",
+  "commands": [
+    [
+      "/opt/homebrew/bin/cmake",
+      "--build",
+      "/Users/zsdx/garnet-metal-investigation/build-prefill-wide",
+      "--target",
+      "garnet_metal_matmul_test",
+      "--parallel",
+      "4"
+    ],
+    [
+      "/opt/homebrew/bin/ctest",
+      "--test-dir",
+      "/Users/zsdx/garnet-metal-investigation/build-prefill-wide",
+      "--output-on-failure"
+    ]
+  ],
+  "exit_codes": [
+    0,
+    0
+  ],
+  "tests_passed": 1,
+  "custom_compute_abort_recovery_included": true,
+  "test_seconds": 0.54,
+  "evidence": "Actual tool execution after restoring the selected wide-prefill source"
+}

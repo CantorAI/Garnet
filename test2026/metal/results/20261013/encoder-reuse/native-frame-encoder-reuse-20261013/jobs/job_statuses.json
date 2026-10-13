@@ -1,0 +1,154 @@
+[
+  {
+    "name": "Qwen3.5-0.8B-b1-garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-encoder-reuse",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b1-garnet-0/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 6.812277665827423
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-garnet-control-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-prefill-wide",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b1-garnet-control-0/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 6.714552749879658
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-garnet-control-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-prefill-wide",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b1-garnet-control-1/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 6.727394167333841
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-encoder-reuse",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b1-garnet-1/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 6.689272750169039
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-encoder-reuse",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b2-garnet-0/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 8.354060625191778
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-garnet-control-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-prefill-wide",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b2-garnet-control-0/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 8.339481833856553
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-garnet-control-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-prefill-wide",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b2-garnet-control-1/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 8.296668875031173
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-encoder-reuse",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/native-frame-encoder-reuse-20261013/jobs/Qwen3.5-0.8B-b2-garnet-1/protocol"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "process_seconds": 8.326374750118703
+  }
+]
