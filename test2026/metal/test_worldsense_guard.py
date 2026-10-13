@@ -53,6 +53,22 @@ class ChangedSource:
 scope['worldsense_script']=ChangedSource()
 check('changed launcher source',False,Probe())
 scope['worldsense_script']=service;scope['subprocess']=subprocess
+supervisor_bytes=service.read_bytes()
+assert hashlib.sha256(supervisor_bytes).hexdigest()=='b904bcf8ece0b74dc160a95aa833b58c8d33536ba90f924465a61b95e61238ed','Supervisor changed; inspect it before extending the guard'
+class SupervisorSource:
+ parents=service.parents
+ def __init__(self,data):self.data=data
+ def __str__(self):return str(service)
+ def is_file(self):return True
+ def read_bytes(self):return self.data
+ def read_text(self,**kwargs):return self.data.decode()
+scope['worldsense_script']=SupervisorSource(supervisor_bytes)
+supervisor_command=str(service.parents[2]/'xlang3')+' -B -u '+str(service)
+check('pinned forwarding-only supervisor',True,Probe(command=supervisor_command))
+check('supervisor with loaded inference library',False,Probe(command=supervisor_command,libraries='n/private/libgarnet'))
+scope['worldsense_script']=SupervisorSource(supervisor_bytes+b'\n')
+check('changed supervisor with forwarding marker',False,Probe(command=supervisor_command))
+scope['worldsense_script']=service;scope['subprocess']=subprocess
 assert verify(pid),'Current live service did not pass the inspected-source/library checks'
 results.append(dict(name='actual live read-only verification',passed=True,expected=True))
 summary=dict(scope='Guard identity/rejection checks; no GPU inference',checks=results,

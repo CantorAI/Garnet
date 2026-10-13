@@ -45,6 +45,11 @@ def verified_worldsense_service(pid):
         identified=True;service_script=launch;verification='exact inline launcher and source fingerprints'
     if not identified or not service_script.is_file():return False
     source_text=service_script.read_text(errors='replace').lower()
+    # This inspected supervisor only forwards the TRT budget environment name;
+    # it imports no inference module. Pin the source before excluding that
+    # literal from keyword detection; loaded inference libraries still reject.
+    if service_script==worldsense_script and hashlib.sha256(service_script.read_bytes()).hexdigest()=='b904bcf8ece0b74dc160a95aa833b58c8d33536ba90f924465a61b95e61238ed':
+        source_text=source_text.replace("'garnet_trt_weight_streaming_budget_mib'",'')
     if any(marker in source_text for marker in ('garnet','mlx','ollama','vllm','torch','qwen','metal')):return False
     libraries=subprocess.run(['/usr/sbin/lsof','-p',str(pid),'-Fn'],capture_output=True,text=True)
     if libraries.returncode:return False
