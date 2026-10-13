@@ -1,0 +1,16 @@
+{
+  "scope": "Exact GPU codec and isolated matrix-vector feasibility only; not full-model inference",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "source_sha256": {
+    "metal_context.mm": "faca27f8e2260b4f0dc312c294329f5017534adef65e28d7c7a7246e9969aed1",
+    "lossless_gpu_probe.mm": "fe457574b929620bca090aa84de435093563745a9e2a704ab1959aa9ef749b3e",
+    "lossless_gpu_probe.metal": "22f6a6fdf73f95fc76b0ae89ad4d42c454a72974b3f3f5099d095263cddb9d20",
+    "prepare_lossless_gpu_probe.py": "c8caa319d0988db5971d6714f0e2d2919d0ddb521a275b0a3d56985fb976ed14",
+    "probe_lossless_bf16_codec.py": "693a20f0ba1ab233b3e267a8b1fd1f3af723ce319670539d5bed08ad26deb5ee"
+  },
+  "native_control_kernel_sha256": "0caada234e7feac6d02c15b031a1c875983888dee767cc41d76459bbd1273446",
+  "small": false
+}

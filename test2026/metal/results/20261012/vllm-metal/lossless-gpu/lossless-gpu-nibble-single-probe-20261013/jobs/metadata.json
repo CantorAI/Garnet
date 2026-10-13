@@ -1,0 +1,19 @@
+{
+  "scope": "Exact GPU codec and isolated matrix-vector feasibility only; not full-model inference",
+  "codec": "nibble-fastpath",
+  "packed_columns_per_simd": 1,
+  "reuse_assets": "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "source_sha256": {
+    "metal_context.mm": "faca27f8e2260b4f0dc312c294329f5017534adef65e28d7c7a7246e9969aed1",
+    "lossless_gpu_probe.mm": "d8a0cfead76a16275637c3571e8342274b98e78303d624ede93e56de9a83217a",
+    "lossless_gpu_probe.metal": "f0d5716255b3e3fafda5a74646008127c04f6736eb7064ab80cafb83fd29266f",
+    "prepare_lossless_gpu_probe.py": "dfa3f302eb21da1f18351c484cdd043214239ed4c3fc5f0360e0f6d6da1d2719",
+    "probe_lossless_nibble_bf16_codec.py": "76585569813a4deabd6e8d10474e687b46d3e900c29f5e075d2994698515dd9f"
+  },
+  "native_control_kernel_sha256": "0caada234e7feac6d02c15b031a1c875983888dee767cc41d76459bbd1273446",
+  "small": false
+}

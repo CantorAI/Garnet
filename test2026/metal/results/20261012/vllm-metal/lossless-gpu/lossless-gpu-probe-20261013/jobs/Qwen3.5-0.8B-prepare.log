@@ -1,0 +1,4 @@
+{"name": "all-bit-patterns", "rows": 512, "inner": 128, "count": 65536, "finite": false, "block": 128, "raw_bytes": 131072, "packed_bytes": 94208, "storage_ratio": 1.391304347826087, "cpu_full_bit_roundtrip": true}
+{"name": "random-tail", "rows": 1, "inner": 4097, "count": 4097, "finite": false, "block": 128, "raw_bytes": 8194, "packed_bytes": 9880, "storage_ratio": 0.8293522267206478, "cpu_full_bit_roundtrip": true}
+{"name": "matrix-0", "rows": 1024, "inner": 3584, "count": 3670016, "finite": true, "block": 128, "raw_bytes": 7340032, "packed_bytes": 5361257, "storage_ratio": 1.3690878836810099, "cpu_full_bit_roundtrip": true}
+{"name": "matrix-1", "rows": 248320, "inner": 1024, "count": 254279680, "finite": true, "block": 128, "raw_bytes": 508559360, "packed_bytes": 371472143, "storage_ratio": 1.3690376777458653, "cpu_full_bit_roundtrip": true}

@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/opt/homebrew/bin/python3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_lossless_gpu_probe.py",
+    "/Users/zsdx/garnet-metal-investigation",
+    "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-single-probe-20261013/jobs",
+    "--single-column",
+    "--reuse-assets",
+    "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs"
+  ],
+  "exit_code": 0
+}

@@ -1,0 +1,21 @@
+{
+  "name": "random-tail",
+  "rows": 1,
+  "inner": 4097,
+  "count": 4097,
+  "finite": false,
+  "block": 128,
+  "codec": "nibble-fastpath",
+  "raw_bytes": 8194,
+  "packed_bytes": 10238,
+  "storage_ratio": 0.8003516311779645,
+  "escape_free_block_fraction": 0.0,
+  "cpu_full_bit_roundtrip": true,
+  "sha256": {
+    "raw.bin": "8ec1b6b77b65f31493e237b09fb29988d34227783dce7a28cac8509063b88723",
+    "metadata.bin": "9f0b029631b2bd071f571f18975706f2faa75957185f7bc603c52187a31da777",
+    "exceptions.bin": "9490e69e44a1182caa97b835767f50b5ca29392207496b36d75bc0ba3b4b42c1",
+    "payload.bin": "d992bbab7cbd79d08c696808a656361c6eb55e8774c5d1788af375ae738bac3c",
+    "packed.bin": "f460b5a6c39d39c8a06a2aa207d95e7ca89d8ee0ea2a30b2b3f86be081fee81b"
+  }
+}

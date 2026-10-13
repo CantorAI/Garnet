@@ -1,0 +1,84 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/lossless_gpu_probe.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/lossless_gpu_probe"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.930419750045985
+  },
+  {
+    "name": "Qwen3.5-0.8B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_lossless_gpu_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 27.32852212479338
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/lossless_gpu_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 4.091190832667053
+  },
+  {
+    "name": "Qwen3-0.6B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_lossless_gpu_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 18.094002374913543
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/lossless_gpu_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 2.2993679577484727
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_lossless_gpu_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 15.099366500042379
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/lossless_gpu_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/lossless-gpu-nibble-probe-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 2.1060804170556366
+  }
+]

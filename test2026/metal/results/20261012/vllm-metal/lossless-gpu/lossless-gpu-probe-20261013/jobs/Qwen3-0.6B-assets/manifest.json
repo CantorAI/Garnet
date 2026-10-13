@@ -1,0 +1,85 @@
+{
+  "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+  "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+  "small": false,
+  "cases": [
+    {
+      "name": "all-bit-patterns",
+      "rows": 512,
+      "inner": 128,
+      "count": 65536,
+      "finite": false,
+      "block": 128,
+      "raw_bytes": 131072,
+      "packed_bytes": 94208,
+      "storage_ratio": 1.391304347826087,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "68e419472d25e0b85e9917ccf692fd58245c5e95e9a46f07d1df81d2e9da246b",
+        "metadata.bin": "71bea56f737946d04992ab5502207b4f19eba817196e7e557ae318bea78e8997",
+        "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload.bin": "6cc160ddcd24f715333f6f8c9ab3cec44ad8680ae96f2db95275bedf5fa891a4",
+        "packed.bin": "de676bae28a480011d3d012db14bef539324e62a841a9627863c689bea168af3"
+      }
+    },
+    {
+      "name": "random-tail",
+      "rows": 1,
+      "inner": 4097,
+      "count": 4097,
+      "finite": false,
+      "block": 128,
+      "raw_bytes": 8194,
+      "packed_bytes": 9880,
+      "storage_ratio": 0.8293522267206478,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "8ec1b6b77b65f31493e237b09fb29988d34227783dce7a28cac8509063b88723",
+        "metadata.bin": "a01bffcf92ad44626d38fbfc09266e4f0162da7e6e7747bfecfd6e95f14d55fc",
+        "exceptions.bin": "0f679f3f6d2e94173c13192caab99143fc60d91994d3390ebd36fc6672d11bae",
+        "payload.bin": "d992bbab7cbd79d08c696808a656361c6eb55e8774c5d1788af375ae738bac3c",
+        "packed.bin": "584c2c65360933acd4acf6cad13ad31d00b9ce4bc866fa9a9375e3b3865bd701"
+      }
+    },
+    {
+      "name": "matrix-0",
+      "rows": 1024,
+      "inner": 3072,
+      "count": 3145728,
+      "finite": true,
+      "block": 128,
+      "raw_bytes": 6291456,
+      "packed_bytes": 4603081,
+      "storage_ratio": 1.3667923723262745,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b",
+        "metadata.bin": "54ecb81686efeaa38025a6a1316eb59d1137f5352b6d2111941a7c6974f2495e",
+        "exceptions.bin": "adb0a11d63901544714c989c44ca885b85e70b924c8080c05b7637a6ff518986",
+        "payload.bin": "7582f3420b99e5b7fa37944e042125ff1d5fe75f491f86d632c98b4dff3aea93",
+        "packed.bin": "9ceb2b0b5530e96ee7c6a2fad9019cf82f710046e12700d7ba2a9b28f0280f97"
+      },
+      "tensor": "model.layers.0.mlp.down_proj.weight"
+    },
+    {
+      "name": "matrix-1",
+      "rows": 151936,
+      "inner": 1024,
+      "count": 155582464,
+      "finite": true,
+      "block": 128,
+      "raw_bytes": 311164928,
+      "packed_bytes": 227507074,
+      "storage_ratio": 1.3677153968408033,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6",
+        "metadata.bin": "f6124dcfb048a97ed9bd51af4501f641796c7f8bc8d8d2da8572885775607364",
+        "exceptions.bin": "6d2028f163bf4285a56d725334eb957a78aaf48b61b519fd76185c98994c8fec",
+        "payload.bin": "eec4c776069b2b159c81054559b618c6b88928d8c4b39260909a4a0a2ee97de4",
+        "packed.bin": "8a94aebaf2bc3cc22b6b40c151921dae1345bbf8bf10b0085d5c81f6eb74f29d"
+      },
+      "tensor": "lm_head.weight"
+    }
+  ]
+}

@@ -9,12 +9,13 @@ from pathlib import Path
 import numpy as np
 BLOCK=256
 
-def encode(bits):
+def encode(bits,block=BLOCK):
+    if block not in (128,256):raise ValueError('Expected a 128- or 256-value block')
     original_count=bits.size
-    bits=np.pad(bits.reshape(-1), (0,(-original_count)%BLOCK)).reshape(-1,BLOCK)
+    bits=np.pad(bits.reshape(-1), (0,(-original_count)%block)).reshape(-1,block)
     exponents=((bits>>7)&255).astype(np.int16)
     hist=np.zeros((len(bits),256),np.int32)
-    for i in range(BLOCK):hist[np.arange(len(bits)),exponents[:,i]]+=1
+    for i in range(block):hist[np.arange(len(bits)),exponents[:,i]]+=1
     cumulative=np.pad(hist.cumsum(axis=1),((0,0),(1,0)))
     ends=np.arange(1,257);starts=np.maximum(0,ends-7)
     bases=(cumulative[:,ends]-cumulative[:,starts]).argmax(axis=1)
@@ -38,7 +39,7 @@ def decode(encoded):
         word,shift=divmod(i*3,32);value=packed[:,word]>>np.uint32(shift)
         if shift>29:value|=packed[:,word+1]<<np.uint32(32-shift)
         tags[:,i]=value&7
-    tags=tags.reshape(-1,BLOCK);base=(encoded['metadata']&255).astype(np.int16)
+    tags=tags.reshape(encoded['payload'].shape);base=(encoded['metadata']&255).astype(np.int16)
     exponents=base[:,None]-tags.astype(np.int16);mask=tags==7
     for row in range(len(tags)):
         start=int(encoded['metadata'][row]>>np.uint64(8));count=int(mask[row].sum())

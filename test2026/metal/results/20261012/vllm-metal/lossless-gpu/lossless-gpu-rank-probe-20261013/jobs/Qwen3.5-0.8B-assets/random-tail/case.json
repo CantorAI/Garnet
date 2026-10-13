@@ -1,0 +1,21 @@
+{
+  "name": "random-tail",
+  "rows": 1,
+  "inner": 4097,
+  "count": 4097,
+  "finite": false,
+  "block": 128,
+  "codec": "rank-popcount",
+  "raw_bytes": 8194,
+  "packed_bytes": 10012,
+  "storage_ratio": 0.8184178985217738,
+  "cpu_full_bit_roundtrip": true,
+  "sha256": {
+    "raw.bin": "8ec1b6b77b65f31493e237b09fb29988d34227783dce7a28cac8509063b88723",
+    "metadata.bin": "a01bffcf92ad44626d38fbfc09266e4f0162da7e6e7747bfecfd6e95f14d55fc",
+    "exceptions.bin": "0f679f3f6d2e94173c13192caab99143fc60d91994d3390ebd36fc6672d11bae",
+    "ranks.bin": "e4982d9418bf425415d71eeb4d99545b56afd201ef416ac67d2a3983319af98a",
+    "payload.bin": "d992bbab7cbd79d08c696808a656361c6eb55e8774c5d1788af375ae738bac3c",
+    "packed.bin": "584c2c65360933acd4acf6cad13ad31d00b9ce4bc866fa9a9375e3b3865bd701"
+  }
+}

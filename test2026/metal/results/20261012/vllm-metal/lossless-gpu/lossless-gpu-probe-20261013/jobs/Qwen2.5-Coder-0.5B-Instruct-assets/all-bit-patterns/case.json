@@ -1,0 +1,19 @@
+{
+  "name": "all-bit-patterns",
+  "rows": 512,
+  "inner": 128,
+  "count": 65536,
+  "finite": false,
+  "block": 128,
+  "raw_bytes": 131072,
+  "packed_bytes": 94208,
+  "storage_ratio": 1.391304347826087,
+  "cpu_full_bit_roundtrip": true,
+  "sha256": {
+    "raw.bin": "68e419472d25e0b85e9917ccf692fd58245c5e95e9a46f07d1df81d2e9da246b",
+    "metadata.bin": "71bea56f737946d04992ab5502207b4f19eba817196e7e557ae318bea78e8997",
+    "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "payload.bin": "6cc160ddcd24f715333f6f8c9ab3cec44ad8680ae96f2db95275bedf5fa891a4",
+    "packed.bin": "de676bae28a480011d3d012db14bef539324e62a841a9627863c689bea168af3"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+  "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+  "small": false,
+  "cases": [
+    {
+      "name": "all-bit-patterns",
+      "rows": 512,
+      "inner": 128,
+      "count": 65536,
+      "finite": false,
+      "block": 128,
+      "codec": "nibble-fastpath",
+      "raw_bytes": 131072,
+      "packed_bytes": 102400,
+      "storage_ratio": 1.28,
+      "escape_free_block_fraction": 1.0,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "68e419472d25e0b85e9917ccf692fd58245c5e95e9a46f07d1df81d2e9da246b",
+        "metadata.bin": "734e83bfff03da382fe3b8882fefb04c71dc98351d62097d141ec99ef76bc790",
+        "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload.bin": "6cc160ddcd24f715333f6f8c9ab3cec44ad8680ae96f2db95275bedf5fa891a4",
+        "packed.bin": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+      }
+    },
+    {
+      "name": "random-tail",
+      "rows": 1,
+      "inner": 4097,
+      "count": 4097,
+      "finite": false,
+      "block": 128,
+      "codec": "nibble-fastpath",
+      "raw_bytes": 8194,
+      "packed_bytes": 10238,
+      "storage_ratio": 0.8003516311779645,
+      "escape_free_block_fraction": 0.0,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "8ec1b6b77b65f31493e237b09fb29988d34227783dce7a28cac8509063b88723",
+        "metadata.bin": "9f0b029631b2bd071f571f18975706f2faa75957185f7bc603c52187a31da777",
+        "exceptions.bin": "9490e69e44a1182caa97b835767f50b5ca29392207496b36d75bc0ba3b4b42c1",
+        "payload.bin": "d992bbab7cbd79d08c696808a656361c6eb55e8774c5d1788af375ae738bac3c",
+        "packed.bin": "f460b5a6c39d39c8a06a2aa207d95e7ca89d8ee0ea2a30b2b3f86be081fee81b"
+      }
+    },
+    {
+      "name": "matrix-0",
+      "rows": 1024,
+      "inner": 3072,
+      "count": 3145728,
+      "finite": true,
+      "block": 128,
+      "codec": "nibble-fastpath",
+      "raw_bytes": 6291456,
+      "packed_bytes": 4915580,
+      "storage_ratio": 1.2799010493166625,
+      "escape_free_block_fraction": 0.9845784505208334,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b",
+        "metadata.bin": "ca242b5b5984bde4a66fcf1ea0f42794821320d4db2ca7c52181d784a4538a6e",
+        "exceptions.bin": "ef9b362fff00af3d40df34aaceb00088dd8b77048486513f62fe5e6315cd7cdc",
+        "payload.bin": "7582f3420b99e5b7fa37944e042125ff1d5fe75f491f86d632c98b4dff3aea93",
+        "packed.bin": "77bf71ce6578eb1cfe0dbe1bfd54f7f668f937598bf9d23ea06c3ae6647de19d"
+      },
+      "tensor": "model.layers.0.mlp.down_proj.weight"
+    },
+    {
+      "name": "matrix-1",
+      "rows": 151936,
+      "inner": 1024,
+      "count": 155582464,
+      "finite": true,
+      "block": 128,
+      "codec": "nibble-fastpath",
+      "raw_bytes": 311164928,
+      "packed_bytes": 243113655,
+      "storage_ratio": 1.2799154699887179,
+      "escape_free_block_fraction": 0.9868809893639428,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6",
+        "metadata.bin": "507fd3c5e6808be7b90d269a050c7fad7fb767b4f01a11744b77285afd6df001",
+        "exceptions.bin": "e92ab6e8ac6200118dcb72eb6d05dcc85afaa161a070f23390de8c647664cc12",
+        "payload.bin": "eec4c776069b2b159c81054559b618c6b88928d8c4b39260909a4a0a2ee97de4",
+        "packed.bin": "bf207a181d4953c0a5e0a3296fbdeab0a8632633a87b38211e4b21c496d1aa87"
+      },
+      "tensor": "lm_head.weight"
+    }
+  ]
+}

@@ -286,11 +286,25 @@ reconstructs exactly. The weighted sampled storage ratio is 1.3971x
 (11.4521 bits/value, roughly 28.4% fewer bytes). This is not quantization.
 The report is `vl-mps-roofline/lossless-bf16-codec-report.json`.
 
-No GPU packing kernel or packed-model speed improvement has been demonstrated.
-The CPU prototype establishes representation correctness only; compression,
-GPU unpacking cost and full-model numerical/performance validation remain
-required before it could count toward the goal. All 2x/half-TTFT targets
-remain unmet.
+At the CPU-prototype stage, no GPU codec or packed-model speed gain had been
+demonstrated. That prototype established representation correctness only.
+The subsequent GPU checks are recorded below; full-model numerical and
+performance validation remains required before a codec could count toward
+the goal. All 2x/half-TTFT targets remain unmet.
+
+### Subsequent exact GPU packing measurements
+
+`lossless-gpu/` now closes the GPU representation-feasibility question for
+four experimental codecs/schedules. All three checkpoints' complete heads
+and first-layer down projections reconstructed exactly on the GPU; all 48
+isolated projection comparisons were bit-exact. All four full-head profiles
+were slower than the unchanged raw BF16 kernel, despite 22–27% fewer stored
+bytes, and are rejected for integration. A small Qwen3 projection improved
+in isolation; no full-model gain or generated-output validation is claimed.
+The earlier CPU-only paragraph describes the state before these experiments.
+Exact commands, source snapshots, hashes, timing windows and limitations are
+retained in `lossless-gpu/README.md`. Production native code was not changed;
+the matched throughput and TTFT targets remain unmet.
 
 ## Comparator teardown compatibility
 

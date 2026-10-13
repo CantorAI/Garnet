@@ -1,0 +1,93 @@
+{
+  "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+  "checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+  "small": false,
+  "cases": [
+    {
+      "name": "all-bit-patterns",
+      "rows": 512,
+      "inner": 128,
+      "count": 65536,
+      "finite": false,
+      "block": 128,
+      "codec": "rank-popcount",
+      "raw_bytes": 131072,
+      "packed_bytes": 96256,
+      "storage_ratio": 1.3617021276595744,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "68e419472d25e0b85e9917ccf692fd58245c5e95e9a46f07d1df81d2e9da246b",
+        "metadata.bin": "71bea56f737946d04992ab5502207b4f19eba817196e7e557ae318bea78e8997",
+        "exceptions.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ranks.bin": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad",
+        "payload.bin": "6cc160ddcd24f715333f6f8c9ab3cec44ad8680ae96f2db95275bedf5fa891a4",
+        "packed.bin": "de676bae28a480011d3d012db14bef539324e62a841a9627863c689bea168af3"
+      }
+    },
+    {
+      "name": "random-tail",
+      "rows": 1,
+      "inner": 4097,
+      "count": 4097,
+      "finite": false,
+      "block": 128,
+      "codec": "rank-popcount",
+      "raw_bytes": 8194,
+      "packed_bytes": 10012,
+      "storage_ratio": 0.8184178985217738,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "8ec1b6b77b65f31493e237b09fb29988d34227783dce7a28cac8509063b88723",
+        "metadata.bin": "a01bffcf92ad44626d38fbfc09266e4f0162da7e6e7747bfecfd6e95f14d55fc",
+        "exceptions.bin": "0f679f3f6d2e94173c13192caab99143fc60d91994d3390ebd36fc6672d11bae",
+        "ranks.bin": "e4982d9418bf425415d71eeb4d99545b56afd201ef416ac67d2a3983319af98a",
+        "payload.bin": "d992bbab7cbd79d08c696808a656361c6eb55e8774c5d1788af375ae738bac3c",
+        "packed.bin": "584c2c65360933acd4acf6cad13ad31d00b9ce4bc866fa9a9375e3b3865bd701"
+      }
+    },
+    {
+      "name": "matrix-0",
+      "rows": 896,
+      "inner": 4864,
+      "count": 4358144,
+      "finite": true,
+      "block": 128,
+      "codec": "rank-popcount",
+      "raw_bytes": 8716288,
+      "packed_bytes": 6507037,
+      "storage_ratio": 1.3395172026838023,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "7738979cfc99fcfc9fc081652c7afc2c421f3cad05b97d8b1d2790d27ac64057",
+        "metadata.bin": "679fc19ccd78627187d61413b01559e5f935af28ee98f2e35fbb5c44b3a2d39e",
+        "exceptions.bin": "9b7bb66de45e850e0cf7f1c86d38984c5469c7d6841c773cc5fdb67dc3dfd2e5",
+        "ranks.bin": "7abae1f2c78e632bc191ff40b19fe6248d14567aea5dc7aef8bf5f247e75e6d2",
+        "payload.bin": "53cd3443efc15528cd8718657ea452c9a54e5d6f98cebcb9a2c4b30c63a008ec",
+        "packed.bin": "9509e9bb42db662e11f8c661d7bf25c615ad5271dc56309460d774f377c531c9"
+      },
+      "tensor": "model.layers.0.mlp.down_proj.weight"
+    },
+    {
+      "name": "matrix-1",
+      "rows": 151936,
+      "inner": 896,
+      "count": 136134656,
+      "finite": true,
+      "block": 128,
+      "codec": "rank-popcount",
+      "raw_bytes": 272269312,
+      "packed_bytes": 203209295,
+      "storage_ratio": 1.3398467427388103,
+      "cpu_full_bit_roundtrip": true,
+      "sha256": {
+        "raw.bin": "fa8f961560d25293a0de13d7855335f76c738a42352cfd8446ec05db3b80c3ae",
+        "metadata.bin": "42fb157b604573d4691c1d4d350bf01019192d03d9a7da0c25d60480a6826268",
+        "exceptions.bin": "4df2c88f72f64d52817f98cda72f01b19d0c7252de93c9a51d207b2ab1855dcc",
+        "ranks.bin": "be08ed6c22a6458e08489a7b7e47463057557e765ff9af37e3d02cff471a2241",
+        "payload.bin": "a9714ee9f177d007827c62b3ba697d9f0be834cf217625d62758b9d857b89dfd",
+        "packed.bin": "2203d768be4e27192075cf72cbbe52d7b68a2d579a11b4d60f61c29935b5b9d2"
+      },
+      "tensor": "model.embed_tokens.weight"
+    }
+  ]
+}
