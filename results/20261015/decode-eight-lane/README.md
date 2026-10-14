@@ -40,4 +40,14 @@ libraries are unchanged. The main optimization goal remains active and unmet.
 ```text
 python3 queue_decode_eight_lane_probe.py ROOT ROOT/logs/decode-eight-lane-20261015
 python3 run_decode_eight_lane_probe.py ROOT OUTPUT
+python3 archive_decode_eight_lane.py ROOT ARCHIVE
+python verify_decode_eight_lane.py RESULTS
 ```
+
+The archive preserves terminal evidence even if the numerical gate rejects
+the kernel; regenerable raw matrices are represented by exact byte lengths,
+checkpoint identities and hashes. The success audit independently recomputes
+component medians and ratios, checks all original 136 matrix/batch/variant
+cases and monitor records, verifies the selected small-output control and
+unchanged numerical bounds, and confirms the dependency's successful terminal
+archive. It must not be used as a success audit for a failed or partial run.
