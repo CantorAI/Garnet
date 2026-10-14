@@ -1,0 +1,4 @@
+/Users/zsdx/garnet-metal-investigation/logs/single-row-bf16-confirm-20261014/jobs/single_row_bf16_gpu.mm:30:2: warning: 'auto' deduced as 'id' in declaration of 'manifest' [-Wauto-var-id]
+   30 |  auto manifest=[NSJSONSerialization JSONObjectWithData:manifestBytes options:0 error:&error];require(manifest!=nil,"Manifest unavailable");
+      |  ^~~~~~~~~~~~~
+1 warning generated.

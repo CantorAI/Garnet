@@ -1,0 +1,38 @@
+[
+  {
+    "name": "generate",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_mps_global_alpha_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/logs/mps-global-alpha-toy-20261014/jobs/global_alpha_gpu.mm"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "/Users/zsdx/garnet-metal-investigation/logs/mps-global-alpha-toy-20261014/jobs/global_alpha_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/mps-global-alpha-toy-20261014/jobs/global_alpha_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/mps-global-alpha-toy-20261014/jobs/global_alpha_gpu"
+    ],
+    "exit_code": 0
+  }
+]
