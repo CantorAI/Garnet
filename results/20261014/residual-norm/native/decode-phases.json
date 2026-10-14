@@ -1,0 +1,77 @@
+{
+  "scope": "Recompute dense-only decode phases; the VL worker lacks per-step phase logs.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "control",
+      "prepare_ms": 0.15738085714285716,
+      "encode_ms": 0.5263273928571428,
+      "gpu_ms": 15.710589292991374,
+      "wait_ms": 16.14392125
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "candidate",
+      "prepare_ms": 0.16830210714285715,
+      "encode_ms": 0.5567812857142858,
+      "gpu_ms": 15.704833386865046,
+      "wait_ms": 16.184483535714286
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "prepare_ms": 0.16127382142857144,
+      "encode_ms": 0.53015175,
+      "gpu_ms": 16.073315504140087,
+      "wait_ms": 16.552366
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "prepare_ms": 0.1505267857142857,
+      "encode_ms": 0.48950296428571427,
+      "gpu_ms": 16.17865325949554,
+      "wait_ms": 16.667663642857143
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "prepare_ms": 0.12734375,
+      "encode_ms": 0.4974980625,
+      "gpu_ms": 12.768705040798523,
+      "wait_ms": 13.182672546875
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "prepare_ms": 0.12883465625,
+      "encode_ms": 0.497259703125,
+      "gpu_ms": 12.723320309305564,
+      "wait_ms": 13.14839325
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "control",
+      "prepare_ms": 0.132984359375,
+      "encode_ms": 0.500206359375,
+      "gpu_ms": 12.933710298966616,
+      "wait_ms": 13.3783821875
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "candidate",
+      "prepare_ms": 0.13473374999999999,
+      "encode_ms": 0.498928328125,
+      "gpu_ms": 13.116511057887692,
+      "wait_ms": 13.56214909375
+    }
+  ]
+}

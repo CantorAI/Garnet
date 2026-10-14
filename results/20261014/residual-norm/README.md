@@ -1,4 +1,4 @@
-# Residual addition plus RMS normalization: native validation running
+# Residual addition plus RMS normalization: no useful native decode gain
 
 This experiment combines two adjacent dispatches while preserving both the
 rounded FP32 residual and normalized output. The original 128-thread RMS
@@ -37,6 +37,13 @@ be selected. Profiling mode retains separate operations. Inputs must be ready
 or produced in the current batch; output/input aliases, output/output aliases,
 invalid epsilon, incompatible layouts and foreign batches are rejected.
 
+The current matcher covers decode's adjacent Add -> Norm. Prefill adapters
+reshape the packed residual through an explicit Layout operation, giving
+Add -> Layout -> Norm; that sequence is not admitted by this candidate.
+The component's prefill-sized speed reductions therefore cannot be attributed
+to this native prefill path. Supporting and validating all three operations
+together is a separate follow-up needed to pursue the remaining TTFT targets.
+
 Actual dispatch counters reset on Begin/Abort and session clear/reset/run;
 the session publishes them only after successful GPU submission. Worker logs
 record the feature marker and last-session count after the timed request.
@@ -48,17 +55,35 @@ The isolated candidate has built and passed CTest. Owned numerical validation
 uses library SHA-256
 `409246a7ab8e069d048177eb490fdf34cd354c8f4e2cb4b718ceead32c49d2ce`.
 Snapshots in `native/pending` are historical observations, not terminal proof.
-Owned numerical validation
-PID **35350** is running at `ROOT/logs/residual-norm-checks-20261014`. The latest
-snapshot records completed configure/build/CTest, both dense exact-tail suites,
-all three private-KV suites, serving and mixed-image-pipeline checks. Qwen3.5
-layer validation is running; all 19 model/vision/cache/prefill stages must pass.
-Owned dependency PID **36987** at
-`ROOT/logs/residual-norm-native-20261014` verifies that exact live validation
-process before waiting, then starts six sequential native ABBA profiles only
-after validation exits 0. It requires full generated-output matches and
-positive actual candidate counters. These are running jobs, not completed
-speed results; inspect their current authoritative status before continuing.
+Owned numerical validation PID **35350**, directory
+`ROOT/logs/residual-norm-checks-20261014`, exited 0 after 1007.65 seconds with
+all 19 model/vision/cache/prefill stages passed. Dependency PID **36987**,
+directory `ROOT/logs/residual-norm-native-20261014`, verified that exact live
+validation process, then completed all six sequential ABBA profiles after
+validation succeeded. It exited 0 after 1073.79 seconds including waiting.
+Both jobs are terminal and must not be restarted.
+
+All **72** complete generated outputs match their frozen references, including
+prompt IDs and finished flags. Actual last-session fusion counts are 28 for
+text and 24 for coder/VL in both batches, versus zero in the control. Every
+image request freshly re-encodes the same image and matches its patch hash.
+
+| Native profile | Control -> candidate row TPS | Control -> candidate warm TTFT |
+| --- | ---: | ---: |
+| Text B1 | 58.8862 -> 58.5137 | 52.9490 -> 51.1108 ms |
+| Text B2 | 57.4610 -> 57.3060 | 86.6573 -> 87.3352 ms |
+| Coder B1 | 71.7284 -> 71.8605 | 35.5821 -> 36.2782 ms |
+| Coder B2 | 70.5903 -> 69.7342 | 56.7633 -> 59.6107 ms |
+| VL B1 | 47.3199 -> 46.7115 | 215.4341 -> 210.2973 ms |
+| VL B2 | 43.8902 -> 43.5855 | 385.1809 -> 385.9222 ms |
+
+Full precision values are authoritative in `native/verification.json`. Decode
+is flat or worse across the profiles. The small coder-B1 increase does not
+establish a useful gain; favorable individual TTFT changes are unconfirmed and
+mixed, with no admitted prefill fusion. No unchanged-candidate repeat or runtime
+promotion is justified. Dense decode GPU phase means are also flat/worse, while
+encoding changes are mixed; `native/decode-phases.json` records these separately.
+The optional primitive stays default OFF for follow-up investigations.
 
 Candidate sources were installed only after all ten prior hashes matched,
 with prior bytes preserved in `ROOT/logs/residual-norm-original-source-20261014`.
@@ -87,7 +112,10 @@ Initial archive SHA-256:
 (64 files). Local verification checks all hashes, executed sources, exact
 BF16-to-FP32 learned-value expansion, shader identity, terminal stages,
 both-output/padding/FP64 gates and independently recomputes timing ratios.
-Full native raw evidence will be archived after the jobs become terminal.
+Full native raw evidence is archived in `native/evidence`. Native archive SHA-256:
+`c9e9d1f1e5b44335f06a41dbef93bd732f68f833e4c552cb2750f5ace1189dbb`
+(450 files). Initialization and first request after initialization are separate
+observations in the derived verifier report; OS/driver caches were not flushed.
 `archive_residual_norm_native.py` refuses live or failed jobs, pins candidate
 and control libraries and preserves executed source identities and prior bytes.
 `verify_residual_norm_native.py` checks all six profiles, 72 full outputs,
