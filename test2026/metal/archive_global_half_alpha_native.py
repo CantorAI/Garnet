@@ -9,6 +9,8 @@ def add(p):
 folders=['global-half-alpha-checks-20261014','global-half-alpha-native-20261014']
 if (root/'logs/global-half-alpha-confirm-native-20261014').exists():
  folders.append('global-half-alpha-confirm-native-20261014')
+if (root/'logs/global-alpha-selected-vl2-20261014').exists():
+ folders.append('global-alpha-selected-vl2-20261014')
 for name in folders:
  folder=root/'logs'/name;status=json.loads((folder/'exit.json').read_text());assert status['exit_code']==0;jobs[name]=status
  for p in sorted(folder.rglob('*')):
@@ -22,6 +24,9 @@ manifest=json.loads((root/'global-half-alpha-staging/manifest.json').read_text()
 scripts=('run_joined_prefill_checks','run_direct_state_zero_checks','run_global_half_alpha_checks','run_guarded_global_half_alpha_checks','launch_global_half_alpha_checks','launch_quiet_prefill_residual_norm_probe','resume_packed_prefill_norm_checks','compare_global_half_alpha','compare_packed_prefill_norm','compare_constant_head','compare_joined_prefill','run_global_half_alpha_profiles','run_packed_prefill_norm_profiles','run_constant_head_profiles','queue_global_half_alpha_profiles','queue_packed_prefill_norm_profiles','run_matched_frame_process','compare_vllm_metal','test_exact_dense_tail_case_reference','test_exact_dense_tail_reference','reference_dense','archive_global_half_alpha_native')
 names=set(manifest)|{f'test2026/metal/{n}.py' for n in scripts}
 if len(folders)>2:names.add('test2026/metal/launch_confirm_global_half_alpha_profiles.py')
+if 'global-alpha-selected-vl2-20261014' in folders:
+ names.update('test2026/metal/'+n+'.py' for n in ('compare_global_alpha_selected_vl2','run_global_alpha_selected_vl2','launch_global_alpha_selected_vl2'))
+ assert digest(root/'build-resident-kv-inplace/libgarnet.dylib')=='73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2'
 for name in names:add(root/'source'/name)
 checks=json.loads((root/'logs/global-half-alpha-checks-20261014/jobs/metadata.json').read_text())
 for name,sha in checks['source_sha256'].items():assert digest(root/'source'/name)==sha;add(root/'source'/name)

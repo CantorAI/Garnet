@@ -1,0 +1,31 @@
+{
+  "scope": "Joined exact-half prefill profiles; discard contention and retain only clean ABBA.",
+  "profiles": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 383.1645833561197,
+          "decode_tps": 44.43717603947234,
+          "initialization_s": 2.9438770203851163,
+          "peak_individual_rss_bytes": 3649421312
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 361.50742729660124,
+          "decode_tps": 44.427752987461666,
+          "initialization_s": 2.9475488546304405,
+          "peak_individual_rss_bytes": 3634020352
+        }
+      },
+      "decode_ratio": 0.9997879466507434,
+      "ttft_fraction": 0.94347818926837,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-selected-vl2-20261014/jobs/Qwen3.5-0.8B-b2-attempt0",
+      "reused_clean_profile": false
+    }
+  ],
+  "guarded_interval_seconds": 0.5
+}

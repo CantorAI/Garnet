@@ -1,0 +1,45 @@
+{
+  "verified_files": 1043,
+  "numerical_stages": 19,
+  "full_output_requests": 12,
+  "all_actual_global_alpha_counters_match": true,
+  "profiles": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 383.1645833561197,
+          "decode_tps": 44.43717603947234,
+          "initialization_s": 2.9438770203851163,
+          "peak_individual_rss_bytes": 3649421312
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 361.50742729660124,
+          "decode_tps": 44.427752987461666,
+          "initialization_s": 2.9475488546304405,
+          "peak_individual_rss_bytes": 3634020352
+        }
+      },
+      "decode_ratio": 0.9997879466507434,
+      "ttft_fraction": 0.94347818926837,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-selected-vl2-20261014/jobs/Qwen3.5-0.8B-b2-attempt0",
+      "reused_clean_profile": false,
+      "distinct_timing_phases": {
+        "control": {
+          "first_request_after_init_ttft_ms": 576.6335416119546,
+          "aggregate_decode_tps": 88.87435207894468
+        },
+        "candidate": {
+          "first_request_after_init_ttft_ms": 550.971791613847,
+          "aggregate_decode_tps": 88.85550597492333
+        }
+      }
+    }
+  ],
+  "scope": "Global alpha and attention versus selected resident-KV VL-B2; no fresh vLLM comparison",
+  "full_goal_met": false
+}

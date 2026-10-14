@@ -12,4 +12,10 @@ source=source.replace("assert r['prefill_profile'].get('packed_prefill_norm_disp
 source=source.replace('all_actual_prefill_counters_match','all_actual_global_alpha_counters_match').replace('Packed prefill versus identical attention; no fresh vLLM comparison','Global alpha versus identical attention; no fresh vLLM comparison')
 if '--confirm' in __import__('sys').argv[3:]:
  source=source.replace('global-half-alpha-native-20261014','global-half-alpha-confirm-native-20261014')
+if '--selected-vl2' in __import__('sys').argv[3:]:
+ source=source.replace('global-half-alpha-native-20261014','global-alpha-selected-vl2-20261014')
+ source=source.replace("folder=base/'logs/global-alpha-selected-vl2-20261014/jobs'", "proof['control_sha256']='73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2'\nfolder=base/'logs/global-alpha-selected-vl2-20261014/jobs'")
+ source=source.replace("{(m,b) for m in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct','Qwen3.5-0.8B') for b in (1,2)}", "{('Qwen3.5-0.8B',2)}")
+ source=source.replace("assert r['attention_prefix_enabled'] and", "assert r['attention_prefix_enabled']==candidate and")
+ source=source.replace('Global alpha versus identical attention; no fresh vLLM comparison','Global alpha and attention versus selected resident-KV VL-B2; no fresh vLLM comparison')
 exec(compile(source,str(Path(__file__)),'exec'))

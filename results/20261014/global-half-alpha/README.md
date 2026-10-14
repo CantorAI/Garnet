@@ -129,11 +129,28 @@ text B2 190.23 -> 188.14, coder B1 122.47 -> 121.90, coder B2 142.28 ->
 penalties from the initial run do not repeat. OS/driver caches were not flushed;
 the repeat must not erase those initial observations or establish cold improvement.
 
-The candidate stays optional and unselected. VL B2 uses attention control here,
-whereas the currently selected VL B2 library is the original resident-KV build;
-admission requires that selected-control comparison as well. No fresh vLLM
-comparison has been made for this candidate. The overall 2x decode / half-TTFT
-goal remains unmet. Selected libraries and protected checkouts remain untouched.
+The candidate stays optional. The main trials above use attention control for
+VL B2, while its prior selected library is the original resident-KV build. A
+separate selected-control trial, PID **40062**, exited 0 in 36.01 seconds:
+VL B2 warm TTFT 383.1646 -> 361.5074 ms (**5.65% lower**), per-row decode
+44.4372 -> 44.4278 tokens/s (**-0.02%**). First request after initialization is
+576.6335 -> 550.9718 ms. This ABBA uses two fresh workers per policy and four
+warm requests per policy; all 12 complete outputs and fresh image identities
+verify. The combined 1,043-file archive SHA-256 is
+`1152d10b18bc72480dd00f2be9c776192cd52f4088685b8d107f794113a2d63c`.
+Local verification is `native/selected-vl2.json`. The historical native records
+must not be used as a new vLLM result.
+
+A separate proposed full-six bundle is frozen in `vllm/selection.json`, using
+global-alpha candidate SHA-256 above across all models and B1/B2. The original
+selection file and original libraries remain intact. Fresh full-six sequential
+comparison PID **40956** was launched at
+`ROOT/logs/global-alpha-vllm-20261014`. It runs three real FP32 GPU dtype audits,
+then native/vLLM ABBA, fresh complete images and unchanged caps/prompts with
+prefix caching and speculation disabled. Inspect the actual current handle or
+terminal record; a launch is not performance evidence. No fresh vLLM speedup
+claim is yet established. The overall 2x decode / half-TTFT goal remains unmet;
+protected checkouts remain untouched.
 
 ```text
 python3 audit_global_half_scale.py ROOT REPORT_JSON
@@ -150,6 +167,11 @@ python3 queue_global_half_alpha_profiles.py ROOT ROOT/logs/global-half-alpha-nat
 python3 archive_global_half_alpha_native.py ROOT ARCHIVE
 python verify_global_half_alpha_native.py RESULTS VERIFICATION_JSON
 python3 launch_confirm_global_half_alpha_profiles.py ROOT ROOT/logs/global-half-alpha-confirm-native-20261014
+python prepare_global_alpha_selected_vl2.py
+python3 launch_global_alpha_selected_vl2.py ROOT ROOT/logs/global-alpha-selected-vl2-20261014
+python verify_global_half_alpha_native.py RESULTS SELECTED_REPORT --selected-vl2
+python prepare_global_alpha_vllm.py
+python3 background_comparison.py launch ROOT/logs/global-alpha-vllm-20261014 python3 ROOT/source/test2026/metal/run_global_alpha_vllm.py ROOT ROOT/logs/global-alpha-vllm-20261014/jobs
 ```
 
 Archive SHA-256:
