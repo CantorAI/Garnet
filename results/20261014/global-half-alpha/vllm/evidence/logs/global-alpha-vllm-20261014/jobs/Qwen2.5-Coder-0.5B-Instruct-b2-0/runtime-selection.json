@@ -1,0 +1,27 @@
+{
+  "scope": "Proposed global-alpha bundle for fresh full-six matched-FP32 study; no general promotion",
+  "basis": "Two complete native trials plus selected resident-KV VL-B2 comparison; warm latency improves, decode unchanged",
+  "models": {
+    "Qwen3-0.6B": {
+      "1": "global_alpha",
+      "2": "global_alpha"
+    },
+    "Qwen2.5-Coder-0.5B-Instruct": {
+      "1": "global_alpha",
+      "2": "global_alpha"
+    },
+    "Qwen3.5-0.8B": {
+      "1": "global_alpha",
+      "2": "global_alpha"
+    }
+  },
+  "builds": {
+    "global_alpha": {
+      "directory": "build-global-half-alpha",
+      "sha256": "887b70f521d5af7f948bcb32a2cf94842377e2ecb828bc9280ffb38af6fe058f",
+      "attention_prefix_enabled": true,
+      "global_half_alpha_enabled": true
+    }
+  },
+  "overall_goal_status": "Unmet; all six decode/latency targets remain required"
+}

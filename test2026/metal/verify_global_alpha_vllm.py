@@ -50,4 +50,6 @@ for job in sorted((e/'logs').glob('global-alpha-vllm-20261014*')):
         assert result['decode_target_met']==(result['decode_ratio']>=2) and result['ttft_target_met']==(result['ttft_fraction']<=.5)
         assert all(json.loads(p.read_text())['free_bytes']>=2*2**30 for p in folder.glob('*-disk.json'))
         outputs+=12;profiles.append({k:v for k,v in result.items() if k!='records'})
-print(json.dumps(dict(verified_files=len(files),actual_dtype_audits=audits,complete_matched_outputs=outputs,profiles=len(profiles),all_measured_targets_met=all(p['decode_target_met'] and p['ttft_target_met'] for p in profiles))))
+verification=dict(verified_files=len(files),actual_dtype_audits=audits,complete_matched_outputs=outputs,profiles=len(profiles),all_measured_targets_met=all(p['decode_target_met'] and p['ttft_target_met'] for p in profiles))
+if len(sys.argv)>2:Path(sys.argv[2]).write_bytes((json.dumps(verification,indent=2)+'\n').encode())
+print(json.dumps(verification))

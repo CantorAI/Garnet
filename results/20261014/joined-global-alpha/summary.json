@@ -1,0 +1,3066 @@
+{
+  "verified_files": 48,
+  "canonical_pairs": 3,
+  "runs": [
+    {
+      "job": "joined-global-alpha-probe-20261014",
+      "profiles": [
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 8,
+          "means": {
+            "False": {
+              "encode_ms": 0.0566475625,
+              "wall_ms": 0.6671067916666666,
+              "gpu_ms": 0.3231249963088582
+            },
+            "True": {
+              "encode_ms": 0.0311398125,
+              "wall_ms": 0.6131501666666667,
+              "gpu_ms": 0.2990112795184056
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.549711428448488,
+            "wall_ms": 0.9191184594820307,
+            "gpu_ms": 0.9253734094672034
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.04044304712796265,
+            "common_warm_ms": 251.573083,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 8,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.04044304712796265,
+            "validated_executions": 324,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 16,
+          "means": {
+            "False": {
+              "encode_ms": 0.05891310416666667,
+              "wall_ms": 0.5755658958333334,
+              "gpu_ms": 0.19925780361518264
+            },
+            "True": {
+              "encode_ms": 0.032815125,
+              "wall_ms": 0.5171015833333333,
+              "gpu_ms": 0.17724129914616546
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5570089280504585,
+            "wall_ms": 0.8984229035750069,
+            "gpu_ms": 0.8895074417685712
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.19625591963865263,
+            "common_warm_ms": 250.967,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 16,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.19625591963865263,
+            "validated_executions": 384,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 22,
+          "means": {
+            "False": {
+              "encode_ms": 0.05950183333333333,
+              "wall_ms": 0.861303,
+              "gpu_ms": 0.37896613745639723
+            },
+            "True": {
+              "encode_ms": 0.033168375,
+              "wall_ms": 0.8298610833333333,
+              "gpu_ms": 0.37342714495025575
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5574345048191792,
+            "wall_ms": 0.9634949411918143,
+            "gpu_ms": 0.9853839381446613
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.19625591963865263,
+            "common_warm_ms": 251.018875,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 22,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.19625591963865263,
+            "validated_executions": 360,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 24,
+          "means": {
+            "False": {
+              "encode_ms": 0.061137166666666666,
+              "wall_ms": 0.8275095416666667,
+              "gpu_ms": 0.3806336511236926
+            },
+            "True": {
+              "encode_ms": 0.03381335416666667,
+              "wall_ms": 0.7789044583333333,
+              "gpu_ms": 0.354350699732701
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5530736213378115,
+            "wall_ms": 0.9412634164490248,
+            "gpu_ms": 0.9309494803903964
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.19625591963865263,
+            "common_warm_ms": 250.983,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 24,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.19625591963865263,
+            "validated_executions": 376,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 26,
+          "means": {
+            "False": {
+              "encode_ms": 0.05975875,
+              "wall_ms": 0.57902525,
+              "gpu_ms": 0.24231597975206873
+            },
+            "True": {
+              "encode_ms": 0.0352023125,
+              "wall_ms": 0.6051823958333333,
+              "gpu_ms": 0.28106248161445063
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5890737758068902,
+            "wall_ms": 1.0451744476313136,
+            "gpu_ms": 1.1599007292132624
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.19625591963865263,
+            "common_warm_ms": 250.309333,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 26,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.19625591963865263,
+            "validated_executions": 368,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 32,
+          "means": {
+            "False": {
+              "encode_ms": 0.059362,
+              "wall_ms": 0.5301250625,
+              "gpu_ms": 0.2026258637973418
+            },
+            "True": {
+              "encode_ms": 0.033188333333333334,
+              "wall_ms": 0.47875089583333336,
+              "gpu_ms": 0.16930297715589404
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5590838134384511,
+            "wall_ms": 0.9030904775103579,
+            "gpu_ms": 0.8355447522001636
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.21704763312180742,
+            "common_warm_ms": 251.586625,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 32,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.21704763312180742,
+            "validated_executions": 336,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 44,
+          "means": {
+            "False": {
+              "encode_ms": 0.06217802083333333,
+              "wall_ms": 0.6961276666666667,
+              "gpu_ms": 0.33500433589021367
+            },
+            "True": {
+              "encode_ms": 0.034471395833333335,
+              "wall_ms": 0.630002625,
+              "gpu_ms": 0.28955643453324836
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5543984091377413,
+            "wall_ms": 0.9050101801250058,
+            "gpu_ms": 0.8643363787032914
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.21704763312180742,
+            "common_warm_ms": 252.619291,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 44,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.21704763312180742,
+            "validated_executions": 294,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 48,
+          "means": {
+            "False": {
+              "encode_ms": 0.06066058333333333,
+              "wall_ms": 0.9335668958333333,
+              "gpu_ms": 0.5283384816721082
+            },
+            "True": {
+              "encode_ms": 0.037121562500000004,
+              "wall_ms": 0.9508437291666667,
+              "gpu_ms": 0.5341501770696292
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6119552510073126,
+            "wall_ms": 1.0185062617477578,
+            "gpu_ms": 1.0109999471912927
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 250.870583,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 48,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 278,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 52,
+          "means": {
+            "False": {
+              "encode_ms": 0.059602333333333334,
+              "wall_ms": 1.0141579375,
+              "gpu_ms": 0.5205677104337761
+            },
+            "True": {
+              "encode_ms": 0.0328445625,
+              "wall_ms": 0.9998966458333334,
+              "gpu_ms": 0.48776125186122954
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.551061689419318,
+            "wall_ms": 0.9859378000809005,
+            "gpu_ms": 0.9369794593191156
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 252.7805,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 52,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 250,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 64,
+          "means": {
+            "False": {
+              "encode_ms": 0.059091104166666665,
+              "wall_ms": 0.9527074791666666,
+              "gpu_ms": 0.3445703284038852
+            },
+            "True": {
+              "encode_ms": 0.0329644375,
+              "wall_ms": 0.8502092708333333,
+              "gpu_ms": 0.32545222590367
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5578578698922885,
+            "wall_ms": 0.8924137675260106,
+            "gpu_ms": 0.9445161091241552
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 253.5,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 64,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 232,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 80,
+          "means": {
+            "False": {
+              "encode_ms": 0.06273527083333333,
+              "wall_ms": 1.4160763958333333,
+              "gpu_ms": 0.7421858026646078
+            },
+            "True": {
+              "encode_ms": 0.03419441666666667,
+              "wall_ms": 1.3803463333333332,
+              "gpu_ms": 0.6720303984669348
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5450588833434675,
+            "wall_ms": 0.97476826631308,
+            "gpu_ms": 0.9054746076443394
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 250.925292,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 80,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 204,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 128,
+          "means": {
+            "False": {
+              "encode_ms": 0.0667839375,
+              "wall_ms": 1.644570375,
+              "gpu_ms": 0.8456345725183686
+            },
+            "True": {
+              "encode_ms": 0.035496625000000004,
+              "wall_ms": 1.3704645,
+              "gpu_ms": 0.6202143267728388
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5315144079367887,
+            "wall_ms": 0.8333267586678983,
+            "gpu_ms": 0.7334306648861222
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 253.09,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 128,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 178,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 160,
+          "means": {
+            "False": {
+              "encode_ms": 0.06708679166666667,
+              "wall_ms": 1.7220850833333334,
+              "gpu_ms": 0.9764166510043045
+            },
+            "True": {
+              "encode_ms": 0.0367421875,
+              "wall_ms": 1.8284748333333334,
+              "gpu_ms": 1.067261289184292
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.547681392822606,
+            "wall_ms": 1.0617796129991834,
+            "gpu_ms": 1.0930388047833353
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 256.450208,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 160,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 172,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 8,
+          "means": {
+            "False": {
+              "encode_ms": 0.057112833333333335,
+              "wall_ms": 0.7694721875,
+              "gpu_ms": 0.42189321053835255
+            },
+            "True": {
+              "encode_ms": 0.03302689583333333,
+              "wall_ms": 0.7230859375,
+              "gpu_ms": 0.39004771194110316
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5782745121499254,
+            "wall_ms": 0.9397167945072739,
+            "gpu_ms": 0.924517631946214
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.020889060831612235,
+            "common_warm_ms": 251.927583,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 8,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.020889060831612235,
+            "validated_executions": 294,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 16,
+          "means": {
+            "False": {
+              "encode_ms": 0.058177875000000004,
+              "wall_ms": 0.6016709583333333,
+              "gpu_ms": 0.24541665334254503
+            },
+            "True": {
+              "encode_ms": 0.03220047916666667,
+              "wall_ms": 0.5422760208333334,
+              "gpu_ms": 0.2205451407159368
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5534832471393406,
+            "wall_ms": 0.901283356496834,
+            "gpu_ms": 0.8986559702128554
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.805709,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 16,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 334,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 22,
+          "means": {
+            "False": {
+              "encode_ms": 0.05816145833333333,
+              "wall_ms": 0.60625175,
+              "gpu_ms": 0.2754782714570562
+            },
+            "True": {
+              "encode_ms": 0.031862895833333335,
+              "wall_ms": 0.5464245208333334,
+              "gpu_ms": 0.22979081647160152
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5478352287991404,
+            "wall_ms": 0.9013161955133876,
+            "gpu_ms": 0.8341522373296261
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.246834,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 22,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 318,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 24,
+          "means": {
+            "False": {
+              "encode_ms": 0.058900145833333334,
+              "wall_ms": 0.7079704583333334,
+              "gpu_ms": 0.33501649159006774
+            },
+            "True": {
+              "encode_ms": 0.032618125,
+              "wall_ms": 0.6476189583333334,
+              "gpu_ms": 0.3015355517466863
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5537868291922027,
+            "wall_ms": 0.9147542114369062,
+            "gpu_ms": 0.9000618158095054
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 250.914625,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 24,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 284,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 26,
+          "means": {
+            "False": {
+              "encode_ms": 0.058749145833333336,
+              "wall_ms": 0.749559875,
+              "gpu_ms": 0.36356594258298475
+            },
+            "True": {
+              "encode_ms": 0.032729145833333334,
+              "wall_ms": 0.7021327708333334,
+              "gpu_ms": 0.32578560058027506
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.557099943651663,
+            "wall_ms": 0.9367267302473113,
+            "gpu_ms": 0.8960839353260207
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.60975,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 26,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 278,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 32,
+          "means": {
+            "False": {
+              "encode_ms": 0.0590971875,
+              "wall_ms": 0.6940485,
+              "gpu_ms": 0.32326040673069656
+            },
+            "True": {
+              "encode_ms": 0.03275872916666667,
+              "wall_ms": 0.6319662083333333,
+              "gpu_ms": 0.2627977228257805
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5543195971325482,
+            "wall_ms": 0.9105504994727793,
+            "gpu_ms": 0.8129598223413528
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.678792,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 32,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 260,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 44,
+          "means": {
+            "False": {
+              "encode_ms": 0.062228354166666666,
+              "wall_ms": 1.0248428541666668,
+              "gpu_ms": 0.4544348824614038
+            },
+            "True": {
+              "encode_ms": 0.03430985416666667,
+              "wall_ms": 0.9077030625,
+              "gpu_ms": 0.379537387440602
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5513540350878368,
+            "wall_ms": 0.8856997527080218,
+            "gpu_ms": 0.8351854183923414
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.846042,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 44,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 234,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 48,
+          "means": {
+            "False": {
+              "encode_ms": 0.062065916666666665,
+              "wall_ms": 1.493469625,
+              "gpu_ms": 0.7559071430781236
+            },
+            "True": {
+              "encode_ms": 0.034055562500000004,
+              "wall_ms": 1.3268358958333333,
+              "gpu_ms": 0.6629384006373584
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5486999037313824,
+            "wall_ms": 0.8884250965822846,
+            "gpu_ms": 0.8770103665614432
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 253.523458,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 48,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 218,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 52,
+          "means": {
+            "False": {
+              "encode_ms": 0.0663255,
+              "wall_ms": 1.2780155416666668,
+              "gpu_ms": 0.570474803680554
+            },
+            "True": {
+              "encode_ms": 0.03893229166666667,
+              "wall_ms": 1.39523525,
+              "gpu_ms": 0.6641388269296536
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5869882875615965,
+            "wall_ms": 1.0917200961268956,
+            "gpu_ms": 1.1641860826189059
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 255.855334,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 52,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 216,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 64,
+          "means": {
+            "False": {
+              "encode_ms": 0.06258677083333333,
+              "wall_ms": 1.2898307291666666,
+              "gpu_ms": 0.5678637438298514
+            },
+            "True": {
+              "encode_ms": 0.034056395833333336,
+              "wall_ms": 1.1678429166666666,
+              "gpu_ms": 0.46569787082262337
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5441468760870326,
+            "wall_ms": 0.9054233941388465,
+            "gpu_ms": 0.8200873464500669
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 256.85225,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 64,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 192,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 80,
+          "means": {
+            "False": {
+              "encode_ms": 0.06439841666666667,
+              "wall_ms": 1.5651266875,
+              "gpu_ms": 0.8088837203104049
+            },
+            "True": {
+              "encode_ms": 0.04407910416666667,
+              "wall_ms": 1.567662375,
+              "gpu_ms": 0.7720087111617128
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6844749676816588,
+            "wall_ms": 1.0016201164546303,
+            "gpu_ms": 0.9544124721232595
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 254.440166,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 80,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 180,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 128,
+          "means": {
+            "False": {
+              "encode_ms": 0.06264583333333333,
+              "wall_ms": 2.0305599791666666,
+              "gpu_ms": 1.2370937135225784
+            },
+            "True": {
+              "encode_ms": 0.042327333333333335,
+              "wall_ms": 1.8808820833333333,
+              "gpu_ms": 1.1691214943615098
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6756607914865315,
+            "wall_ms": 0.9262873801468496,
+            "gpu_ms": 0.9450549150657955
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 260.271417,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 128,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 166,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 160,
+          "means": {
+            "False": {
+              "encode_ms": 0.06850520833333333,
+              "wall_ms": 2.2654470416666665,
+              "gpu_ms": 1.4744001576521744
+            },
+            "True": {
+              "encode_ms": 0.04374129166666667,
+              "wall_ms": 2.306118875,
+              "gpu_ms": 1.588953173874567
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6385104538888466,
+            "wall_ms": 1.0179531159127921,
+            "gpu_ms": 1.0776946581481694
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 252.575458,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 160,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 158,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 8,
+          "means": {
+            "False": {
+              "encode_ms": 0.056656270833333335,
+              "wall_ms": 0.7500617083333333,
+              "gpu_ms": 0.383227423299104
+            },
+            "True": {
+              "encode_ms": 0.031465208333333335,
+              "wall_ms": 0.6796067083333334,
+              "gpu_ms": 0.35467365523800254
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5553702682955439,
+            "wall_ms": 0.9060677285385575,
+            "gpu_ms": 0.9254913236237386
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.010952248350755157,
+            "common_warm_ms": 250.258584,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 8,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.010952248350755157,
+            "validated_executions": 304,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 16,
+          "means": {
+            "False": {
+              "encode_ms": 0.05832722916666667,
+              "wall_ms": 0.6723081041666666,
+              "gpu_ms": 0.27204686193726957
+            },
+            "True": {
+              "encode_ms": 0.03224922916666667,
+              "wall_ms": 0.5966702083333333,
+              "gpu_ms": 0.23469533577250937
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5529017857940135,
+            "wall_ms": 0.8874951895350311,
+            "gpu_ms": 0.8627018672489853
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 250.730625,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 16,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 366,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 22,
+          "means": {
+            "False": {
+              "encode_ms": 0.059143208333333336,
+              "wall_ms": 0.9112881666666667,
+              "gpu_ms": 0.4318376595620066
+            },
+            "True": {
+              "encode_ms": 0.03248,
+              "wall_ms": 0.888300375,
+              "gpu_ms": 0.42922656090619665
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5491754829555662,
+            "wall_ms": 0.9747743990237995,
+            "gpu_ms": 0.9939535179528848
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 252.069875,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 22,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 350,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 24,
+          "means": {
+            "False": {
+              "encode_ms": 0.0595443125,
+              "wall_ms": 0.879337625,
+              "gpu_ms": 0.4210000139816354
+            },
+            "True": {
+              "encode_ms": 0.032791729166666665,
+              "wall_ms": 0.8057917083333334,
+              "gpu_ms": 0.3800408449023962
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5507113574729184,
+            "wall_ms": 0.9163621405752237,
+            "gpu_ms": 0.9027098153943864
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 251.397708,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 24,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 336,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 26,
+          "means": {
+            "False": {
+              "encode_ms": 0.059369791666666664,
+              "wall_ms": 0.9163073333333334,
+              "gpu_ms": 0.45340537326410413
+            },
+            "True": {
+              "encode_ms": 0.03291927083333333,
+              "wall_ms": 0.8124391875,
+              "gpu_ms": 0.3802977832189451
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5544784630230722,
+            "wall_ms": 0.8866448602397594,
+            "gpu_ms": 0.8387588803395707
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 251.4985,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 26,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 336,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 32,
+          "means": {
+            "False": {
+              "encode_ms": 0.058842875,
+              "wall_ms": 0.9430147083333333,
+              "gpu_ms": 0.4478185922683527
+            },
+            "True": {
+              "encode_ms": 0.03234733333333333,
+              "wall_ms": 0.7731927708333334,
+              "gpu_ms": 0.3631961881183088
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5497238762268725,
+            "wall_ms": 0.8199159185967098,
+            "gpu_ms": 0.8110341874789012
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 251.711042,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 32,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 312,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 44,
+          "means": {
+            "False": {
+              "encode_ms": 0.05884029166666667,
+              "wall_ms": 0.7285686041666667,
+              "gpu_ms": 0.32478645637941855
+            },
+            "True": {
+              "encode_ms": 0.032719604166666666,
+              "wall_ms": 0.5855389791666666,
+              "gpu_ms": 0.26066495532480377
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5560748126815029,
+            "wall_ms": 0.8036840673863559,
+            "gpu_ms": 0.8025733530596871
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 251.017292,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 44,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 254,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 48,
+          "means": {
+            "False": {
+              "encode_ms": 0.059772541666666665,
+              "wall_ms": 0.7895624583333334,
+              "gpu_ms": 0.35578124031114083
+            },
+            "True": {
+              "encode_ms": 0.0326545,
+              "wall_ms": 0.7415242291666667,
+              "gpu_ms": 0.3396172445112218
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5463127230242985,
+            "wall_ms": 0.9391584178557966,
+            "gpu_ms": 0.9545675995007968
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 250.142125,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 48,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 256,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 52,
+          "means": {
+            "False": {
+              "encode_ms": 0.06050695833333333,
+              "wall_ms": 1.0635025625,
+              "gpu_ms": 0.5928759152690569
+            },
+            "True": {
+              "encode_ms": 0.03629947916666667,
+              "wall_ms": 1.193487875,
+              "gpu_ms": 0.6487205003698667
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.599922391846117,
+            "wall_ms": 1.1222237887179514,
+            "gpu_ms": 1.094192703165327
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07955556441724655,
+            "common_warm_ms": 252.839333,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 52,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07955556441724655,
+            "validated_executions": 244,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 64,
+          "means": {
+            "False": {
+              "encode_ms": 0.06021883333333333,
+              "wall_ms": 1.1842848333333333,
+              "gpu_ms": 0.45168487122282386
+            },
+            "True": {
+              "encode_ms": 0.03322833333333333,
+              "wall_ms": 1.0331172291666666,
+              "gpu_ms": 0.4059088629825662
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5517930437044889,
+            "wall_ms": 0.8723553659458894,
+            "gpu_ms": 0.8986549890052093
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07955556441724655,
+            "common_warm_ms": 252.946875,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 64,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07955556441724655,
+            "validated_executions": 210,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 80,
+          "means": {
+            "False": {
+              "encode_ms": 0.0613993125,
+              "wall_ms": 1.4318792916666667,
+              "gpu_ms": 0.6809513724874705
+            },
+            "True": {
+              "encode_ms": 0.03433760416666667,
+              "wall_ms": 1.440052875,
+              "gpu_ms": 0.6985573175673684
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5592506295028412,
+            "wall_ms": 1.0057082907622885,
+            "gpu_ms": 1.0258549226732365
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07955556441724655,
+            "common_warm_ms": 257.811291,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 80,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07955556441724655,
+            "validated_executions": 196,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 128,
+          "means": {
+            "False": {
+              "encode_ms": 0.06630460416666667,
+              "wall_ms": 1.7227005416666668,
+              "gpu_ms": 1.0198454741233338
+            },
+            "True": {
+              "encode_ms": 0.035862,
+              "wall_ms": 1.6491970833333334,
+              "gpu_ms": 0.8921970632703354
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5408674171382643,
+            "wall_ms": 0.9573324228120224,
+            "gpu_ms": 0.8748355372535963
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07955556441724655,
+            "common_warm_ms": 258.709375,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 128,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07955556441724655,
+            "validated_executions": 178,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 160,
+          "means": {
+            "False": {
+              "encode_ms": 0.0609565625,
+              "wall_ms": 1.975931375,
+              "gpu_ms": 1.2430998322088271
+            },
+            "True": {
+              "encode_ms": 0.0402908125,
+              "wall_ms": 1.82687675,
+              "gpu_ms": 1.0977994825225323
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6609757973146863,
+            "wall_ms": 0.9245648776643369,
+            "gpu_ms": 0.8831144965822134
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.08630558591958531,
+            "common_warm_ms": 254.360458,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 160,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.08630558591958531,
+            "validated_executions": 166,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        }
+      ],
+      "excluded": [],
+      "validated_executions": 10396,
+      "timed_executions": 3744
+    },
+    {
+      "job": "joined-global-alpha-probe-confirm-20261014",
+      "profiles": [
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 8,
+          "means": {
+            "False": {
+              "encode_ms": 0.0597899375,
+              "wall_ms": 0.6546301875,
+              "gpu_ms": 0.33592704373101395
+            },
+            "True": {
+              "encode_ms": 0.03137245833333333,
+              "wall_ms": 0.603066875,
+              "gpu_ms": 0.30935328686609864
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5247113418262619,
+            "wall_ms": 0.9212329136593628,
+            "gpu_ms": 0.9208942615343776
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.04044304712796265,
+            "common_warm_ms": 250.25675,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 8,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.04044304712796265,
+            "validated_executions": 318,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 16,
+          "means": {
+            "False": {
+              "encode_ms": 0.058917583333333336,
+              "wall_ms": 0.48137935416666666,
+              "gpu_ms": 0.15547745473062
+            },
+            "True": {
+              "encode_ms": 0.032446145833333336,
+              "wall_ms": 0.44694179166666664,
+              "gpu_ms": 0.1529800647404045
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5507039494435023,
+            "wall_ms": 0.9284606574795545,
+            "gpu_ms": 0.9839372853476249
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.19625591963865263,
+            "common_warm_ms": 251.185,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 16,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.19625591963865263,
+            "validated_executions": 436,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 22,
+          "means": {
+            "False": {
+              "encode_ms": 0.05910420833333333,
+              "wall_ms": 0.7933688958333334,
+              "gpu_ms": 0.34271266000966233
+            },
+            "True": {
+              "encode_ms": 0.03272760416666667,
+              "wall_ms": 0.7516492916666667,
+              "gpu_ms": 0.3226536209695041
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5537271387189717,
+            "wall_ms": 0.9474146208834598,
+            "gpu_ms": 0.9414698043556585
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.19625591963865263,
+            "common_warm_ms": 252.308625,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 22,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.19625591963865263,
+            "validated_executions": 346,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 24,
+          "means": {
+            "False": {
+              "encode_ms": 0.059475645833333333,
+              "wall_ms": 0.8809271041666666,
+              "gpu_ms": 0.3906528193814059
+            },
+            "True": {
+              "encode_ms": 0.033664958333333335,
+              "wall_ms": 0.8238002708333333,
+              "gpu_ms": 0.36545743932947516
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5660293026102071,
+            "wall_ms": 0.9351514636533135,
+            "gpu_ms": 0.9355044202885127
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.19625591963865263,
+            "common_warm_ms": 250.026584,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 24,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.19625591963865263,
+            "validated_executions": 358,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 26,
+          "means": {
+            "False": {
+              "encode_ms": 0.06190364583333333,
+              "wall_ms": 0.74176825,
+              "gpu_ms": 0.36207814506875974
+            },
+            "True": {
+              "encode_ms": 0.033854125,
+              "wall_ms": 0.7338854583333333,
+              "gpu_ms": 0.36591236130334437
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5468841866139413,
+            "wall_ms": 0.9893729723984995,
+            "gpu_ms": 1.0105894716011001
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.19625591963865263,
+            "common_warm_ms": 250.788125,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 26,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.19625591963865263,
+            "validated_executions": 366,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 32,
+          "means": {
+            "False": {
+              "encode_ms": 0.06099908333333333,
+              "wall_ms": 0.6819010416666667,
+              "gpu_ms": 0.3357352688908577
+            },
+            "True": {
+              "encode_ms": 0.034581645833333334,
+              "wall_ms": 0.6195104166666666,
+              "gpu_ms": 0.294834200758487
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5669207460767853,
+            "wall_ms": 0.9085048691999236,
+            "gpu_ms": 0.8781746455548374
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.21704763312180742,
+            "common_warm_ms": 250.723833,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 32,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.21704763312180742,
+            "validated_executions": 344,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 44,
+          "means": {
+            "False": {
+              "encode_ms": 0.061813375,
+              "wall_ms": 0.945954,
+              "gpu_ms": 0.5285876783697555
+            },
+            "True": {
+              "encode_ms": 0.033565937500000004,
+              "wall_ms": 0.8342977708333333,
+              "gpu_ms": 0.4417856107465923
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5430206245816541,
+            "wall_ms": 0.881964419869606,
+            "gpu_ms": 0.8357849205057637
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.21704763312180742,
+            "common_warm_ms": 251.613334,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 44,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.21704763312180742,
+            "validated_executions": 290,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 48,
+          "means": {
+            "False": {
+              "encode_ms": 0.059685833333333334,
+              "wall_ms": 0.9952613333333333,
+              "gpu_ms": 0.5216597152563432
+            },
+            "True": {
+              "encode_ms": 0.034146645833333336,
+              "wall_ms": 0.9616561666666666,
+              "gpu_ms": 0.48424040627044934
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5721063764433213,
+            "wall_ms": 0.966234831454653,
+            "gpu_ms": 0.928268739387886
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 251.602542,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 48,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 268,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 52,
+          "means": {
+            "False": {
+              "encode_ms": 0.0587551875,
+              "wall_ms": 0.769684875,
+              "gpu_ms": 0.3424010452969621
+            },
+            "True": {
+              "encode_ms": 0.032605062500000004,
+              "wall_ms": 0.633642375,
+              "gpu_ms": 0.2820538259887447
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5549307880261637,
+            "wall_ms": 0.8232490926887448,
+            "gpu_ms": 0.823752818114563
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 253.224917,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 52,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 240,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 64,
+          "means": {
+            "False": {
+              "encode_ms": 0.0606110625,
+              "wall_ms": 0.9420146875,
+              "gpu_ms": 0.4085798282176256
+            },
+            "True": {
+              "encode_ms": 0.035440958333333335,
+              "wall_ms": 0.8503090416666667,
+              "gpu_ms": 0.3718463412951678
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5847275542040421,
+            "wall_ms": 0.9026494522323111,
+            "gpu_ms": 0.9100947125003633
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 253.896542,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 64,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 236,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 80,
+          "means": {
+            "False": {
+              "encode_ms": 0.06194358333333333,
+              "wall_ms": 1.2649453333333334,
+              "gpu_ms": 0.5997630457083384
+            },
+            "True": {
+              "encode_ms": 0.034079875,
+              "wall_ms": 1.2800121875,
+              "gpu_ms": 0.5793038775057843
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5501760338372418,
+            "wall_ms": 1.011911071387538,
+            "gpu_ms": 0.9658879146540428
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 254.903875,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 80,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 200,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 128,
+          "means": {
+            "False": {
+              "encode_ms": 0.06102958333333333,
+              "wall_ms": 1.4765625208333333,
+              "gpu_ms": 0.7179843378253281
+            },
+            "True": {
+              "encode_ms": 0.03872652083333333,
+              "wall_ms": 1.4166875208333334,
+              "gpu_ms": 0.7390416673539827
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6345532562759864,
+            "wall_ms": 0.9594497360218733,
+            "gpu_ms": 1.029328396762016
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 257.081958,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 128,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 178,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "rows": 160,
+          "means": {
+            "False": {
+              "encode_ms": 0.06354689583333334,
+              "wall_ms": 1.83897225,
+              "gpu_ms": 1.0801709625714768
+            },
+            "True": {
+              "encode_ms": 0.03879075,
+              "wall_ms": 1.7277057708333334,
+              "gpu_ms": 0.9403151052538306
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6104271418975028,
+            "wall_ms": 0.9394952919128243,
+            "gpu_ms": 0.8705243316440366
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.22605453813859366,
+            "common_warm_ms": 250.369541,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 6144,
+            "rows": 160,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.22605453813859366,
+            "validated_executions": 170,
+            "kind": "check",
+            "model": "Qwen3-0.6B"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 8,
+          "means": {
+            "False": {
+              "encode_ms": 0.05685935416666667,
+              "wall_ms": 0.7564235833333334,
+              "gpu_ms": 0.4037943241807322
+            },
+            "True": {
+              "encode_ms": 0.030991333333333333,
+              "wall_ms": 0.7032916666666666,
+              "gpu_ms": 0.3852256922982633
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5450525034542469,
+            "wall_ms": 0.9297590426351725,
+            "gpu_ms": 0.9540146288085074
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.020889060831612235,
+            "common_warm_ms": 251.758292,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 8,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.020889060831612235,
+            "validated_executions": 292,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 16,
+          "means": {
+            "False": {
+              "encode_ms": 0.058526,
+              "wall_ms": 0.598655375,
+              "gpu_ms": 0.24296010572773716
+            },
+            "True": {
+              "encode_ms": 0.03280558333333333,
+              "wall_ms": 0.5683229375,
+              "gpu_ms": 0.228233509308969
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5605300778001799,
+            "wall_ms": 0.9493323892732107,
+            "gpu_ms": 0.9393867714427533
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 250.222417,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 16,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 340,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 22,
+          "means": {
+            "False": {
+              "encode_ms": 0.05934725,
+              "wall_ms": 0.89923875,
+              "gpu_ms": 0.45656510822785396
+            },
+            "True": {
+              "encode_ms": 0.032880291666666665,
+              "wall_ms": 0.7808115625000001,
+              "gpu_ms": 0.3787196280124287
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5540322705208188,
+            "wall_ms": 0.8683028422651938,
+            "gpu_ms": 0.8294975266121835
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.460125,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 22,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 304,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 24,
+          "means": {
+            "False": {
+              "encode_ms": 0.05900604166666667,
+              "wall_ms": 0.920513875,
+              "gpu_ms": 0.47040194234189886
+            },
+            "True": {
+              "encode_ms": 0.032640583333333334,
+              "wall_ms": 0.8277005208333333,
+              "gpu_ms": 0.4106770793441683
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5531735803890139,
+            "wall_ms": 0.8991722377170397,
+            "gpu_ms": 0.8730344039389166
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.2135,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 24,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 310,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 26,
+          "means": {
+            "False": {
+              "encode_ms": 0.05956770833333333,
+              "wall_ms": 0.8927699791666667,
+              "gpu_ms": 0.459745671832934
+            },
+            "True": {
+              "encode_ms": 0.03276829166666667,
+              "wall_ms": 0.773249125,
+              "gpu_ms": 0.37478559534065425
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5501016000699486,
+            "wall_ms": 0.8661235738703598,
+            "gpu_ms": 0.8152020090726309
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.739916,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 26,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 294,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 32,
+          "means": {
+            "False": {
+              "encode_ms": 0.059645687499999996,
+              "wall_ms": 0.845058875,
+              "gpu_ms": 0.421707450489824
+            },
+            "True": {
+              "encode_ms": 0.03280645833333334,
+              "wall_ms": 0.7270519791666666,
+              "gpu_ms": 0.3404375068688144
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5500223018358761,
+            "wall_ms": 0.8603565984283245,
+            "gpu_ms": 0.8072835954721396
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 250.194625,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 32,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 260,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 44,
+          "means": {
+            "False": {
+              "encode_ms": 0.060630166666666666,
+              "wall_ms": 1.0152620833333332,
+              "gpu_ms": 0.4196484320952247
+            },
+            "True": {
+              "encode_ms": 0.03289502083333334,
+              "wall_ms": 0.8990720625,
+              "gpu_ms": 0.3780824481509626
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5425520436746285,
+            "wall_ms": 0.885556623515521,
+            "gpu_ms": 0.900950460515887
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 250.073083,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 44,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 234,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 48,
+          "means": {
+            "False": {
+              "encode_ms": 0.06384116666666667,
+              "wall_ms": 1.6024201458333334,
+              "gpu_ms": 0.8030208700802177
+            },
+            "True": {
+              "encode_ms": 0.036211791666666666,
+              "wall_ms": 1.452583375,
+              "gpu_ms": 0.7885312176464746
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5672169472675677,
+            "wall_ms": 0.9064934554006051,
+            "gpu_ms": 0.9819560699184622
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.966459,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 48,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 220,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 52,
+          "means": {
+            "False": {
+              "encode_ms": 0.06259458333333333,
+              "wall_ms": 1.2597646666666666,
+              "gpu_ms": 0.5835468861429641
+            },
+            "True": {
+              "encode_ms": 0.036651,
+              "wall_ms": 1.22677,
+              "gpu_ms": 0.5375720211304724
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.585529898087561,
+            "wall_ms": 0.9738088648303095,
+            "gpu_ms": 0.9212147882128734
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 255.400875,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 52,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 214,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 64,
+          "means": {
+            "False": {
+              "encode_ms": 0.0722768125,
+              "wall_ms": 1.3736075833333332,
+              "gpu_ms": 0.5957838535929719
+            },
+            "True": {
+              "encode_ms": 0.04146264583333333,
+              "wall_ms": 1.2265754375,
+              "gpu_ms": 0.49306079745292664
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5736645598937188,
+            "wall_ms": 0.8929591335856414,
+            "gpu_ms": 0.8275833500344847
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 255.704041,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 64,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 192,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 80,
+          "means": {
+            "False": {
+              "encode_ms": 0.06835935416666666,
+              "wall_ms": 1.7314470208333332,
+              "gpu_ms": 0.9271753466843317
+            },
+            "True": {
+              "encode_ms": 0.036131125,
+              "wall_ms": 1.3382413333333334,
+              "gpu_ms": 0.639631946493561
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5285469039381041,
+            "wall_ms": 0.7729034254188426,
+            "gpu_ms": 0.689871607113958
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 255.258834,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 80,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 180,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 128,
+          "means": {
+            "False": {
+              "encode_ms": 0.06477602083333334,
+              "wall_ms": 2.0571745,
+              "gpu_ms": 1.284262165427208
+            },
+            "True": {
+              "encode_ms": 0.0399965,
+              "wall_ms": 1.8464592083333333,
+              "gpu_ms": 1.072809905357038
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6174584280641402,
+            "wall_ms": 0.8975705310042165,
+            "gpu_ms": 0.8353511722430671
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 251.118542,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 128,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 164,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "rows": 160,
+          "means": {
+            "False": {
+              "encode_ms": 0.0655720625,
+              "wall_ms": 2.2167986458333333,
+              "gpu_ms": 1.4791753298292558
+            },
+            "True": {
+              "encode_ms": 0.04132466666666667,
+              "wall_ms": 2.1284070416666667,
+              "gpu_ms": 1.4354322920553386
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6302175818652443,
+            "wall_ms": 0.9601264623953076,
+            "gpu_ms": 0.9704274152686372
+          },
+          "check": {
+            "inner": 896,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.148271055421165,
+            "common_warm_ms": 255.82775,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 9728,
+            "rows": 160,
+            "global_scale": 17,
+            "candidate_fp64_worst_ratio": 0.148271055421165,
+            "validated_executions": 158,
+            "kind": "check",
+            "model": "Qwen2.5-Coder-0.5B-Instruct"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 8,
+          "means": {
+            "False": {
+              "encode_ms": 0.05719189583333333,
+              "wall_ms": 0.742680625,
+              "gpu_ms": 0.38190451838697
+            },
+            "True": {
+              "encode_ms": 0.0311935625,
+              "wall_ms": 0.6713941041666667,
+              "gpu_ms": 0.34755557620277006
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5454192774253054,
+            "wall_ms": 0.904014567724406,
+            "gpu_ms": 0.9100588222174544
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.010952248350755157,
+            "common_warm_ms": 250.121917,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 8,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.010952248350755157,
+            "validated_executions": 306,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 16,
+          "means": {
+            "False": {
+              "encode_ms": 0.05871522916666667,
+              "wall_ms": 0.7151753541666667,
+              "gpu_ms": 0.2942404826171696
+            },
+            "True": {
+              "encode_ms": 0.03260070833333333,
+              "wall_ms": 0.6546840416666667,
+              "gpu_ms": 0.26171615657707054
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.555234285823773,
+            "wall_ms": 0.9154175096393172,
+            "gpu_ms": 0.8894634560451838
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 251.485709,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 16,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 362,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 22,
+          "means": {
+            "False": {
+              "encode_ms": 0.05843477083333334,
+              "wall_ms": 0.9051145416666667,
+              "gpu_ms": 0.44179769853750867
+            },
+            "True": {
+              "encode_ms": 0.03229772916666667,
+              "wall_ms": 0.8558264583333334,
+              "gpu_ms": 0.4188697785139084
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.552714226582418,
+            "wall_ms": 0.9455449215934871,
+            "gpu_ms": 0.9481031248023722
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 250.902333,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 22,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 352,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 24,
+          "means": {
+            "False": {
+              "encode_ms": 0.0594071875,
+              "wall_ms": 0.8681258958333333,
+              "gpu_ms": 0.435218777662764
+            },
+            "True": {
+              "encode_ms": 0.03380895833333333,
+              "wall_ms": 0.8105798541666667,
+              "gpu_ms": 0.38316402545509237
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5691055199900404,
+            "wall_ms": 0.9337123314223602,
+            "gpu_ms": 0.880394057243534
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 252.172625,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 24,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 346,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 26,
+          "means": {
+            "False": {
+              "encode_ms": 0.060751708333333335,
+              "wall_ms": 0.8043906041666666,
+              "gpu_ms": 0.4330252025586863
+            },
+            "True": {
+              "encode_ms": 0.034357625,
+              "wall_ms": 0.7216631875,
+              "gpu_ms": 0.382607647528251
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5655417097324424,
+            "wall_ms": 0.8971551678523513,
+            "gpu_ms": 0.8835690053776895
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 252.052125,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 26,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 354,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 32,
+          "means": {
+            "False": {
+              "encode_ms": 0.05990708333333333,
+              "wall_ms": 0.7940529583333333,
+              "gpu_ms": 0.42616319842636585
+            },
+            "True": {
+              "encode_ms": 0.034395812500000005,
+              "wall_ms": 0.7306318333333334,
+              "gpu_ms": 0.36613627647360164
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5741526808877637,
+            "wall_ms": 0.9201298548989517,
+            "gpu_ms": 0.8591456930715338
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 252.225792,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 32,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 324,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 44,
+          "means": {
+            "False": {
+              "encode_ms": 0.05996008333333333,
+              "wall_ms": 1.0361952708333333,
+              "gpu_ms": 0.5464592056038479
+            },
+            "True": {
+              "encode_ms": 0.032912375,
+              "wall_ms": 0.9854990833333334,
+              "gpu_ms": 0.5011996351337681
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5489047574705951,
+            "wall_ms": 0.951074677788069,
+            "gpu_ms": 0.9171766711843254
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 252.732792,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 44,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 266,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 48,
+          "means": {
+            "False": {
+              "encode_ms": 0.0595608125,
+              "wall_ms": 0.841349,
+              "gpu_ms": 0.4080347328757246
+            },
+            "True": {
+              "encode_ms": 0.033280416666666666,
+              "wall_ms": 0.7492075625,
+              "gpu_ms": 0.3548316405309985
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5587636445803467,
+            "wall_ms": 0.8904836904780299,
+            "gpu_ms": 0.8696113637930667
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07869139368142009,
+            "common_warm_ms": 254.450125,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 48,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07869139368142009,
+            "validated_executions": 232,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 52,
+          "means": {
+            "False": {
+              "encode_ms": 0.06185502083333333,
+              "wall_ms": 0.9250624583333333,
+              "gpu_ms": 0.435160599105681
+            },
+            "True": {
+              "encode_ms": 0.03557554166666667,
+              "wall_ms": 0.9191067916666666,
+              "gpu_ms": 0.43338890342662734
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5751439606256701,
+            "wall_ms": 0.9935618761598034,
+            "gpu_ms": 0.995928639489203
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07955556441724655,
+            "common_warm_ms": 253.151917,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 52,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07955556441724655,
+            "validated_executions": 244,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 64,
+          "means": {
+            "False": {
+              "encode_ms": 0.060440979166666665,
+              "wall_ms": 1.2425312708333334,
+              "gpu_ms": 0.5653403156126539
+            },
+            "True": {
+              "encode_ms": 0.033426250000000005,
+              "wall_ms": 1.2389610416666668,
+              "gpu_ms": 0.5585026422825953
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5530395182352482,
+            "wall_ms": 0.9971266484389788,
+            "gpu_ms": 0.987905208347562
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07955556441724655,
+            "common_warm_ms": 255.488292,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 64,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07955556441724655,
+            "validated_executions": 216,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 80,
+          "means": {
+            "False": {
+              "encode_ms": 0.0664886875,
+              "wall_ms": 1.7192300416666666,
+              "gpu_ms": 0.9156458545476198
+            },
+            "True": {
+              "encode_ms": 0.037849041666666666,
+              "wall_ms": 1.5350547916666666,
+              "gpu_ms": 0.7977734882539759
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.569255358916006,
+            "wall_ms": 0.8928734110407612,
+            "gpu_ms": 0.8712686070621928
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07955556441724655,
+            "common_warm_ms": 256.353667,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 80,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07955556441724655,
+            "validated_executions": 200,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 128,
+          "means": {
+            "False": {
+              "encode_ms": 0.062099729166666666,
+              "wall_ms": 1.6594669583333332,
+              "gpu_ms": 0.864269066369161
+            },
+            "True": {
+              "encode_ms": 0.03886202083333333,
+              "wall_ms": 1.6155937916666667,
+              "gpu_ms": 0.919564200254778
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.6258001661977188,
+            "wall_ms": 0.9735618920001095,
+            "gpu_ms": 1.0639790732276404
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.07955556441724655,
+            "common_warm_ms": 255.12,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 128,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.07955556441724655,
+            "validated_executions": 172,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "rows": 160,
+          "means": {
+            "False": {
+              "encode_ms": 0.0671875,
+              "wall_ms": 1.908546,
+              "gpu_ms": 1.1972620850428939
+            },
+            "True": {
+              "encode_ms": 0.034011291666666665,
+              "wall_ms": 1.8515164791666667,
+              "gpu_ms": 1.1221640840327989
+            }
+          },
+          "fractions": {
+            "encode_ms": 0.5062145736434108,
+            "wall_ms": 0.9701188649195076,
+            "gpu_ms": 0.9372752198968997
+          },
+          "check": {
+            "inner": 1024,
+            "max_abs_error": 0,
+            "tensor": "joined_gate_up",
+            "padding_preserved": true,
+            "control_fp64_worst_ratio": 0.08630558591958531,
+            "common_warm_ms": 259.341542,
+            "comparison_worst_ratio": 0,
+            "learned_bits_exact": true,
+            "input_variants": 4,
+            "columns": 7168,
+            "rows": 160,
+            "global_scale": 18,
+            "candidate_fp64_worst_ratio": 0.08630558591958531,
+            "validated_executions": 166,
+            "kind": "check",
+            "model": "Qwen3.5-0.8B"
+          }
+        }
+      ],
+      "excluded": [],
+      "validated_executions": 10452,
+      "timed_executions": 3744
+    }
+  ],
+  "scope": "Two common-alpha products versus one joined product/output views; component only",
+  "full_goal_met": false
+}

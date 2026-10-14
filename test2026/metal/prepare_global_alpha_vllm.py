@@ -32,6 +32,9 @@ source=source.replace("for name in names:files[", "names=names+('compare_global_
 (here/'archive_global_alpha_vllm.py').write_bytes(source.encode())
 source=(here/'verify_selected_attention_vllm.py').read_text().replace("glob('selected-attention-vllm*')","glob('global-alpha-vllm-20261014*')")
 source=source.replace("assert value['attention_prefix_enabled']==chosen['attention_prefix_enabled']", "assert value['attention_prefix_enabled']==chosen['attention_prefix_enabled']\n                assert value['global_half_alpha_enabled'] and value['prefill_profile'].get('global_half_alpha_dispatches',0)>0\n                assert not value['packed_prefill_norm_enabled'] and not value['residual_norm_enabled'] and not value['constant_head_enabled'] and not value['direct_state_zero_enabled']")
+source=source.replace('print(json.dumps(dict(verified_files=', 'verification=dict(verified_files=').rstrip()
+assert source.endswith('))))')
+source=source[:-2]+"\nif len(sys.argv)>2:Path(sys.argv[2]).write_bytes((json.dumps(verification,indent=2)+'\\n').encode())\nprint(json.dumps(verification))\n"
 (here/'verify_global_alpha_vllm.py').write_bytes(source.encode())
 source=(here/'summarize_selected_attention_vllm.py').read_text().replace('selected-attention-vllm-20261013','global-alpha-vllm-20261014')
 (here/'summarize_global_alpha_vllm.py').write_bytes(source.encode())

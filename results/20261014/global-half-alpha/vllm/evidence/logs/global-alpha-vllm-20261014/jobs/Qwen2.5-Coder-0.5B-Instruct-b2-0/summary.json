@@ -1,0 +1,6725 @@
+{
+  "model": "Qwen2.5-Coder-0.5B-Instruct",
+  "batch": 2,
+  "means": {
+    "garnet": {
+      "requests": 4,
+      "ttft_ms": 52.03618761152029,
+      "decode_tps": 70.53672423248476,
+      "initialization_s": 1.3905284791253507,
+      "peak_child_rss_bytes": 2070216704
+    },
+    "vllm-metal": {
+      "requests": 4,
+      "ttft_ms": 84.22376064117998,
+      "decode_tps": 28.401956397545113,
+      "initialization_s": 15.932827374897897,
+      "peak_child_rss_bytes": 3835084800
+    }
+  },
+  "decode_ratio": 2.4835163903913853,
+  "ttft_fraction": 0.6178326307846904,
+  "decode_target_met": true,
+  "ttft_target_met": false,
+  "exact_complete_outputs": true,
+  "counts_as_default_bf16_speedup": false,
+  "records": [
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3824440413154662,
+      "ttft_seconds": 0.14231883361935616,
+      "total_seconds": 0.3662601667456329,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0011362088844180107,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.019848041236400604,
+        0.01324816606938839,
+        0.013235917314887047,
+        0.013420042116194963,
+        0.013068749569356441,
+        0.013451916165649891,
+        0.01331383315846324,
+        0.013684125151485205,
+        0.013454207684844732,
+        0.013856792356818914,
+        0.013972249813377857,
+        0.013559791259467602,
+        0.01389908418059349,
+        0.013703541830182076,
+        0.014030708000063896,
+        0.013704375363886356
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 71.60389187287367,
+      "decode_window_seconds": 0.22394133312627673,
+      "decode_wall_steps_per_second": 71.44728387848737,
+      "native_decode_ms": [
+        19.657166,
+        13.128083,
+        13.132208,
+        13.322875,
+        12.974416,
+        13.361,
+        13.21975,
+        13.593209,
+        13.342334,
+        13.73675,
+        13.880959,
+        13.471542,
+        13.808416,
+        13.615375,
+        13.94225,
+        13.61575
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.17975,
+          "encode_ms": 0.547375,
+          "gpu_ms": 12.154999654740095,
+          "wait_ms": 18.927833
+        },
+        {
+          "prepare_ms": 0.134292,
+          "encode_ms": 0.514708,
+          "gpu_ms": 12.010749895125628,
+          "wait_ms": 12.478125
+        },
+        {
+          "prepare_ms": 0.12125,
+          "encode_ms": 0.471833,
+          "gpu_ms": 12.056875042617321,
+          "wait_ms": 12.53825
+        },
+        {
+          "prepare_ms": 0.1225,
+          "encode_ms": 0.462875,
+          "gpu_ms": 12.323125265538692,
+          "wait_ms": 12.736667
+        },
+        {
+          "prepare_ms": 0.119041,
+          "encode_ms": 0.452292,
+          "gpu_ms": 11.963208205997944,
+          "wait_ms": 12.402333
+        },
+        {
+          "prepare_ms": 0.118958,
+          "encode_ms": 0.447209,
+          "gpu_ms": 12.426083441823721,
+          "wait_ms": 12.794083
+        },
+        {
+          "prepare_ms": 0.119791,
+          "encode_ms": 0.448375,
+          "gpu_ms": 12.26212503388524,
+          "wait_ms": 12.650917
+        },
+        {
+          "prepare_ms": 0.118084,
+          "encode_ms": 0.449916,
+          "gpu_ms": 12.627500109374523,
+          "wait_ms": 13.02425
+        },
+        {
+          "prepare_ms": 0.141375,
+          "encode_ms": 0.523542,
+          "gpu_ms": 12.294374871999025,
+          "wait_ms": 12.6765
+        },
+        {
+          "prepare_ms": 0.164833,
+          "encode_ms": 0.615542,
+          "gpu_ms": 12.580583337694407,
+          "wait_ms": 12.955667
+        },
+        {
+          "prepare_ms": 0.118584,
+          "encode_ms": 0.446583,
+          "gpu_ms": 12.937500141561031,
+          "wait_ms": 13.315167
+        },
+        {
+          "prepare_ms": 0.11825,
+          "encode_ms": 0.445459,
+          "gpu_ms": 12.564999982714653,
+          "wait_ms": 12.907208
+        },
+        {
+          "prepare_ms": 0.118416,
+          "encode_ms": 0.443709,
+          "gpu_ms": 12.890583369880915,
+          "wait_ms": 13.245583
+        },
+        {
+          "prepare_ms": 0.118792,
+          "encode_ms": 0.445375,
+          "gpu_ms": 12.691874988377094,
+          "wait_ms": 13.050583
+        },
+        {
+          "prepare_ms": 0.119625,
+          "encode_ms": 0.448708,
+          "gpu_ms": 12.941000051796436,
+          "wait_ms": 13.373292
+        },
+        {
+          "prepare_ms": 0.117417,
+          "encode_ms": 0.445583,
+          "gpu_ms": 12.663916684687138,
+          "wait_ms": 13.052084
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.1845,
+        "encode_ms": 22.585208,
+        "gpu_ms": 47.391250263899565,
+        "wait_ms": 68.357792,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 91.130958,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "garnet",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-global-half-alpha",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 2.550773000344634,
+        "peak_rss_bytes": 2069807104,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3824440413154662,
+      "ttft_seconds": 0.04955775011330843,
+      "total_seconds": 0.27639775024726987,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0019369591027498245,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.013978125061839819,
+        0.014051957987248898,
+        0.013910375069826841,
+        0.013795457780361176,
+        0.013965582940727472,
+        0.013831707648932934,
+        0.01416704198345542,
+        0.014153040945529938,
+        0.01408066600561142,
+        0.014467958360910416,
+        0.013651542365550995,
+        0.014119792263954878,
+        0.014142499770969152,
+        0.014549499843269587,
+        0.014460332691669464,
+        0.014900625217705965
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.72567005970919,
+      "decode_window_seconds": 0.22684000013396144,
+      "decode_wall_steps_per_second": 70.53429726040876,
+      "native_decode_ms": [
+        13.807291,
+        13.9505,
+        13.81675,
+        13.703041,
+        13.873375,
+        13.735708,
+        14.045458,
+        14.033959,
+        13.95675,
+        14.320709,
+        13.515333,
+        14.018,
+        14.018416,
+        14.370959,
+        14.333875,
+        14.780292
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.14025,
+          "encode_ms": 0.474833,
+          "gpu_ms": 12.782124802470207,
+          "wait_ms": 13.191417
+        },
+        {
+          "prepare_ms": 0.116291,
+          "encode_ms": 0.450542,
+          "gpu_ms": 12.89133308455348,
+          "wait_ms": 13.382833
+        },
+        {
+          "prepare_ms": 0.122375,
+          "encode_ms": 0.445,
+          "gpu_ms": 12.839875183999538,
+          "wait_ms": 13.248708
+        },
+        {
+          "prepare_ms": 0.118916,
+          "encode_ms": 0.450667,
+          "gpu_ms": 12.708874884992838,
+          "wait_ms": 13.13275
+        },
+        {
+          "prepare_ms": 0.118583,
+          "encode_ms": 0.447375,
+          "gpu_ms": 12.840749695897102,
+          "wait_ms": 13.306792
+        },
+        {
+          "prepare_ms": 0.118291,
+          "encode_ms": 0.442875,
+          "gpu_ms": 12.81758351251483,
+          "wait_ms": 13.172375
+        },
+        {
+          "prepare_ms": 0.131833,
+          "encode_ms": 0.488042,
+          "gpu_ms": 12.995624914765358,
+          "wait_ms": 13.423542
+        },
+        {
+          "prepare_ms": 0.130459,
+          "encode_ms": 0.480208,
+          "gpu_ms": 13.038333505392075,
+          "wait_ms": 13.420458
+        },
+        {
+          "prepare_ms": 0.138375,
+          "encode_ms": 0.499125,
+          "gpu_ms": 12.898500077426434,
+          "wait_ms": 13.317333
+        },
+        {
+          "prepare_ms": 0.150625,
+          "encode_ms": 0.565875,
+          "gpu_ms": 13.038458302617073,
+          "wait_ms": 13.60075
+        },
+        {
+          "prepare_ms": 0.159916,
+          "encode_ms": 0.568584,
+          "gpu_ms": 12.37054169178009,
+          "wait_ms": 12.785875
+        },
+        {
+          "prepare_ms": 0.118041,
+          "encode_ms": 0.458459,
+          "gpu_ms": 13.105874881148338,
+          "wait_ms": 13.439958
+        },
+        {
+          "prepare_ms": 0.13125,
+          "encode_ms": 0.484,
+          "gpu_ms": 13.01725022494793,
+          "wait_ms": 13.398416
+        },
+        {
+          "prepare_ms": 0.16,
+          "encode_ms": 0.603625,
+          "gpu_ms": 13.19245807826519,
+          "wait_ms": 13.605334
+        },
+        {
+          "prepare_ms": 0.15675,
+          "encode_ms": 0.55875,
+          "gpu_ms": 13.251374941319227,
+          "wait_ms": 13.616833
+        },
+        {
+          "prepare_ms": 0.145917,
+          "encode_ms": 0.543833,
+          "gpu_ms": 13.714124914258718,
+          "wait_ms": 14.089167
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.260875,
+        "encode_ms": 5.424,
+        "gpu_ms": 39.80562509968877,
+        "wait_ms": 40.913875,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 46.599667,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "garnet",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-global-half-alpha",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 2.550773000344634,
+        "peak_rss_bytes": 2069807104,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3824440413154662,
+      "ttft_seconds": 0.05305891716852784,
+      "total_seconds": 0.2800204590894282,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.001299459021538496,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.015366542153060436,
+        0.013715125154703856,
+        0.01423437474295497,
+        0.013852500356733799,
+        0.013915250077843666,
+        0.01398974983021617,
+        0.014251291751861572,
+        0.014303416945040226,
+        0.014121416956186295,
+        0.01429391698911786,
+        0.014210541732609272,
+        0.014015582855790854,
+        0.014135167002677917,
+        0.01397366588935256,
+        0.014097040984779596,
+        0.01396916713565588
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.65741184342686,
+      "decode_window_seconds": 0.22696154192090034,
+      "decode_wall_steps_per_second": 70.49652493802783,
+      "native_decode_ms": [
+        15.159167,
+        13.598084,
+        14.132042,
+        13.757833,
+        13.822875,
+        13.895459,
+        14.159875,
+        14.21175,
+        14.026417,
+        14.184458,
+        14.08625,
+        13.891333,
+        14.041459,
+        13.8835,
+        14.004792,
+        13.876459
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.220334,
+          "encode_ms": 0.642875,
+          "gpu_ms": 13.554125092923641,
+          "wait_ms": 14.294041
+        },
+        {
+          "prepare_ms": 0.127292,
+          "encode_ms": 0.490167,
+          "gpu_ms": 12.564457952976227,
+          "wait_ms": 12.979625
+        },
+        {
+          "prepare_ms": 0.126833,
+          "encode_ms": 0.467584,
+          "gpu_ms": 13.072625268250704,
+          "wait_ms": 13.536916
+        },
+        {
+          "prepare_ms": 0.1205,
+          "encode_ms": 0.45425,
+          "gpu_ms": 12.82787462696433,
+          "wait_ms": 13.182333
+        },
+        {
+          "prepare_ms": 0.121125,
+          "encode_ms": 0.453875,
+          "gpu_ms": 12.678375001996756,
+          "wait_ms": 13.247125
+        },
+        {
+          "prepare_ms": 0.1195,
+          "encode_ms": 0.451209,
+          "gpu_ms": 12.887750286608934,
+          "wait_ms": 13.324083
+        },
+        {
+          "prepare_ms": 0.120875,
+          "encode_ms": 0.452125,
+          "gpu_ms": 12.922875117510557,
+          "wait_ms": 13.586125
+        },
+        {
+          "prepare_ms": 0.123042,
+          "encode_ms": 0.448,
+          "gpu_ms": 13.18087475374341,
+          "wait_ms": 13.640041
+        },
+        {
+          "prepare_ms": 0.120167,
+          "encode_ms": 0.446458,
+          "gpu_ms": 13.010624796152115,
+          "wait_ms": 13.458959
+        },
+        {
+          "prepare_ms": 0.138708,
+          "encode_ms": 0.523458,
+          "gpu_ms": 13.027874752879143,
+          "wait_ms": 13.521417
+        },
+        {
+          "prepare_ms": 0.166208,
+          "encode_ms": 0.633333,
+          "gpu_ms": 12.86074984818697,
+          "wait_ms": 13.285792
+        },
+        {
+          "prepare_ms": 0.172792,
+          "encode_ms": 0.616958,
+          "gpu_ms": 12.719000224024057,
+          "wait_ms": 13.101
+        },
+        {
+          "prepare_ms": 0.1195,
+          "encode_ms": 0.447959,
+          "gpu_ms": 12.891000136733055,
+          "wait_ms": 13.473416
+        },
+        {
+          "prepare_ms": 0.120792,
+          "encode_ms": 0.448167,
+          "gpu_ms": 12.943791691213846,
+          "wait_ms": 13.313916
+        },
+        {
+          "prepare_ms": 0.1205,
+          "encode_ms": 0.449792,
+          "gpu_ms": 12.990791816264391,
+          "wait_ms": 13.433041
+        },
+        {
+          "prepare_ms": 0.120459,
+          "encode_ms": 0.44725,
+          "gpu_ms": 12.839000206440687,
+          "wait_ms": 13.308041
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.305458,
+        "encode_ms": 5.933917,
+        "gpu_ms": 43.293250259011984,
+        "wait_ms": 44.3205,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 50.564041,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "garnet",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-global-half-alpha",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 2.550773000344634,
+        "peak_rss_bytes": 2069807104,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 15.947472000028938,
+      "ttft_seconds": 0.09717199997976422,
+      "ttft_per_row_seconds": {
+        "0-0": 0.08738441672176123,
+        "0-1": 0.09717199997976422
+      },
+      "total_seconds": 0.4855100838467479,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```",
+        "```python\ndef add(a, b):\n    return a + b\n```"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.025995458010584116,
+        0.024678499903529882,
+        0.023454707581549883,
+        0.022926957812160254,
+        0.022937875241041183,
+        0.022547292057424784,
+        0.02333404077216983,
+        0.023198457900434732,
+        0.024075124878436327,
+        0.023774334229528904,
+        0.023859667126089334,
+        0.024193832650780678,
+        0.024960207752883434,
+        0.027347541879862547,
+        0.026664583012461662,
+        0.02426391700282693
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 41.21454123756222,
+      "events": [
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.08738441672176123,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.09717199997976422,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.09717199997976422,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.12317787483334541,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.12317787483334541,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.1478652497753501,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.1478652497753501,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.1713266666047275,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.1713266666047275,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.19426174974069,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.19426174974069,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.21720487484708428,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.21720487484708428,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.2397579587996006,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.2397579587996006,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.26309649972245097,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.26309649972245097,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.2863013749010861,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.2863013749010861,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.3103800415992737,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.3103800415992737,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.3341583339497447,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.3341583339497447,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.35802220879122615,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.35802220879122615,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.3822202496230602,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.3822202496230602,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.4071831665933132,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.4071831665933132,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.43453316669911146,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.43453316669911146,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.46120716677978635,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.46120716677978635,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.4854829586111009,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.3883109586313367,
+      "decode_wall_steps_per_second": 41.204090804942844,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "vllm-metal",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 20.50929837487638,
+        "peak_rss_bytes": 3826188288,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 15.947472000028938,
+      "ttft_seconds": 0.07534791668877006,
+      "ttft_per_row_seconds": {
+        "1-0": 0.07534791668877006,
+        "1-1": 0.07534791668877006
+      },
+      "total_seconds": 0.636183749884367,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```",
+        "```python\ndef add(a, b):\n    return a + b\n```"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.02922170888632536,
+        0.03159425035119057,
+        0.035358165856450796,
+        0.036519916262477636,
+        0.03347187535837293,
+        0.03384604165330529,
+        0.03508170833811164,
+        0.03659991594031453,
+        0.03802083432674408,
+        0.040982458740472794,
+        0.03758183401077986,
+        0.03616379201412201,
+        0.03464516717940569,
+        0.03417258430272341,
+        0.03398266667500138,
+        0.03345537465065718
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 28.535845668912344,
+      "events": [
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.07534791668877006,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.07534791668877006,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.1045758337713778,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.1045758337713778,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.13617937499657273,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.13617937499657273,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.17154812486842275,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.17154812486842275,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.20808300003409386,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.20808300003409386,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.24156795907765627,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.24156795907765627,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.2754255416803062,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.2754255416803062,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.31051354203373194,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.31051354203373194,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.347119374666363,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.347119374666363,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.38514595897868276,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.38514595897868276,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.4261338338255882,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.4261338338255882,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.46371933398768306,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.46371933398768306,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.49988583382219076,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.49988583382219076,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.5345350420102477,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.5345350420102477,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.5687100840732455,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.5687100840732455,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.602695666719228,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.602695666719228,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.636158624663949,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.636158624663949,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.560810707975179,
+      "decode_wall_steps_per_second": 28.53012571348432,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "vllm-metal",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 20.50929837487638,
+        "peak_rss_bytes": 3826188288,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 15.947472000028938,
+      "ttft_seconds": 0.09214279195293784,
+      "ttft_per_row_seconds": {
+        "2-0": 0.09214279195293784,
+        "2-1": 0.09214279195293784
+      },
+      "total_seconds": 0.658270750194788,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```",
+        "```python\ndef add(a, b):\n    return a + b\n```"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.031869083642959595,
+        0.0363384997472167,
+        0.03604520903900266,
+        0.03519583400338888,
+        0.03452154202386737,
+        0.03340499987825751,
+        0.030470000114291906,
+        0.035542750265449286,
+        0.035767124965786934,
+        0.038716749753803015,
+        0.03914308315142989,
+        0.04056645790114999,
+        0.036936374846845865,
+        0.03497687494382262,
+        0.03405050002038479,
+        0.032421791926026344
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 28.270205681924793,
+      "events": [
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.09214279195293784,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.09214279195293784,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.12402283400297165,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.12402283400297165,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.16037299996241927,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.16037299996241927,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.1964310840703547,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.1964310840703547,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.23164658434689045,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.23164658434689045,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.26618470903486013,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.26618470903486013,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.2996054170653224,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.2996054170653224,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.3300882922485471,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.3300882922485471,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.36563808424398303,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.36563808424398303,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.4014095840975642,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.4014095840975642,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.44013250013813376,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.44013250013813376,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.4792835423722863,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.4792835423722863,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.519854917190969,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.519854917190969,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.5567955002188683,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.5567955002188683,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.5917750420048833,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.5917750420048833,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.6258277921006083,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.6258277921006083,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.6582544590346515,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.6582544590346515,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.5661116670817137,
+      "decode_wall_steps_per_second": 28.26297518735032,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "vllm-metal",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 20.50929837487638,
+        "peak_rss_bytes": 3826188288,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 15.918182749766856,
+      "ttft_seconds": 0.099351542070508,
+      "ttft_per_row_seconds": {
+        "0-0": 0.08919299999251962,
+        "0-1": 0.099351542070508
+      },
+      "total_seconds": 0.4888696251437068,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```",
+        "```python\ndef add(a, b):\n    return a + b\n```"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.02564441692084074,
+        0.024489959236234426,
+        0.02401670813560486,
+        0.02296841610223055,
+        0.023152958136051893,
+        0.02267508301883936,
+        0.023528624791651964,
+        0.02304266719147563,
+        0.02375770779326558,
+        0.024376584216952324,
+        0.024347207974642515,
+        0.0242486665956676,
+        0.024442834313958883,
+        0.026292084250599146,
+        0.02731766691431403,
+        0.025109666865319014
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 41.08766734145702,
+      "events": [
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.08919299999251962,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.099351542070508,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.099351542070508,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.12500674976035953,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.12500674976035953,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.1495035421103239,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.1495035421103239,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.17352637508884072,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.17352637508884072,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.1965024578385055,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.1965024578385055,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.21966320788487792,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.21966320788487792,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.24234370794147253,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.24234370794147253,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.26587599981576204,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.26587599981576204,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.28892291709780693,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.28892291709780693,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.31268645776435733,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.31268645776435733,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.3370661670342088,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.3370661670342088,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.36141599994152784,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.36141599994152784,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.38566712476313114,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.38566712476313114,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.4101125421002507,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.4101125421002507,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.4364071669988334,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.4364071669988334,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.4637274998240173,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.4637274998240173,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.4888421669602394,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.3894906248897314,
+      "decode_wall_steps_per_second": 41.07929428219166,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "vllm-metal",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 20.507730124983937,
+        "peak_rss_bytes": 3843981312,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 15.918182749766856,
+      "ttft_seconds": 0.07563862530514598,
+      "ttft_per_row_seconds": {
+        "1-0": 0.07563862530514598,
+        "1-1": 0.07563862530514598
+      },
+      "total_seconds": 0.6399256670847535,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```",
+        "```python\ndef add(a, b):\n    return a + b\n```"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.02747120801359415,
+        0.032358167227357626,
+        0.035583124961704016,
+        0.03910358436405659,
+        0.036843833047896624,
+        0.03143900027498603,
+        0.03437225008383393,
+        0.03635454224422574,
+        0.039028082974255085,
+        0.038032916840165854,
+        0.040616665966808796,
+        0.036453042179346085,
+        0.03501037461683154,
+        0.03397179115563631,
+        0.034374541603028774,
+        0.033132124692201614
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 28.36149022441489,
+      "events": [
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.07563862530514598,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.07563862530514598,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.10311600007116795,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.10311600007116795,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.13548491708934307,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.13548491708934307,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.17107929196208715,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.17107929196208715,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.2101949593052268,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.2101949593052268,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.2470562499947846,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.2470562499947846,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.2785085001960397,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.2785085001960397,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.3128880001604557,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.3128880001604557,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.34924779227003455,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.34924779227003455,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.3882831670343876,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.3882831670343876,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.4263226669281721,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.4263226669281721,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.46694487519562244,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.46694487519562244,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.5034017092548311,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.5034017092548311,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.5384149588644505,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.5384149588644505,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.5723903751932085,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.5723903751932085,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.6067677089013159,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.6067677089013159,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.6399024999700487,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.6399024999700487,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.5642638746649027,
+      "decode_wall_steps_per_second": 28.35552782729864,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "vllm-metal",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 20.507730124983937,
+        "peak_rss_bytes": 3843981312,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 15.918182749766856,
+      "ttft_seconds": 0.09376570861786604,
+      "ttft_per_row_seconds": {
+        "2-0": 0.09376570861786604,
+        "2-1": 0.09376570861786604
+      },
+      "total_seconds": 0.6559873749502003,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```",
+        "```python\ndef add(a, b):\n    return a + b\n```"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.032173417042940855,
+        0.03450529230758548,
+        0.03593079186975956,
+        0.03446179209277034,
+        0.0338623751886189,
+        0.034046624787151814,
+        0.030081457924097776,
+        0.03408445790410042,
+        0.036157332826405764,
+        0.03768308274447918,
+        0.03909866604954004,
+        0.039133625105023384,
+        0.037375958170741796,
+        0.036421291064471006,
+        0.03456554189324379,
+        0.032485750038176775
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 28.46633406804899,
+      "events": [
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.09376570861786604,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.09376570861786604,
+          "token_ids": [
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.12595029175281525,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.12595029175281525,
+          "token_ids": [
+            73594,
+            12669
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.16046804189682007,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.16046804189682007,
+          "token_ids": [
+            73594,
+            12669,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.1964122918434441,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.1964122918434441,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.23088916670531034,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.23088916670531034,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.2647678339853883,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.2647678339853883,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.29882908379659057,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.29882908379659057,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.3289243746548891,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.3289243746548891,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.3630171245895326,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.3630171245895326,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.3991788746789098,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.3991788746789098,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.43686716677621007,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.43686716677621007,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.4759726249612868,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.4759726249612868,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.51511145895347,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.51511145895347,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.552491916809231,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.552491916809231,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.5889166248962283,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.5889166248962283,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.6234855838119984,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.6234855838119984,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.6559741250239313,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.6559741250239313,
+          "token_ids": [
+            73594,
+            12669,
+            198,
+            750,
+            912,
+            2877,
+            11,
+            293,
+            982,
+            262,
+            470,
+            264,
+            488,
+            293,
+            198,
+            73594,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.5622084164060652,
+      "decode_wall_steps_per_second": 28.45919686204717,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "vllm-metal",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 20.507730124983937,
+        "peak_rss_bytes": 3843981312,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3986129169352353,
+      "ttft_seconds": 0.14766933303326368,
+      "total_seconds": 0.3748524999246001,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.001270124688744545,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.02125325007364154,
+        0.013892124872654676,
+        0.01362929167225957,
+        0.01315954141318798,
+        0.013360291719436646,
+        0.013352916110306978,
+        0.013480165973305702,
+        0.013561499770730734,
+        0.0135991252027452,
+        0.014140791725367308,
+        0.013875249773263931,
+        0.01399375032633543,
+        0.013951333239674568,
+        0.013709041755646467,
+        0.013747666962444782,
+        0.013969708234071732
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.58540705361153,
+      "decode_window_seconds": 0.22718316689133644,
+      "decode_wall_steps_per_second": 70.42775316030756,
+      "native_decode_ms": [
+        21.053792,
+        13.769,
+        13.524667,
+        13.059542,
+        13.264167,
+        13.261041,
+        13.386625,
+        13.467583,
+        13.488833,
+        14.019667,
+        13.78275,
+        13.90125,
+        13.856792,
+        13.619458,
+        13.658167,
+        13.869167
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.19875,
+          "encode_ms": 0.575459,
+          "gpu_ms": 12.70962506532669,
+          "wait_ms": 20.27675
+        },
+        {
+          "prepare_ms": 0.143417,
+          "encode_ms": 0.588917,
+          "gpu_ms": 12.107083108276129,
+          "wait_ms": 13.035333
+        },
+        {
+          "prepare_ms": 0.12125,
+          "encode_ms": 0.477833,
+          "gpu_ms": 12.486541643738747,
+          "wait_ms": 12.924542
+        },
+        {
+          "prepare_ms": 0.117208,
+          "encode_ms": 0.458959,
+          "gpu_ms": 12.020708061754704,
+          "wait_ms": 12.482625
+        },
+        {
+          "prepare_ms": 0.116375,
+          "encode_ms": 0.454958,
+          "gpu_ms": 12.25470844656229,
+          "wait_ms": 12.692125
+        },
+        {
+          "prepare_ms": 0.118458,
+          "encode_ms": 0.457417,
+          "gpu_ms": 12.302166782319546,
+          "wait_ms": 12.684375
+        },
+        {
+          "prepare_ms": 0.116209,
+          "encode_ms": 0.44925,
+          "gpu_ms": 12.34462484717369,
+          "wait_ms": 12.820375
+        },
+        {
+          "prepare_ms": 0.11675,
+          "encode_ms": 0.447083,
+          "gpu_ms": 12.508749961853027,
+          "wait_ms": 12.902917
+        },
+        {
+          "prepare_ms": 0.134958,
+          "encode_ms": 0.5185,
+          "gpu_ms": 12.477625161409378,
+          "wait_ms": 12.834375
+        },
+        {
+          "prepare_ms": 0.160333,
+          "encode_ms": 0.618125,
+          "gpu_ms": 12.775000184774399,
+          "wait_ms": 13.2405
+        },
+        {
+          "prepare_ms": 0.11825,
+          "encode_ms": 0.457833,
+          "gpu_ms": 12.79300032183528,
+          "wait_ms": 13.205959
+        },
+        {
+          "prepare_ms": 0.116084,
+          "encode_ms": 0.4475,
+          "gpu_ms": 12.85975007340312,
+          "wait_ms": 13.336958
+        },
+        {
+          "prepare_ms": 0.115958,
+          "encode_ms": 0.451125,
+          "gpu_ms": 12.80508330091834,
+          "wait_ms": 13.288875
+        },
+        {
+          "prepare_ms": 0.11875,
+          "encode_ms": 0.446208,
+          "gpu_ms": 12.6031250692904,
+          "wait_ms": 13.053792
+        },
+        {
+          "prepare_ms": 0.116,
+          "encode_ms": 0.453542,
+          "gpu_ms": 12.678708415478468,
+          "wait_ms": 13.087916
+        },
+        {
+          "prepare_ms": 0.116625,
+          "encode_ms": 0.448209,
+          "gpu_ms": 12.879374902695417,
+          "wait_ms": 13.302958
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.184583,
+        "encode_ms": 25.005167,
+        "gpu_ms": 46.40375031158328,
+        "wait_ms": 66.728083,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 91.922667,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "garnet",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-global-half-alpha",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 2.582394250202924,
+        "peak_rss_bytes": 2070626304,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3986129169352353,
+      "ttft_seconds": 0.04917279211804271,
+      "total_seconds": 0.2750218748115003,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0019557918421924114,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.013781292364001274,
+        0.01388558279722929,
+        0.013975333888083696,
+        0.013923833146691322,
+        0.014178957790136337,
+        0.013934917282313108,
+        0.013687292113900185,
+        0.01401612488552928,
+        0.01406329171732068,
+        0.01383883273229003,
+        0.014374999795109034,
+        0.014359000138938427,
+        0.01408145809546113,
+        0.014601250179111958,
+        0.01422183308750391,
+        0.014256875030696392
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 71.0539915827717,
+      "decode_window_seconds": 0.2258490826934576,
+      "decode_wall_steps_per_second": 70.84376792318709,
+      "native_decode_ms": [
+        13.576209,
+        13.786791,
+        13.880333,
+        13.82425,
+        14.053167,
+        13.81075,
+        13.55675,
+        13.85725,
+        13.914125,
+        13.717791,
+        14.247542,
+        14.230416,
+        13.956459,
+        14.468542,
+        14.073458,
+        14.126666
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.148334,
+          "encode_ms": 0.480208,
+          "gpu_ms": 12.563624884933233,
+          "wait_ms": 12.946875
+        },
+        {
+          "prepare_ms": 0.119708,
+          "encode_ms": 0.450458,
+          "gpu_ms": 12.836124747991562,
+          "wait_ms": 13.215959
+        },
+        {
+          "prepare_ms": 0.117458,
+          "encode_ms": 0.45825,
+          "gpu_ms": 12.851083651185036,
+          "wait_ms": 13.303917
+        },
+        {
+          "prepare_ms": 0.115708,
+          "encode_ms": 0.459209,
+          "gpu_ms": 12.73195818066597,
+          "wait_ms": 13.247416
+        },
+        {
+          "prepare_ms": 0.128208,
+          "encode_ms": 0.492209,
+          "gpu_ms": 13.009500224143267,
+          "wait_ms": 13.430958
+        },
+        {
+          "prepare_ms": 0.126584,
+          "encode_ms": 0.47875,
+          "gpu_ms": 12.782541569322348,
+          "wait_ms": 13.203166
+        },
+        {
+          "prepare_ms": 0.140083,
+          "encode_ms": 0.497917,
+          "gpu_ms": 12.416583485901356,
+          "wait_ms": 12.915041
+        },
+        {
+          "prepare_ms": 0.154584,
+          "encode_ms": 0.579666,
+          "gpu_ms": 12.72679166868329,
+          "wait_ms": 13.120042
+        },
+        {
+          "prepare_ms": 0.158,
+          "encode_ms": 0.597666,
+          "gpu_ms": 12.692375108599663,
+          "wait_ms": 13.156917
+        },
+        {
+          "prepare_ms": 0.138,
+          "encode_ms": 0.535041,
+          "gpu_ms": 12.682708445936441,
+          "wait_ms": 13.043209
+        },
+        {
+          "prepare_ms": 0.149167,
+          "encode_ms": 0.568791,
+          "gpu_ms": 13.069791719317436,
+          "wait_ms": 13.528375
+        },
+        {
+          "prepare_ms": 0.144625,
+          "encode_ms": 0.53825,
+          "gpu_ms": 13.101416639983654,
+          "wait_ms": 13.545833
+        },
+        {
+          "prepare_ms": 0.151084,
+          "encode_ms": 0.5465,
+          "gpu_ms": 12.817500159144402,
+          "wait_ms": 13.257
+        },
+        {
+          "prepare_ms": 0.148208,
+          "encode_ms": 0.540959,
+          "gpu_ms": 13.384500052779913,
+          "wait_ms": 13.776041
+        },
+        {
+          "prepare_ms": 0.1505,
+          "encode_ms": 0.568291,
+          "gpu_ms": 12.978250160813332,
+          "wait_ms": 13.352709
+        },
+        {
+          "prepare_ms": 0.160375,
+          "encode_ms": 0.56275,
+          "gpu_ms": 12.954500038176775,
+          "wait_ms": 13.40225
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.271625,
+        "encode_ms": 5.528333,
+        "gpu_ms": 39.07187469303608,
+        "wait_ms": 40.24625,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 46.047125,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "garnet",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-global-half-alpha",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 2.582394250202924,
+        "peak_rss_bytes": 2070626304,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3986129169352353,
+      "ttft_seconds": 0.05635529104620218,
+      "total_seconds": 0.2840410000644624,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0013445410877466202,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.015561249572783709,
+        0.014297209214419127,
+        0.014277625363320112,
+        0.014090332668274641,
+        0.014382958877831697,
+        0.014181166887283325,
+        0.014254957903176546,
+        0.014111500233411789,
+        0.014203125145286322,
+        0.014044583775103092,
+        0.013951917178928852,
+        0.01403833320364356,
+        0.013779541943222284,
+        0.013998833019286394,
+        0.014132500160485506,
+        0.013864000327885151
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.43188619911261,
+      "decode_window_seconds": 0.22768570901826024,
+      "decode_wall_steps_per_second": 70.27230680831536,
+      "native_decode_ms": [
+        15.369917,
+        14.168375,
+        14.158875,
+        13.99425,
+        14.28975,
+        14.089209,
+        14.159833,
+        14.002125,
+        14.078625,
+        13.951458,
+        13.861708,
+        13.9485,
+        13.688958,
+        13.905166,
+        14.039459,
+        13.773792
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.205417,
+          "encode_ms": 0.607666,
+          "gpu_ms": 13.360749930143356,
+          "wait_ms": 14.554959
+        },
+        {
+          "prepare_ms": 0.154458,
+          "encode_ms": 0.558584,
+          "gpu_ms": 12.974250130355358,
+          "wait_ms": 13.45425
+        },
+        {
+          "prepare_ms": 0.138834,
+          "encode_ms": 0.533291,
+          "gpu_ms": 12.987333349883556,
+          "wait_ms": 13.485917
+        },
+        {
+          "prepare_ms": 0.123833,
+          "encode_ms": 0.461583,
+          "gpu_ms": 13.041500002145767,
+          "wait_ms": 13.408
+        },
+        {
+          "prepare_ms": 0.122167,
+          "encode_ms": 0.446917,
+          "gpu_ms": 13.362333178520203,
+          "wait_ms": 13.72
+        },
+        {
+          "prepare_ms": 0.123917,
+          "encode_ms": 0.447583,
+          "gpu_ms": 13.067208230495453,
+          "wait_ms": 13.516792
+        },
+        {
+          "prepare_ms": 0.12525,
+          "encode_ms": 0.449541,
+          "gpu_ms": 13.054875191301107,
+          "wait_ms": 13.58425
+        },
+        {
+          "prepare_ms": 0.142,
+          "encode_ms": 0.517959,
+          "gpu_ms": 12.912292033433914,
+          "wait_ms": 13.341166
+        },
+        {
+          "prepare_ms": 0.167709,
+          "encode_ms": 0.621,
+          "gpu_ms": 12.89629191160202,
+          "wait_ms": 13.289208
+        },
+        {
+          "prepare_ms": 0.122042,
+          "encode_ms": 0.4475,
+          "gpu_ms": 12.924499809741974,
+          "wait_ms": 13.38125
+        },
+        {
+          "prepare_ms": 0.120875,
+          "encode_ms": 0.444166,
+          "gpu_ms": 12.91212486103177,
+          "wait_ms": 13.296
+        },
+        {
+          "prepare_ms": 0.120916,
+          "encode_ms": 0.450917,
+          "gpu_ms": 12.963375076651573,
+          "wait_ms": 13.376042
+        },
+        {
+          "prepare_ms": 0.120917,
+          "encode_ms": 0.4445,
+          "gpu_ms": 12.74312473833561,
+          "wait_ms": 13.122875
+        },
+        {
+          "prepare_ms": 0.122083,
+          "encode_ms": 0.446375,
+          "gpu_ms": 12.946541886776686,
+          "wait_ms": 13.336042
+        },
+        {
+          "prepare_ms": 0.122042,
+          "encode_ms": 0.447417,
+          "gpu_ms": 13.00574978813529,
+          "wait_ms": 13.469375
+        },
+        {
+          "prepare_ms": 0.121375,
+          "encode_ms": 0.443917,
+          "gpu_ms": 12.806707993149757,
+          "wait_ms": 13.20775
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.262208,
+        "encode_ms": 5.814708,
+        "gpu_ms": 45.552749652415514,
+        "wait_ms": 46.364084,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 52.443166,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "backend": "garnet",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-global-half-alpha",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+          "/Users/zsdx/garnet-metal-investigation/logs/global-alpha-vllm-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 2.582394250202924,
+        "peak_rss_bytes": 2070626304,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    }
+  ],
+  "scope": "Current retained prefill policy, equivalent-FP32 native/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"
+}

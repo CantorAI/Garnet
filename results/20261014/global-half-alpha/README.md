@@ -141,15 +141,15 @@ verify. The combined 1,043-file archive SHA-256 is
 Local verification is `native/selected-vl2.json`. The historical native records
 must not be used as a new vLLM result.
 
-A separate proposed full-six bundle is frozen in `vllm/selection.json`, using
+A separate full-six comparison bundle is frozen in `vllm/selection.json`, using
 global-alpha candidate SHA-256 above across all models and B1/B2. The original
 selection file and original libraries remain intact. Fresh full-six sequential
-comparison PID **40956** was launched at
-`ROOT/logs/global-alpha-vllm-20261014`. It runs three real FP32 GPU dtype audits,
-then native/vLLM ABBA, fresh complete images and unchanged caps/prompts with
-prefix caching and speculation disabled. Inspect the actual current handle or
-terminal record; a launch is not performance evidence. No fresh vLLM speedup
-claim is yet established. The overall 2x decode / half-TTFT goal remains unmet;
+comparison PID **40956** exited 0 at `ROOT/logs/global-alpha-vllm-20261014`.
+All three real FP32 GPU dtype audits and 72 complete matching outputs verify.
+Full measurements and limitations are recorded in `vllm/README.md`. Batch-2
+decode ratios are 2.25–2.63x; batch 1 is 1.55–1.83x; no half-TTFT target passes.
+This remains the qualified additional matched-FP32 study with different weight
+storage widths. The overall 2x decode / half-TTFT goal remains unmet;
 protected checkouts remain untouched.
 
 ```text

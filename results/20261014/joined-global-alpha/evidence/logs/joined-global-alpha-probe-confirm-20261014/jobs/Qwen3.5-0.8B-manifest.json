@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "joined_gate_up",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/joined-global-alpha-probe-confirm-20261014/jobs/Qwen3.5-0.8B-joined.bin",
+      "columns": 7168,
+      "inner": 1024,
+      "sha256": "e1922f0ab1512fcce7c9ba3680acd5500313f5eb4be11586fade00063100a3f6"
+    }
+  ],
+  "rows": [
+    8,
+    16,
+    22,
+    24,
+    26,
+    32,
+    44,
+    48,
+    52,
+    64,
+    80,
+    128,
+    160
+  ]
+}
