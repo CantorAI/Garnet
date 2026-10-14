@@ -1,0 +1,55 @@
+Executing after successful owned predecessor ["/opt/homebrew/bin/python3", "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_decode_subsimd.py", "/Users/zsdx/garnet-metal-investigation", "/Users/zsdx/garnet-metal-investigation/logs/decode-subsimd-inference-20261013/jobs"]
+Starting exclusive native worker Qwen3-0.6B-b1-control-0
+Completed exact native worker Qwen3-0.6B-b1-control-0
+Starting exclusive native worker Qwen3-0.6B-b1-candidate-0
+Completed exact native worker Qwen3-0.6B-b1-candidate-0
+Starting exclusive native worker Qwen3-0.6B-b1-candidate-1
+Completed exact native worker Qwen3-0.6B-b1-candidate-1
+Starting exclusive native worker Qwen3-0.6B-b1-control-1
+Completed exact native worker Qwen3-0.6B-b1-control-1
+{"model": "Qwen3-0.6B", "batch": 1, "means": {"control": {"requests": 4, "ttft_ms": 51.88583326525986, "decode_tps": 58.04512682250913, "initialization_s": 1.6714583754073828, "peak_individual_rss_bytes": 2442674176}, "candidate": {"requests": 4, "ttft_ms": 52.886010496877134, "decode_tps": 57.81314891428924, "initialization_s": 1.665081895655021, "peak_individual_rss_bytes": 2443329536}}, "decode_ratio": 0.9960034903717373, "ttft_fraction": 1.019276499357811, "exact_complete_outputs": true}
+Starting exclusive native worker Qwen3-0.6B-b2-control-0
+Completed exact native worker Qwen3-0.6B-b2-control-0
+Starting exclusive native worker Qwen3-0.6B-b2-candidate-0
+Completed exact native worker Qwen3-0.6B-b2-candidate-0
+Starting exclusive native worker Qwen3-0.6B-b2-candidate-1
+Completed exact native worker Qwen3-0.6B-b2-candidate-1
+Starting exclusive native worker Qwen3-0.6B-b2-control-1
+Completed exact native worker Qwen3-0.6B-b2-control-1
+{"model": "Qwen3-0.6B", "batch": 2, "means": {"control": {"requests": 4, "ttft_ms": 86.08818775974214, "decode_tps": 57.56529733341651, "initialization_s": 1.687129229074344, "peak_individual_rss_bytes": 2496323584}, "candidate": {"requests": 4, "ttft_ms": 87.31332328170538, "decode_tps": 56.82538254791726, "initialization_s": 1.6942379591055214, "peak_individual_rss_bytes": 2493063168}}, "decode_ratio": 0.9871465132679905, "ttft_fraction": 1.014231168686956, "exact_complete_outputs": true}
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b1-control-0
+Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b1-control-0
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b1-candidate-0
+Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b1-candidate-0
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b1-candidate-1
+Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b1-candidate-1
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b1-control-1
+Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b1-control-1
+{"model": "Qwen2.5-Coder-0.5B-Instruct", "batch": 1, "means": {"control": {"requests": 4, "ttft_ms": 36.20719735044986, "decode_tps": 71.76936555603149, "initialization_s": 1.39081050013192, "peak_individual_rss_bytes": 2069716992}, "candidate": {"requests": 4, "ttft_ms": 35.791229107417166, "decode_tps": 68.45380471959709, "initialization_s": 1.3839529792312533, "peak_individual_rss_bytes": 2070831104}}, "decode_ratio": 0.9538025617093425, "ttft_fraction": 0.9885114487319597, "exact_complete_outputs": true}
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b2-control-0
+Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b2-control-0
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0
+Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1
+Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1
+Starting exclusive native worker Qwen2.5-Coder-0.5B-Instruct-b2-control-1
+Completed exact native worker Qwen2.5-Coder-0.5B-Instruct-b2-control-1
+{"model": "Qwen2.5-Coder-0.5B-Instruct", "batch": 2, "means": {"control": {"requests": 4, "ttft_ms": 56.62067700177431, "decode_tps": 70.83830392750609, "initialization_s": 1.3922685622237623, "peak_individual_rss_bytes": 2070282240}, "candidate": {"requests": 4, "ttft_ms": 57.83794808667153, "decode_tps": 67.32751778131853, "initialization_s": 1.3845550210680813, "peak_individual_rss_bytes": 2070601728}}, "decode_ratio": 0.9504394381070953, "ttft_fraction": 1.0214987024061735, "exact_complete_outputs": true}
+Starting exclusive native worker Qwen3.5-0.8B-b1-control-0
+Completed exact native worker Qwen3.5-0.8B-b1-control-0
+Starting exclusive native worker Qwen3.5-0.8B-b1-candidate-0
+Completed exact native worker Qwen3.5-0.8B-b1-candidate-0
+Starting exclusive native worker Qwen3.5-0.8B-b1-candidate-1
+Completed exact native worker Qwen3.5-0.8B-b1-candidate-1
+Starting exclusive native worker Qwen3.5-0.8B-b1-control-1
+Completed exact native worker Qwen3.5-0.8B-b1-control-1
+{"model": "Qwen3.5-0.8B", "batch": 1, "means": {"control": {"requests": 4, "ttft_ms": 218.4251876315102, "decode_tps": 47.78071009409081, "initialization_s": 3.1437377496622503, "peak_individual_rss_bytes": 3615735808}, "candidate": {"requests": 4, "ttft_ms": 216.67042700573802, "decode_tps": 47.214628530855435, "initialization_s": 3.129876166814938, "peak_individual_rss_bytes": 3614187520}}, "decode_ratio": 0.988152508363299, "ttft_fraction": 0.9919663082595928, "exact_complete_outputs": true}
+Starting exclusive native worker Qwen3.5-0.8B-b2-control-0
+Completed exact native worker Qwen3.5-0.8B-b2-control-0
+Starting exclusive native worker Qwen3.5-0.8B-b2-candidate-0
+Completed exact native worker Qwen3.5-0.8B-b2-candidate-0
+Starting exclusive native worker Qwen3.5-0.8B-b2-candidate-1
+Completed exact native worker Qwen3.5-0.8B-b2-candidate-1
+Starting exclusive native worker Qwen3.5-0.8B-b2-control-1
+Completed exact native worker Qwen3.5-0.8B-b2-control-1
+{"model": "Qwen3.5-0.8B", "batch": 2, "means": {"control": {"requests": 4, "ttft_ms": 383.27675010077655, "decode_tps": 44.56545996475035, "initialization_s": 3.129143500002101, "peak_individual_rss_bytes": 3637518336}, "candidate": {"requests": 4, "ttft_ms": 384.7658437443897, "decode_tps": 43.864057471246475, "initialization_s": 3.194302541669458, "peak_individual_rss_bytes": 3635281920}}, "decode_ratio": 0.9842612980083979, "ttft_fraction": 1.0038851655969783, "exact_complete_outputs": true}

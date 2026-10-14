@@ -28,9 +28,6 @@ public:
 #ifdef GARNET_METAL_DIRECT_STATE_ZERO
         info+="; direct_state_zero";
 #endif
-#ifdef GARNET_METAL_SUBSIMD_DECODE
-        info+="; subsimd_decode";
-#endif
         return info;
     }
     // Graphs own synchronous queues and release them through close(). There

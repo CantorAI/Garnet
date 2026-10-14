@@ -80,7 +80,6 @@ try:
             prefill_chunk_plan=decoder.prefill_chunk_plan,
             reset_seconds=reset_seconds,
             direct_state_zero_enabled='direct_state_zero' in garnet.backend_info(),
-            subsimd_decode_enabled='subsimd_decode' in garnet.backend_info(),
             vision_reencoded=True,attention_prefix_enabled='attention_prefix' in garnet.backend_info(),
             weights='BF16 checkpoint; FP32 native vision/activations/KV'))
 finally:

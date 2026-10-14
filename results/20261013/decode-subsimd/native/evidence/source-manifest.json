@@ -1,0 +1,34 @@
+{
+  "cmake/GarnetMetal.cmake": {
+    "before_sha256": "ffe406d84c392d46f1a312238ab9e2253ce5cee244b8088f6b98f0df28afa56f",
+    "sha256": "8812e4ec34f50a9dd7879bd787472dfbaef197c5f386e7c2b2b7076889da2aae"
+  },
+  "src/backends/metal/metal_context.mm": {
+    "before_sha256": "40b276447cb0f0bac5e30a8ef3af5f46ea36c706b9e7cbe4be6c7a522b99c68c",
+    "sha256": "fef6a0cd2178a64e1d8125ef04530b2c04b6e6812fbc7d8379d3080e2ff49eee"
+  },
+  "src/entry/metal_main.cpp": {
+    "before_sha256": "8d7b3fff7ba1e7bc6e2cf0975a2d637d1ebcab0a7d099a9cc69769f7079f82ae",
+    "sha256": "45d3a413ae3c297db495c4ca329f76b4f7afb3877c350736d70361ee663590a9"
+  },
+  "test2026/metal/run_matched_garnet.py": {
+    "before_sha256": "4b01fa5874f3207202c989cfebcefef1c0eaf10cecb84236f5121b73d821b9e5",
+    "sha256": "3c172c8e3a25d76e1f224e0f719e39380447ab809064496ffaf0f91a9dcef431"
+  },
+  "test2026/metal/frame_worker_garnet.py": {
+    "before_sha256": "8180341218a7505c963fcd24c19029f9cec97cfb2b9c0a3ac67374b56fafb3f1",
+    "sha256": "e812616ba76330e70474690ecdc6b05d8f979e8c785f98716b1bdebb258f4345"
+  },
+  "test2026/metal/run_decode_subsimd_checks.py": {
+    "before_sha256": null,
+    "sha256": "faf5e39623bb8b11c9b03604d0a287cf4a5add8363510e728874943aeea09961"
+  },
+  "test2026/metal/compare_decode_subsimd.py": {
+    "before_sha256": null,
+    "sha256": "b3050004614458f52d56a7084fde102c666c582432e5ef70d54ba0748f855da5"
+  },
+  "test2026/metal/integrate_decode_subsimd.py": {
+    "before_sha256": null,
+    "sha256": "5b97c83946b2a3a7edcb9c370be9a89f7089194bf66c2f57c7fde6e4736fe154"
+  }
+}
