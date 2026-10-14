@@ -44,9 +44,22 @@ commands, terminal status, monitor samples and library/source hashes.
 
 ```text
 python3 launch_combined_prefill_reset.py ROOT ROOT/logs/combined-prefill-reset-20261015
+python3 archive_combined_prefill_reset.py ROOT ARCHIVE
+python verify_combined_prefill_reset.py EVIDENCE VERIFICATION_JSON
 ```
 
 The original GPT-OSS and Pi checkouts were inspected and remain clean on
 `feature/gpt-oss-120b` and `feature/qwen35-vl-pi5b` respectively. This work
 is isolated in `feature/qwen35-metal`. The full optimization goal remains
 active and unmet.
+
+The independent audit retains all twenty-two validation stages, both feature
+CTest signals, all six B1/B2 recovery results, the original full serving
+outputs and frame hashes, both features' actual counters and independently
+recomputed means. Archive and expanded-verifier syntax were checked before
+use; no pending job is represented as verified terminal evidence.
+
+Owned queue **33256** is waiting for this exact live dependency. It archives
+successful terminal combined evidence before starting the separate eight-lane
+decode component probe. It never starts a probe alongside this job and does
+not interrupt the dependency. A dependency failure stops the queue.
