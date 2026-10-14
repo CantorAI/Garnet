@@ -1,0 +1,38 @@
+[
+  {
+    "run": "decode-splitk-20261015",
+    "model": "Qwen3-0.6B",
+    "variant": "bf16_decode_sk2",
+    "unweighted_large_matrix_ratio": 0.9776476640665016
+  },
+  {
+    "run": "decode-splitk-20261015",
+    "model": "Qwen3-0.6B",
+    "variant": "bf16_decode_sk4",
+    "unweighted_large_matrix_ratio": 0.9418372211908506
+  },
+  {
+    "run": "decode-splitk-20261015",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "variant": "bf16_decode_sk2",
+    "unweighted_large_matrix_ratio": 0.9684542912351422
+  },
+  {
+    "run": "decode-splitk-20261015",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "variant": "bf16_decode_sk4",
+    "unweighted_large_matrix_ratio": 0.9200087435272469
+  },
+  {
+    "run": "decode-splitk-20261015",
+    "model": "Qwen3.5-0.8B",
+    "variant": "bf16_decode_sk2",
+    "unweighted_large_matrix_ratio": 0.9948027647137743
+  },
+  {
+    "run": "decode-splitk-20261015",
+    "model": "Qwen3.5-0.8B",
+    "variant": "bf16_decode_sk4",
+    "unweighted_large_matrix_ratio": 0.9338892827957238
+  }
+]

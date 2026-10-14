@@ -1,4 +1,4 @@
-# FP32 split-K decode: isolated component test in progress
+# FP32 split-K decode: no broad gain, rejected for general dispatch
 
 This experiment divides each learned BF16-weight dot product into two or four
 parallel FP32 partial sums, then reduces them in FP32. It retains exact native
@@ -22,13 +22,37 @@ exit 0. The earlier evidence is archived and independently verified. Existing
 0.5-second guards remain intact and reject other inference/probe jobs. No
 competing runtime is deliberately run simultaneously.
 
-Generated shader/harness construction passed locally. Actual Mac compilation,
-all numerical gates and component timing remain pending until terminal
-evidence is collected. Production sources, learned values, model settings and
-selected libraries are unchanged. The full three-model 2x/half-latency goal
-remains active and unmet.
+PID **55556** exited 0 after 42.07 seconds. Actual Mac compilation and all 136
+matrix/batch/variant checks passed within the unchanged numerical bounds.
+Independent verification checked 55 archived files and 34 omitted raw-matrix
+identities. Worst FP64 envelope fraction is 0.009973; worst native comparison
+envelope fraction is 0.044918. Full generated outputs were not tested because
+the component did not justify general production integration.
+
+For large trained matrices, two-part unweighted GPU speedups are text
+0.986/0.969, coder 0.996/0.941 and VL 1.007/0.983 for B1/B2 respectively.
+Four-part variants are slower in all six groups (GPU speedups 0.916–0.944).
+Wall results also fail to establish a broad gain; the only pooled positive
+direction is VL B1 two-part at 1.009x. `component-by-batch.json` retains both
+GPU and wall clocks, by batch and variant. Pooling distinct matrices is not
+weighted by layer count and does not establish serving tokens/sec.
+
+The individual VL B2 MLP down projection is an exception: two/four-part GPU
+speedups 1.103/1.133 and wall speedups 1.035/1.037. This does not address the
+unmet B1 throughput target and is not presented as a whole-model gain. Reject
+general split-K dispatch; preserve this isolated shape observation for later
+profiling rather than integrating a broad regression. No favorable full-model
+claim or repeat follows the general candidate's result.
+
+Archive SHA-256:
+`be89df3044b8356ee701fb8f1f6b68ca77e7c0315abace73796cfd7caa9de1f8`.
+Production sources, learned values, model settings and selected libraries are
+unchanged. The full three-model 2x/half-latency goal remains active and unmet.
 
 ```text
 python3 launch_decode_splitk_probe.py ROOT ROOT/logs/decode-splitk-20261015
 python3 run_decode_splitk_probe.py ROOT OUTPUT
+python3 archive_decode_splitk.py ROOT ARCHIVE
+python verify_decode_splitk.py RESULTS
+python summarize_decode_splitk.py RESULTS
 ```

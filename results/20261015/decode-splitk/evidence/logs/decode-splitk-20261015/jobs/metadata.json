@@ -1,0 +1,21 @@
+{
+  "scope": "Real BF16 learned values and FP32 math; changed reduction order; component only",
+  "numerical_bounds": "5e-6+5e-5*abs(control); both versus FP64 with gamma(ceil(K/32)+32)*sumabs+1e-7",
+  "source_sha256": {
+    "test2026/metal/make_decode_eight_lane_probe.py": "9de6f6320ad2cb18a6cea66354869860f68f4e3f86580c1b4d0b30d8638009bf",
+    "test2026/metal/run_decode_eight_lane_probe.py": "a73c32779c194df901bc3fbbe79b399a227bc055e31b22016effaad91c14e42e",
+    "test2026/metal/make_decode_subsimd_probe.py": "3baf3ae3762af205a28c5e6671d61e8f160e6e63019305e2f3b12c94dd8864ad",
+    "test2026/metal/run_decode_subsimd_probe.py": "422b2a307a8678a5ffe96bfe09b94607f13c151d17413dba16f1c0e3d6e011da",
+    "src/backends/metal/metal_context.mm": "b0cf78db529b4837022a66ac06db879774e114a73285d43065582124b505f480",
+    "test2026/metal/decode_wide_outputs_gpu.mm": "bb578c512d352224417591c60f8576bada476b4733c8850643d72645bbc763be",
+    "test2026/metal/make_decode_splitk_probe.py": "b168c1e1e3699aaa4a93506790dd0671ccc1e41b91d8abb9ea997fd560916e82",
+    "test2026/metal/make_decode_splitk_shader.py": "933b97f78daf303ddc1de7aeff2d1f0592ee5391db18d14faa7b566069ec908f",
+    "test2026/metal/prepare_decode_tile_probe.py": "787166c08791d675ecc1cea030f0d94e8b8daf150dc6a4490749e3ceb45b5059",
+    "test2026/metal/run_decode_splitk_probe.py": "bfb7b8ca47f086e929419bc01d8c299887ca6db6600252a6839d2ff7947dce8f",
+    "test2026/metal/compare_vllm_metal.py": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  }
+}
