@@ -32,6 +32,7 @@ struct MetalBF16Weight::Impl {
     id<MTLBuffer> buffer;
     MPSMatrix* exactHalf;
     id<MTLBuffer> halfScales;
+    size_t halfScalesOffset=0;
     size_t rows,columns;
     bool floatPrefill=false;
 };
@@ -1311,11 +1312,23 @@ bool MetalContext::EncodeJoinedBF16Prefill(const MetalMatrix& input,const MetalB
             for(size_t index=0;index<2;++index) {
                 auto weight=index?w1:w0;
                 for(size_t row=0;row<x.columns;++row)std::memcpy(static_cast<char*>(pack.data.contents)+(index*x.columns+row)*rowBytes,
-                    static_cast<const char*>(weight->exactHalf.data.contents)+row*weight->exactHalf.rowBytes,a.columns*2);
-                std::memcpy(static_cast<char*>(pack.scales.contents)+index*x.columns*4,weight->halfScales.contents,x.columns*4);
+                    static_cast<const char*>(weight->exactHalf.data.contents)+weight->exactHalf.offset+row*weight->exactHalf.rowBytes,a.columns*2);
+                std::memcpy(static_cast<char*>(pack.scales.contents)+index*x.columns*4,
+                    static_cast<const char*>(weight->halfScales.contents)+weight->halfScalesOffset,x.columns*4);
             }
             pack.view=[[MPSMatrix alloc] initWithBuffer:pack.data descriptor:descriptor];
             if(!pack.view)throw std::runtime_error("Joined prefill matrix view failed");
+#ifdef GARNET_METAL_COMPACT_JOINED_PREFILL
+            // Retain the learned BF16 decode buffers. Individual half projections
+            // share the joined allocation, with their original row scales.
+            auto singleDescriptor=[MPSMatrixDescriptor matrixDescriptorWithRows:x.columns columns:a.columns rowBytes:rowBytes dataType:MPSDataTypeFloat16];
+            auto firstView=[[MPSMatrix alloc] initWithBuffer:pack.data offset:0 descriptor:singleDescriptor];
+            auto secondView=[[MPSMatrix alloc] initWithBuffer:pack.data offset:x.columns*rowBytes descriptor:singleDescriptor];
+            if(!firstView||!secondView)throw std::runtime_error("Joined prefill subview creation failed");
+            w0->exactHalf=firstView;w1->exactHalf=secondView;
+            w0->halfScales=pack.scales;w0->halfScalesOffset=0;
+            w1->halfScales=pack.scales;w1->halfScalesOffset=x.columns*4;
+#endif
             found=impl_->joinedWeights.emplace(identity,std::move(pack)).first;
         }
         const std::array<size_t,3> key{a.rows,x.columns*2,a.columns};
@@ -1388,7 +1401,7 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
             auto encoder=[impl_->command computeCommandEncoder];
             if(!encoder)throw std::runtime_error("Cannot create exact half rescale encoder");
             [encoder setComputePipelineState:impl_->kernels->halfRescale];
-            [encoder setBuffer:temporary.data offset:0 atIndex:0];[encoder setBuffer:w->halfScales offset:0 atIndex:1];
+            [encoder setBuffer:temporary.data offset:0 atIndex:0];[encoder setBuffer:w->halfScales offset:w->halfScalesOffset atIndex:1];
             [encoder setBuffer:o.data offset:0 atIndex:2];[encoder setBytes:&p length:sizeof(p) atIndex:3];
             const auto total=Elements(o.rows,o.columns);
             [encoder dispatchThreads:MTLSizeMake(total,1,1) threadsPerThreadgroup:MTLSizeMake(std::min(total,size_t(impl_->kernels->halfRescale.maxTotalThreadsPerThreadgroup)),1,1)];

@@ -20,6 +20,16 @@ static void test(size_t rows,size_t inner,size_t columns) {
         require(gpu.LastJoinedPrefillPairs()==1,"Dispatch counter incorrect");gpu.SubmitAndWait();
         auto a=gpu.Download(x),b=gpu.Download(y);require(std::memcmp(a.data(),ref0.data(),a.size()*4)==0&&std::memcmp(b.data(),ref1.data(),b.size()*4)==0,"Joined outputs changed bits");
     }
+    // Exercise both offset views, then repack a reversed pair from those views.
+    gpu.Begin();gpu.EncodeBF16MatVec(input,w0,x);gpu.EncodeBF16MatVec(input,w1,y);gpu.SubmitAndWait();
+    auto solo0=gpu.Download(x),solo1=gpu.Download(y);
+    require(std::memcmp(solo0.data(),ref0.data(),solo0.size()*4)==0&&std::memcmp(solo1.data(),ref1.data(),solo1.size()*4)==0,"Individual projections changed after joining");
+    gpu.Begin();require(gpu.EncodeJoinedBF16Prefill(input,w1,w0,y,x),"Reversed pair rejected");gpu.SubmitAndWait();
+    solo0=gpu.Download(x);solo1=gpu.Download(y);
+    require(std::memcmp(solo0.data(),ref0.data(),solo0.size()*4)==0&&std::memcmp(solo1.data(),ref1.data(),solo1.size()*4)==0,"Reversed joined outputs changed bits");
+    gpu.Begin();gpu.EncodeBF16MatVec(input,w0,x);gpu.EncodeBF16MatVec(input,w1,y);gpu.SubmitAndWait();
+    solo0=gpu.Download(x);solo1=gpu.Download(y);
+    require(std::memcmp(solo0.data(),ref0.data(),solo0.size()*4)==0&&std::memcmp(solo1.data(),ref1.data(),solo1.size()*4)==0,"Individual projections changed after reversed joining");
     auto untouched=gpu.Upload(std::vector<float>(rows*columns,99.5f),rows,columns);
     gpu.Begin();require(!gpu.EncodeJoinedBF16Prefill(input,w0,w1,untouched,untouched),"Aliased pair admitted");require(gpu.LastJoinedPrefillPairs()==0,"Alias rejection changed counter");gpu.Abort();
     for(float value:gpu.Download(untouched))require(value==99.5f,"Alias rejection changed output");
