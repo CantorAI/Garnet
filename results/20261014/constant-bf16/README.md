@@ -46,24 +46,37 @@ dispatch counts, reset on clear/reset/begin/abort and published only after
 successful submission. Worker logs capture the feature marker and actual
 last-session dispatch count after the timed request has completed.
 
-The isolated candidate builds and passes native CTest.
+The isolated candidate builds and passes native CTest. All 19 trained-model,
+cache, vision and extended-prefill validation stages subsequently passed,
+with exit 0 after 1006.73 seconds.
 Candidate library SHA-256 is
 `df1c1912b2daf40c86925d323747d60db6a4950723ac04562f06854da1c7aaa3`.
-Trained text tail
-checks have passed; the rest of the 19-stage trained-model/cache/vision
-validation remains running in owned PID **10827**, directory
+Owned validation PID **10827** is terminal, directory
 `ROOT/logs/constant-head-checks-20261014`. Historical build/CTest snapshots
-are in `native/pending`; they do not prove the whole gate passed.
+are in `native/pending`; the full remote terminal logs remain authoritative.
 
-Owned PID **16406** waits for that exact live predecessor identity and
-terminal exit 0, then runs three B1 complete-output comparisons sequentially
-against the retained attention library. It is not allowed to benchmark
-before all checks pass. The directory is
-`ROOT/logs/constant-head-native-20261014`. Re-poll these actual handles and
-terminal files; an observation timeout does not justify restarting them.
+Owned PID **16406** verified the predecessor's successful terminal state,
+then completed three sequential B1 comparisons against retained attention.
+All 36 complete outputs match, and candidate dispatch counters equal 1
+versus control 0. Its directory is
+`ROOT/logs/constant-head-native-20261014`; its exit code is 0. Both owned
+jobs are terminal and must not be restarted. Full raw native evidence still
+needs archiving; `native/initial-summary.json` captures this initial result.
+
+| Initial native B1 result | Control → candidate TPS | Control → candidate TTFT |
+| --- | ---: | ---: |
+| Text | 59.2747 → 58.9827 | 51.9618 → 52.8059 ms |
+| Coder | 72.0785 → 71.3736 | 35.5724 → 36.0902 ms |
+| VL | 48.0947 → 48.1353 | 209.9577 → 206.6803 ms |
+
+The component head signal does not establish a whole-model decode gain:
+text/coder regress slightly and VL decode is essentially flat. Its single
+small VL latency reduction is unconfirmed. No favorable-number repeat is
+warranted without a new change or a specific unresolved concern. The route
+remains optional and default OFF; no runtime promotion is made.
 Selected primary/attention binaries remain unchanged (73c10e5d / f2c5c448).
-No full-model performance result or fresh vLLM comparison is established
-for this candidate. The full 2x decode / half-TTFT goal remains unmet.
+These are initial native comparisons, with no fresh vLLM comparison for
+this candidate. The full 2x decode / half-TTFT goal remains unmet.
 
 ## Commands and evidence
 
