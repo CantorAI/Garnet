@@ -1,13 +1,23 @@
 {
   "packed-prefill-norm-checks-20261014": {
-    "terminal": false,
-    "verified_live": true,
-    "pid": 68972
+    "terminal": true,
+    "exit_code": 1,
+    "wall_seconds": 357.47418470773846
   },
   "packed-prefill-norm-native-20261014": {
+    "terminal": true,
+    "exit_code": 1,
+    "wall_seconds": 275.9074581670575
+  },
+  "packed-prefill-norm-resume-checks-20261014": {
     "terminal": false,
     "verified_live": true,
-    "pid": 70597
+    "pid": 75785
+  },
+  "packed-prefill-norm-resume-native-20261014": {
+    "terminal": false,
+    "verified_live": true,
+    "pid": 78978
   },
   "selected_libraries_unchanged": true
 }

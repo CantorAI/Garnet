@@ -67,12 +67,27 @@ and reject bad inputs/aliases/parameters while checking counter resets.
 Candidate library SHA-256 is
 `9286535724998269f7c871e853f24ca74ff11a526e6d34c83c17c697faab44a3`.
 
-Validation PID **68972** is live at
-`ROOT/logs/packed-prefill-norm-checks-20261014`, running 19 model/cache/vision/
-prefill stages. Dependency PID **70597** at
-`ROOT/logs/packed-prefill-norm-native-20261014` verifies that exact live handle
-before waiting, and starts six sequential ABBA profiles only after exit 0.
-These are ongoing jobs; revalidate their actual state before continuing.
+Initial validation PID **68972** exited 1 after 357.47 seconds when an unrelated
+xlang3 runtime interrupted the first dense-tail stage. Its dependency PID
+**70597** exited 1 without running benchmarks. This is guard interruption,
+not a numerical failure. Both initial jobs are terminal and must not restart.
+
+Resumed validation PID **75785**, directory
+`ROOT/logs/packed-prefill-norm-resume-checks-20261014`, reuses only the pinned
+candidate build and the three clean configure/build/CTest stages. All source
+and library identities are rechecked first. It executes the original eight
+dense-tail fixtures individually, preserving their random sequence by consuming
+the skipped draws. `fixture-rng-verification.json` verifies all 48 input hashes
+at both trained hidden widths. Shapes, three stateful iterations, paused rows,
+slot reuse, invalid-input tests and numerical bounds remain unchanged.
+Only interrupted complete cases are discarded/retried. All other validation
+stages retain their original commands and coverage, with clean-interval guards.
+
+New dependency PID **78978**, directory
+`ROOT/logs/packed-prefill-norm-resume-native-20261014`, verifies the actual
+resumed validation process before waiting and starts all six sequential ABBA
+profiles only after exit 0. These resumed jobs are ongoing; inspect their
+current authoritative state before continuing.
 No full-model speed gain, promotion or fresh vLLM comparison is claimed.
 The overall 2x decode / half-TTFT goal remains unmet. Protected GPT-OSS/Pi
 checkouts and selected primary/attention libraries are untouched.
@@ -91,6 +106,8 @@ python prepare_packed_prefill_norm_sources.py
 python3 install_packed_prefill_norm_sources.py ROOT
 python3 launch_quiet_packed_prefill_norm_checks.py ROOT ROOT/logs/packed-prefill-norm-checks-20261014 checks
 python3 queue_packed_prefill_norm_profiles.py ROOT ROOT/logs/packed-prefill-norm-native-20261014
+python3 launch_resume_packed_prefill_norm_checks.py ROOT ROOT/logs/packed-prefill-norm-resume-checks-20261014
+python3 queue_resume_packed_prefill_norm_profiles.py ROOT ROOT/logs/packed-prefill-norm-resume-native-20261014
 ```
 
 Initial archive SHA-256:
