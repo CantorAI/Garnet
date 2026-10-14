@@ -62,6 +62,7 @@ try:
             prefill_chunk_plan=decoder.prefill_chunk_plan,prefill_inference_ms=decoder.prefill_inference_ms,
             attention_prefix_enabled='attention_prefix' in garnet.backend_info(),
             direct_state_zero_enabled='direct_state_zero' in garnet.backend_info(),
+            subsimd_decode_enabled='subsimd_decode' in garnet.backend_info(),
             weights='checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV')
         result['case']=workload
         print('matched_result',json.dumps(result),flush=True)
