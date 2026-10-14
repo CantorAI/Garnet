@@ -46,7 +46,7 @@ dispatch counts, reset on clear/reset/begin/abort and published only after
 successful submission. Worker logs capture the feature marker and actual
 last-session dispatch count after the timed request has completed.
 
-The isolated candidate builds and passes native CTest. Trained text tail
+The isolated candidate builds and passes native CTest.
 Candidate library SHA-256 is
 `df1c1912b2daf40c86925d323747d60db6a4950723ac04562f06854da1c7aaa3`.
 Trained text tail
