@@ -1,0 +1,236 @@
+{
+  "jobs": {
+    "private-bf16-probe-20261014": {
+      "exit_code": 1,
+      "wall_seconds": 11.986283207777888
+    },
+    "private-bf16-retry-20261014": {
+      "exit_code": 0,
+      "wall_seconds": 37.564381666947156
+    }
+  },
+  "files": [
+    {
+      "path": "logs/private-bf16-probe-20261014/exit.json",
+      "bytes": 52,
+      "sha256": "3b778632daab5743872f2cee13e29edd171e3d954f516102891d2b957344b078"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/Qwen3-0.6B-gpu-monitor.json",
+      "bytes": 845,
+      "sha256": "2fd0c358d077c3d787d4f95c287a356a02f62888d366ba9d0a36d6538764b4fe"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/Qwen3-0.6B-gpu.log",
+      "bytes": 115467,
+      "sha256": "18356ee65f90a61459598fb9b79845bb75e266747379e6c9f7f6347701fbd2ca"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/background_service_checks.json",
+      "bytes": 15769,
+      "sha256": "51a1d3701bca6893856c4d87476a91ce9b352bf94999cefafc647b3b9b745288"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/compile-monitor.json",
+      "bytes": 158,
+      "sha256": "37535657913361ef483fb23429b9a8293a4288a8d32709b34edda26211d2e73f"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/compile.log",
+      "bytes": 372,
+      "sha256": "650fd1e4632401d65f592ec89ff9c1bfbba740d08d9717d2c09a817075dc6d02"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/harness-monitor.json",
+      "bytes": 81,
+      "sha256": "b9da19aec13472ba0baf17317f2259cd6d9b80476e6980dcd6584ed7079c430f"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/harness.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/metadata.json",
+      "bytes": 4613,
+      "sha256": "a97d82eba380a38012c76fbe377c01b41bfd530fe77186153be84d88b7c546dd"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/native-decode.metal",
+      "bytes": 3821,
+      "sha256": "26c30aed74e1b1e1bd87c168a39a25bab054b66f0b8621bc1c63a7f5f0ffa18d"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/private_bf16_gpu.mm",
+      "bytes": 9302,
+      "sha256": "5d0477ead558c352044f1d519e968b60b71c8fc18020d9b63783454c48207fe8"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/source-snapshot/src/backends/metal/metal_context.mm",
+      "bytes": 143972,
+      "sha256": "12ed987bdf001c5455542963d9ce6707481a90ad5f672566a42102a04796022d"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py",
+      "bytes": 12763,
+      "sha256": "dbd05e692603f968b71649df4e1397f0952d35bf3558ebcff13aefac78aea7b7"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/source-snapshot/test2026/metal/indirect_bf16_projection.mm",
+      "bytes": 9399,
+      "sha256": "847082b0f326bb76368f1df74e8bb4529e62b4eaee2988d4521c5a95ee958091"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/source-snapshot/test2026/metal/make_private_bf16_probe.py",
+      "bytes": 3076,
+      "sha256": "7c81ea5e12a58e055d6eefc96583ddc382ddda873c3d589eb67a5d553f7060cd"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/source-snapshot/test2026/metal/run_private_bf16_probe.py",
+      "bytes": 4956,
+      "sha256": "c48f864a001a9310b1b34e1fbaf8f8eb9c10423fae98041a861e8cca4dbf7511"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/statuses.json",
+      "bytes": 1188,
+      "sha256": "c10d2988bb02ac51cb18c89d67232ed796134973732e00d8f98797bae8363ba6"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/output.log",
+      "bytes": 504,
+      "sha256": "96a20e7d0ccd5aea112c9d3cdd56067b5a891160a815c14a98aad31920e52daa"
+    },
+    {
+      "path": "logs/private-bf16-probe-20261014/pid.json",
+      "bytes": 13,
+      "sha256": "5b1152022fe258a689a490cc97ce31403eaf785ee79dbdfa7816ca2f6c2f559a"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/exit.json",
+      "bytes": 52,
+      "sha256": "ffca576c0d11d20b041b8b7409fa3cc3c67ae2c94a2859dd577afc7ce825fc15"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json",
+      "bytes": 996,
+      "sha256": "2c2de0e6ad7ba49425e4784d14680b6b47f4bd12d36f022bf064e289bb12737a"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log",
+      "bytes": 158378,
+      "sha256": "3ca746e9e07e9af4ccd5c228bea22700b912942bc064b6d354b52cac4ae6f3fd"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/Qwen3-0.6B-gpu-monitor.json",
+      "bytes": 1072,
+      "sha256": "8241e5919e78c1ac79574553e3f4e55a1d5e70d773f48a89fed254fafb8ed569"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/Qwen3-0.6B-gpu.log",
+      "bytes": 158349,
+      "sha256": "bbd7ad38c7578ca9b4ae0096db2156afc2dd07609c2a56c042ca95d4f403cdd9"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/Qwen3.5-0.8B-gpu-monitor.json",
+      "bytes": 1224,
+      "sha256": "a4ebdb1bbd728faba7f2324a634745a6a1f06f6d2bd0d0260e8d5a2201f977b9"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/Qwen3.5-0.8B-gpu.log",
+      "bytes": 172524,
+      "sha256": "626907a37543561c1c0e82f46d182c4d4604c17f3d75ba65e23b9cd76a64933b"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/background_service_checks.json",
+      "bytes": 46524,
+      "sha256": "de88452de7dd99bb844254c4e1d7c2ee55ace866f94fcd53adcf4d5d3862b6aa"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/compile-monitor.json",
+      "bytes": 157,
+      "sha256": "43884e48a4a0838259d4b613fc530921a088d352aff63a09bfe7f7fd76a8691a"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/compile.log",
+      "bytes": 372,
+      "sha256": "6e014ac5475955aaada6e0ae451a6b1b07294e7ec5b685868db4e51cf0dd159f"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/harness-monitor.json",
+      "bytes": 81,
+      "sha256": "d499c93e858fa30b17cf2990c61a10f2b6e5987521b3912c584010f9f4d38a42"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/harness.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/metadata.json",
+      "bytes": 11194,
+      "sha256": "352a3711aa45872e5db629d4bdf18f3f8021f217a519752f29d7a8a4bdad80a3"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/native-decode.metal",
+      "bytes": 3821,
+      "sha256": "26c30aed74e1b1e1bd87c168a39a25bab054b66f0b8621bc1c63a7f5f0ffa18d"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/private_bf16_gpu.mm",
+      "bytes": 9371,
+      "sha256": "5b98333e336daa4db9ccd08ae5db17a524b77b217c7bc80c6e479f9aa3f09363"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/source-snapshot/src/backends/metal/metal_context.mm",
+      "bytes": 143972,
+      "sha256": "12ed987bdf001c5455542963d9ce6707481a90ad5f672566a42102a04796022d"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py",
+      "bytes": 12763,
+      "sha256": "dbd05e692603f968b71649df4e1397f0952d35bf3558ebcff13aefac78aea7b7"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/source-snapshot/test2026/metal/indirect_bf16_projection.mm",
+      "bytes": 9399,
+      "sha256": "847082b0f326bb76368f1df74e8bb4529e62b4eaee2988d4521c5a95ee958091"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/source-snapshot/test2026/metal/make_private_bf16_probe.py",
+      "bytes": 3145,
+      "sha256": "697ff0cc2ea8552391bf8f51524418751bf0da43805aff26ce8fa75f5941587b"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/source-snapshot/test2026/metal/run_private_bf16_probe.py",
+      "bytes": 4956,
+      "sha256": "c48f864a001a9310b1b34e1fbaf8f8eb9c10423fae98041a861e8cca4dbf7511"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/statuses.json",
+      "bytes": 2006,
+      "sha256": "1cdb07ef61393c9e9786c3d53033365f1fe6b0778864e1a72c735bb8deb7c9b9"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/output.log",
+      "bytes": 86,
+      "sha256": "295b766afa9079e5851545e4c0acb2f442cfdde721e3c6414d29f1b22d3a7c53"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/pid.json",
+      "bytes": 13,
+      "sha256": "3b336a04612c5add0b9bcb89097c147cb1cb6199f9f7aaac523b2181d6c9ef8e"
+    }
+  ],
+  "omitted": [
+    {
+      "path": "logs/private-bf16-probe-20261014/jobs/private_bf16_gpu",
+      "bytes": 73552,
+      "sha256": "51ce0444844ccde61090f1edbf736fd05ba782996db357d4fcfeefcf43f3a46b"
+    },
+    {
+      "path": "logs/private-bf16-retry-20261014/jobs/private_bf16_gpu",
+      "bytes": 73648,
+      "sha256": "3ea4572c18446e33aa195aba02725962ccfb66d3872552d7e38d78f22585da62"
+    }
+  ]
+}

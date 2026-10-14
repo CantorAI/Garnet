@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_private_bf16_probe.py", line 62, in <module>
+    check();run(model+'-gpu',[str(binary),str(shader),str(assets)])
+            ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_private_bf16_probe.py", line 32, in run
+    assert process.returncode==0,name
+           ^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Qwen3-0.6B-gpu

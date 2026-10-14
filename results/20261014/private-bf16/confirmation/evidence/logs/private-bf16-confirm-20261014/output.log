@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_private_bf16_probe.py", line 46, in <module>
+    run('harness',[sys.executable,str(s/'make_private_bf16_probe.py'),str(probe)])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_private_bf16_probe.py", line 18, in run
+    check();samples=[];begin=time.monotonic()
+    ~~~~~^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_private_bf16_probe.py", line 13, in check
+    strict_guard()
+    ~~~~~~~~~~~~^^
+  File "owned_guard", line 94, in guard
+RuntimeError: Another inference runtime is active: [" 2897   0.0 164608 /Users/zsdx/cantorai-release-tests/current/bin/xlang3", " 2985   1.1 275408 /Users/zsdx/cantorai-release-tests/current/bin/xlang3"]
