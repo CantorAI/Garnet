@@ -64,6 +64,7 @@ try:
             direct_state_zero_enabled='direct_state_zero' in garnet.backend_info(),
             constant_head_enabled='constant_bf16_head' in garnet.backend_info(),
             residual_norm_enabled='residual_norm' in garnet.backend_info(),
+            packed_prefill_norm_enabled='packed_prefill_norm' in garnet.backend_info(),
             residual_norm_dispatches=decoder.session.residual_norm_dispatches if 'residual_norm' in garnet.backend_info() else 0,
             constant_head_dispatches=decoder.session.constant_head_dispatches if 'constant_bf16_head' in garnet.backend_info() else 0,
             weights='checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV')

@@ -34,6 +34,9 @@ public:
 #ifdef GARNET_METAL_RESIDUAL_NORM
         info+="; residual_norm";
 #endif
+#ifdef GARNET_METAL_PACKED_PREFILL_NORM
+        info+="; packed_prefill_norm";
+#endif
         return info;
     }
     // Graphs own synchronous queues and release them through close(). There

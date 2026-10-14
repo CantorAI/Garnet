@@ -1,0 +1,499 @@
+{
+  "verified_files": 470,
+  "profiles": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 1,
+      "chunk": 8,
+      "means": {
+        "control": {
+          "encode_ms": 0.005005125,
+          "wall_ms": 0.26986475,
+          "gpu_ms": 0.015150930266827345
+        },
+        "candidate": {
+          "encode_ms": 0.004036375,
+          "wall_ms": 0.22307812500000002,
+          "gpu_ms": 0.008682429324835539
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.8064483903998402,
+        "wall_ms": 0.8266293578542586,
+        "gpu_ms": 0.5730624570192592
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.7983209876543211,
+          "wall_ms": 0.7825942984951771,
+          "gpu_ms": 0.5317906878604586
+        },
+        {
+          "encode_ms": 0.8147642867970288,
+          "wall_ms": 0.8786023960598217,
+          "gpu_ms": 0.6227447062508996
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 1,
+      "chunk": 16,
+      "means": {
+        "control": {
+          "encode_ms": 0.005249874999999999,
+          "wall_ms": 0.363010375,
+          "gpu_ms": 0.029291666578501463
+        },
+        "candidate": {
+          "encode_ms": 0.004297125000000001,
+          "wall_ms": 0.315567625,
+          "gpu_ms": 0.016067642718553543
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.8185194885592516,
+        "wall_ms": 0.8693074543668347,
+        "gpu_ms": 0.5485397246173198
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.8055922293474163,
+          "wall_ms": 0.8169783789621199,
+          "gpu_ms": 0.5132704602451345
+        },
+        {
+          "encode_ms": 0.8317060266461451,
+          "wall_ms": 0.93286283481079,
+          "gpu_ms": 0.5939023337588646
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 1,
+      "chunk": 22,
+      "means": {
+        "control": {
+          "encode_ms": 0.005203375,
+          "wall_ms": 0.334098875,
+          "gpu_ms": 0.03571348497644067
+        },
+        "candidate": {
+          "encode_ms": 0.004364750000000001,
+          "wall_ms": 0.344854,
+          "gpu_ms": 0.01782807521522045
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.8388305666994981,
+        "wall_ms": 1.0321914433264703,
+        "gpu_ms": 0.499197298358903
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.8075329746202563,
+          "wall_ms": 0.8683871864511604,
+          "gpu_ms": 0.3844633585577904
+        },
+        {
+          "encode_ms": 0.8706971783186271,
+          "wall_ms": 1.1828619122559902,
+          "gpu_ms": 0.6313190820849465
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 1,
+      "chunk": 26,
+      "means": {
+        "control": {
+          "encode_ms": 0.005390625,
+          "wall_ms": 0.80036975,
+          "gpu_ms": 0.04472915316000581
+        },
+        "candidate": {
+          "encode_ms": 0.00433325,
+          "wall_ms": 0.702812625,
+          "gpu_ms": 0.01933856401592493
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.803849275362319,
+        "wall_ms": 0.8781099298168128,
+        "gpu_ms": 0.4323480917858365
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.7929994232731469,
+          "wall_ms": 0.7675769110764431,
+          "gpu_ms": 0.33967513614308253
+        },
+        {
+          "encode_ms": 0.8157306645938593,
+          "wall_ms": 0.9888863455992856,
+          "gpu_ms": 0.5352704161368025
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 1,
+      "chunk": 32,
+      "means": {
+        "control": {
+          "encode_ms": 0.005296749999999999,
+          "wall_ms": 0.73390125,
+          "gpu_ms": 0.0436667469330132
+        },
+        "candidate": {
+          "encode_ms": 0.00419275,
+          "wall_ms": 0.74093225,
+          "gpu_ms": 0.02507807221263647
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.791570302544013,
+        "wall_ms": 1.0095803079774015,
+        "gpu_ms": 0.5743059415693912
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.7718561781346962,
+          "wall_ms": 1.1125494969923966,
+          "gpu_ms": 0.5807255052653495
+        },
+        {
+          "encode_ms": 0.8126894124547857,
+          "wall_ms": 0.9306649882831058,
+          "gpu_ms": 0.5673901244960348
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 1,
+      "chunk": 64,
+      "means": {
+        "control": {
+          "encode_ms": 0.00634875,
+          "wall_ms": 0.89290625,
+          "gpu_ms": 0.09156245505437255
+        },
+        "candidate": {
+          "encode_ms": 0.004812625,
+          "wall_ms": 0.762088625,
+          "gpu_ms": 0.04040630301460624
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.7580429218350069,
+        "wall_ms": 0.8534923179225142,
+        "gpu_ms": 0.4412977239482248
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.8593692193858676,
+          "wall_ms": 0.9452377062479911,
+          "gpu_ms": 0.4876944851551423
+        },
+        {
+          "encode_ms": 0.6829184667078104,
+          "wall_ms": 0.7619094375027797,
+          "gpu_ms": 0.3937357903707957
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 1,
+      "chunk": 80,
+      "means": {
+        "control": {
+          "encode_ms": 0.006510625000000001,
+          "wall_ms": 0.83945825,
+          "gpu_ms": 0.1033801818266511
+        },
+        "candidate": {
+          "encode_ms": 0.00520325,
+          "wall_ms": 0.75714075,
+          "gpu_ms": 0.04433852154761553
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.7991936258039742,
+        "wall_ms": 0.9019397331552821,
+        "gpu_ms": 0.4288880205488785
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.6253760763564685,
+          "wall_ms": 1.0861220455394933,
+          "gpu_ms": 0.5426928417979182
+        },
+        {
+          "encode_ms": 1.016142955801105,
+          "wall_ms": 0.7367051261371382,
+          "gpu_ms": 0.32617661173526663
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 2,
+      "chunk": 8,
+      "means": {
+        "control": {
+          "encode_ms": 0.005228875,
+          "wall_ms": 0.33921875,
+          "gpu_ms": 0.033546704798936844
+        },
+        "candidate": {
+          "encode_ms": 0.004260375,
+          "wall_ms": 0.256771,
+          "gpu_ms": 0.012223899830132723
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.8147785135425881,
+        "wall_ms": 0.7569481345002304,
+        "gpu_ms": 0.3643845171499563
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.8155846576874681,
+          "wall_ms": 0.638319402728911,
+          "gpu_ms": 0.30634694418666314
+        },
+        {
+          "encode_ms": 0.8139295180131539,
+          "wall_ms": 0.8944027045838719,
+          "gpu_ms": 0.42815212958107557
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 2,
+      "chunk": 16,
+      "means": {
+        "control": {
+          "encode_ms": 0.0057135,
+          "wall_ms": 0.710296875,
+          "gpu_ms": 0.04826567601412535
+        },
+        "candidate": {
+          "encode_ms": 0.004281125,
+          "wall_ms": 0.7169115,
+          "gpu_ms": 0.024911423679441214
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.7492999037367639,
+        "wall_ms": 1.009312479377021,
+        "gpu_ms": 0.5161312497135787
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.7231957478614733,
+          "wall_ms": 0.94003254271777,
+          "gpu_ms": 0.46447201448235537
+        },
+        {
+          "encode_ms": 0.7783686303523537,
+          "wall_ms": 1.0857142751412505,
+          "gpu_ms": 0.5623713001286713
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 2,
+      "chunk": 22,
+      "means": {
+        "control": {
+          "encode_ms": 0.0054217499999999995,
+          "wall_ms": 0.84065625,
+          "gpu_ms": 0.07472402649000287
+        },
+        "candidate": {
+          "encode_ms": 0.004854375,
+          "wall_ms": 0.689182375,
+          "gpu_ms": 0.027046888135373592
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.8953520542260341,
+        "wall_ms": 0.8198147280770232,
+        "gpu_ms": 0.3619570492362604
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.9532631578947368,
+          "wall_ms": 0.6295314374762226,
+          "gpu_ms": 0.2679661943638739
+        },
+        {
+          "encode_ms": 0.8390835947088505,
+          "wall_ms": 1.001016014124338,
+          "gpu_ms": 0.4575998415799259
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 2,
+      "chunk": 26,
+      "means": {
+        "control": {
+          "encode_ms": 0.0054269999999999995,
+          "wall_ms": 0.8509113749999999,
+          "gpu_ms": 0.08579686982557178
+        },
+        "candidate": {
+          "encode_ms": 0.0051875,
+          "wall_ms": 0.734796875,
+          "gpu_ms": 0.03298959927633405
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.9558688041275107,
+        "wall_ms": 0.8635410180055474,
+        "gpu_ms": 0.3845081917720673
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.8464621337755668,
+          "wall_ms": 0.9604365269027446,
+          "gpu_ms": 0.45538307068181144
+        },
+        {
+          "encode_ms": 1.0652754744794546,
+          "wall_ms": 0.7638380574186725,
+          "gpu_ms": 0.31324517637966903
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 2,
+      "chunk": 32,
+      "means": {
+        "control": {
+          "encode_ms": 0.00549475,
+          "wall_ms": 0.852557125,
+          "gpu_ms": 0.09607826359570026
+        },
+        "candidate": {
+          "encode_ms": 0.00535975,
+          "wall_ms": 0.774692625,
+          "gpu_ms": 0.039880163967609406
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.9754310933163475,
+        "wall_ms": 0.908669463057974,
+        "gpu_ms": 0.41507998245499245
+      },
+      "rounds": [
+        {
+          "encode_ms": 1.1217161655006256,
+          "wall_ms": 0.8348974378434957,
+          "gpu_ms": 0.36382068930558925
+        },
+        {
+          "encode_ms": 0.8343240223463688,
+          "wall_ms": 0.9770461393815122,
+          "gpu_ms": 0.4667467115307181
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 2,
+      "chunk": 64,
+      "means": {
+        "control": {
+          "encode_ms": 0.005750125,
+          "wall_ms": 1.0592502499999998,
+          "gpu_ms": 0.17645308980718255
+        },
+        "candidate": {
+          "encode_ms": 0.006286375,
+          "wall_ms": 0.790187375,
+          "gpu_ms": 0.05865091225132346
+        }
+      },
+      "ratios": {
+        "encode_ms": 1.0932588421990828,
+        "wall_ms": 0.7459874330924162,
+        "gpu_ms": 0.3323881282861847
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.9285274725274726,
+          "wall_ms": 0.7535794409930928,
+          "gpu_ms": 0.322490623546526
+        },
+        {
+          "encode_ms": 1.2544406692185284,
+          "wall_ms": 0.7385513386136144,
+          "gpu_ms": 0.3422862142040911
+        }
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "tensor": "model.language_model.layers.0.post_attention_layernorm.weight",
+      "batch": 2,
+      "chunk": 80,
+      "means": {
+        "control": {
+          "encode_ms": 0.0065051250000000005,
+          "wall_ms": 1.0713489999999999,
+          "gpu_ms": 0.22034376161172986
+        },
+        "candidate": {
+          "encode_ms": 0.005031,
+          "wall_ms": 0.8107811250000001,
+          "gpu_ms": 0.08216669084504247
+        }
+      },
+      "ratios": {
+        "encode_ms": 0.7733902115639592,
+        "wall_ms": 0.7567852539181912,
+        "gpu_ms": 0.37290227889378275
+      },
+      "rounds": [
+        {
+          "encode_ms": 0.9030757755254267,
+          "wall_ms": 0.6869552588221342,
+          "gpu_ms": 0.3204128105236946
+        },
+        {
+          "encode_ms": 0.6723418803418802,
+          "wall_ms": 0.8384466784181468,
+          "gpu_ms": 0.42829367610929375
+        }
+      ]
+    }
+  ],
+  "exact_validated_executions": 4804,
+  "timing_windows": 112,
+  "fp64_worst_ratio": 0.0036248126582897012,
+  "full_model_gain_established": false
+}

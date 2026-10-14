@@ -8,6 +8,7 @@ class DenseMetalDecoder(MetalDecoder):
     def __init__(self,checkpoint,config,batch=1,capacity=256,bf16_head=True,resident=True,bf16_projections=True):
         self.session=None;self.bf16_projections=bf16_projections
         backend=garnet.backend_info();self.joined_prefill_enabled='joined_mps_prefill' in backend
+        self.packed_prefill_norm_enabled='packed_prefill_norm' in backend
         if not backend.startswith('Garnet Metal/MPS '):raise ValueError('Native Metal package required')
         if config.get('model_type') not in ('qwen3','qwen2'):raise ValueError('Only dense Qwen3/Qwen2 supported')
         if config.get('rope_scaling') is not None or config.get('use_sliding_window',False):raise ValueError('Scaled RoPE/sliding-window profiles are not implemented')

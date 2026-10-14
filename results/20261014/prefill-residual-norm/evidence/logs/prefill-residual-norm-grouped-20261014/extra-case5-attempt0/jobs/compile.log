@@ -1,0 +1,4 @@
+/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-grouped-20261014/extra-case5-attempt0/jobs/prefill_residual_norm_gpu.mm:26:2: warning: 'auto' deduced as 'id' in declaration of 'manifest' [-Wauto-var-id]
+   26 |  auto manifest=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:argv[2]]] options:0 error:nil];
+      |  ^~~~~~~~~~~~~
+1 warning generated.

@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_grouped_prefill_residual_norm_probe.py", line 10, in <module>
+    exec(compile(source,str(Path(__file__)),'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_grouped_prefill_residual_norm_probe.py", line 15, in <module>
+  File "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-grouped-20261014/regular-case1-attempt0/jobs.executed.py", line 39, in <module>
+    run('gpu',[str(binary),str(shader),str(assetfile)])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "exclusive_runner", line 23, in run
+  File "exclusive_runner", line 13, in check
+  File "owned_guard", line 94, in guard
+RuntimeError: Another inference runtime is active: ["63967   2.7  28608 /Users/zsdx/cantorai-release-tests/current/bin/xlang3"]

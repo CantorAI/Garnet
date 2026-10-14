@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "tensor": "model.layers.0.post_attention_layernorm.weight",
+      "columns": 896,
+      "offset": 0,
+      "epsilon": 1e-06,
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-grouped-20261014/extra-case3-attempt0/jobs/Qwen2.5-Coder-0.5B-Instruct-norm1.bin"
+    }
+  ]
+}

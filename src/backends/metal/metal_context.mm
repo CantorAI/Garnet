@@ -54,6 +54,7 @@ struct MetalPipelines {
 #endif
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> residualNorm;
+    id<MTLComputePipelineState> packedPrefillNorm;
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> kvInplace;
     id<MTLComputePipelineState> add;
@@ -86,6 +87,7 @@ struct MetalContext::Impl {
     size_t joinedPrefillPairs=0;
     size_t constantHeadDispatches=0;
     size_t residualNormDispatches=0;
+    size_t packedPrefillNormDispatches=0;
 #ifdef GARNET_METAL_JOINED_PREFILL
     struct JoinedWeight {
         MetalBF16Weight firstOwner,secondOwner;
@@ -368,6 +370,21 @@ kernel void residual_norm(device const float* a [[buffer(0)]],device const float
     sum=simd_sum(lane<4?partial[lane]:0.0f);
     float inverse=rsqrt(sum/float(p.columns)+p.epsilon);
     for(ulong j=tid;j<p.columns;j+=128)c[row*p.cStride+j]=residual[row*p.cStride+j]*inverse*(weight[j]+p.offset);
+}
+struct PackedParams {ulong rows,columns,packedStride,normStride,chunk;float epsilon,offset;};
+kernel void packed_residual_norm(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+ device const float* weight [[buffer(2)]],device float* packed [[buffer(3)]],device float* layout [[buffer(4)]],
+ device float* out [[buffer(5)]],constant PackedParams& p [[buffer(6)]],uint row [[threadgroup_position_in_grid]],
+ uint tid [[thread_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+ if(row>=p.rows)return;
+ ulong base=(row/p.chunk)*p.packedStride+(row%p.chunk)*p.columns;
+ threadgroup float partial[4];float sum=0;
+ for(ulong j=tid;j<p.columns;j+=128){float x=a[base+j]+b[base+j];packed[base+j]=x;layout[row*p.normStride+j]=x;sum+=x*x;}
+ sum=simd_sum(sum);if(lane==0)partial[simd]=sum;
+ threadgroup_barrier(mem_flags::mem_threadgroup|mem_flags::mem_device);
+ sum=simd_sum(lane<4?partial[lane]:0.0f);
+ float inverse=rsqrt(sum/float(p.columns)+p.epsilon);
+ for(ulong j=tid;j<p.columns;j+=128)out[row*p.normStride+j]=layout[row*p.normStride+j]*inverse*(weight[j]+p.offset);
 }
 kernel void silu_mul(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
     device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
@@ -1163,6 +1180,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
         impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
+#ifdef GARNET_METAL_PACKED_PREFILL_NORM
+        impl_->kernels->packedPrefillNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"packed_residual_norm"] error:&error];
+        if(!impl_->kernels->packedPrefillNorm)throw std::runtime_error("Cannot create packed prefill normalization pipeline");
+#endif
 #ifdef GARNET_METAL_RESIDUAL_NORM
         impl_->kernels->residualNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"residual_norm"] error:&error];
         if(!impl_->kernels->residualNorm)throw std::runtime_error("Cannot create residual normalization pipeline");
@@ -1392,6 +1413,7 @@ bool MetalContext::EncodeJoinedBF16Prefill(const MetalMatrix& input,const MetalB
 size_t MetalContext::LastJoinedPrefillPairs() const {return impl_->joinedPrefillPairs;}
 size_t MetalContext::LastConstantHeadDispatches() const {return impl_->constantHeadDispatches;}
 size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualNormDispatches;}
+size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->packedPrefillNormDispatches;}
 void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
     @autoreleasepool {
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
@@ -1533,7 +1555,7 @@ void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;
+    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
     }
@@ -1651,6 +1673,49 @@ void MetalContext::EncodeResidualRMSNorm(const MetalMatrix& left,const MetalMatr
     }
 #else
     throw std::logic_error("Residual normalization experiment is disabled");
+#endif
+}
+void MetalContext::EncodePackedPrefillNorm(const MetalMatrix& left,const MetalMatrix& right,
+    const MetalMatrix& weight,const MetalMatrix& packed,const MetalMatrix& reshaped,const MetalMatrix& normalized,float epsilon,float offset) {
+#ifdef GARNET_METAL_PACKED_PREFILL_NORM
+    @autoreleasepool {
+    if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
+    const std::array<MetalMatrix,6> matrices={left,right,weight,packed,reshaped,normalized};
+    for(const auto& m:matrices)if(!m.impl_||m.impl_->matrix.device!=impl_->device)
+        throw std::invalid_argument("Invalid packed prefill normalization matrix/device");
+    const auto a=left.impl_->matrix,w=weight.impl_->matrix,n=reshaped.impl_->matrix;
+    if(!left.CompatibleLayout(right)||!left.CompatibleLayout(packed)||!reshaped.CompatibleLayout(normalized)||
+        a.rows>2||!n.columns||a.columns%n.columns||w.rows!=1||w.columns!=n.columns||
+        !(epsilon>0)||!std::isfinite(epsilon)||!std::isfinite(offset))
+        throw std::invalid_argument("Packed prefill normalization shape/layout/parameters mismatch");
+    const size_t chunk=a.columns/n.columns;
+    if(chunk<2||chunk>kMetalPrefillChunkLimit||n.rows!=Elements(a.rows,chunk))
+        throw std::invalid_argument("Packed prefill normalization chunk mismatch");
+    for(size_t i=0;i<3;++i)if(!matrices[i].impl_->ready&&
+        !(matrices[i].impl_->pending&&impl_->pendingOutputs.count(matrices[i].impl_.get())))
+        throw std::logic_error("Uninitialized packed prefill normalization input");
+    for(size_t i=3;i<6;++i) {
+        for(size_t j=0;j<i;++j)if(matrices[i].SharesStorage(matrices[j]))
+            throw std::invalid_argument("Aliased packed prefill normalization output");
+        if(matrices[i].impl_->pending&&!impl_->pendingOutputs.count(matrices[i].impl_.get()))
+            throw std::logic_error("Packed prefill normalization output belongs to another batch");
+    }
+    auto pipeline=impl_->kernels->packedPrefillNorm;
+    if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
+        throw std::runtime_error("Packed prefill normalization requires 32-lane SIMD groups");
+    struct Params {uint64_t rows,columns,packedStride,normStride,chunk;float epsilon,offset;};
+    Params p{n.rows,n.columns,a.rowBytes/4,n.rowBytes/4,chunk,epsilon,offset};
+    auto encoder=[impl_->command computeCommandEncoder];if(!encoder)throw std::runtime_error("Cannot create packed prefill normalization encoder");
+    [encoder setComputePipelineState:pipeline];
+    for(size_t i=0;i<6;++i)[encoder setBuffer:matrices[i].impl_->matrix.data offset:0 atIndex:i];
+    [encoder setBytes:&p length:sizeof(p) atIndex:6];
+    [encoder dispatchThreadgroups:MTLSizeMake(n.rows,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
+    for(size_t i=3;i<6;++i){auto state=matrices[i].impl_;state->ready=false;state->pending=true;
+        if(impl_->pendingOutputs.insert(state.get()).second)impl_->outputs.push_back(state);}
+    ++impl_->packedPrefillNormDispatches;
+    }
+#else
+    throw std::logic_error("Packed prefill normalization experiment is disabled");
 #endif
 }
 void MetalContext::EncodeSiluMul(const MetalMatrix& gate,const MetalMatrix& up,const MetalMatrix& output) {
@@ -2084,7 +2149,7 @@ void MetalContext::SubmitAndWait() {
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;
+    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

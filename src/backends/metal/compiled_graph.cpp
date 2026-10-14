@@ -835,6 +835,21 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
         auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
+#ifdef GARNET_METAL_PACKED_PREFILL_NORM
+        if(!profileOps&&op.kind==Kind::Add&&i+2<ops_.size()&&
+            (packedOutput||(residentOps_[i+1]&&residentOps_[i+2]))) {
+            const auto& layout=ops_[i+1];const auto& norm=ops_[i+2];
+            const auto& packed=slots_[op.out];const auto& reshaped=slots_[layout.out];
+            if(layout.kind==Kind::Layout&&layout.a==op.out&&layout.dimensions.size()==1&&!layout.dimensions[0]&&
+                norm.kind==Kind::Norm&&norm.a==layout.out&&packed.rows<=2&&reshaped.rows>packed.rows&&
+                reshaped.columns&&packed.columns%reshaped.columns==0&&
+                packed.columns/reshaped.columns<=kMetalPrefillChunkLimit&&a.CompatibleLayout(b)&&a.CompatibleLayout(out)&&
+                reshaped.matrix.CompatibleLayout(slots_[norm.out].matrix)) {
+                gpu.EncodePackedPrefillNorm(a,b,slots_[norm.b].matrix,out,reshaped.matrix,slots_[norm.out].matrix,norm.epsilon,norm.offset);
+                i+=2;continue;
+            }
+        }
+#endif
 #ifdef GARNET_METAL_RESIDUAL_NORM
         if(!profileOps&&op.kind==Kind::Add&&i+1<ops_.size()&&(packedOutput||residentOps_[i+1])) {
             const auto& next=ops_[i+1];

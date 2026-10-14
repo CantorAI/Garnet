@@ -1,0 +1,40 @@
+[
+  {
+    "name": "generate",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_prefill_residual_norm_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/metal_context.mm",
+      "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-probe-20261014/jobs/prefill-residual-norm.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-probe-20261014/jobs/prefill_residual_norm_gpu.mm"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-probe-20261014/jobs/prefill_residual_norm_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-probe-20261014/jobs/prefill_residual_norm_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-probe-20261014/jobs/prefill_residual_norm_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-probe-20261014/jobs/prefill-residual-norm.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/prefill-residual-norm-probe-20261014/jobs/norm-assets.json"
+    ],
+    "exit_code": 0
+  }
+]

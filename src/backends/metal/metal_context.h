@@ -60,6 +60,7 @@ public:
     size_t LastJoinedPrefillPairs() const;
     size_t LastConstantHeadDispatches() const;
     size_t LastResidualNormDispatches() const;
+    size_t LastPackedPrefillNormDispatches() const;
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
     void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
     // Synchronous host update into an existing allocation, between command batches.
@@ -77,6 +78,8 @@ public:
     void EncodeAdd(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
     void EncodeResidualRMSNorm(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
         const MetalMatrix& residual,const MetalMatrix& normalized,float epsilon,float offset);
+    void EncodePackedPrefillNorm(const MetalMatrix&,const MetalMatrix&,const MetalMatrix&,
+        const MetalMatrix& packed,const MetalMatrix& reshaped,const MetalMatrix& normalized,float epsilon,float offset);
     void EncodeBias(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
     void EncodeMaskRows(const MetalMatrix&, const MetalMatrix&, const MetalMatrix&);
     // Packed rows retain explicit caller-owned states after the output segment.

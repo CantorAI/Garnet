@@ -1,0 +1,61 @@
+{
+  "scope": "Exclusive packed prefill Add/Layout/RMS probe; preserve all three outputs.",
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "2e14fea0ae8ce31a791bda9bb6b6cc137e536d9438647609dbaa30db55cbe13c",
+    "test2026/metal/residual_norm_gpu.mm": "103667a3cab58ee614dd5f2ba578597433a125bad0b9972bc6cc9583a08f522a",
+    "test2026/metal/make_prefill_residual_norm_probe.py": "c7733b7ddb47f8ee129f871cabd5bdfcc23763d6a7d562fe0337c924df383c33",
+    "test2026/metal/run_residual_norm_probe.py": "e2bfc89c6532f0005b4798e1f72c71d76fff44496eb12adc21b896bc7f9752cc",
+    "test2026/metal/run_grouped_prefill_residual_norm_probe.py": "d0952858634331dd0f3a8e37c5b02ff61d2b62eba7319e0b19c6fef8bbd92f59",
+    "test2026/metal/run_indirect_bf16_projection.py": "ba4fe2f1bc11ba24102ac4a445e0002afc1cd3783619f9f36580f330eff03808",
+    "test2026/metal/compare_vllm_metal.py": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+  },
+  "assets": {
+    "Qwen3-0.6B:model.layers.0.input_layernorm.weight": {
+      "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "canonical_bf16_sha256": "8d634da920e8c6b12832fa35034be83946b401d335a5ffdb67fca0291ddc71fa",
+      "expanded_fp32_sha256": "85b8828379bcdf6a03f0a4ba28d19f3b2f5ffdfc4892848ba1b71fc5ee9a2a51",
+      "columns": 1024
+    },
+    "Qwen3-0.6B:model.layers.0.post_attention_layernorm.weight": {
+      "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "canonical_bf16_sha256": "9e5626c2d6cfb953b1c0d64f6f072b7789e80b29edf1e0de70aeb3003bb68cfe",
+      "expanded_fp32_sha256": "3a4980455e26795c7e5019e07b27e3ec8f1e61eabac9e6ac323987492252de58",
+      "columns": 1024
+    },
+    "Qwen2.5-Coder-0.5B-Instruct:model.layers.0.input_layernorm.weight": {
+      "checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+      "canonical_bf16_sha256": "fe92b9742c68b8e5bbf030fe725c38c23716927fafc8d5116765d2ec32cbac54",
+      "expanded_fp32_sha256": "04de84f444190f26dee5ffd60bcd5fca6288c77481a07522e2231af41d098323",
+      "columns": 896
+    },
+    "Qwen2.5-Coder-0.5B-Instruct:model.layers.0.post_attention_layernorm.weight": {
+      "checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+      "canonical_bf16_sha256": "a65270f553cea1ad773edca11e6b653cc77d58bd217c3feff245ff8fabb1f204",
+      "expanded_fp32_sha256": "4d6ad9d079f68250613039286a5b409d02e97e6afcdc299f0cf59a05552c2152",
+      "columns": 896
+    },
+    "Qwen3.5-0.8B:model.language_model.layers.0.input_layernorm.weight": {
+      "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+      "canonical_bf16_sha256": "032420ad60956b0e62b5f4afbfc3a51a7148c79946f746ea4eb6b0ceb6c67e37",
+      "expanded_fp32_sha256": "ae7b2e386ac478d21a7c4c2741d493cb6bde41c7bfdf0f77ab2de69962047d49",
+      "columns": 1024
+    },
+    "Qwen3.5-0.8B:model.language_model.layers.0.post_attention_layernorm.weight": {
+      "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+      "canonical_bf16_sha256": "9c5f1eafa39cd5af93a2f9fadafd3362bc886938ab1a1db3954baea7887fe303",
+      "expanded_fp32_sha256": "f2b0c01b0e391f9079dc0346be44e7ce061b0eae7d2a7791fcb4743c5431b3c2",
+      "columns": 1024
+    }
+  },
+  "versions": {
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "macos": "ProductName:\t\tmacOS\nProductVersion:\t\t15.6.1\nBuildVersion:\t\t24G90\n"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "shader_sha256": "13b940b39d280470289fc4f7a8b7b1b06a11ce1f50fbac762ba841efbf0009b7",
+  "asset_manifest_sha256": "c782fb987f55aca64233adcae9df4e44d55a7c7736e92383d2b4efd5d7c2ea28",
+  "binary_sha256": "8e5155bd666619ba8f41fce5df83126f24f229ef4770e5fa5032ab6117a66404"
+}
