@@ -1,6 +1,7 @@
 """Add actual optional MLP counters alongside existing global-alpha telemetry."""
 from pathlib import Path
 root=Path(__file__).resolve().parents[2]
+assert 'joinedGlobalMlpBlocks_' not in (root/'src/backends/metal/decoder_session.h').read_text(encoding='utf-8'),'Counter preparation was already applied; do not modify the completed source again'
 def edit(name,changes):
  p=root/name;s=p.read_text(encoding='utf-8')
  for before,after in changes:

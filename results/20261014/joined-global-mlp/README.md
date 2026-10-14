@@ -114,3 +114,8 @@ python3 archive_joined_global_mlp_native.py ROOT ARCHIVE
 python verify_joined_global_mlp_native.py RESULTS VERIFICATION_JSON
 python verify_joined_global_mlp_native.py RESULTS CONFIRMATION_JSON --confirm
 ```
+
+The counter preparation command was used once while editing the base source;
+it rejects reapplication to this completed branch. Rebuild from the archived
+candidate source bundle or the committed implementation, preserving the pinned
+control rather than rerunning preparation on an already modified tree.
