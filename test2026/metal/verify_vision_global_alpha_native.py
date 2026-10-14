@@ -13,4 +13,7 @@ source=source.replace("assert r['prefill_profile'].get('packed_prefill_norm_disp
 source=source.replace('all_actual_prefill_counters_match','all_actual_vision_global_alpha_counts_checked').replace('Packed prefill versus identical attention; no fresh vLLM comparison','Vision block global alpha versus global alpha; no fresh vLLM comparison')
 source=source.replace("meta=json.loads((checks/'metadata.json').read_text())", "assert 'Vision global alpha tiny/full rows, FP64, decoder limits, fallback and abort PASS' in (checks/'CTest-LastTest.log').read_text()\nmeta=json.loads((checks/'metadata.json').read_text())")
 source=source.replace('profiles.append(dict(**p,distinct_timing_phases=extra))', "profiles.append(dict(**p,distinct_timing_phases=extra,actual_vision_global_alpha_counts={policy:[r['vision_global_alpha_dispatches'] for r in records if r['build_policy']==policy] for policy in ('control','candidate')}))")
+if '--confirm' in __import__('sys').argv[3:]:
+ source=source.replace('vision-global-alpha-native-20261014','vision-global-alpha-confirm-native-20261014')
+ source=source.replace("{(m,b) for m in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct','Qwen3.5-0.8B') for b in (1,2)}","{('Qwen3.5-0.8B',1),('Qwen3.5-0.8B',2)}")
 exec(compile(source,str(Path(__file__)),'exec'))

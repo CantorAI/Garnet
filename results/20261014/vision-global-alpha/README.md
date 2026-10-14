@@ -1,11 +1,11 @@
 # Vision FP32 products versus exact common half alpha
 
-This new component experiment preserves all learned values and gives repeated
-GPU reductions for vision-block projections. It does not yet establish image
-inference latency, throughput or the overall 2x decode / half-TTFT goal.
-The component trial leaves selected libraries unchanged. An optional native
-integration is now built and under full validation; no serving gain is yet
-established for it.
+The component experiment preserves learned values and gives repeated GPU
+reductions for vision-block projections. Full native image trials now pass
+nineteen numerical stages and 96 complete requests, including a fresh repeat.
+Warm TTFT decreases modestly, while decode throughput remains essentially flat.
+The optional integration stays disabled in the selected comparison bundle;
+there is no fresh vLLM comparison for it and the overall goal remains unmet.
 
 The earlier per-row-scaled half vision trial failed to improve serving latency.
 This trial instead compares the current expanded-FP32 MPS product against one
@@ -30,7 +30,7 @@ difference from the FP32 control and satisfy the independent unchanged
 0.433996587, below 1. Numerical equality is not a signed-zero bit-identity
 claim. Every eligible output and padding element is checked. Fresh inputs are
 deterministic sine vectors scaled by four exact power-of-two variants; actual
-image-dependent activations and complete image inference remain to be tested.
+image-dependent activations are covered separately by the native trials below.
 
 Each run contains 100 matrix/row profiles and 9,600 timed executions. Each
 profile alternates common warming for at least 250 ms, then two ABBA rounds,
@@ -78,24 +78,38 @@ inexact-scale fallback representation, out-of-profile rows and Begin/Abort/
 readiness recovery. Candidate library SHA-256:
 `0997e2ba00ce52766b0e8b1fa0b46f44bcff6b081883e9a8c7ba93c2f3635d23`.
 
-Owned validation PID **13040** is running all nineteen original full-model/
-cache/image/head/prefill stages at `ROOT/logs/vision-global-alpha-checks-20261014`.
-Dependent PID **16264**, directory `ROOT/logs/vision-global-alpha-native-20261014`,
-verifies that exact live handle before waiting and starts all six sequential
-native ABBA profiles only after terminal validation exit 0. It requires actual
-48 block-product dispatches for every candidate VL image and zero for controls
-and text/coder, complete frozen outputs and fresh image identities. Other head,
-norm, reset and joined-MLP experiments stay disabled.
+Owned validation PID **13040** exited 0 in 1201.13 seconds, passing all nineteen
+original full-model/cache/image/head/prefill stages. Dependent PID **16264**
+exited 0 in 1178.98 seconds including its validation wait, completing all six
+native ABBA profiles (72 requests). Fresh VL confirmation PID **40142** exited
+0 in 69.25 seconds (24 requests). Every candidate VL request records 48 actual
+block-product dispatches; controls and text/coder record zero. Frozen complete
+outputs and fresh image identities match. Other experimental paths stay off.
 
-The bounded historical snapshot in `native/pending` verifies both current
-handles, unchanged selected libraries, source bundle and real CTest output.
-Only configure/build/CTest are complete in that snapshot; the remaining
-sixteen stages and all inference measurements are still required. Inspect
-authoritative current handles/terminal records before continuing. The prepared
-terminal archiver and local verifier check all original cases, source/binary
-identities, actual image use and independently recomputed timing phases.
-No native image-latency or decode gain is yet claimed. The broader goal remains
-active and unmet; GPT-OSS and Pi checkouts remain unchanged.
+| VL batch | Initial TTFT control / candidate ms | Repeat TTFT control / candidate ms | Repeat decode control / candidate tokens/s per row |
+| --- | ---: | ---: | ---: |
+| 1 | 196.500 / 192.566 | 194.484 / 192.671 | 47.889 / 47.757 |
+| 2 | 359.646 / 356.024 | 358.828 / 352.366 | 44.447 / 44.394 |
+
+TTFT reductions are 2.0% / 1.0% initially and 0.9% / 1.8% on repeat.
+Repeat decode changes are -0.28% / -0.12%. First request after initialization
+on repeat is 333.159 / 331.487 ms for B1 and 552.286 / 548.798 ms for B2.
+Caches were not flushed, so these are not hardware-cold measurements.
+
+Observed repeat vision-only wall time is 53.927 / 54.182 ms for B1 and
+114.225 / 111.209 ms for B2. Vision excludes the separately measured reset
+using same-origin clock subtraction. Preprocessing and text prefill also vary;
+the complete TTFT difference cannot be attributed solely to vision GPU work.
+The small serving gain does not resolve the broader speed targets. The original
+selection is retained until a useful combined candidate has fresh matched
+comparison evidence. GPT-OSS and Pi checkouts remain unchanged.
+
+The combined native archive SHA-256 is
+`d0eb98a2947d7dd7d99fe393380af0e9e0ef4800118414684b970916611a41a2`.
+Both local audits verify all 811 archived files, nineteen numerical stages,
+72 initial / 24 confirmation outputs, source/binary identities and real
+dispatch counts. Reports are `native/verification.json`, `native/confirmation.json`
+and their observed phase summaries. Historical `native/pending` is superseded.
 
 Initial owned PID 6184 exits 0 in 155.84 seconds; fresh confirmation PID 9206
 exits 0 in 155.62 seconds. The second starts after the first is terminal.

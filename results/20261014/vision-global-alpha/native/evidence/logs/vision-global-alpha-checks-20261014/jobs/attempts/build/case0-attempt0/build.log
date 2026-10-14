@@ -1,0 +1,19 @@
+[  6%] Building OBJCXX object CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o
+[ 13%] Linking OBJCXX static library libgarnet_metal.a
+[ 13%] Built target garnet_metal
+[ 26%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/compiled_graph.cpp.o
+[ 26%] Building CXX object CMakeFiles/garnet_vision_global_alpha_test.dir/test2026/metal/vision_global_alpha_test.cpp.o
+[ 40%] Building CXX object CMakeFiles/garnet.dir/src/entry/metal_main.cpp.o
+[ 40%] Building CXX object CMakeFiles/garnet_metal_matmul_test.dir/test2026/metal/matmul_test.cpp.o
+[ 46%] Linking CXX executable garnet_vision_global_alpha_test
+[ 46%] Built target garnet_vision_global_alpha_test
+[ 53%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/decoder_session.cpp.o
+[ 60%] Linking CXX executable garnet_metal_matmul_test
+[ 60%] Built target garnet_metal_matmul_test
+[ 66%] Building CXX object CMakeFiles/garnet.dir/src/tensor/garnet_tensor.cpp.o
+[ 73%] Building CXX object CMakeFiles/garnet.dir/src/tensor/graph_capture.cpp.o
+[ 80%] Building CXX object CMakeFiles/garnet.dir/src/core/lowering_context.cpp.o
+[ 86%] Building CXX object CMakeFiles/garnet.dir/src/model/safetensors_index.cpp.o
+[ 93%] Building CXX object CMakeFiles/garnet.dir/src/tokenizer/qwen_tokenizer.cpp.o
+[100%] Linking CXX shared library libgarnet.dylib
+[100%] Built target garnet

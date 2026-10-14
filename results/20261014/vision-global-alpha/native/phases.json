@@ -1,0 +1,45 @@
+{
+  "scope": "Observed wall phases; vision excludes reset by same-origin clock subtraction; no isolated GPU attribution",
+  "profiles": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 196.50043733417988,
+      "reset_ms": 5.0142399268224835,
+      "vision_encode_elapsed_ms": 55.52832270041108,
+      "common_preprocessing_ms": 45.98671873100102,
+      "prefill_wall_ms": 87.59082295000553
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 192.56608362775296,
+      "reset_ms": 5.287947948090732,
+      "vision_encode_elapsed_ms": 54.58651029039174,
+      "common_preprocessing_ms": 44.954135664738715,
+      "prefill_wall_ms": 84.6537605393678
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 359.645854216069,
+      "reset_ms": 10.200530989095569,
+      "vision_encode_elapsed_ms": 113.59436460770667,
+      "common_preprocessing_ms": 48.379260464571416,
+      "prefill_wall_ms": 184.72158326767385
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 356.0243856627494,
+      "reset_ms": 9.473541751503944,
+      "vision_encode_elapsed_ms": 111.0373018309474,
+      "common_preprocessing_ms": 46.959218685515225,
+      "prefill_wall_ms": 185.50712463911623
+    }
+  ]
+}

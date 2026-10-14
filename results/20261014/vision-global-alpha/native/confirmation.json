@@ -1,0 +1,116 @@
+{
+  "verified_files": 811,
+  "numerical_stages": 19,
+  "full_output_requests": 24,
+  "all_actual_vision_global_alpha_counts_checked": true,
+  "profiles": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 194.48364560957998,
+          "decode_tps": 47.889364830236595,
+          "initialization_s": 2.9738983125425875,
+          "peak_individual_rss_bytes": 3602374656
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 192.67067732289433,
+          "decode_tps": 47.75736134372903,
+          "initialization_s": 2.968089311849326,
+          "peak_individual_rss_bytes": 3610050560
+        }
+      },
+      "decode_ratio": 0.9972435740800593,
+      "ttft_fraction": 0.9906780424595437,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-confirm-native-20261014/jobs/Qwen3.5-0.8B-b1-attempt0",
+      "reused_clean_profile": false,
+      "distinct_timing_phases": {
+        "control": {
+          "first_request_after_init_ttft_ms": 333.1587293650955,
+          "aggregate_decode_tps": 47.889364830236595
+        },
+        "candidate": {
+          "first_request_after_init_ttft_ms": 331.4870623871684,
+          "aggregate_decode_tps": 47.75736134372903
+        }
+      },
+      "actual_vision_global_alpha_counts": {
+        "control": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "candidate": [
+          48,
+          48,
+          48,
+          48,
+          48,
+          48
+        ]
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 358.8279582327232,
+          "decode_tps": 44.44659351727726,
+          "initialization_s": 2.9643467916175723,
+          "peak_individual_rss_bytes": 3638075392
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 352.366020786576,
+          "decode_tps": 44.39390156156192,
+          "initialization_s": 2.997305853292346,
+          "peak_individual_rss_bytes": 3622567936
+        }
+      },
+      "decode_ratio": 0.9988144883208011,
+      "ttft_fraction": 0.9819915441428446,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-confirm-native-20261014/jobs/Qwen3.5-0.8B-b2-attempt0",
+      "reused_clean_profile": false,
+      "distinct_timing_phases": {
+        "control": {
+          "first_request_after_init_ttft_ms": 552.2859797347337,
+          "aggregate_decode_tps": 88.89318703455451
+        },
+        "candidate": {
+          "first_request_after_init_ttft_ms": 548.7976877484471,
+          "aggregate_decode_tps": 88.78780312312384
+        }
+      },
+      "actual_vision_global_alpha_counts": {
+        "control": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "candidate": [
+          48,
+          48,
+          48,
+          48,
+          48,
+          48
+        ]
+      }
+    }
+  ],
+  "scope": "Vision block global alpha versus global alpha; no fresh vLLM comparison",
+  "full_goal_met": false
+}

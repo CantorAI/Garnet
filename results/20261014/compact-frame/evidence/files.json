@@ -1,0 +1,90 @@
+{
+  "evidence/logs/compact-frame-probe-20261014/exit.json": {
+    "bytes": 52,
+    "sha256": "7b88e72c31c308a9ba3d3d7dedc0ad508ab641e8bfd126e05d07e426bdd14265"
+  },
+  "evidence/logs/compact-frame-probe-20261014/output.log": {
+    "bytes": 526,
+    "sha256": "4510a5b34d74ce75a8de258fdbd57c8a0f1c61a70cb58fb4c9815789a3ae5e38"
+  },
+  "evidence/logs/compact-frame-probe-20261014/dependency-wait.json": {
+    "bytes": 82,
+    "sha256": "188b24d543d44dd370e2a91c37dc730c29267c18a7b239d2167aaf1bb9e2c9a1"
+  },
+  "evidence/logs/compact-frame-probe-20261014/pid.json": {
+    "bytes": 14,
+    "sha256": "26baee76d0bf84fcdf887fa1186b426a83492ff94236639ff45e7e9fa9c81202"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/exit.json": {
+    "bytes": 51,
+    "sha256": "43d320aa95a41460fe141ac9e573599e16d9c48b16a99123641a07276601e96f"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/output.log": {
+    "bytes": 312,
+    "sha256": "f7dd93d2ce1d34af1e39bba87b854a548ec2b18a0381a12c6455a34427a25d85"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/pid.json": {
+    "bytes": 14,
+    "sha256": "7ebe6d3d7957de23c5121019f4a242d86122f265bf425c0055fc374f9bb8f5f2"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/summary.json": {
+    "bytes": 70299,
+    "sha256": "0ad2baf6324320656e97b54ee7d79246e71bb1928eab66b8bf69ca5bb0dbc738"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/compatibility-status.json": {
+    "bytes": 307,
+    "sha256": "8c10a1918a1be0dd005b537b1be1c70f837240f645919556a25f23f6ebbd5fdb"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/compatibility.log": {
+    "bytes": 178,
+    "sha256": "dd9b0e10c756a0030862887760c03866741c14205862ef5495256d65232fb7df"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/background_service_checks.json": {
+    "bytes": 167499,
+    "sha256": "f88eb3a88f2748f663805f8a51eb1dd431e313e5b45b4c31fdc1cad431d7fe25"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/compatibility/verification.json": {
+    "bytes": 347856,
+    "sha256": "743f288a5daf6bbb1bb28cc325020cb3b07b56ab74aafbba91c915a9e3a9734d"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/source-snapshot/test_compact_frame_preprocessing.py": {
+    "bytes": 2051,
+    "sha256": "46a4c0362fded307ae0d6e64b7c236af0e1c6ba8387bc8a44a80d462895502f3"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/source-snapshot/frame_preprocessing_compact.py": {
+    "bytes": 1755,
+    "sha256": "f8ef63065f6ef49dfb6ab4f0e1c0003f61deaa35ae1d853a84150b12902c5117"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/source-snapshot/run_compact_frame_probe.py": {
+    "bytes": 3951,
+    "sha256": "98aa33e1e89c5962017d73ad89607983960108d826fe9b533b86a394fc5c7fa7"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/source-snapshot/compare_vllm_metal.py": {
+    "bytes": 12830,
+    "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+  },
+  "evidence/logs/compact-frame-repair-probe-20261014/jobs/source-snapshot/frame_preprocessing.py": {
+    "bytes": 1639,
+    "sha256": "e8bfb8adc169b3ab322378a5685e7a835b3def0c585835f3ae3ba5b662492a95"
+  },
+  "evidence/source/frame_preprocessing_compact.py": {
+    "bytes": 1755,
+    "sha256": "f8ef63065f6ef49dfb6ab4f0e1c0003f61deaa35ae1d853a84150b12902c5117"
+  },
+  "evidence/source/test_compact_frame_preprocessing.py": {
+    "bytes": 2051,
+    "sha256": "46a4c0362fded307ae0d6e64b7c236af0e1c6ba8387bc8a44a80d462895502f3"
+  },
+  "evidence/source/run_compact_frame_probe.py": {
+    "bytes": 3951,
+    "sha256": "98aa33e1e89c5962017d73ad89607983960108d826fe9b533b86a394fc5c7fa7"
+  },
+  "evidence/source/queue_compact_frame_probe.py": {
+    "bytes": 932,
+    "sha256": "c6bcb47a163d6281c9f155dc770fac0427d204d80183c28ff0a92d0b7ab63b7b"
+  },
+  "evidence/source/archive_compact_frame_probe.py": {
+    "bytes": 1517,
+    "sha256": "bc13d6d4ab4a640d9cfca0811a836110e33dab4d4307eb33918873c46c5d3147"
+  }
+}
