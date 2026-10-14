@@ -23,6 +23,7 @@ class MetalDecoderSession {
     size_t kvInplaceUpdates_=0;
     size_t joinedPrefillPairs_=0;
     size_t constantHeadDispatches_=0;
+    size_t singleCoderHeadDispatches_=0;
     size_t residualNormDispatches_=0;
     size_t packedPrefillNormDispatches_=0;
     size_t globalHalfAlphaDispatches_=0;
@@ -43,6 +44,7 @@ public:
     size_t LastKVInplaceUpdates() const {return kvInplaceUpdates_;}
     size_t LastJoinedPrefillPairs() const {return joinedPrefillPairs_;}
     size_t LastConstantHeadDispatches() const {return constantHeadDispatches_;}
+    size_t LastSingleCoderHeadDispatches() const {return singleCoderHeadDispatches_;}
     size_t LastResidualNormDispatches() const {return residualNormDispatches_;}
     size_t LastPackedPrefillNormDispatches() const {return packedPrefillNormDispatches_;}
     size_t LastGlobalHalfAlphaDispatches() const {return globalHalfAlphaDispatches_;}
@@ -62,6 +64,7 @@ public:
         APISET().AddProp("kv_inplace_updates",&MetalDecoderSession::LastKVInplaceUpdates);
         APISET().AddProp("joined_prefill_pairs",&MetalDecoderSession::LastJoinedPrefillPairs);
         APISET().AddProp("constant_head_dispatches",&MetalDecoderSession::LastConstantHeadDispatches);
+        APISET().AddProp("single_coder_head_dispatches",&MetalDecoderSession::LastSingleCoderHeadDispatches);
         APISET().AddProp("residual_norm_dispatches",&MetalDecoderSession::LastResidualNormDispatches);
         APISET().AddProp("packed_prefill_norm_dispatches",&MetalDecoderSession::LastPackedPrefillNormDispatches);
         APISET().AddProp("global_half_alpha_dispatches",&MetalDecoderSession::LastGlobalHalfAlphaDispatches);

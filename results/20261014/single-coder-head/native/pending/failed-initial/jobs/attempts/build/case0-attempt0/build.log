@@ -1,0 +1,25 @@
+[  6%] Building OBJCXX object CMakeFiles/garnet_metal.dir/src/backends/metal/metal_context.mm.o
+[ 13%] Linking OBJCXX static library libgarnet_metal.a
+[ 13%] Built target garnet_metal
+[ 40%] Building CXX object CMakeFiles/garnet.dir/src/entry/metal_main.cpp.o
+[ 40%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/compiled_graph.cpp.o
+[ 40%] Building CXX object CMakeFiles/garnet_metal_matmul_test.dir/test2026/metal/matmul_test.cpp.o
+[ 40%] Building CXX object CMakeFiles/garnet_single_coder_head_test.dir/test2026/metal/single_coder_head_test.cpp.o
+/Users/zsdx/garnet-metal-investigation/source/test2026/metal/single_coder_head_test.cpp:62:9: error: 'auto' deduced as 'MetalBF16Weight' in declaration of 'w' and deduced as 'MetalMatrix' in declaration of 'a'
+   62 |         auto w=gpu.UploadBF16(small,sizeof(small),2,2),a=gpu.Upload({1,2},1,2),o=gpu.Allocate(1,2);
+      |         ^      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   ~~~~~~~~~~~~~~~~~~~~~
+1 error generated.
+make[2]: *** [CMakeFiles/garnet_single_coder_head_test.dir/test2026/metal/single_coder_head_test.cpp.o] Error 1
+make[1]: *** [CMakeFiles/garnet_single_coder_head_test.dir/all] Error 2
+make[1]: *** Waiting for unfinished jobs....
+[ 46%] Building CXX object CMakeFiles/garnet.dir/src/backends/metal/decoder_session.cpp.o
+[ 53%] Linking CXX executable garnet_metal_matmul_test
+[ 53%] Built target garnet_metal_matmul_test
+[ 60%] Building CXX object CMakeFiles/garnet.dir/src/tensor/garnet_tensor.cpp.o
+[ 66%] Building CXX object CMakeFiles/garnet.dir/src/tensor/graph_capture.cpp.o
+[ 73%] Building CXX object CMakeFiles/garnet.dir/src/core/lowering_context.cpp.o
+[ 80%] Building CXX object CMakeFiles/garnet.dir/src/model/safetensors_index.cpp.o
+[ 86%] Building CXX object CMakeFiles/garnet.dir/src/tokenizer/qwen_tokenizer.cpp.o
+[ 93%] Linking CXX shared library libgarnet.dylib
+[ 93%] Built target garnet
+make: *** [all] Error 2

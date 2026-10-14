@@ -31,6 +31,9 @@ public:
 #ifdef GARNET_METAL_CONSTANT_BF16_HEAD
         info+="; constant_bf16_head";
 #endif
+#ifdef GARNET_METAL_SINGLE_CODER_HEAD
+        info+="; single_coder_head";
+#endif
 #ifdef GARNET_METAL_RESIDUAL_NORM
         info+="; residual_norm";
 #endif

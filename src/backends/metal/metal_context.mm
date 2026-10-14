@@ -49,6 +49,9 @@ struct MetalPipelines {
     id<MTLComputePipelineState> nativeBFSerial,nativeBFDot;
 #endif
     id<MTLComputePipelineState> halfRescale;
+#ifdef GARNET_METAL_SINGLE_CODER_HEAD
+    id<MTLComputePipelineState> singleCoderHead;
+#endif
 #ifdef GARNET_METAL_CONSTANT_BF16_HEAD
     id<MTLComputePipelineState> constantHead;
 #endif
@@ -93,6 +96,7 @@ struct MetalContext::Impl {
     std::map<std::array<size_t,3>,MetalMatrix> splitScratch;
     size_t joinedPrefillPairs=0;
     size_t constantHeadDispatches=0;
+    size_t singleCoderHeadDispatches=0;
     size_t residualNormDispatches=0;
     size_t packedPrefillNormDispatches=0;
     size_t globalHalfAlphaDispatches=0;
@@ -1170,6 +1174,16 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         headSource=[headSource stringByReplacingOccurrencesOfString:@"device const ushort4*" withString:@"constant ushort4*"];
         source=[source stringByAppendingString:headSource];
 #endif
+#ifdef GARNET_METAL_SINGLE_CODER_HEAD
+        const auto singleStart=[source rangeOfString:@"kernel void bf16_decode("];
+        const auto singleEnd=[source rangeOfString:@"kernel void bf16_decode_small("];
+        if(singleStart.location==NSNotFound||singleEnd.location==NSNotFound||singleEnd.location<=singleStart.location)
+            throw std::runtime_error("Cannot locate original coder vocabulary shader");
+        auto singleSource=[source substringWithRange:NSMakeRange(singleStart.location,singleEnd.location-singleStart.location)];
+        singleSource=[singleSource stringByReplacingOccurrencesOfString:@"kernel void bf16_decode(" withString:@"kernel void bf16_decode_single_coder_head("];
+        singleSource=[singleSource stringByReplacingOccurrencesOfString:@"p.rows==2" withString:@"false"];
+        source=[source stringByAppendingString:singleSource];
+#endif
         auto library=[impl_->device newLibraryWithSource:source options:compileOptions error:&error];
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
@@ -1179,6 +1193,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         if(!impl_->kernels->kvInplace)throw std::runtime_error("Cannot create private KV update pipeline");
 #endif
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
+#ifdef GARNET_METAL_SINGLE_CODER_HEAD
+        impl_->kernels->singleCoderHead=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_single_coder_head"] error:&error];
+        if(!impl_->kernels->singleCoderHead)throw std::runtime_error("Cannot create single-row coder vocabulary pipeline");
+#endif
 #ifdef GARNET_METAL_CONSTANT_BF16_HEAD
         impl_->kernels->constantHead=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_constant_head"] error:&error];
         if(!impl_->kernels->constantHead)throw std::runtime_error("Cannot create constant-address vocabulary pipeline");
@@ -1534,6 +1552,7 @@ bool MetalContext::EncodeJoinedGlobalMlp(const MetalMatrix& input,const MetalBF1
 size_t MetalContext::LastJoinedGlobalMlpBlocks() const {return impl_->joinedGlobalMlpBlocks;}
 size_t MetalContext::LastJoinedPrefillPairs() const {return impl_->joinedPrefillPairs;}
 size_t MetalContext::LastConstantHeadDispatches() const {return impl_->constantHeadDispatches;}
+size_t MetalContext::LastSingleCoderHeadDispatches() const {return impl_->singleCoderHeadDispatches;}
 size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualNormDispatches;}
 size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->packedPrefillNormDispatches;}
 size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->globalHalfAlphaDispatches;}
@@ -1641,6 +1660,10 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
             (a.columns==1024&&(o.columns==151936||o.columns==248320)));
         if(constantHead){pipeline=impl_->kernels->constantHead;threads=128;decodeColumns=16;}
 #endif
+#ifdef GARNET_METAL_SINGLE_CODER_HEAD
+        const bool singleCoderHead=a.rows==1&&a.columns==896&&o.columns==151936;
+        if(singleCoderHead){pipeline=impl_->kernels->singleCoderHead;threads=128;decodeColumns=16;}
+#endif
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)
             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
@@ -1653,6 +1676,9 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+decodeColumns-1)/decodeColumns,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
 #ifdef GARNET_METAL_CONSTANT_BF16_HEAD
         if(constantHead)++impl_->constantHeadDispatches;
+#endif
+#ifdef GARNET_METAL_SINGLE_CODER_HEAD
+        if(singleCoderHead)++impl_->singleCoderHeadDispatches;
 #endif
         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
@@ -1694,7 +1720,7 @@ void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
     }
@@ -2288,7 +2314,7 @@ void MetalContext::SubmitAndWait() {
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

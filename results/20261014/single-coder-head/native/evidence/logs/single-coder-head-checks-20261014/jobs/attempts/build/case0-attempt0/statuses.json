@@ -1,0 +1,15 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "--build",
+      "/Users/zsdx/garnet-metal-investigation/build-single-coder-head",
+      "--parallel",
+      "4"
+    ],
+    "exit_code": 2,
+    "interruption": null,
+    "wall_seconds": 8.311861208174378
+  }
+]

@@ -60,6 +60,7 @@ public:
         const MetalBF16Weight&,const MetalMatrix&,const MetalMatrix&);
     size_t LastJoinedPrefillPairs() const;
     size_t LastConstantHeadDispatches() const;
+    size_t LastSingleCoderHeadDispatches() const;
     size_t LastResidualNormDispatches() const;
     size_t LastPackedPrefillNormDispatches() const;
     size_t LastGlobalHalfAlphaDispatches() const;

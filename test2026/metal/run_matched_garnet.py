@@ -30,12 +30,14 @@ try:
             assert rejected,'Unvalidated exact-tail profile admitted'
             assert before==(decoder.chunk,decoder.prefill_projection,decoder.prefill_graphs,decoder.slots,decoder.finer_chunks,decoder.exact_tail),'Rejected exact-tail profile changed state'
         print('exact_tail_admission PASS',flush=True)
+    single_coder_head_enabled='single_coder_head' in garnet.backend_info()
     initialization=time.monotonic()-started
     for request in range(repeats):
         begin=time.monotonic();decoder.reset();reset_seconds=time.monotonic()-begin
         hidden=[decoder.io.embedding([token]*batch) for token in ids]
         positions=[[[i]*3 for i in range(len(ids))] for row in range(batch)]
         prediction=decoder.prefill_sequence(hidden,positions);ttft=time.monotonic()-begin
+        single_head_counts=[decoder.session.single_coder_head_dispatches if single_coder_head_enabled else 0]
         output=[[] for row in range(batch)];active=[1]*batch;durations=[];native_ms=[];phases=[]
         for token in range(limit):
             for row in range(batch):
@@ -44,6 +46,7 @@ try:
             if not any(active) or token==limit-1:break
             step=time.monotonic();prediction=decoder.step(prediction,active=active)
             durations.append(time.monotonic()-step);native_ms.append(decoder.last_session_ms)
+            single_head_counts.append(decoder.session.single_coder_head_dispatches if single_coder_head_enabled else 0)
             phases.append(dict(prepare_ms=decoder.session.prepare_ms,encode_ms=decoder.session.encode_ms,
                 gpu_ms=decoder.session.gpu_ms,wait_ms=decoder.session.wait_ms))
         total=time.monotonic()-begin
@@ -67,6 +70,7 @@ try:
             packed_prefill_norm_enabled='packed_prefill_norm' in garnet.backend_info(),
             global_half_alpha_enabled='global_half_alpha' in garnet.backend_info(),
             joined_global_mlp_enabled='joined_global_mlp' in garnet.backend_info(),
+            single_coder_head_enabled=single_coder_head_enabled,single_coder_head_counts=single_head_counts,
             residual_norm_dispatches=decoder.session.residual_norm_dispatches if 'residual_norm' in garnet.backend_info() else 0,
             constant_head_dispatches=decoder.session.constant_head_dispatches if 'constant_bf16_head' in garnet.backend_info() else 0,
             weights='checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV')

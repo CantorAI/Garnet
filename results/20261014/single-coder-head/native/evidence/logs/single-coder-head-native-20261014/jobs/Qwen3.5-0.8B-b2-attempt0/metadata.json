@@ -1,0 +1,20 @@
+{
+  "scope": "Native ABBA for native BF16 body projection; same frozen workloads and full outputs.",
+  "library_sha256": {
+    "control": "887b70f521d5af7f948bcb32a2cf94842377e2ecb828bc9280ffb38af6fe058f",
+    "candidate": "ec927190e2830e0e8045fd6f18e74a1d90373d21fc6165355b2fe0a16e8abde0"
+  },
+  "source_sha256": {
+    "compare_single_coder_head.py": "23e9139c1181faa5291e14a7158c12cfaf835b8de13f1d65c98b3fe14cacfbde",
+    "run_matched_garnet.py": "11344dd4b27be3e515c145385045ae45e4270bc4d488e3126cd0117409e5a248",
+    "run_matched_frame_process.py": "a30bdcd1da7e411b91ce7797235268b47bd4ab4099720e7267f95f8011464ec7",
+    "frame_worker_garnet.py": "0d34d797f11b701a6dd67fac32214d72fa97ead5095ed8c4ce3f58290b5c3e73"
+  },
+  "assets": {
+    "Qwen3.5-0.8B": {
+      "model.safetensors": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+      "config.json": "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204",
+      "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42"
+    }
+  }
+}
