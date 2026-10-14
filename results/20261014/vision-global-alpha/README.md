@@ -3,7 +3,9 @@
 This new component experiment preserves all learned values and gives repeated
 GPU reductions for vision-block projections. It does not yet establish image
 inference latency, throughput or the overall 2x decode / half-TTFT goal.
-No production route or selected library changes in this experiment.
+The component trial leaves selected libraries unchanged. An optional native
+integration is now built and under full validation; no serving gain is yet
+established for it.
 
 The earlier per-row-scaled half vision trial failed to improve serving latency.
 This trial instead compares the current expanded-FP32 MPS product against one
@@ -50,11 +52,50 @@ should therefore initially retain FP32 merger products and test only block
 products, with full bounds, fallback and ownership validation. No benefit for
 full image-to-first-token latency can be inferred from these component ratios.
 
-Integration must preserve the existing decoder row limits while separately
-supporting vision rows 216/432, preserve the FP32 fallback for inexact matrices
-and handle tiny vision grids without selecting an unintended decode kernel.
-Actual vision dispatch counters and complete reference images/outputs are
-required before any admission. The broader goal remains active and unmet.
+## Optional native integration
+
+`GARNET_METAL_VISION_GLOBAL_ALPHA` defaults OFF and requires global half alpha.
+Only BF16 2D block QKV, attention output and MLP projection weights are selected.
+Norms, biases, patch/position embeddings and both merger products retain their
+existing FP32 path. Inexact common scales also fall back to the original FP32
+matrix. A separate shared-weight cache key preserves the vision role.
+
+Tagged vision weights use the existing lossless representation but always
+take the MPS common-alpha route, including tiny grids with one or two rows.
+Vision-only rows up to the existing grid limit are supported, while decoder
+weights retain their original 128-row limit. Learned BF16 buffers, precision,
+shape/device checks, alias guards and output ownership remain intact. Context
+Begin/Abort and graph clear/run reset a separate counter; graph Run publishes
+it after successful GPU submission. Image workers report actual per-image
+counts, rather than relying on the enabled feature marker.
+
+Installation matched all fifteen original source hashes against branch base
+`2394abcb` and preserved their exact bytes before installing sixteen candidate
+files. The isolated candidate builds and both CTests pass on the actual M4.
+The new test checks rows 1/2/54/108/216/432 against original FP32 MPS and
+independent FP64 references with four fresh inputs, unchanged decoder limits,
+inexact-scale fallback representation, out-of-profile rows and Begin/Abort/
+readiness recovery. Candidate library SHA-256:
+`0997e2ba00ce52766b0e8b1fa0b46f44bcff6b081883e9a8c7ba93c2f3635d23`.
+
+Owned validation PID **13040** is running all nineteen original full-model/
+cache/image/head/prefill stages at `ROOT/logs/vision-global-alpha-checks-20261014`.
+Dependent PID **16264**, directory `ROOT/logs/vision-global-alpha-native-20261014`,
+verifies that exact live handle before waiting and starts all six sequential
+native ABBA profiles only after terminal validation exit 0. It requires actual
+48 block-product dispatches for every candidate VL image and zero for controls
+and text/coder, complete frozen outputs and fresh image identities. Other head,
+norm, reset and joined-MLP experiments stay disabled.
+
+The bounded historical snapshot in `native/pending` verifies both current
+handles, unchanged selected libraries, source bundle and real CTest output.
+Only configure/build/CTest are complete in that snapshot; the remaining
+sixteen stages and all inference measurements are still required. Inspect
+authoritative current handles/terminal records before continuing. The prepared
+terminal archiver and local verifier check all original cases, source/binary
+identities, actual image use and independently recomputed timing phases.
+No native image-latency or decode gain is yet claimed. The broader goal remains
+active and unmet; GPT-OSS and Pi checkouts remain unchanged.
 
 Initial owned PID 6184 exits 0 in 155.84 seconds; fresh confirmation PID 9206
 exits 0 in 155.62 seconds. The second starts after the first is terminal.
@@ -78,4 +119,16 @@ python3 launch_vision_global_alpha_probe.py ROOT ROOT/logs/vision-global-alpha-p
 python3 launch_vision_global_alpha_probe.py ROOT ROOT/logs/vision-global-alpha-probe-confirm-20261014
 python3 archive_vision_global_alpha_probe.py ROOT ARCHIVE
 python verify_vision_global_alpha_probe.py RESULTS REPORT_JSON
+python add_vision_global_alpha_counters.py
+python prepare_vision_global_alpha_sources.py
+python3 install_vision_global_alpha_sources.py ROOT
+python3 launch_vision_global_alpha_checks.py ROOT ROOT/logs/vision-global-alpha-checks-20261014 checks
+python prepare_vision_global_alpha_profiles.py
+python3 queue_vision_global_alpha_profiles.py ROOT ROOT/logs/vision-global-alpha-native-20261014
+python3 archive_vision_global_alpha_native.py ROOT ARCHIVE
+python verify_vision_global_alpha_native.py RESULTS REPORT_JSON
 ```
+
+Counter preparation is a one-time editing helper and rejects reapplication to
+the completed source. Rebuild from the committed implementation or archived
+source bundle rather than rerunning it on an already modified branch.

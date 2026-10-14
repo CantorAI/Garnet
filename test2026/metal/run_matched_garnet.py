@@ -71,6 +71,7 @@ try:
             global_half_alpha_enabled='global_half_alpha' in garnet.backend_info(),
             joined_global_mlp_enabled='joined_global_mlp' in garnet.backend_info(),
             single_coder_head_enabled=single_coder_head_enabled,single_coder_head_counts=single_head_counts,
+            vision_global_alpha_enabled='vision_global_alpha' in garnet.backend_info(),vision_global_alpha_dispatches=0,
             residual_norm_dispatches=decoder.session.residual_norm_dispatches if 'residual_norm' in garnet.backend_info() else 0,
             constant_head_dispatches=decoder.session.constant_head_dispatches if 'constant_bf16_head' in garnet.backend_info() else 0,
             weights='checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV')

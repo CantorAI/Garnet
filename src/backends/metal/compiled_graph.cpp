@@ -20,6 +20,16 @@ size_t MetalCompiledGraph::Weight(const std::string& name) {
     auto found=weights_.find(name);if(found!=weights_.end())return found->second;
     auto entry=index_.Find(name);
     if(!entry)throw std::runtime_error("Metal checkpoint weight missing: "+name);
+#ifdef GARNET_METAL_VISION_GLOBAL_ALPHA
+    auto ends=[&](const std::string& suffix){return name.size()>=suffix.size()&&name.compare(name.size()-suffix.size(),suffix.size(),suffix)==0;};
+    const bool visionProjection=name.rfind("model.visual.blocks.",0)==0&&
+        (ends(".attn.qkv.weight")||ends(".attn.proj.weight")||ends(".mlp.linear_fc1.weight")||ends(".mlp.linear_fc2.weight"));
+    if(entry->dataType=="BF16"&&entry->shape.size()==2&&visionProjection) {
+        const auto id=BF16Weight(name,true);
+        if(slots_[id].bf16.GlobalHalfReady())return id;
+        // Inexact common scales retain the original FP32-expanded MPS path.
+    }
+#endif
     if(bf16Projections_&&entry->dataType=="BF16"&&entry->shape.size()==2&&
         (name.rfind("model.language_model.layers.",0)==0||name.rfind("model.layers.",0)==0))return BF16Weight(name);
     const auto modified=std::filesystem::last_write_time(entry->filePath);
@@ -64,8 +74,8 @@ size_t MetalCompiledGraph::Weight(const std::string& name) {
     weightRecords_[name]={slots_[id],*entry,modified,bytes};
     weights_[name]=id;return id;
 }
-size_t MetalCompiledGraph::BF16Weight(const std::string& name) {
-    const auto key=name+"|BF16";auto found=weights_.find(key);if(found!=weights_.end())return found->second;
+size_t MetalCompiledGraph::BF16Weight(const std::string& name,bool visionPrefill) {
+    const auto key=name+(visionPrefill?"|VisionGlobalBF16":"|BF16");auto found=weights_.find(key);if(found!=weights_.end())return found->second;
     auto entry=index_.Find(name);
     if(!entry||entry->shape.size()!=2||entry->shape[0]<=0||entry->shape[1]<=0)
         throw std::runtime_error("Invalid vocabulary checkpoint matrix");
@@ -92,7 +102,7 @@ size_t MetalCompiledGraph::BF16Weight(const std::string& name) {
     floatPrefill=name.rfind("model.layers.",0)==0&&name.size()>=keySuffix.size()&&
         name.compare(name.size()-keySuffix.size(),keySuffix.size(),keySuffix)==0;
 #endif
-    auto weight=gpu_->UploadBF16(data,entry->dataSize,size_t(entry->shape[0]),size_t(entry->shape[1]),floatPrefill);
+    auto weight=gpu_->UploadBF16(data,entry->dataSize,size_t(entry->shape[0]),size_t(entry->shape[1]),floatPrefill,visionPrefill);
     auto id=slots_.size();slots_.push_back({MetalMatrix(),size_t(entry->shape[0]),size_t(entry->shape[1]),std::vector<int64_t>(entry->shape.begin(),entry->shape.end()),std::move(weight)});
     if(modified!=std::filesystem::last_write_time(entry->filePath)||bytes!=std::filesystem::file_size(entry->filePath))throw std::runtime_error("BF16 checkpoint changed while loading");
     weightRecords_[key]={slots_[id],*entry,modified,bytes};weights_[key]=id;return id;
@@ -183,7 +193,7 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     return output;
 }
 void MetalCompiledGraph::Clear() {
-    ++generation_;ready_=false;bf16Projections_=false;outputParts_.clear();outputStorageGroups_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
+    visionGlobalAlphaDispatches_=0;++generation_;ready_=false;bf16Projections_=false;outputParts_.clear();outputStorageGroups_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
 }
 void MetalCompiledGraph::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 bool MetalCompiledGraph::Build(X::Value graph,X::Value symbols,const std::string& checkpoint) {
@@ -958,12 +968,14 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
 }
 X::Value MetalCompiledGraph::Run(X::Value inputs) {
     std::lock_guard<std::mutex> lock(mutex_);
+    visionGlobalAlphaDispatches_=0;
     auto start=std::chrono::steady_clock::now();
     PrepareInputs(inputs);
     gpu_->Begin();
     try {
         Encode(*gpu_);
         gpu_->SubmitAndWait();
+        visionGlobalAlphaDispatches_=gpu_->LastVisionGlobalAlphaDispatches();
     }catch(...){gpu_->Abort();throw;}
     auto result=gpu_->Download(slots_[output_].matrix);auto& output=slots_[output_];
     inferenceMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();

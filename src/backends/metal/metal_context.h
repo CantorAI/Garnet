@@ -52,7 +52,7 @@ public:
     static std::string AvailableDeviceName();
     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
     MetalMatrix Allocate(size_t rows, size_t columns);
-    MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false);
+    MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false,bool visionPrefill=false);
     // Preserve BF16 checkpoint values; use SIMD matvec for decode and FP32 tiled GEMM for up to 128 prompt rows.
     void EncodeBF16MatVec(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
     // Try the bounded exact-half prefill pair; false leaves both outputs untouched.
@@ -64,6 +64,7 @@ public:
     size_t LastResidualNormDispatches() const;
     size_t LastPackedPrefillNormDispatches() const;
     size_t LastGlobalHalfAlphaDispatches() const;
+    size_t LastVisionGlobalAlphaDispatches() const;
     // False preserves all three independent outputs. Decode never takes this route.
     bool EncodeJoinedGlobalMlp(const MetalMatrix&,const MetalBF16Weight&,const MetalBF16Weight&,
         const MetalMatrix& gate,const MetalMatrix& up,const MetalMatrix& activated);

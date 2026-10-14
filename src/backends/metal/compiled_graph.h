@@ -32,11 +32,12 @@ class MetalCompiledGraph {
     std::vector<uint8_t> residentOps_;
     uint64_t generation_=0;
     double compileMs_=0,inferenceMs_=0;
+    size_t visionGlobalAlphaDispatches_=0;
     bool ready_=false,bf16Projections_=false;
     std::mutex mutex_;
     SafeTensorsIndex index_;
     size_t Weight(const std::string&);
-    size_t BF16Weight(const std::string&);
+    size_t BF16Weight(const std::string&,bool visionPrefill=false);
     size_t Allocate(size_t,size_t);
     size_t LowerVision(size_t input,const X::Value& attributes);
     void Clear();
@@ -55,6 +56,7 @@ public:
     double CompileMs() const {return compileMs_;}
     double LastInferenceMs() const {return inferenceMs_;}
     size_t OperationCount() const {return ops_.size();}
+    size_t LastVisionGlobalAlphaDispatches() const {return visionGlobalAlphaDispatches_;}
     BEGIN_PACKAGE(MetalCompiledGraph)
         APISET().AddFunc<3>("build",&MetalCompiledGraph::Build);
         APISET().AddFunc<3>("build_bf16",&MetalCompiledGraph::BuildBF16);
@@ -65,6 +67,7 @@ public:
         APISET().AddProp("compile_ms",&MetalCompiledGraph::CompileMs);
         APISET().AddProp("last_inference_ms",&MetalCompiledGraph::LastInferenceMs);
         APISET().AddProp("operation_count",&MetalCompiledGraph::OperationCount);
+        APISET().AddProp("vision_global_alpha_dispatches",&MetalCompiledGraph::LastVisionGlobalAlphaDispatches);
     END_PACKAGE
 };
 }
