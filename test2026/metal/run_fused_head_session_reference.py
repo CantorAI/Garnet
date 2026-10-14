@@ -30,7 +30,13 @@ def run(s,name,predict=0):
 def expected(s,h):
     scores=h.run([s.hidden()]).tolist();width=len(scores)//batch
     assert all(math.isfinite(v) for v in scores)
-    return [max(range(width),key=lambda i:scores[row*width+i]) for row in range(batch)]
+    result=[]
+    for row in range(batch):
+        best=0
+        for index in range(1,width):
+            if scores[row*width+index]>scores[row*width+best]:best=index
+        result.append(best)
+    return result
 try:
     assert 'fused_head_argmax' in garnet.backend_info()
     graph.build_bf16(forward(*symbols),symbols,f['checkpoint']);head.build(bf16_head(head_symbol),[head_symbol],f['checkpoint']);fallback.build(float_head(head_symbol),[head_symbol],f['checkpoint'])

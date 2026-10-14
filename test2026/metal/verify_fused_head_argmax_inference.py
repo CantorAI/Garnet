@@ -2,12 +2,14 @@
 import hashlib,json,statistics,sys
 from pathlib import Path
 root=Path(sys.argv[1]).resolve();proof=json.loads((root/'manifest.json').read_text())
+native_trial=sys.argv[3] if len(sys.argv)>3 else 'fused-head-argmax-native-20261015'
+confirmation_trial=sys.argv[4] if len(sys.argv)>4 else None
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 for name,info in proof['files'].items():
     p=root/name;assert p.resolve().is_relative_to(root) and p.stat().st_size==info['bytes'] and digest(p)==info['sha256']
 for name,sha in proof['candidate'].items():assert digest(root/'source'/name)==sha
 for name,sha in proof['original'].items():assert digest(root/'logs/fused-head-argmax-original-source-20261015'/name)==sha
-for trial in ('fused-head-argmax-checks-20261015','fused-head-argmax-native-20261015'):assert proof['jobs'][trial]['exit_code']==0
+for trial in ('fused-head-argmax-checks-20261015',native_trial):assert proof['jobs'][trial]['exit_code']==0
 checks=root/'logs/fused-head-argmax-checks-20261015/jobs';meta=json.loads((checks/'metadata.json').read_text())
 assert meta['candidate_sha256']==proof['library_sha256']['build-fused-head-argmax']
 assert proof['library_sha256']['build-global-half-alpha']=='887b70f521d5af7f948bcb32a2cf94842377e2ecb828bc9280ffb38af6fe058f'
@@ -31,7 +33,7 @@ for stage in stages:
 ctest=next(v for v in stages if v['name']=='ctest')['accepted_cases'][0]
 ctext=(checks/ctest['evidence']/'ctest.log').read_text()
 assert '100% tests passed' in ctext and 'metal_fused_head_argmax_reference' in ctext and 'metal_mps_matmul_reference' in ctext
-trial=root/'logs/fused-head-argmax-native-20261015'
+trial=root/'logs'/native_trial
 for phase in ('recovery','native'):assert json.loads((trial/(phase+'-exit.json')).read_text())['exit_code']==0
 dependencies=json.loads((trial/'dependency.json').read_text());assert dependencies['pid']==68935 and dependencies['completed_original_stages']==19 and dependencies['source_manifest']==proof['candidate']
 for name,sha in json.loads((trial/'helper-identities.json').read_text()).items():assert digest(trial/'helper-snapshot'/name)==sha
@@ -42,7 +44,9 @@ for stage in r_stages:
     rows=[json.loads(line.split(' ',2)[2]) for line in (recovery/(stage['name']+'.log')).read_text().splitlines() if line.startswith('fused_head_session_reference PASS ')]
     assert len(rows)==2 and {v['batch'] for v in rows}=={1,2}
     assert all(all(v[k] for k in ('actual_fused_head','generic_full_logits_preserved','float_head_fallback','nonfinite_poison_recovery','private_sessions_isolated')) for v in rows);recovered+=2
-native=trial/'native';profiles=json.loads((native/'summary.json').read_text())['profiles']
+if confirmation_trial:assert proof['jobs'][confirmation_trial]['exit_code']==0
+native=root/'logs'/confirmation_trial/'jobs' if confirmation_trial else trial/'native'
+profiles=json.loads((native/'summary.json').read_text())['profiles']
 assert len(profiles)==6 and {(p['model'],p['batch']) for p in profiles}=={(m,b) for m in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct','Qwen3.5-0.8B') for b in (1,2)}
 observed=[];requests=0
 for profile in profiles:

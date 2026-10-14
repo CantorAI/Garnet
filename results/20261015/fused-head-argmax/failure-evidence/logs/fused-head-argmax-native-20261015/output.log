@@ -1,0 +1,7 @@
+Starting Qwen3-0.6B-session
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_fused_head_session_checks.py", line 7, in <module>
+    run(model+'-session',[sys.executable,str(s/'test_fused_head_session_reference.py'),runtime,str(build),str(r/'source'),str(r/'models'/model),str(output/model)])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_fused_head_session_checks.py", line 48, in run
+AssertionError: ('Qwen3-0.6B-session', None)
