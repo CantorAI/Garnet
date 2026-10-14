@@ -1,0 +1,31 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/state_zero_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/state-zero-gpu-probe-conditioned-20261013/jobs/state_zero_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/state-zero-gpu-probe-conditioned-20261013/jobs/state_zero_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/state-zero-gpu-probe-conditioned-20261013/jobs/profiles.tsv",
+      "gpu-conditioned"
+    ],
+    "exit_code": 0
+  }
+]

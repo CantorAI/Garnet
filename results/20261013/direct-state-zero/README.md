@@ -65,8 +65,9 @@ no sum is presented as an observed hardware-cold end-to-end TTFT.
 Although temporary allocations are removed, measured peak RSS changes are
 small/mixed (about -14.7 to +7.8 MiB across both runs); no peak-memory saving
 is established. The largest confirmation text reset still takes 5.1 ms.
-A future GPU buffer-fill reset could be measured against this CPU clear;
-that method is not implemented or benchmarked by this evidence.
+A subsequent [GPU buffer-fill component test](../state-zero-gpu/README.md)
+is slower than direct CPU clear in both tested input conditions and is
+rejected for integration. It does not change this native comparison's results.
 
 ## Validation and evidence
 
