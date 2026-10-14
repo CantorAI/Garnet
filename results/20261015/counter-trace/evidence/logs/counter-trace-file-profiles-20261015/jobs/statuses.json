@@ -1,0 +1,429 @@
+[
+  {
+    "name": "generate",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_counter_trace_source.py",
+      "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/metal_context.mm",
+      "/Users/zsdx/garnet-metal-investigation/counter-trace-file-source/src/backends/metal/metal_context.mm"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 0.6916285832412541
+  },
+  {
+    "name": "configure",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-S",
+      "/Users/zsdx/garnet-metal-investigation/counter-trace-file-source",
+      "-B",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "-DGARNET_METAL=ON",
+      "-DGARNET_METAL_XMODEL=ON",
+      "-DGARNET_METAL_EXACT_HALF_PREFILL=ON",
+      "-DGARNET_METAL_MPS_VISION_SCORES=ON",
+      "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=ON",
+      "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_CONV=ON",
+      "-DGARNET_METAL_LINEAR_CHUNK_DELTA=ON",
+      "-DGARNET_METAL_SMALL_OUTPUT_DECODE=ON",
+      "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=ON",
+      "-DGARNET_METAL_RESIDENT_KV_INPLACE=ON",
+      "-DGARNET_METAL_ATTENTION_PREFIX=ON",
+      "-DGARNET_METAL_GLOBAL_HALF_ALPHA=ON",
+      "-DXLANG3_SDK_ROOT=/Users/zsdx/CantorAI/xlang3/sdk",
+      "-DGARNET_XLANG3_RUNTIME_LIBRARY=/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/libxlang3_runtime.dylib",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 1.3832954578101635
+  },
+  {
+    "name": "build",
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "--build",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "--parallel",
+      "4"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.589777250308543
+  },
+  {
+    "name": "ctest",
+    "command": [
+      "/opt/homebrew/bin/ctest",
+      "--test-dir",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "--output-on-failure"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.0896864156238735
+  },
+  {
+    "name": "Qwen3-0.6B-b1-quiet-0",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3-0.6B-b1-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 3.476551374886185
+  },
+  {
+    "name": "Qwen3-0.6B-b1-traced-0",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3-0.6B-b1-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 3.4591783746145666
+  },
+  {
+    "name": "Qwen3-0.6B-b1-traced-1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3-0.6B-b1-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.7700301250442863
+  },
+  {
+    "name": "Qwen3-0.6B-b1-quiet-1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3-0.6B-b1-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.7807470839470625
+  },
+  {
+    "name": "Qwen3-0.6B-b2-quiet-0",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3-0.6B-b2-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.775439292192459
+  },
+  {
+    "name": "Qwen3-0.6B-b2-traced-0",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3-0.6B-b2-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 3.469617750030011
+  },
+  {
+    "name": "Qwen3-0.6B-b2-traced-1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3-0.6B-b2-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 3.485411874949932
+  },
+  {
+    "name": "Qwen3-0.6B-b2-quiet-1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3-0.6B-b2-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.7767437077127397
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-quiet-0",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.802463584113866
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-traced-0",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 3.4951960002072155
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-traced-1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 3.493012915831059
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-quiet-1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.79972608294338
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-quiet-0",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.7909453343600035
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-traced-0",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 3.488837958779186
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-traced-1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 3.502939249854535
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-quiet-1",
+    "command": [
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-case.json"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 2.807376583106816
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-quiet-0",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b1-quiet-0/protocol"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.287017333786935
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-traced-0",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b1-traced-0/protocol"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.979326458647847
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-traced-1",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b1-traced-1/protocol"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.29307320760563
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-quiet-1",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b1-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b1-quiet-1/protocol"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.267192666884512
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-quiet-0",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b2-quiet-0/protocol"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.970885000191629
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-traced-0",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b2-traced-0/protocol"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.719398000277579
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-traced-1",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b2-traced-1/protocol"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 7.719612082932144
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-quiet-1",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-counter-trace-file",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b2-case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/counter-trace-file-profiles-20261015/jobs/Qwen3.5-0.8B-b2-quiet-1/protocol"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.979940957855433
+  }
+]
