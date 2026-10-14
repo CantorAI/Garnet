@@ -44,3 +44,23 @@ python -X utf8 summarize_sparse_counter_trace_profiles.py EVIDENCE OVERHEAD_JSON
 ```
 
 Production selection is unchanged. The full 2x / half-latency goal remains unmet.
+
+`prediction-roles.json` additionally aligns every forced vocabulary-head event
+with the complete request's recorded prediction-call count. Each worker has
+one head context and one head per prediction command; vocabulary/hidden/batch
+dimensions match its preserved model configuration. Request order, exact head
+counts and decode shapes are checked. This is an inference from the archived
+source's synchronous call contract, not an explicit runtime phase marker.
+No role is selected from absent sampled shapes.
+
+Across the two traced workers, warm decode contributes 28 text, 64 coder and
+108 VL prediction commands per batch profile; each has four separate warm
+final-prefill head commands. Earlier prefill chunks and vision commands without
+a head are excluded. The saved ranks isolate these cohorts, but heads remain
+oversampled and intervals may overlap; ranks are not serving-time percentages.
+This dataset describes the selected-global-alpha diagnostic before the new
+fused-head routes. Its timing values cannot be substituted for the new build.
+
+```text
+python -X utf8 summarize_sparse_prediction_roles.py EVIDENCE PREDICTION_ROLES_JSON
+```
