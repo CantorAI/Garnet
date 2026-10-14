@@ -1,0 +1,53 @@
+{
+  "trial": "fused-head-argmax-20261015",
+  "verified_files": 48,
+  "captured_head_queries": 51,
+  "edge_checks": 96,
+  "timed_executions": 3264,
+  "pools": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "captured_queries": 8,
+      "gpu_fraction": 0.9135330805474171,
+      "wall_fraction": 0.9214173612353772
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "captured_queries": 9,
+      "gpu_fraction": 0.8693259436558914,
+      "wall_fraction": 0.8785971737169357
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "captured_queries": 8,
+      "gpu_fraction": 0.9180436967751332,
+      "wall_fraction": 0.9220014867265411
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "captured_queries": 9,
+      "gpu_fraction": 0.8581925765653359,
+      "wall_fraction": 0.8705851433635587
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "captured_queries": 8,
+      "gpu_fraction": 0.8934182993972779,
+      "wall_fraction": 0.8975091866423005
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "captured_queries": 9,
+      "gpu_fraction": 0.8561052973427048,
+      "wall_fraction": 0.8622306509518457
+    }
+  ],
+  "scope": "Whole-head component only; captured complete logits, synthetic ties/nonfinite/tails; no new full-model or comparator gain",
+  "full_goal_met": false
+}

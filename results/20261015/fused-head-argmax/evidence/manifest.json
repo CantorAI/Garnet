@@ -1,0 +1,216 @@
+{
+  "jobs": {
+    "fused-head-argmax-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 33.5085788751021
+    },
+    "fused-head-argmax-confirm-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 33.19101395783946
+    }
+  },
+  "omitted_binaries": {
+    "logs/fused-head-argmax-20261015/jobs/fused_head_argmax_gpu": {
+      "bytes": 56008,
+      "sha256": "2dc10750eb7614a2bf530b970a9e1e48fbc4fb624b5df34d3eab3fde1dcd4692"
+    },
+    "logs/fused-head-argmax-confirm-20261015/jobs/fused_head_argmax_gpu": {
+      "bytes": 56008,
+      "sha256": "2dc10750eb7614a2bf530b970a9e1e48fbc4fb624b5df34d3eab3fde1dcd4692"
+    }
+  },
+  "files": {
+    "evidence/logs/fused-head-argmax-20261015/exit.json": {
+      "bytes": 50,
+      "sha256": "effaa5fc8be9361bc750f2e8acb81ee915274bdb6c2d5e32941ad798cda96ddd"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 994,
+      "sha256": "a4c351a8f48aebff5d2f531cb106fc5d786c27b2d1c2651b4b44a15d31cf28a5"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 63087,
+      "sha256": "e251739654b8ef3559c10103847cd85d5d272271ec6455ede140e3a6aac9e00c"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 1070,
+      "sha256": "ad88ba52498c1146d6c6b7371f4bf45305ab250162157d1c75a8ac3862bfc08d"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 63337,
+      "sha256": "eb9b5307ef4f930cdc615fce185596f977b153dde1fac101a3fe0452c9c8304f"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 1301,
+      "sha256": "c9c2cc6fbd74c05c2a459d661c54d18cdaf8124704f8e7e5c1b348e38f71a9d9"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 64582,
+      "sha256": "6567eeb94d1d90dc66fabe92d305b9fc09e649f46ff9bf5a38f1422255b2e7cd"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/background_service_checks.json": {
+      "bytes": 44143,
+      "sha256": "2319f92658dbc8bc8236cf101c85e05a2c198c2429720b45febf303ea3211e99"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/combined.metal": {
+      "bytes": 7748,
+      "sha256": "b1bbce74e65870651631f8a5e05f816850f10e0fcfe239734bd1e04a1884a963"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/compile-monitor.json": {
+      "bytes": 157,
+      "sha256": "af8d7765782568648c16445c4540d21c8b788528dce819be937f0ea1b17b3444"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/metadata.json": {
+      "bytes": 21143,
+      "sha256": "03684b46c256735801b73e5910c66e85aaf57a288eaa5d556661614702bccc9c"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/shader-monitor.json": {
+      "bytes": 80,
+      "sha256": "56700edc6cd66b397d1b4988a13a9abdf986d8497e427ad85c41e0592dd74b13"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/shader.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 171286,
+      "sha256": "b0cf78db529b4837022a66ac06db879774e114a73285d43065582124b505f480"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/source-snapshot/test2026/metal/fused_head_argmax_gpu.mm": {
+      "bytes": 8070,
+      "sha256": "00f0032864de54deffcdb69405d15b5edd5d6bba02eaa4a7fa142e87273bad01"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/source-snapshot/test2026/metal/make_fused_head_argmax_shader.py": {
+      "bytes": 3798,
+      "sha256": "75caf3b59fb0902c57e1570263bdf71351b169fc7a357928996c12b62eb67125"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/source-snapshot/test2026/metal/run_decode_subsimd_probe.py": {
+      "bytes": 5285,
+      "sha256": "422b2a307a8678a5ffe96bfe09b94607f13c151d17413dba16f1c0e3d6e011da"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/source-snapshot/test2026/metal/run_fused_head_argmax_probe.py": {
+      "bytes": 3367,
+      "sha256": "36c8d9db0be412a7f987a6a4e25a484d306fc091407283a8b8476435c165abf6"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/statuses.json": {
+      "bytes": 2086,
+      "sha256": "bf25c52089922a95ca20b4952192cba9730f48083fb1f4de9f82fa33b05e75d9"
+    },
+    "evidence/logs/fused-head-argmax-20261015/jobs/summary.json": {
+      "bytes": 21404,
+      "sha256": "afde36f0829f9ba397cf2e40f284ae32954b089eab10f0ad183bb538bde02118"
+    },
+    "evidence/logs/fused-head-argmax-20261015/output.log": {
+      "bytes": 69,
+      "sha256": "fe78c45e4991a341daa8c6032d6f44b1b96424669eee14e7e8e6dbeefa84e347"
+    },
+    "evidence/logs/fused-head-argmax-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "c344fe30a5a1496cce65efb5d754815368f4f6be55538b4b94461e977ca81714"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "7dd79e683f5c5a98b2755a70548a337e13fc27c93d991c9b0bce1affd37ffefb"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 995,
+      "sha256": "1242d634fc1c75aa41d3064032a569db2a7f18ccfd46875b757e59848e833c09"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 63509,
+      "sha256": "24d9e712bc783fa82e039ca73d1b5969e8b1e0de379e51c3da71e56d8d37bc25"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 1072,
+      "sha256": "0fd71f380b7d1658659cb144b9f5a05a294e524d1ce2b70b5d1944fc6a9e3cde"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 63439,
+      "sha256": "2cff498c505c5e726cde37cb39d2a4d34c0b79b20a07f49fa12eded2b782c139"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 1303,
+      "sha256": "5a18feb6d2285f11df8a0bd5c634c2d8e2b95a4cc2fb7f03d8c66f9c93ebf611"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 64502,
+      "sha256": "28a290d3ff3663b4d2c073179c48b1eac1a693cd271b81f09a93ed7e8159fc6e"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/background_service_checks.json": {
+      "bytes": 44152,
+      "sha256": "286c43c560826295623e2922abe3e510c49b8a455fde169469e3f1504addb420"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/combined.metal": {
+      "bytes": 7748,
+      "sha256": "b1bbce74e65870651631f8a5e05f816850f10e0fcfe239734bd1e04a1884a963"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/compile-monitor.json": {
+      "bytes": 157,
+      "sha256": "e950f59f221e6b11452e4dcb689aaec3525c8346bffa398a36fc47c04fbfc04d"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/metadata.json": {
+      "bytes": 21143,
+      "sha256": "03684b46c256735801b73e5910c66e85aaf57a288eaa5d556661614702bccc9c"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/shader-monitor.json": {
+      "bytes": 81,
+      "sha256": "03797d0a4e3cd5516947df89145e05e3311607f59afa15df639b4a93b17b3536"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/shader.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 171286,
+      "sha256": "b0cf78db529b4837022a66ac06db879774e114a73285d43065582124b505f480"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/source-snapshot/test2026/metal/fused_head_argmax_gpu.mm": {
+      "bytes": 8070,
+      "sha256": "00f0032864de54deffcdb69405d15b5edd5d6bba02eaa4a7fa142e87273bad01"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/source-snapshot/test2026/metal/make_fused_head_argmax_shader.py": {
+      "bytes": 3798,
+      "sha256": "75caf3b59fb0902c57e1570263bdf71351b169fc7a357928996c12b62eb67125"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/source-snapshot/test2026/metal/run_decode_subsimd_probe.py": {
+      "bytes": 5285,
+      "sha256": "422b2a307a8678a5ffe96bfe09b94607f13c151d17413dba16f1c0e3d6e011da"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/source-snapshot/test2026/metal/run_fused_head_argmax_probe.py": {
+      "bytes": 3367,
+      "sha256": "36c8d9db0be412a7f987a6a4e25a484d306fc091407283a8b8476435c165abf6"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/statuses.json": {
+      "bytes": 2150,
+      "sha256": "9a27d713182892a044c21b57ec1c1c204a5837dfad193c2f634ec276f3531aaa"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/jobs/summary.json": {
+      "bytes": 21349,
+      "sha256": "88e407411db4bf97f728f9e742e9c9e3510ff7aa6c0fd656366cc92a1adb34ec"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/output.log": {
+      "bytes": 69,
+      "sha256": "fe78c45e4991a341daa8c6032d6f44b1b96424669eee14e7e8e6dbeefa84e347"
+    },
+    "evidence/logs/fused-head-argmax-confirm-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "e7d94393a142da72f35edd599474da48a5f226e436d3b8eb819f12f256b747ba"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "name": "shader",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_fused_head_argmax_shader.py",
+      "/Users/zsdx/garnet-metal-investigation/source/src/backends/metal/metal_context.mm",
+      "/Users/zsdx/garnet-metal-investigation/logs/fused-head-argmax-confirm-20261015/jobs/combined.metal"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/fused_head_argmax_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/fused-head-argmax-confirm-20261015/jobs/fused_head_argmax_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/fused-head-argmax-confirm-20261015/jobs/fused_head_argmax_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/fused-head-argmax-confirm-20261015/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/fused-head-argmax-confirm-20261015/jobs/fused_head_argmax_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/fused-head-argmax-confirm-20261015/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/fused-head-argmax-confirm-20261015/jobs/fused_head_argmax_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/fused-head-argmax-confirm-20261015/jobs/combined.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/pruned-head-gpu-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0
+  }
+]
