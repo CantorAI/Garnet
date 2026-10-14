@@ -1,0 +1,108 @@
+{
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "12ed987bdf001c5455542963d9ce6707481a90ad5f672566a42102a04796022d",
+    "test2026/metal/indirect_bf16_projection.mm": "847082b0f326bb76368f1df74e8bb4529e62b4eaee2988d4521c5a95ee958091",
+    "test2026/metal/make_constant_bf16_probe.py": "7bd092a9f514ceb397b05eccc62390d7faf3ea6da505c033426b79e8b86f044f",
+    "test2026/metal/run_constant_bf16_probe.py": "ac36847270918354d2cf0db762ee7f978ef99000041b03e8f71f1dfbe2ffb582",
+    "test2026/metal/compare_vllm_metal.py": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+  },
+  "numerical_bounds": "Bit-exact versus current native shader; gamma(ceil(K/32)+32)*sumabs+1e-7 versus independent FP64",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "versions": {
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "macos": "ProductName:\t\tmacOS\nProductVersion:\t\t15.6.1\nBuildVersion:\t\t24G90\n",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n"
+  },
+  "assets": {
+    "Qwen3-0.6B": {
+      "checkpoint": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "scope": "Actual BF16 matrices, FP32 inputs/accumulation; isolated decode only",
+      "cases": [
+        {
+          "name": "matrix-0",
+          "tensor": "model.embed_tokens.weight",
+          "columns": 151936,
+          "inner": 1024,
+          "sha256": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6"
+        },
+        {
+          "name": "matrix-1",
+          "tensor": "model.layers.0.mlp.down_proj.weight",
+          "columns": 1024,
+          "inner": 3072,
+          "sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+        },
+        {
+          "name": "matrix-2",
+          "tensor": "model.layers.0.mlp.gate_proj.weight",
+          "columns": 3072,
+          "inner": 1024,
+          "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+        },
+        {
+          "name": "matrix-3",
+          "tensor": "model.layers.0.mlp.up_proj.weight",
+          "columns": 3072,
+          "inner": 1024,
+          "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+        },
+        {
+          "name": "matrix-4",
+          "tensor": "model.layers.0.self_attn.k_proj.weight",
+          "columns": 1024,
+          "inner": 1024,
+          "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+        },
+        {
+          "name": "matrix-5",
+          "tensor": "model.layers.0.self_attn.o_proj.weight",
+          "columns": 1024,
+          "inner": 2048,
+          "sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+        },
+        {
+          "name": "matrix-6",
+          "tensor": "model.layers.0.self_attn.q_proj.weight",
+          "columns": 2048,
+          "inner": 1024,
+          "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+        },
+        {
+          "name": "matrix-7",
+          "tensor": "model.layers.0.self_attn.v_proj.weight",
+          "columns": 1024,
+          "inner": 1024,
+          "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+        },
+        {
+          "name": "synthetic-37",
+          "tensor": "synthetic finite BF16 tail fixture",
+          "columns": 19,
+          "inner": 37,
+          "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+        },
+        {
+          "name": "synthetic-129",
+          "tensor": "synthetic finite BF16 tail fixture",
+          "columns": 65,
+          "inner": 129,
+          "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+        },
+        {
+          "name": "synthetic-132",
+          "tensor": "synthetic finite BF16 tail fixture",
+          "columns": 37,
+          "inner": 132,
+          "sha256": "fad404ccc61ce3de4f3c801bc31d8397aec221a0479329e07a0588cb9f9b4436"
+        }
+      ]
+    }
+  },
+  "shader_sha256": "b3277cb0de9eec1f767d4a93a38c963cfa9b3a38953892a6a0f8187cfb5929d5",
+  "binary_sha256": "046b73a927fb8847482d566eb8f31f584a00ed8e551dc7c92117071579f64d36"
+}

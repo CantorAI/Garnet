@@ -22,6 +22,7 @@ class MetalDecoderSession {
     std::vector<int64_t> hiddenShape_;
     size_t kvInplaceUpdates_=0;
     size_t joinedPrefillPairs_=0;
+    size_t constantHeadDispatches_=0;
     bool poisoned_=false;
     double inferenceMs_=0,prepareMs_=0,encodeMs_=0,gpuMs_=0,waitMs_=0;
     std::mutex mutex_;
@@ -37,6 +38,7 @@ public:
     void Close();
     size_t LastKVInplaceUpdates() const {return kvInplaceUpdates_;}
     size_t LastJoinedPrefillPairs() const {return joinedPrefillPairs_;}
+    size_t LastConstantHeadDispatches() const {return constantHeadDispatches_;}
     double LastInferenceMs() const {return inferenceMs_;}
     double PrepareMs() const {return prepareMs_;}
     double EncodeMs() const {return encodeMs_;}
@@ -51,6 +53,7 @@ public:
         APISET().AddFunc<0>("close",&MetalDecoderSession::Close);
         APISET().AddProp("kv_inplace_updates",&MetalDecoderSession::LastKVInplaceUpdates);
         APISET().AddProp("joined_prefill_pairs",&MetalDecoderSession::LastJoinedPrefillPairs);
+        APISET().AddProp("constant_head_dispatches",&MetalDecoderSession::LastConstantHeadDispatches);
         APISET().AddProp("prepare_ms",&MetalDecoderSession::PrepareMs);
         APISET().AddProp("encode_ms",&MetalDecoderSession::EncodeMs);
         APISET().AddProp("gpu_ms",&MetalDecoderSession::GPUMs);

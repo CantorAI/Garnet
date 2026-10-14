@@ -1,0 +1,92 @@
+# Constant-address BF16 weights: repeated head signal, native trial pending
+
+The component changes only the original shader's weight address-space
+qualifier from device-readonly to constant, including its ushort4 casts.
+Weights retain the same buffer, BF16 bits and original FP32 math. Both
+native small-output and regular decode kernels are tested. The initial
+attempt stopped at shader compilation because vector casts still used
+device space; its timings are discarded. The corrected and fresh-process
+confirmation jobs (PIDs 8012 / 8994) exited 0 after 35.64 / 35.59 seconds.
+
+Both successful runs verify all three checkpoint identities and canonical
+BF16 tensor slices, covering 34 fixtures / 68 batch profiles. All 121,652
+validated warm/timed executions retain complete output/padding bits with
+four freshly uploaded input variants. Each run also has 272 independent
+FP64 reference executions, 6,528 timed executions, and a common alternating
+250 ms warm stage per profile. Worst FP64 normalized error is
+0.0100017036, below 1 under the unchanged prior envelope. Encoding, wall
+and GPU clocks are separate; setup/checks/input copies are outside timing.
+
+| Model/batch | Pooled constant/device wall fraction, initial / repeat |
+| --- | ---: |
+| Text B1 | 0.99247 / 0.98746 |
+| Text B2 | 0.98009 / 0.99249 |
+| Coder B1 | 0.97987 / 0.99532 |
+| Coder B2 | 1.00235 / 1.00810 |
+| VL B1 | 0.93113 / 0.98917 |
+| VL B2 | 1.02018 / 1.01834 |
+
+These are components, not observed full-model TPS. Large B1 head wall
+fractions in four independent ABBA rounds (initial then fresh-process
+repeat) are text 0.9960/0.9773/0.9752/0.9965, coder
+0.9624/0.8931/0.9586/0.9324 and VL 0.7969/0.9618/0.9439/0.9922.
+Magnitude varies substantially, but the B1 head direction repeats. Body
+profiles are mostly flat/mixed, and B2 does not justify broad admission.
+OS caches were not flushed, GPU frequency is not pinned and the 0.5-second
+guard cannot rule out arbitrary shorter external activity.
+
+## Native experiment, not a completed speed claim
+
+`GARNET_METAL_CONSTANT_BF16_HEAD` defaults OFF. Its candidate route keeps
+the original shader code and float operations, changing the two weight
+pointer qualifiers only. Admission is exactly one row with K/N equal to
+896/151936, 1024/151936 or 1024/248320, matching the measured vocabulary
+heads. All other cases keep the existing path. The session exposes actual
+dispatch counts, reset on clear/reset/begin/abort and published only after
+successful submission. Worker logs capture the feature marker and actual
+last-session dispatch count after the timed request has completed.
+
+The isolated candidate builds and passes native CTest. Trained text tail
+checks have passed; the rest of the 19-stage trained-model/cache/vision
+validation remains running in owned PID **10827**, directory
+`ROOT/logs/constant-head-checks-20261014`. Historical build/CTest snapshots
+are in `native/pending`; they do not prove the whole gate passed.
+
+Owned PID **16406** waits for that exact live predecessor identity and
+terminal exit 0, then runs three B1 complete-output comparisons sequentially
+against the retained attention library. It is not allowed to benchmark
+before all checks pass. The directory is
+`ROOT/logs/constant-head-native-20261014`. Re-poll these actual handles and
+terminal files; an observation timeout does not justify restarting them.
+Selected primary/attention binaries remain unchanged (73c10e5d / f2c5c448).
+No full-model performance result or fresh vLLM comparison is established
+for this candidate. The full 2x decode / half-TTFT goal remains unmet.
+
+## Commands and evidence
+
+```text
+python3 launch_constant_bf16_probe.py ROOT ROOT/logs/constant-bf16-probe-20261014
+python3 launch_constant_bf16_probe.py ROOT ROOT/logs/constant-bf16-retry-20261014
+python3 launch_constant_bf16_probe.py ROOT ROOT/logs/constant-bf16-confirm-20261014
+python3 archive_constant_bf16.py ROOT ARCHIVE
+python summarize_constant_bf16.py EVIDENCE SUMMARY [SUCCESSFUL_JOB_NAME]
+python3 install_constant_head_sources.py ROOT
+python3 launch_constant_head_checks.py ROOT ROOT/logs/constant-head-checks-20261014
+python3 queue_constant_head_profiles.py ROOT ROOT/logs/constant-head-native-20261014
+```
+
+The installer verifies prior source hashes and preserves original bytes
+before installing only owned investigation sources. Native validation uses
+the retained attention configuration; direct-state-zero and joined-prefill
+experiments are disabled. The conditional runtime changes do not promote
+the candidate or change the protected checkouts.
+
+Initial component archive SHA-256:
+`1948fc753cea51110a3ccf8085d37eb8474eaaf4ea046c640ad4e3a9d68bfe79`
+(42 files). Combined confirmation archive:
+`5161df64338193a2741aaa0e60d6aded6c6f54396f80efcf8525eca1d9022551`
+(65 files). Local verification checked all hashes, terminal stages,
+source/shader/binary identities, sample counts, exact/FP64/padding gates,
+common warm durations and recomputed means. Raw evidence retains its byte
+identities. The two derived component reports are `summary.json` and
+`confirmation/summary.json`.

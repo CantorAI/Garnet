@@ -58,6 +58,7 @@ public:
     bool EncodeJoinedBF16Prefill(const MetalMatrix&,const MetalBF16Weight&,
         const MetalBF16Weight&,const MetalMatrix&,const MetalMatrix&);
     size_t LastJoinedPrefillPairs() const;
+    size_t LastConstantHeadDispatches() const;
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
     void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
     // Synchronous host update into an existing allocation, between command batches.

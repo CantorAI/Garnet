@@ -46,6 +46,9 @@ struct MetalPipelines {
     id<MTLComputePipelineState> nativeBFSerial,nativeBFDot;
 #endif
     id<MTLComputePipelineState> halfRescale;
+#ifdef GARNET_METAL_CONSTANT_BF16_HEAD
+    id<MTLComputePipelineState> constantHead;
+#endif
 #ifdef GARNET_METAL_JOINED_PREFILL
     id<MTLComputePipelineState> joinedSplitRescale;
 #endif
@@ -80,6 +83,7 @@ struct MetalContext::Impl {
     std::map<std::array<size_t,2>,MetalMatrix> halfScratch;
     std::map<std::array<size_t,3>,MetalMatrix> splitScratch;
     size_t joinedPrefillPairs=0;
+    size_t constantHeadDispatches=0;
 #ifdef GARNET_METAL_JOINED_PREFILL
     struct JoinedWeight {
         MetalBF16Weight firstOwner,secondOwner;
@@ -1095,6 +1099,17 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
 )METAL"]];
         compileOptions=[MTLCompileOptions new];compileOptions.languageVersion=MTLLanguageVersion3_1;
 #endif
+#ifdef GARNET_METAL_CONSTANT_BF16_HEAD
+        const auto headStart=[source rangeOfString:@"kernel void bf16_decode("];
+        const auto headEnd=[source rangeOfString:@"kernel void bf16_decode_small("];
+        if(headStart.location==NSNotFound||headEnd.location==NSNotFound||headEnd.location<=headStart.location)
+            throw std::runtime_error("Cannot locate original BF16 vocabulary shader");
+        auto headSource=[source substringWithRange:NSMakeRange(headStart.location,headEnd.location-headStart.location)];
+        headSource=[headSource stringByReplacingOccurrencesOfString:@"kernel void bf16_decode(" withString:@"kernel void bf16_decode_constant_head("];
+        headSource=[headSource stringByReplacingOccurrencesOfString:@"device const ushort* weight" withString:@"constant ushort* weight"];
+        headSource=[headSource stringByReplacingOccurrencesOfString:@"device const ushort4*" withString:@"constant ushort4*"];
+        source=[source stringByAppendingString:headSource];
+#endif
         auto library=[impl_->device newLibraryWithSource:source options:compileOptions error:&error];
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
@@ -1104,6 +1119,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         if(!impl_->kernels->kvInplace)throw std::runtime_error("Cannot create private KV update pipeline");
 #endif
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
+#ifdef GARNET_METAL_CONSTANT_BF16_HEAD
+        impl_->kernels->constantHead=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_constant_head"] error:&error];
+        if(!impl_->kernels->constantHead)throw std::runtime_error("Cannot create constant-address vocabulary pipeline");
+#endif
 #ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
         impl_->kernels->nativeBFSerial=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_native_serial_t64"] error:&error];
         impl_->kernels->nativeBFDot=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_native_dot_t128"] error:&error];
@@ -1350,6 +1369,7 @@ bool MetalContext::EncodeJoinedBF16Prefill(const MetalMatrix& input,const MetalB
 #endif
 }
 size_t MetalContext::LastJoinedPrefillPairs() const {return impl_->joinedPrefillPairs;}
+size_t MetalContext::LastConstantHeadDispatches() const {return impl_->constantHeadDispatches;}
 void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
     @autoreleasepool {
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
@@ -1433,6 +1453,11 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
             threads=a.rows==1?64:128;decodeColumns=a.rows==1?8:16;
         }
 #endif
+#ifdef GARNET_METAL_CONSTANT_BF16_HEAD
+        const bool constantHead=a.rows==1&&((a.columns==896&&o.columns==151936)||
+            (a.columns==1024&&(o.columns==151936||o.columns==248320)));
+        if(constantHead){pipeline=impl_->kernels->constantHead;threads=128;decodeColumns=16;}
+#endif
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)
             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
@@ -1443,6 +1468,9 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
         [encoder setBytes:&p length:sizeof(p) atIndex:3];
         [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+decodeColumns-1)/decodeColumns,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
+#ifdef GARNET_METAL_CONSTANT_BF16_HEAD
+        if(constantHead)++impl_->constantHeadDispatches;
+#endif
         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }
@@ -1483,6 +1511,7 @@ void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     impl_->joinedPrefillPairs=0;
+    impl_->constantHeadDispatches=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
     }
@@ -1993,6 +2022,7 @@ void MetalContext::SubmitAndWait() {
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     impl_->joinedPrefillPairs=0;
+    impl_->constantHeadDispatches=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }
