@@ -1,0 +1,214 @@
+{
+  "evidence/logs/webp-thread-exact-20261013/exit.json": {
+    "bytes": 446,
+    "sha256": "5aabad5af8821e42e7c7f5b46dbd3adbabf6fd33e938fd7feeedfb7f428fb173"
+  },
+  "evidence/logs/webp-thread-exact-20261013/output.log": {
+    "bytes": 1366,
+    "sha256": "3067182d2fc99f4e9692f1c018bb0c844663a6d3c816f923a41d8e381c7d0fe6"
+  },
+  "evidence/logs/webp-thread-exact-20261013/source-snapshot/frame_webp_threaded.py": {
+    "bytes": 1607,
+    "sha256": "1a58a8eabdc4db083e68cc53a5f1f1310222aa8726fc2000bab89f69a8294a43"
+  },
+  "evidence/logs/webp-thread-exact-20261013/source-snapshot/test_webp_thread_exact.py": {
+    "bytes": 4558,
+    "sha256": "b110185c168947be00bfd96381202759a1e651455d1332161c5b0712036ac539"
+  },
+  "evidence/logs/webp-thread-exact-retry1-20261013/exit.json": {
+    "bytes": 461,
+    "sha256": "9ccf160faaf8a523591f26f4bc499393bb5ff7608503bd1eb6ed854574477e53"
+  },
+  "evidence/logs/webp-thread-exact-retry1-20261013/jobs/background_service_checks.json": {
+    "bytes": 3946,
+    "sha256": "176fa1b03c7e311ea555a323f740c17ba475e5c673753eb32f55a9640a3fbc07"
+  },
+  "evidence/logs/webp-thread-exact-retry1-20261013/jobs/summary.json": {
+    "bytes": 49387,
+    "sha256": "60fbfaead4126dfac60de61ef7be883bc8e6c5271505bc5e1706251e4c4d5307"
+  },
+  "evidence/logs/webp-thread-exact-retry1-20261013/output.log": {
+    "bytes": 446,
+    "sha256": "dabed34e182de34ca2ce5dae2d499814307a2b12d1d1f425d2e4a6cc77daa3dd"
+  },
+  "evidence/logs/webp-thread-probe-20261013/exit.json": {
+    "bytes": 341,
+    "sha256": "31ee627e44ae8bab60dd087e3de9941bbe5b97fd7642367215383fdd707adb39"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/background_service_checks.json": {
+    "bytes": 26814,
+    "sha256": "27dc0c70828ab5c7c917545ae65663293f6e09c2aabd9111f3f77d6df42de9b6"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/compile-status.json": {
+    "bytes": 606,
+    "sha256": "9de7d0bb82363f48ed3ec9be18191cf5456879dbdf90f834e40327f69640c4bc"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/compile.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/source-snapshot/compare_vllm_metal.py": {
+    "bytes": 12763,
+    "sha256": "dbd05e692603f968b71649df4e1397f0952d35bf3558ebcff13aefac78aea7b7"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/source-snapshot/frame_frontend_candidates.py": {
+    "bytes": 3907,
+    "sha256": "1b250666165a65f8a451142a06d195540b1eacbf87aba6ebcd50a06fe0f891d4"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/source-snapshot/frame_preprocessing.py": {
+    "bytes": 1639,
+    "sha256": "e8bfb8adc169b3ab322378a5685e7a835b3def0c585835f3ae3ba5b662492a95"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/source-snapshot/frame_webp_threaded.py": {
+    "bytes": 1607,
+    "sha256": "1a58a8eabdc4db083e68cc53a5f1f1310222aa8726fc2000bab89f69a8294a43"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/source-snapshot/run_webp_thread_probe.py": {
+    "bytes": 5202,
+    "sha256": "40ffdf466376878a43d6a1963a722246023611d39749cec264ea0b0699b38b3a"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/source-snapshot/webp_thread_decode.cpp": {
+    "bytes": 1539,
+    "sha256": "a19761ce4dbfe17b2007836d78bb35e09a200c46d74b24e5404fc75b2446c057"
+  },
+  "evidence/logs/webp-thread-probe-20261013/jobs/summary.json": {
+    "bytes": 141896,
+    "sha256": "3f5ff06ad291181e2cf4795efd651db8705eb188c4cea6f92a3d47c2f34af508"
+  },
+  "evidence/logs/webp-thread-probe-20261013/output.log": {
+    "bytes": 563,
+    "sha256": "094d509f9cb8250ed293cb9427dac13a76ed5cd18ce82986fe7dc657246b42ad"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/exit.json": {
+    "bytes": 349,
+    "sha256": "54002eb5a01626ab7fb7d266fc552546b31b7ddfe485e7a7ea54a20f74a824ad"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/background_service_checks.json": {
+    "bytes": 26805,
+    "sha256": "bf6c0ea79014538117b2d44a1368a6ed2b27c24dad05baca5591f50465275d10"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/compile-status.json": {
+    "bytes": 654,
+    "sha256": "61e7595809d6c9b5f214da67a701a91b0142b41a7e480436a0686deb30ebccf7"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/compile.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/loader-fix.json": {
+    "bytes": 1522,
+    "sha256": "23bb66fab5c17cb3922c482632445c4698d3b94e912c7ae7bf044fface2e8386"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/source-snapshot/compare_vllm_metal.py": {
+    "bytes": 12763,
+    "sha256": "dbd05e692603f968b71649df4e1397f0952d35bf3558ebcff13aefac78aea7b7"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/source-snapshot/frame_frontend_candidates.py": {
+    "bytes": 3907,
+    "sha256": "1b250666165a65f8a451142a06d195540b1eacbf87aba6ebcd50a06fe0f891d4"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/source-snapshot/frame_preprocessing.py": {
+    "bytes": 1639,
+    "sha256": "e8bfb8adc169b3ab322378a5685e7a835b3def0c585835f3ae3ba5b662492a95"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/source-snapshot/frame_webp_threaded.py": {
+    "bytes": 1607,
+    "sha256": "1a58a8eabdc4db083e68cc53a5f1f1310222aa8726fc2000bab89f69a8294a43"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/source-snapshot/run_webp_thread_probe.py": {
+    "bytes": 5744,
+    "sha256": "09ab4efd3427048e7b3c879a0a97d49c5b39eb6aebdf7273d1117580bf05833c"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/source-snapshot/webp_thread_decode.cpp": {
+    "bytes": 1539,
+    "sha256": "a19761ce4dbfe17b2007836d78bb35e09a200c46d74b24e5404fc75b2446c057"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/jobs/summary.json": {
+    "bytes": 141896,
+    "sha256": "e36962ebcce90d6f310ab23fe2a280060937d9aa372162bb364feec49c6685d1"
+  },
+  "evidence/logs/webp-thread-probe-confirm-20261013/output.log": {
+    "bytes": 560,
+    "sha256": "19756614575357a6016c963d58f9c7edfd5202d4be34c448c84ba2ad9aa7d9a9"
+  },
+  "evidence/source/archive_webp_thread.py": {
+    "bytes": 2145,
+    "sha256": "2b2ffb3f9734e9fb1ad4aad90703d82d4d711ebebf4e7b17b1753725c5c8031f"
+  },
+  "evidence/source/audit_comparator_dtypes.py": {
+    "bytes": 4195,
+    "sha256": "daf7014fab434d565136d368a224acf0ce3dfb4b7b469a6612784030675c25e4"
+  },
+  "evidence/source/background_comparison.py": {
+    "bytes": 1179,
+    "sha256": "15ae5068a01b9373932f3b993724520e63a3ef6db11cc7b35c8aaedddc3aa0cf"
+  },
+  "evidence/source/compare_frame_frontend_inference.py": {
+    "bytes": 11355,
+    "sha256": "9ba522692bbe71d8589bbc58fd80c01802ea299d2d1cdad707ffd12459e4d370"
+  },
+  "evidence/source/compare_vllm_metal.py": {
+    "bytes": 12763,
+    "sha256": "dbd05e692603f968b71649df4e1397f0952d35bf3558ebcff13aefac78aea7b7"
+  },
+  "evidence/source/compare_webp_thread_inference.py": {
+    "bytes": 1500,
+    "sha256": "339328f62b6a897af879d0c8e9646b64a12490caa91f6c32b6fff97f26ab39ab"
+  },
+  "evidence/source/frame_frontend_candidates.py": {
+    "bytes": 3907,
+    "sha256": "1b250666165a65f8a451142a06d195540b1eacbf87aba6ebcd50a06fe0f891d4"
+  },
+  "evidence/source/frame_preprocessing.py": {
+    "bytes": 1639,
+    "sha256": "e8bfb8adc169b3ab322378a5685e7a835b3def0c585835f3ae3ba5b662492a95"
+  },
+  "evidence/source/frame_preprocessing_control.py": {
+    "bytes": 1373,
+    "sha256": "b8c72bcd551c1ef7952df0ce1c23a90a1c1deb52141681015c28bc0f7b25939d"
+  },
+  "evidence/source/frame_webp_threaded.py": {
+    "bytes": 1607,
+    "sha256": "1a58a8eabdc4db083e68cc53a5f1f1310222aa8726fc2000bab89f69a8294a43"
+  },
+  "evidence/source/frame_worker_garnet.py": {
+    "bytes": 5682,
+    "sha256": "8180341218a7505c963fcd24c19029f9cec97cfb2b9c0a3ac67374b56fafb3f1"
+  },
+  "evidence/source/frame_worker_vllm.py": {
+    "bytes": 4818,
+    "sha256": "7654dd031852e28b1c8bc130e42d2e14ed50b1f02362068953c65e825b21bac4"
+  },
+  "evidence/source/run_after_owned_job.py": {
+    "bytes": 1271,
+    "sha256": "be5efd2a5122f5f5074e31e51fb9d504e9ba2344db5a235d58dd0a243dc04f95"
+  },
+  "evidence/source/run_matched_frame_process.py": {
+    "bytes": 5109,
+    "sha256": "a30bdcd1da7e411b91ce7797235268b47bd4ab4099720e7267f95f8011464ec7"
+  },
+  "evidence/source/run_retained_prefill_vllm_profiles.py": {
+    "bytes": 5874,
+    "sha256": "88999c06ebcc24b001a2598afff58e5eaf517ef91b491ff42eeab9027d632ada"
+  },
+  "evidence/source/run_webp_thread_frame_process.py": {
+    "bytes": 1492,
+    "sha256": "625de16554c095a5ec4219d899606a9b1db5af50c7c2c29ad7ad57a527027717"
+  },
+  "evidence/source/run_webp_thread_inference.py": {
+    "bytes": 1301,
+    "sha256": "da3e674fced9e8e2c9a4606ba9e856a272dfadf9e96125fc73adae39f8ecaf1c"
+  },
+  "evidence/source/run_webp_thread_probe.py": {
+    "bytes": 5744,
+    "sha256": "09ab4efd3427048e7b3c879a0a97d49c5b39eb6aebdf7273d1117580bf05833c"
+  },
+  "evidence/source/test_webp_thread_exact.py": {
+    "bytes": 4756,
+    "sha256": "850736d409305c1d02e514a738ee2c8f8498a94a3ccfc75b62b1996888724e2e"
+  },
+  "evidence/source/webp_thread_decode.cpp": {
+    "bytes": 1539,
+    "sha256": "a19761ce4dbfe17b2007836d78bb35e09a200c46d74b24e5404fc75b2446c057"
+  }
+}
