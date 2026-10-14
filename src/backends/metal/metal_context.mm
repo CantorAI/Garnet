@@ -1724,6 +1724,19 @@ void MetalContext::Zero(const MetalMatrix& matrix) {
             0,native.columns*sizeof(float));
     matrix.impl_->ready=true;
 }
+void MetalContext::ZeroPrefixGroups(const MetalMatrix& matrix,size_t groups,size_t capacity,size_t width,size_t dirtyTokens) {
+    if(impl_->command)throw std::logic_error("Host prefix zero requires a closed command batch");
+    if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
+        throw std::invalid_argument("Metal prefix zero matrix belongs to another device or is empty");
+    if(matrix.impl_->pending||!matrix.impl_->ready)throw std::logic_error("Prefix zero requires initialized, completed state");
+    auto native=matrix.impl_->matrix;
+    if(!groups||!capacity||!width||dirtyTokens>capacity||capacity>SIZE_MAX/width||
+        groups>SIZE_MAX/(capacity*width)||groups*capacity*width!=native.columns)
+        throw std::invalid_argument("Metal prefix zero layout/bounds mismatch");
+    for(size_t row=0;row<native.rows;++row)for(size_t group=0;group<groups;++group)
+        std::memset(static_cast<char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),
+            0,dirtyTokens*width*sizeof(float));
+}
 void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");

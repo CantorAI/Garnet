@@ -33,6 +33,7 @@ class MetalCompiledGraph {
     uint64_t generation_=0;
     double compileMs_=0,inferenceMs_=0;
     size_t visionGlobalAlphaDispatches_=0;
+    bool resetKVPrefix_[2]={false,false};
     bool ready_=false,bf16Projections_=false;
     std::mutex mutex_;
     SafeTensorsIndex index_;
@@ -44,6 +45,8 @@ class MetalCompiledGraph {
     void PrepareInputs(X::Value,const std::unordered_set<size_t>& skip={});
     void Encode(MetalContext&,bool packedOutput=true);
     bool CanUpdateKVInPlace(size_t part) const;
+    bool ComputeResetKVPrefix(size_t part) const;
+    bool CanResetKVPrefix(size_t part) const {return part>=1&&part<=2&&resetKVPrefix_[part-1];}
     bool SwapOutputStorage(size_t part,MetalMatrix& replacement);
     bool BuildInternal(X::Value,X::Value,const std::string&,std::unordered_map<std::string,SharedWeight>,bool bf16Projections=false);
 public:

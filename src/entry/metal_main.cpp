@@ -28,6 +28,9 @@ public:
 #ifdef GARNET_METAL_DIRECT_STATE_ZERO
         info+="; direct_state_zero";
 #endif
+#ifdef GARNET_METAL_DIRTY_PREFIX_RESET
+        info+="; dirty_prefix_reset";
+#endif
 #ifdef GARNET_METAL_CONSTANT_BF16_HEAD
         info+="; constant_bf16_head";
 #endif

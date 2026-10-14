@@ -193,6 +193,7 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
     return output;
 }
 void MetalCompiledGraph::Clear() {
+    resetKVPrefix_[0]=resetKVPrefix_[1]=false;
     visionGlobalAlphaDispatches_=0;++generation_;ready_=false;bf16Projections_=false;outputParts_.clear();outputStorageGroups_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
 }
 void MetalCompiledGraph::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
@@ -741,6 +742,7 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 (std::find(group.begin(),group.end(),ops_[i].out)!=group.end()||std::find(group.begin(),group.end(),ops_[i].auxiliaryOutput)!=group.end()))writer=true;
             if(eligible&&writer)outputStorageGroups_[part]=std::move(group);
         }
+        resetKVPrefix_[0]=ComputeResetKVPrefix(1);resetKVPrefix_[1]=ComputeResetKVPrefix(2);
         sharedWeights_.clear();ready_=true;
         compileMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
         return true;
@@ -770,6 +772,30 @@ bool MetalCompiledGraph::CanUpdateKVInPlace(size_t part) const {
 #else
     return false;
 #endif
+}
+bool MetalCompiledGraph::ComputeResetKVPrefix(size_t part) const {
+    if(part<1||part>2||inputs_.size()!=6||part>=outputStorageGroups_.size()||outputStorageGroups_[part].empty())return false;
+    const auto& shape=inputShapes_[part];
+    if(shape.size()!=4||std::any_of(shape.begin(),shape.end(),[](int64_t n){return n<=0;}))return false;
+    const auto& group=outputStorageGroups_[part];size_t writer=SIZE_MAX;
+    auto member=[&](size_t id){return std::find(group.begin(),group.end(),id)!=group.end();};
+    for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]&&
+        (member(ops_[i].out)||member(ops_[i].auxiliaryOutput))) {
+        const auto& op=ops_[i];
+        if(writer!=SIZE_MAX||(op.kind!=Kind::KVUpdate&&op.kind!=Kind::KVChunk)||op.arguments.size()!=5||
+            op.arguments[1]!=inputs_[part]||op.arguments[2]!=inputs_[4]||op.arguments[3]!=inputs_[5]||op.dimensions.size()!=4||
+            op.dimensions[0]!=size_t(shape[1])||op.dimensions[1]!=size_t(shape[3])||op.dimensions[2]!=size_t(shape[2]))return false;
+        writer=i;
+    }
+    if(writer==SIZE_MAX)return false;
+    // Reject a writer aliasing the input cache outside the proved output group.
+    const auto& source=slots_[inputs_[part]].matrix;
+    for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]) {
+        const auto& op=ops_[i];
+        if(!member(op.out)&&source.SharesStorage(slots_[op.out].matrix))return false;
+        if(op.auxiliaryOutput!=SIZE_MAX&&!member(op.auxiliaryOutput)&&source.SharesStorage(slots_[op.auxiliaryOutput].matrix))return false;
+    }
+    return true;
 }
 void MetalCompiledGraph::PrepareInputs(X::Value inputs,const std::unordered_set<size_t>& skip) {
     if(!ready_||inputs.runtime()!=Host()->runtime||!inputs.IsList()||inputs.Size()!=inputs_.size())

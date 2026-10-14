@@ -76,6 +76,8 @@ public:
     void Update(const MetalMatrix&,const float* values,size_t count);
     // Clear logical elements of an existing shared allocation between batches.
     void Zero(const MetalMatrix&);
+    // Caller proves the remaining logical elements are already positive zero.
+    void ZeroPrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t dirtyTokens);
     void Begin();
     void EncodeMatMul(const MetalMatrix& left, const MetalMatrix& right,
         const MetalMatrix& output, bool transposeRight = false);

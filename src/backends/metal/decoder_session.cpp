@@ -19,6 +19,7 @@ X::Value TensorValue(X3PackageHost* host,MetalContext& gpu,const MetalMatrix& ma
 }
 }
 void MetalDecoderSession::Clear() {
+    dirtyPrefixResetBytes_=dirtyPrefixResetStates_=dirtyPrefixResetFallbackStates_=0;
     joinedPrefillPairs_=0;
     constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;
     hidden_=MetalMatrix();prediction_=MetalMatrix();hiddenShape_.clear();states_.clear();owners_.clear();head_=nullptr;
@@ -29,12 +30,30 @@ void MetalDecoderSession::ResetUnlocked() {
     joinedPrefillPairs_=0;
     constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;
     if(!gpu_)throw std::logic_error("Metal session is closed");
-    for(auto& state:states_)for(size_t i=0;i<2;++i)
+    dirtyPrefixResetBytes_=dirtyPrefixResetStates_=dirtyPrefixResetFallbackStates_=0;
+#ifdef GARNET_METAL_DIRTY_PREFIX_RESET
+    const bool forceFull=poisoned_;poisoned_=true;
+#endif
+    for(auto& state:states_)for(size_t i=0;i<2;++i) {
+#ifdef GARNET_METAL_DIRTY_PREFIX_RESET
+        if(!forceFull&&state.prefixLayout[i]&&state.zeroOutsideDirty[i]) {
+            const auto& shape=state.shape[i];
+            gpu_->ZeroPrefixGroups(state.matrix[i],size_t(shape[1]),size_t(shape[2]),size_t(shape[3]),state.dirtyExtent[i]);
+            dirtyPrefixResetBytes_+=state.rows*size_t(shape[1])*state.dirtyExtent[i]*size_t(shape[3])*sizeof(float);
+            ++dirtyPrefixResetStates_;
+        } else {
+            gpu_->Update(state.matrix[i],std::vector<float>(state.rows*state.columns[i],0));
+            dirtyPrefixResetBytes_+=state.rows*state.columns[i]*sizeof(float);++dirtyPrefixResetFallbackStates_;
+        }
+        state.dirtyExtent[i]=0;state.zeroOutsideDirty[i]=state.prefixLayout[i];
+#else
 #ifdef GARNET_METAL_DIRECT_STATE_ZERO
         gpu_->Zero(state.matrix[i]);
 #else
         gpu_->Update(state.matrix[i],std::vector<float>(state.rows*state.columns[i],0));
 #endif
+#endif
+    }
     hidden_=MetalMatrix();hiddenShape_.clear();kvInplaceUpdates_=0;poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
 }
 void MetalDecoderSession::Reset() {std::lock_guard<std::mutex> lock(mutex_);ResetUnlocked();}
@@ -62,6 +81,9 @@ bool MetalDecoderSession::Build(X::Value graphs,X::Value head) {
                     throw std::invalid_argument("Metal session state layout mismatch");
                 state.shape[k]=source.shape;state.columns[k]=source.columns;
                 state.matrix[k]=gpu_->Allocate(source.rows,source.columns);
+#ifdef GARNET_METAL_DIRTY_PREFIX_RESET
+                state.prefixLayout[k]=graph->CanResetKVPrefix(k+1);
+#endif
             }
             states_.push_back(std::move(state));owners_.push_back(std::move(owner));
         }
@@ -113,6 +135,25 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         for(size_t i=0;i<count;++i)if(!std::isfinite(data[i])||(data[i]!=0&&data[i]!=1))
             throw std::invalid_argument("Invalid Metal session active flags");
     }
+#ifdef GARNET_METAL_DIRTY_PREFIX_RESET
+    // Host controls were validated above. Mark before submission so a failed
+    // command always takes the existing full-reset recovery path.
+    size_t writeExtent=0;bool needExtent=false;
+    for(size_t i=0;i<states_.size();++i)for(size_t k=0;k<2;++k)
+        needExtent=needExtent||(states_[i].prefixLayout[k]&&states_[i].zeroOutsideDirty[k]&&layers[i]->CanResetKVPrefix(k+1));
+    if(needExtent) {
+        X::Tensor slotTensor(slots),flagTensor(active);auto sl=slotTensor.Acquire();auto fl=flagTensor.Acquire();
+        const auto* slotData=static_cast<const float*>(slotTensor.Info().data);
+        const auto* flagData=static_cast<const float*>(flagTensor.Info().data);
+        for(size_t j=0;j<states_[0].rows*chunk;++j)if(flagData[j]!=0)writeExtent=std::max(writeExtent,size_t(slotData[j])+1);
+    }
+    for(size_t i=0;i<layers.size();++i)for(size_t k=0;k<2;++k) {
+        auto& state=states_[i];
+        if(!state.prefixLayout[k]||!state.zeroOutsideDirty[k])continue;
+        if(!layers[i]->CanResetKVPrefix(k+1)){state.zeroOutsideDirty[k]=false;continue;}
+        state.dirtyExtent[k]=std::max(state.dirtyExtent[k],writeExtent);
+    }
+#endif
     if(hiddenShape_!=inputShape[0]) {
         const auto& slot=layers[0]->slots_[layers[0]->inputs_[0]];
         hidden_=gpu_->Allocate(slot.rows,slot.columns);

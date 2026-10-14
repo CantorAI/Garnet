@@ -13,6 +13,7 @@ def forward(hidden,key,value,positions,slots,active):
     return DenseLayer(hidden,key,value,positions,slots,active,c,layer,capacity)
 graph=garnet.compiled_graph();session=garnet.decoder_session();other=garnet.decoder_session();built=False
 enabled='resident_kv_inplace' in garnet.backend_info();expected_updates=2 if enabled else 0
+prefix_reset='dirty_prefix_reset' in garnet.backend_info();dirty_extent=0
 def snapshot(s):return [v.tolist() for v in s.snapshot(0)]
 def collect(s):
     hidden=s.hidden().tolist();key,value=snapshot(s);packed=[]
@@ -27,6 +28,9 @@ try:
         host_before=[v.tolist() for v in control]
         wanted=graph.run(control).tolist();assert all(math.isfinite(v) for v in wanted)
         session.run([graph],values[0],values[3],values[4],values[5],-1)
+        if prefix_reset:
+            for slot,flag in zip(values[4].tolist(),values[5].tolist()):
+                if flag:dirty_extent=max(dirty_extent,int(slot)+1)
         assert collect(session)==wanted,'Private update differs from explicit graph output/state'
         if enabled:assert session.kv_inplace_updates==2,'Private update was not executed'
         # Neither the caller-owned tensors nor a second session may be changed.
@@ -43,6 +47,10 @@ try:
         assert rejected and saved==snapshot(session),'Invalid controls changed private caches'
     saved=snapshot(other);session.reset()
     assert all(v==0 for state in snapshot(session) for v in state) and saved==snapshot(other)
+    if prefix_reset:
+        assert session.dirty_prefix_reset_states==2 and session.dirty_prefix_reset_fallback_states==0
+        assert session.dirty_prefix_reset_bytes==2*batch*c['num_key_value_heads']*dirty_extent*c['head_dim']*4
+        session.reset();assert session.dirty_prefix_reset_bytes==0 and all(v==0 for state in snapshot(session) for v in state)
     print('private_kv_reference PASS',json.dumps(dict(batch=batch,capacity=capacity,layer=layer,enabled=enabled,steps=len(f['steps']),invalid_controls=len(f['invalid']),shared_graph_isolated=True)),flush=True)
 finally:
     if built:session.reset();other.reset()

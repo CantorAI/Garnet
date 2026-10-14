@@ -87,3 +87,63 @@ request lengths, sparse/overwritten/inactive slots, two interleaved private
 sessions, failed-run recovery and full-capacity boundaries before six-profile
 native ABBA timing. A repeated serving gain and fresh matched vLLM comparison
 are required before any selection change. The full 2x/half-latency goal is unmet.
+
+## Optional native trial in progress
+
+`GARNET_METAL_DIRTY_PREFIX_RESET` defaults OFF and is mutually exclusive with
+the earlier full direct-reset experiment. The new isolated build keeps global
+half alpha enabled and all other experimental paths disabled. The three
+selected libraries retain their original hashes.
+
+Only graph outputs proved to have a single KVUpdate/KVChunk writer, the
+original cache input, explicit unchanged slot/active controls and a supported
+four-dimensional cache layout admit the bounded reset. Admission is computed
+once per compiled graph. A session tracks the highest validated active slot
+plus one across decode/chunk calls and private storage swaps. It does not
+infer extent from token count or clear another session's buffers. Generic
+writers invalidate the proof; failed requests force full reset recovery.
+Every new state buffer is fully initialized. Convolution/recurrent and
+unsupported state retain the original full vector-copy reset. Padding is
+preserved and host clearing requires completed, initialized buffers with a
+closed command batch.
+
+Workers now record actual cleared-byte counts, bounded-state counts and full
+fallback counts inside the unchanged TTFT scope. Warm profile admission
+checks these against the preceding complete request, prompt length, actual
+decode steps and archived model configuration. First-request counters are
+checked separately, without calling initialization hardware-cold latency.
+
+Installation verified eleven original source hashes against `4053c7d4`, saved
+their exact bytes and installed twelve pinned candidate files. The candidate
+library SHA-256 is
+`e389fc080249301b506b84ff09b242df7d6cd63128091e1ab677b4025710491c`.
+The actual M4 configure/build and both CTests pass. The new unit performs 216
+whole-buffer positive-zero checks after GPU writes/consumption across rows
+1/2/3, groups 1/3, capacities 1/17/256, widths 1/3/128 and dirty extents
+0/1/half/full. Invalid bounds, uninitialized buffers, open commands and abort
+recovery are also checked. The original numerical CTest remains intact.
+
+Owned validation PID **44364** is running all nineteen original stages in
+`ROOT/logs/dirty-prefix-reset-checks-20261014`; the text model's eight original
+dense-tail cases have passed. Dependent PID **45551** verifies that exact live
+handle and waits for terminal validation exit 0. It then runs six additional
+B1/B2 real-layer session gates for partial clearing, an unknown cache writer,
+nonfinite-head poisoning, full recovery and interleaved-session isolation,
+before all six sequential native ABBA performance profiles. The new gates
+retain deterministic input fixtures and do not provide serving timings.
+
+`native/pending` is a historical bounded snapshot of actual owned handles,
+source hashes, library identities, successful configure/build/CTest stages and
+the real unit output. It is not evidence that the remaining full-model/session
+gates or serving measurements are complete. Preserve current source/binaries
+until their terminal records and exact executed-source archives are collected.
+No native TTFT/TPS gain or new vLLM comparison is claimed yet.
+
+```text
+python prepare_dirty_prefix_reset_sources.py
+python3 install_dirty_prefix_reset_sources.py ROOT
+python3 launch_dirty_prefix_reset_checks.py ROOT ROOT/logs/dirty-prefix-reset-checks-20261014 checks
+python3 queue_dirty_prefix_reset_profiles.py ROOT ROOT/logs/dirty-prefix-reset-native-20261014
+python3 archive_dirty_prefix_reset_native.py ROOT ARCHIVE
+python verify_dirty_prefix_reset_native.py EVIDENCE VERIFICATION_JSON
+```
