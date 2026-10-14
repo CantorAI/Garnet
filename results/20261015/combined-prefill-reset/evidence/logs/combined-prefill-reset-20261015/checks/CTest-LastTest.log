@@ -1,0 +1,57 @@
+Start testing: Oct 15 04:00 CST
+----------------------------------------------------------
+1/3 Testing: metal_prefill_stream_reference
+1/3 Test: metal_prefill_stream_reference
+Command: "/Users/zsdx/garnet-metal-investigation/build-combined-prefill-reset/garnet_prefill_stream_test"
+Directory: /Users/zsdx/garnet-metal-investigation/build-combined-prefill-reset
+"metal_prefill_stream_reference" start time: Oct 15 04:00 CST
+Output:
+----------------------------------------------------------
+Prefill stream exact dependencies, ownership, abort drain and recovery PASS 27
+<end of output>
+Test time =   0.85 sec
+----------------------------------------------------------
+Test Passed.
+"metal_prefill_stream_reference" end time: Oct 15 04:00 CST
+"metal_prefill_stream_reference" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/3 Testing: metal_dirty_prefix_reset_reference
+2/3 Test: metal_dirty_prefix_reset_reference
+Command: "/Users/zsdx/garnet-metal-investigation/build-combined-prefill-reset/garnet_dirty_prefix_reset_test"
+Directory: /Users/zsdx/garnet-metal-investigation/build-combined-prefill-reset
+"metal_dirty_prefix_reset_reference" start time: Oct 15 04:00 CST
+Output:
+----------------------------------------------------------
+Dirty prefix reset complete CPU/GPU positive zero, bounds, uninitialized and abort PASS 216
+<end of output>
+Test time =   0.53 sec
+----------------------------------------------------------
+Test Passed.
+"metal_dirty_prefix_reset_reference" end time: Oct 15 04:00 CST
+"metal_dirty_prefix_reset_reference" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/3 Testing: metal_mps_matmul_reference
+3/3 Test: metal_mps_matmul_reference
+Command: "/Users/zsdx/garnet-metal-investigation/build-combined-prefill-reset/garnet_metal_matmul_test"
+Directory: /Users/zsdx/garnet-metal-investigation/build-combined-prefill-reset
+"metal_mps_matmul_reference" start time: Oct 15 04:00 CST
+Output:
+----------------------------------------------------------
+Batched vision attention independent references PASS cases=48
+Split key exact dyadic checks=144
+Exact scaled half codec checks=8421120
+Chunk delta sequential reference PASS 48 cases
+Chunk convolution sequential reference PASS 48 cases
+Gated token direct-write reference PASS 6 layouts
+Metal/MPS matmul reference PASS device=Apple M4
+<end of output>
+Test time =   1.71 sec
+----------------------------------------------------------
+Test Passed.
+"metal_mps_matmul_reference" end time: Oct 15 04:00 CST
+"metal_mps_matmul_reference" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 15 04:00 CST

@@ -1,0 +1,3942 @@
+{
+  "files": [
+    {
+      "path": "logs/combined-prefill-reset-20261015/native-exit.json",
+      "bytes": 343,
+      "sha256": "81b64f4e3b5527eed10a2279991272800d2506f5d916a24535feae344b8f8b91"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/exit.json",
+      "bytes": 51,
+      "sha256": "d86acaceb9bc33cf952fa426cc843c4f66606ff0b6e730e352be36aa21c3a615"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/run_guarded_combined_prefill_reset_checks.py.executed",
+      "bytes": 995,
+      "sha256": "a8c699e6cf1ec3806cee49f7156724996a6928704f6820879e08d7bfa560e1ca"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/compare_combined_prefill_reset.py.executed",
+      "bytes": 1287,
+      "sha256": "3126762e16423d8d162dca1322ba80fc44ea9ffece406be2e62d31e24d965c76"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/output.log",
+      "bytes": 4505,
+      "sha256": "d226541c94ff94c5fb6e15988ea408ed98230d86f820d76bb2e09517be997899"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks-exit.json",
+      "bytes": 348,
+      "sha256": "6eb93c9e950c50da3b2f7599067e3d2d8c3211532475656537087b7b3a2c72d6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/source-identities.json",
+      "bytes": 1591,
+      "sha256": "c18d55aedf0de165c77d07d660ba677c8fb2fcd46f3f73223ebcfc2b760adbc1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/launch_combined_prefill_reset.py.executed",
+      "bytes": 2472,
+      "sha256": "81f7f670f8cf461bab379db5e439b80573232f059256b0bac8ab2b14006256d3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/pid.json",
+      "bytes": 14,
+      "sha256": "2ca702a10e30fd1d4a507723871c3bbafd26457ec14a277fcbf73e2bb669aa1c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks.executed.py",
+      "bytes": 9436,
+      "sha256": "e6859e6e6d1ba020703c26014e1043a43f411368879076c110d2e70743a1b16a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/run_combined_prefill_reset_profiles.py.executed",
+      "bytes": 297,
+      "sha256": "e5a8c7d6e6c239773fef02212513160311dca6e7439da8a8fa2f74f1e585ac0c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/summary.json",
+      "bytes": 5348,
+      "sha256": "efb05cd126fe95df43cdef9b432b13bbfb760e9682dffa8a41f5e7dc42125ace"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0.log",
+      "bytes": 950,
+      "sha256": "af0f2c59cf90a3ce44150d9828ea74f7afa1d0b3df92d2431238d7b5c56496da"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0.log",
+      "bytes": 966,
+      "sha256": "7e3af356dbbbcf50e6d59eba0179978805902dab5a0f9a0ebfb1c3e0d7771f49"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0.log",
+      "bytes": 1104,
+      "sha256": "16a105efe80a46dbccd346b9e1583a7a49be6272d6851ede80298da2599798dd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/statuses.json",
+      "bytes": 2966,
+      "sha256": "d03c46add165307680e10f2defc600cf09a18e7e402cdb51b95f603128d3044b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0.log",
+      "bytes": 1105,
+      "sha256": "22d9b77034fc314655f04e13fde7f4a7e64938929f72b44d94f5b7d66db72edd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0.log",
+      "bytes": 969,
+      "sha256": "c0345cb7cafca5d1dc28353a3185fdc8383b09fa8da38af710ac18776ef13975"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0.log",
+      "bytes": 948,
+      "sha256": "482008204472c68e8979b8400a050293421eaba45a0122571d57743aa4500e66"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/background_service_checks.json",
+      "bytes": 42568,
+      "sha256": "98d88abcd2d3ac7f7442e0a32decda63ce051b1b6a12ae582925a7b2b7cfae81"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/configure-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-exact-tails-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/mixed-image-pipeline-quiet-processes.txt",
+      "bytes": 59060,
+      "sha256": "4d5d079b589181138b04ceb003077d24b9375228ab7583297b478c75003a3598"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/qwen35-extended-prefill-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/build-quiet-processes.txt",
+      "bytes": 59937,
+      "sha256": "a8daa0794cb24afe38c58f286e8cdb70412a338c0387829fd6ec19d18e022684"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-layers-quiet-processes.txt",
+      "bytes": 58524,
+      "sha256": "29f42b29225ad9095475c85d01705923539d24b5f2206e71e6f413b36f83274c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-layers-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/qwen35-extended-prefill-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "e94952a21485b86339d4dfbb76f5d6b704856ebaed2367380861d50de7b03811"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-head-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-session-recovery-quiet-processes.txt",
+      "bytes": 59462,
+      "sha256": "342dc1b13bcc814d5ddf0a75b89c9f7de977d2fbf9ae4d2b4120acde8586ac64"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/serving-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/configure-quiet-processes.txt",
+      "bytes": 58782,
+      "sha256": "7d1d3195177787ecde891320aa191e0ea0c2fc0906deafbad7e241554ec005fd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-layers-quiet-processes.txt",
+      "bytes": 59194,
+      "sha256": "9f7ae34e55771103a759b42f4e937a294bd530521dee9fb357e84dea96a73d93"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3.5-0.8B-session-recovery-quiet-processes.txt",
+      "bytes": 59462,
+      "sha256": "0ab092a82609dabeb676f8e7a17473b962d7ad564ec3064db2590baf79c65fab"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/vision-small-quiet-processes.txt",
+      "bytes": 59076,
+      "sha256": "5d572b18018db3da49411d70fa9ca29817cb14b7007ce742bb77825bda5d4902"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/metadata.json",
+      "bytes": 1932,
+      "sha256": "c253cd1b3b75b4b643ea20717f1d28911d7122770e278e4bc23a6cb0219f77d0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/vision-pretrained-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "133089a9ee520972dd2d5c7f9a55ce632bb73aa8709eddc6bb8bd7425facf2cc"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3.5-0.8B-session-recovery-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-layers-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/serving-quiet-processes.txt",
+      "bytes": 58524,
+      "sha256": "ab31898805c0fcee247998958f7d63b718813df5dd224331e768d8b592495de9"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-session-recovery-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/build-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3.5-0.8B-private-kv-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "c44d2ce6b01d28e0a98af5f070d5f6cf2540c77acef87c5af95c4e360479203e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-head-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-head-quiet-processes.txt",
+      "bytes": 58808,
+      "sha256": "8a5057cfaa7435d9a659982e4cfad5e209c9235d20b3b323b6f4d22217107e22"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/statuses.json",
+      "bytes": 62094,
+      "sha256": "856f8ac34f117a5809181dfeb8a54b20273d307d1a797ace9cbb87c29a3063fe"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3.5-0.8B-private-kv-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-exact-tails-quiet-processes.txt",
+      "bytes": 58658,
+      "sha256": "b18e0cfb02ba95c8611d5e9d6dc4697162e6886a37d96c8c23f66789f40c7d6d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/qwen35-layers-quiet-processes.txt",
+      "bytes": 59060,
+      "sha256": "ef504766bb45c7a217991f8446eaabc5925beac961087b2be338f34b0b340334"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/CTest-LastTest.log",
+      "bytes": 2685,
+      "sha256": "155d1aae3ccf8a8fb2e8dc44a71ee8f64de612d9d18ca8e19cdd1fe9bb8abba0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/qwen35-layers-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-private-kv-quiet-processes.txt",
+      "bytes": 58658,
+      "sha256": "7b64177a08584763e917ab0fe0f33f7bd9f155e42237905d32ebd86e073f2510"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/vision-pretrained-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-private-kv-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3.5-0.8B-head-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "5faa489ab00472e5c606344e7f1cddaa6779e530fc4460853a950df9ab17989b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/vision-small-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-exact-tails-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-session-recovery-quiet-processes.txt",
+      "bytes": 58390,
+      "sha256": "056535f9434b32d4e1e8dda7b0bd9b8fa60d7600ed0d3d93fd3395755c807838"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/ctest-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/ctest-quiet-processes.txt",
+      "bytes": 59854,
+      "sha256": "9a31f46ac4dd07d982dec5059ec36fb6c360a90f6411de83d8a0809a7281e23d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-session-recovery-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-private-kv-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "b1307ed7f1c99de05825ce3f30560f2941dd3f686dd71f942d5f58d069f432ff"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/mixed-image-pipeline-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-private-kv-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen2.5-Coder-0.5B-Instruct-head-quiet-processes.txt",
+      "bytes": 58808,
+      "sha256": "9b8b919beee08f7d97a4ba288095801f921d4651b5a1366bd40efd8c318b5178"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/background_service_checks.json",
+      "bytes": 1438035,
+      "sha256": "805cb649b4f688f0d84867fb51b53ef183a722d0b593d5c13caad79fc62d737c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3-0.6B-exact-tails-quiet-processes.txt",
+      "bytes": 58390,
+      "sha256": "a4db07210cb8d9932fd1483474d7cb31547bc76b8218e3bb25716b7775ff3d27"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/Qwen3.5-0.8B-head-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/fixture-b2.json",
+      "bytes": 2728,
+      "sha256": "88978de39bfd3107b2bd23934e07a35bd7d0d809a79798cd1d15c3499505bf79"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-nonfinite-4.f32",
+      "bytes": 8,
+      "sha256": "08a288f5a7f82b748a65d7063e2601b6d5b17383d4336b45021250a7f6b4410f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-nonfinite-5.f32",
+      "bytes": 8,
+      "sha256": "434b26042aff3fb844a4c4c6be0d81a079b0ce84cfb8190679024404e5dc4822"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-nonfinite-1.f32",
+      "bytes": 65536,
+      "sha256": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-nonfinite-0.f32",
+      "bytes": 8192,
+      "sha256": "0c1325d137cccc23b27ee89e049fdc12105f99461573d1cd205519d0faeed256"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-nonfinite-2.f32",
+      "bytes": 65536,
+      "sha256": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-nonfinite-3.f32",
+      "bytes": 24,
+      "sha256": "8d677bafd14611d678dea83387e0bec7f4d1a98b6daae14772659ce678bba160"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-nonfinite-0.f32",
+      "bytes": 4096,
+      "sha256": "09f96d35e8b3e2722c0dd57f0e108137ba272f9ba2b8313260891673aa0825ff"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-partial-5.f32",
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-partial-0.f32",
+      "bytes": 8192,
+      "sha256": "8d3a69fe224f2cb9bb2217216628c6403aed92782399f988992c525b94838f57"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/fixture-b1.json",
+      "bytes": 2728,
+      "sha256": "62df543c4d9e24ece44b6c0ef13fc7eb8105ddbba65180338614dd28fd10fbe4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-partial-1.f32",
+      "bytes": 65536,
+      "sha256": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-partial-4.f32",
+      "bytes": 4,
+      "sha256": "ea2845900b5856c9bf354b1aa9761b5aa6888e5ed61738fe9579ca42bc0f6054"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-nonfinite-1.f32",
+      "bytes": 32768,
+      "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-nonfinite-3.f32",
+      "bytes": 12,
+      "sha256": "e2dfce1e226913cd0e76fccbcdc6f157ad802d1d170f2f0ee53edc0f9159310f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-partial-3.f32",
+      "bytes": 24,
+      "sha256": "8d677bafd14611d678dea83387e0bec7f4d1a98b6daae14772659ce678bba160"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-partial-2.f32",
+      "bytes": 65536,
+      "sha256": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-nonfinite-2.f32",
+      "bytes": 32768,
+      "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-partial-3.f32",
+      "bytes": 12,
+      "sha256": "e2dfce1e226913cd0e76fccbcdc6f157ad802d1d170f2f0ee53edc0f9159310f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-partial-2.f32",
+      "bytes": 32768,
+      "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-nonfinite-5.f32",
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-partial-0.f32",
+      "bytes": 4096,
+      "sha256": "846bb187473d468b8ead8ab5483364cebcc7926155ae17fe04b0d59764c4d5aa"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-partial-5.f32",
+      "bytes": 8,
+      "sha256": "434b26042aff3fb844a4c4c6be0d81a079b0ce84cfb8190679024404e5dc4822"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/2-partial-4.f32",
+      "bytes": 8,
+      "sha256": "08a288f5a7f82b748a65d7063e2601b6d5b17383d4336b45021250a7f6b4410f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-partial-1.f32",
+      "bytes": 32768,
+      "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3-0.6B/1-nonfinite-4.f32",
+      "bytes": 4,
+      "sha256": "ea2845900b5856c9bf354b1aa9761b5aa6888e5ed61738fe9579ca42bc0f6054"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/fixture-b2.json",
+      "bytes": 3724,
+      "sha256": "1947cc20058b4a1b6facb820edd67fc666bc3735e5fc8bde25731794acb52129"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-nonfinite-4.f32",
+      "bytes": 8,
+      "sha256": "08a288f5a7f82b748a65d7063e2601b6d5b17383d4336b45021250a7f6b4410f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-nonfinite-5.f32",
+      "bytes": 8,
+      "sha256": "434b26042aff3fb844a4c4c6be0d81a079b0ce84cfb8190679024404e5dc4822"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-nonfinite-1.f32",
+      "bytes": 32768,
+      "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-nonfinite-0.f32",
+      "bytes": 8192,
+      "sha256": "0c1325d137cccc23b27ee89e049fdc12105f99461573d1cd205519d0faeed256"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-nonfinite-2.f32",
+      "bytes": 32768,
+      "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-nonfinite-3.f32",
+      "bytes": 24,
+      "sha256": "8d677bafd14611d678dea83387e0bec7f4d1a98b6daae14772659ce678bba160"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-nonfinite-0.f32",
+      "bytes": 4096,
+      "sha256": "09f96d35e8b3e2722c0dd57f0e108137ba272f9ba2b8313260891673aa0825ff"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-partial-5.f32",
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-partial-0.f32",
+      "bytes": 8192,
+      "sha256": "8d3a69fe224f2cb9bb2217216628c6403aed92782399f988992c525b94838f57"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/fixture-b1.json",
+      "bytes": 3724,
+      "sha256": "053fcd2fb0abd2255035df37039ff1395e041568b2697ed10c49eb7810d651c5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-partial-1.f32",
+      "bytes": 32768,
+      "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-partial-4.f32",
+      "bytes": 4,
+      "sha256": "ea2845900b5856c9bf354b1aa9761b5aa6888e5ed61738fe9579ca42bc0f6054"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-nonfinite-1.f32",
+      "bytes": 16384,
+      "sha256": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-nonfinite-3.f32",
+      "bytes": 12,
+      "sha256": "e2dfce1e226913cd0e76fccbcdc6f157ad802d1d170f2f0ee53edc0f9159310f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-partial-3.f32",
+      "bytes": 24,
+      "sha256": "8d677bafd14611d678dea83387e0bec7f4d1a98b6daae14772659ce678bba160"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-partial-2.f32",
+      "bytes": 32768,
+      "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-nonfinite-2.f32",
+      "bytes": 16384,
+      "sha256": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-partial-3.f32",
+      "bytes": 12,
+      "sha256": "e2dfce1e226913cd0e76fccbcdc6f157ad802d1d170f2f0ee53edc0f9159310f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-partial-2.f32",
+      "bytes": 16384,
+      "sha256": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-nonfinite-5.f32",
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-partial-0.f32",
+      "bytes": 4096,
+      "sha256": "846bb187473d468b8ead8ab5483364cebcc7926155ae17fe04b0d59764c4d5aa"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-partial-5.f32",
+      "bytes": 8,
+      "sha256": "434b26042aff3fb844a4c4c6be0d81a079b0ce84cfb8190679024404e5dc4822"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/2-partial-4.f32",
+      "bytes": 8,
+      "sha256": "08a288f5a7f82b748a65d7063e2601b6d5b17383d4336b45021250a7f6b4410f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-partial-1.f32",
+      "bytes": 16384,
+      "sha256": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen3.5-0.8B/1-nonfinite-4.f32",
+      "bytes": 4,
+      "sha256": "ea2845900b5856c9bf354b1aa9761b5aa6888e5ed61738fe9579ca42bc0f6054"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/fixture-b2.json",
+      "bytes": 2892,
+      "sha256": "82535319e7d05b14694489e9a5ad7799fdb7f736246f179f9270ff5e8552939f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-nonfinite-4.f32",
+      "bytes": 8,
+      "sha256": "08a288f5a7f82b748a65d7063e2601b6d5b17383d4336b45021250a7f6b4410f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-nonfinite-5.f32",
+      "bytes": 8,
+      "sha256": "434b26042aff3fb844a4c4c6be0d81a079b0ce84cfb8190679024404e5dc4822"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-nonfinite-1.f32",
+      "bytes": 8192,
+      "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-nonfinite-0.f32",
+      "bytes": 7168,
+      "sha256": "7f0b0755d8857921e0f3275616f24b5af9608475cd56b7071d58352823948002"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-nonfinite-2.f32",
+      "bytes": 8192,
+      "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-nonfinite-3.f32",
+      "bytes": 24,
+      "sha256": "8d677bafd14611d678dea83387e0bec7f4d1a98b6daae14772659ce678bba160"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-nonfinite-0.f32",
+      "bytes": 3584,
+      "sha256": "9055311c37a6fde767e38e748c9bbe214f920d4365404e6498cc21c9bc377b39"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-partial-5.f32",
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-partial-0.f32",
+      "bytes": 7168,
+      "sha256": "485b18b494772ecf88481a0836f518c128a5ca9c2e0d5be1fed757d424c6479c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/fixture-b1.json",
+      "bytes": 2892,
+      "sha256": "f57cba322f9ab22bcbf5b3a48e58bb08d1aa0e57dd3d3ccdc1fd57b2621fadb4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-partial-1.f32",
+      "bytes": 8192,
+      "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-partial-4.f32",
+      "bytes": 4,
+      "sha256": "ea2845900b5856c9bf354b1aa9761b5aa6888e5ed61738fe9579ca42bc0f6054"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-nonfinite-1.f32",
+      "bytes": 4096,
+      "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-nonfinite-3.f32",
+      "bytes": 12,
+      "sha256": "e2dfce1e226913cd0e76fccbcdc6f157ad802d1d170f2f0ee53edc0f9159310f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-partial-3.f32",
+      "bytes": 24,
+      "sha256": "8d677bafd14611d678dea83387e0bec7f4d1a98b6daae14772659ce678bba160"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-partial-2.f32",
+      "bytes": 8192,
+      "sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-nonfinite-2.f32",
+      "bytes": 4096,
+      "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-partial-3.f32",
+      "bytes": 12,
+      "sha256": "e2dfce1e226913cd0e76fccbcdc6f157ad802d1d170f2f0ee53edc0f9159310f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-partial-2.f32",
+      "bytes": 4096,
+      "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-nonfinite-5.f32",
+      "bytes": 4,
+      "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-partial-0.f32",
+      "bytes": 3584,
+      "sha256": "455916807c0c156b3d125a3a31aefa7c1b1f49304fd17fd7b0a58f53fdadd394"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-partial-5.f32",
+      "bytes": 8,
+      "sha256": "434b26042aff3fb844a4c4c6be0d81a079b0ce84cfb8190679024404e5dc4822"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/2-partial-4.f32",
+      "bytes": 8,
+      "sha256": "08a288f5a7f82b748a65d7063e2601b6d5b17383d4336b45021250a7f6b4410f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-partial-1.f32",
+      "bytes": 4096,
+      "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/recovery-Qwen2.5-Coder-0.5B-Instruct/1-nonfinite-4.f32",
+      "bytes": 4,
+      "sha256": "ea2845900b5856c9bf354b1aa9761b5aa6888e5ed61738fe9579ca42bc0f6054"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-session-recovery/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-session-recovery-before-processes.txt",
+      "bytes": 59462,
+      "sha256": "b6d0f8eace1dbb117feff89c3867c53746dbdbe82bfbc29249e2e39ce6c5dcb8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-session-recovery/case0-attempt0/statuses.json",
+      "bytes": 756,
+      "sha256": "dd207a49e7f38f6405d23fe21f90a63705d5c28d8793d182ea9ea3386611d1e3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-session-recovery/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-session-recovery-after-processes.txt",
+      "bytes": 59462,
+      "sha256": "f40bbf17d4471bbd797ca63654d80066bcb7b64c2de58c33917991657dc8cc46"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-session-recovery/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-session-recovery-monitor.json",
+      "bytes": 156,
+      "sha256": "d249918a06cd0223aa5e7eb49529f6f8084cf012b3b37038833a20be813cedc4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-session-recovery/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-session-recovery-monitor-current-processes.txt",
+      "bytes": 59491,
+      "sha256": "8e022cea9b1e6a9d3d8a20aefbd1546708b455969cf2f57f18712d689a5e4ccc"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-session-recovery/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-session-recovery.log",
+      "bytes": 498,
+      "sha256": "50461217f3c23b5fcd95b93d1502490b7e0dd87f2f68d0b63e98a6e83486ba64"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-session-recovery/case0-attempt0/background_service_checks.json",
+      "bytes": 1431729,
+      "sha256": "9370ca41a74d69e255fcfdfca5839c6ceef8c9d047028ad755705288fee83b5f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-session-recovery/case0-attempt0/Qwen3.5-0.8B-session-recovery-monitor-current-processes.txt",
+      "bytes": 59606,
+      "sha256": "c843b7820873718b40c2f0ddc1548fe7eed13a2c309de8b81de2b86cdca548d3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-session-recovery/case0-attempt0/Qwen3.5-0.8B-session-recovery.log",
+      "bytes": 498,
+      "sha256": "50461217f3c23b5fcd95b93d1502490b7e0dd87f2f68d0b63e98a6e83486ba64"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-session-recovery/case0-attempt0/Qwen3.5-0.8B-session-recovery-monitor.json",
+      "bytes": 157,
+      "sha256": "87059335663ee1d1667ae02f317f60477e1e8cc5630e0c8731cad87d23b87b5e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-session-recovery/case0-attempt0/statuses.json",
+      "bytes": 712,
+      "sha256": "0b1d45c84340420287501fa37db267931b8bc9c036a0095cc7533b824d7c80f6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-session-recovery/case0-attempt0/Qwen3.5-0.8B-session-recovery-after-processes.txt",
+      "bytes": 59462,
+      "sha256": "4b8820383ed71d5cea2505d1c853cc5b84420e6c57ead3184470181014462581"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-session-recovery/case0-attempt0/Qwen3.5-0.8B-session-recovery-before-processes.txt",
+      "bytes": 59462,
+      "sha256": "cc5056623220f42ee0472cbfc0930707a212797e7a5e52a5c78ab207c2190bb2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-session-recovery/case0-attempt0/background_service_checks.json",
+      "bytes": 1441189,
+      "sha256": "aa1041e250016af87a813a3235c19e9d05d56b1f5659447f8aed6e89f74b93d3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-pretrained/case0-attempt0/vision-pretrained-monitor.json",
+      "bytes": 310,
+      "sha256": "da09ad345ecddad3a202ab38f6bc37b4c4020bc8478dd0ed68b8de16d3e3afa3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-pretrained/case0-attempt0/statuses.json",
+      "bytes": 579,
+      "sha256": "a8c76f614dcc918c1a037fb0adb9fe38aaabb16bffa91297495c3eb8d32ae3ce"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-pretrained/case0-attempt0/vision-pretrained-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "fa03b52cd0c57017a16ae14b8d8e2aff0a3d989ca1e09dcb5e7d85595c3f2f14"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-pretrained/case0-attempt0/vision-pretrained-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "735dafcab188785eb726bcc505aad218dbc918f1f1b535a3ef82be9c858f81bd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-pretrained/case0-attempt0/vision-pretrained-monitor-current-processes.txt",
+      "bytes": 58964,
+      "sha256": "1ea201a59e445e2d5df3aeb08474d64eca50c4f2b8deb7c4f0033f71c686361c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-pretrained/case0-attempt0/background_service_checks.json",
+      "bytes": 1230701,
+      "sha256": "32cef9ac4cdc15caa36575a7722a47a1c7341240048990b9f8a2b8e6d567342a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-pretrained/case0-attempt0/vision-pretrained.log",
+      "bytes": 510,
+      "sha256": "b4f420e0ce3637e4c105dce3ae36a46c0f2741900ff644355f3a604716ae3738"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/statuses.json",
+      "bytes": 583,
+      "sha256": "8cf552d0218f52834f6401fec4e251d16348a1406093d82466a5a058656c78fa"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "d0e0cbfe9976d3f0189917ba587cdd8b1c3086350f524b86c45866787b28c535"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv-monitor-current-processes.txt",
+      "bytes": 58668,
+      "sha256": "6b3e040d92294f8facf928aff85805db7a5bbc52036e47b454f083b89e3c4c2a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv-monitor.json",
+      "bytes": 2606,
+      "sha256": "72688a03d5bf5548038cce7c5ab605863968383d5189b925fdddeb932554eccd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv-after-processes.txt",
+      "bytes": 58524,
+      "sha256": "aa35b42cc4d2071b281dd65b9ac9d0772e9e398c8f7166f2aed2c4e29545047b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/background_service_checks.json",
+      "bytes": 849097,
+      "sha256": "1578b09bf9fa5aeff125d2daaff77487f6ecba688a2cc0226da5f890edf53e6a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv.log",
+      "bytes": 9108,
+      "sha256": "97a7768695e3d5579d5f3a8d2854a3a64c0d3c3edac8e63cb76bf1208155ee73"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/build/case0-attempt0/statuses.json",
+      "bytes": 297,
+      "sha256": "ebe04beac51de4b40117954aef2b41845543c6ad5c393ac86c649018f84d0f59"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/build/case0-attempt0/build-before-processes.txt",
+      "bytes": 59937,
+      "sha256": "c0109dd392372580f4060b6b8af03d6f63f9365b0985e8025d72a4d5e4a665f2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/build/case0-attempt0/build-after-processes.txt",
+      "bytes": 59854,
+      "sha256": "3c1a5a829aff51a04d18a8cb71cd91689a223c871f62c89612d70d4da78db979"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/build/case0-attempt0/build-monitor-current-processes.txt",
+      "bytes": 59883,
+      "sha256": "41c3eb29a1c5cb074302a5bea8e80d9db5a4f1ee31dddb5df0344dd89b1f3f1f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/build/case0-attempt0/background_service_checks.json",
+      "bytes": 27594,
+      "sha256": "d60b970a9eb5124b4647a2212afe7629deabc0863eabb2a1c5a69f8e438eef62"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/build/case0-attempt0/build.log",
+      "bytes": 1568,
+      "sha256": "469c1949540a66af0424d4cc20393e07474e227ddca7313e6c592f2716738cc0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/build/case0-attempt0/build-monitor.json",
+      "bytes": 916,
+      "sha256": "80f370980c48c8797b36e1af26cbefd17c91aaef6903ce9c7a10080ac2f9659f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv-monitor-current-processes.txt",
+      "bytes": 58802,
+      "sha256": "245424bf64dc059e2cf43d3b70d54bb3b9f93bd68671b160a1bd2b31a8ecbc3e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "25ed2a0bd79e6ee1d9f130c7f9415d9824aac09d00f0cc24026f9350756cfb90"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv-monitor.json",
+      "bytes": 918,
+      "sha256": "17b5114be7d5fe6bddd2ac7cc846293bbb4792e0686d20d49ba36a25a58c17d1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv.log",
+      "bytes": 9108,
+      "sha256": "70d89a91c9f6ce8bafd8aa50f7ee8d2c83d131b8bee330f43469bbbe776e6a6f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/statuses.json",
+      "bytes": 611,
+      "sha256": "608dbb396cd8c4aabe5816963e9de41dfbd86e34a77b2f3f0ebd245058cfd072"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "645cff48c35387c3cd166842006bd32bab30d01a622641aad830a60d003b03b6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/background_service_checks.json",
+      "bytes": 814416,
+      "sha256": "6146b9783fa088a37d4988440c5fc4f102f14b0efb4052053d50ab2dba703f6f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head-monitor-current-processes.txt",
+      "bytes": 58837,
+      "sha256": "53d723e58c824b574e33c9aa8cb3b25bada0afa7a0dbcd65ac801bc9bc4a3622"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-head/case0-attempt0/statuses.json",
+      "bytes": 561,
+      "sha256": "d66fedafe6639e335d6b56cd82c1bddec6ecc7abe4f5b9d108f9aa043993db41"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head-monitor.json",
+      "bytes": 463,
+      "sha256": "40892cdc6cfe719bb668d8bf752c82602f2e4c42ba104e464f6513687b0e3bc8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head-before-processes.txt",
+      "bytes": 58808,
+      "sha256": "20db775b3b0815bc929a05606840049a5ee2c86d6d8bfff2528954cac1528fff"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head.log",
+      "bytes": 569,
+      "sha256": "96e790b665d0be02f780c9df12bc53eceaec8b9dbf5f90870035cd1818452c95"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head-after-processes.txt",
+      "bytes": 58808,
+      "sha256": "f65a67c7c0191236eaf585b6b24ebda0325e6f9fe931266aea441bb7f755df9a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-head/case0-attempt0/background_service_checks.json",
+      "bytes": 1195223,
+      "sha256": "09bd1a2742a8b6f2ca495a2ef9f75e443b072551087f63237056f9ede0d4b325"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-session-recovery/case0-attempt0/Qwen3-0.6B-session-recovery-before-processes.txt",
+      "bytes": 58390,
+      "sha256": "d5651c21c011b723c0fbfd517b8792096584204ad25784f065c99bfd0ec672d1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-session-recovery/case0-attempt0/Qwen3-0.6B-session-recovery-monitor-current-processes.txt",
+      "bytes": 59204,
+      "sha256": "29d222058092740ed01a18a3d81a9cfe15532fe5d45271f87c7e8f7aef1257f5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-session-recovery/case0-attempt0/Qwen3-0.6B-session-recovery-after-processes.txt",
+      "bytes": 59328,
+      "sha256": "901f91bee409c4d46f9c08abb3a0034516d0714b246f1a25e59361e81e70f974"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-session-recovery/case0-attempt0/statuses.json",
+      "bytes": 705,
+      "sha256": "54f77b3a9d094dca8453587dccff48bfdaba68d1fead80c5241be7558e4bf9ba"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-session-recovery/case0-attempt0/Qwen3-0.6B-session-recovery.log",
+      "bytes": 498,
+      "sha256": "50461217f3c23b5fcd95b93d1502490b7e0dd87f2f68d0b63e98a6e83486ba64"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-session-recovery/case0-attempt0/Qwen3-0.6B-session-recovery-monitor.json",
+      "bytes": 156,
+      "sha256": "b9076b02694cb3edb4196f164a9a53c16f70dfa23be82fc0d6c5ac6d7a9e1264"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-session-recovery/case0-attempt0/background_service_checks.json",
+      "bytes": 1422267,
+      "sha256": "e3c7b478030c378e53e5212d8cb517a358e9e5ebe8411dd3963b6f1c4510a54e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58553,
+      "sha256": "4797a78ad871692a545ae0f778e897c90af93060fcdf6add2743f8b9014d8ba0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 1147,
+      "sha256": "710f5b323fc3238d549815bf72ed9edd81a7bdbda5858dc0817d705875d25ca3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "9138f9346580d3bfcbae039be72f4ebbb303c753a884894a8e2d98f3eaf195b3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58390,
+      "sha256": "c18a867bb89ffc0a2e8787fd6b093dac810a06502acb0007f026213c682f200e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/statuses.json",
+      "bytes": 649,
+      "sha256": "a6aa0dc6ebe45a7a2b1f54cd541aeb738b2c8f42f7870ce1a6793ce20c3f4d27"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 718,
+      "sha256": "fa425e53e9df8501bd08145542ecaf91bc639778637a65728c9a0ec43b0b63f8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/background_service_checks.json",
+      "bytes": 675657,
+      "sha256": "348928b4a3af61d1881623fb40a2ae10817ff98ef0ce66aab8f21e3aa3a80854"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58553,
+      "sha256": "1df433c250edb0264d913f4d807e13b283ab88c23d358b45ed0c451ea4e06d9e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 1071,
+      "sha256": "e8b33648aa53bffca01ffc43e9807689a782ac176282887556067702af698c13"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58524,
+      "sha256": "dac5274d3909711fea0a0a2a12656f9ff391b058fddf4214350ff2d2b4e88b17"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58658,
+      "sha256": "250317fad380c98d7c563847e39d921b7bf2a95ebf745b52dc476f571ce31cd0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/statuses.json",
+      "bytes": 647,
+      "sha256": "ff55e5f56773ebe0d3d013d64daf7b4e050774c2491da373bed2d7b090ee8580"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 715,
+      "sha256": "ee5b5611d05401f68388467057edec8065f9dd0db74b1255a7f5ad316bc19aa7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/background_service_checks.json",
+      "bytes": 655946,
+      "sha256": "f0f22057d617581a0b7022be1ff9845eb5247f399661fc850ddc910fca289d23"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58936,
+      "sha256": "8156f9836a1b5db40cceed0e452184532f25f22ed364ebe56f0ffb017f9f78d4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 538,
+      "sha256": "aa68df768f7faeea396f45b15ccc92abccabdedff3f16dcf549f272e332598d2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "0c40024bf1891a1f15b65ad104d2c36d5ea56824398eab9ea969d2f2726aeb66"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "4daa5008276abe1e7df5816eb4e4ad43294d05b988e609f777d98989b05c2270"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/statuses.json",
+      "bytes": 648,
+      "sha256": "a830e8748c9ba541751e63d468e617304a70a1b5f89ea886d4509c6e6e1b5c30"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 718,
+      "sha256": "3ac35bb9b6846a86a809e919f7a916858b2981ed190fd6db1615222a20981319"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/background_service_checks.json",
+      "bytes": 689062,
+      "sha256": "848e6e20adf33264d14fcd3d2fbb19b44a0aef558d7f95bbc345f5591baf1a5b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58964,
+      "sha256": "766b54abe88c8c44cff6702ba9961ea78567694dd6ee8d60ddd4bf989d07ef0b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 616,
+      "sha256": "0a5ab4fe06b29d81647503f8c442429dacc72027fa075c615c9d66c7dc398ed1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "5941ba4bde63d1c01e7e1a09b4bb39564560323a2c63257d8c1d6c130e693ada"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "22c78dcdaaa703240d6c0001279eb113e020d94bbe582c378496fb860a0b2ed6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/statuses.json",
+      "bytes": 648,
+      "sha256": "d8f08b1cc05bb92489fcd58d790ccc19b545eb7149cdcae2e72c200b0a48b18c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 725,
+      "sha256": "58143a8cbb5978c69802680767fed795b7b4f596118c00ac746dece8ff42bdd5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/background_service_checks.json",
+      "bytes": 703253,
+      "sha256": "bafaa3b837354ce0da2bbb8292cbc5c9ad0ba3cad306a6cb2f8f5f736659755b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58802,
+      "sha256": "9522f2add696f31af183c4b84f09f97f92814dd5394e3e425adaab4a35eacb08"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 536,
+      "sha256": "a88e62998ab6a5050354ec077fb312d7a2b1d18156127674fe9e80b63290ccd0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58658,
+      "sha256": "169c66bd7b71e7b3a45c466081a928958a0b8a6bfa14ffcde95b1ad77bdc7e59"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58658,
+      "sha256": "405b315c6e02e1f0e7abc9f95bae83284b3ea34e4309451618acaf3acf6348da"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/statuses.json",
+      "bytes": 648,
+      "sha256": "94de2e2b8db2e3f1463ec65e76a77133714159c8f67c7321f3649b755d183c40"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 719,
+      "sha256": "075a3b1065e471f702bccc4e2dabff65aa5ffcefa78bb5432977467a5d8ec57d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/background_service_checks.json",
+      "bytes": 622844,
+      "sha256": "a11b22f090b3a938e2fbb7a724874f2f4102fa95795bc808c243341838576245"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58830,
+      "sha256": "58d2a0ae645e0911711996515d5c4c4bc8fac5975d45136fe724e2013dc49d96"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 617,
+      "sha256": "594710b142fe199c25d3789bf405348a19c2f53fb592e4c70c3ad24603604e2c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58658,
+      "sha256": "6f6cee32c026068de7413db7c789da2fca357071807eb3e06aa20b439907d7b6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58658,
+      "sha256": "1676fbbd334f2cc990dc1d1409c7028e9df8635b5e520610477d9051afefacff"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/statuses.json",
+      "bytes": 648,
+      "sha256": "c178e1d6992f8abb095751e426281d0194042ec86621dcf89dd7b4339a3fb785"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 719,
+      "sha256": "28b32b8c357f85efb4304287b47008c14c085f073d72841b9410f64a0fa7d77f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/background_service_checks.json",
+      "bytes": 637030,
+      "sha256": "f39012123ab3b82dedaf4b6a6ba6c135931d7f117fe7351dd8d19debf1124bae"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58802,
+      "sha256": "e7cdf4bbbea9c0f592eafeb9b43d1f6a9992140adfbae7cc052b242694898e59"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 1071,
+      "sha256": "a80742da636685ecbfb92fef147fd9df1a9d5d6bb49d34402408881afe3991b0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58658,
+      "sha256": "ea08cfe32ebbc6e8aa7391fecca23d05ce40d8de4fdb13d1daead18634a902d4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58658,
+      "sha256": "e051aa47685039d4e5f0c2e8143ec596aad934c30cd0fbe59bccb0c4f934c9aa"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/statuses.json",
+      "bytes": 648,
+      "sha256": "a8d06a7c16090139e25cba486cc30dc85b67a4d7799e7ab3a86648dee7d18d28"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 719,
+      "sha256": "05511576d8f324095a2104a19b4188f8b2b645cea76a99d60863cfb59d45e0c3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/background_service_checks.json",
+      "bytes": 740317,
+      "sha256": "081b00b6582c7ed72b919f1809a67c00d74915d00fd800a041d2498d5792f9df"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 59070,
+      "sha256": "ac82a39f56e38087353b25bf1294447108e8be394646caa53a36c6b8e92fe268"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 994,
+      "sha256": "8327f081bae0d08ccd973807513e370f6fe3aa0af5dc1567376c42aee60df3bd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58926,
+      "sha256": "d336e571aa362db7d04641f2accb40e1333669864fcf401f8216068c7f5b6483"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "cfc18d12d4ec135ec15768e3a56c30c1236bc87ed5638763b45ea1e26e8676da"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/statuses.json",
+      "bytes": 647,
+      "sha256": "7ba71e967de2d38d5e60b496d977aa784672beae85f5e9fd5b89817fed00f757"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 719,
+      "sha256": "5e5d4e4cd2a5bc4926517821e0e2e97be16cfcfc298d1e0e6feedd9349f5266d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/background_service_checks.json",
+      "bytes": 721390,
+      "sha256": "0493b6bf57464cfa4d81ba4c34e9eb5cb023d20ccfef74d875e9a9cf4532bcb4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/ctest/case0-attempt0/ctest-before-processes.txt",
+      "bytes": 59854,
+      "sha256": "aea0f76c1d84dd4ecd8ae6ef6f5d0c3f123ef08c9dcc54a1ff23d906767e4c1b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/ctest/case0-attempt0/ctest-after-processes.txt",
+      "bytes": 59988,
+      "sha256": "384d64d7d0759226f6b31d333f2d122cfeb887267a9a8a855129182dab04b373"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/ctest/case0-attempt0/ctest-monitor.json",
+      "bytes": 385,
+      "sha256": "f4a93b5918d059089f3098e2220255b994fe2e070e52bf68a3f72febbf937ae7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/ctest/case0-attempt0/statuses.json",
+      "bytes": 298,
+      "sha256": "712d5f45b62c0938eed82ea7582e0f7840f31e3ad0598f0b8f5c9a8bd289b020"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/ctest/case0-attempt0/ctest.log",
+      "bytes": 513,
+      "sha256": "f8b5ed49edd66deb57a5476603777c18c81dbcd4715f0ed0ec4ba25b7094dae6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/ctest/case0-attempt0/ctest-monitor-current-processes.txt",
+      "bytes": 60143,
+      "sha256": "296d75b6a79c60aeff4bd0faf6f8eb514092798b8a4a1643581f29c1bd68946f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/ctest/case0-attempt0/background_service_checks.json",
+      "bytes": 39415,
+      "sha256": "5832ed7d00407d72639d7c8ed57b15b3b58b5d786c8f12dfc76abf4f6f95fa6d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline-monitor-current-processes.txt",
+      "bytes": 59089,
+      "sha256": "53dbcfbb5882d086e49f1eefb63018d32e6d5e75ef831bb7a8234742f920bc3f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline-before-processes.txt",
+      "bytes": 59060,
+      "sha256": "36ab237d8d1e0262657a961a9eb9f2171843e8c25c0d99e341a1313b439dd2c1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/mixed-image-pipeline/case0-attempt0/statuses.json",
+      "bytes": 504,
+      "sha256": "9d74d43c575f3f8c2b6844c18f1bee6d096d1573dabd33ab30adec546cd7fff6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline-monitor.json",
+      "bytes": 234,
+      "sha256": "90a423b37ebae8f4e896da67487e9094b5e6b9475356c8a5c05ed51e42ccc226"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline.log",
+      "bytes": 706,
+      "sha256": "1231502368b3e4e3be9ab776c5b53bf9f0b3c4f8f5e984868f3a95f322c0f831"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline-after-processes.txt",
+      "bytes": 59060,
+      "sha256": "bedbecd123c4d80b63d048a8e4caccd335da1b18e9a44b681dc3cab6a125b039"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/mixed-image-pipeline/case0-attempt0/background_service_checks.json",
+      "bytes": 871967,
+      "sha256": "a41859b5635fd627f3061abba29789476caacb4352405cb3196be90a0f7fd687"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv-after-processes.txt",
+      "bytes": 59060,
+      "sha256": "914c092a4c24ac4f8e1191c11e730b7a23ae84da3220e12e2246368afc69f19d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv-monitor.json",
+      "bytes": 4745,
+      "sha256": "1ed26b5cbc272ae4f563e5c1d581c3011cdc21c2475fa45dd37cdb97ca30f8db"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-private-kv/case0-attempt0/statuses.json",
+      "bytes": 579,
+      "sha256": "734ac8562c231a1ab674261efcd81fd988fdf74757c1b1be6d7bddd2d35b6a53"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv.log",
+      "bytes": 9108,
+      "sha256": "ec2f3df1011acc0c97d72a04e241caf24bc5c20504e4a9c14ac3b5a42a72cd57"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv-monitor-current-processes.txt",
+      "bytes": 59204,
+      "sha256": "2e3f12ec448b7eb5c2e4954fa6998d12d643cf6484bd4957d55569fb224eae30"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv-before-processes.txt",
+      "bytes": 58658,
+      "sha256": "6d227bb1679fd39bb43fd0cded230ac8b9002bedca0374f510e030e3d03d59d0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-private-kv/case0-attempt0/background_service_checks.json",
+      "bytes": 797074,
+      "sha256": "980ccd04b0b7e45b0c53d51ad117dee681584322d1e677d17d852f99886a086a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-small/case0-attempt0/vision-small-monitor-current-processes.txt",
+      "bytes": 59070,
+      "sha256": "67371e1ce54c7157698d5e35bbffc0d1dccd25e555f645acf38badda991df58f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-small/case0-attempt0/vision-small-monitor.json",
+      "bytes": 463,
+      "sha256": "6149dad2d0f47bed083e667760edda263e2b85a91a57a0da8cfa7748037afb0e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-small/case0-attempt0/vision-small-before-processes.txt",
+      "bytes": 59076,
+      "sha256": "924abf51a7a1ce24a3e7edbc7238b7ddc1451e254b273f9bc9efaeb54b683ef2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-small/case0-attempt0/vision-small.log",
+      "bytes": 1456,
+      "sha256": "4c1cbd9308520ed3cb8a86877321aa3a7bca8d72f9e834f190ae558923e9eccd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-small/case0-attempt0/statuses.json",
+      "bytes": 494,
+      "sha256": "b809fcb86eea4bda8e1d0f2c136276a985fb1fc6fa0c1860ed4b7963ef34a6f7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-small/case0-attempt0/vision-small-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "60e6fce7dc74595c63b51230c951298634ffe8aa5e3c7ab828524ccd1f7976d0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/vision-small/case0-attempt0/background_service_checks.json",
+      "bytes": 1219662,
+      "sha256": "813317bc15eb5547eae24a4ebc72a03aa839176c428591320f3b593e83ee247a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill-monitor.json",
+      "bytes": 16892,
+      "sha256": "79dc07dfa2f5966bb6d6e74c6289e455be8864386f69285d5c485ffac73afe83"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "c346fae9906330b3d2fbd72f03f4788b7afb82f6196257f52efcaed78f2b9f17"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill-monitor-current-processes.txt",
+      "bytes": 58132,
+      "sha256": "2a1dff5bca4a254c935b5f97ffe6ba65691e0ad6b4045db0fb5b7501725866ba"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-extended-prefill/case0-attempt0/statuses.json",
+      "bytes": 593,
+      "sha256": "75076762c6d4c5911c5a372d32ed0654fe9e4d8fa505aade68edd47238b0b745"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill-after-processes.txt",
+      "bytes": 57988,
+      "sha256": "14fc05297aa64b6ffaede9d6209b4677e5ac7337265bf16a918f687b0f66dd4e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill.log",
+      "bytes": 3826,
+      "sha256": "9a0446e753c141eb283645f1aecfaee5b6c2f6e504ea40ae1e57a00adb54d0e4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-extended-prefill/case0-attempt0/background_service_checks.json",
+      "bytes": 1412806,
+      "sha256": "96169955915a36dcb1aeb362f4d53f4ef73026d28a2c8d50fbaec24df712eea8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head-after-processes.txt",
+      "bytes": 58942,
+      "sha256": "d30aa50651271968327cce0ea81243e31c0b3651b6417fb465f0c30b78ca60b7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head.log",
+      "bytes": 572,
+      "sha256": "9de81a25f331f1e7f656569654dbcb728a70bd9fe0f4fd0fb449dc393ef260ef"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head-monitor.json",
+      "bytes": 617,
+      "sha256": "bce5f351576e86b525964147dcb97c74892316b21e3c8adc0100eb1cd89a9358"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-head/case0-attempt0/statuses.json",
+      "bytes": 564,
+      "sha256": "a996305f00aaeeb132d3b308e6bf4d219569ac8d267260d86ff963e521f5c8b7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "b8da3403b834472107e165ae7d6b689fb00728c9111c3fa3bd9e739c0a276ae7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head-monitor-current-processes.txt",
+      "bytes": 59086,
+      "sha256": "64a75fb4a39c9076024799c60140b0a3e0ccbe75ea032d1757fb6e55daf06514"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3.5-0.8B-head/case0-attempt0/background_service_checks.json",
+      "bytes": 1182611,
+      "sha256": "5c6c9d05a6f4d2628c01a5d7d5ae1a0def90b24c13e29a5cb8a1afb4e4cb8b8f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/configure/case0-attempt0/configure-monitor-current-processes.txt",
+      "bytes": 59382,
+      "sha256": "356816776f33a3b00b9e46f05a9e7d589583e6feb39d50df32fa5889a7a4672a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/configure/case0-attempt0/configure.log",
+      "bytes": 645,
+      "sha256": "1670e6c7a8636d2c6cb205efbb09afa7d4b0f5493b533b9f53a2c82a6bf51cca"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/configure/case0-attempt0/configure-before-processes.txt",
+      "bytes": 58782,
+      "sha256": "85cd58e51e232335bc6d608af79b53cd344a16528d7b03438a62caa40c8f8f45"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/configure/case0-attempt0/statuses.json",
+      "bytes": 1265,
+      "sha256": "9e16054676fdb3ca744fb52b3bbbfae4f433a178362619935805ff24d3dfe0b9"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/configure/case0-attempt0/configure-after-processes.txt",
+      "bytes": 59050,
+      "sha256": "10e30e42aee581098060780eaafbf57063690257b8d8d8a9a84073b2987bc5a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/configure/case0-attempt0/configure-monitor.json",
+      "bytes": 157,
+      "sha256": "c4fc00970f84164f9cdee74c46bf54a8c4564482bb73c43210e9a2930807df5f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/configure/case0-attempt0/background_service_checks.json",
+      "bytes": 10255,
+      "sha256": "62d8d313b475bf5e472ea0004f70edb454fee018450472f9c6f811ec5412e63b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58792,
+      "sha256": "e2057022bfbc4ee81b2ca2e8923b5683761d419f6ef93c5f1da303a71db26a58"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58648,
+      "sha256": "03097cacee848b582649cac883d8db6c7eabfe9b0039a81b6726a9e99b28b199"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/statuses.json",
+      "bytes": 614,
+      "sha256": "ff26df4df6a113805882121af8e1c0286ef533353c12f2ef944ad1d0c8e85600"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58112,
+      "sha256": "44912328bfb374c50aedaff4ae646b5a17d26fc06373db19e34e4b14bc8afbc5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 710,
+      "sha256": "82df8afd369a8be4880913ea05547869ffda0c0df35b34aa8eedba4c3d152a92"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 9148,
+      "sha256": "9411e16eca41388862d1a76dd15de22657a46a605e53450bac20021c09aa20aa"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/background_service_checks.json",
+      "bytes": 325629,
+      "sha256": "8a4cc541fe84a003d641366e50a41d754b8a40cabca83bd683df0ccb241e11ba"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58552,
+      "sha256": "313bd5f239107ebcb6319cc0cdf34095d4a7b2f58cb7994ae3a6a421f4f50bc8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58380,
+      "sha256": "3332e4f17965b9b516b91639af5b2984cc9b8a46de71b32bf964e287360386c2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/statuses.json",
+      "bytes": 614,
+      "sha256": "4491ec55b1a2806d3626148b60a4891371c83e9911038d30dadbc40869993936"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58514,
+      "sha256": "389cb713b52dbdb9b38fd4acfe90cc883ff93ff0b398fc8ea23bb10a9d233dab"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 719,
+      "sha256": "e7ea62af39a179e7acf2e8426a6ac3eec398dbbdc5858ca7729534303bea16dc"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 9157,
+      "sha256": "b86e816a1a9a30db6b59433abdd94851577dc21479c2dafe34441d41d607fcd3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/background_service_checks.json",
+      "bytes": 223129,
+      "sha256": "582af84d368236292717ce2ff634b022cff2a703687ef96ad034f0ec88917b6c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58658,
+      "sha256": "169beebdcfc42bd3bfc89920dcd03e1768d732bf321502dd4c329b48d20a6dce"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58514,
+      "sha256": "27ca8e4f817c3e1108650bdd38fa650364f113c9fd82babd350601af4acc73cf"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/statuses.json",
+      "bytes": 614,
+      "sha256": "fcab91473c2681c7807d2d229913cba5c035424b69dfb93716f187189cec1450"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58648,
+      "sha256": "8c180e0d5601cb68f2e1a7f02778321167cd558052b9d5f4b722e2ecb9375e1c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 694,
+      "sha256": "a4df8257b7677b26abf7e84e1dcc5d6890a4a58873c250996e22fd2a4b012c1c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 3058,
+      "sha256": "04340801cb7c20144ce01d0aa31bb065a19b9028396006077f9e81b1f95cc823"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/background_service_checks.json",
+      "bytes": 365047,
+      "sha256": "fabae8fb3e0648bea70fc92d182e064bf532eca6a21a8f00d2c64d13f5682ed4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58668,
+      "sha256": "398dcbf26961304c906aa1914abd42f0c5b0d68ef23cf934c63813b8c5a5f5af"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58524,
+      "sha256": "d9289c1adac337bab41457e874c05c142bd944a99b8e6783bba1ca8158d4aade"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/statuses.json",
+      "bytes": 615,
+      "sha256": "7f5b753347bd692e2a0bf002e6dea0871a04ad1d21fa53ba831a1345ef6e5482"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58380,
+      "sha256": "9036e741e70234db589e74e22be40e07421a06388ec48ade6d5e0108ded04354"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 701,
+      "sha256": "65704823ff385f2507a5efc02d1354b42e5b9316bb289693f425518a8d529538"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 3138,
+      "sha256": "4527b44c2c6db63e36d9fe314d243c7303f3069580c90b75cb8efd5a653cfc3b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/background_service_checks.json",
+      "bytes": 405248,
+      "sha256": "90ae3bcdc142e27356887bf030bb5dbc3017aa86cbbbfaaebeba23e8c5f4344f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 59078,
+      "sha256": "da38bd700974b8c8cea9c8b680910aa077f5349f4ac1d08a0e7948133701c2c8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 59050,
+      "sha256": "1d32f9f47581d2d32c4493119bc624a535af56dfc0c83bf4f4aede9244122759"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/statuses.json",
+      "bytes": 615,
+      "sha256": "3dfee842ae6f9bb838f9a758c1c3d80cec55bae6d19aae99910cb8989775e496"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 59988,
+      "sha256": "7a1ed2594de21b59f90a356bda121a8277dd9f5f49b4138fbda339b4d075f81e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 712,
+      "sha256": "7287e98a9b3c1837a7fafc2c89c77f79a773ab116a35d92e0614246933239d6c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 3135,
+      "sha256": "110c3fe7e9ae214c6fe496c9248e094594bfbde63809567d2de2a27775e1ca05"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/background_service_checks.json",
+      "bytes": 79632,
+      "sha256": "1f2fe26a5d7e233574a5196cfc5f1eccba321a941d256866907b4e28766e3cc8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 59060,
+      "sha256": "d2031839b30ca8d07909891b5b4374c9a0f0939a8380577666971ae03ee2a5c0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58916,
+      "sha256": "761f6ba84e66cd5629743b8bf49b16a72379d0276308b95e98c84d172c271cec"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/statuses.json",
+      "bytes": 615,
+      "sha256": "12ca88ac755c63fc709e5feda77245f477fb5c01f83b69ecc18d5f49baa996f5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58916,
+      "sha256": "fbd69fcd28dcfd0e3ff1bb82cb12a6b46389fd63291176eb4819a7f49bd2dc3a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 712,
+      "sha256": "cec5903acbeb2d6bc4178c0d10919dc45bd878b261c348b7dab9b256aca3a120"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 3140,
+      "sha256": "151ebae48330993db349f978eb6bcc4e43bb37f7b59db9f7141a3222265e7835"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/background_service_checks.json",
+      "bytes": 120633,
+      "sha256": "bb0d8add7e5fe9d32137393264e4c2bf81f59a48cf1fba1c39291fc7f259bc63"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58821,
+      "sha256": "464c9832c75d77e1e2aadea6b018995c8867e4d11cf98dec4c661965bba8df85"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "71f0338a7006bc76ac725b6360f75f4cd61ded38f3cf87bac6e87a3dd1cdf10d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/statuses.json",
+      "bytes": 614,
+      "sha256": "ce38f4072ab163f34d8baea0c586cb7d6e6ae4291a0d5aa5a6169dc48c5fa7d3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58390,
+      "sha256": "df2cd50054824e90b1ca929610ad0c967562f886228f3534993c0eedc54cb9d4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 697,
+      "sha256": "804851f86f436c6f5dda9ed17e9f518d4eb3422a1854219a2f924c101f9bfc44"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 9144,
+      "sha256": "68a1d4c86a40387193cd05eabfdda3ede2f6407521c93875296bf05ac067e02f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/background_service_checks.json",
+      "bytes": 609440,
+      "sha256": "f6156acbef89d84fc66336340dd260f46aa4169659a5f84df95ea88d098ca422"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58885,
+      "sha256": "d446d50b895f6f2f1ed5dad452e4198132449d39e221d6f95ad0a5e6ddcaa913"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58741,
+      "sha256": "8e7038df071e6896e8bdd75ab446db0aba3c00b9051d0760a37e437858da2bf5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/statuses.json",
+      "bytes": 614,
+      "sha256": "e130cc5bb1c564651f52eeb74d8cacc26115d1ad0c8a860a988455ad272f0da9"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58524,
+      "sha256": "07e5f75ccf058f2e49ab3b237cce94b78171fc82d651bca00a6a739f977c5169"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 701,
+      "sha256": "85d0e63882d01823d9effaf269ee060212d3329273ece30fe059a5007a3b2e79"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 9082,
+      "sha256": "a4f3846558ca7f3e838b317b28c859152cb73c5bc6dd5686eb4f18e90ef1d354"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/background_service_checks.json",
+      "bytes": 506951,
+      "sha256": "739037f12ea8ac72946bd2ee32fce482220b950233b29a662da5bf343370cb2c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers-monitor-current-processes.txt",
+      "bytes": 58151,
+      "sha256": "7a01cac88505012e8105f19ed69d0e335c6cb3e8d3ca44ebe598a3e50e4e0593"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers-monitor.json",
+      "bytes": 15878,
+      "sha256": "20a840a5e7c6c37ae5417b8daed0d1695a3832caf6d5f5cd122b62e72630e87b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-layers/case0-attempt0/statuses.json",
+      "bytes": 583,
+      "sha256": "27df16ebf68f32c11d984393bef0f8277c04a57a863a4182a623e4b302302059"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers-after-processes.txt",
+      "bytes": 58122,
+      "sha256": "ca25f4ae0c3bff7fd3e8a61687ea454a913390392c977f4f90533996b04443a8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers-before-processes.txt",
+      "bytes": 59194,
+      "sha256": "5f5f67f6cda66447bc0394ecf290cbdf320eedd73864ff3fb5c39ec28c49bd19"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers.log",
+      "bytes": 5030,
+      "sha256": "fbd0d0b7204e90329b753e2a81fc15003b9935d8c98eb34c65142a2c7a5bf86f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen3-0.6B-layers/case0-attempt0/background_service_checks.json",
+      "bytes": 1134521,
+      "sha256": "2b064cbda632b0cdf9b3c60cc3ef13216696399eb9ffe11819c104d90727bcb8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/serving/case0-attempt0/serving-monitor-current-processes.txt",
+      "bytes": 59338,
+      "sha256": "e1eb02228ddb480776ca1266272a812c371d661ed9f0f95dd8512729a355b577"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/serving/case0-attempt0/statuses.json",
+      "bytes": 490,
+      "sha256": "9a7e516820250f7aa1e5d9f13865eb4ae348ca44d24da2e94256fa2740cc0a5e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/serving/case0-attempt0/serving-monitor.json",
+      "bytes": 464,
+      "sha256": "fa93df0b2b39786c723a7e6a567dbbb6b7f30a1033e4f0cadcdc32ff689550f2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/serving/case0-attempt0/serving.log",
+      "bytes": 1150,
+      "sha256": "c9bf40b16a7033fe930d05687e0e19c52d2ecb67b8b2dfc866c8c216a05b7951"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/serving/case0-attempt0/serving-after-processes.txt",
+      "bytes": 59194,
+      "sha256": "63d1fac4ffe4b24ee6a768feff4370fcf32e2f8189802f1dccbcff8104333d7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/serving/case0-attempt0/serving-before-processes.txt",
+      "bytes": 59194,
+      "sha256": "6b0d352bb2d5c6bc2a0fb0c6e96eb2a3346779346c828fd2cf8647fc886a6eb1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/serving/case0-attempt0/background_service_checks.json",
+      "bytes": 861715,
+      "sha256": "555a6ffd44126b1d35751cdfda8bdbe59ce409ecceaf3ddbe24b4aaf0a881e5e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/statuses.json",
+      "bytes": 616,
+      "sha256": "b0810d8a7dafd22f95137fc432fe56a7071b215167d26f0e462878a0e0bb2d39"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers.log",
+      "bytes": 5098,
+      "sha256": "074d2765a006d1c6977630e2f748a297cabf8638dfa4fce6453d4aab96e2a745"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "599f1a2b2bbfdcbc50d450c0bb55769d10b1c9fbbfad6da4423b19772a459862"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers-monitor.json",
+      "bytes": 2530,
+      "sha256": "1dca99dd1096bd02e189c2ac2d795297e50bb336f964184beff050636ba74c12"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers-monitor-current-processes.txt",
+      "bytes": 58936,
+      "sha256": "0ad0c0ca7592b5d2281f0f33badd3df7df3d8b349a4ce71e2ac56aa3930fea65"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/background_service_checks.json",
+      "bytes": 1168420,
+      "sha256": "229ce854b8a7f7a6da91db29335e056b17058e29d31b766d1099bb65ef63da1b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers-before-processes.txt",
+      "bytes": 58524,
+      "sha256": "dea579aafe1d330900f7463b2e10d4b2e9390bee2337ec0663fd6ecf9b0d5fd6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-layers/case0-attempt0/qwen35-layers-monitor-current-processes.txt",
+      "bytes": 59338,
+      "sha256": "d4d95201a4ee542039de3af1f1f7cfed4ca25a0514843161b98f51a6c3841373"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-layers/case0-attempt0/qwen35-layers-after-processes.txt",
+      "bytes": 59194,
+      "sha256": "a4c97790bf5030f7d91e21c942186656f487f9e80fc9b1bec9338b08ba4a29fa"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-layers/case0-attempt0/statuses.json",
+      "bytes": 576,
+      "sha256": "f8556f635df4d9f5986635e5dc40665b8c25669aa1c778f048d78bf215588eb9"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-layers/case0-attempt0/qwen35-layers-monitor.json",
+      "bytes": 8011,
+      "sha256": "29a8db5dce986f0cdbbf431c82e33bcc6f6767518bff2073abe71bae4919beda"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-layers/case0-attempt0/qwen35-layers-before-processes.txt",
+      "bytes": 59060,
+      "sha256": "28508e64b5c10fc76fff2db9fa66bfdb60105a202751e089c48da98735f58796"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-layers/case0-attempt0/qwen35-layers.log",
+      "bytes": 5068,
+      "sha256": "7959943034dc64417a33394a6d3b6a65a095aad37edeff854ddeac2ba7ccb20c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/qwen35-layers/case0-attempt0/background_service_checks.json",
+      "bytes": 962632,
+      "sha256": "001f7a725ba14b49a4195ef0743aab1575b69230110e6ab186e16d0e0821c3db"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head-monitor-current-processes.txt",
+      "bytes": 59264,
+      "sha256": "ab7bbdae8af1d4be029a94a82f1fa722efe11ac9fe3fedcba926a396e1449b2a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head-after-processes.txt",
+      "bytes": 59159,
+      "sha256": "f1b5844aa65eb4db3e825a1fcdb30490f197c22d5dcdbc72e5d9669ac58d8277"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head-before-processes.txt",
+      "bytes": 58808,
+      "sha256": "fcc7f60e2169348aa54effee45e25c1388fc6039c8a9d4560989643cdc53c82d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/statuses.json",
+      "bytes": 595,
+      "sha256": "c8e63c3306d065ac33b311f9e0c7d999b9d771b337159f48170ae069501f8988"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head-monitor.json",
+      "bytes": 387,
+      "sha256": "f50cc56d5f9e2118a9ea4f93d77b2201b6131756a76664885cb4e6f5b39c7af3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head.log",
+      "bytes": 598,
+      "sha256": "38586b63a76de36d1eca59aaadd373e58b29596da171c07ef9ea3d4adb55b4a4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/checks/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/background_service_checks.json",
+      "bytes": 1207046,
+      "sha256": "631bc7d7360bc284fdabd90de8bd8771af5e2d283828fc988f0019e91ec97da6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/summary.json",
+      "bytes": 99988,
+      "sha256": "eadf854f66352737314adad826ee8da1d864e9bd5fc7ea6408c6ba9445be9e98"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-case.json",
+      "bytes": 2311,
+      "sha256": "a109684eb7087a90a22bf85854392c0fa7e370cd72c4bddf4b4434b12a352adb"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1-monitor-current-processes.txt",
+      "bytes": 59635,
+      "sha256": "5e6274286aa5734988a544e9e2ce2d4e403d9825f4a53b3ab411c25d0f6e6d62"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1-after-processes.txt",
+      "bytes": 59606,
+      "sha256": "99ed7ce0451edee1a6ec23cccd3d91cf8ec89ab2628a97256f5ce90ad12c2212"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0-after-processes.txt",
+      "bytes": 59740,
+      "sha256": "f5259778ac7fb6086e10a12ea91638da88d7d2ff9f6a7db42440eb89f41cea01"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0-before-processes.txt",
+      "bytes": 59740,
+      "sha256": "7b284d404ef87ad937664532444c451f22150961b238609511504712fc28e6f3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-expected.json",
+      "bytes": 2687,
+      "sha256": "6df31197ef062b1237a3840641ea3043d47f92a244a5cbd33935089c4400b982"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/metadata.json",
+      "bytes": 1050,
+      "sha256": "fa7122468f6fc61b6c84f94726f3378a4c27086e91e9ae5a1019fd39fbf44dcd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1-before-processes.txt",
+      "bytes": 59740,
+      "sha256": "51fbce65df19869d1e2337d8c6249e94cf56e5a7d643d4eab367b82581483add"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0-monitor-current-processes.txt",
+      "bytes": 59769,
+      "sha256": "99a8e03fa16dce132597c2e5c05cc6cb337e9aec4d34dca8cb64b915baae6e3e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/statuses.json",
+      "bytes": 3556,
+      "sha256": "11d06d468e9ebfd401f1f186f2b13a2b9f3023df8d5d29730b7694dfb250b71f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0-after-processes.txt",
+      "bytes": 59740,
+      "sha256": "16241a3976389643e2987e099404ed0c1a902501a93362e3f574dd3ce260121b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1-after-processes.txt",
+      "bytes": 59606,
+      "sha256": "aecd84388e2368c5259722d52fdaa6606e0cd588755af3d8e90b19374aaee2cd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0-monitor-current-processes.txt",
+      "bytes": 59769,
+      "sha256": "462f36802509378bf6497876f0dcdd8cc27fb31da548b7b869664527bbd7005c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0-before-processes.txt",
+      "bytes": 59606,
+      "sha256": "70ab09003d73649da67ccc0bd342b1f88669c342599055a45e64a37069620733"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1-before-processes.txt",
+      "bytes": 59606,
+      "sha256": "dc2f51bd3d0c63becaa6dd1619490f0f356c3230289f35360f227b49967eff0d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/background_service_checks.json",
+      "bytes": 37839,
+      "sha256": "2b3b870fbc37eb881e0f476df4264008c8e960c87e34b3fe2fd4808dbe0fcd56"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1-monitor-current-processes.txt",
+      "bytes": 59635,
+      "sha256": "503f387724e36bd08a7f5d9059e43876210e5b5f1a17ff075ab2609842434bf1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/summary.json",
+      "bytes": 56196,
+      "sha256": "7af39e228e4e63caf8ac22b6508956d06ed04b0e84fa8bc3dcd78b9355e84a66"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-1-monitor-current-processes.txt",
+      "bytes": 59907,
+      "sha256": "60474b3f9629377b50741345833ef49d8db72e6b0447074c07afd57289f85d70"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-0-after-processes.txt",
+      "bytes": 59874,
+      "sha256": "386ddb3c59f8c11fb9baea31fcd9e8c39373bf12bfdd5d2d7604162c50fe32f0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-expected.json",
+      "bytes": 2910,
+      "sha256": "7eece7a013c215b7f6364f30891491c4c060d804495ca1397e927bdd10f1404d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-1-after-processes.txt",
+      "bytes": 59874,
+      "sha256": "9f43830bfef5ef59581165494605d6370309a76fa8dac536ca19a0776cc805d6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-0-monitor-current-processes.txt",
+      "bytes": 59907,
+      "sha256": "a5b8b4924c2ccd292647efbd4d84a8cb7d2fe38ddbb0321ab2839cc664da5438"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/metadata.json",
+      "bytes": 1048,
+      "sha256": "90b8eb116d7f01df0c265f805afb8dcfeed38bbe48319945c893e1e530cd9b79"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/statuses.json",
+      "bytes": 2496,
+      "sha256": "784f7b786d73fd93694b2e59928c1a36636579842c0075a5cf3b8c7705b7b8cf"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-1-monitor-current-processes.txt",
+      "bytes": 59907,
+      "sha256": "3118de1709cf114092631ab969259909514d558385c8902cfb7b721c1079a051"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-case.json",
+      "bytes": 323,
+      "sha256": "6e10706b62bb1ebfd1fac6212088faa060d48ff52e159af11430891201f243b3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-1-before-processes.txt",
+      "bytes": 59874,
+      "sha256": "cd175c79a035b6b87c6fe23dfbf56e1cf043f0b9eba56e50fbbc1798aec40b41"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-1-before-processes.txt",
+      "bytes": 59874,
+      "sha256": "3a3af44755220ccaf98673ca8e4871c8053c1db52c25177c224b52fe4ae53f00"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-0-after-processes.txt",
+      "bytes": 59874,
+      "sha256": "8680ca7500f04ad9beb3ae94b8926f0dd974b4246c8c0ba85cf272f60020ee54"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-1-after-processes.txt",
+      "bytes": 59874,
+      "sha256": "f84966df78a637a7fbfe4a1313f0ad0969cc2cadb003cb7a194d444c14eab54a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-0-monitor-current-processes.txt",
+      "bytes": 59907,
+      "sha256": "45fa3f5ceea71187c986eaa270d1b2d05c4fde9a85bb34deef388e8d3505211f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-0-before-processes.txt",
+      "bytes": 59874,
+      "sha256": "965c40e8b0c7f25aa75f26fbdf9d059a3170dccfd642a638f8d2f4a0c0010e35"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-0-before-processes.txt",
+      "bytes": 59740,
+      "sha256": "4a7be7d3032a972b5bc9725972f70380c6d27f8c93cd30ebccc4297dc4107374"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/background_service_checks.json",
+      "bytes": 18930,
+      "sha256": "fb32c3d28fe52cb6481be47209218b26504855916c976fcaaf2e1a10ec3162db"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/summary.json",
+      "bytes": 87288,
+      "sha256": "e68674dc638a4c95309965889021309f11a53719ad9fe30610f180ef00637987"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0-after-processes.txt",
+      "bytes": 59472,
+      "sha256": "a867039fa3097d2d1a78e9b055f2b706aa6405c46b371eeb2ae6f188175178a9"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1-after-processes.txt",
+      "bytes": 59472,
+      "sha256": "13126049960a9ba90a57dd88ef2171acd0bb8d0f6c2a1c0da1096c84dff2d337"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-expected.json",
+      "bytes": 4956,
+      "sha256": "c82728a02e24b824df0706e5c07586fa966fa290959954a5ae153d50f9f34b2f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/metadata.json",
+      "bytes": 1065,
+      "sha256": "14243ac565954d1816cb4c476d50e4247f44b278e3df0065203a492a5bc9fcaf"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-case.json",
+      "bytes": 351,
+      "sha256": "22093c25c49607be030589c8bcea3520a44e085a0f529ff82a1a0a9c2f10aa8c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/statuses.json",
+      "bytes": 2768,
+      "sha256": "f59f7cc3dc45caae44ea1ae62ba0bee204f8ae297cda1fe0ba0a0c83bad05815"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-0-monitor-current-processes.txt",
+      "bytes": 59505,
+      "sha256": "3741df5ef5461c3642b2a2e597a1901a9b6618d94b1b28cde5c1ad62d318e0f1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-0-before-processes.txt",
+      "bytes": 59472,
+      "sha256": "17dfdd6bceda686934ed8398b792b08b5a71ed479610dce5f9c84cbad20725bb"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0-monitor-current-processes.txt",
+      "bytes": 59505,
+      "sha256": "0ce4208c5fced3082a167de50a6c5194006dfa82aa9b3bed9d31c74b52c4259f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0-before-processes.txt",
+      "bytes": 59472,
+      "sha256": "4ee46473dd50a301ef8318964655beacb6c38825d24f1eae6d92aa42907cd03f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-1-monitor-current-processes.txt",
+      "bytes": 59505,
+      "sha256": "c2e97b69e302f55feeac3dcb12c38b750e581ad8683444275989adb66aaa5d36"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1-monitor-current-processes.txt",
+      "bytes": 59505,
+      "sha256": "ea98bd6573a089259b16cfd5166860007fe600a6be01769f796320c7360d701c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-1-before-processes.txt",
+      "bytes": 59472,
+      "sha256": "f58ab337476dc21ad6d6fc997673165a425c3843987f438683178a115cbffcbe"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1-before-processes.txt",
+      "bytes": 59472,
+      "sha256": "eca2329a81fffbc4ff42cac479193c3a5142a929bda44dfc6ad23d047f93d782"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/background_service_checks.json",
+      "bytes": 18927,
+      "sha256": "707fb850d28ccbd113106f026085fd5cb94a88c7c68545a8fef8b8978b5d58f3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-0-after-processes.txt",
+      "bytes": 59472,
+      "sha256": "a46aa01d90e9990e2620164db4b80ff55ceea11dc917a4def5100dd85a209320"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-1-after-processes.txt",
+      "bytes": 59472,
+      "sha256": "2383f35fef0ae869322ab5b697f22bd58ad2e95718ae387fdd08428cf4039129"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/summary.json",
+      "bytes": 82864,
+      "sha256": "90517099f13d9389b42d17479bdb350dfb36ed96d253590a17fe9778dc6600b8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-0-after-processes.txt",
+      "bytes": 59338,
+      "sha256": "ad2b0ab1be2c904bd82e27c29ab5951f4bb873f2235ba48b3504a38459e778c0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-1-after-processes.txt",
+      "bytes": 59338,
+      "sha256": "2546629bacb15159812ddb8f8763ceb79681106041cd9c002078c39235fba07f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-0-monitor-current-processes.txt",
+      "bytes": 59371,
+      "sha256": "74943443cb9b6c84662f7a85121d352e5e756f91dd94c94a0baf76656a1ef2c3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-1-before-processes.txt",
+      "bytes": 59338,
+      "sha256": "2357b5b7868e715b655eb7203c092df56ed90bddbfdcd33aca2a45f17556d6d5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-0-after-processes.txt",
+      "bytes": 59338,
+      "sha256": "7425832030539ebb33e3b8879beb5bc49e2fb8db706d702f4a5e6144b534858d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-1-after-processes.txt",
+      "bytes": 59338,
+      "sha256": "a45e10e40fcdf15e4b4c3af8da45e87d6dc441dcb3939d5cf88e55ea7c0c535b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/metadata.json",
+      "bytes": 1065,
+      "sha256": "14243ac565954d1816cb4c476d50e4247f44b278e3df0065203a492a5bc9fcaf"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-0-before-processes.txt",
+      "bytes": 59338,
+      "sha256": "4bc1e4df65abc90c35121a92ae13f08f9059092ef24f6058b47d408a39c47064"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-expected.json",
+      "bytes": 4663,
+      "sha256": "ea4486c540b5e2b41cf888c772c92c4218a0d0232f9672c941a7c5a286d09481"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-1-monitor-current-processes.txt",
+      "bytes": 59371,
+      "sha256": "9b5a86db77fbd52d0d7e82e5e36d46194e5343c171fad6d5055f225595a3ba02"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/statuses.json",
+      "bytes": 2768,
+      "sha256": "10ad35b4cf50208ea8c00b1e20ac32d08f0c34003d427afa75104fdbfb719e98"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-1-before-processes.txt",
+      "bytes": 59338,
+      "sha256": "7f45809a2cee3d35bc3238ce84bf9e8d12f37439ed7be642239147b1ccda2203"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-0-monitor-current-processes.txt",
+      "bytes": 59371,
+      "sha256": "cb5c2664ce383b16dfdb6db8f8a2ef47e59bbfc85db1924a69aeb337ce0e809b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-case.json",
+      "bytes": 351,
+      "sha256": "ade7656b7ecd5933f71213c475ce92bcc960c25c52e6ea832104ebc6e9047c6c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-0-before-processes.txt",
+      "bytes": 59338,
+      "sha256": "05acb6656ed578c516279c98cb0e3ec9d2beb3ef9d919e79c51ca5639e77a50b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/background_service_checks.json",
+      "bytes": 18920,
+      "sha256": "0e4f3c0f77f2152611c452b284f832fdb5270663cbd4ddad2e014aabfdbbb98f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-1-monitor-current-processes.txt",
+      "bytes": 59371,
+      "sha256": "2c21c10a5dab70f24d1165979513cea334f3c4e2d7d94d1114d289d64b3c1ba2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-expected.json",
+      "bytes": 3062,
+      "sha256": "410e6204b914afa767e11e739d4f549bcb24483de46b5c279657f7eebaa6f781"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/summary.json",
+      "bytes": 58750,
+      "sha256": "352dd58bc7b4d3d258a087553d1de97a14bbb2844f30f176c85dec2ddeb9c12c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-0-before-processes.txt",
+      "bytes": 59874,
+      "sha256": "857e384a2295bd2d8c6a993d7e0454e96ad63b4ec1c9a41d4da87d0883cf639e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-0-after-processes.txt",
+      "bytes": 59874,
+      "sha256": "849bfb795b14acfa7d390d1b7352ce7fbd0a17765e09eefdc20cec67b2ca3010"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-1-after-processes.txt",
+      "bytes": 60142,
+      "sha256": "d3080f9df31bf3440a9ad5504505c6b8a1138bbfddb2d37a4ca2743625a85ab8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-0-after-processes.txt",
+      "bytes": 59874,
+      "sha256": "d177f5fef24a1f3d2221b52c133d5cdd3392aa158a02c4a1458f6203724e6c4c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-1-after-processes.txt",
+      "bytes": 60142,
+      "sha256": "2d8c271cd9c8e47c2867e0dcef9c8c35b1a7132f24f2868ef35e9e9f437ecd5c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/metadata.json",
+      "bytes": 1048,
+      "sha256": "90b8eb116d7f01df0c265f805afb8dcfeed38bbe48319945c893e1e530cd9b79"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-case.json",
+      "bytes": 322,
+      "sha256": "d5253cf1ccdc6a9b60d23416583bb520ce68ba3c51e7e1c50cbb7a65f751c632"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-1-before-processes.txt",
+      "bytes": 60142,
+      "sha256": "359746ea260073a5e9c6fbfad750482098fa2c2a68c588737185e6a399535cca"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/statuses.json",
+      "bytes": 2496,
+      "sha256": "2ed83609854db06e487cb9aba9e625ae2c10fba639d392a43fc6528db596e5eb"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-0-before-processes.txt",
+      "bytes": 59874,
+      "sha256": "29dd9d19e591d6bb5d9296bcf8229f2a1426d0206d71ec588ff5b5bf92236db6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-1-monitor-current-processes.txt",
+      "bytes": 60175,
+      "sha256": "f2799f5b068acbf548b0e7dbcf026fbd6edc5e6381de06d2def00d5e87f27726"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-1-monitor-current-processes.txt",
+      "bytes": 60175,
+      "sha256": "29028fdbcc0a6480ac1d92f6bbc57a95aa59d0cda1e7c584475ab29cf45d078d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-1-before-processes.txt",
+      "bytes": 59874,
+      "sha256": "a0eced2176016a040d39adb87dac51201d43ee7a0995251da23f871d9175e911"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-0-monitor-current-processes.txt",
+      "bytes": 59907,
+      "sha256": "cb60d3e12cb2d012f9f52a62c1301d486f35c2c9f5d30369c1fbf2c9fd5cda82"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/background_service_checks.json",
+      "bytes": 18925,
+      "sha256": "5da573b827535336af6ea3a65d022bfd2e96185302868d4a7badc5e1b0f29ab0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-0-monitor-current-processes.txt",
+      "bytes": 59907,
+      "sha256": "9db91d71fef5e619b50251bc60502f79171d96f5ce393bddee9bb293d0ee76db"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1-before-processes.txt",
+      "bytes": 59606,
+      "sha256": "ca9f219b2dbd98a4f27b138fd846408532716ff4859ecc83ab3fc36a87ad9bd1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/summary.json",
+      "bytes": 91904,
+      "sha256": "3f1e213ba7f51111fe1da6d2e4ffd236cce96518765b28ef9478fc6f18b7fcb5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1-before-processes.txt",
+      "bytes": 59606,
+      "sha256": "6e4f2adc53d39d45b9d9e5058c7f1e503358d05d62a10c40012672ee69e90122"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0-before-processes.txt",
+      "bytes": 59472,
+      "sha256": "922f510df7e1c39df375269e87851e9d3bfec0a58ea4da34f84a5261c21146bf"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/metadata.json",
+      "bytes": 1050,
+      "sha256": "fa7122468f6fc61b6c84f94726f3378a4c27086e91e9ae5a1019fd39fbf44dcd"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-expected.json",
+      "bytes": 2142,
+      "sha256": "f3ec54fa978df888165de328ac91c4a4911b1947bb4cd85e5c3ebaa650be51ce"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0-before-processes.txt",
+      "bytes": 59472,
+      "sha256": "4b4345adbc1f7cc2a2eed12cbcf950ae757abc60d1957bdc54afe3e65997fc67"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/statuses.json",
+      "bytes": 3556,
+      "sha256": "3a9462dd9bdaffe1fe5484709f8551f98619e3644677c61caba5d9f53359a280"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0-monitor-current-processes.txt",
+      "bytes": 59625,
+      "sha256": "17462ec3d6b843629fe1f8918c7e45421f297df0c7787c9f5ad3824e3ca08e90"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1-monitor-current-processes.txt",
+      "bytes": 59635,
+      "sha256": "1f8f401d92189c6d42d4023b588bc0bc73a48a82e084c7d84df7be1fd44b0df4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1-after-processes.txt",
+      "bytes": 59606,
+      "sha256": "4fea30d91552de4ecf83e4a7e1afae49eade9800fef72d9d46873a41d513c044"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0-after-processes.txt",
+      "bytes": 59472,
+      "sha256": "87afc8b2876eea712bd64d596e17996acda15ba38e436b2153d11c4e6604d04b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-case.json",
+      "bytes": 2311,
+      "sha256": "11e925acd5f0841a6083f265d77d342633e34cc1f41652e696af3806341ac4b0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1-monitor-current-processes.txt",
+      "bytes": 59635,
+      "sha256": "fe879ef8884a88a380040f5279a942583215e47265c804fac9815cab556afa32"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0-after-processes.txt",
+      "bytes": 59606,
+      "sha256": "59a3279fa63f21fe094847f6e0ce54def789f012d32194a4def15b44b8e75943"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0-monitor-current-processes.txt",
+      "bytes": 59635,
+      "sha256": "b40e64e06f662434eb5b29627b6e584ad0e2b466d65253eced887185387c87bc"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1-after-processes.txt",
+      "bytes": 59606,
+      "sha256": "4215ba78aacbb71e3dcdf8300f951ff4a79a73e76cb8518b5dd0591214a1c1e1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/background_service_checks.json",
+      "bytes": 34694,
+      "sha256": "4dbca7b5f029ec8f5cb97074a4797052ffb43ec6ab88fee4d0595572872b4e2e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/exit.json",
+      "bytes": 848,
+      "sha256": "41a0d373709a5c24a9aa6beed8d22f9da7c2cd441678f2f16385c9516d1d11a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/monitor.json",
+      "bytes": 692,
+      "sha256": "90a03a5486aa4ccb93e4aa06c5ef5bd96ee92e2d82cc34f4fa924ff6da58386b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/output.log",
+      "bytes": 16520,
+      "sha256": "c7cc4a704dbb0e3d3d343ba49c99a7134fccd6bfa1d8edc8001a59797815b056"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/exit.json",
+      "bytes": 848,
+      "sha256": "77d88daaa35fd0bc8d3e103850cf169a1a358714afddc86922aa89a64f0fdf63"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/monitor.json",
+      "bytes": 690,
+      "sha256": "5f2d174a3015b37011d4ef594329057538c8eae5c8cf650a3b725924e7d23f39"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/output.log",
+      "bytes": 16511,
+      "sha256": "de40d6cbed2f89f100d97b8c19e82428ea202df4f4acafc77095fe3123d6353a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/exit.json",
+      "bytes": 857,
+      "sha256": "f7bfdfe659de2f1b8dace52376767091ecb8d9ac1a24253369add4c60cabe8d2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/monitor.json",
+      "bytes": 691,
+      "sha256": "0e6edd7869d7a91923ed144786a6b5f7f1460291082716e58cf979b5de78bd94"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/output.log",
+      "bytes": 16648,
+      "sha256": "a75baf483136ca3f0a97c5ec1ce181f89ccacae22cbe146cbb744dfaac54eb81"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/exit.json",
+      "bytes": 857,
+      "sha256": "a170378211e4dc8c9a1f502c57451c30fbeb501d52993aa4d187d0df9c328bac"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/monitor.json",
+      "bytes": 690,
+      "sha256": "ecb239a6220358d85c18aafe7a8d6c065817bd6805d638054aa4a00288f36f0f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/output.log",
+      "bytes": 16642,
+      "sha256": "d74446edcd44c441ca201ed19adf5f29f284f80df166e86a1f96faf5aafb2fc7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-0-frame_first.json",
+      "bytes": 58,
+      "sha256": "5f5a2b30a66377dd899161f536d54d8ad2ecab5b9277a5a4a6af38a556df58ca"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-ready.json",
+      "bytes": 701,
+      "sha256": "ed4064d2d8e13aa0c3e34f9585d98084bcde0417082a0b70bc3b809084f85923"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-1.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-0.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-0-frame_done.json",
+      "bytes": 14,
+      "sha256": "92c42576ecdff3fde2c59c03170cfff9955b813059068969580cc14f56bfe0c6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/frame-2.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-2-frame_result.json",
+      "bytes": 2330,
+      "sha256": "11cd08a47ee72e3bdbd14577a1b4602ee4b146c44d2318b15a448e90a7ed3985"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-1-frame_first.json",
+      "bytes": 58,
+      "sha256": "0f7e52a58e33b1ff46a2f18f3c8a627934381357fd7b63e7d1dfa61566f5773d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-1-frame_done.json",
+      "bytes": 14,
+      "sha256": "4943782ee6dfa045a402ae56b3884974701437d3bfad08b7dd2fff7c67589e4b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/worker.log",
+      "bytes": 1485,
+      "sha256": "55ed351d2cca485967d4b5c31a25d62a487c3b3f923013de668f72141f902544"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-1-frame_result.json",
+      "bytes": 2330,
+      "sha256": "35043bedf607fea57689b9f60cf8c496494e65a366335ea67e20c0e219da2a87"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-0-frame_result.json",
+      "bytes": 2327,
+      "sha256": "50f4b607faef16e5d0787e28f5b7077c8ac7b0c86774ed1d9e906d2ec82a0153"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-2-frame_first.json",
+      "bytes": 58,
+      "sha256": "ca46d028bd3d7f3d860b0da11321ab615f9aad62f9723c18d7032509842aecfc"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json",
+      "bytes": 28,
+      "sha256": "f937aa21ca4f26e482ccf172bced70a974ad165f39831af6d920767d4ffca992"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/ready.json",
+      "bytes": 1048,
+      "sha256": "0a89362a2d9eed7e761c72728655ca00d9f5685463cc6bc3208cc731e2ad0c7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-0/protocol/command.json.event-2-frame_done.json",
+      "bytes": 14,
+      "sha256": "45373af65e8977c2854f6e55401f1dcba0846f325d2cd2685cc2600d5f235a23"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-0-frame_first.json",
+      "bytes": 58,
+      "sha256": "cbe61afd51f58eb69fb7e3a8af383ea6af5e59c50a4cd605f4a4304730a89bb1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-ready.json",
+      "bytes": 701,
+      "sha256": "ed4064d2d8e13aa0c3e34f9585d98084bcde0417082a0b70bc3b809084f85923"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-1.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-0.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-0-frame_done.json",
+      "bytes": 14,
+      "sha256": "92c42576ecdff3fde2c59c03170cfff9955b813059068969580cc14f56bfe0c6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/frame-2.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-2-frame_result.json",
+      "bytes": 2328,
+      "sha256": "8cc6526ef00091081e989eb127fea789b6888e1fb1afb5bd2fbbae85a0c7f5a3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-1-frame_first.json",
+      "bytes": 58,
+      "sha256": "af775b2700e14d81637b3f90f3ce41b66b7d2de642691d9865354fed97adde64"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-1-frame_done.json",
+      "bytes": 14,
+      "sha256": "4943782ee6dfa045a402ae56b3884974701437d3bfad08b7dd2fff7c67589e4b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/worker.log",
+      "bytes": 1485,
+      "sha256": "0c50b7ddaab8a844ba7f9f52c7f17e3504f5c07d8b46959a49c8671b5659d8ad"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-1-frame_result.json",
+      "bytes": 2333,
+      "sha256": "1ffb1757d7920ce358102fab6939ef8492e425e137c0e4720580b47e4beb9fad"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-0-frame_result.json",
+      "bytes": 2331,
+      "sha256": "58f9c897907afed3785a3a925c0a7c945a42ef3207cee08dd742085487ac4ec1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-2-frame_first.json",
+      "bytes": 57,
+      "sha256": "893f931afc1d97da27d131170e33ac79824d0a18a20f5b14c5047a8782a153d2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json",
+      "bytes": 28,
+      "sha256": "f937aa21ca4f26e482ccf172bced70a974ad165f39831af6d920767d4ffca992"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/ready.json",
+      "bytes": 1048,
+      "sha256": "0a89362a2d9eed7e761c72728655ca00d9f5685463cc6bc3208cc731e2ad0c7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-candidate-1/protocol/command.json.event-2-frame_done.json",
+      "bytes": 14,
+      "sha256": "45373af65e8977c2854f6e55401f1dcba0846f325d2cd2685cc2600d5f235a23"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-0-frame_first.json",
+      "bytes": 58,
+      "sha256": "7cf7fcfe36132704d585aa13c57eb6724c1cdf574f009667caa2f33eb9adb7c3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-ready.json",
+      "bytes": 701,
+      "sha256": "ed4064d2d8e13aa0c3e34f9585d98084bcde0417082a0b70bc3b809084f85923"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-1.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-0.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-0-frame_done.json",
+      "bytes": 14,
+      "sha256": "92c42576ecdff3fde2c59c03170cfff9955b813059068969580cc14f56bfe0c6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/frame-2.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-2-frame_result.json",
+      "bytes": 2287,
+      "sha256": "33ccbeeb5ae1e99a9018582c54206f71e452f13916c5a30b8950537c9d65cb47"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-1-frame_first.json",
+      "bytes": 58,
+      "sha256": "5b6e44b9bf97892449efd60d24e2c5c270e9ab983d8dda56222efa044cfadd84"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-1-frame_done.json",
+      "bytes": 14,
+      "sha256": "4943782ee6dfa045a402ae56b3884974701437d3bfad08b7dd2fff7c67589e4b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/worker.log",
+      "bytes": 1478,
+      "sha256": "0735b2ceeeac9e0999e398c9e5833e2a8a481d660c0486c0ecfea429139ff3d2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-1-frame_result.json",
+      "bytes": 2290,
+      "sha256": "1fa2d30052895b908cfbe1eefec91cf701564efcea54649bee12654bafac42cb"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-0-frame_result.json",
+      "bytes": 2290,
+      "sha256": "6a597c5156203646a85bafcab31fcc32773c3786353b8c38249a91b04e423b50"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-2-frame_first.json",
+      "bytes": 58,
+      "sha256": "e773be973e9c5940f18b29ab91a8276f45866194377faf5e47f6c57b3ef838ea"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json",
+      "bytes": 28,
+      "sha256": "f937aa21ca4f26e482ccf172bced70a974ad165f39831af6d920767d4ffca992"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/ready.json",
+      "bytes": 1048,
+      "sha256": "0a89362a2d9eed7e761c72728655ca00d9f5685463cc6bc3208cc731e2ad0c7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-0/protocol/command.json.event-2-frame_done.json",
+      "bytes": 14,
+      "sha256": "45373af65e8977c2854f6e55401f1dcba0846f325d2cd2685cc2600d5f235a23"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-0-frame_first.json",
+      "bytes": 58,
+      "sha256": "6436041365b28374629f9fefc98f47dc019d4381e281bec8cf7df901d31c7756"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-ready.json",
+      "bytes": 701,
+      "sha256": "ed4064d2d8e13aa0c3e34f9585d98084bcde0417082a0b70bc3b809084f85923"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-1.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-0.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-0-frame_done.json",
+      "bytes": 14,
+      "sha256": "92c42576ecdff3fde2c59c03170cfff9955b813059068969580cc14f56bfe0c6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/frame-2.f32",
+      "bytes": 1327104,
+      "sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-2-frame_result.json",
+      "bytes": 2291,
+      "sha256": "20a9f508cbd2b71fb6459cf57aabc163472ef649d1bb3f326b63c916deffed11"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-1-frame_first.json",
+      "bytes": 58,
+      "sha256": "aa81f3f01ec00ede462f802d85de73d81fedfc02cf0bd9907194fb7a1eb782c8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-1-frame_done.json",
+      "bytes": 14,
+      "sha256": "4943782ee6dfa045a402ae56b3884974701437d3bfad08b7dd2fff7c67589e4b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/worker.log",
+      "bytes": 1480,
+      "sha256": "6c6a62059e33afa09077ca32f0e5423b07142d96fdfebe9967c16f61972e7f1d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-1-frame_result.json",
+      "bytes": 2293,
+      "sha256": "b1df762856759014172f76b6cbf7653dd898311a9bf25532843d34b53907cd2d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-0-frame_result.json",
+      "bytes": 2290,
+      "sha256": "f6910950cf273e6596360a51b640ac6eb4c93e18b009a9c7c71c02596b5e7239"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-2-frame_first.json",
+      "bytes": 58,
+      "sha256": "d550e0ffb6c3168b38ccf0bf19dcdbd23d4fe973869b117701fabde4f169911e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json",
+      "bytes": 28,
+      "sha256": "f937aa21ca4f26e482ccf172bced70a974ad165f39831af6d920767d4ffca992"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/ready.json",
+      "bytes": 1048,
+      "sha256": "0a89362a2d9eed7e761c72728655ca00d9f5685463cc6bc3208cc731e2ad0c7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b1-attempt0/Qwen3.5-0.8B-b1-control-1/protocol/command.json.event-2-frame_done.json",
+      "bytes": 14,
+      "sha256": "45373af65e8977c2854f6e55401f1dcba0846f325d2cd2685cc2600d5f235a23"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-1/exit.json",
+      "bytes": 597,
+      "sha256": "237ae232a98f523c7bf42f75fa6f449db8a17cd3eadb818994ebd06820664b83"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-1/monitor.json",
+      "bytes": 307,
+      "sha256": "b312f3429d1753f0b028a9225b7266f58e1c687583e34cf34e4ae46e95168290"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-1/output.log",
+      "bytes": 10841,
+      "sha256": "e3a03e452b318b7700fb6d57332d865b90f5d0a6519eaa6e2987424bea4ce40f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-0/exit.json",
+      "bytes": 597,
+      "sha256": "356690cf087c8a86d9664b1cb8094daad867a1f3951d08c0c239d62c72944401"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-0/monitor.json",
+      "bytes": 309,
+      "sha256": "d82211fa63e1acc353fd41222dbaaf4bd5a96668ff20c5643db8824278dfda4f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-0/output.log",
+      "bytes": 10852,
+      "sha256": "b775be82cbf2841d1f7a0bac1c845c0aa63154e5b2e9b698086440bbcdfe1740"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-0/exit.json",
+      "bytes": 590,
+      "sha256": "04dfef5ba82258a981cd63c35837aa7413f1b68e641c21c5f54c6c970c7899ad"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-0/monitor.json",
+      "bytes": 311,
+      "sha256": "5bf0a3a971c0cb8b7d7071c694471855b8ac91a7e9f246cae532c708df6f52ac"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-0/output.log",
+      "bytes": 10739,
+      "sha256": "c716724010955fde0c3e929d346fa3aef9048b7c41b3d7f9e95ce8dc86b92d75"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-1/exit.json",
+      "bytes": 590,
+      "sha256": "30666451eb2a783edde0373216c74bcdb568337e69e5934fd9426a1582a110c3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-1/monitor.json",
+      "bytes": 310,
+      "sha256": "d3b6e76e746e59d214d22f038759871bb19324813d51007629a74514962df8de"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-control-1/output.log",
+      "bytes": 10737,
+      "sha256": "b819428780eb1c7e8aa0352c2bd449f90a17e01d6db66f6e584c503f13ff5b40"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-0/exit.json",
+      "bytes": 658,
+      "sha256": "5ebbbdabc912bcc1507897aebd711e4ca505716e77d949fbebcd6efd2c86df67"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-0/monitor.json",
+      "bytes": 309,
+      "sha256": "938066e63faf16c0d3c99cb3f381b92999897cef7936f95d57e91211c63a15f1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-0/output.log",
+      "bytes": 14504,
+      "sha256": "920b7d42b3fde892674882bdf7d5e9129bea4c2c31a2c544d965b1c461474b7a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-1/exit.json",
+      "bytes": 658,
+      "sha256": "8ab0d039cb9b5ce07255e2d5632d94d7450ac51c783b8cf490152ec834d70e19"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-1/monitor.json",
+      "bytes": 311,
+      "sha256": "6822cd3d68b62deafbb89b468ff33eed7f2204f11d462e71d699841915c16018"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-control-1/output.log",
+      "bytes": 14470,
+      "sha256": "5dc46d683768947bb56cb40e357c1f947c8f2e59d82ee5d5cfbc3589b3129cb5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-1/exit.json",
+      "bytes": 665,
+      "sha256": "aa6e20c6ce026643c5109891ca77e41e65903326d59f5d7c153f5277f8d46e96"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-1/monitor.json",
+      "bytes": 311,
+      "sha256": "74e4cc87d48f8db9805e94a341cd9d66f8c953d3cd471a48587ca7b9c3e7654c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-1/output.log",
+      "bytes": 14597,
+      "sha256": "7e253a75b43683c09e9199d2d684c437316a9ecca3445f6c1faab959eefad662"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-0/exit.json",
+      "bytes": 665,
+      "sha256": "2176ec54b31f902b3de99d4cb355c1477cf33cd5590a9eb1390f80b10d1e5617"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-0/monitor.json",
+      "bytes": 310,
+      "sha256": "1f7e4c376d85917b3cd6085cfe8cd5c984a6da5583fcae999444006f53cc3b1e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/Qwen2.5-Coder-0.5B-Instruct-b1-candidate-0/output.log",
+      "bytes": 14613,
+      "sha256": "d16f97574a3e9a188dbc046c489bbb60a6bcb01c8d220e9de84221636e35cab1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-0/exit.json",
+      "bytes": 658,
+      "sha256": "6a09b7ebaf17923529f21aab48aef75796103d7c6f7bd2929c269eddaa03b097"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-0/monitor.json",
+      "bytes": 309,
+      "sha256": "e32d0b8ed07c4dc1bcc616cd5b4fdee44249d03ea1c3f0f80cf9d22e7cceb9e8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-0/output.log",
+      "bytes": 14979,
+      "sha256": "bb8f78504e34140b0b684c786ecf7a5ed86903ef7c1639841e9b0b2a335b5970"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-1/exit.json",
+      "bytes": 658,
+      "sha256": "ec4a35b769e8bcd63afd30c0e8c8bb11657806ccda26396b3d3f4eae2943b398"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-1/monitor.json",
+      "bytes": 310,
+      "sha256": "454c2efd158f74dac59871fdbe74950ee1e3c68bb52bf92ccf6400574625e606"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-control-1/output.log",
+      "bytes": 14976,
+      "sha256": "581d24fdeee3fe81c5305b9eff587e135ec8e738dbfeb2d181a1bfd66508d09f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0/exit.json",
+      "bytes": 665,
+      "sha256": "f8bd4e0119c6e2f17db96b8c960598bcca65f67d9c43b9512deaa6eb18db81d6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0/monitor.json",
+      "bytes": 308,
+      "sha256": "b00fa2a5c1740a73f15e1713981009b12d0f060bff5e4069d22ad355520375f4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-0/output.log",
+      "bytes": 15111,
+      "sha256": "f44bfbacd9476737c8f26d584185dcb76dc0d1835d2d3a73ec166bce6f24890a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1/exit.json",
+      "bytes": 665,
+      "sha256": "6ae3c6f0f5b3a93d3865d320758dc0095c9f8632127f81860c548c4b22d9c12b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1/monitor.json",
+      "bytes": 310,
+      "sha256": "84b0dc9321e5a3361ad1b2f305dd252f2898071e79e03f392e38d25a3c159969"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/Qwen2.5-Coder-0.5B-Instruct-b2-candidate-1/output.log",
+      "bytes": 15095,
+      "sha256": "8a2594ad2b8eda2ac743633901c66f7957e51b4e85d74efa58dfd1634af07484"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-0/exit.json",
+      "bytes": 597,
+      "sha256": "a7571e008b5268800df6c27f9e9327c51d5f2c03cdcb967c338f7966951e3d09"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-0/monitor.json",
+      "bytes": 310,
+      "sha256": "a8feb060f1ee024baf5a83984c7fa42831164ddb00ab68da56dfc03dfcca77e3"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-0/output.log",
+      "bytes": 10540,
+      "sha256": "862e6a524543e692149b5cdb6e3a47808527c1c417d31438eb033d11a729149d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-1/exit.json",
+      "bytes": 597,
+      "sha256": "dd92d060910801b3ad36ed4c13e05484b84eec7ad5886e8c6c56fbede9592609"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-1/monitor.json",
+      "bytes": 311,
+      "sha256": "e351450cd71fdb5d1337849b144906c8ed6fe808e2744997e82c74dd70882d1f"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-candidate-1/output.log",
+      "bytes": 10569,
+      "sha256": "1680cced6d71aac647fc9edb41e58ed0606b5c6e56009a9c26acc35202ebaa31"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-0/exit.json",
+      "bytes": 590,
+      "sha256": "71a40efbfeb97ab939c80b316601912c6c09026e1a5833e8317b81a1aec06839"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-0/monitor.json",
+      "bytes": 309,
+      "sha256": "0b19b2043ba79bb70516a2b814257488c0a873ed54071b1154ff77733e0a3631"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-0/output.log",
+      "bytes": 10439,
+      "sha256": "35acf4fc342c66243e8965a3e20a206f1400cb1d1f2e6d6e14c2a97f9ec6eafa"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-1/exit.json",
+      "bytes": 590,
+      "sha256": "c8f5b7710e5f0077f06c37ac146beaa8996dd7b1c8c3d69a74289a88d48442c0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-1/monitor.json",
+      "bytes": 311,
+      "sha256": "4ca6ce86bd16bd47eaaf10b1ec4853df4ea73224a2516e20fcf428c205d32a5d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-control-1/output.log",
+      "bytes": 10437,
+      "sha256": "cfd74469ed29107a7b20ea9868fa9866cded123c6405a91c658ee35454fd8779"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/exit.json",
+      "bytes": 857,
+      "sha256": "e9da5abd8ce88eeedfba73aff9e5a9a92e0a47ea37f371fe4e08ea4ddf1655f4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/monitor.json",
+      "bytes": 769,
+      "sha256": "71bcf66cbd79802414b91b5fbce0042b769409d914562549b1165ec3eee73a58"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/output.log",
+      "bytes": 17675,
+      "sha256": "93f65e5c9a46a5c734b94650f640d9c5cd11b37cd0c6b99b1988428f13f5fcc1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/exit.json",
+      "bytes": 857,
+      "sha256": "e4fe69c1acb3d4de95274140b42392e213dc6378e03a23260b51c8e1d34c20f7"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/monitor.json",
+      "bytes": 767,
+      "sha256": "af0320e95a00d6e9c4ee9f41d037095836af803193824b426077eb64339162da"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/output.log",
+      "bytes": 17666,
+      "sha256": "b99166aa2fd1e29b4d49513d19666269fa3ee69b427fccefd52c3c1c884bf024"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/exit.json",
+      "bytes": 848,
+      "sha256": "f79ca205d687a619c4b01cffba9046fa329c2b4f3e99db86e54347fcefbc3c12"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/monitor.json",
+      "bytes": 765,
+      "sha256": "d81fd3c98c69049ccb570f15965f8d556a4f2c537780c52a57934ea67fa32d18"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/output.log",
+      "bytes": 17549,
+      "sha256": "cd5ed1445c1deb961f2b08c6b0c9e054f0082f2a4add4aaaba6a1ae03088bc83"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/exit.json",
+      "bytes": 848,
+      "sha256": "637c144f964d9b4c1f4b6eb419c0889c3025ea8d9562885e99e7dc46678cc265"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/monitor.json",
+      "bytes": 768,
+      "sha256": "f3defb98b5514a00f617c0c68c8cf6cb5d47f4a189d816011326db0a84851d2b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/output.log",
+      "bytes": 17553,
+      "sha256": "284ed705689a5824f1ce47ec0240ac0c5e4bbf15fc4723acc3d2892bdcdbeb04"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-0-frame_first.json",
+      "bytes": 58,
+      "sha256": "01a53dce93552cf50c4b88a40634d95cfa3256a686e88134010034d50bd4fce4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-ready.json",
+      "bytes": 701,
+      "sha256": "ed4064d2d8e13aa0c3e34f9585d98084bcde0417082a0b70bc3b809084f85923"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-1.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-0.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-0-frame_done.json",
+      "bytes": 14,
+      "sha256": "92c42576ecdff3fde2c59c03170cfff9955b813059068969580cc14f56bfe0c6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/frame-2.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-2-frame_result.json",
+      "bytes": 2634,
+      "sha256": "691be05df29f567f412c20377c811943b5d148ee6b981c0827d5940b24a0a3c4"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-1-frame_first.json",
+      "bytes": 57,
+      "sha256": "13fa16a2c489a95edfc3d437550c0ccdfd7d38570163f0b7213b1ec44857d408"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-1-frame_done.json",
+      "bytes": 14,
+      "sha256": "4943782ee6dfa045a402ae56b3884974701437d3bfad08b7dd2fff7c67589e4b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/worker.log",
+      "bytes": 1486,
+      "sha256": "ae01591b449e3570c9227ec3b3bda45823e377a167be66851d8065a8637130c0"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-1-frame_result.json",
+      "bytes": 2645,
+      "sha256": "fc5344c93c605a31eb7db3804ba0d10cd776c49a6a2699cf936ba8c84be88f68"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-0-frame_result.json",
+      "bytes": 2627,
+      "sha256": "af5a159e2347098f39660458e9db48c9b4c99f594bd98eb506fdc9a676c3844b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-2-frame_first.json",
+      "bytes": 57,
+      "sha256": "65154012fd0d3d8e9f060cb15f3cb1a7b3b0e46aa9ed06499790678617fcf7e5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json",
+      "bytes": 28,
+      "sha256": "f937aa21ca4f26e482ccf172bced70a974ad165f39831af6d920767d4ffca992"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/ready.json",
+      "bytes": 1048,
+      "sha256": "0a89362a2d9eed7e761c72728655ca00d9f5685463cc6bc3208cc731e2ad0c7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-0/protocol/command.json.event-2-frame_done.json",
+      "bytes": 14,
+      "sha256": "45373af65e8977c2854f6e55401f1dcba0846f325d2cd2685cc2600d5f235a23"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-0-frame_first.json",
+      "bytes": 58,
+      "sha256": "0445fa52795214f7959208e3f96e986f93baff4fb1da97bc7303881cc8248644"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-ready.json",
+      "bytes": 701,
+      "sha256": "ed4064d2d8e13aa0c3e34f9585d98084bcde0417082a0b70bc3b809084f85923"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-1.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-0.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-0-frame_done.json",
+      "bytes": 14,
+      "sha256": "92c42576ecdff3fde2c59c03170cfff9955b813059068969580cc14f56bfe0c6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/frame-2.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-2-frame_result.json",
+      "bytes": 2636,
+      "sha256": "3803ad38ba0dcb63cddc4626421806c22232380cbd59e7f3b93fa945aec83e2b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-1-frame_first.json",
+      "bytes": 58,
+      "sha256": "6007bddea90a264fb90a9da9b40eb5bd769017f816187f3d58766516a7b62a0a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-1-frame_done.json",
+      "bytes": 14,
+      "sha256": "4943782ee6dfa045a402ae56b3884974701437d3bfad08b7dd2fff7c67589e4b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/worker.log",
+      "bytes": 1475,
+      "sha256": "567546dce669e24f23a9d583f92d50e75368eeff8ab1a09d694a2683bf92df19"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-1-frame_result.json",
+      "bytes": 2635,
+      "sha256": "1f339bd0d5973f19d68253d69177380db677d9bb245169fbfca03d1720904abb"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-0-frame_result.json",
+      "bytes": 2645,
+      "sha256": "fd097f62666f1a82e0a6b6d08f163dd890cc9f95f7c8c61a47ab9052c163617a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-2-frame_first.json",
+      "bytes": 57,
+      "sha256": "64d7908b9779367777a3b7af53dbcec34959f79196f0c591bc18d389c5c9f570"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json",
+      "bytes": 28,
+      "sha256": "f937aa21ca4f26e482ccf172bced70a974ad165f39831af6d920767d4ffca992"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/ready.json",
+      "bytes": 1048,
+      "sha256": "0a89362a2d9eed7e761c72728655ca00d9f5685463cc6bc3208cc731e2ad0c7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-control-1/protocol/command.json.event-2-frame_done.json",
+      "bytes": 14,
+      "sha256": "45373af65e8977c2854f6e55401f1dcba0846f325d2cd2685cc2600d5f235a23"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-0-frame_first.json",
+      "bytes": 58,
+      "sha256": "6d7b39a76876e7454d636373f9e224e6f5a2f36e385e232a4309aa1331fbd8db"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-ready.json",
+      "bytes": 701,
+      "sha256": "ed4064d2d8e13aa0c3e34f9585d98084bcde0417082a0b70bc3b809084f85923"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-1.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-0.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-0-frame_done.json",
+      "bytes": 14,
+      "sha256": "92c42576ecdff3fde2c59c03170cfff9955b813059068969580cc14f56bfe0c6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/frame-2.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-2-frame_result.json",
+      "bytes": 2666,
+      "sha256": "1817436dba69558fedbf07464e9af2467172b7467495d3318de0a60dc41cc4b2"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-1-frame_first.json",
+      "bytes": 57,
+      "sha256": "954ab55cc5fc63f0b2fced4238781885224c15922a52b5d004c814dd6812c6d1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-1-frame_done.json",
+      "bytes": 14,
+      "sha256": "4943782ee6dfa045a402ae56b3884974701437d3bfad08b7dd2fff7c67589e4b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/worker.log",
+      "bytes": 1476,
+      "sha256": "8f5157e440825c416bd4a8383dacb673920271e2d01e01fb06e015edcd1f1c1c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-1-frame_result.json",
+      "bytes": 2687,
+      "sha256": "6a7a5f3c65ed0a82fa3b7a8858a03e7dbfaf6a9d08217d834568c4b00dbce952"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-0-frame_result.json",
+      "bytes": 2669,
+      "sha256": "a41bfe9b3b5f738a128f21bd43cf6c7900a5c4d6f107b15b84e56b514bed86e1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-2-frame_first.json",
+      "bytes": 56,
+      "sha256": "a16921762f653348404b46f3df2c321138c36df0539e31e800127ccdd6bd2a03"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json",
+      "bytes": 28,
+      "sha256": "f937aa21ca4f26e482ccf172bced70a974ad165f39831af6d920767d4ffca992"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/ready.json",
+      "bytes": 1048,
+      "sha256": "0a89362a2d9eed7e761c72728655ca00d9f5685463cc6bc3208cc731e2ad0c7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-1/protocol/command.json.event-2-frame_done.json",
+      "bytes": 14,
+      "sha256": "45373af65e8977c2854f6e55401f1dcba0846f325d2cd2685cc2600d5f235a23"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-0-frame_first.json",
+      "bytes": 58,
+      "sha256": "6042e53976fad12bc41a17722609591e3a6a735d9c7f507b7c89cae532ba077a"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-ready.json",
+      "bytes": 701,
+      "sha256": "ed4064d2d8e13aa0c3e34f9585d98084bcde0417082a0b70bc3b809084f85923"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-1.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-0.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-0-frame_done.json",
+      "bytes": 14,
+      "sha256": "92c42576ecdff3fde2c59c03170cfff9955b813059068969580cc14f56bfe0c6"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/frame-2.f32",
+      "bytes": 2654208,
+      "sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-2-frame_result.json",
+      "bytes": 2670,
+      "sha256": "f76ee87193dbe8c9722cdc7b21b050f5ad7a80786f2acbab4ee07acde893e4b9"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-1-frame_first.json",
+      "bytes": 57,
+      "sha256": "631bc0717b830f036dde9044c55c887d1ac80145d254305418532ea11c28794c"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-1-frame_done.json",
+      "bytes": 14,
+      "sha256": "4943782ee6dfa045a402ae56b3884974701437d3bfad08b7dd2fff7c67589e4b"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/worker.log",
+      "bytes": 1488,
+      "sha256": "b7dc31d12671304cb719999fc1938531fc75bc3a963e67cc5095ff23b6597b3d"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-1-frame_result.json",
+      "bytes": 2679,
+      "sha256": "7d3fbb49ebe8a511d40d5e5150b57e6faa71ac5d35b88469d1e5c65e074177f8"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-0-frame_result.json",
+      "bytes": 2669,
+      "sha256": "554a5a28e828c363cdd660f0360b3e4e79341070ae70aba6ffaacfa3f0652ba1"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-2-frame_first.json",
+      "bytes": 58,
+      "sha256": "6b8eeaf729f2c7d59be46dc2e0bbcbcb9aa4f41de0febeedebc5fcce93ca0c93"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json",
+      "bytes": 28,
+      "sha256": "f937aa21ca4f26e482ccf172bced70a974ad165f39831af6d920767d4ffca992"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/ready.json",
+      "bytes": 1048,
+      "sha256": "0a89362a2d9eed7e761c72728655ca00d9f5685463cc6bc3208cc731e2ad0c7e"
+    },
+    {
+      "path": "logs/combined-prefill-reset-20261015/native/Qwen3.5-0.8B-b2-attempt0/Qwen3.5-0.8B-b2-candidate-0/protocol/command.json.event-2-frame_done.json",
+      "bytes": 14,
+      "sha256": "45373af65e8977c2854f6e55401f1dcba0846f325d2cd2685cc2600d5f235a23"
+    },
+    {
+      "path": "prefill-stream-staging/original.json",
+      "bytes": 970,
+      "sha256": "4166276ff01f54a0d4d2967a06ee16e641a61971732ffee5b2fe90dbb6b84b72"
+    },
+    {
+      "path": "prefill-stream-staging/source.tar.gz",
+      "bytes": 46101,
+      "sha256": "f33dba32dcfc4711be0cad4f35cc88a6980e46a36f9ed6f015893c509f8c1b74"
+    },
+    {
+      "path": "prefill-stream-staging/install_prefill_stream_sources.py",
+      "bytes": 375,
+      "sha256": "bfa5cfe057a28ae942f673663c5dc2410e3469d493c38dedbc1f192f81bfda2e"
+    },
+    {
+      "path": "prefill-stream-staging/manifest.json",
+      "bytes": 1082,
+      "sha256": "31bd6d7d15e9249132899815509a226aa202cb37f854297b12c8c83846b4f96c"
+    },
+    {
+      "path": "prefill-stream-staging/install_residual_norm_sources.py",
+      "bytes": 1385,
+      "sha256": "5b637f1cc0ddec1d0660b481261e58514bde03ea86e0a7b038a2f83e0ea124ae"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/manifest.json",
+      "bytes": 969,
+      "sha256": "8c8580f70988508ecb417754f1bf3f3ea6b9029e34788d8c1efe56c7e28fe3f4"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/cmake/GarnetMetal.cmake",
+      "bytes": 11281,
+      "sha256": "465838b74e90ce70d907b2235feef8bf45462d19353e462fa3ad515c2156bc3d"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/entry/metal_main.cpp",
+      "bytes": 2749,
+      "sha256": "31e20b06eece2025b4db581bf57e6476bf3ac8fa2d779dcc4587dd5536047bd7"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/backends/metal/decoder_session.h",
+      "bytes": 4889,
+      "sha256": "be14d9bb611220b09113203bc2423ab79fa2b0bee7fc003cb7316057781e238b"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/backends/metal/decoder_session.cpp",
+      "bytes": 15332,
+      "sha256": "b6b29dc099d775944189982ff05d08de5269cdbc3573e25c3ff37f000dec02f9"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/backends/metal/metal_context.mm",
+      "bytes": 169385,
+      "sha256": "0b00dc5536401264a10a90e2edfc1b4f80b351eb6ce26332bb1cba1dea3c911e"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/backends/metal/metal_context.h",
+      "bytes": 9259,
+      "sha256": "c52d1085a30736a6f0c29f8fc5e33f7784a75df729d3355c9ba225798736a6c5"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/test2026/metal/frame_worker_garnet.py",
+      "bytes": 7330,
+      "sha256": "68b7882f6223701c2a5cfd0747be0781b49014df56ad66377a02b50bdfa51b1b"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/test2026/metal/run_matched_garnet.py",
+      "bytes": 6524,
+      "sha256": "cce868dda9c3100cdf946b809b6e525f3dd4342ce0330aab15dbca6b682143c6"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/xModel/qwen35/vl_0_8b/metal_decoder.py",
+      "bytes": 14577,
+      "sha256": "1c599f3192e78b277206dec947c268b12d579f3ba93e3d5422bdd67be0fcf289"
+    },
+    {
+      "path": "source/cmake/GarnetMetal.cmake",
+      "bytes": 11797,
+      "sha256": "6d96d560577e087ed116560bd2014205501e0334e3dd7e474ade226360284cdb"
+    },
+    {
+      "path": "source/src/backends/metal/metal_context.h",
+      "bytes": 9399,
+      "sha256": "874d3d59ceb44daa3a972ffbcb31405e361fb472c94c1acc8f23a39df437ace0"
+    },
+    {
+      "path": "source/src/backends/metal/metal_context.mm",
+      "bytes": 171286,
+      "sha256": "b0cf78db529b4837022a66ac06db879774e114a73285d43065582124b505f480"
+    },
+    {
+      "path": "source/src/backends/metal/decoder_session.h",
+      "bytes": 5125,
+      "sha256": "d86d6300dc6440bd7865de66890b1f1b8e25382f3bc01966982fda429d7e94e8"
+    },
+    {
+      "path": "source/src/backends/metal/decoder_session.cpp",
+      "bytes": 15641,
+      "sha256": "63e1c60ef0967a948b7e69eb5f12c1a9c39ceab6cf5a5829e1a48e09e799914f"
+    },
+    {
+      "path": "source/src/entry/metal_main.cpp",
+      "bytes": 2825,
+      "sha256": "3bd62b127fb471886c4e73474971c63dbc85d4deb77ed28c03a2eef06e296b16"
+    },
+    {
+      "path": "source/test2026/metal/run_matched_garnet.py",
+      "bytes": 6738,
+      "sha256": "c482f3eb4f828d238e4bdd40a0d343b1ee14b3def240225f3d95673a57849436"
+    },
+    {
+      "path": "source/test2026/metal/frame_worker_garnet.py",
+      "bytes": 7544,
+      "sha256": "68b5b37acb100b48f4938ababc3594c809547d63ad0b14155c98970875cec1fd"
+    },
+    {
+      "path": "source/xModel/qwen35/vl_0_8b/metal_decoder.py",
+      "bytes": 14684,
+      "sha256": "e0795cf9405631dafe399a156ee332ad6b5b97d90832c0e86ca22bfc217740e7"
+    },
+    {
+      "path": "source/test2026/metal/prefill_stream_test.cpp",
+      "bytes": 2719,
+      "sha256": "94bcc4dd1a810395b4dfafa5590c0eea933e95809452c7c3c28c951bbd4eaad2"
+    },
+    {
+      "path": "source/src/backends/metal/compiled_graph.cpp",
+      "bytes": 78896,
+      "sha256": "268698db451954d149ae7788391270b5f7bf1808adc9ca8aca0fdabba8b54f2d"
+    },
+    {
+      "path": "source/xModel/qwen/metal_dense/decoder.py",
+      "bytes": 5670,
+      "sha256": "92ee08c4ee3ca54e61b6597d79e63f342c99f62f9fd678e98fc1ff79741f6378"
+    },
+    {
+      "path": "source/test2026/metal/run_dense_reference.py",
+      "bytes": 6575,
+      "sha256": "d6651780c283093effe1d8a27304f907976948d1647ed38608b043203bde4a94"
+    },
+    {
+      "path": "source/test2026/metal/run_joined_prefill_checks.py",
+      "bytes": 6347,
+      "sha256": "fac8cdcf920e7773496ddbffc871a8ab6e75302c9254989409329eac1630b0ac"
+    },
+    {
+      "path": "source/test2026/metal/launch_combined_prefill_reset.py",
+      "bytes": 2472,
+      "sha256": "81f7f670f8cf461bab379db5e439b80573232f059256b0bac8ab2b14006256d3"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_combined_prefill_reset_checks.py",
+      "bytes": 995,
+      "sha256": "a8c699e6cf1ec3806cee49f7156724996a6928704f6820879e08d7bfa560e1ca"
+    },
+    {
+      "path": "source/test2026/metal/run_combined_prefill_reset_profiles.py",
+      "bytes": 297,
+      "sha256": "e5a8c7d6e6c239773fef02212513160311dca6e7439da8a8fa2f74f1e585ac0c"
+    },
+    {
+      "path": "source/test2026/metal/compare_combined_prefill_reset.py",
+      "bytes": 1287,
+      "sha256": "3126762e16423d8d162dca1322ba80fc44ea9ffece406be2e62d31e24d965c76"
+    },
+    {
+      "path": "source/test2026/metal/launch_confirm_prefill_stream_profiles.py",
+      "bytes": 646,
+      "sha256": "6dcbe4dba475b56cfeb4c1d17ad7632da87ee39e8eb7771304b152afc66d5bfb"
+    },
+    {
+      "path": "source/test2026/metal/launch_confirm_global_half_alpha_profiles.py",
+      "bytes": 1169,
+      "sha256": "b72f17e5c24cdf2588cc92d9a08bb4a1f367123d288e41249a8fbee994727b9a"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_dirty_prefix_reset_checks.py",
+      "bytes": 367,
+      "sha256": "15f6d72e286a04739785d96d1baccad53fd471c805e45168fce6f45d28a72742"
+    },
+    {
+      "path": "source/test2026/metal/run_vision_global_alpha_profiles.py",
+      "bytes": 3036,
+      "sha256": "fc94df4e74ea862a187048da1d3ef92ee054401bffdd140544f6d473a0e9e019"
+    },
+    {
+      "path": "source/test2026/metal/compare_vllm_metal.py",
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    {
+      "path": "source/test2026/metal/compare_prefill_stream.py",
+      "bytes": 1156,
+      "sha256": "189b15b2de041938cc37adb5285bb0567d2fcccb74c2fdd59264f5be53c8e16f"
+    },
+    {
+      "path": "source/test2026/metal/resume_packed_prefill_norm_checks.py",
+      "bytes": 4895,
+      "sha256": "d6ded1ed2759cf297e33498368d4221a0be1ed2e23131bdf6270a60691367764"
+    },
+    {
+      "path": "source/test2026/metal/launch_prefill_stream_checks.py",
+      "bytes": 317,
+      "sha256": "41d4a6df790a993bcda5eb107b84f1fade348d1b9e25a78a2def570af8c222e8"
+    },
+    {
+      "path": "source/test2026/metal/run_global_half_alpha_checks.py",
+      "bytes": 559,
+      "sha256": "762a73a9ef294711eca9a064ab37a80eb3f4038bd2b4f766579862a8cce07d3d"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_global_half_alpha_checks.py",
+      "bytes": 1081,
+      "sha256": "c620cf5e7c96bbb623abc06c9421a188b6d51b9edc9612dddd0218e14643697d"
+    },
+    {
+      "path": "source/test2026/metal/launch_joined_global_mlp_checks.py",
+      "bytes": 341,
+      "sha256": "31ae98e081060ca48999d5791c788d8f8eb45b72755f954a73d6ee0b2572cc47"
+    },
+    {
+      "path": "source/test2026/metal/compare_dirty_prefix_reset.py",
+      "bytes": 2137,
+      "sha256": "7ea69979182c68a07065f01fd9d9990cc0250d50d5a5c72edb17776f145bb263"
+    },
+    {
+      "path": "source/test2026/metal/queue_prefill_stream_profiles.py",
+      "bytes": 522,
+      "sha256": "970340b57e0a44d0afb4d68bd557c1dd4a89375f4e887c5d40cdb81aabae320f"
+    },
+    {
+      "path": "source/test2026/metal/test_exact_dense_tail_reference.py",
+      "bytes": 2699,
+      "sha256": "671e19c31a6f3fd0f799eb0c396e03ca97bb4dfeafbfaa16b03ea3d53fd82f64"
+    },
+    {
+      "path": "source/test2026/metal/launch_quiet_prefill_residual_norm_probe.py",
+      "bytes": 2052,
+      "sha256": "6ac2816980940c131ed281a90ac6ac9b04fbca0890ee9dd3c29776d97914820b"
+    },
+    {
+      "path": "source/test2026/metal/archive_dirty_prefix_reset_native.py",
+      "bytes": 3323,
+      "sha256": "bc62471c5610ee1ac1a22edb37c995b63ecd1d282961b0b3936bb2e25761262e"
+    },
+    {
+      "path": "source/test2026/metal/run_direct_state_zero_checks.py",
+      "bytes": 1409,
+      "sha256": "302737852368875e5ed4cb98577e49f28f952500ff6e17af8bb7a23a23faed92"
+    },
+    {
+      "path": "source/test2026/metal/launch_vision_global_alpha_checks.py",
+      "bytes": 332,
+      "sha256": "4c65b51a2cb5dbd34d0d95134e31453ce9d9d65ce709c892590f985b25fb8a59"
+    },
+    {
+      "path": "source/test2026/metal/run_prefix_reset_session_reference.py",
+      "bytes": 3966,
+      "sha256": "bfd3dc50b2cf908a448862ed42fc23df1fd05627ba3f3ac44f032f470e94eeac"
+    },
+    {
+      "path": "source/test2026/metal/run_dirty_prefix_reset_profiles.py",
+      "bytes": 553,
+      "sha256": "1e6363099d3b8be28dc677153e31582284615fd24f9fcf6a0752293163f8f0b4"
+    },
+    {
+      "path": "source/test2026/metal/reference_dense.py",
+      "bytes": 3742,
+      "sha256": "1b67d7dd7199a0901ff984d9a91da7c01b187fe7c05a9fe08de036a5f0056511"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_prefix_reset_session_tests.py",
+      "bytes": 693,
+      "sha256": "b96fc67be47d06078c93e2af858955f6b7b7bdce22f9c70e164f5b3bea8e220b"
+    },
+    {
+      "path": "source/test2026/metal/archive_prefill_stream_native.py",
+      "bytes": 1009,
+      "sha256": "f11bcd3bd370a7d78b5bfe404841e43505414b8c329018804676c34ddb1360b9"
+    },
+    {
+      "path": "source/test2026/metal/test_exact_dense_tail_case_reference.py",
+      "bytes": 755,
+      "sha256": "364ba5e774f96fbf00785c1120f18824891a2002f6ba9e4b52623d34fb882a5b"
+    },
+    {
+      "path": "source/test2026/metal/queue_dirty_prefix_reset_profiles.py",
+      "bytes": 543,
+      "sha256": "ae168742f2ab045fde2f54e37e7393cb33d370d222875481bba6f2c1b1c14224"
+    },
+    {
+      "path": "source/test2026/metal/queue_vision_global_alpha_profiles.py",
+      "bytes": 1948,
+      "sha256": "eba07ebb063062b2e8aa68bde03ef357b869e1160e208428701a44bf8cea1cc6"
+    },
+    {
+      "path": "source/test2026/metal/launch_repaired_prefill_stream_profiles.py",
+      "bytes": 946,
+      "sha256": "35ee1481061585c55c9af9f415cf5413a3abe7dcf630a0e21a92039e58daa3f5"
+    },
+    {
+      "path": "source/test2026/metal/test_prefix_reset_session_reference.py",
+      "bytes": 1523,
+      "sha256": "50cff5a7459ea605a434781c0d4b01b14ade4d3d5ea02368a95f1153e19cbab7"
+    },
+    {
+      "path": "source/test2026/metal/run_prefill_stream_profiles.py",
+      "bytes": 295,
+      "sha256": "178f96f169b8cc20506e54060fdbec1c57723fe0a6c47e66f1eaadd5e696079b"
+    },
+    {
+      "path": "source/test2026/metal/compare_vision_global_alpha.py",
+      "bytes": 9862,
+      "sha256": "c38705239b1bb9238ef5d5ed22de66a91cfaf8adc7c2d49450b739238a26c156"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_joined_global_mlp_checks.py",
+      "bytes": 529,
+      "sha256": "9cfc29010bc08abcc6d53ccf1b95bc4e2033f08308836c6cf077a1f91c0ed530"
+    },
+    {
+      "path": "source/test2026/metal/launch_global_half_alpha_checks.py",
+      "bytes": 512,
+      "sha256": "ed591658c16bca406a24e5ada03632e8948bbaeeb3823d8480448131cf576c84"
+    },
+    {
+      "path": "source/test2026/metal/run_matched_frame_process.py",
+      "bytes": 5109,
+      "sha256": "a30bdcd1da7e411b91ce7797235268b47bd4ab4099720e7267f95f8011464ec7"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_prefill_stream_checks.py",
+      "bytes": 336,
+      "sha256": "5a193955c7725587a8100cbb3fc78c3886b1146e5bdeed7696d6598cc6a4cc2a"
+    },
+    {
+      "path": "source/test2026/metal/launch_dirty_prefix_reset_checks.py",
+      "bytes": 310,
+      "sha256": "9de73cb70994829747553553e4068f6b8c5079c43dcaabd94838e050a6992973"
+    },
+    {
+      "path": "source/test2026/metal/archive_prefill_stream_repaired_native.py",
+      "bytes": 1212,
+      "sha256": "27f7638c29282947f1e036127f7028cb501a3ef57e5056bccf7e7533db5793a4"
+    },
+    {
+      "path": "source/test2026/metal/archive_combined_prefill_reset.py",
+      "bytes": 3533,
+      "sha256": "411dcd843262fa5bd932c6720551d9be6d9042eccde776b91c7d5f4bcade670e"
+    },
+    {
+      "path": "source/test2026/metal/dirty_prefix_reset_test.cpp",
+      "bytes": 2471,
+      "sha256": "b7c197d78eba4cd4caef56bf355f843c59de655d138e06f51ffbe89f12ba6463"
+    },
+    {
+      "path": "source/src/backends/metal/compiled_graph.h",
+      "bytes": 4081,
+      "sha256": "f0760a21abe3315a70d0d300eeb3c245ec59a76d28d7e28b51d9bc46435fe4d4"
+    },
+    {
+      "path": "models/Qwen3-0.6B/config.json",
+      "bytes": 726,
+      "sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+    },
+    {
+      "path": "models/Qwen2.5-Coder-0.5B-Instruct/config.json",
+      "bytes": 659,
+      "sha256": "b1e58593cd31852f7da5c2fc31ddf6135b9c066c0fd9177a4bbe95717083adff"
+    },
+    {
+      "path": "models/Qwen3.5-0.8B/config.json",
+      "bytes": 2907,
+      "sha256": "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204"
+    }
+  ],
+  "jobs": {
+    "exit.json": {
+      "exit_code": 0,
+      "wall_seconds": 1370.332106417045
+    },
+    "checks-exit.json": {
+      "exit_code": 0,
+      "wall_seconds": 1225.30184654193,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_guarded_combined_prefill_reset_checks.py",
+        "/Users/zsdx/garnet-metal-investigation",
+        "/Users/zsdx/garnet-metal-investigation/logs/combined-prefill-reset-20261015/checks"
+      ]
+    },
+    "native-exit.json": {
+      "exit_code": 0,
+      "wall_seconds": 145.0288362922147,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_combined_prefill_reset_profiles.py",
+        "/Users/zsdx/garnet-metal-investigation",
+        "/Users/zsdx/garnet-metal-investigation/logs/combined-prefill-reset-20261015/native"
+      ]
+    }
+  },
+  "candidate_sha256": "65a68b5ad8819fbdfeee4256fdf28069a540a18c83dce817921265a038184098",
+  "control_sha256": "887b70f521d5af7f948bcb32a2cf94842377e2ecb828bc9280ffb38af6fe058f"
+}

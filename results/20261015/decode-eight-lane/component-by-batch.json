@@ -1,0 +1,103 @@
+{
+  "scope": "Sum of per-matrix medians, unweighted across distinct matrices; not a layer-weighted or full-model speedup",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "variant": "bf16_decode_s8_t64",
+      "large_trained_matrices": 8,
+      "unweighted_gpu_component_speedup": 0.9328677801417753,
+      "unweighted_wall_component_speedup": 0.9858524575454615
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "variant": "bf16_decode_s8_t128",
+      "large_trained_matrices": 8,
+      "unweighted_gpu_component_speedup": 0.8946936074495591,
+      "unweighted_wall_component_speedup": 0.9475362070530152
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "variant": "bf16_decode_s8_t64",
+      "large_trained_matrices": 8,
+      "unweighted_gpu_component_speedup": 0.8893400974240042,
+      "unweighted_wall_component_speedup": 0.9300777928469659
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "variant": "bf16_decode_s8_t128",
+      "large_trained_matrices": 8,
+      "unweighted_gpu_component_speedup": 0.8761022314228597,
+      "unweighted_wall_component_speedup": 0.9154307487836557
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "variant": "bf16_decode_s8_t64",
+      "large_trained_matrices": 6,
+      "unweighted_gpu_component_speedup": 0.906238625429813,
+      "unweighted_wall_component_speedup": 0.9323625129601616
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "variant": "bf16_decode_s8_t128",
+      "large_trained_matrices": 6,
+      "unweighted_gpu_component_speedup": 0.9151346837684042,
+      "unweighted_wall_component_speedup": 0.9507804316593491
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "variant": "bf16_decode_s8_t64",
+      "large_trained_matrices": 6,
+      "unweighted_gpu_component_speedup": 0.8947489878165207,
+      "unweighted_wall_component_speedup": 0.9356291313952213
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "variant": "bf16_decode_s8_t128",
+      "large_trained_matrices": 6,
+      "unweighted_gpu_component_speedup": 0.8967510040088251,
+      "unweighted_wall_component_speedup": 0.9415161778828112
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "variant": "bf16_decode_s8_t64",
+      "large_trained_matrices": 7,
+      "unweighted_gpu_component_speedup": 0.8965120623800231,
+      "unweighted_wall_component_speedup": 0.9179920649673533
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "variant": "bf16_decode_s8_t128",
+      "large_trained_matrices": 7,
+      "unweighted_gpu_component_speedup": 0.8972931364934916,
+      "unweighted_wall_component_speedup": 0.9242934868611188
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "variant": "bf16_decode_s8_t64",
+      "large_trained_matrices": 7,
+      "unweighted_gpu_component_speedup": 0.8708430907314378,
+      "unweighted_wall_component_speedup": 0.9088049724154383
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "variant": "bf16_decode_s8_t128",
+      "large_trained_matrices": 7,
+      "unweighted_gpu_component_speedup": 0.9019942561287846,
+      "unweighted_wall_component_speedup": 0.9328755995955913
+    }
+  ],
+  "fp64_worst_ratio": 0.0097090214,
+  "comparison_worst_ratio": 0.0725068826
+}

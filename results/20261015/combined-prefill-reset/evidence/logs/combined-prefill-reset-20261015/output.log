@@ -1,0 +1,108 @@
+Starting configure
+Completed configure
+Completed all clean cases for configure
+Starting build
+Completed build
+Completed all clean cases for build
+Starting ctest
+Completed ctest
+Completed all clean cases for ctest
+Starting Qwen3-0.6B-exact-tails
+Completed Qwen3-0.6B-exact-tails
+Starting Qwen3-0.6B-exact-tails
+Completed Qwen3-0.6B-exact-tails
+Starting Qwen3-0.6B-exact-tails
+Completed Qwen3-0.6B-exact-tails
+Starting Qwen3-0.6B-exact-tails
+Completed Qwen3-0.6B-exact-tails
+Starting Qwen3-0.6B-exact-tails
+Completed Qwen3-0.6B-exact-tails
+Starting Qwen3-0.6B-exact-tails
+Completed Qwen3-0.6B-exact-tails
+Starting Qwen3-0.6B-exact-tails
+Completed Qwen3-0.6B-exact-tails
+Starting Qwen3-0.6B-exact-tails
+Completed Qwen3-0.6B-exact-tails
+Completed all clean cases for Qwen3-0.6B-exact-tails
+Starting Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Starting Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Starting Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Starting Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Starting Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Starting Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Starting Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Starting Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Completed all clean cases for Qwen2.5-Coder-0.5B-Instruct-exact-tails
+Starting Qwen3-0.6B-private-kv
+Completed Qwen3-0.6B-private-kv
+Completed all clean cases for Qwen3-0.6B-private-kv
+Starting Qwen2.5-Coder-0.5B-Instruct-private-kv
+Completed Qwen2.5-Coder-0.5B-Instruct-private-kv
+Completed all clean cases for Qwen2.5-Coder-0.5B-Instruct-private-kv
+Starting Qwen3.5-0.8B-private-kv
+Completed Qwen3.5-0.8B-private-kv
+Completed all clean cases for Qwen3.5-0.8B-private-kv
+Starting serving
+Completed serving
+Completed all clean cases for serving
+Starting mixed-image-pipeline
+Completed mixed-image-pipeline
+Completed all clean cases for mixed-image-pipeline
+Starting qwen35-layers
+Completed qwen35-layers
+Completed all clean cases for qwen35-layers
+Starting Qwen3-0.6B-layers
+Completed Qwen3-0.6B-layers
+Completed all clean cases for Qwen3-0.6B-layers
+Starting Qwen2.5-Coder-0.5B-Instruct-layers
+Completed Qwen2.5-Coder-0.5B-Instruct-layers
+Completed all clean cases for Qwen2.5-Coder-0.5B-Instruct-layers
+Starting Qwen3.5-0.8B-head
+Completed Qwen3.5-0.8B-head
+Completed all clean cases for Qwen3.5-0.8B-head
+Starting Qwen3-0.6B-head
+Completed Qwen3-0.6B-head
+Completed all clean cases for Qwen3-0.6B-head
+Starting Qwen2.5-Coder-0.5B-Instruct-head
+Completed Qwen2.5-Coder-0.5B-Instruct-head
+Completed all clean cases for Qwen2.5-Coder-0.5B-Instruct-head
+Starting vision-small
+Completed vision-small
+Completed all clean cases for vision-small
+Starting vision-pretrained
+Completed vision-pretrained
+Completed all clean cases for vision-pretrained
+Starting qwen35-extended-prefill
+Completed qwen35-extended-prefill
+Completed all clean cases for qwen35-extended-prefill
+All global-half-alpha checks, exact tails and private KV suites passed
+Starting Qwen3-0.6B-session-recovery
+Completed Qwen3-0.6B-session-recovery
+Completed all clean cases for Qwen3-0.6B-session-recovery
+Starting Qwen2.5-Coder-0.5B-Instruct-session-recovery
+Completed Qwen2.5-Coder-0.5B-Instruct-session-recovery
+Completed all clean cases for Qwen2.5-Coder-0.5B-Instruct-session-recovery
+Starting Qwen3.5-0.8B-session-recovery
+Completed Qwen3.5-0.8B-session-recovery
+Completed all clean cases for Qwen3.5-0.8B-session-recovery
+Combined prefill/reset original19 and recovery3 PASS
+Starting bounded clean profile Qwen3-0.6B-b1-attempt0
+Completed clean profile Qwen3-0.6B-b1-attempt0
+Starting bounded clean profile Qwen3-0.6B-b2-attempt0
+Completed clean profile Qwen3-0.6B-b2-attempt0
+Starting bounded clean profile Qwen2.5-Coder-0.5B-Instruct-b1-attempt0
+Completed clean profile Qwen2.5-Coder-0.5B-Instruct-b1-attempt0
+Starting bounded clean profile Qwen2.5-Coder-0.5B-Instruct-b2-attempt0
+Completed clean profile Qwen2.5-Coder-0.5B-Instruct-b2-attempt0
+Starting bounded clean profile Qwen3.5-0.8B-b1-attempt0
+Completed clean profile Qwen3.5-0.8B-b1-attempt0
+Starting bounded clean profile Qwen3.5-0.8B-b2-attempt0
+Completed clean profile Qwen3.5-0.8B-b2-attempt0

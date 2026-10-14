@@ -12,6 +12,15 @@ jobs={name:json.loads((folder/name).read_text()) for name in ('exit.json','check
 assert all(v['exit_code']==0 for v in jobs.values())
 for p in folder.rglob('*'):
     if p.is_file() and p.suffix in ('.json','.log','.txt','.py','.f32','.executed'):add(p)
+confirm=root/'logs/combined-prefill-reset-confirm-20261015'
+if confirm.exists():
+    jobs['confirmation']=json.loads((confirm/'exit.json').read_text())
+    assert jobs['confirmation']['exit_code']==0
+    for p in confirm.rglob('*'):
+        if p.is_file() and p.suffix in ('.json','.log','.txt','.py','.executed'):add(p)
+    for name in ('launch_confirm_combined_prefill_reset.py','launch_confirm_global_half_alpha_profiles.py'):
+        add(root/'source/test2026/metal'/name)
+    add(root/'work/combined-prefill-reset-initial-verification.json')
 for area in (root/'prefill-stream-staging',root/'logs/prefill-stream-original-source-20261014'):
     for p in area.rglob('*'):
         if p.is_file():add(p)

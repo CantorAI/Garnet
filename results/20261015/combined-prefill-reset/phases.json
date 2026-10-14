@@ -1,0 +1,281 @@
+{
+  "scope": "Observed clocks; multi-command GPU span includes gaps and overlaps CPU encoding/waiting; no isolated kernel attribution; init/first request separate and caches unflushed",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 50.70582311600447,
+      "decode_tps_per_row": 59.04232828087207,
+      "first_request_after_init_ttft_ms": 161.42493742518127,
+      "initialization_s": 1.6545045205857605,
+      "prefill_inference_ms": 41.45607275,
+      "reset_ms": 7.489885319955647,
+      "prefill_phases": {
+        "prepare_ms": 0.25939575,
+        "encode_ms": 6.47594775,
+        "gpu_ms": 33.61495828721672,
+        "wait_ms": 34.71856275
+      },
+      "observed_prefill_partial_submissions": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 39.87808327656239,
+      "decode_tps_per_row": 57.47240664291142,
+      "first_request_after_init_ttft_ms": 127.94935377314687,
+      "initialization_s": 1.655126312514767,
+      "prefill_inference_ms": 37.30583375,
+      "reset_ms": 1.04103097692132,
+      "prefill_phases": {
+        "prepare_ms": 0.34389575,
+        "encode_ms": 6.56383325,
+        "gpu_ms": 34.79171893559396,
+        "wait_ms": 30.39549
+      },
+      "observed_prefill_partial_submissions": [
+        6,
+        6,
+        6,
+        6
+      ]
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 83.81006249692291,
+      "decode_tps_per_row": 57.81725753884889,
+      "first_request_after_init_ttft_ms": 194.4931244943291,
+      "initialization_s": 1.6721658955793828,
+      "prefill_inference_ms": 58.4152605,
+      "reset_ms": 23.90645840205252,
+      "prefill_phases": {
+        "prepare_ms": 0.31000025,
+        "encode_ms": 6.02967675,
+        "gpu_ms": 50.96006253734231,
+        "wait_ms": 52.07339625
+      },
+      "observed_prefill_partial_submissions": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 60.4534373851493,
+      "decode_tps_per_row": 55.700572127538514,
+      "first_request_after_init_ttft_ms": 150.316562037915,
+      "initialization_s": 1.6796207292936742,
+      "prefill_inference_ms": 57.1320415,
+      "reset_ms": 1.6093123704195023,
+      "prefill_phases": {
+        "prepare_ms": 0.28132275,
+        "encode_ms": 5.849469,
+        "gpu_ms": 55.159093579277396,
+        "wait_ms": 50.9990205
+      },
+      "observed_prefill_partial_submissions": [
+        6,
+        6,
+        6,
+        6
+      ]
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 33.375208149664104,
+      "decode_tps_per_row": 72.14708265259561,
+      "first_request_after_init_ttft_ms": 126.80697883479297,
+      "initialization_s": 1.3935174166690558,
+      "prefill_inference_ms": 31.046427,
+      "reset_ms": 0.7902913494035602,
+      "prefill_phases": {
+        "prepare_ms": 0.233948,
+        "encode_ms": 5.7667705,
+        "gpu_ms": 24.18017713353038,
+        "wait_ms": 25.04330225
+      },
+      "observed_prefill_partial_submissions": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 28.012218652293086,
+      "decode_tps_per_row": 71.57193156731621,
+      "first_request_after_init_ttft_ms": 105.32239568419755,
+      "initialization_s": 1.3855218961834908,
+      "prefill_inference_ms": 26.580542,
+      "reset_ms": 0.3447083290666342,
+      "prefill_phases": {
+        "prepare_ms": 0.251146,
+        "encode_ms": 5.63184375,
+        "gpu_ms": 24.274781346321106,
+        "wait_ms": 20.69570825
+      },
+      "observed_prefill_partial_submissions": [
+        5,
+        5,
+        5,
+        5
+      ]
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 52.655520965345204,
+      "decode_tps_per_row": 70.46774063450428,
+      "first_request_after_init_ttft_ms": 150.06483299657702,
+      "initialization_s": 1.3904915619641542,
+      "prefill_inference_ms": 49.04835425,
+      "reset_ms": 1.6697087557986379,
+      "prefill_phases": {
+        "prepare_ms": 0.28415650000000003,
+        "encode_ms": 5.6347605,
+        "gpu_ms": 42.03331260941923,
+        "wait_ms": 43.127354
+      },
+      "observed_prefill_partial_submissions": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 45.109364786185324,
+      "decode_tps_per_row": 70.25844582106363,
+      "first_request_after_init_ttft_ms": 116.50199955329299,
+      "initialization_s": 1.3842506669461727,
+      "prefill_inference_ms": 42.953292000000005,
+      "reset_ms": 0.4964896943420172,
+      "prefill_phases": {
+        "prepare_ms": 0.289448,
+        "encode_ms": 5.5904792500000005,
+        "gpu_ms": 40.72627075947821,
+        "wait_ms": 37.07130225
+      },
+      "observed_prefill_partial_submissions": [
+        5,
+        5,
+        5,
+        5
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 198.72622867114842,
+      "decode_tps_per_row": 48.101886287382065,
+      "first_request_after_init_ttft_ms": 343.70308299548924,
+      "initialization_s": 2.9530380205251276,
+      "prefill_inference_ms": 87.34885375,
+      "reset_ms": 5.190156283788383,
+      "prefill_phases": {
+        "prepare_ms": 0.2560205,
+        "encode_ms": 6.460552,
+        "gpu_ms": 79.60037491284311,
+        "wait_ms": 80.62973975
+      },
+      "observed_prefill_partial_submissions": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 189.4383959006518,
+      "decode_tps_per_row": 47.86236444888354,
+      "first_request_after_init_ttft_ms": 312.9545624833554,
+      "initialization_s": 2.953350104391575,
+      "prefill_inference_ms": 80.0907085,
+      "reset_ms": 4.145041457377374,
+      "prefill_phases": {
+        "prepare_ms": 0.2167815,
+        "encode_ms": 6.17004175,
+        "gpu_ms": 77.97855220269412,
+        "wait_ms": 73.7021145
+      },
+      "observed_prefill_partial_submissions": [
+        5,
+        5,
+        5,
+        5
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 361.24834371730685,
+      "decode_tps_per_row": 44.3936484618469,
+      "first_request_after_init_ttft_ms": 563.7186875101179,
+      "initialization_s": 2.9785858960822225,
+      "prefill_inference_ms": 184.51669775,
+      "reset_ms": 11.252489523030818,
+      "prefill_phases": {
+        "prepare_ms": 0.6265310000000001,
+        "encode_ms": 18.3976775,
+        "gpu_ms": 162.5991459004581,
+        "wait_ms": 165.48944749999998
+      },
+      "observed_prefill_partial_submissions": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 348.4838540898636,
+      "decode_tps_per_row": 44.33952402789317,
+      "first_request_after_init_ttft_ms": 522.6234993897378,
+      "initialization_s": 2.96110906265676,
+      "prefill_inference_ms": 174.63105225,
+      "reset_ms": 9.617645759135485,
+      "prefill_phases": {
+        "prepare_ms": 0.62027075,
+        "encode_ms": 18.581729,
+        "gpu_ms": 168.40889595914632,
+        "wait_ms": 155.425104
+      },
+      "observed_prefill_partial_submissions": [
+        15,
+        15,
+        15,
+        15
+      ]
+    }
+  ]
+}

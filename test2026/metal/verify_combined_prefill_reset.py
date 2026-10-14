@@ -31,4 +31,6 @@ for stage in stages[19:]:
 source=source.replace(needle,recovery+needle)
 source=source.replace('Ordered prefill submissions versus global alpha; no fresh vLLM comparison','Combined bounded reset and ordered prefill versus global alpha; no fresh vLLM comparison')
 source=source.replace('all_actual_prefill_partial_submissions_checked=True','all_actual_prefill_partial_submissions_checked=True,all_actual_dirty_prefix_reset_bytes_checked=True,all_three_model_recovery_suites_checked=True')
+if '--confirm' in __import__('sys').argv[3:]:
+    source=source.replace('combined-prefill-reset-20261015/native','combined-prefill-reset-confirm-20261015/jobs')
 exec(compile(source,__file__,'exec'))

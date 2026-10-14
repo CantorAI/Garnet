@@ -11,4 +11,7 @@ source=source.replace(needle,'''    dependency=json.loads((folder/'dependency.js
     assert 'columns<=256?"bf16_decode_small":"bf16_decode"' in harness
     assert '5e-6+5e-5*std::abs' in harness and 'std::ceil(double(inner)/32)+32' in harness
 ''')
+needle="print(json.dumps(dict(files=len(files),omitted_matrices=len(proof),checks=count,scope='Matrix components only; no full-model claim')))"
+assert source.count(needle)==1
+source=source.replace(needle,"result=dict(files=len(files),omitted_matrices=len(proof),checks=count,scope='Matrix components only; no full-model claim',full_goal_met=False)\n(r/'verification.json').write_bytes((json.dumps(result,indent=2)+'\\n').encode())\nprint(json.dumps(result))")
 exec(compile(source,__file__,'exec'))
