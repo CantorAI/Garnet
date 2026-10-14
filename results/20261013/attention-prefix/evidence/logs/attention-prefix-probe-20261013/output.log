@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_attention_prefix_probe.py", line 13, in <module>
+    exec(compile(source,str(destination),'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/logs/attention-prefix-probe-20261013/jobs.executed.py", line 41, in <module>
+    (output/'before-processes.txt').write_text(snapshot());check()
+                                                           ~~~~~^^
+  File "/Users/zsdx/garnet-metal-investigation/logs/attention-prefix-probe-20261013/jobs.executed.py", line 13, in check
+    strict_guard()
+    ~~~~~~~~~~~~^^
+  File "owned_guard", line 89, in guard
+RuntimeError: Another inference runtime is active: ["67805   0.0 148800 /Users/zsdx/cantorai-release-tests/current/bin/WorldSense/../xlang3"]

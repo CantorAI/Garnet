@@ -22,6 +22,9 @@ public:
 #ifdef GARNET_METAL_JOINED_PREFILL
         info+="; joined_mps_prefill";
 #endif
+#ifdef GARNET_METAL_ATTENTION_PREFIX
+        info+="; attention_prefix";
+#endif
         return info;
     }
     // Graphs own synchronous queues and release them through close(). There

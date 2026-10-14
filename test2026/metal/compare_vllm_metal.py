@@ -48,7 +48,7 @@ def verified_worldsense_service(pid):
     # This inspected supervisor only forwards the TRT budget environment name;
     # it imports no inference module. Pin the source before excluding that
     # literal from keyword detection; loaded inference libraries still reject.
-    if service_script==worldsense_script and hashlib.sha256(service_script.read_bytes()).hexdigest() in ('b904bcf8ece0b74dc160a95aa833b58c8d33536ba90f924465a61b95e61238ed','6ce05f32376832f579e5908399a9787d5957cc1b08bff31b6394c09fff9b80ec'):
+    if service_script==worldsense_script and hashlib.sha256(service_script.read_bytes()).hexdigest() in ('b904bcf8ece0b74dc160a95aa833b58c8d33536ba90f924465a61b95e61238ed','6ce05f32376832f579e5908399a9787d5957cc1b08bff31b6394c09fff9b80ec','b5581a1a0d204dfead1ab67fee62096301505047f1e276138ba0a60332cb7b66'):
         source_text=source_text.replace("'garnet_trt_weight_streaming_budget_mib'",'')
     if any(marker in source_text for marker in ('garnet','mlx','ollama','vllm','torch','qwen','metal')):return False
     libraries=subprocess.run(['/usr/sbin/lsof','-p',str(pid),'-Fn'],capture_output=True,text=True)
@@ -72,7 +72,12 @@ def guard():
     for line in lines:
         name=line.split()[-1].lower() if line.split() else ''
         if name.endswith('/xlang3'):
-            if not verified_worldsense_service(int(line.split()[0])):active.append(line)
+            pid=int(line.split()[0])
+            if not verified_worldsense_service(pid):
+                # A process can exit between the snapshot and library audit.
+                # A still-live unknown worker retains the conservative rejection.
+                current=subprocess.run(['/bin/ps','-p',str(pid),'-o','comm='],capture_output=True,text=True)
+                if current.returncode==0 and current.stdout.strip():active.append(line)
         elif name.endswith('/ollama') or name.endswith('/vllm'):
             active.append(line)
     # Python workers need argument inspection to identify their role. Never

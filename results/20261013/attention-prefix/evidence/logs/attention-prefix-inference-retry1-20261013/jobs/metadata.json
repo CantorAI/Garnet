@@ -1,0 +1,20 @@
+{
+  "scope": "Native ABBA for GPU-verified prompt-slot lookup, all matched profiles.",
+  "library_sha256": {
+    "control": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2",
+    "candidate": "f2c5c448ec4f3c8431be37b48a2634d8fa4cc31de4aa163ec367a319c9263088"
+  },
+  "source_sha256": {
+    "compare_attention_prefix.py": "34dd930b9bcec2d1c05d94a49b74bb82eb24af971009d9dc9e3a9cf5e9498ff8",
+    "run_matched_garnet.py": "0026b2600de8aaba6d4d026ed4fdaa1698459890b2853a990af2a8d668bd8dc6",
+    "run_matched_frame_process.py": "a30bdcd1da7e411b91ce7797235268b47bd4ab4099720e7267f95f8011464ec7",
+    "frame_worker_garnet.py": "3c99d35117f75b3eb2e21ca53d1f71353078b92745cc24781bc14fffd51e4271"
+  },
+  "assets": {
+    "Qwen3-0.6B": {
+      "model.safetensors": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+      "tokenizer.json": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+    }
+  }
+}

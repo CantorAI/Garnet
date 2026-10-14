@@ -59,6 +59,7 @@ try:
             decode_wall_steps_per_second=len(durations)/decode_window if durations else None,
             native_decode_ms=native_ms,decode_phases=phases,prefill_profile=decoder.prefill_profile,
             prefill_chunk_plan=decoder.prefill_chunk_plan,prefill_inference_ms=decoder.prefill_inference_ms,
+            attention_prefix_enabled='attention_prefix' in garnet.backend_info(),
             weights='checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV')
         result['case']=workload
         print('matched_result',json.dumps(result),flush=True)

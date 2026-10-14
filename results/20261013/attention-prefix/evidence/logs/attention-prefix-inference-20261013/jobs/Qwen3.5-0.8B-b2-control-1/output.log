@@ -1,0 +1,27 @@
+frame_initialization {"seconds": 3.080196457915008, "command": ["/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3", "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/frame_worker_garnet.py", "/Users/zsdx/garnet-metal-investigation/build-resident-kv-inplace", "/Users/zsdx/garnet-metal-investigation/source", "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B", "/Users/zsdx/garnet-metal-investigation/logs/attention-prefix-inference-20261013/jobs/Qwen3.5-0.8B-b2-case.json", "/Users/zsdx/garnet-metal-investigation/logs/attention-prefix-inference-20261013/jobs/Qwen3.5-0.8B-b2-control-1/protocol/command.json"], "backend": "garnet"}
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py", line 76, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_frame_process.py", line 50, in main
+    patches.tofile(patchfile);rgbfile.write_bytes(rgb)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: 663552 requested and 0 written
+        3.41 real         2.38 user         0.97 sys
+          3649028096  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              307868  page reclaims
+                  21  page faults
+                   0  swaps
+                   0  block input operations
+                   9  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                  19  voluntary context switches
+                2490  involuntary context switches
+          1095493847  instructions retired
+           422117428  cycles elapsed
+            75383288  peak memory footprint

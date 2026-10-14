@@ -78,7 +78,8 @@ try:
             assembly_seconds=assembled-start-vision_seconds,prefill_wall_seconds=first-assembled,
             prefill_profile=decoder.prefill_profile,prefill_inference_ms=decoder.prefill_inference_ms,
             prefill_chunk_plan=decoder.prefill_chunk_plan,
-            vision_reencoded=True,weights='BF16 checkpoint; FP32 native vision/activations/KV'))
+            vision_reencoded=True,attention_prefix_enabled='attention_prefix' in garnet.backend_info(),
+            weights='BF16 checkpoint; FP32 native vision/activations/KV'))
 finally:
     if vision is not None:vision.close()
     if decoder is not None:decoder.close()

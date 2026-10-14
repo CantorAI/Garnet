@@ -1,0 +1,14 @@
+{
+  "scope": "FP32 chunk attention verified-prefix component only; synthetic inputs, general-scan fallback, no full model claim",
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "a54787e4930f7e159c2620a4546f902ce2bde6056288702d592de0d59e4703e5",
+    "test2026/metal/run_attention_prefix_probe.py": "834568e3d2020039ef85b030cfa193299c77ed5c7588f7144ecb7eeabb9f04ed",
+    "test2026/metal/attention_prefix_gpu.mm": "be303db61bb0d755b7ea6fa9b73db29e605da241f9219ea3fcbda8fce9602faf",
+    "test2026/metal/make_attention_prefix_shader.py": "63e68cce2de90deba0564dab9dd8463075e566f52e6a78f6f66414074dfe1c51",
+    "test2026/metal/compare_vllm_metal.py": "1ee0a35e4c67fc01e8e30ad6537d18bfbaa5d405737d4386c3c0078b8b972b29"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  }
+}

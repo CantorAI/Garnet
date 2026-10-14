@@ -472,8 +472,26 @@ kernel void attention_chunk(device const float* query [[buffer(0)]],device const
     if(active[row*p.aStride+token]==0.0f){for(ulong d=tid;d<p.dim;d+=128)output[flatRow*p.oStride+head*p.dim+d]=0.0f;return;}
     const ulong visible=min(p.capacity,ulong(slots[row*p.sStride+token])+1);
     threadgroup float partial[4];
+#ifdef GARNET_ATTENTION_PREFIX
+    threadgroup int contiguousPrefix;
+    if(tid==0) {
+        float first=slots[row*p.sStride];
+        int valid=isfinite(first)&&first>=0.0f&&first==floor(first);
+        for(ulong t=0;t<=token;++t)if(active[row*p.aStride+t]==0.0f||slots[row*p.sStride+t]!=first+float(t))valid=0;
+        contiguousPrefix=valid;
+    }
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+#endif
     for(ulong s=simd;s<visible;s+=4) {
+#ifdef GARNET_ATTENTION_PREFIX
+        int latest=-1;
+        if(contiguousPrefix) {
+            float first=slots[row*p.sStride];
+            if(float(s)>=first)latest=int(float(s)-first);
+        } else for(uint t=0;t<=token;++t)if(active[row*p.aStride+t]!=0.0f&&slots[row*p.sStride+t]==float(s))latest=int(t);
+#else
         int latest=-1;for(uint t=0;t<=token;++t)if(active[row*p.aStride+t]!=0.0f&&slots[row*p.sStride+t]==float(s))latest=int(t);
+#endif
         float score=-1e30f;
         if(float(s)<=slots[row*p.sStride+token]) {
             score=0.0f;
@@ -970,6 +988,9 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
 }
 )METAL"];
         NSError* error=nil;
+#ifdef GARNET_METAL_ATTENTION_PREFIX
+        source=[@"#define GARNET_ATTENTION_PREFIX 1\n" stringByAppendingString:source];
+#endif
 #ifdef GARNET_METAL_FUSED_VISION_CONTEXT
         source=[source stringByAppendingString:[NSString stringWithUTF8String:R"METAL(
 kernel void vision_softmax_context(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],device const float* c [[buffer(2)]],

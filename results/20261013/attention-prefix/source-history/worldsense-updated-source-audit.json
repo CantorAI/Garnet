@@ -1,0 +1,14 @@
+{
+  "queried_pids": [88140, 88150],
+  "supervisor_parent": 1,
+  "child_parent": 88140,
+  "supervisor_sha256": "b5581a1a0d204dfead1ab67fee62096301505047f1e276138ba0a60332cb7b66",
+  "launch_sha256": "9ac0a1fbdfefcba3349ecd5b0e5a00e63222f1cb588290ed55046d4851b70233",
+  "inline_payload_sha256": "751439d940f63c48dafa52f3a707c43c1584af6df675247dc0a5ae913dd6e42a",
+  "inline_imports": ["sys", "runpy", "signal"],
+  "inline_calls": ["sys.path.insert", "runpy.run_path"],
+  "loaded_inference_or_gpu_markers_both_processes": [],
+  "lsof_exit_both_processes": 0,
+  "source_inspection": "Updated supervisor manages the HTTP child and Cantor launch-agent lifecycle; the only Garnet text is the existing streaming-budget environment name. The unchanged inline payload and launch file remain pinned. Actual environment values and command arguments were not displayed.",
+  "guard_change": "Add this inspected supervisor source fingerprint to the existing exact environment-name exclusion; preserve all loaded-library and unknown-worker rejection checks."
+}
