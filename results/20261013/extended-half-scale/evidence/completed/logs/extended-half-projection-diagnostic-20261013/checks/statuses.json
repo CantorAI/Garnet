@@ -1,0 +1,43 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/extended_half_projection_probe.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/extended-half-projection-diagnostic-20261013/checks/extended_half_projection_probe"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 1.968057541642338
+  },
+  {
+    "name": "prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_prefill_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/extended-half-projection-diagnostic-20261013/checks/assets"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 2.029794791713357
+  },
+  {
+    "name": "gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/extended-half-projection-diagnostic-20261013/checks/extended_half_projection_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/extended-half-projection-diagnostic-20261013/checks/assets"
+    ],
+    "exit_code": 1,
+    "wall_seconds": 0.664593709167093
+  }
+]

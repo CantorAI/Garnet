@@ -1,0 +1,8 @@
+# Preserve the exact experimental sources executed on the Mac (CRLF from Windows).
+experimental_extended_half_codec.h -text whitespace=cr-at-eol
+extended_half_projection_probe.mm -text whitespace=cr-at-eol
+extended_half_bits_projection_probe.mm -text whitespace=cr-at-eol
+extended_half_hybrid_projection_probe.mm -text whitespace=cr-at-eol
+run_scale_bits_gpu.py -text whitespace=cr-at-eol
+run_extended_half_bits_projection.py -text whitespace=cr-at-eol
+run_extended_half_hybrid_projection.py -text whitespace=cr-at-eol

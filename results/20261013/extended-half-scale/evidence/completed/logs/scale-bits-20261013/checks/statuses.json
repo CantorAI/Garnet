@@ -1,0 +1,30 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/scale_bits_gpu.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/scale-bits-20261013/checks/scale_bits_gpu"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 1.3257011254318058
+  },
+  {
+    "name": "gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/scale-bits-20261013/checks/scale_bits_gpu",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/experimental_scale_bits.metal"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 0.6775615410879254
+  }
+]

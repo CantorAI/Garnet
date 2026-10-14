@@ -1,0 +1,9 @@
+{
+  "scope": "GPU integer power-of-two scaling; host IEEE comparison, component only.",
+  "source_sha256": {
+    "test2026/metal/scale_bits_gpu.mm": "94ed4a5910b3d21cca9a13d8034dc4bffebc3570a5cac3bcd947be82f0ee5f5c",
+    "test2026/metal/run_scale_bits_gpu.py": "3d295e32d0ddcc6aff539d742b30c42a50070370662480bea51aeab3759fbddf",
+    "test2026/metal/compare_vllm_metal.py": "1ee0a35e4c67fc01e8e30ad6537d18bfbaa5d405737d4386c3c0078b8b972b29",
+    "test2026/metal/experimental_scale_bits.metal": "1da24622f76e110c9be0f5ab78a3bc0c87e146d79dd3013a36490cb8b68cf314"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "scope": "GPU exhaustive codec admission check; no serving/performance claim.",
+  "execution_exit_code": 0,
+  "checks": [
+    {
+      "kind": "summary",
+      "fast_math": false,
+      "tested": 65026,
+      "bit_mismatches": 0,
+      "signed_zero_mismatches": 0,
+      "failed_scale_min": 0,
+      "failed_scale_max": 0
+    },
+    {
+      "kind": "summary",
+      "fast_math": true,
+      "tested": 65026,
+      "bit_mismatches": 0,
+      "signed_zero_mismatches": 0,
+      "failed_scale_min": 0,
+      "failed_scale_max": 0
+    }
+  ],
+  "serving_changed": false
+}
