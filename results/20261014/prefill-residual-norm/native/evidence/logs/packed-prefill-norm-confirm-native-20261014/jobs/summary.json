@@ -1,0 +1,81 @@
+{
+  "scope": "Joined exact-half prefill profiles; discard contention and retain only clean ABBA.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 84.22669779974967,
+          "decode_tps": 57.819822694278145,
+          "initialization_s": 1.6692504584789276,
+          "peak_individual_rss_bytes": 2497142784
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 83.28277082182467,
+          "decode_tps": 57.42428441770058,
+          "initialization_s": 1.6650355840101838,
+          "peak_individual_rss_bytes": 2492727296
+        }
+      },
+      "decode_ratio": 0.993159123322308,
+      "ttft_fraction": 0.9887930192850585,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/packed-prefill-norm-confirm-native-20261014/jobs/Qwen3-0.6B-b2-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 35.939489491283894,
+          "decode_tps": 71.94352250734912,
+          "initialization_s": 1.374812396010384,
+          "peak_individual_rss_bytes": 2069741568
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 35.76574975159019,
+          "decode_tps": 71.92883661229945,
+          "initialization_s": 1.3786165625788271,
+          "peak_individual_rss_bytes": 2069864448
+        }
+      },
+      "decode_ratio": 0.99979586911319,
+      "ttft_fraction": 0.9951657705172513,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/packed-prefill-norm-confirm-native-20261014/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 380.41688536759466,
+          "decode_tps": 44.47450462587286,
+          "initialization_s": 2.9120720829814672,
+          "peak_individual_rss_bytes": 3637067776
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 376.460978994146,
+          "decode_tps": 44.2427530887541,
+          "initialization_s": 2.950602208264172,
+          "peak_individual_rss_bytes": 3643293696
+        }
+      },
+      "decode_ratio": 0.9947891148182921,
+      "ttft_fraction": 0.9896011283262937,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/packed-prefill-norm-confirm-native-20261014/jobs/Qwen3.5-0.8B-b2-attempt0",
+      "reused_clean_profile": false
+    }
+  ],
+  "guarded_interval_seconds": 0.5
+}

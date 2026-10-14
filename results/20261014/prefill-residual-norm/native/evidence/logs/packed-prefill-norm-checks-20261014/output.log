@@ -1,0 +1,22 @@
+Quiet interval verified; starting exclusive checks probe
+Starting configure
+Completed configure
+Starting build
+Completed build
+Starting ctest
+Completed ctest
+Starting Qwen3-0.6B-exact-tails
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_packed_prefill_norm_checks.py", line 8, in <module>
+    exec(compile(source,str(destination),'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/logs/packed-prefill-norm-checks-20261014/jobs.wrapper.py", line 19, in <module>
+    exec(compile(source,str(destination),'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/logs/packed-prefill-norm-checks-20261014/jobs.executed.py", line 63, in <module>
+    run(model+'-exact-tails',[py,str(s/'test_exact_dense_tail_reference.py'),runtime,str(build),str(r/'source'),str(models/model),'bf16'])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/logs/packed-prefill-norm-checks-20261014/jobs.executed.py", line 50, in run
+    (output/'statuses.json').write_text(json.dumps(statuses,indent=2));assert code==0,(name,interruption)
+                                                                              ^^^^^^^
+AssertionError: ('Qwen3-0.6B-exact-tails', 'Another inference runtime is active: ["75289   0.0  11440 /Users/zsdx/cantorai-release-tests/current/bin/xlang3"]')

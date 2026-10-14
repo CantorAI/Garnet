@@ -1,0 +1,33 @@
+{
+  "candidate_sha256": "9286535724998269f7c871e853f24ca74ff11a526e6d34c83c17c697faab44a3",
+  "control_sha256": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2",
+  "options": [
+    "METAL",
+    "METAL_XMODEL",
+    "METAL_EXACT_HALF_PREFILL",
+    "METAL_MPS_VISION_SCORES",
+    "METAL_PARALLEL_DELTA_SPLIT",
+    "METAL_FLOAT_DENSE_KEY_PREFILL",
+    "METAL_LINEAR_CHUNK_DIRECT_WRITE",
+    "METAL_LINEAR_CHUNK_CONV",
+    "METAL_LINEAR_CHUNK_DELTA",
+    "METAL_SMALL_OUTPUT_DECODE",
+    "METAL_QWEN35_EXTENDED_PREFILL",
+    "METAL_RESIDENT_KV_INPLACE",
+    "METAL_ATTENTION_PREFIX",
+    "METAL_PACKED_PREFILL_NORM"
+  ],
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "272e0b94c18fe185f14b64f355b138ff2aee0db4e851dbc5704c321654cc19c7",
+    "cmake/GarnetMetal.cmake": "39e37de3dc0581a8bea30cd0e1102ccddf1d67d89ae07a9d74849eb1e2f99a4c",
+    "src/entry/metal_main.cpp": "176ca83aef16f05ab9c41eea54aabf29ab631b667dc28e926bec699e81613a62",
+    "src/backends/metal/compiled_graph.cpp": "605a2f653792ab64868d32cc54d119659add5d5702003edc9770ef5b35299b91",
+    "src/backends/metal/metal_context.h": "f724cce834b5783b1b1d94534003b677377ee55dac49a2ed817686cbea34db29",
+    "src/backends/metal/decoder_session.cpp": "6c3c0cc201904c32e366627224194aeb3de9c7d44373f663023d668fce2d69c4",
+    "src/backends/metal/decoder_session.h": "542a9e881637aa011b5eb4138d096f91588e32748d52c05fc93e03303df7d5f2",
+    "xModel/qwen/metal_dense/decoder.py": "6237daae299dc624c1d01ea64ae8249c6dd49713c6a4e8f120133531ec7daa18",
+    "xModel/qwen35/vl_0_8b/metal_decoder.py": "2d822115bc5f61c259d747e7181a06b4e30a2e4e5b2b8bf1ece0e3fee56eee1e",
+    "test2026/metal/run_dense_reference.py": "d6651780c283093effe1d8a27304f907976948d1647ed38608b043203bde4a94",
+    "test2026/metal/run_joined_prefill_checks.py": "fac8cdcf920e7773496ddbffc871a8ab6e75302c9254989409329eac1630b0ac"
+  }
+}

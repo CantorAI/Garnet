@@ -1,0 +1,59 @@
+{
+  "scope": "Recompute native prefill phases from complete warm request records.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "prepare_ms": 0.26347950000000003,
+      "encode_ms": 5.2396977499999995,
+      "gpu_ms": 55.64790638163686,
+      "wait_ms": 56.51932275
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "prepare_ms": 0.2704065,
+      "encode_ms": 5.32138525,
+      "gpu_ms": 56.35965627152473,
+      "wait_ms": 57.2165105
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "prepare_ms": 0.3403545,
+      "encode_ms": 5.05145825,
+      "gpu_ms": 27.780041680671275,
+      "wait_ms": 28.62930175
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "prepare_ms": 0.24430200000000002,
+      "encode_ms": 4.90533325,
+      "gpu_ms": 27.263562544248998,
+      "wait_ms": 28.416666499999998
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "prepare_ms": 0.66064625,
+      "encode_ms": 16.990406,
+      "gpu_ms": 184.8978541092947,
+      "wait_ms": 188.0529475
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "prepare_ms": 0.616584,
+      "encode_ms": 16.616531000000002,
+      "gpu_ms": 179.70447917468846,
+      "wait_ms": 182.7692495
+    }
+  ]
+}
