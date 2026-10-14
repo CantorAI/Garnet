@@ -1,0 +1,3516 @@
+{
+  "scope": "Native ABBA for native BF16 body projection; same frozen workloads and full outputs.",
+  "profiles": [
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 51.85699986759573,
+          "decode_tps": 71.36898096724411,
+          "initialization_s": 1.3974271875340492,
+          "peak_individual_rss_bytes": 2070577152
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 46.11859412398189,
+          "decode_tps": 70.3331766350093,
+          "initialization_s": 1.3881928124465048,
+          "peak_individual_rss_bytes": 2070609920
+        }
+      },
+      "decode_ratio": 0.9854866313320318,
+      "ttft_fraction": 0.8893417328756876,
+      "exact_complete_outputs": true
+    }
+  ],
+  "records": [
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3949173330329359,
+      "ttft_seconds": 0.13918812479823828,
+      "total_seconds": 0.36886058282107115,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.001350166741758585,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.022248290944844484,
+        0.013927749823778868,
+        0.014032166916877031,
+        0.014229583088308573,
+        0.0140540418215096,
+        0.013384874910116196,
+        0.013549499679356813,
+        0.013556166086345911,
+        0.013357166666537523,
+        0.01379529107362032,
+        0.013580250088125467,
+        0.013566333800554276,
+        0.013861415907740593,
+        0.013995416928082705,
+        0.014257291331887245,
+        0.013766332995146513
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 69.81964257829542,
+      "decode_window_seconds": 0.22967245802283287,
+      "decode_wall_steps_per_second": 69.66442619083809,
+      "native_decode_ms": [
+        22.018166,
+        13.79925,
+        13.912542,
+        14.12025,
+        13.956,
+        13.291708,
+        13.45475,
+        13.462083,
+        13.262792,
+        13.691041,
+        13.487083,
+        13.474125,
+        13.769042,
+        13.903041,
+        14.164959,
+        13.676917
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.238958,
+          "encode_ms": 0.706625,
+          "gpu_ms": 12.130749877542257,
+          "wait_ms": 21.069833
+        },
+        {
+          "prepare_ms": 0.132667,
+          "encode_ms": 0.5845,
+          "gpu_ms": 12.20004167407751,
+          "wait_ms": 13.08025
+        },
+        {
+          "prepare_ms": 0.131042,
+          "encode_ms": 0.51825,
+          "gpu_ms": 12.363124638795853,
+          "wait_ms": 13.262042
+        },
+        {
+          "prepare_ms": 0.122833,
+          "encode_ms": 0.504042,
+          "gpu_ms": 12.488000094890594,
+          "wait_ms": 13.4925
+        },
+        {
+          "prepare_ms": 0.120208,
+          "encode_ms": 0.471333,
+          "gpu_ms": 12.582083232700825,
+          "wait_ms": 13.363667
+        },
+        {
+          "prepare_ms": 0.118416,
+          "encode_ms": 0.469292,
+          "gpu_ms": 12.33162498101592,
+          "wait_ms": 12.703292
+        },
+        {
+          "prepare_ms": 0.118042,
+          "encode_ms": 0.456833,
+          "gpu_ms": 12.395541649311781,
+          "wait_ms": 12.879125
+        },
+        {
+          "prepare_ms": 0.117875,
+          "encode_ms": 0.45875,
+          "gpu_ms": 12.435624841600657,
+          "wait_ms": 12.884792
+        },
+        {
+          "prepare_ms": 0.11825,
+          "encode_ms": 0.454417,
+          "gpu_ms": 12.302124872803688,
+          "wait_ms": 12.689333
+        },
+        {
+          "prepare_ms": 0.1365,
+          "encode_ms": 0.529958,
+          "gpu_ms": 12.611374724656343,
+          "wait_ms": 13.023875
+        },
+        {
+          "prepare_ms": 0.117291,
+          "encode_ms": 0.46225,
+          "gpu_ms": 12.53870828077197,
+          "wait_ms": 12.906792
+        },
+        {
+          "prepare_ms": 0.11775,
+          "encode_ms": 0.458083,
+          "gpu_ms": 12.447124812752008,
+          "wait_ms": 12.897667
+        },
+        {
+          "prepare_ms": 0.118709,
+          "encode_ms": 0.457833,
+          "gpu_ms": 12.800625059753656,
+          "wait_ms": 13.191833
+        },
+        {
+          "prepare_ms": 0.118833,
+          "encode_ms": 0.454958,
+          "gpu_ms": 12.6994582824409,
+          "wait_ms": 13.328625
+        },
+        {
+          "prepare_ms": 0.119209,
+          "encode_ms": 0.454166,
+          "gpu_ms": 13.141999952495098,
+          "wait_ms": 13.590959
+        },
+        {
+          "prepare_ms": 0.124125,
+          "encode_ms": 0.457958,
+          "gpu_ms": 12.693166732788086,
+          "wait_ms": 13.094125
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.187417,
+        "encode_ms": 21.789208,
+        "gpu_ms": 41.156125254929066,
+        "wait_ms": 64.336084,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 86.317334,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "control",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2070544384
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3949173330329359,
+      "ttft_seconds": 0.0472422088496387,
+      "total_seconds": 0.2701689996756613,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0021264590322971344,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.013837582897394896,
+        0.013877040706574917,
+        0.013599249999970198,
+        0.013512040954083204,
+        0.013808874879032373,
+        0.013841541949659586,
+        0.013890875037759542,
+        0.013687790837138891,
+        0.013489209115505219,
+        0.013805916998535395,
+        0.013418042100965977,
+        0.01403154106810689,
+        0.014406458009034395,
+        0.014419292099773884,
+        0.014195125084370375,
+        0.014474791940301657
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 71.97630672764896,
+      "decode_window_seconds": 0.22292679082602262,
+      "decode_wall_steps_per_second": 71.77244126071317,
+      "native_decode_ms": [
+        13.6575,
+        13.777708,
+        13.503833,
+        13.420791,
+        13.7185,
+        13.74,
+        13.769458,
+        13.558625,
+        13.354542,
+        13.672584,
+        13.286666,
+        13.906792,
+        14.2825,
+        14.290958,
+        14.059666,
+        14.312708
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.151208,
+          "encode_ms": 0.4845,
+          "gpu_ms": 12.57200026884675,
+          "wait_ms": 13.021125
+        },
+        {
+          "prepare_ms": 0.117125,
+          "encode_ms": 0.457875,
+          "gpu_ms": 12.814458459615707,
+          "wait_ms": 13.202041
+        },
+        {
+          "prepare_ms": 0.119,
+          "encode_ms": 0.450375,
+          "gpu_ms": 12.543708086013794,
+          "wait_ms": 12.932917
+        },
+        {
+          "prepare_ms": 0.118291,
+          "encode_ms": 0.452875,
+          "gpu_ms": 12.418624944984913,
+          "wait_ms": 12.848959
+        },
+        {
+          "prepare_ms": 0.118959,
+          "encode_ms": 0.449833,
+          "gpu_ms": 12.788208201527596,
+          "wait_ms": 13.149083
+        },
+        {
+          "prepare_ms": 0.117834,
+          "encode_ms": 0.448041,
+          "gpu_ms": 12.742791324853897,
+          "wait_ms": 13.172125
+        },
+        {
+          "prepare_ms": 0.130375,
+          "encode_ms": 0.490208,
+          "gpu_ms": 12.709750328212976,
+          "wait_ms": 13.146875
+        },
+        {
+          "prepare_ms": 0.128292,
+          "encode_ms": 0.482875,
+          "gpu_ms": 12.579708360135555,
+          "wait_ms": 12.943417
+        },
+        {
+          "prepare_ms": 0.152584,
+          "encode_ms": 0.539166,
+          "gpu_ms": 12.25708331912756,
+          "wait_ms": 12.660959
+        },
+        {
+          "prepare_ms": 0.144417,
+          "encode_ms": 0.55375,
+          "gpu_ms": 12.593124993145466,
+          "wait_ms": 12.97175
+        },
+        {
+          "prepare_ms": 0.155333,
+          "encode_ms": 0.610083,
+          "gpu_ms": 12.114958371967077,
+          "wait_ms": 12.519667
+        },
+        {
+          "prepare_ms": 0.143875,
+          "encode_ms": 0.545583,
+          "gpu_ms": 12.76475004851818,
+          "wait_ms": 13.215792
+        },
+        {
+          "prepare_ms": 0.148583,
+          "encode_ms": 0.563792,
+          "gpu_ms": 13.124000281095505,
+          "wait_ms": 13.568833
+        },
+        {
+          "prepare_ms": 0.148666,
+          "encode_ms": 0.554167,
+          "gpu_ms": 13.148500118404627,
+          "wait_ms": 13.586125
+        },
+        {
+          "prepare_ms": 0.1555,
+          "encode_ms": 0.573375,
+          "gpu_ms": 12.933541554957628,
+          "wait_ms": 13.328
+        },
+        {
+          "prepare_ms": 0.151083,
+          "encode_ms": 0.580958,
+          "gpu_ms": 13.182375114411116,
+          "wait_ms": 13.577542
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.257458,
+        "encode_ms": 5.207792,
+        "gpu_ms": 37.91970806196332,
+        "wait_ms": 38.389167,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 43.855417,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "control",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2070544384
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3949173330329359,
+      "ttft_seconds": 0.05573537480086088,
+      "total_seconds": 0.28112899977713823,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0017540832050144672,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.014778958167880774,
+        0.015266708098351955,
+        0.014378707855939865,
+        0.013922167010605335,
+        0.014042041264474392,
+        0.013725749682635069,
+        0.013870750088244677,
+        0.013861582614481449,
+        0.014125874731689692,
+        0.014448957983404398,
+        0.013610916212201118,
+        0.01362699968740344,
+        0.013617250137031078,
+        0.013745333068072796,
+        0.013848166912794113,
+        0.014003292191773653
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 71.1511278629899,
+      "decode_window_seconds": 0.22539362497627735,
+      "decode_wall_steps_per_second": 70.98692343975566,
+      "native_decode_ms": [
+        14.603042,
+        15.146333,
+        14.279209,
+        13.824083,
+        13.938917,
+        13.629292,
+        13.777125,
+        13.767708,
+        14.017875,
+        14.326417,
+        13.521834,
+        13.538917,
+        13.528125,
+        13.653417,
+        13.757125,
+        13.912459
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.187917,
+          "encode_ms": 0.537,
+          "gpu_ms": 13.405749574303627,
+          "wait_ms": 13.876208
+        },
+        {
+          "prepare_ms": 0.130708,
+          "encode_ms": 0.500917,
+          "gpu_ms": 14.002291951328516,
+          "wait_ms": 14.513542
+        },
+        {
+          "prepare_ms": 0.125167,
+          "encode_ms": 0.480583,
+          "gpu_ms": 13.183292001485825,
+          "wait_ms": 13.672584
+        },
+        {
+          "prepare_ms": 0.120708,
+          "encode_ms": 0.467542,
+          "gpu_ms": 12.745166663080454,
+          "wait_ms": 13.234875
+        },
+        {
+          "prepare_ms": 0.120542,
+          "encode_ms": 0.469666,
+          "gpu_ms": 12.837791815400124,
+          "wait_ms": 13.347834
+        },
+        {
+          "prepare_ms": 0.116417,
+          "encode_ms": 0.463458,
+          "gpu_ms": 12.62954156845808,
+          "wait_ms": 13.048667
+        },
+        {
+          "prepare_ms": 0.120333,
+          "encode_ms": 0.452459,
+          "gpu_ms": 12.758874800056219,
+          "wait_ms": 13.203541
+        },
+        {
+          "prepare_ms": 0.117666,
+          "encode_ms": 0.446292,
+          "gpu_ms": 12.79866648837924,
+          "wait_ms": 13.202917
+        },
+        {
+          "prepare_ms": 0.1355,
+          "encode_ms": 0.518292,
+          "gpu_ms": 12.722332961857319,
+          "wait_ms": 13.363
+        },
+        {
+          "prepare_ms": 0.161083,
+          "encode_ms": 0.617209,
+          "gpu_ms": 13.010749593377113,
+          "wait_ms": 13.547458
+        },
+        {
+          "prepare_ms": 0.117209,
+          "encode_ms": 0.448708,
+          "gpu_ms": 12.561124749481678,
+          "wait_ms": 12.955292
+        },
+        {
+          "prepare_ms": 0.116542,
+          "encode_ms": 0.449792,
+          "gpu_ms": 12.58412515744567,
+          "wait_ms": 12.971916
+        },
+        {
+          "prepare_ms": 0.117208,
+          "encode_ms": 0.453208,
+          "gpu_ms": 12.560583185404539,
+          "wait_ms": 12.957042
+        },
+        {
+          "prepare_ms": 0.117833,
+          "encode_ms": 0.442417,
+          "gpu_ms": 12.720874976366758,
+          "wait_ms": 13.092417
+        },
+        {
+          "prepare_ms": 0.117208,
+          "encode_ms": 0.442,
+          "gpu_ms": 12.727958150207996,
+          "wait_ms": 13.19725
+        },
+        {
+          "prepare_ms": 0.117584,
+          "encode_ms": 0.445666,
+          "gpu_ms": 12.871250044554472,
+          "wait_ms": 13.348584
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.32025,
+        "encode_ms": 6.173167,
+        "gpu_ms": 45.48300011083484,
+        "wait_ms": 46.096958,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 52.59375,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "control",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2070544384
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3821912910789251,
+      "ttft_seconds": 0.11841895803809166,
+      "total_seconds": 0.34505725000053644,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.001769624650478363,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.021232707891613245,
+        0.014035749714821577,
+        0.013820333871990442,
+        0.013259584084153175,
+        0.0132597079500556,
+        0.013496124651283026,
+        0.01354691619053483,
+        0.013597459066659212,
+        0.01393412472680211,
+        0.01375987520441413,
+        0.013698042370378971,
+        0.013717624824494123,
+        0.01391608314588666,
+        0.013580665923655033,
+        0.013562375213950872,
+        0.013721874915063381
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.75286584698793,
+      "decode_window_seconds": 0.22663829196244478,
+      "decode_wall_steps_per_second": 70.59707281350006,
+      "native_decode_ms": [
+        21.040625,
+        13.907083,
+        13.708666,
+        13.157083,
+        13.165708,
+        13.404167,
+        13.456666,
+        13.505125,
+        13.842042,
+        13.65425,
+        13.590667,
+        13.626542,
+        13.822583,
+        13.489583,
+        13.474333,
+        13.632958
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.181,
+          "encode_ms": 0.537167,
+          "gpu_ms": 12.17000000178814,
+          "wait_ms": 20.319833
+        },
+        {
+          "prepare_ms": 0.132542,
+          "encode_ms": 0.535208,
+          "gpu_ms": 12.374874670058489,
+          "wait_ms": 13.237875
+        },
+        {
+          "prepare_ms": 0.128291,
+          "encode_ms": 0.489167,
+          "gpu_ms": 12.346124742180109,
+          "wait_ms": 13.090083
+        },
+        {
+          "prepare_ms": 0.118292,
+          "encode_ms": 0.466416,
+          "gpu_ms": 12.200125027447939,
+          "wait_ms": 12.571584
+        },
+        {
+          "prepare_ms": 0.12175,
+          "encode_ms": 0.44375,
+          "gpu_ms": 12.18162477016449,
+          "wait_ms": 12.599333
+        },
+        {
+          "prepare_ms": 0.118709,
+          "encode_ms": 0.442166,
+          "gpu_ms": 12.484750244766474,
+          "wait_ms": 12.842625
+        },
+        {
+          "prepare_ms": 0.117833,
+          "encode_ms": 0.440833,
+          "gpu_ms": 12.517708353698254,
+          "wait_ms": 12.89725
+        },
+        {
+          "prepare_ms": 0.118125,
+          "encode_ms": 0.442125,
+          "gpu_ms": 12.492250185459852,
+          "wait_ms": 12.944125
+        },
+        {
+          "prepare_ms": 0.117792,
+          "encode_ms": 0.438792,
+          "gpu_ms": 12.551874853670597,
+          "wait_ms": 13.284625
+        },
+        {
+          "prepare_ms": 0.136541,
+          "encode_ms": 0.509292,
+          "gpu_ms": 12.535249814391136,
+          "wait_ms": 13.007708
+        },
+        {
+          "prepare_ms": 0.136584,
+          "encode_ms": 0.508958,
+          "gpu_ms": 12.547374702990055,
+          "wait_ms": 12.944542
+        },
+        {
+          "prepare_ms": 0.116667,
+          "encode_ms": 0.439708,
+          "gpu_ms": 12.611624784767628,
+          "wait_ms": 13.069542
+        },
+        {
+          "prepare_ms": 0.117,
+          "encode_ms": 0.439958,
+          "gpu_ms": 12.796082999557257,
+          "wait_ms": 13.264959
+        },
+        {
+          "prepare_ms": 0.11775,
+          "encode_ms": 0.438625,
+          "gpu_ms": 12.5108752399683,
+          "wait_ms": 12.932583
+        },
+        {
+          "prepare_ms": 0.11725,
+          "encode_ms": 0.440958,
+          "gpu_ms": 12.524374760687351,
+          "wait_ms": 12.9155
+        },
+        {
+          "prepare_ms": 0.117542,
+          "encode_ms": 0.439083,
+          "gpu_ms": 12.688499875366688,
+          "wait_ms": 13.075708
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.176458,
+        "encode_ms": 23.113875,
+        "gpu_ms": 44.64499978348613,
+        "wait_ms": 40.675583,
+        "global_half_alpha_dispatches": 143,
+        "prefill_partial_submissions": 5
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 63.96975,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "candidate",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2070577152
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3821912910789251,
+      "ttft_seconds": 0.04434920800849795,
+      "total_seconds": 0.26926774997264147,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.001681916881352663,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.014096708968281746,
+        0.013835582882165909,
+        0.014085541013628244,
+        0.014368750154972076,
+        0.014068374875932932,
+        0.013833750039339066,
+        0.01388908363878727,
+        0.01389445923268795,
+        0.013826082926243544,
+        0.013911541551351547,
+        0.013805875089019537,
+        0.014251749962568283,
+        0.013892707880586386,
+        0.013944041915237904,
+        0.014204333070665598,
+        0.014414250385016203
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 71.32577519725136,
+      "decode_window_seconds": 0.22491854196414351,
+      "decode_wall_steps_per_second": 71.1368651969597,
+      "native_decode_ms": [
+        13.95425,
+        13.72875,
+        13.987708,
+        14.273,
+        13.966875,
+        13.7425,
+        13.798375,
+        13.803583,
+        13.723208,
+        13.761584,
+        13.677333,
+        14.1255,
+        13.762083,
+        13.814833,
+        14.069959,
+        14.302041
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.146708,
+          "encode_ms": 0.496709,
+          "gpu_ms": 12.870250269770622,
+          "wait_ms": 13.309666
+        },
+        {
+          "prepare_ms": 0.119625,
+          "encode_ms": 0.465083,
+          "gpu_ms": 12.670416850596666,
+          "wait_ms": 13.143167
+        },
+        {
+          "prepare_ms": 0.116416,
+          "encode_ms": 0.447834,
+          "gpu_ms": 12.867916841059923,
+          "wait_ms": 13.422666
+        },
+        {
+          "prepare_ms": 0.116208,
+          "encode_ms": 0.444917,
+          "gpu_ms": 13.092583511024714,
+          "wait_ms": 13.711125
+        },
+        {
+          "prepare_ms": 0.117625,
+          "encode_ms": 0.441375,
+          "gpu_ms": 13.016916811466217,
+          "wait_ms": 13.40625
+        },
+        {
+          "prepare_ms": 0.116666,
+          "encode_ms": 0.439,
+          "gpu_ms": 12.770249973982573,
+          "wait_ms": 13.185959
+        },
+        {
+          "prepare_ms": 0.11625,
+          "encode_ms": 0.444583,
+          "gpu_ms": 12.767958454787731,
+          "wait_ms": 13.236834
+        },
+        {
+          "prepare_ms": 0.116666,
+          "encode_ms": 0.437667,
+          "gpu_ms": 12.757250107824802,
+          "wait_ms": 13.2485
+        },
+        {
+          "prepare_ms": 0.116958,
+          "encode_ms": 0.438708,
+          "gpu_ms": 12.747624889016151,
+          "wait_ms": 13.165167
+        },
+        {
+          "prepare_ms": 0.129375,
+          "encode_ms": 0.487834,
+          "gpu_ms": 12.71574990823865,
+          "wait_ms": 13.141833
+        },
+        {
+          "prepare_ms": 0.132666,
+          "encode_ms": 0.492125,
+          "gpu_ms": 12.654250022023916,
+          "wait_ms": 13.050625
+        },
+        {
+          "prepare_ms": 0.130291,
+          "encode_ms": 0.479875,
+          "gpu_ms": 12.795624788850546,
+          "wait_ms": 13.5135
+        },
+        {
+          "prepare_ms": 0.145958,
+          "encode_ms": 0.561542,
+          "gpu_ms": 12.671041768044233,
+          "wait_ms": 13.053
+        },
+        {
+          "prepare_ms": 0.146875,
+          "encode_ms": 0.540208,
+          "gpu_ms": 12.762625236064196,
+          "wait_ms": 13.124833
+        },
+        {
+          "prepare_ms": 0.133917,
+          "encode_ms": 0.495125,
+          "gpu_ms": 13.001624960452318,
+          "wait_ms": 13.439083
+        },
+        {
+          "prepare_ms": 0.137166,
+          "encode_ms": 0.474334,
+          "gpu_ms": 13.256249949336052,
+          "wait_ms": 13.688166
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.20675,
+        "encode_ms": 5.138,
+        "gpu_ms": 39.42199982702732,
+        "wait_ms": 36.230584,
+        "global_half_alpha_dispatches": 143,
+        "prefill_partial_submissions": 5
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 41.576459,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "candidate",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2070577152
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3821912910789251,
+      "ttft_seconds": 0.04658245900645852,
+      "total_seconds": 0.2786417091265321,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0014172093942761421,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.015350750181823969,
+        0.015429417137056589,
+        0.015330750029534101,
+        0.015924999956041574,
+        0.014763916376978159,
+        0.014192083850502968,
+        0.014035709202289581,
+        0.014082499779760838,
+        0.013933415990322828,
+        0.013972708024084568,
+        0.014361917041242123,
+        0.013836875092238188,
+        0.013975083827972412,
+        0.014115625061094761,
+        0.01418366702273488,
+        0.014052583370357752
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 69.10193341019514,
+      "decode_window_seconds": 0.23205925012007356,
+      "decode_wall_steps_per_second": 68.94790874193198,
+      "native_decode_ms": [
+        15.156833,
+        15.300542,
+        15.211375,
+        15.829792,
+        14.673417,
+        14.101375,
+        13.946625,
+        13.989708,
+        13.844542,
+        13.880459,
+        14.270792,
+        13.744875,
+        13.868208,
+        13.9935,
+        14.06425,
+        13.961459
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.2065,
+          "encode_ms": 0.598416,
+          "gpu_ms": 13.898750301450491,
+          "wait_ms": 14.350334
+        },
+        {
+          "prepare_ms": 0.147542,
+          "encode_ms": 0.548292,
+          "gpu_ms": 14.09724960103631,
+          "wait_ms": 14.602875
+        },
+        {
+          "prepare_ms": 0.155291,
+          "encode_ms": 0.551375,
+          "gpu_ms": 14.058333355933428,
+          "wait_ms": 14.503709
+        },
+        {
+          "prepare_ms": 0.116417,
+          "encode_ms": 0.451375,
+          "gpu_ms": 14.75499989464879,
+          "wait_ms": 15.261333
+        },
+        {
+          "prepare_ms": 0.115834,
+          "encode_ms": 0.459,
+          "gpu_ms": 13.676833361387253,
+          "wait_ms": 14.097875
+        },
+        {
+          "prepare_ms": 0.116583,
+          "encode_ms": 0.440834,
+          "gpu_ms": 13.074750080704689,
+          "wait_ms": 13.54325
+        },
+        {
+          "prepare_ms": 0.117959,
+          "encode_ms": 0.449333,
+          "gpu_ms": 12.954416684806347,
+          "wait_ms": 13.378667
+        },
+        {
+          "prepare_ms": 0.114208,
+          "encode_ms": 0.441542,
+          "gpu_ms": 13.009041547775269,
+          "wait_ms": 13.433375
+        },
+        {
+          "prepare_ms": 0.117292,
+          "encode_ms": 0.435333,
+          "gpu_ms": 12.891666498035192,
+          "wait_ms": 13.29125
+        },
+        {
+          "prepare_ms": 0.114334,
+          "encode_ms": 0.437833,
+          "gpu_ms": 12.771833688020706,
+          "wait_ms": 13.327708
+        },
+        {
+          "prepare_ms": 0.114834,
+          "encode_ms": 0.436791,
+          "gpu_ms": 13.251416385173798,
+          "wait_ms": 13.7185
+        },
+        {
+          "prepare_ms": 0.114208,
+          "encode_ms": 0.437084,
+          "gpu_ms": 12.736625038087368,
+          "wait_ms": 13.192833
+        },
+        {
+          "prepare_ms": 0.132791,
+          "encode_ms": 0.512375,
+          "gpu_ms": 12.817999813705683,
+          "wait_ms": 13.222125
+        },
+        {
+          "prepare_ms": 0.157959,
+          "encode_ms": 0.603916,
+          "gpu_ms": 12.865375261753798,
+          "wait_ms": 13.23075
+        },
+        {
+          "prepare_ms": 0.160333,
+          "encode_ms": 0.605208,
+          "gpu_ms": 12.87266705185175,
+          "wait_ms": 13.298084
+        },
+        {
+          "prepare_ms": 0.114209,
+          "encode_ms": 0.43675,
+          "gpu_ms": 12.953708413988352,
+          "wait_ms": 13.409875
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.216208,
+        "encode_ms": 5.001208,
+        "gpu_ms": 42.29662474244833,
+        "wait_ms": 38.747209,
+        "global_half_alpha_dispatches": 143,
+        "prefill_partial_submissions": 5
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 43.96825,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "candidate",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2070577152
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3941943338140845,
+      "ttft_seconds": 0.12279820814728737,
+      "total_seconds": 0.34925491688773036,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0013743750751018524,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.021011041942983866,
+        0.014200333040207624,
+        0.013731291051954031,
+        0.01329041738063097,
+        0.013409791979938745,
+        0.013409292325377464,
+        0.013555416837334633,
+        0.013418625108897686,
+        0.013449833262711763,
+        0.01379583403468132,
+        0.013710832688957453,
+        0.014238290954381227,
+        0.013643082696944475,
+        0.013765374664217234,
+        0.013680208008736372,
+        0.013622249942272902
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.81779453262058,
+      "decode_window_seconds": 0.226456708740443,
+      "decode_wall_steps_per_second": 70.65368073656258,
+      "native_decode_ms": [
+        20.818291,
+        14.074959,
+        13.626167,
+        13.189208,
+        13.316125,
+        13.317042,
+        13.461,
+        13.327625,
+        13.35175,
+        13.690125,
+        13.61475,
+        14.145875,
+        13.539917,
+        13.675625,
+        13.590917,
+        13.527041
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.182708,
+          "encode_ms": 0.526292,
+          "gpu_ms": 11.991083156317472,
+          "wait_ms": 20.106875
+        },
+        {
+          "prepare_ms": 0.1405,
+          "encode_ms": 0.549084,
+          "gpu_ms": 12.523666489869356,
+          "wait_ms": 13.383875
+        },
+        {
+          "prepare_ms": 0.122,
+          "encode_ms": 0.505292,
+          "gpu_ms": 12.149166781455278,
+          "wait_ms": 12.998
+        },
+        {
+          "prepare_ms": 0.118917,
+          "encode_ms": 0.459125,
+          "gpu_ms": 11.95974973961711,
+          "wait_ms": 12.610416
+        },
+        {
+          "prepare_ms": 0.116917,
+          "encode_ms": 0.453125,
+          "gpu_ms": 12.306541670113802,
+          "wait_ms": 12.745333
+        },
+        {
+          "prepare_ms": 0.11625,
+          "encode_ms": 0.447333,
+          "gpu_ms": 12.37895805388689,
+          "wait_ms": 12.752792
+        },
+        {
+          "prepare_ms": 0.116833,
+          "encode_ms": 0.445792,
+          "gpu_ms": 12.437874916940928,
+          "wait_ms": 12.897708
+        },
+        {
+          "prepare_ms": 0.11825,
+          "encode_ms": 0.447,
+          "gpu_ms": 12.344875372946262,
+          "wait_ms": 12.761667
+        },
+        {
+          "prepare_ms": 0.116709,
+          "encode_ms": 0.456041,
+          "gpu_ms": 12.359749991446733,
+          "wait_ms": 12.778167
+        },
+        {
+          "prepare_ms": 0.135417,
+          "encode_ms": 0.512416,
+          "gpu_ms": 12.663875240832567,
+          "wait_ms": 13.041542
+        },
+        {
+          "prepare_ms": 0.11575,
+          "encode_ms": 0.443042,
+          "gpu_ms": 12.672374956309795,
+          "wait_ms": 13.05525
+        },
+        {
+          "prepare_ms": 0.116042,
+          "encode_ms": 0.442416,
+          "gpu_ms": 12.990541756153107,
+          "wait_ms": 13.586625
+        },
+        {
+          "prepare_ms": 0.11575,
+          "encode_ms": 0.444,
+          "gpu_ms": 12.583583127707243,
+          "wait_ms": 12.97875
+        },
+        {
+          "prepare_ms": 0.115791,
+          "encode_ms": 0.443667,
+          "gpu_ms": 12.71199993789196,
+          "wait_ms": 13.1155
+        },
+        {
+          "prepare_ms": 0.122417,
+          "encode_ms": 0.449708,
+          "gpu_ms": 12.607624754309654,
+          "wait_ms": 13.018042
+        },
+        {
+          "prepare_ms": 0.115875,
+          "encode_ms": 0.441583,
+          "gpu_ms": 12.571875005960464,
+          "wait_ms": 12.968917
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.187708,
+        "encode_ms": 22.858209,
+        "gpu_ms": 44.53400010243058,
+        "wait_ms": 41.966625,
+        "global_half_alpha_dispatches": 143,
+        "prefill_partial_submissions": 5
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 65.016167,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "candidate",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2070642688
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3941943338140845,
+      "ttft_seconds": 0.04414841718971729,
+      "total_seconds": 0.2705388329923153,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0019662920385599136,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.013714874628931284,
+        0.01404070807620883,
+        0.013730291742831469,
+        0.014246291015297174,
+        0.013761875219643116,
+        0.01398241613060236,
+        0.013973707798868418,
+        0.014013584237545729,
+        0.014481374993920326,
+        0.014183042105287313,
+        0.014267957769334316,
+        0.014279666356742382,
+        0.013694040942937136,
+        0.0142213748767972,
+        0.014463749714195728,
+        0.014738417230546474
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.86124716051705,
+      "decode_window_seconds": 0.226390415802598,
+      "decode_wall_steps_per_second": 70.67436995191201,
+      "native_decode_ms": [
+        13.571,
+        13.941333,
+        13.632959,
+        14.152042,
+        13.669,
+        13.892625,
+        13.873458,
+        13.881958,
+        14.350208,
+        14.057708,
+        14.145209,
+        14.027084,
+        13.587083,
+        14.099375,
+        14.338125,
+        14.610375
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.15,
+          "encode_ms": 0.485084,
+          "gpu_ms": 12.52904161810875,
+          "wait_ms": 12.934875
+        },
+        {
+          "prepare_ms": 0.119375,
+          "encode_ms": 0.450792,
+          "gpu_ms": 12.881458271294832,
+          "wait_ms": 13.370375
+        },
+        {
+          "prepare_ms": 0.118292,
+          "encode_ms": 0.444542,
+          "gpu_ms": 12.58316682651639,
+          "wait_ms": 13.069416
+        },
+        {
+          "prepare_ms": 0.117042,
+          "encode_ms": 0.442916,
+          "gpu_ms": 13.12616653740406,
+          "wait_ms": 13.591417
+        },
+        {
+          "prepare_ms": 0.116959,
+          "encode_ms": 0.437791,
+          "gpu_ms": 12.675583362579346,
+          "wait_ms": 13.1135
+        },
+        {
+          "prepare_ms": 0.117,
+          "encode_ms": 0.436167,
+          "gpu_ms": 12.977167032659054,
+          "wait_ms": 13.338791
+        },
+        {
+          "prepare_ms": 0.11675,
+          "encode_ms": 0.436833,
+          "gpu_ms": 12.979375198483467,
+          "wait_ms": 13.317542
+        },
+        {
+          "prepare_ms": 0.126708,
+          "encode_ms": 0.496875,
+          "gpu_ms": 12.888750061392784,
+          "wait_ms": 13.256292
+        },
+        {
+          "prepare_ms": 0.131625,
+          "encode_ms": 0.501875,
+          "gpu_ms": 13.289832975715399,
+          "wait_ms": 13.714792
+        },
+        {
+          "prepare_ms": 0.144958,
+          "encode_ms": 0.498167,
+          "gpu_ms": 12.985416688024998,
+          "wait_ms": 13.412708
+        },
+        {
+          "prepare_ms": 0.135042,
+          "encode_ms": 0.493083,
+          "gpu_ms": 13.03250016644597,
+          "wait_ms": 13.513334
+        },
+        {
+          "prepare_ms": 0.159667,
+          "encode_ms": 0.583042,
+          "gpu_ms": 12.723499909043312,
+          "wait_ms": 13.282833
+        },
+        {
+          "prepare_ms": 0.12125,
+          "encode_ms": 0.460167,
+          "gpu_ms": 12.628916651010513,
+          "wait_ms": 13.00375
+        },
+        {
+          "prepare_ms": 0.163833,
+          "encode_ms": 0.540458,
+          "gpu_ms": 13.011000119149685,
+          "wait_ms": 13.39375
+        },
+        {
+          "prepare_ms": 0.148416,
+          "encode_ms": 0.529917,
+          "gpu_ms": 13.2469586096704,
+          "wait_ms": 13.658167
+        },
+        {
+          "prepare_ms": 0.158875,
+          "encode_ms": 0.558416,
+          "gpu_ms": 13.436999637633562,
+          "wait_ms": 13.891167
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.267583,
+        "encode_ms": 5.279083,
+        "gpu_ms": 38.44654140993953,
+        "wait_ms": 35.2995,
+        "global_half_alpha_dispatches": 143,
+        "prefill_partial_submissions": 5
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 40.8475,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "candidate",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2070642688
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3941943338140845,
+      "ttft_seconds": 0.049394292291253805,
+      "total_seconds": 0.2761080842465162,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0014529172331094742,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.014725917018949986,
+        0.01485454197973013,
+        0.014256167225539684,
+        0.014227666892111301,
+        0.014345250092446804,
+        0.013975583016872406,
+        0.014139083679765463,
+        0.01402491657063365,
+        0.013793417252600193,
+        0.013904375024139881,
+        0.013827332761138678,
+        0.01446216693148017,
+        0.013946583028882742,
+        0.013848249800503254,
+        0.01394379185512662,
+        0.013932207599282265
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.73159657094232,
+      "decode_window_seconds": 0.22671379195526242,
+      "decode_wall_steps_per_second": 70.5735626492335,
+      "native_decode_ms": [
+        14.539917,
+        14.729833,
+        14.1615,
+        14.133084,
+        14.252375,
+        13.883542,
+        14.048042,
+        13.935167,
+        13.704333,
+        13.810875,
+        13.719666,
+        14.338417,
+        13.826292,
+        13.7595,
+        13.854791,
+        13.838125
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.205667,
+          "encode_ms": 0.59975,
+          "gpu_ms": 13.285083696246147,
+          "wait_ms": 13.733583
+        },
+        {
+          "prepare_ms": 0.140792,
+          "encode_ms": 0.544666,
+          "gpu_ms": 13.620625250041485,
+          "wait_ms": 14.043542
+        },
+        {
+          "prepare_ms": 0.122708,
+          "encode_ms": 0.457208,
+          "gpu_ms": 13.111500069499016,
+          "wait_ms": 13.580917
+        },
+        {
+          "prepare_ms": 0.119792,
+          "encode_ms": 0.450667,
+          "gpu_ms": 12.957499828189611,
+          "wait_ms": 13.561958
+        },
+        {
+          "prepare_ms": 0.11875,
+          "encode_ms": 0.445083,
+          "gpu_ms": 13.219874817878008,
+          "wait_ms": 13.687875
+        },
+        {
+          "prepare_ms": 0.119458,
+          "encode_ms": 0.441584,
+          "gpu_ms": 12.864458374679089,
+          "wait_ms": 13.321833
+        },
+        {
+          "prepare_ms": 0.119,
+          "encode_ms": 0.443167,
+          "gpu_ms": 13.076500035822392,
+          "wait_ms": 13.485208
+        },
+        {
+          "prepare_ms": 0.117959,
+          "encode_ms": 0.440916,
+          "gpu_ms": 13.012874871492386,
+          "wait_ms": 13.375667
+        },
+        {
+          "prepare_ms": 0.118,
+          "encode_ms": 0.44075,
+          "gpu_ms": 12.75087520480156,
+          "wait_ms": 13.144875
+        },
+        {
+          "prepare_ms": 0.118667,
+          "encode_ms": 0.441916,
+          "gpu_ms": 12.7832917496562,
+          "wait_ms": 13.249584
+        },
+        {
+          "prepare_ms": 0.137166,
+          "encode_ms": 0.511917,
+          "gpu_ms": 12.626000214368105,
+          "wait_ms": 13.069667
+        },
+        {
+          "prepare_ms": 0.166333,
+          "encode_ms": 0.611417,
+          "gpu_ms": 13.09275021776557,
+          "wait_ms": 13.559917
+        },
+        {
+          "prepare_ms": 0.162042,
+          "encode_ms": 0.607958,
+          "gpu_ms": 12.670916505157948,
+          "wait_ms": 13.055708
+        },
+        {
+          "prepare_ms": 0.118584,
+          "encode_ms": 0.441708,
+          "gpu_ms": 12.66987482085824,
+          "wait_ms": 13.198625
+        },
+        {
+          "prepare_ms": 0.120416,
+          "encode_ms": 0.439584,
+          "gpu_ms": 12.874750420451164,
+          "wait_ms": 13.294125
+        },
+        {
+          "prepare_ms": 0.117583,
+          "encode_ms": 0.441834,
+          "gpu_ms": 12.87316670641303,
+          "wait_ms": 13.278083
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.333167,
+        "encode_ms": 6.036458,
+        "gpu_ms": 44.22762477770448,
+        "wait_ms": 40.284,
+        "global_half_alpha_dispatches": 143,
+        "prefill_partial_submissions": 5
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 46.656709,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "candidate",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2070642688
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3999370420351624,
+      "ttft_seconds": 0.14249870833009481,
+      "total_seconds": 0.36923175025731325,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0012981658801436424,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.02194358315318823,
+        0.013783624861389399,
+        0.014109124895185232,
+        0.01310429209843278,
+        0.013439000118523836,
+        0.013383416924625635,
+        0.013474874664098024,
+        0.013746624812483788,
+        0.0135557078756392,
+        0.013583290856331587,
+        0.013478375039994717,
+        0.013693209271878004,
+        0.013864375185221434,
+        0.01347637502476573,
+        0.013584875036031008,
+        0.013995708897709846
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 70.72871748966078,
+      "decode_window_seconds": 0.22673304192721844,
+      "decode_wall_steps_per_second": 70.5675708489635,
+      "native_decode_ms": [
+        21.75,
+        13.655,
+        13.985791,
+        12.996542,
+        13.338417,
+        13.289833,
+        13.380375,
+        13.652375,
+        13.443917,
+        13.46225,
+        13.385833,
+        13.601708,
+        13.773333,
+        13.387459,
+        13.496583,
+        13.906083
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.198375,
+          "encode_ms": 0.5675,
+          "gpu_ms": 12.571583036333323,
+          "wait_ms": 20.980875
+        },
+        {
+          "prepare_ms": 0.141334,
+          "encode_ms": 0.583291,
+          "gpu_ms": 12.000041548162699,
+          "wait_ms": 12.928459
+        },
+        {
+          "prepare_ms": 0.130541,
+          "encode_ms": 0.51925,
+          "gpu_ms": 12.479291297495365,
+          "wait_ms": 13.334792
+        },
+        {
+          "prepare_ms": 0.118667,
+          "encode_ms": 0.466916,
+          "gpu_ms": 11.965374927967787,
+          "wait_ms": 12.409875
+        },
+        {
+          "prepare_ms": 0.118834,
+          "encode_ms": 0.46,
+          "gpu_ms": 12.21999991685152,
+          "wait_ms": 12.758583
+        },
+        {
+          "prepare_ms": 0.118,
+          "encode_ms": 0.453666,
+          "gpu_ms": 12.314124964177608,
+          "wait_ms": 12.717375
+        },
+        {
+          "prepare_ms": 0.118583,
+          "encode_ms": 0.45,
+          "gpu_ms": 12.348125223070383,
+          "wait_ms": 12.811042
+        },
+        {
+          "prepare_ms": 0.117042,
+          "encode_ms": 0.448625,
+          "gpu_ms": 12.63187499716878,
+          "wait_ms": 13.085833
+        },
+        {
+          "prepare_ms": 0.137084,
+          "encode_ms": 0.518208,
+          "gpu_ms": 12.324499897658825,
+          "wait_ms": 12.78775
+        },
+        {
+          "prepare_ms": 0.162125,
+          "encode_ms": 0.615292,
+          "gpu_ms": 12.287874706089497,
+          "wait_ms": 12.684125
+        },
+        {
+          "prepare_ms": 0.117,
+          "encode_ms": 0.4455,
+          "gpu_ms": 12.43445836007595,
+          "wait_ms": 12.822708
+        },
+        {
+          "prepare_ms": 0.11725,
+          "encode_ms": 0.444125,
+          "gpu_ms": 12.575125321745872,
+          "wait_ms": 13.039625
+        },
+        {
+          "prepare_ms": 0.117417,
+          "encode_ms": 0.445,
+          "gpu_ms": 12.847875244915485,
+          "wait_ms": 13.210291
+        },
+        {
+          "prepare_ms": 0.117459,
+          "encode_ms": 0.443041,
+          "gpu_ms": 12.465708423405886,
+          "wait_ms": 12.826334
+        },
+        {
+          "prepare_ms": 0.118416,
+          "encode_ms": 0.444667,
+          "gpu_ms": 12.535999994724989,
+          "wait_ms": 12.932833
+        },
+        {
+          "prepare_ms": 0.117083,
+          "encode_ms": 0.455042,
+          "gpu_ms": 12.931375298649073,
+          "wait_ms": 13.333375
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.266625,
+        "encode_ms": 21.705833,
+        "gpu_ms": 43.696333188563585,
+        "wait_ms": 66.621542,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 88.59875,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "control",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2070609920
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3999370420351624,
+      "ttft_seconds": 0.049302916042506695,
+      "total_seconds": 0.27288175001740456,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0018738750368356705,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.013914582785218954,
+        0.013511249795556068,
+        0.013810332864522934,
+        0.01350758271291852,
+        0.01404812466353178,
+        0.013740124646574259,
+        0.013848042115569115,
+        0.013704209122806787,
+        0.013792291283607483,
+        0.01401870884001255,
+        0.013872332870960236,
+        0.014181500300765038,
+        0.013945041224360466,
+        0.014262666925787926,
+        0.014497249852865934,
+        0.014290249906480312
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 71.76680778121121,
+      "decode_window_seconds": 0.22357883397489786,
+      "decode_wall_steps_per_second": 71.56312480722745,
+      "native_decode_ms": [
+        13.748125,
+        13.417916,
+        13.719625,
+        13.417625,
+        13.958875,
+        13.632583,
+        13.711917,
+        13.582208,
+        13.652667,
+        13.876125,
+        13.734,
+        14.054542,
+        13.810125,
+        14.13675,
+        14.365584,
+        14.163041
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.143708,
+          "encode_ms": 0.465042,
+          "gpu_ms": 12.7147501334548,
+          "wait_ms": 13.138708
+        },
+        {
+          "prepare_ms": 0.117166,
+          "encode_ms": 0.447709,
+          "gpu_ms": 12.46833335608244,
+          "wait_ms": 12.852375
+        },
+        {
+          "prepare_ms": 0.11725,
+          "encode_ms": 0.445,
+          "gpu_ms": 12.775583658367395,
+          "wait_ms": 13.15675
+        },
+        {
+          "prepare_ms": 0.116666,
+          "encode_ms": 0.446542,
+          "gpu_ms": 12.480250094085932,
+          "wait_ms": 12.853708
+        },
+        {
+          "prepare_ms": 0.117125,
+          "encode_ms": 0.443833,
+          "gpu_ms": 12.979041319340467,
+          "wait_ms": 13.397208
+        },
+        {
+          "prepare_ms": 0.117042,
+          "encode_ms": 0.444375,
+          "gpu_ms": 12.638499960303307,
+          "wait_ms": 13.068166
+        },
+        {
+          "prepare_ms": 0.138917,
+          "encode_ms": 0.497375,
+          "gpu_ms": 12.685791589319706,
+          "wait_ms": 13.074167
+        },
+        {
+          "prepare_ms": 0.136583,
+          "encode_ms": 0.475708,
+          "gpu_ms": 12.614083010703325,
+          "wait_ms": 12.966042
+        },
+        {
+          "prepare_ms": 0.146917,
+          "encode_ms": 0.5225,
+          "gpu_ms": 12.588541954755783,
+          "wait_ms": 12.981083
+        },
+        {
+          "prepare_ms": 0.149458,
+          "encode_ms": 0.505083,
+          "gpu_ms": 12.768833432346582,
+          "wait_ms": 13.218625
+        },
+        {
+          "prepare_ms": 0.163,
+          "encode_ms": 0.570875,
+          "gpu_ms": 12.57579168304801,
+          "wait_ms": 12.998375
+        },
+        {
+          "prepare_ms": 0.14725,
+          "encode_ms": 0.542208,
+          "gpu_ms": 12.914208229631186,
+          "wait_ms": 13.362584
+        },
+        {
+          "prepare_ms": 0.1565,
+          "encode_ms": 0.56075,
+          "gpu_ms": 12.675291858613491,
+          "wait_ms": 13.09125
+        },
+        {
+          "prepare_ms": 0.140583,
+          "encode_ms": 0.538417,
+          "gpu_ms": 13.090749736875296,
+          "wait_ms": 13.455917
+        },
+        {
+          "prepare_ms": 0.157459,
+          "encode_ms": 0.56125,
+          "gpu_ms": 13.24616651982069,
+          "wait_ms": 13.645541
+        },
+        {
+          "prepare_ms": 0.148708,
+          "encode_ms": 0.545417,
+          "gpu_ms": 13.098166789859533,
+          "wait_ms": 13.465291
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.266167,
+        "encode_ms": 5.306667,
+        "gpu_ms": 39.56512501463294,
+        "wait_ms": 40.62025,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 46.194,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "control",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2070609920
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 1.3999370420351624,
+      "ttft_seconds": 0.05514749977737665,
+      "total_seconds": 0.28001366602256894,
+      "token_ids": [
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ],
+        [
+          73594,
+          12669,
+          198,
+          750,
+          912,
+          2877,
+          11,
+          293,
+          982,
+          262,
+          470,
+          264,
+          488,
+          293,
+          198,
+          73594,
+          151645
+        ]
+      ],
+      "text": [
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>",
+        "```python\ndef add(a, b):\n    return a + b\n```<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.001666040625423193,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        7985,
+        264,
+        13027,
+        729,
+        912,
+        2877,
+        11,
+        293,
+        8,
+        429,
+        4675,
+        862,
+        2629,
+        13,
+        9258,
+        1172,
+        2038,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "decode_step_seconds": [
+        0.015475708991289139,
+        0.014661124907433987,
+        0.014181625097990036,
+        0.013846375048160553,
+        0.013766457792371511,
+        0.01391749968752265,
+        0.013795374892652035,
+        0.014010458253324032,
+        0.013703374657779932,
+        0.013886666856706142,
+        0.013823625165969133,
+        0.013724875170737505,
+        0.01414908329024911,
+        0.013787082862108946,
+        0.013947082683444023,
+        0.013709333259612322
+      ],
+      "decode_steps_after_first": 16,
+      "decode_steps_per_second": 71.30577631864259,
+      "decode_window_seconds": 0.2248661662451923,
+      "decode_wall_steps_per_second": 71.15343436128015,
+      "native_decode_ms": [
+        15.293125,
+        14.534,
+        14.081125,
+        13.754292,
+        13.673208,
+        13.827458,
+        13.703625,
+        13.916792,
+        13.601167,
+        13.797542,
+        13.734792,
+        13.632792,
+        14.055625,
+        13.695292,
+        13.854542,
+        13.61725
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.174958,
+          "encode_ms": 0.531209,
+          "gpu_ms": 14.141499996185303,
+          "wait_ms": 14.58525
+        },
+        {
+          "prepare_ms": 0.128041,
+          "encode_ms": 0.496375,
+          "gpu_ms": 13.420375064015388,
+          "wait_ms": 13.90875
+        },
+        {
+          "prepare_ms": 0.121958,
+          "encode_ms": 0.456708,
+          "gpu_ms": 13.021541759371758,
+          "wait_ms": 13.501709
+        },
+        {
+          "prepare_ms": 0.117917,
+          "encode_ms": 0.447125,
+          "gpu_ms": 12.799874879419804,
+          "wait_ms": 13.188542
+        },
+        {
+          "prepare_ms": 0.118167,
+          "encode_ms": 0.442458,
+          "gpu_ms": 12.652500066906214,
+          "wait_ms": 13.111917
+        },
+        {
+          "prepare_ms": 0.117458,
+          "encode_ms": 0.442625,
+          "gpu_ms": 12.804416939616203,
+          "wait_ms": 13.266583
+        },
+        {
+          "prepare_ms": 0.12075,
+          "encode_ms": 0.440792,
+          "gpu_ms": 12.519416864961386,
+          "wait_ms": 13.141416
+        },
+        {
+          "prepare_ms": 0.117959,
+          "encode_ms": 0.441416,
+          "gpu_ms": 12.893958482891321,
+          "wait_ms": 13.356667
+        },
+        {
+          "prepare_ms": 0.136542,
+          "encode_ms": 0.518458,
+          "gpu_ms": 12.579541653394699,
+          "wait_ms": 12.945542
+        },
+        {
+          "prepare_ms": 0.116708,
+          "encode_ms": 0.450542,
+          "gpu_ms": 12.768999673426151,
+          "wait_ms": 13.229625
+        },
+        {
+          "prepare_ms": 0.117084,
+          "encode_ms": 0.447416,
+          "gpu_ms": 12.793708592653275,
+          "wait_ms": 13.169667
+        },
+        {
+          "prepare_ms": 0.11775,
+          "encode_ms": 0.443,
+          "gpu_ms": 12.692374642938375,
+          "wait_ms": 13.071375
+        },
+        {
+          "prepare_ms": 0.116833,
+          "encode_ms": 0.444167,
+          "gpu_ms": 13.014249969273806,
+          "wait_ms": 13.494
+        },
+        {
+          "prepare_ms": 0.117583,
+          "encode_ms": 0.452334,
+          "gpu_ms": 12.67724996432662,
+          "wait_ms": 13.124625
+        },
+        {
+          "prepare_ms": 0.117667,
+          "encode_ms": 0.443708,
+          "gpu_ms": 12.827250175178051,
+          "wait_ms": 13.292584
+        },
+        {
+          "prepare_ms": 0.125292,
+          "encode_ms": 0.443041,
+          "gpu_ms": 12.672750279307365,
+          "wait_ms": 13.048334
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.314542,
+        "encode_ms": 5.978666,
+        "gpu_ms": 44.64787524193525,
+        "wait_ms": 45.794375,
+        "global_half_alpha_dispatches": 143
+      },
+      "prefill_chunk_plan": [
+        26
+      ],
+      "prefill_inference_ms": 52.089875,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "Write a Python function add(a, b) that returns their sum. Output only code.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen2.5-Coder-0.5B-Instruct",
+      "build_policy": "control",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2070609920
+    }
+  ]
+}

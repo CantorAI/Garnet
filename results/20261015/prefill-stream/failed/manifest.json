@@ -1,0 +1,1771 @@
+{
+  "files": [
+    {
+      "path": "logs/prefill-stream-checks-20261015/exit.json",
+      "bytes": 51,
+      "sha256": "0de593f5e5e63734cde5f0f1acb76987eb2e14da050c796c08707280e329b81e"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/quiet-waits.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/output.log",
+      "bytes": 3371,
+      "sha256": "2d9636257516cc44cab03ae5ef5e59dd927bfff10d80c5588c718e2a855c164c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs.executed.py",
+      "bytes": 8994,
+      "sha256": "82fdee23b3a6f3d9637ebcb3025a602ad50e4bcfd78a10441b1e6593d5a96175"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/pid.json",
+      "bytes": 14,
+      "sha256": "92efe275b733d38ae098f52eb99c85e8c18ccd502914021f2f9179134696283b"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/background_service_checks.json",
+      "bytes": 7102,
+      "sha256": "64ab389f9f1027de1db5c894ebe907fccfe0d6f4fa2a6fcb2accca0c806d127d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/configure-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-exact-tails-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/mixed-image-pipeline-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "58dde722574c7c8b79b9efb79593e506ba0a6c8c67fce939d469b4ad71bab9fb"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/qwen35-extended-prefill-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/build-quiet-processes.txt",
+      "bytes": 59988,
+      "sha256": "5e5112e6cbf08339504e24fd4d539d03b3178a9a3b11473c6d8308f052b9d1e3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-layers-quiet-processes.txt",
+      "bytes": 58623,
+      "sha256": "327f3a7f154dc33ee0370157b48b133da24d4524eeec22d754dd2068de016b81"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3-0.6B-layers-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/qwen35-extended-prefill-quiet-processes.txt",
+      "bytes": 58926,
+      "sha256": "7397add8e74ef3c0c900cf865de9f79edd07e76c92f9f320046305a0a48bedd5"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3-0.6B-head-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/serving-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/configure-quiet-processes.txt",
+      "bytes": 59452,
+      "sha256": "845d8f053d1386a0da7efe2818bd36787fefc92b2dc41bd5bd04194a89203d7f"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3-0.6B-layers-quiet-processes.txt",
+      "bytes": 59293,
+      "sha256": "16e686862b576c9e07d1d9dc9997f9c5bdf785873ed6db76b91a7c57e49f87fc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/vision-small-quiet-processes.txt",
+      "bytes": 58926,
+      "sha256": "bcef2ee0491dfb92531e8422a1c9743868a6104f71af2860cbfd9f2410928cf7"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/metadata.json",
+      "bytes": 1900,
+      "sha256": "a3c02ba2b7281994b829758c3ff0186f844c056f53c749c6d650bac0b51f86e5"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/vision-pretrained-quiet-processes.txt",
+      "bytes": 58926,
+      "sha256": "bf1b5fff26897c44841151c46f0bb6f35093e8d1e5e026c556dfea7e2a9144fe"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-layers-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/serving-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "03a4b1ae98d202bc94c5f10d679aefd4c36cc2f7dc62b1b0b055cf4d1dfc0fe1"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/build-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3.5-0.8B-private-kv-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "b3bf0b29fff34e86fcbb2642d330176fa730b99aeb51b0b9275e75b6133d130c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-head-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3-0.6B-head-quiet-processes.txt",
+      "bytes": 58390,
+      "sha256": "d6cd142f49475fe0ca025aef9d8505990836ef092f5392b6b39fec5209227a9f"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/statuses.json",
+      "bytes": 54324,
+      "sha256": "dbec1dc218d217040d45eee5afce3d33cd30333b9e0265eafc8cceb58eeeb706"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3.5-0.8B-private-kv-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-exact-tails-quiet-processes.txt",
+      "bytes": 58792,
+      "sha256": "b1fcca84d32b6e5f4acd3685ad2efa4ecd8705f588cda9a63979820ae76d5c32"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/qwen35-layers-quiet-processes.txt",
+      "bytes": 58658,
+      "sha256": "fa42e99b9ab52a7526fc221c958bad5714ae2f2c628149a94daee15609d27fdb"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/CTest-LastTest.log",
+      "bytes": 1851,
+      "sha256": "14c924399cf5527f2e3bcd9ec57d5cb06ef71a346125d19bb68df7401061ba1c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/qwen35-layers-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3-0.6B-private-kv-quiet-processes.txt",
+      "bytes": 58926,
+      "sha256": "2b9ae640679828cca249e93bfce31c691f093b1eddbf527a8e9158208a9d9eac"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/vision-pretrained-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3-0.6B-private-kv-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3.5-0.8B-head-quiet-processes.txt",
+      "bytes": 58524,
+      "sha256": "238968922b9b5933143d904bd4d0b32753d3fb4577cb85f0ded83901069ec261"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/vision-small-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3-0.6B-exact-tails-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/ctest-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/ctest-quiet-processes.txt",
+      "bytes": 59988,
+      "sha256": "bad63ebd41b71ee8c8a402fb5eb9774dde5e5c97cbf06b62904206c81966a1f3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-private-kv-quiet-processes.txt",
+      "bytes": 58524,
+      "sha256": "f0aee2b64496b673ea25be62220f4631ce8e66bf392a67911b4cb5d764a76469"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/mixed-image-pipeline-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-private-kv-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-head-quiet-processes.txt",
+      "bytes": 58926,
+      "sha256": "05b4e6b01ea206c67b13dc8607e1517bbd6a7664912a08c283f87568204494f4"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/background_service_checks.json",
+      "bytes": 1226736,
+      "sha256": "7cc13ff6e329ae1066f9de5ed512c81e29567ab54fa44e4386183fb167c1775e"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3-0.6B-exact-tails-quiet-processes.txt",
+      "bytes": 58256,
+      "sha256": "d0bea5a4bbc49886655637d18e0c98a0da5bf32746aa9a58e59003bd8fb8e155"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/Qwen3.5-0.8B-head-quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-pretrained/case0-attempt0/vision-pretrained-monitor.json",
+      "bytes": 309,
+      "sha256": "4abcbf19ce327470890f1554fb630553c54e47f401cad72123729eb46478a97f"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-pretrained/case0-attempt0/statuses.json",
+      "bytes": 570,
+      "sha256": "6b2ea66d838da75099426df3ba08333711b205641be142c794f46310595fa745"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-pretrained/case0-attempt0/vision-pretrained-before-processes.txt",
+      "bytes": 58926,
+      "sha256": "8d3e27e6bff67423d79786f91bdf3cfa304872069194aebdc96d94f3f4b0706d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-pretrained/case0-attempt0/vision-pretrained-after-processes.txt",
+      "bytes": 58926,
+      "sha256": "86add55523c60f37b9f86228c7247c6765508cefa3cbbc65f7aea511ca0edca0"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-pretrained/case0-attempt0/vision-pretrained-monitor-current-processes.txt",
+      "bytes": 58955,
+      "sha256": "5d8b0b08fc73feb5f3b8d4db2d499006b919b320692d6445ac31b5aa04f04896"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-pretrained/case0-attempt0/background_service_checks.json",
+      "bytes": 1220433,
+      "sha256": "17cc3bf8da10e9b445ba51d395c80c96cb085e807df0775a950fb2265644c4c8"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-pretrained/case0-attempt0/vision-pretrained.log",
+      "bytes": 507,
+      "sha256": "507cf74fbc992cf75c2c788390681dd050d6cdc9a31a8094820e6d1496b794e8"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/statuses.json",
+      "bytes": 575,
+      "sha256": "6dfb82b33cda1c6bbda932b317299ca382afcc227dac1f28ca5e20cce1853cef"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "df2e40025eace285575287b6c0b71b7609d8a687ac86a62099c7a5a14c7ee6b1"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv-monitor-current-processes.txt",
+      "bytes": 58668,
+      "sha256": "759ab1dbb53ef7b31b6ca864bac87595187ad77063d8973c25a279397bb0c6cb"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv-monitor.json",
+      "bytes": 2454,
+      "sha256": "ea8cd056176a125fc88a65abc4b714f1c76535f4be03a58b2be5bec7167f25e0"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv-after-processes.txt",
+      "bytes": 58524,
+      "sha256": "41decec6570b4f4250105c759730a7ad66856c0ef222e1dd1b5679f4a67eab51"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/background_service_checks.json",
+      "bytes": 839640,
+      "sha256": "beec689613c62ba972a877da96752cbf596049695d597d1036ae74183d236458"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-private-kv/case0-attempt0/Qwen3.5-0.8B-private-kv.log",
+      "bytes": 9108,
+      "sha256": "97a7768695e3d5579d5f3a8d2854a3a64c0d3c3edac8e63cb76bf1208155ee73"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/build/case0-attempt0/statuses.json",
+      "bytes": 289,
+      "sha256": "a8cae9d8722d3b0432ece2ff593090c72f2624762d01cb8b22365e88f0226eb3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/build/case0-attempt0/build-before-processes.txt",
+      "bytes": 59988,
+      "sha256": "c469bf9db387d5b474700d33b44b8d551f39a3fdb91ef35c27cab035f30ad233"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/build/case0-attempt0/build-after-processes.txt",
+      "bytes": 59988,
+      "sha256": "f648fda9872dd4530c7ded25b0709dc64a4bf3b72446d3f499d26e9a80587211"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/build/case0-attempt0/build-monitor-current-processes.txt",
+      "bytes": 60482,
+      "sha256": "9c428ba651ec15195bcaa3e91985a95ceb3cf6daa9b0ed210cead8cb267ba1a9"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/build/case0-attempt0/background_service_checks.json",
+      "bytes": 26022,
+      "sha256": "0bc709deebf74082fb217179fbe1ce13bbae82d7cce0491c88e943f401465cd1"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/build/case0-attempt0/build.log",
+      "bytes": 1338,
+      "sha256": "e1c998e50dac9083f9e8498078d949032d66d18215cf342909580344e3ab03e0"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/build/case0-attempt0/build-monitor.json",
+      "bytes": 843,
+      "sha256": "64a5751182540dc25f836a2fd2feb0377e8c1720bf8b25a94ab52763e5d3c2f7"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv-monitor-current-processes.txt",
+      "bytes": 58686,
+      "sha256": "c8c6caf9f6a4290f4cf4f60c151b21fbb19d0460ea240f68d4330a071b33a737"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv-after-processes.txt",
+      "bytes": 58658,
+      "sha256": "7cde9b91be00527ca870bf603f510ff10534a6d4fb2eb517be4fbc0d7e4215bf"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv-monitor.json",
+      "bytes": 918,
+      "sha256": "28833d0ec0ab2da6841fec37eee716f0c1eb4792112eda6689517b9c09ea7ac6"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv.log",
+      "bytes": 9108,
+      "sha256": "70d89a91c9f6ce8bafd8aa50f7ee8d2c83d131b8bee330f43469bbbe776e6a6f"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/statuses.json",
+      "bytes": 604,
+      "sha256": "c1c93bd818a91f3ee176e0d257ef4f2d11197f5822aac859e5e05a745a6bc070"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-private-kv-before-processes.txt",
+      "bytes": 58524,
+      "sha256": "3d54d2211e7567d751655b59f9a7425616da48138a9bb5ca37e2b86ea091ec79"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-private-kv/case0-attempt0/background_service_checks.json",
+      "bytes": 806534,
+      "sha256": "3e449c8c07e0d55c51c6b9cd36d8cfd9e6505fcfee4e71619dd90bb8e236f8c6"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head-monitor-current-processes.txt",
+      "bytes": 58534,
+      "sha256": "53361c20b30acddd004062570c1b5a23ea3d28025aef94b3d866ed8af7137765"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-head/case0-attempt0/statuses.json",
+      "bytes": 553,
+      "sha256": "a68203a2bcde1758e7761f1cc72ed8c03ffbebd553115031c054a658ad6c51d3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head-monitor.json",
+      "bytes": 386,
+      "sha256": "13ee1111823f177b8bbc202533dc5b3fbd04122557119be85fdaafaae54ce1ec"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head-before-processes.txt",
+      "bytes": 58390,
+      "sha256": "f77302a3ae93833bca9dc1c8b1da9b11ccc44097be972b5b10a3d12c04b0a159"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head.log",
+      "bytes": 567,
+      "sha256": "d586035013aa7c0f492310227c97679d75ac01c71c663a7eb61d70f96a73ef7c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-head/case0-attempt0/Qwen3-0.6B-head-after-processes.txt",
+      "bytes": 58390,
+      "sha256": "e0963403e27fd0decd2752c496878b03a5c0c3ea8e5246319995c0177ea3d6c1"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-head/case0-attempt0/background_service_checks.json",
+      "bytes": 1184951,
+      "sha256": "6ebb54044acc12c7908812bd87e2df3d363c685d45cc85f7aaeaadf222be1837"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58802,
+      "sha256": "30874cb1d1cbf24ac6f0051c05e8cd1bcd7288a116b1f4ebbac50ea0e68dc4e0"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 1071,
+      "sha256": "09fc607c8e13fc3dea2616b15eccb913a7a69ec78a24cc07bdecc7e1e4f37349"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58741,
+      "sha256": "75adca861fa030d42b7ec4d07ec9bbfde509bd44af0d2ca1fafbd49f218ca3dc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58524,
+      "sha256": "238c5c070c0745607b82746932f6de8a793afd8bcacb85ffcfd9db42003263a8"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/statuses.json",
+      "bytes": 640,
+      "sha256": "8e061bad1ed18bd174c0f891007b3da81526d8e6983bba545371a7250efd541c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 718,
+      "sha256": "1e5d2d0a8f1bbf0187ad8308d24973436d6314472268430f204c4e8c55d12dfd"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case3-attempt0/background_service_checks.json",
+      "bytes": 670146,
+      "sha256": "11844623b1f9fea36fa628393f62f8ce20d8cf3c5526b25b819f5af68ee38f8b"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58668,
+      "sha256": "ad251e33f7b57caed57a5e391a29cea09b13db019453a01568f830fb7786c563"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 997,
+      "sha256": "ffb31c02a056d833c5edfb5be4b0e6e0a695a2f73a0287707c22b8aff304dcce"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58524,
+      "sha256": "1b464a47cfca011a4db813c543f093adf63579f6ccd8c86164f9b8a9c69e7cc6"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58524,
+      "sha256": "82f454cf718eecc2cba6ac8c797b60a38d69fd9533901d4e2e062cd3b05af309"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/statuses.json",
+      "bytes": 640,
+      "sha256": "fadf79fb56825c1e653822d754a05d99020a5417226545304f9a6f7c21207ea0"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 718,
+      "sha256": "2233f2b4861e5db693405e4e6d340b9380433003266ef222400f045f908c7378"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case2-attempt0/background_service_checks.json",
+      "bytes": 651224,
+      "sha256": "020de0c051dcfcd9ae3c1808020ed4493f6da426970828aaa19cb01ee6daf843"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58802,
+      "sha256": "9ab3ee180501c1a54bb33a5af9fd15dfb8645bcb142ed897f06bacc255186171"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 539,
+      "sha256": "1fd75362a1588610db72ac49505e5f09e4f9b6efefcf74e9196ed00e1b739efc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58658,
+      "sha256": "efb3fee9076561f3ac0addf54422f380cc02b4e4f37b82b403a52bf414759346"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58658,
+      "sha256": "9836f439307ed4629afb03bb9285ea8fbcab3a2fa85919e68471faae7b37e6d5"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/statuses.json",
+      "bytes": 640,
+      "sha256": "908b95e284b9dc3016a271b17c89ebbc80e8080e183f45cabd5343cd6cce5550"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 720,
+      "sha256": "f04618df11af32ef687138a83e6d7346990fc0d24ec22b6e212b29ef5dc0277d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case4-attempt0/background_service_checks.json",
+      "bytes": 683548,
+      "sha256": "7a3ca1bc7d3ec0ef352e3cf927403d02fa4fa80b6a17d1e57944471a5cf552bf"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58802,
+      "sha256": "bbd3f0aa068ab2d38c807c5c20e14df39631c3bbd45826cc8eefcce73b5ef30b"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 617,
+      "sha256": "fc2274fa537addfbe08746b1ca63bd0aa2b8f76af1ea16a3abeb9c1fd1023efc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58658,
+      "sha256": "ff31bab7e9b5296b7b160cae31219f6864aa955be26bc8a1b97ffff238e7d13c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58658,
+      "sha256": "6ea03d8680ee0a525548a4a4cf887f0aa7cfc68fbb096d2ffd2d1914715d9140"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/statuses.json",
+      "bytes": 640,
+      "sha256": "59a23923a0365f73789541e84ba040afe003bc73b56a7931fface9742a4ce3b3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 725,
+      "sha256": "2fcd3c827daf8646e00bbb074ed610cc39391e8258d6af445824c1c2e7481cbc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case5-attempt0/background_service_checks.json",
+      "bytes": 697738,
+      "sha256": "8b747c3c7d6a232989e402e379983b7b204463675befcf58b05429f576f9b418"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58534,
+      "sha256": "5aef9ac8f6545b0badde9fc85bf9ece3ca830c726b57ad7a24dd5c224c2da56d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 539,
+      "sha256": "eccd1fe73f366a939d9c20dfadf0df7afc417485fa9d11d3665fe493e717b0ff"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58390,
+      "sha256": "399a994269dd0bea6a83bd9c2d81268e68f1206780a033aa0883df30e8a47d19"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58256,
+      "sha256": "f9758daf3a4c1d6ab55154a668c29288a5f6ad84d566b87e636c706c216ea451"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/statuses.json",
+      "bytes": 640,
+      "sha256": "286ae92e5cb5b1d2bfa301c3319d5070c847c9348a5bbfe773f79b12049bd74d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 719,
+      "sha256": "2ccc43fd78ac34bc78baa0df45d0f9abee34301c950ba8beada3f3be57e5da5a"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case0-attempt0/background_service_checks.json",
+      "bytes": 618905,
+      "sha256": "7f50d628a8b40ba05afb979b6aa47976660372b8f5614425e7a6df5c3d498fc1"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58668,
+      "sha256": "30c54bfdb6ad3789372f2262674d84daaddcba6821e2344af46163d59af88a53"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 616,
+      "sha256": "54837ded29df51a1ad13e23c4dc0906c937617a6eaada423c94ea7161192c02d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58524,
+      "sha256": "16aa782c5642ed179152357496c10ba5add09934edbf871981020ce23329c637"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58390,
+      "sha256": "853546f8498e15dff9c8b1e62b0959c6c301c3df2a5cd391d42d9b1751a0a9b7"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/statuses.json",
+      "bytes": 641,
+      "sha256": "21c891b6317b5f69eebb7c2c995d6dc2d89568dbcd15b47f92243c4b7c79be89"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 716,
+      "sha256": "f50d875ff4307e66fcd8c464d2bca8bf47339f0a021ac58a6449d88b0fe33eaa"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case1-attempt0/background_service_checks.json",
+      "bytes": 633100,
+      "sha256": "bf58f53309eb9c5be8a526000514ae417e973bc03caccfc6e393c894600d8490"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58936,
+      "sha256": "03bec1778b039c08692521b30e72f244f5ff8f217e3a3c7e9f1aadfcab7168cb"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 1072,
+      "sha256": "d4fa92f5107bde847db7ed20baabf9000cd9b9eda7a1d5c89b285c519c55a2b4"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "6871ce207b98ba1ebbc67ab5b3e695d3487dcc556843dd0f773da56011c78ab2"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "49402577559519e9dc4d00ac217bc9db3ed93b31c4fb228b7117d4f89594d50d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/statuses.json",
+      "bytes": 639,
+      "sha256": "8b2e11da4a60d7da09094e9308ef624e964fb4e50c54b22eb96b7e7f4dc4e3da"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 718,
+      "sha256": "3a61c38d5bfa325713241d0fada4a89ebd9b33ec5d8775f7476514138bfb242d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case7-attempt0/background_service_checks.json",
+      "bytes": 734794,
+      "sha256": "32fffa04943c52894ead8d169e662c0f265bea73c89151afb84143b6f62b1248"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor-current-processes.txt",
+      "bytes": 58936,
+      "sha256": "3dc1081e369a68aa2648350d749994f8bd9f1b57b59f821adec9de5a31a15d54"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-monitor.json",
+      "bytes": 996,
+      "sha256": "83b463e1cb88653d6aa870098852a5be6cf5f402be8d7ce5ecfb05f191e57804"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "54897872548beb726d5da554b7d1076199fe044b85ce82a8b63c439cc556299c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "13ef8d05790bce5e86d79f2bf2d6f14953c568499c841533eeead182a76d0260"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/statuses.json",
+      "bytes": 639,
+      "sha256": "fbd8d159cf22c5ebe5c8872b5978971aa47be2905870a751ac689f01636a6cc2"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/Qwen2.5-Coder-0.5B-Instruct-exact-tails.log",
+      "bytes": 719,
+      "sha256": "17a19c63f0751618756d66fd00e291a9fee3f49e84474e5ee57fbc8e469d21b7"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-exact-tails/case6-attempt0/background_service_checks.json",
+      "bytes": 715874,
+      "sha256": "260b9a87229b71878c155cd29606edf07b6bb2583abc2cfcd693359c7213ce62"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/ctest/case0-attempt0/ctest-before-processes.txt",
+      "bytes": 59988,
+      "sha256": "bb127fc82e4392510ae750fd9da847d12f4762689be42798fb94289603f7fb70"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/ctest/case0-attempt0/ctest-after-processes.txt",
+      "bytes": 59988,
+      "sha256": "22de5b11f58648ea95cec2ba5f230bbb203ca8b41192deaaba7a371f1e626bca"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/ctest/case0-attempt0/ctest-monitor.json",
+      "bytes": 309,
+      "sha256": "06a0e02a50e2925c8cdf55c57681eb0c946e5746c71def008674b2aa867d8308"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/ctest/case0-attempt0/statuses.json",
+      "bytes": 291,
+      "sha256": "dccbb8593cc2acbbe0d6d2453c75a7cf66726bf5bfbf980c29fcfb8fe37933d8"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/ctest/case0-attempt0/ctest.log",
+      "bytes": 376,
+      "sha256": "d1f2a060179acd8877310c54ec05b4c6f95aa294b482ff2cb490fbdc8b6fd501"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/ctest/case0-attempt0/ctest-monitor-current-processes.txt",
+      "bytes": 60135,
+      "sha256": "46132d5c06e34a344b975771d995dc18be1d6b26cfc0da8edfbd70412c772099"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/ctest/case0-attempt0/background_service_checks.json",
+      "bytes": 37058,
+      "sha256": "9d260d53f97dcde1dcbd667b1c8e604099d50d5d773d00f3d0db864534f6e8ae"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline-monitor-current-processes.txt",
+      "bytes": 58821,
+      "sha256": "80d0706ad328ae889c8962a96f07a18d2d94bf138c11768911dc7cf19ed83b38"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "395ccb7b19469832f2860bc83893a4fa88b86b59513d286d08c79cc324609ccc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/mixed-image-pipeline/case0-attempt0/statuses.json",
+      "bytes": 497,
+      "sha256": "ddc546f2b78819b7bd169b7fde3bd74aea32bcf82e673a6939a4ae15f52ca5c3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline-monitor.json",
+      "bytes": 234,
+      "sha256": "99f406de78f7043cd09942f40b9b69c1bde65e46e238d72fabc4755bb19f0f40"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline.log",
+      "bytes": 665,
+      "sha256": "cefce592b4f0b1b8c013df5a266589581f2b4d5febc2b33697bcca05946d0045"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/mixed-image-pipeline/case0-attempt0/mixed-image-pipeline-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "bbbff1291735ba9fcd28b7007a2aaa9abbfb5e0d0c630bbf16939b319a332ada"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/mixed-image-pipeline/case0-attempt0/background_service_checks.json",
+      "bytes": 862506,
+      "sha256": "bc4af0b589e360fc8d7542f94dadccf728a5c559402f01714e003e7daf466228"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv-after-processes.txt",
+      "bytes": 58658,
+      "sha256": "aa3e23a9b53d734e444b43dfccbde3eb39276a342a19868be5deeb1e9ad8f8cc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv-monitor.json",
+      "bytes": 4509,
+      "sha256": "ddb9d839454c9ae9698565d3078721e8b62b100cbef408b7d0a2f66a75fbfd09"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-private-kv/case0-attempt0/statuses.json",
+      "bytes": 571,
+      "sha256": "54b9643d24418d4504b5483f1adb65a849f5fdbf39c8e74ba9440d96e7081dc7"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv.log",
+      "bytes": 9108,
+      "sha256": "ec2f3df1011acc0c97d72a04e241caf24bc5c20504e4a9c14ac3b5a42a72cd57"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv-monitor-current-processes.txt",
+      "bytes": 58687,
+      "sha256": "12de4e15d1348006dd71029ba710b77a7d8e4a6da40fca915e91a75a61f0300e"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-private-kv/case0-attempt0/Qwen3-0.6B-private-kv-before-processes.txt",
+      "bytes": 58926,
+      "sha256": "50589716e87027652cd6b8850323632c1c4f708373eb402badfb05597f66ddd7"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-private-kv/case0-attempt0/background_service_checks.json",
+      "bytes": 789188,
+      "sha256": "48129c7e44d86bb963dd53eb901c3cdedc69704c2e6de30820a0cb01b5cf6387"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-small/case0-attempt0/vision-small-monitor-current-processes.txt",
+      "bytes": 59070,
+      "sha256": "7a8637db56b90d09ce6be65c7f3fb4e50078fd705b9e2faddcaad0c428cfc20d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-small/case0-attempt0/vision-small-monitor.json",
+      "bytes": 462,
+      "sha256": "db9580f014d6880e2c2ded3fad44c9b189751b46718f9d7c79f2f8ba917885db"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-small/case0-attempt0/vision-small-before-processes.txt",
+      "bytes": 58926,
+      "sha256": "9d591e8c52c7a4247ae6cb9c2af94a745daa89c1d57f2333e7a93d38c2e889b4"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-small/case0-attempt0/vision-small.log",
+      "bytes": 1457,
+      "sha256": "e876f0bb68c472d583ec7045dc018fdcdb488c9cada5f44869423219043aa3ad"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-small/case0-attempt0/statuses.json",
+      "bytes": 486,
+      "sha256": "72cd5228d9b486f34a907851404b65358cf5c7c9c8ef08bf22223cb959bf192c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-small/case0-attempt0/vision-small-after-processes.txt",
+      "bytes": 58926,
+      "sha256": "bac1a76f3e3bfdc7642e3a9962fd7a4edbcba3db79247dcd3d08ee8c2a906637"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/vision-small/case0-attempt0/background_service_checks.json",
+      "bytes": 1209393,
+      "sha256": "fc1e9769d81aacac667a633fef99845525de6bb4ecc3a65b58480570005babee"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill-monitor.json",
+      "bytes": 16891,
+      "sha256": "79de10b2441a3bce3afb2dc9380692f736358fda005cc6fcc1a9e47ed41daad9"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill-before-processes.txt",
+      "bytes": 58926,
+      "sha256": "135789e49ad97bdaa3bedae21aa7186ecc7b6c6c77e4d9899dbcbb35c9682c97"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill-monitor-current-processes.txt",
+      "bytes": 58534,
+      "sha256": "daceec6c74eebbc9a776d82339023e3ba54c11bf393ceae56358ee4239c97ce7"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-extended-prefill/case0-attempt0/statuses.json",
+      "bytes": 587,
+      "sha256": "a80b8f5eaeb3878121038c2801d741ff1995419c5c5237dbd6c032a92186f420"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill-after-processes.txt",
+      "bytes": 58390,
+      "sha256": "d0706b9ebdd00d2ff228fee2dbca8817c9f47684a34651e58b0e18d5710ba2ab"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-extended-prefill/case0-attempt0/qwen35-extended-prefill.log",
+      "bytes": 3834,
+      "sha256": "6ee6eb35ddf26240c235c4af51522ac8dd9fe11b1314562077a87ace0f2e6b56"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-extended-prefill/case0-attempt0/background_service_checks.json",
+      "bytes": 1402565,
+      "sha256": "1372f189ec90aa207164f45bd3616d2a0c6fc551ff4aa2464b9e2faecc8600cc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head-after-processes.txt",
+      "bytes": 58390,
+      "sha256": "5d10c68338790022aee9ba6cb883febcd3389272506c2b4cebfe94c827016abd"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head.log",
+      "bytes": 571,
+      "sha256": "6d331ac47c07660daafd0a60fcea3415dfec06351e27aa6f9c8369b980af1e37"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head-monitor.json",
+      "bytes": 615,
+      "sha256": "eabc6dcc3e8f32752bbe3dc38184a401db9d0db5749f7c79d0bd0f71ef447aaa"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-head/case0-attempt0/statuses.json",
+      "bytes": 556,
+      "sha256": "122ded50f0c145aa7150961b5a894abfe331be878d57eddd308b7302768c798b"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head-before-processes.txt",
+      "bytes": 58524,
+      "sha256": "91b24e589f48263b3c804b5b20fa2c626c88009f85c204932d634f7b98d9f6be"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-head/case0-attempt0/Qwen3.5-0.8B-head-monitor-current-processes.txt",
+      "bytes": 58534,
+      "sha256": "0c31ec5c80f2e925f57da310359a01408b4839bd558e4c4338496a2b537b7cbf"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3.5-0.8B-head/case0-attempt0/background_service_checks.json",
+      "bytes": 1173131,
+      "sha256": "c9f66dc55ef6649d2657bbe4d5e8c73c9be5da2fa7b323f2d59fa4753ae0bd76"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/configure/case0-attempt0/configure-monitor-current-processes.txt",
+      "bytes": 59079,
+      "sha256": "0aa17ed86dcdda0881bb56ddb0a8f962231ab6a02451a6ea3eccce09e2990c34"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/configure/case0-attempt0/configure.log",
+      "bytes": 637,
+      "sha256": "fef85e0fe80e814bec8428d47bce56abd2deacbf7a82f7c973ef7cb50cafe294"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/configure/case0-attempt0/configure-before-processes.txt",
+      "bytes": 59452,
+      "sha256": "30eae397d26666eeddff120a0bbcda06e972408328fd813ae90fc759661591aa"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/configure/case0-attempt0/statuses.json",
+      "bytes": 1210,
+      "sha256": "18dd4019b49ccc4ebf397cfc93d7bb4154d637f2ba8c9b010f403544d963fc09"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/configure/case0-attempt0/configure-after-processes.txt",
+      "bytes": 59854,
+      "sha256": "2ad563c6a65f9f694788f7a4b7939c1c6d3275bed14f4528f4b7040ae438470b"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/configure/case0-attempt0/configure-monitor.json",
+      "bytes": 157,
+      "sha256": "56d51301840382b7d1d41abf5033a68ea63d11d853971fd6ad7d84833b76e6f2"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/configure/case0-attempt0/background_service_checks.json",
+      "bytes": 9466,
+      "sha256": "abf0897f41949d6753932325ab10bbe5cd5278bc691ef5fddc148d1ae6dbd0da"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 59472,
+      "sha256": "69c7bcb0aa9f507e47f4252e3d03133776a0e75727f52dc404aa3976e1fe28e6"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 59194,
+      "sha256": "abc806b743ad3531ca60acf17519c12f4591ec3a5934077bef7e544eb37cd3e1"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/statuses.json",
+      "bytes": 606,
+      "sha256": "a2ceb654457c123299f35de3916b91c96138337e776d0867c629249e70631835"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58246,
+      "sha256": "e5345a9aec0f587d73d23a3b47e754535c9023898ab2e1daf9e8e7cd0d734e7b"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 710,
+      "sha256": "848a2a1782698b43fc60e6358094feaa3530b2824c518c11965d9474fd307fd3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 9160,
+      "sha256": "33087e050faa9990c77ae1d97c9672bc047c2274c8b460943c1d13315c30ae79"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case3-attempt0/background_service_checks.json",
+      "bytes": 321677,
+      "sha256": "9148724b1ca382978e620ff64e8eb09abef6c0bc4247044a2b4f49b3fc79cce6"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 57854,
+      "sha256": "0244e8df1708eb595b1efbde189c8f985251c13c39b916c561cff23dfb1609f6"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 57710,
+      "sha256": "0bff976e69fd49fc3910a7299e8660a94796609962d73c64bc49305d4815e159"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/statuses.json",
+      "bytes": 606,
+      "sha256": "75b2778cb913d511a39d0f70a739e8006d0591c943332a32f2c24859627b5149"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58970,
+      "sha256": "8057514ad895b945485ca509a33904db5dc8d014e1216f3606d0428a5fd35fd3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 720,
+      "sha256": "29a42bd2d3f7dbbc1c88957025fa71ebf16c81b891b15fe768614aef3ea5ebd9"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 9065,
+      "sha256": "c9bb38b70602d9fadf5f67700989ea85a2089e685c2dc814fa012d3eb89b7a41"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case2-attempt0/background_service_checks.json",
+      "bytes": 219177,
+      "sha256": "edd1a5fbec55323f97df84e619eb18e46589e4ceae95aa4b12ef7a3bedd014e5"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58534,
+      "sha256": "8a44717c4d3be04482b37629ccdda839cf3c7d346b964cce7e720f150116ab80"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58390,
+      "sha256": "5636841f3bc389c8763a48a03a845c6e1b22df768ec9ae96edf6af72d74fec64"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/statuses.json",
+      "bytes": 607,
+      "sha256": "30c462272711feb5a2e8edf0bf205fcef04813ccd737cf3ce444f45cff330558"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 59060,
+      "sha256": "91b8d564f0169c86861bc7457e9253a5d7776acb399311b1f52a499d14df7a5a"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 694,
+      "sha256": "91c5a25aeb2a2ea060c64c62a4df72ec0e66517b08833f7662b72fb0029cead3"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 3140,
+      "sha256": "6d45fcd6be3e1bee4e6ff00b9340ef8b7f49a1c0fef310b272339716fa3f66ed"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case4-attempt0/background_service_checks.json",
+      "bytes": 361892,
+      "sha256": "b045d5c69ceebee5e9642a3e3e1b045c1ca09cb65255ba87558882594be8cc6e"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58964,
+      "sha256": "527820b4de2e77d13f733b2285a171a94a193dc40deba4314428171372580d21"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "41ed8f0600410ca6a6226030fc22793e578e63334a665fc2beab70684f2a7078"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/statuses.json",
+      "bytes": 606,
+      "sha256": "7334716d1a9e5142a4f2a33669b41de190b9e6a1e224d3a47bb9549940d0ceb7"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58390,
+      "sha256": "fc2b31434bd74e8593e6c51f8d8c14a63b55c628a2f962495d3af6de01c4eba8"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 701,
+      "sha256": "dec6298f2a171e05d955c20d9c8925308f9914b44b1cf87f4cf89087553d7c8a"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 3141,
+      "sha256": "0488f969e68056dd9e8de6170043c060b2f647315238bf3bae6cc495ccd6e243"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case5-attempt0/background_service_checks.json",
+      "bytes": 402092,
+      "sha256": "68b91c60e35afdc39316b544beb26058bd94797a061475e557f106a0367d1ac1"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 59133,
+      "sha256": "e49ff3e24e57b4f0a60d7efc91c8b0f97abfe7cc2b93d4e0b285d0b991d92b3b"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 59104,
+      "sha256": "30b9f785adc35553843b61bc315a0f5c82265e8471f9cec534b9931b23e5ae78"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/statuses.json",
+      "bytes": 606,
+      "sha256": "adff36899d47b9840a76db0818ac554a68d4ba0ca27cea1e488ff9c0292398ef"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 59854,
+      "sha256": "c7cc12a4c32bac94ca413d676abe53e6cf85dcee69faa05a1293a792ab9e35ed"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 714,
+      "sha256": "6a99bc405a45cb66ed39ed0c0e0db1d9b61682f55dc6003576945d2483f2aa33"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 3141,
+      "sha256": "d6bc13fe10c6719965cb2facf29ca94e943823a4b3becd9a79ef5ee3e767b4dd"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case0-attempt0/background_service_checks.json",
+      "bytes": 77267,
+      "sha256": "22e1fc9eb161bd1b0474fa09fe897e08067c5953933d1182bc088d5ba43e218d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 59114,
+      "sha256": "17213a6ca3d6c060fd19169c948ee574ce577c254dde6122a4aa62a3f3646682"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 58970,
+      "sha256": "9084e28334fb16b0f862970d915ffa428288e0f88746f6a9c241acf3bcb73364"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/statuses.json",
+      "bytes": 607,
+      "sha256": "7b98a8f0832f31203a6913b7a8db3a2df62713bade5492972e264e88ac9481ad"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 59104,
+      "sha256": "5dcb10ab15783b9a71bc244cfb8696e07be77c5567acd8e4c7c09b555001d3ba"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 712,
+      "sha256": "c2b81def7162c3988a3aa81d73aa89b715838e61cd349348d72d7e35796ad77d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 3142,
+      "sha256": "ad70222a7e3d1470036df92d34d0f252669f64a8597754e49df1d8448ab2014f"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case1-attempt0/background_service_checks.json",
+      "bytes": 117473,
+      "sha256": "fb6bcd5709c065edfe04fc10b2f2b792b0314d5404a8afa865357cce5a7839a9"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 57998,
+      "sha256": "b61d9bcef4964651683c540c562a4f1693054f3a0bb729ef98072574f319cf3c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 57854,
+      "sha256": "d97dc43344533691d9fc757e4b7580cdfd6726b5b2bf27be3ebe2f8c575e1efa"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/statuses.json",
+      "bytes": 606,
+      "sha256": "e9e1cb095c1f0f4c7c88a6dbfc064a739fff756f9056b44ed91e7a0f67d8ddde"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58256,
+      "sha256": "79ff7b376bc3fa58f2571958a533ae7124475fabb269417225b153817e6649bf"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 700,
+      "sha256": "eb5ffeb026141bb7900953e03286e0c73ef337e9f115604953b2f89311a47d70"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 9062,
+      "sha256": "1bb8bf8787800962a91b004342bbf2fef006373654695d38d6635b0409c779d0"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case7-attempt0/background_service_checks.json",
+      "bytes": 605503,
+      "sha256": "539ae2b2c970521b0c52b9e2b314f1c881866b2ab93cee04a607a0de62f87e8e"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails-monitor-current-processes.txt",
+      "bytes": 58132,
+      "sha256": "b736b4764afef01675051c61367908c05f3b462d58c279226c507b8c6b39871e"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails-after-processes.txt",
+      "bytes": 57988,
+      "sha256": "0a9bf6cb46861a48e9597999d91e4455c6f30bcf44732c1cee5011448085d004"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/statuses.json",
+      "bytes": 606,
+      "sha256": "1aec866112066a61eb8ebb8010f590d37d1ba80ba050f5d2bf952674d9e75f78"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "75d9978ead24b69f945ef3bf0301a3a22d97a43321cb7a1db6b290453be28aca"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails.log",
+      "bytes": 701,
+      "sha256": "e9f2e37da82e9ecff97e6b0802f0c5acd55a30285ce6a7e3e919c237dcb7ab47"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/Qwen3-0.6B-exact-tails-monitor.json",
+      "bytes": 9080,
+      "sha256": "0d68590dd35312e17452f4751f9cc3ea25ff4364c1318b752b18728f49b8e638"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-exact-tails/case6-attempt0/background_service_checks.json",
+      "bytes": 503802,
+      "sha256": "3023ef001d53fc4c451dec11d49d5d475be82235ea3ba04ec9d57ec8b083307a"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers-monitor-current-processes.txt",
+      "bytes": 58767,
+      "sha256": "93f9e604ddbb08ba4a08fe22c546d1f7795d4fb9e0d313edaf1be6a930a07490"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers-monitor.json",
+      "bytes": 15809,
+      "sha256": "57e3217d2cae4b09bfe2ab2c702b61868b3ef7214110ed1ea1b72f21995949f0"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-layers/case0-attempt0/statuses.json",
+      "bytes": 573,
+      "sha256": "a0817d83c76c47730327530f852eb4cfecfbebf50c176d831b545eb7ac7ed5c6"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers-after-processes.txt",
+      "bytes": 58623,
+      "sha256": "cda9ceecb0aaedbea60f3802bd4730e6ad721c3bbac617301e562c8234ad819b"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers-before-processes.txt",
+      "bytes": 59293,
+      "sha256": "77f41334063a823ec7cb3f150804c9a7688460eea8c0fbfc5aba7a21e43b45dc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-layers/case0-attempt0/Qwen3-0.6B-layers.log",
+      "bytes": 5033,
+      "sha256": "35af6039821b482976edd51e330060c7423dc0825745958cf3f40c2aae5c6d9d"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen3-0.6B-layers/case0-attempt0/background_service_checks.json",
+      "bytes": 1125039,
+      "sha256": "d38834047318f95ba4090b2010b04dc1183284bbdea2f95b4e344f0cbb0e83bc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/serving/case0-attempt0/serving-monitor-current-processes.txt",
+      "bytes": 58936,
+      "sha256": "7b442e4158f81a3ea5d325165004beebab4347469605b564c9d9fb3e0a24a923"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/serving/case0-attempt0/statuses.json",
+      "bytes": 482,
+      "sha256": "b04181388dec937703f7ecea3ed401d548912e1c0b4cc0155a2d152974331b56"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/serving/case0-attempt0/serving-monitor.json",
+      "bytes": 462,
+      "sha256": "87d371a555401cccba995fc1205a7abfc15859df7c9a9d86b2709a7e23e1346c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/serving/case0-attempt0/serving.log",
+      "bytes": 1110,
+      "sha256": "d7eb4b6e23bd758075b6f19ba646f4a46a99c93070d8934fb75e9a3d40444d82"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/serving/case0-attempt0/serving-after-processes.txt",
+      "bytes": 58792,
+      "sha256": "85998d0573d0441147ae0904d167ce73762628ffb11a79fb406daa2b80ad946a"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/serving/case0-attempt0/serving-before-processes.txt",
+      "bytes": 58792,
+      "sha256": "bf874636331ff05974bbb7d8bf6958d2e8b0eae15e4b02c0ca74b596dac7e822"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/serving/case0-attempt0/background_service_checks.json",
+      "bytes": 852257,
+      "sha256": "8479f2d0bc02990defe1f1ffd0cfeacae5d71cbaaa9f8a58c07306c6364c5dc9"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/statuses.json",
+      "bytes": 608,
+      "sha256": "f0f3da64822c9236ecb6adf2b2af320432c411d5f23d1f43c23e50bb9887fea5"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers.log",
+      "bytes": 5099,
+      "sha256": "da18cc5b2ec3bf545e22a183a5ddffa0abcc501872c18fa16bb1c2dcd7bac304"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers-after-processes.txt",
+      "bytes": 58524,
+      "sha256": "c206191db679bc3b009b72df1305a2b4e3b6289c090f083c0bfd9735bace8e8e"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers-monitor.json",
+      "bytes": 2527,
+      "sha256": "47bbfe66b5af1f5f355140779a70b9a1eaacd09d924c0da376c48cd29a171bbb"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers-monitor-current-processes.txt",
+      "bytes": 58668,
+      "sha256": "2b2bdace5b9c66af10680a9cccdb1ab8cb77f1771f1ae079148385db98a44ef9"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/background_service_checks.json",
+      "bytes": 1158942,
+      "sha256": "529f3ab6d51e63ef41f37c63dd12c9aafb92a3c6067efae36b4d1950de9be1a1"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-layers/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-layers-before-processes.txt",
+      "bytes": 58623,
+      "sha256": "8c00dadb210e58010ba8e19369023e536a0b9e85f8c1b2fcbd1627ed2daf3445"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-layers/case0-attempt0/qwen35-layers-monitor-current-processes.txt",
+      "bytes": 59437,
+      "sha256": "471f45a13fa7e5ea24ba761f1553d97c13332d6d3d8a249215197540a07cc7e5"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-layers/case0-attempt0/qwen35-layers-after-processes.txt",
+      "bytes": 59293,
+      "sha256": "bb17fda08e52abc262ab075f04b06a1d5fa185aa2652efa838a0afe3b09eb26c"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-layers/case0-attempt0/statuses.json",
+      "bytes": 568,
+      "sha256": "e955ee24c2bcf9a9e84360991313a192a284607803b1b334854629115868d973"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-layers/case0-attempt0/qwen35-layers-monitor.json",
+      "bytes": 8093,
+      "sha256": "a4638f35045d09e858c0271d8d846150b147d947610bf2af909156a5d0283bfc"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-layers/case0-attempt0/qwen35-layers-before-processes.txt",
+      "bytes": 58658,
+      "sha256": "208d1337ed7619b65cf97561ec6ef25876705dfb998635babcff3535475f00de"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-layers/case0-attempt0/qwen35-layers.log",
+      "bytes": 5066,
+      "sha256": "7ce0551595d80aa0eaade58fe1cc0d7556d6f70160cf8c9b0927c6c7b4c4f4f8"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/qwen35-layers/case0-attempt0/background_service_checks.json",
+      "bytes": 953953,
+      "sha256": "48e025769153de26cdeda0497526e1c2767f01b7adeb1766c2aeeca4128b2bf5"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head-monitor-current-processes.txt",
+      "bytes": 59070,
+      "sha256": "61e1e4ad062af66455e70fe6c750cd1cd2095cdda66b2b29be59764243543b50"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head-after-processes.txt",
+      "bytes": 58926,
+      "sha256": "4b36468d9080503cac39d046991ecbc86599575a1d2b68888fe150b7d84d41f0"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head-before-processes.txt",
+      "bytes": 58926,
+      "sha256": "1cbef87b522fd0c4536d2e74e00c3aaeec38225d757bdc6328f2cdb3b26c9394"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/statuses.json",
+      "bytes": 587,
+      "sha256": "f7f55fa4326c3e2124c2dc591ca3e71cb7421e6cff74a9e455217cc8a029ea38"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head-monitor.json",
+      "bytes": 385,
+      "sha256": "bd202c62e4a144dfbdcd5a9317bd90adfce1c017f6b02f61a9193299831324ed"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/Qwen2.5-Coder-0.5B-Instruct-head.log",
+      "bytes": 599,
+      "sha256": "0b065d80b6afac83d34ab26590c6b8e906951f2b9aa399b038ec224b559595ad"
+    },
+    {
+      "path": "logs/prefill-stream-checks-20261015/jobs/attempts/Qwen2.5-Coder-0.5B-Instruct-head/case0-attempt0/background_service_checks.json",
+      "bytes": 1196778,
+      "sha256": "d1db15068366d84d921a1878fce2b2c608cae3faeeaa60cb81f1d52fde4ca32a"
+    },
+    {
+      "path": "logs/prefill-stream-native-20261015/exit.json",
+      "bytes": 51,
+      "sha256": "c0c7f3d17b1e42a61e553a4336348c1b2f36f9f0dd53d1ecaf3be4a22140d36c"
+    },
+    {
+      "path": "logs/prefill-stream-native-20261015/output.log",
+      "bytes": 576,
+      "sha256": "d249f9d772425d6eea7b81ebdb71f30a0c7feb06b44c646e186c5e1552d92910"
+    },
+    {
+      "path": "logs/prefill-stream-native-20261015/dependency-wait.json",
+      "bytes": 80,
+      "sha256": "c394c06362133ea6f4d71d74a812bedfe6aad6e8c516c997ea8183a7bd68a73a"
+    },
+    {
+      "path": "logs/prefill-stream-native-20261015/pid.json",
+      "bytes": 13,
+      "sha256": "a5c7d10a65d6b5e5f6ea23b95ac9267f842a244225c4306959e116ad84513a00"
+    },
+    {
+      "path": "logs/prefill-stream-native-20261015/jobs/quiet-waits.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "logs/prefill-stream-native-20261015/jobs/statuses.json",
+      "bytes": 466,
+      "sha256": "cd92078a6f7ab7bd4742c04324112e5963fb4c147d14bcf546a36a960be26181"
+    },
+    {
+      "path": "logs/prefill-stream-native-20261015/jobs/Qwen3-0.6B-b1-attempt0.log",
+      "bytes": 1106,
+      "sha256": "80e931d92618781af0d0f5a2f77ee9eafc018d9e1557147f2faffd599eedc81c"
+    },
+    {
+      "path": "logs/prefill-stream-native-20261015/jobs/background_service_checks.json",
+      "bytes": 7098,
+      "sha256": "9351d78370205586625e7daa085e68b5d6b131e84cfa3ddf23824c98de1c5805"
+    },
+    {
+      "path": "prefill-stream-staging/original.json",
+      "bytes": 970,
+      "sha256": "4166276ff01f54a0d4d2967a06ee16e641a61971732ffee5b2fe90dbb6b84b72"
+    },
+    {
+      "path": "prefill-stream-staging/source.tar.gz",
+      "bytes": 46101,
+      "sha256": "f33dba32dcfc4711be0cad4f35cc88a6980e46a36f9ed6f015893c509f8c1b74"
+    },
+    {
+      "path": "prefill-stream-staging/install_prefill_stream_sources.py",
+      "bytes": 375,
+      "sha256": "bfa5cfe057a28ae942f673663c5dc2410e3469d493c38dedbc1f192f81bfda2e"
+    },
+    {
+      "path": "prefill-stream-staging/manifest.json",
+      "bytes": 1082,
+      "sha256": "31bd6d7d15e9249132899815509a226aa202cb37f854297b12c8c83846b4f96c"
+    },
+    {
+      "path": "prefill-stream-staging/install_residual_norm_sources.py",
+      "bytes": 1385,
+      "sha256": "5b637f1cc0ddec1d0660b481261e58514bde03ea86e0a7b038a2f83e0ea124ae"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/manifest.json",
+      "bytes": 969,
+      "sha256": "8c8580f70988508ecb417754f1bf3f3ea6b9029e34788d8c1efe56c7e28fe3f4"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/cmake/GarnetMetal.cmake",
+      "bytes": 11281,
+      "sha256": "465838b74e90ce70d907b2235feef8bf45462d19353e462fa3ad515c2156bc3d"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/entry/metal_main.cpp",
+      "bytes": 2749,
+      "sha256": "31e20b06eece2025b4db581bf57e6476bf3ac8fa2d779dcc4587dd5536047bd7"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/backends/metal/decoder_session.h",
+      "bytes": 4889,
+      "sha256": "be14d9bb611220b09113203bc2423ab79fa2b0bee7fc003cb7316057781e238b"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/backends/metal/decoder_session.cpp",
+      "bytes": 15332,
+      "sha256": "b6b29dc099d775944189982ff05d08de5269cdbc3573e25c3ff37f000dec02f9"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/backends/metal/metal_context.mm",
+      "bytes": 169385,
+      "sha256": "0b00dc5536401264a10a90e2edfc1b4f80b351eb6ce26332bb1cba1dea3c911e"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/src/backends/metal/metal_context.h",
+      "bytes": 9259,
+      "sha256": "c52d1085a30736a6f0c29f8fc5e33f7784a75df729d3355c9ba225798736a6c5"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/test2026/metal/frame_worker_garnet.py",
+      "bytes": 7330,
+      "sha256": "68b7882f6223701c2a5cfd0747be0781b49014df56ad66377a02b50bdfa51b1b"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/test2026/metal/run_matched_garnet.py",
+      "bytes": 6524,
+      "sha256": "cce868dda9c3100cdf946b809b6e525f3dd4342ce0330aab15dbca6b682143c6"
+    },
+    {
+      "path": "logs/prefill-stream-original-source-20261014/xModel/qwen35/vl_0_8b/metal_decoder.py",
+      "bytes": 14577,
+      "sha256": "1c599f3192e78b277206dec947c268b12d579f3ba93e3d5422bdd67be0fcf289"
+    },
+    {
+      "path": "source/test2026/metal/launch_quiet_prefill_residual_norm_probe.py",
+      "bytes": 2052,
+      "sha256": "6ac2816980940c131ed281a90ac6ac9b04fbca0890ee9dd3c29776d97914820b"
+    },
+    {
+      "path": "source/src/backends/metal/decoder_session.h",
+      "bytes": 5125,
+      "sha256": "d86d6300dc6440bd7865de66890b1f1b8e25382f3bc01966982fda429d7e94e8"
+    },
+    {
+      "path": "source/test2026/metal/prefill_stream_test.cpp",
+      "bytes": 2719,
+      "sha256": "94bcc4dd1a810395b4dfafa5590c0eea933e95809452c7c3c28c951bbd4eaad2"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_dirty_prefix_reset_checks.py",
+      "bytes": 367,
+      "sha256": "15f6d72e286a04739785d96d1baccad53fd471c805e45168fce6f45d28a72742"
+    },
+    {
+      "path": "source/test2026/metal/compare_dirty_prefix_reset.py",
+      "bytes": 2137,
+      "sha256": "7ea69979182c68a07065f01fd9d9990cc0250d50d5a5c72edb17776f145bb263"
+    },
+    {
+      "path": "source/test2026/metal/run_direct_state_zero_checks.py",
+      "bytes": 1409,
+      "sha256": "302737852368875e5ed4cb98577e49f28f952500ff6e17af8bb7a23a23faed92"
+    },
+    {
+      "path": "source/test2026/metal/launch_joined_global_mlp_checks.py",
+      "bytes": 341,
+      "sha256": "31ae98e081060ca48999d5791c788d8f8eb45b72755f954a73d6ee0b2572cc47"
+    },
+    {
+      "path": "source/test2026/metal/run_vision_global_alpha_profiles.py",
+      "bytes": 3036,
+      "sha256": "fc94df4e74ea862a187048da1d3ef92ee054401bffdd140544f6d473a0e9e019"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_global_half_alpha_checks.py",
+      "bytes": 1081,
+      "sha256": "c620cf5e7c96bbb623abc06c9421a188b6d51b9edc9612dddd0218e14643697d"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_prefix_reset_session_tests.py",
+      "bytes": 693,
+      "sha256": "b96fc67be47d06078c93e2af858955f6b7b7bdce22f9c70e164f5b3bea8e220b"
+    },
+    {
+      "path": "source/test2026/metal/compare_vllm_metal.py",
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    {
+      "path": "source/test2026/metal/archive_prefill_stream_native.py",
+      "bytes": 1009,
+      "sha256": "f11bcd3bd370a7d78b5bfe404841e43505414b8c329018804676c34ddb1360b9"
+    },
+    {
+      "path": "source/test2026/metal/queue_vision_global_alpha_profiles.py",
+      "bytes": 1948,
+      "sha256": "eba07ebb063062b2e8aa68bde03ef357b869e1160e208428701a44bf8cea1cc6"
+    },
+    {
+      "path": "source/test2026/metal/run_prefill_stream_profiles.py",
+      "bytes": 295,
+      "sha256": "178f96f169b8cc20506e54060fdbec1c57723fe0a6c47e66f1eaadd5e696079b"
+    },
+    {
+      "path": "source/cmake/GarnetMetal.cmake",
+      "bytes": 11797,
+      "sha256": "6d96d560577e087ed116560bd2014205501e0334e3dd7e474ade226360284cdb"
+    },
+    {
+      "path": "source/test2026/metal/launch_global_half_alpha_checks.py",
+      "bytes": 512,
+      "sha256": "ed591658c16bca406a24e5ada03632e8948bbaeeb3823d8480448131cf576c84"
+    },
+    {
+      "path": "source/test2026/metal/compare_vision_global_alpha.py",
+      "bytes": 9862,
+      "sha256": "c38705239b1bb9238ef5d5ed22de66a91cfaf8adc7c2d49450b739238a26c156"
+    },
+    {
+      "path": "source/test2026/metal/queue_dirty_prefix_reset_profiles.py",
+      "bytes": 543,
+      "sha256": "ae168742f2ab045fde2f54e37e7393cb33d370d222875481bba6f2c1b1c14224"
+    },
+    {
+      "path": "source/test2026/metal/test_prefix_reset_session_reference.py",
+      "bytes": 1523,
+      "sha256": "50cff5a7459ea605a434781c0d4b01b14ade4d3d5ea02368a95f1153e19cbab7"
+    },
+    {
+      "path": "source/test2026/metal/test_exact_dense_tail_case_reference.py",
+      "bytes": 755,
+      "sha256": "364ba5e774f96fbf00785c1120f18824891a2002f6ba9e4b52623d34fb882a5b"
+    },
+    {
+      "path": "source/src/backends/metal/metal_context.mm",
+      "bytes": 171286,
+      "sha256": "b0cf78db529b4837022a66ac06db879774e114a73285d43065582124b505f480"
+    },
+    {
+      "path": "source/test2026/metal/launch_prefill_stream_checks.py",
+      "bytes": 317,
+      "sha256": "41d4a6df790a993bcda5eb107b84f1fade348d1b9e25a78a2def570af8c222e8"
+    },
+    {
+      "path": "source/test2026/metal/compare_prefill_stream.py",
+      "bytes": 1156,
+      "sha256": "d83eabfd450126327c36fe219d4343a855b2fdeaeec8db57686b06f8fea18b1e"
+    },
+    {
+      "path": "source/test2026/metal/launch_vision_global_alpha_checks.py",
+      "bytes": 332,
+      "sha256": "4c65b51a2cb5dbd34d0d95134e31453ce9d9d65ce709c892590f985b25fb8a59"
+    },
+    {
+      "path": "source/test2026/metal/run_matched_garnet.py",
+      "bytes": 6738,
+      "sha256": "c482f3eb4f828d238e4bdd40a0d343b1ee14b3def240225f3d95673a57849436"
+    },
+    {
+      "path": "source/test2026/metal/run_global_half_alpha_checks.py",
+      "bytes": 559,
+      "sha256": "762a73a9ef294711eca9a064ab37a80eb3f4038bd2b4f766579862a8cce07d3d"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_joined_global_mlp_checks.py",
+      "bytes": 529,
+      "sha256": "9cfc29010bc08abcc6d53ccf1b95bc4e2033f08308836c6cf077a1f91c0ed530"
+    },
+    {
+      "path": "source/src/backends/metal/decoder_session.cpp",
+      "bytes": 15641,
+      "sha256": "63e1c60ef0967a948b7e69eb5f12c1a9c39ceab6cf5a5829e1a48e09e799914f"
+    },
+    {
+      "path": "source/test2026/metal/test_exact_dense_tail_reference.py",
+      "bytes": 2699,
+      "sha256": "671e19c31a6f3fd0f799eb0c396e03ca97bb4dfeafbfaa16b03ea3d53fd82f64"
+    },
+    {
+      "path": "source/test2026/metal/resume_packed_prefill_norm_checks.py",
+      "bytes": 4895,
+      "sha256": "d6ded1ed2759cf297e33498368d4221a0be1ed2e23131bdf6270a60691367764"
+    },
+    {
+      "path": "source/test2026/metal/run_guarded_prefill_stream_checks.py",
+      "bytes": 336,
+      "sha256": "5a193955c7725587a8100cbb3fc78c3886b1146e5bdeed7696d6598cc6a4cc2a"
+    },
+    {
+      "path": "source/src/backends/metal/metal_context.h",
+      "bytes": 9399,
+      "sha256": "874d3d59ceb44daa3a972ffbcb31405e361fb472c94c1acc8f23a39df437ace0"
+    },
+    {
+      "path": "source/test2026/metal/reference_dense.py",
+      "bytes": 3742,
+      "sha256": "1b67d7dd7199a0901ff984d9a91da7c01b187fe7c05a9fe08de036a5f0056511"
+    },
+    {
+      "path": "source/src/entry/metal_main.cpp",
+      "bytes": 2825,
+      "sha256": "3bd62b127fb471886c4e73474971c63dbc85d4deb77ed28c03a2eef06e296b16"
+    },
+    {
+      "path": "source/test2026/metal/queue_prefill_stream_profiles.py",
+      "bytes": 522,
+      "sha256": "970340b57e0a44d0afb4d68bd557c1dd4a89375f4e887c5d40cdb81aabae320f"
+    },
+    {
+      "path": "source/test2026/metal/archive_dirty_prefix_reset_native.py",
+      "bytes": 3323,
+      "sha256": "bc62471c5610ee1ac1a22edb37c995b63ecd1d282961b0b3936bb2e25761262e"
+    },
+    {
+      "path": "source/xModel/qwen35/vl_0_8b/metal_decoder.py",
+      "bytes": 14684,
+      "sha256": "e0795cf9405631dafe399a156ee332ad6b5b97d90832c0e86ca22bfc217740e7"
+    },
+    {
+      "path": "source/test2026/metal/launch_dirty_prefix_reset_checks.py",
+      "bytes": 310,
+      "sha256": "9de73cb70994829747553553e4068f6b8c5079c43dcaabd94838e050a6992973"
+    },
+    {
+      "path": "source/test2026/metal/run_prefix_reset_session_reference.py",
+      "bytes": 3966,
+      "sha256": "bfd3dc50b2cf908a448862ed42fc23df1fd05627ba3f3ac44f032f470e94eeac"
+    },
+    {
+      "path": "source/test2026/metal/run_matched_frame_process.py",
+      "bytes": 5109,
+      "sha256": "a30bdcd1da7e411b91ce7797235268b47bd4ab4099720e7267f95f8011464ec7"
+    },
+    {
+      "path": "source/test2026/metal/frame_worker_garnet.py",
+      "bytes": 7544,
+      "sha256": "68b5b37acb100b48f4938ababc3594c809547d63ad0b14155c98970875cec1fd"
+    },
+    {
+      "path": "source/test2026/metal/run_dirty_prefix_reset_profiles.py",
+      "bytes": 553,
+      "sha256": "1e6363099d3b8be28dc677153e31582284615fd24f9fcf6a0752293163f8f0b4"
+    },
+    {
+      "path": "source/test2026/metal/run_joined_prefill_checks.py",
+      "bytes": 6347,
+      "sha256": "fac8cdcf920e7773496ddbffc871a8ab6e75302c9254989409329eac1630b0ac"
+    },
+    {
+      "path": "source/src/backends/metal/compiled_graph.cpp",
+      "bytes": 78896,
+      "sha256": "268698db451954d149ae7788391270b5f7bf1808adc9ca8aca0fdabba8b54f2d"
+    },
+    {
+      "path": "source/xModel/qwen/metal_dense/decoder.py",
+      "bytes": 5670,
+      "sha256": "92ee08c4ee3ca54e61b6597d79e63f342c99f62f9fd678e98fc1ff79741f6378"
+    },
+    {
+      "path": "source/test2026/metal/run_dense_reference.py",
+      "bytes": 6575,
+      "sha256": "d6651780c283093effe1d8a27304f907976948d1647ed38608b043203bde4a94"
+    },
+    {
+      "path": "models/Qwen3-0.6B/config.json",
+      "bytes": 726,
+      "sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+    },
+    {
+      "path": "models/Qwen2.5-Coder-0.5B-Instruct/config.json",
+      "bytes": 659,
+      "sha256": "b1e58593cd31852f7da5c2fc31ddf6135b9c066c0fd9177a4bbe95717083adff"
+    },
+    {
+      "path": "models/Qwen3.5-0.8B/config.json",
+      "bytes": 2907,
+      "sha256": "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204"
+    }
+  ],
+  "jobs": {
+    "prefill-stream-checks-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 1201.135285584256
+    },
+    "prefill-stream-native-20261015": {
+      "exit_code": 1,
+      "wall_seconds": 993.5894680409692
+    }
+  },
+  "candidate_sha256": "bad8c5db120df0e6ac107a0fabc6b19708a379f36785b7b5c8869a30fd14534b",
+  "control_sha256": "887b70f521d5af7f948bcb32a2cf94842377e2ecb828bc9280ffb38af6fe058f"
+}

@@ -1,6 +1,6 @@
 """Exact full native ABBA with real prefill submissions and decode unchanged."""
 from pathlib import Path
-source=Path(__file__).with_name('compare_vision_global_alpha.py').read_text().replace('build-vision-global-alpha','build-prefill-stream').replace('vision-global-alpha-checks-20261014','prefill-stream-checks-20261014')
+source=Path(__file__).with_name('compare_vision_global_alpha.py').read_text().replace('build-vision-global-alpha','build-prefill-stream').replace('vision-global-alpha-checks-20261014','prefill-stream-checks-20261015')
 source=source.replace("assert value['vision_global_alpha_enabled']==(policy=='candidate')","assert not value['vision_global_alpha_enabled'] and not value['dirty_prefix_reset_enabled']\n                assert value['prefill_stream_enabled']==(policy=='candidate')")
 start=source.index('                expected_vision=');end=source.index("                assert not value['single_coder_head_enabled']",start)
 source=source[:start]+'''                assert value['vision_global_alpha_dispatches']==0 and value['decode_partial_submissions']==0
