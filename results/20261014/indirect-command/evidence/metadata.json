@@ -1,0 +1,12 @@
+{
+  "scope": "Recorded indirect GPU commands: component timing and exact dependency checks; no model performance claim",
+  "source_sha256": {
+    "run_indirect_command_probe.py": "00ea11df4c82f98f4810f62f30764d70612ac874f9ed7193a126ca8447de44b1",
+    "indirect_command_probe.mm": "6bb360d3a44eb6b541af9fc3581cb286c8780fb7970fcb4e503065700fa1362f",
+    "compare_vllm_metal.py": "dbd05e692603f968b71649df4e1397f0952d35bf3558ebcff13aefac78aea7b7"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  }
+}

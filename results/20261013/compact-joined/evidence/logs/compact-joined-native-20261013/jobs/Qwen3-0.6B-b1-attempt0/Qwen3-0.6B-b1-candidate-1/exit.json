@@ -1,0 +1,14 @@
+{
+  "name": "Qwen3-0.6B-b1-candidate-1",
+  "command": [
+    "/usr/bin/time",
+    "-l",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+    "/Users/zsdx/garnet-metal-investigation/build-compact-joined-prefill",
+    "/Users/zsdx/garnet-metal-investigation/source",
+    "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+    "/Users/zsdx/garnet-metal-investigation/logs/compact-joined-native-20261013/jobs/Qwen3-0.6B-b1-attempt0/Qwen3-0.6B-b1-case.json"
+  ],
+  "exit_code": 0
+}
