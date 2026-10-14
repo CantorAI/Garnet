@@ -1,0 +1,41 @@
+Start testing: Oct 15 07:23 CST
+----------------------------------------------------------
+1/2 Testing: metal_deferred_state_zero_reference
+1/2 Test: metal_deferred_state_zero_reference
+Command: "/Users/zsdx/garnet-metal-investigation/build-deferred-state-zero/garnet_deferred_state_zero_test"
+Directory: /Users/zsdx/garnet-metal-investigation/build-deferred-state-zero
+"metal_deferred_state_zero_reference" start time: Oct 15 07:23 CST
+Output:
+----------------------------------------------------------
+Deferred reset positive-zero snapshots/GPU use, padded strides, ownership, cancellation, invalid inputs, abort/partial recovery and destruction PASS 45 transitions
+<end of output>
+Test time =   0.59 sec
+----------------------------------------------------------
+Test Passed.
+"metal_deferred_state_zero_reference" end time: Oct 15 07:23 CST
+"metal_deferred_state_zero_reference" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: metal_mps_matmul_reference
+2/2 Test: metal_mps_matmul_reference
+Command: "/Users/zsdx/garnet-metal-investigation/build-deferred-state-zero/garnet_metal_matmul_test"
+Directory: /Users/zsdx/garnet-metal-investigation/build-deferred-state-zero
+"metal_mps_matmul_reference" start time: Oct 15 07:23 CST
+Output:
+----------------------------------------------------------
+Batched vision attention independent references PASS cases=48
+Split key exact dyadic checks=144
+Exact scaled half codec checks=8421120
+Chunk delta sequential reference PASS 48 cases
+Chunk convolution sequential reference PASS 48 cases
+Gated token direct-write reference PASS 6 layouts
+Metal/MPS matmul reference PASS device=Apple M4
+<end of output>
+Test time =   1.83 sec
+----------------------------------------------------------
+Test Passed.
+"metal_mps_matmul_reference" end time: Oct 15 07:23 CST
+"metal_mps_matmul_reference" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 15 07:23 CST

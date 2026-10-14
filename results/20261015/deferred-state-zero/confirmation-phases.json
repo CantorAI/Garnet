@@ -1,0 +1,233 @@
+{
+  "scope": "Observed clocks only. Candidate reset_call_ms is logical marking; physical clearing is included in prefill, not eliminated. Encode/GPU/wait clocks overlap and must not be added. Model initialization and first request after init are separate; caches unflushed.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 49.49336429126561,
+      "reset_call_ms": 6.770760635845363,
+      "prefill_inference_ms": 41.365469,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.27917725,
+        "encode_ms": 6.123552,
+        "gpu_ms": 33.912729122675955,
+        "wait_ms": 34.96060425
+      },
+      "materialized_clear_bytes": 0,
+      "materialized_clear_states": 0,
+      "decode_tps_per_row": 58.60289432001552,
+      "initialization_s": 1.659923208411783,
+      "first_request_after_init_ttft_ms": 154.30306317284703
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 44.71928137354553,
+      "reset_call_ms": 0.052375136874616146,
+      "prefill_inference_ms": 42.8453025,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.28505225,
+        "encode_ms": 6.34990625,
+        "gpu_ms": 35.21806246135384,
+        "wait_ms": 36.207646
+      },
+      "materialized_clear_bytes": 58720256,
+      "materialized_clear_states": 56,
+      "decode_tps_per_row": 58.289816489612555,
+      "initialization_s": 1.6211592289619148,
+      "first_request_after_init_ttft_ms": 152.1764788776636
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 82.09205220919102,
+      "reset_call_ms": 21.587114548310637,
+      "prefill_inference_ms": 59.072094,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.32294775,
+        "encode_ms": 6.27967725,
+        "gpu_ms": 51.44159379415214,
+        "wait_ms": 52.466927
+      },
+      "materialized_clear_bytes": 0,
+      "materialized_clear_states": 0,
+      "decode_tps_per_row": 57.665318832065,
+      "initialization_s": 1.685737375402823,
+      "first_request_after_init_ttft_ms": 184.01706242002547
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 64.59557311609387,
+      "reset_call_ms": 0.05566678009927273,
+      "prefill_inference_ms": 62.4688125,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.327875,
+        "encode_ms": 6.08650025,
+        "gpu_ms": 55.09101052302867,
+        "wait_ms": 56.05151025
+      },
+      "materialized_clear_bytes": 117440512,
+      "materialized_clear_states": 56,
+      "decode_tps_per_row": 56.06925916344575,
+      "initialization_s": 1.657111770939082,
+      "first_request_after_init_ttft_ms": 166.25466663390398
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 33.87015592306852,
+      "reset_call_ms": 0.9078541770577431,
+      "prefill_inference_ms": 31.5487915,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.26301025,
+        "encode_ms": 5.4521250000000006,
+        "gpu_ms": 24.79983353987336,
+        "wait_ms": 25.831426999999998
+      },
+      "materialized_clear_bytes": 0,
+      "materialized_clear_states": 0,
+      "decode_tps_per_row": 72.23511527804706,
+      "initialization_s": 1.393286541569978,
+      "first_request_after_init_ttft_ms": 123.25991643592715
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 32.16423944104463,
+      "reset_call_ms": 0.04476041067391634,
+      "prefill_inference_ms": 30.51754175,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.248948,
+        "encode_ms": 5.5006565,
+        "gpu_ms": 24.081093724817038,
+        "wait_ms": 24.76566625
+      },
+      "materialized_clear_bytes": 6291456,
+      "materialized_clear_states": 48,
+      "decode_tps_per_row": 72.20126455364168,
+      "initialization_s": 1.395850625121966,
+      "first_request_after_init_ttft_ms": 124.48262493126094
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 50.989312352612615,
+      "reset_call_ms": 1.7324582440778613,
+      "prefill_inference_ms": 47.810698,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.28372925,
+        "encode_ms": 5.7020835000000005,
+        "gpu_ms": 40.84145836532116,
+        "wait_ms": 41.822927
+      },
+      "materialized_clear_bytes": 0,
+      "materialized_clear_states": 0,
+      "decode_tps_per_row": 71.08482808362571,
+      "initialization_s": 1.3912555421702564,
+      "first_request_after_init_ttft_ms": 146.60431304946542
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 48.42674976680428,
+      "reset_call_ms": 0.04982261452823877,
+      "prefill_inference_ms": 46.87621875,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.30751025,
+        "encode_ms": 5.6213335,
+        "gpu_ms": 40.05871876142919,
+        "wait_ms": 40.94503125
+      },
+      "materialized_clear_bytes": 12582912,
+      "materialized_clear_states": 48,
+      "decode_tps_per_row": 70.67137725620366,
+      "initialization_s": 1.3949462084565312,
+      "first_request_after_init_ttft_ms": 144.42366641014814
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 196.25906262081116,
+      "reset_call_ms": 5.420125322416425,
+      "prefill_inference_ms": 85.36444775,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.2511665,
+        "encode_ms": 6.41487525,
+        "gpu_ms": 77.83198950346559,
+        "wait_ms": 78.695729
+      },
+      "materialized_clear_bytes": 0,
+      "materialized_clear_states": 0,
+      "decode_tps_per_row": 48.34843345846623,
+      "initialization_s": 2.9588681461755186,
+      "first_request_after_init_ttft_ms": 336.90233319066465
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 192.85203143954277,
+      "reset_call_ms": 0.06445823237299919,
+      "prefill_inference_ms": 86.61808325,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.27534349999999996,
+        "encode_ms": 6.42486475,
+        "gpu_ms": 78.98227078840137,
+        "wait_ms": 79.91528124999999
+      },
+      "materialized_clear_bytes": 26935296,
+      "materialized_clear_states": 48,
+      "decode_tps_per_row": 48.32388003560886,
+      "initialization_s": 2.971112750004977,
+      "first_request_after_init_ttft_ms": 336.18847955949605
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 358.79979166202247,
+      "reset_call_ms": 9.893374517560005,
+      "prefill_inference_ms": 181.50043775,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.645198,
+        "encode_ms": 18.406802499999998,
+        "gpu_ms": 159.68389553017914,
+        "wait_ms": 162.44504175
+      },
+      "materialized_clear_bytes": 0,
+      "materialized_clear_states": 0,
+      "decode_tps_per_row": 44.583450801616,
+      "initialization_s": 2.994373603956774,
+      "first_request_after_init_ttft_ms": 563.7487289495766
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 353.6217811051756,
+      "reset_call_ms": 0.05940592382103205,
+      "prefill_inference_ms": 184.731281,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.614062,
+        "encode_ms": 18.43417775,
+        "gpu_ms": 162.88079170044512,
+        "wait_ms": 165.6802185
+      },
+      "materialized_clear_bytes": 53870592,
+      "materialized_clear_states": 48,
+      "decode_tps_per_row": 44.338401552288005,
+      "initialization_s": 2.9857545630075037,
+      "first_request_after_init_ttft_ms": 549.2150420323014
+    }
+  ]
+}
