@@ -156,8 +156,16 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
         auto qkv=project(norm(x,prefix+".norm1"),prefix+".attn.qkv");
         if(slots_[qkv].columns!=3*hidden)throw std::runtime_error("Metal vision QKV shape mismatch");
         auto rotated=vision(6,qkv,rope,rope,batch*n,3*hidden);
-        auto probability=vision(7,rotated,rotated,rotated,batch*n,heads*n);
-        auto context=vision(8,probability,rotated,rotated,batch*n,hidden);
+        size_t context;
+#ifdef GARNET_METAL_FUSED_VISION_CONTEXT
+        if(batch*n<=1024&&n<=512&&heads<=16&&dim<=128) {
+            context=vision(10,rotated,rotated,rotated,batch*n,hidden);
+        } else
+#endif
+        {
+            auto probability=vision(7,rotated,rotated,rotated,batch*n,heads*n);
+            context=vision(8,probability,rotated,rotated,batch*n,hidden);
+        }
         x=add(x,project(context,prefix+".attn.proj"));
         auto intermediate=project(norm(x,prefix+".norm2"),prefix+".mlp.linear_fc1");
         auto activated=vision(2,intermediate,intermediate,intermediate,slots_[intermediate].rows,slots_[intermediate].columns);

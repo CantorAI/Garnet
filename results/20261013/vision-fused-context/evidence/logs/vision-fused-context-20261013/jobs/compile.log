@@ -1,0 +1,13 @@
+/Users/zsdx/garnet-metal-investigation/source/test2026/metal/vision_fused_context_gpu.mm:85:8: error: expected expression
+   85 |     }} catch(const std::exception& e){fprintf(stderr,"ERROR: %s\n",e.what());return 1;}return 0;}}
+      |        ^
+/Users/zsdx/garnet-metal-investigation/source/test2026/metal/vision_fused_context_gpu.mm:85:98: error: expected catch
+   85 |     }} catch(const std::exception& e){fprintf(stderr,"ERROR: %s\n",e.what());return 1;}return 0;}}
+      |                                                                                                  ^
+/Users/zsdx/garnet-metal-investigation/source/test2026/metal/vision_fused_context_gpu.mm:85:99: error: expected '}'
+   85 |     }} catch(const std::exception& e){fprintf(stderr,"ERROR: %s\n",e.what());return 1;}return 0;}}
+      |                                                                                                   ^
+/Users/zsdx/garnet-metal-investigation/source/test2026/metal/vision_fused_context_gpu.mm:20:32: note: to match this '{'
+   20 | int main(int argc,char** argv) {@autoreleasepool {try {
+      |                                ^
+3 errors generated.

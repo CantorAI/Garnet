@@ -62,7 +62,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> concat;
     id<MTLComputePipelineState> normRope,kvUpdate,kvUpdateVector,scores,scoresSerial,attentionContext;
     id<MTLComputePipelineState> vision,visionNorm,visionScores,layout,kvChunk,kvChunkVector,attentionChunk;
-    id<MTLComputePipelineState> visionPackQK,visionSoftmax;
+    id<MTLComputePipelineState> visionPackQK,visionSoftmax,visionFusedContext;
 };
 static std::mutex pipelineMutex;
 static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
@@ -970,6 +970,35 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
 }
 )METAL"];
         NSError* error=nil;
+#ifdef GARNET_METAL_FUSED_VISION_CONTEXT
+        source=[source stringByAppendingString:[NSString stringWithUTF8String:R"METAL(
+kernel void vision_softmax_context(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],device const float* c [[buffer(2)]],
+    device float* out [[buffer(3)]],constant VisionParams& p [[buffer(4)]],threadgroup float* scratch [[threadgroup(0)]],
+    uint id [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+    if(row>=p.outRows)return;threadgroup float partial[4];
+    ulong packedRow=((row/p.tokens)*p.heads+head)*p.tokens+row%p.tokens;
+    for(ulong key=tid;key<p.tokens;key+=128)scratch[key]=b[packedRow*p.bStride+key]*rsqrt(float(dim));
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float maximum=-INFINITY;for(ulong key=tid;key<p.tokens;key+=128)maximum=max(maximum,scratch[key]);
+    maximum=simd_max(maximum);if(lane==0)partial[simd]=maximum;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    maximum=simd_max(lane<4?partial[lane]:-INFINITY);
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    float total=0;for(ulong key=tid;key<p.tokens;key+=128){float v=exp(scratch[key]-maximum);scratch[key]=v;total+=v;}
+    total=simd_sum(total);if(lane==0)partial[simd]=total;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    total=simd_sum(lane<4?partial[lane]:0.0f);
+    for(ulong key=tid;key<p.tokens;key+=128)scratch[key]/=total;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    for(ulong d=tid;d<dim;d+=128) {
+        float result=0;
+        for(ulong key=0;key<p.tokens;++key)result+=scratch[key]*a[(batchBase+key)*p.aStride+2*p.hidden+head*dim+d];
+        out[row*p.oStride+head*dim+d]=result;
+    }
+}
+)METAL"]];
+#endif
 #ifdef GARNET_METAL_JOINED_PREFILL
         source=[source stringByAppendingString:@"\nkernel void joined_split_rescale(device const float* input [[buffer(0)]],device const int* scales [[buffer(1)]],device float* first [[buffer(2)]],device float* second [[buffer(3)]],constant HalfRescaleParams& p [[buffer(4)]],uint id [[thread_position_in_grid]]) {if(id>=p.rows*p.columns*2)return;ulong row=id/(p.columns*2),col=id%(p.columns*2);float v=ldexp(input[row*p.iStride+col],-scales[col]);if(col<p.columns)first[row*p.oStride+col]=v;else second[row*p.oStride+col-p.columns]=v;}\n"];
 #endif
@@ -1111,6 +1140,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         impl_->kernels->visionPackQK=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_pack_qk"] error:&error];
         impl_->kernels->visionSoftmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_softmax"] error:&error];
         if(!impl_->kernels->visionPackQK||!impl_->kernels->visionSoftmax)throw std::runtime_error("Cannot create MPS vision score pipelines");
+#endif
+#ifdef GARNET_METAL_FUSED_VISION_CONTEXT
+        impl_->kernels->visionFusedContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_softmax_context"] error:&error];
+        if(!impl_->kernels->visionFusedContext)throw std::runtime_error("Cannot create fused vision context pipeline");
 #endif
         impl_->kernels->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
         impl_->kernels->kvChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk"] error:&error];
@@ -1548,7 +1581,12 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
 #endif
     const auto* visionFields=static_cast<const uint64_t*>(parameters);
     const bool visionNorm=operation==10&&visionFields[12]==1;
-    const bool visionScores=operation==10&&visionFields[12]==7&&visionFields[8]<=4096;
+#ifdef GARNET_METAL_FUSED_VISION_CONTEXT
+    const bool fusedVisionContext=operation==10&&visionFields[12]==10;
+#else
+    constexpr bool fusedVisionContext=false;
+#endif
+    const bool visionScores=operation==10&&(visionFields[12]==7||fusedVisionContext)&&visionFields[8]<=4096;
     if(visionNorm)pipeline=impl_->kernels->visionNorm;
     if(visionScores)pipeline=impl_->kernels->visionScores;
 #ifdef GARNET_METAL_MPS_VISION_SCORES
@@ -1592,7 +1630,7 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         [pack endEncoding];
         [item.product encodeToCommandBuffer:impl_->command leftMatrix:item.queryView rightMatrix:item.keyView resultMatrix:item.scoreView];
         mpsScores=item.scores;mpsFields[5]=item.scores.impl_->matrix.rowBytes/4;
-        parameters=mpsFields.data();pipeline=impl_->kernels->visionSoftmax;
+        parameters=mpsFields.data();pipeline=fusedVisionContext?impl_->kernels->visionFusedContext:impl_->kernels->visionSoftmax;
     }
 #endif
     auto encoder=[impl_->command computeCommandEncoder];
@@ -1649,7 +1687,12 @@ void MetalContext::EncodeLayout(const MetalMatrix& input,const MetalMatrix& flag
 }
 void MetalContext::EncodeVision(unsigned operation,const std::vector<MetalMatrix>& inputs,
     const MetalMatrix& output,size_t tokens,size_t hidden,size_t heads,size_t mergeUnit) {
-    if(inputs.size()!=3||operation>9||!output.impl_||!tokens||!hidden||!heads||hidden%heads||!mergeUnit)
+#ifdef GARNET_METAL_FUSED_VISION_CONTEXT
+    constexpr unsigned maxMode=10;
+#else
+    constexpr unsigned maxMode=9;
+#endif
+    if(inputs.size()!=3||operation>maxMode||!output.impl_||!tokens||!hidden||!heads||hidden%heads||!mergeUnit)
         throw std::invalid_argument("Invalid Metal vision dispatch");
     for(auto& input:inputs)if(!input.impl_)throw std::invalid_argument("Missing Metal vision input");
     auto a=inputs[0].impl_->matrix,b=inputs[1].impl_->matrix,c=inputs[2].impl_->matrix,o=output.impl_->matrix;
@@ -1665,6 +1708,10 @@ void MetalContext::EncodeVision(unsigned operation,const std::vector<MetalMatrix
     case 7:valid=a.rows==o.rows&&a.rows%tokens==0&&a.columns==3*hidden&&o.columns==heads*tokens;break;
     case 8:valid=a.rows==o.rows&&a.rows==b.rows&&a.rows%tokens==0&&a.columns==heads*tokens&&b.columns==3*hidden&&o.columns==hidden;break;
     case 9:valid=a.rows*tokens==o.rows&&a.columns==o.columns*tokens;break;
+#ifdef GARNET_METAL_FUSED_VISION_CONTEXT
+    case 10:valid=a.rows==o.rows&&a.rows%tokens==0&&a.columns==3*hidden&&o.columns==hidden&&
+        a.rows<=1024&&tokens<=512&&heads<=16&&hidden/heads<=128;break;
+#endif
     }
     if(!valid)throw std::invalid_argument("Metal vision matrix dimensions mismatch");
     // Positional indices are graph-owned constants validated during lowering.

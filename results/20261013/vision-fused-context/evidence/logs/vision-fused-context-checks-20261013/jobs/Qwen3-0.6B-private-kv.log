@@ -1,0 +1,72 @@
+private_kv_step {"index": 0, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 1, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 1, "capacity": 8, "layer": 0, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}
+private_kv_step {"index": 0, "batch": 1, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 1, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 1, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 1, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 1, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 1, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 1, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 1, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 1, "capacity": 256, "layer": 0, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}
+private_kv_step {"index": 0, "batch": 2, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 2, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 2, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 2, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 2, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 2, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 2, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 2, "capacity": 8, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 2, "capacity": 8, "layer": 0, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}
+private_kv_step {"index": 0, "batch": 2, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 2, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 2, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 2, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 2, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 2, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 2, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 2, "capacity": 256, "layer": 0, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 2, "capacity": 256, "layer": 0, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}
+private_kv_step {"index": 0, "batch": 1, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 1, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 1, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 1, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 1, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 1, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 1, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 1, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 1, "capacity": 8, "layer": 27, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}
+private_kv_step {"index": 0, "batch": 1, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 1, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 1, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 1, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 1, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 1, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 1, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 1, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 1, "capacity": 256, "layer": 27, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}
+private_kv_step {"index": 0, "batch": 2, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 2, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 2, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 2, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 2, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 2, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 2, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 2, "capacity": 8, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 2, "capacity": 8, "layer": 27, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}
+private_kv_step {"index": 0, "batch": 2, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 1, "batch": 2, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 2, "batch": 2, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 3, "batch": 2, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 4, "batch": 2, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 5, "batch": 2, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 6, "batch": 2, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_step {"index": 7, "batch": 2, "capacity": 256, "layer": 27, "inplace_updates": 2, "exact_output_and_state": true}
+private_kv_reference PASS {"batch": 2, "capacity": 256, "layer": 27, "enabled": true, "steps": 8, "invalid_controls": 3, "shared_graph_isolated": true}

@@ -1,0 +1,14 @@
+{
+  "scope": "FP32 vision softmax and value contraction component only; synthetic inputs, no full model claim",
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "f1cf28fd639a4bbede13f35a365a129a34962aa3eb66a4a8a264d2ac3127ce60",
+    "test2026/metal/run_vision_fused_context_probe.py": "804ddfa3b333ecc51d933b98e1b165d639f1304c5f4abfa6eb82749a6d1d6c85",
+    "test2026/metal/vision_fused_context_gpu.mm": "b2354d709cf825e4731a11240c46ac444c19ee473fa95180c34b7482c2a8afe3",
+    "test2026/metal/make_vision_fused_context_shader.py": "d09c901e86a467241e2dececb3955bc08fa05eed215afd1a7c4e46d13bd9f745",
+    "test2026/metal/compare_vllm_metal.py": "1ee0a35e4c67fc01e8e30ad6537d18bfbaa5d405737d4386c3c0078b8b972b29"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  }
+}

@@ -1,0 +1,23 @@
+ERROR: program_source:4:13: error: kernel function cannot be a member function
+kernel void vision_softmax(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],device const float* c [[buffer(2)]],
+            ^
+program_source:23:13: error: kernel function cannot be a member function
+kernel void vision_op(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+            ^
+program_source:81:13: error: kernel function cannot be a member function
+kernel void vision_softmax_context(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],device const float* c [[buffer(2)]],
+            ^
+program_source:105:2: error: expected '}'
+}
+ ^
+program_source:3:21: note: to match this '{'
+struct VisionParams {ulong rows,columns,outRows,outColumns,aStride,bStride,cStride,oStride,tokens,hidden,heads,unit,mode;
+                    ^
+program_source:7:63: warning: unused variable 'batchBase' [-Wunused-variable]
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+                                                              ^
+program_source:105:2: error: expected ';' after struct
+}
+ ^
+ ;
+
