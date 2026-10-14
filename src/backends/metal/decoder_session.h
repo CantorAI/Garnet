@@ -32,6 +32,7 @@ class MetalDecoderSession {
     size_t packedPrefillNormDispatches_=0;
     size_t globalHalfAlphaDispatches_=0;
     size_t joinedGlobalMlpBlocks_=0;
+    size_t prefillPartialSubmissions_=0;
     size_t dirtyPrefixResetBytes_=0,dirtyPrefixResetStates_=0,dirtyPrefixResetFallbackStates_=0;
     bool poisoned_=false;
     double inferenceMs_=0,prepareMs_=0,encodeMs_=0,gpuMs_=0,waitMs_=0;
@@ -54,6 +55,7 @@ public:
     size_t LastPackedPrefillNormDispatches() const {return packedPrefillNormDispatches_;}
     size_t LastGlobalHalfAlphaDispatches() const {return globalHalfAlphaDispatches_;}
     size_t LastJoinedGlobalMlpBlocks() const {return joinedGlobalMlpBlocks_;}
+    size_t LastPrefillPartialSubmissions() const {return prefillPartialSubmissions_;}
     size_t LastDirtyPrefixResetBytes() const {return dirtyPrefixResetBytes_;}
     size_t LastDirtyPrefixResetStates() const {return dirtyPrefixResetStates_;}
     size_t LastDirtyPrefixResetFallbackStates() const {return dirtyPrefixResetFallbackStates_;}
@@ -77,6 +79,7 @@ public:
         APISET().AddProp("packed_prefill_norm_dispatches",&MetalDecoderSession::LastPackedPrefillNormDispatches);
         APISET().AddProp("global_half_alpha_dispatches",&MetalDecoderSession::LastGlobalHalfAlphaDispatches);
         APISET().AddProp("joined_global_mlp_blocks",&MetalDecoderSession::LastJoinedGlobalMlpBlocks);
+        APISET().AddProp("prefill_partial_submissions",&MetalDecoderSession::LastPrefillPartialSubmissions);
         APISET().AddProp("dirty_prefix_reset_bytes",&MetalDecoderSession::LastDirtyPrefixResetBytes);
         APISET().AddProp("dirty_prefix_reset_states",&MetalDecoderSession::LastDirtyPrefixResetStates);
         APISET().AddProp("dirty_prefix_reset_fallback_states",&MetalDecoderSession::LastDirtyPrefixResetFallbackStates);

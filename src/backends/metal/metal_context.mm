@@ -86,6 +86,8 @@ struct MetalContext::Impl {
     id<MTLDevice> device;
     id<MTLCommandQueue> queue;
     id<MTLCommandBuffer> command;
+    NSMutableArray<id<MTLCommandBuffer>>* submitted=nil;
+    size_t partialSubmissions=0;
     double gpuMs=0;
     std::vector<std::shared_ptr<MetalMatrix::Impl>> outputs;
     std::unordered_set<const MetalMatrix::Impl*> pendingOutputs;
@@ -1740,6 +1742,8 @@ void MetalContext::ZeroPrefixGroups(const MetalMatrix& matrix,size_t groups,size
 void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
+    if(impl_->submitted.count)throw std::logic_error("Undrained Metal partial batches");
+    impl_->partialSubmissions=0;
     impl_->joinedPrefillPairs=0;
     impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
@@ -2319,21 +2323,49 @@ void MetalContext::EncodeAttentionContext(const MetalMatrix& probabilities,const
     Params params{p.rows,heads,kvHeads,dim,capacity,p.rowBytes/4,v.rowBytes/4,g.rowBytes/4,s.rowBytes/4,o.rowBytes/4,uint64_t(gated)};
     EncodeStateKernel(9,{probabilities,value,gate,slots},output,&params,sizeof(params),Elements(o.rows,o.columns));
 }
+void MetalContext::Flush() {
+    @autoreleasepool {
+    if(!impl_->command)throw std::logic_error("No Metal command batch to flush");
+    auto next=[impl_->queue commandBuffer];
+    if(!next)throw std::runtime_error("Cannot create Metal continuation command");
+    if(!impl_->submitted)impl_->submitted=[NSMutableArray new];
+    if(!impl_->submitted)throw std::runtime_error("Cannot retain Metal partial commands");
+    [impl_->submitted addObject:impl_->command];
+    [impl_->command commit];impl_->command=next;++impl_->partialSubmissions;
+    // Pending owners stay retained and usable only by this context. Shared
+    // tracked resources on one queue preserve producer/consumer ordering.
+    }
+}
+size_t MetalContext::LastPartialSubmissions() const {return impl_->partialSubmissions;}
 void MetalContext::SubmitAndWait() {
     @autoreleasepool {
     if(!impl_->command)throw std::logic_error("No Metal command batch to submit");
     auto command=impl_->command;
     [command commit];[command waitUntilCompleted];
-    const bool success=command.status==MTLCommandBufferStatusCompleted;
-    impl_->gpuMs=success?(command.GPUEndTime-command.GPUStartTime)*1000.0:0;
+    bool success=command.status==MTLCommandBufferStatusCompleted;
+    NSString* failure=command.error.localizedDescription;
+    double first=std::numeric_limits<double>::infinity(),last=0;
+    auto observe=[&](id<MTLCommandBuffer> c) {
+        if(c.GPUStartTime>0&&c.GPUEndTime>=c.GPUStartTime){first=std::min(first,c.GPUStartTime);last=std::max(last,c.GPUEndTime);}
+    };
+    observe(command);
+    for(id<MTLCommandBuffer> prior in impl_->submitted) {
+        [prior waitUntilCompleted];observe(prior);
+        if(prior.status!=MTLCommandBufferStatusCompleted){success=false;if(!failure)failure=prior.error.localizedDescription;}
+    }
+    // One observed GPU span, including inter-command gaps; never sum overlaps.
+    impl_->gpuMs=success&&std::isfinite(first)?(last-first)*1000.0:0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=success;}
-    impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
-    if(!success)throw std::runtime_error(command.error ?
-        std::string(command.error.localizedDescription.UTF8String):"Metal execution did not complete");
+    impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;impl_->submitted=nil;
+    if(!success)throw std::runtime_error(failure?std::string(failure.UTF8String):"Metal execution did not complete");
     }
 }
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
+    // Flushed work may already be executing. Drain it before exposing buffers
+    // for reset/reuse; the uncommitted continuation is discarded.
+    for(id<MTLCommandBuffer> prior in impl_->submitted)[prior waitUntilCompleted];
+    impl_->submitted=nil;impl_->partialSubmissions=0;
     impl_->joinedPrefillPairs=0;
     impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}

@@ -19,6 +19,7 @@ X::Value TensorValue(X3PackageHost* host,MetalContext& gpu,const MetalMatrix& ma
 }
 }
 void MetalDecoderSession::Clear() {
+    prefillPartialSubmissions_=0;
     dirtyPrefixResetBytes_=dirtyPrefixResetStates_=dirtyPrefixResetFallbackStates_=0;
     joinedPrefillPairs_=0;
     constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;
@@ -27,6 +28,7 @@ void MetalDecoderSession::Clear() {
 }
 void MetalDecoderSession::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 void MetalDecoderSession::ResetUnlocked() {
+    prefillPartialSubmissions_=0;
     joinedPrefillPairs_=0;
     constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;
     if(!gpu_)throw std::logic_error("Metal session is closed");
@@ -158,6 +160,7 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         const auto& slot=layers[0]->slots_[layers[0]->inputs_[0]];
         hidden_=gpu_->Allocate(slot.rows,slot.columns);
     }
+    prefillPartialSubmissions_=0;
     const auto prepared=std::chrono::steady_clock::now();
     prepareMs_=std::chrono::duration<double,std::milli>(prepared-start).count();
     kvInplaceUpdates_=0;constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;poisoned_=true;gpu_->Begin();
@@ -195,6 +198,9 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
             for(size_t k=0;k<2;++k)if(!inplace[k]&&!graph->SwapOutputStorage(k+1,states_[i].matrix[k]))
                 gpu_->EncodeSliceGroups(graph->slots_[graph->outputParts_[k+1]].matrix,
                     states_[i].matrix[k],1,states_[i].columns[k],0,states_[i].columns[k]);
+#ifdef GARNET_METAL_PREFILL_STREAM
+            if(chunk>1&&(i+1)%4==0&&i+1<layers.size())gpu_->Flush();
+#endif
         }
         const size_t hiddenWidth=size_t(inputShape[0].back())*chunk;
         gpu_->EncodeSliceGroups(current,hidden_,1,hiddenWidth,0,hiddenWidth);
@@ -208,8 +214,9 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         const auto encoded=std::chrono::steady_clock::now();
         encodeMs_=std::chrono::duration<double,std::milli>(encoded-prepared).count();
         gpu_->SubmitAndWait();gpuMs_=gpu_->LastGPUMs();joinedPrefillPairs_=gpu_->LastJoinedPrefillPairs();constantHeadDispatches_=gpu_->LastConstantHeadDispatches();singleCoderHeadDispatches_=gpu_->LastSingleCoderHeadDispatches();residualNormDispatches_=gpu_->LastResidualNormDispatches();packedPrefillNormDispatches_=gpu_->LastPackedPrefillNormDispatches();globalHalfAlphaDispatches_=gpu_->LastGlobalHalfAlphaDispatches();joinedGlobalMlpBlocks_=gpu_->LastJoinedGlobalMlpBlocks();
+        prefillPartialSubmissions_=gpu_->LastPartialSubmissions();
         waitMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-encoded).count();
-    }catch(...){kvInplaceUpdates_=0;joinedPrefillPairs_=0;constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;gpu_->Abort();throw;}
+    }catch(...){prefillPartialSubmissions_=0;kvInplaceUpdates_=0;joinedPrefillPairs_=0;constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;gpu_->Abort();throw;}
     hiddenShape_=inputShape[0];
     auto result=X::Value::List(Host());
     if(predictionToken>=0) {

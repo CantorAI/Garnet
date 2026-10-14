@@ -79,6 +79,9 @@ public:
     // Caller proves the remaining logical elements are already positive zero.
     void ZeroPrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t dirtyTokens);
     void Begin();
+    // Commit an ordered partial batch and continue encoding without CPU wait.
+    void Flush();
+    size_t LastPartialSubmissions() const;
     void EncodeMatMul(const MetalMatrix& left, const MetalMatrix& right,
         const MetalMatrix& output, bool transposeRight = false);
     void EncodeRMSNorm(const MetalMatrix& input, const MetalMatrix& weight,

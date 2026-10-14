@@ -57,6 +57,8 @@ try:
             clock='time.monotonic',initialization_seconds=initialization,ttft_seconds=ttft,total_seconds=total,
             token_ids=output,text=[tokenizer.decode(o) for o in output],finished=[not a for a in active],
             reset_seconds=reset_seconds,
+            prefill_stream_enabled='prefill_stream' in garnet.backend_info(),
+            decode_partial_submissions=decoder.session.prefill_partial_submissions if 'prefill_stream' in garnet.backend_info() else 0,
             dirty_prefix_reset_enabled='dirty_prefix_reset' in garnet.backend_info(),
             dirty_prefix_reset_bytes=decoder.session.dirty_prefix_reset_bytes if 'dirty_prefix_reset' in garnet.backend_info() else 0,
             dirty_prefix_reset_states=decoder.session.dirty_prefix_reset_states if 'dirty_prefix_reset' in garnet.backend_info() else 0,

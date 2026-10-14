@@ -79,6 +79,8 @@ try:
             prefill_profile=decoder.prefill_profile,prefill_inference_ms=decoder.prefill_inference_ms,
             prefill_chunk_plan=decoder.prefill_chunk_plan,
             reset_seconds=reset_seconds,
+            prefill_stream_enabled='prefill_stream' in garnet.backend_info(),
+            decode_partial_submissions=decoder.session.prefill_partial_submissions if 'prefill_stream' in garnet.backend_info() else 0,
             dirty_prefix_reset_enabled='dirty_prefix_reset' in garnet.backend_info(),
             dirty_prefix_reset_bytes=decoder.session.dirty_prefix_reset_bytes if 'dirty_prefix_reset' in garnet.backend_info() else 0,
             dirty_prefix_reset_states=decoder.session.dirty_prefix_reset_states if 'dirty_prefix_reset' in garnet.backend_info() else 0,
