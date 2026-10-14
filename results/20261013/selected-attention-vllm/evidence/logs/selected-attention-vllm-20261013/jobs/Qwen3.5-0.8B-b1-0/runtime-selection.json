@@ -1,0 +1,14 @@
+{
+  "scope": "Proposed library selection for the next actual matched-FP32 vLLM study; not a new comparator result or general serving promotion",
+  "basis": "Repeated native warm-TTFT gains; no demonstrated decode improvement",
+  "models": {
+    "Qwen3-0.6B": {"1": "candidate", "2": "candidate"},
+    "Qwen2.5-Coder-0.5B-Instruct": {"1": "candidate", "2": "candidate"},
+    "Qwen3.5-0.8B": {"1": "candidate", "2": "control"}
+  },
+  "builds": {
+    "candidate": {"directory": "build-attention-prefix", "sha256": "f2c5c448ec4f3c8431be37b48a2634d8fa4cc31de4aa163ec367a319c9263088", "attention_prefix_enabled": true},
+    "control": {"directory": "build-resident-kv-inplace", "sha256": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2", "attention_prefix_enabled": false}
+  },
+  "overall_goal_status": "Unmet; new actual sequential comparator runs and further optimization are required"
+}

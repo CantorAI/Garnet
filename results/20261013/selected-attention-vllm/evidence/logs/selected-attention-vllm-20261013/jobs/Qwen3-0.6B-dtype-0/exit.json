@@ -1,0 +1,12 @@
+{
+  "name": "Qwen3-0.6B-dtype-0",
+  "command": [
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/audit_comparator_dtypes.py",
+    "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+    "float32",
+    ".30"
+  ],
+  "exit_code": 0,
+  "interruption": null
+}

@@ -18,17 +18,21 @@ reasons. Component speedups are not full-model speedups.
 | Bounded joined MPS prefill integration | Test the two repeated component shapes in actual trained layers and complete inference | Default-OFF experiment retained. All checks and 96 complete requests pass; warm TTFT falls 2.68% for text B2 and 2.14% for coder B1 in confirmation, with higher RSS and substantially worse first-use TTFT. Primary serving library unchanged. [Report](joined-prefill/README.md) |
 | Common frame RGB copy elision | Remove redundant full-image copies before both inference runtimes | Retained exact-input CPU simplification, no added production dependency. Preparation saves a few ms in two scans; 48 matched native/vLLM requests do not establish a useful end-to-end TTFT gain. OpenCV route not selected; B1 decode/half-TTFT targets remain unmet. [Report](frame-frontend/README.md) |
 | FP32 vision softmax/value fusion | Remove the probability output matrix and following value-contraction dispatch | Default-OFF experiment retained. Two component runs are bit-exact and 12–19% faster at serving shapes; all 18 handoff stages and 48 complete frame outputs pass. B2 warm TTFT reduction repeats at 1.24–1.43%; B1's initial 2.61% becomes 0.22% in confirmation. No decode improvement or new vLLM claim; primary library unchanged. [Report](vision-fused-context/README.md) |
-| GPU-verified contiguous attention slots | Replace repeated latest-writer scans when actual prompt controls form a consecutive active prefix | Optional candidate retained. 1,008 component comparisons, 16 validation stages and 144 clean model outputs pass. Warm TTFT gains repeat for text/coder B1/B2 and VL B1 (confirmation 3–7%); VL B2 remains inconclusive. No decode improvement or new vLLM result. Disk-full timing is discarded; 15.17 GiB of verified derived matrix copies were cleaned with checkpoint/source/evidence preserved. [Report](attention-prefix/README.md) |
+| GPU-verified contiguous attention slots | Replace repeated latest-writer scans when actual prompt controls form a consecutive active prefix | Optional candidate retained. 1,008 component comparisons, 16 validation stages and 144 clean model outputs pass. Warm TTFT gains repeat for text/coder B1/B2 and VL B1 (confirmation 3–7%); VL B2 remains inconclusive and uses the control in the fresh comparator. No established decode improvement. Disk-full timing is discarded; 15.17 GiB of verified derived matrix copies were cleaned with checkpoint/source/evidence preserved. [Report](attention-prefix/README.md), [fresh comparator](selected-attention-vllm/README.md) |
 
 Earlier retained prefill/recurrence methods and rejected alternatives have
 their own reports in this directory. This table is a current decision index,
 not an exhaustive list of all historical attempts or an attribution of the
 entire advantage over vLLM-Metal.
 
-The [latest actual comparator report](retained-prefill-vllm/README.md)
+The [latest actual comparator report](selected-attention-vllm/README.md)
 records six warm profiles and 72 complete matched output sequences. B1
-decode ratios are 1.510–1.846; B2 ratios are 2.289–2.610. Every TTFT fraction
+decode ratios are 1.527–1.824; B2 ratios are 2.075–2.552. Every TTFT fraction
 is above 0.5. The all-profile 2x decode / half-TTFT goal remains unmet.
+Batch-1 decode needs another 9.6–30.9% speedup; all-profile TTFT needs
+another 18.6–47.9% reduction. Garnet's setup is faster, but its first request
+after setup is slower in all six profiles; these intervals are reported
+separately from warm latency.
 
 These are additional matched-FP32 measurements, with identical learned
 values, prompts, image bytes, capacities, caps and stopping rules. Garnet
