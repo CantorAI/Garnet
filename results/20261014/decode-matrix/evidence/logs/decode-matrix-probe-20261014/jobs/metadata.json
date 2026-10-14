@@ -1,0 +1,16 @@
+{
+  "scope": "Real BF16 learned values and FP32 math; changed reduction order; component only",
+  "numerical_bounds": "5e-6+5e-5*abs(control); both versus FP64 with gamma(ceil(K/32)+32)*sumabs+1e-7",
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "eac7db4ad0482d4a08adfdc3a9ebdfd52c28f636c7f601b72938343c7e9dbd59",
+    "test2026/metal/decode_wide_outputs_gpu.mm": "bb578c512d352224417591c60f8576bada476b4733c8850643d72645bbc763be",
+    "test2026/metal/make_decode_matrix_probe.py": "6a27678afdd421764d1ca0e8c4ff924f6dafced980b891e95ef01efe846afed8",
+    "test2026/metal/prepare_decode_tile_probe.py": "787166c08791d675ecc1cea030f0d94e8b8daf150dc6a4490749e3ceb45b5059",
+    "test2026/metal/run_decode_matrix_probe.py": "2b171580c32b6d7da456e683394680b3bc1aa8abd53f511877dce6f4fe55a723",
+    "test2026/metal/compare_vllm_metal.py": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  }
+}

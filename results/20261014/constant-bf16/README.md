@@ -1,4 +1,4 @@
-# Constant-address BF16 weights: repeated head signal, native trial pending
+# Constant-address BF16 weights: no useful native decode gain
 
 The component changes only the original shader's weight address-space
 qualifier from device-readonly to constant, including its ushort4 casts.
@@ -60,8 +60,9 @@ then completed three sequential B1 comparisons against retained attention.
 All 36 complete outputs match, and candidate dispatch counters equal 1
 versus control 0. Its directory is
 `ROOT/logs/constant-head-native-20261014`; its exit code is 0. Both owned
-jobs are terminal and must not be restarted. Full raw native evidence still
-needs archiving; `native/initial-summary.json` captures this initial result.
+jobs are terminal and must not be restarted. Full raw native evidence is
+archived in `native/evidence`; `native/initial-summary.json` captures this
+initial result and `native/verification.json` independently audits it.
 
 | Initial native B1 result | Control → candidate TPS | Control → candidate TTFT |
 | --- | ---: | ---: |
@@ -106,3 +107,9 @@ source/shader/binary identities, sample counts, exact/FP64/padding gates,
 common warm durations and recomputed means. Raw evidence retains its byte
 identities. The two derived component reports are `summary.json` and
 `confirmation/summary.json`.
+
+Native archive SHA-256:
+`d186619c05a5e22d6bf0bff0a71453b7e8d5065260fc0640510da0df9d745575`
+(293 files). The local verifier checks all file hashes, 19 validation stages,
+36 complete outputs, actual dispatch counts, input identities, fresh image
+encoding, library identities and independently recomputed warm means.

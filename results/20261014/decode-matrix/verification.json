@@ -1,0 +1,12 @@
+{
+  "verified_files": 41,
+  "matrix_fixtures": 34,
+  "reference_checks": 136,
+  "timing_windows": 1088,
+  "fp64_worst_ratio": 0.0460314187,
+  "pooled_gpu_fractions": {
+    "bf16_decode_matrix8": 1.8099328216468655,
+    "bf16_gemm": 2.4792508194202623
+  },
+  "full_model_gain_established": false
+}
