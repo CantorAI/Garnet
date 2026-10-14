@@ -47,6 +47,9 @@ successful submission. Worker logs capture the feature marker and actual
 last-session dispatch count after the timed request has completed.
 
 The isolated candidate builds and passes native CTest. Trained text tail
+Candidate library SHA-256 is
+`df1c1912b2daf40c86925d323747d60db6a4950723ac04562f06854da1c7aaa3`.
+Trained text tail
 checks have passed; the rest of the 19-stage trained-model/cache/vision
 validation remains running in owned PID **10827**, directory
 `ROOT/logs/constant-head-checks-20261014`. Historical build/CTest snapshots
