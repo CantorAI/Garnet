@@ -1,0 +1,189 @@
+{
+  "files": {
+    "logs/reused-zero-source-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "45749d99e3cfe9d194f4f00fef7fd1969ab2789c5e158d4d4fcebb3854233e90"
+    },
+    "logs/reused-zero-source-20261015/jobs/background_service_checks.json": {
+      "bytes": 12613,
+      "sha256": "cdd981f09060edf1f8e697376f95586ce7f37a860d433f4cf90cde90808aa3ce"
+    },
+    "logs/reused-zero-source-20261015/jobs/compile-monitor.json": {
+      "bytes": 234,
+      "sha256": "95cec243425ab0d923e84db21edd0f3255872e34844e5168a759f6a033aa0627"
+    },
+    "logs/reused-zero-source-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "logs/reused-zero-source-20261015/jobs/gpu-monitor.json": {
+      "bytes": 768,
+      "sha256": "d44a65dba7410b287c2e38676c6310a5bb4bea9832a2f510082be12d88c9b037"
+    },
+    "logs/reused-zero-source-20261015/jobs/gpu.log": {
+      "bytes": 42082,
+      "sha256": "89fe397c72eb65f4e1216237051b0f02b61c1a9ba6c48c647910528e8e19f265"
+    },
+    "logs/reused-zero-source-20261015/jobs/metadata.json": {
+      "bytes": 12253,
+      "sha256": "0b27423441634854de1e0f4726dd95c3174bfe68d46d686595ee3a231eaa825f"
+    },
+    "logs/reused-zero-source-20261015/jobs/profiles.tsv": {
+      "bytes": 2169,
+      "sha256": "4f2caa5a8fc96a5b069b2c9ae71f7bc41e97e24ea565ea05a198a1516bc1c812"
+    },
+    "logs/reused-zero-source-20261015/jobs/source-snapshot/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "logs/reused-zero-source-20261015/jobs/source-snapshot/joint_state_zero_gpu.mm": {
+      "bytes": 6028,
+      "sha256": "b15aade1848ca2e7d86072a60c22e4be7356add9bc0473ff7466e60fd9f1bb5f"
+    },
+    "logs/reused-zero-source-20261015/jobs/source-snapshot/make_reused_zero_source_probe.py": {
+      "bytes": 750,
+      "sha256": "3bc5eeb0c5bf8aa461593311b7182d0dbcf6c34a0dd6c93c2afa5a3acf5f6b87"
+    },
+    "logs/reused-zero-source-20261015/jobs/source-snapshot/reused_zero_source_gpu.mm": {
+      "bytes": 6207,
+      "sha256": "a86f053f1770e4b0aeb8fe88877716006ee6cf565a394f761e9b1f024fc96ccb"
+    },
+    "logs/reused-zero-source-20261015/jobs/source-snapshot/run_decode_subsimd_probe.py": {
+      "bytes": 5285,
+      "sha256": "422b2a307a8678a5ffe96bfe09b94607f13c151d17413dba16f1c0e3d6e011da"
+    },
+    "logs/reused-zero-source-20261015/jobs/source-snapshot/run_joint_state_zero_probe.py": {
+      "bytes": 3742,
+      "sha256": "9e4e9a5095390fe0db96db37eba7e7e20ef376b9c00d9308649a19588680f051"
+    },
+    "logs/reused-zero-source-20261015/jobs/source-snapshot/run_reused_zero_source_probe.py": {
+      "bytes": 1311,
+      "sha256": "9d8f12eb77e12c00027874dba0c514631179bd7de3d22a5a14ec6df8b8b4bc11"
+    },
+    "logs/reused-zero-source-20261015/jobs/statuses.json": {
+      "bytes": 794,
+      "sha256": "fef1f401c729936b4186116f572c44065125ebaf09a3f2f3a3ebd3285958ffc3"
+    },
+    "logs/reused-zero-source-20261015/jobs/summary.json": {
+      "bytes": 4178,
+      "sha256": "6bedb681c09665db5cadac4d1500701e6f4fda0c165ca15cd254525429074f5f"
+    },
+    "logs/reused-zero-source-20261015/output.log": {
+      "bytes": 2822,
+      "sha256": "47fb1641253cd5cf5f8ca9d4a6f8bdd030b1e14d11b0308388b5ac20635351a6"
+    },
+    "logs/reused-zero-source-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "fccbaaba8a3b5f9bfaba20b5d3a60af90ac8da47ae75eafe5b493c2db032294f"
+    },
+    "logs/reused-zero-source-confirm-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "f6ca284fd0e38fee0954246c2ceecd7f883b2d869a705ff3d24a4bbf0d28c279"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/background_service_checks.json": {
+      "bytes": 12616,
+      "sha256": "d27b52e1a0eb8876242a7a678f39604d43659db863490d7d51f96602598abcef"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/compile-monitor.json": {
+      "bytes": 235,
+      "sha256": "644ac57cac0df357907e8231da73179d8ff525a5de45a0a66b6b22cf8acc047d"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/gpu-monitor.json": {
+      "bytes": 768,
+      "sha256": "53df339e582614155ed206771081ff22049f59c59ac93c2f6877eb324a25b6b2"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/gpu.log": {
+      "bytes": 42185,
+      "sha256": "7a0d945c17993433eee5800e6cb5c2489c799df45ca054070d59aea3ba3bb480"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/metadata.json": {
+      "bytes": 12253,
+      "sha256": "0b27423441634854de1e0f4726dd95c3174bfe68d46d686595ee3a231eaa825f"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/profiles.tsv": {
+      "bytes": 2169,
+      "sha256": "4f2caa5a8fc96a5b069b2c9ae71f7bc41e97e24ea565ea05a198a1516bc1c812"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/source-snapshot/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/source-snapshot/joint_state_zero_gpu.mm": {
+      "bytes": 6028,
+      "sha256": "b15aade1848ca2e7d86072a60c22e4be7356add9bc0473ff7466e60fd9f1bb5f"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/source-snapshot/make_reused_zero_source_probe.py": {
+      "bytes": 750,
+      "sha256": "3bc5eeb0c5bf8aa461593311b7182d0dbcf6c34a0dd6c93c2afa5a3acf5f6b87"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/source-snapshot/reused_zero_source_gpu.mm": {
+      "bytes": 6207,
+      "sha256": "a86f053f1770e4b0aeb8fe88877716006ee6cf565a394f761e9b1f024fc96ccb"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/source-snapshot/run_decode_subsimd_probe.py": {
+      "bytes": 5285,
+      "sha256": "422b2a307a8678a5ffe96bfe09b94607f13c151d17413dba16f1c0e3d6e011da"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/source-snapshot/run_joint_state_zero_probe.py": {
+      "bytes": 3742,
+      "sha256": "9e4e9a5095390fe0db96db37eba7e7e20ef376b9c00d9308649a19588680f051"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/source-snapshot/run_reused_zero_source_probe.py": {
+      "bytes": 1311,
+      "sha256": "9d8f12eb77e12c00027874dba0c514631179bd7de3d22a5a14ec6df8b8b4bc11"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/statuses.json": {
+      "bytes": 818,
+      "sha256": "2c314ffa04aa9b784253663d94892438ae2199503c6527e6b0d5171721b563d4"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/summary.json": {
+      "bytes": 4156,
+      "sha256": "b2ca69678fd9e087026eabe1a7785a1f5fdf92023159e4698f442ff48d57442f"
+    },
+    "logs/reused-zero-source-confirm-20261015/output.log": {
+      "bytes": 2800,
+      "sha256": "1761cdd20741a60bebbdaf8159adfd1bc5f4fbd155369cc2ccccb26c67471f8e"
+    },
+    "logs/reused-zero-source-confirm-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "ebc516ca8bdb01b5b8c0c54c49c8af4b2d57a07693ac07583c9fd5c8e9449fcf"
+    },
+    "models/Qwen2.5-Coder-0.5B-Instruct/config.json": {
+      "bytes": 659,
+      "sha256": "b1e58593cd31852f7da5c2fc31ddf6135b9c066c0fd9177a4bbe95717083adff"
+    },
+    "models/Qwen3-0.6B/config.json": {
+      "bytes": 726,
+      "sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+    },
+    "models/Qwen3.5-0.8B/config.json": {
+      "bytes": 2907,
+      "sha256": "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204"
+    }
+  },
+  "jobs": {
+    "reused-zero-source-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 9.283776124939322
+    },
+    "reused-zero-source-confirm-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 9.191497624851763
+    }
+  },
+  "omitted": {
+    "logs/reused-zero-source-20261015/jobs/reused_zero_source_gpu": {
+      "bytes": 57064,
+      "sha256": "f0bd67138c2d9e7fd0178a956748fc146ce787f369a6b9bff0f5a1d01bab2f5f"
+    },
+    "logs/reused-zero-source-confirm-20261015/jobs/reused_zero_source_gpu": {
+      "bytes": 57064,
+      "sha256": "f0bd67138c2d9e7fd0178a956748fc146ce787f369a6b9bff0f5a1d01bab2f5f"
+    }
+  },
+  "scope": "Reset/read component only; no inference or comparator evidence"
+}
