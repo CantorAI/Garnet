@@ -20,6 +20,12 @@ for p in (root/'logs/fused-head-argmax-original-source-20261015').rglob('*'):
 helpers=('archive_fused_head_argmax_inference.py','run_guarded_fused_head_argmax_checks.py','launch_fused_head_argmax_checks.py','run_guarded_global_half_alpha_checks.py','run_global_half_alpha_checks.py','run_direct_state_zero_checks.py','run_joined_prefill_checks.py','resume_packed_prefill_norm_checks.py','run_fused_head_session_checks.py','test_fused_head_session_reference.py','run_fused_head_session_reference.py','compare_fused_head_argmax.py','compare_vision_global_alpha.py','run_fused_head_argmax_profiles.py','run_vision_global_alpha_profiles.py','run_matched_frame_process.py','compare_vllm_metal.py','test_prefix_reset_session_reference.py')
 for name in helpers:
     p=root/'source/test2026/metal'/name;entries[str(p.relative_to(root))]=p
+# Preserve validation drivers and model implementations as well as the changed
+# source. Never include checkpoint arrays or unrelated workspace locations.
+for directory in ('source/xModel','source/src/backends/metal','source/test2026/metal'):
+    for p in (root/directory).rglob('*'):
+        if p.is_file() and p.suffix in ('.py','.cpp','.mm','.h','.metal'):
+            entries[str(p.relative_to(root))]=p
 for p in staging.glob('*.json'):entries[str(p.relative_to(root))]=p
 libraries={name:digest(root/name/'libgarnet.dylib') for name in ('build-fused-head-argmax','build-global-half-alpha')}
 assert libraries['build-global-half-alpha']=='887b70f521d5af7f948bcb32a2cf94842377e2ecb828bc9280ffb38af6fe058f'
