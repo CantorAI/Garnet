@@ -1,0 +1,15 @@
+{
+  "scope": "Native decode native-BF16 conversion/dot component experiment only, not serving or vLLM timing",
+  "precision": "Exact BF16 weights, FP32 input/accumulation/output, serial unchanged/dot reassociated sums; independent FP64 reference; no quantization",
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "source_sha256": {
+    "metal_context.mm": "3dc37728607efd57c1d70a5d28a3a00dfce9787e6072f7b4e33ceb7e484d74f9",
+    "native_bfloat_decode_gpu.mm": "54740050152b8de509bd5d8843ea4b3b4e64dc5976bad024fd07225e7fd3b44b",
+    "make_native_bfloat_decode_shader.py": "bb7c8e60aee499d20774ea6798aab2f67b666e6f509c6ca9d744a13b7734e69f",
+    "prepare_decode_tile_probe.py": "787166c08791d675ecc1cea030f0d94e8b8daf150dc6a4490749e3ceb45b5059",
+    "run_native_bfloat_decode_probe.py": "eea9d6b24d0dd45df49d22a2be735ea254f79657b8e7d43e0f1867a517a996ba"
+  }
+}

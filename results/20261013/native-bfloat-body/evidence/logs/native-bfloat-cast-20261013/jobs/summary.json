@@ -1,0 +1,19 @@
+{
+  "scope": "GPU exhaustive finite native BF16 cast check; component only.",
+  "execution_exit_code": 0,
+  "checks": [
+    {
+      "kind": "summary",
+      "tested": 65280,
+      "fast_math": false,
+      "bit_mismatches": 0
+    },
+    {
+      "kind": "summary",
+      "tested": 65280,
+      "fast_math": true,
+      "bit_mismatches": 0
+    }
+  ],
+  "serving_changed": false
+}

@@ -78,3 +78,9 @@ if(GARNET_METAL_XMODEL)
     target_compile_definitions(garnet PRIVATE GARNET_WITH_METAL=1 XLANG3_USE_SHARED=1)
     target_link_libraries(garnet PRIVATE garnet_metal "${GARNET_XLANG3_RUNTIME_LIBRARY}")
 endif()
+
+# Experimental decode-only native BF16 body route; default control unchanged.
+option(GARNET_METAL_NATIVE_BFLOAT_BODY "Test native BF16 serial/dot body projections" OFF)
+if(GARNET_METAL_NATIVE_BFLOAT_BODY)
+    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_NATIVE_BFLOAT_BODY=1)
+endif()

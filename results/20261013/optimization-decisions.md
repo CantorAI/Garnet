@@ -13,6 +13,7 @@ reasons. Component speedups are not full-model speedups.
 | Dual-accumulator vocabulary head | Reduce dependent accumulation in the large output projection | Rejected. A 7.3–8.6% component signal did not improve actual affected text B1 decode (ratio 0.99867). Production files restored. [Report](dual-text-head/README.md) |
 | Transposed exact-half MPS weights | Improve MPS prefill access without altering encoded values | Not promoted. Component output checks passed, but text/coder B1 gains did not repeat. [Report](transpose-half-prefill/README.md) |
 | Extended exact-half scales for first VL QKV | Admit the sole excluded linear-attention QKV matrix without rounding its tiny rows | Experimental only. Codec is exact; naive rescaling loses a subnormal result. Bit-based reconstruction passes targeted checks but adds cost; hybrid reconstruction regresses most shapes and is flat at 80 rows. No serving promotion. [Report](extended-half-scale/README.md) |
+| Native BF16 body loads / vector dots | Test compiler-generated conversion and shorter accumulation dependency without weight repacking | Default-OFF experiment retained, primary build unchanged. All validation and 120 complete requests pass. Repeated text/VL decode gains are 0.5–2.8%, with slightly worse confirmation TTFT; coder flat. [Report](native-bfloat-body/README.md) |
 
 Earlier retained prefill/recurrence methods and rejected alternatives have
 their own reports in this directory. This table is a current decision index,

@@ -41,6 +41,9 @@ struct MetalPipelines {
     id<MTLComputePipelineState> argmax;
     id<MTLComputePipelineState> bf16Decode,bf16DecodeSmall,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
     id<MTLComputePipelineState> bf16Split,bf16SplitReduce;
+#ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
+    id<MTLComputePipelineState> nativeBFSerial,nativeBFDot;
+#endif
     id<MTLComputePipelineState> halfRescale;
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
@@ -955,7 +958,78 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
 }
 )METAL"];
         NSError* error=nil;
-        auto library=[impl_->device newLibraryWithSource:source options:nil error:&error];
+        MTLCompileOptions* compileOptions=nil;
+#ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
+        source=[source stringByAppendingString:[NSString stringWithUTF8String:R"METAL(
+kernel void bf16_native_serial_t64(device const float* a [[buffer(0)]],device const bfloat* weight [[buffer(1)]],
+    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
+    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
+    ulong column=ulong(group)*8+simd*4;
+    if(column>=p.columns)return;
+    float4 sum0=0.0f,sum1=0.0f;
+    if(p.inner%4==0) {
+        for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
+            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
+            bfloat4 b0=*(device const bfloat4*)(weight+column*p.inner+k),b1=bfloat4(0),b2=bfloat4(0),b3=bfloat4(0);
+            if(column+1<p.columns)b1=*(device const bfloat4*)(weight+(column+1)*p.inner+k);
+            if(column+2<p.columns)b2=*(device const bfloat4*)(weight+(column+2)*p.inner+k);
+            if(column+3<p.columns)b3=*(device const bfloat4*)(weight+(column+3)*p.inner+k);
+            for(uint j=0;j<4;++j) {
+                float4 w=float4(float(b0[j]),float(b1[j]),float(b2[j]),float(b3[j]));
+                sum0+=x[j]*w;if(p.rows==2)sum1+=y[j]*w;
+            }
+        }
+    } else {
+    for(ulong k=lane;k<p.inner;k+=32) {
+        float x=a[k],y=p.rows==2?a[p.aStride+k]:0.0f;
+        float4 w=0.0f;
+        w.x=float(weight[column*p.inner+k]);
+        if(column+1<p.columns)w.y=float(weight[(column+1)*p.inner+k]);
+        if(column+2<p.columns)w.z=float(weight[(column+2)*p.inner+k]);
+        if(column+3<p.columns)w.w=float(weight[(column+3)*p.inner+k]);
+        sum0+=x*w;if(p.rows==2)sum1+=y*w;
+    }
+    }
+    sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
+    sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
+    if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
+}
+kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device const bfloat* weight [[buffer(1)]],
+    device float* out [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
+    uint group [[threadgroup_position_in_grid]],uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
+    ulong column=ulong(group)*16+simd*4;
+    if(column>=p.columns)return;
+    float4 sum0=0.0f,sum1=0.0f;
+    if(p.inner%4==0) {
+        for(ulong k=ulong(lane)*4;k<p.inner;k+=128) {
+            float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0.0f);
+            bfloat4 b0=*(device const bfloat4*)(weight+column*p.inner+k),b1=bfloat4(0),b2=bfloat4(0),b3=bfloat4(0);
+            if(column+1<p.columns)b1=*(device const bfloat4*)(weight+(column+1)*p.inner+k);
+            if(column+2<p.columns)b2=*(device const bfloat4*)(weight+(column+2)*p.inner+k);
+            if(column+3<p.columns)b3=*(device const bfloat4*)(weight+(column+3)*p.inner+k);
+            float4 w0=float4(b0),w1=float4(b1),w2=float4(b2),w3=float4(b3);
+            sum0+=float4(dot(x,w0),dot(x,w1),dot(x,w2),dot(x,w3));
+            if(p.rows==2)sum1+=float4(dot(y,w0),dot(y,w1),dot(y,w2),dot(y,w3));
+        }
+    } else {
+    for(ulong k=lane;k<p.inner;k+=32) {
+        float x=a[k],y=p.rows==2?a[p.aStride+k]:0.0f;
+        float4 w=0.0f;
+        w.x=float(weight[column*p.inner+k]);
+        if(column+1<p.columns)w.y=float(weight[(column+1)*p.inner+k]);
+        if(column+2<p.columns)w.z=float(weight[(column+2)*p.inner+k]);
+        if(column+3<p.columns)w.w=float(weight[(column+3)*p.inner+k]);
+        sum0+=x*w;if(p.rows==2)sum1+=y*w;
+    }
+    }
+    sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
+    sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));
+    if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum0[j];if(p.rows==2)out[p.oStride+column+j]=sum1[j];}
+}
+)METAL"]];
+        compileOptions=[MTLCompileOptions new];compileOptions.languageVersion=MTLLanguageVersion3_1;
+#endif
+        auto library=[impl_->device newLibraryWithSource:source options:compileOptions error:&error];
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
@@ -964,6 +1038,11 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
         if(!impl_->kernels->kvInplace)throw std::runtime_error("Cannot create private KV update pipeline");
 #endif
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
+#ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
+        impl_->kernels->nativeBFSerial=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_native_serial_t64"] error:&error];
+        impl_->kernels->nativeBFDot=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_native_dot_t128"] error:&error];
+        if(!impl_->kernels->nativeBFSerial||!impl_->kernels->nativeBFDot)throw std::runtime_error("Cannot create native BF16 body pipelines");
+#endif
 #ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
         impl_->kernels->bf16DecodeSmall=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_small"] error:&error];
         if(!impl_->kernels->bf16DecodeSmall)throw std::runtime_error("Cannot create small-output decode pipeline");
@@ -1196,6 +1275,14 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
 #ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
         if(a.rows<=2&&o.columns<=256&&impl_->kernels->bf16DecodeSmall.threadExecutionWidth==32&&impl_->kernels->bf16DecodeSmall.maxTotalThreadsPerThreadgroup>=64) {
             pipeline=impl_->kernels->bf16DecodeSmall;threads=64;decodeColumns=4;
+        }
+#endif
+#ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
+        // Preserve the small-output and vocabulary-head kernels. Native BF16
+        // body weights retain their original bytes, with FP32 arithmetic.
+        if(a.rows<=2&&a.columns%4==0&&o.columns>256&&o.columns<100000) {
+            pipeline=a.rows==1?impl_->kernels->nativeBFSerial:impl_->kernels->nativeBFDot;
+            threads=a.rows==1?64:128;decodeColumns=a.rows==1?8:16;
         }
 #endif
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)
