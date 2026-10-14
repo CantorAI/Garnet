@@ -1,0 +1,125 @@
+{
+  "scope": "Separate measured intervals; no synthetic hardware-cold sum",
+  "profiles": [
+    {
+      "run": "webp-thread-inference-20261013",
+      "batch": 1,
+      "backend": "garnet",
+      "observations": {
+        "selected": {
+          "warm_ttft_ms": 208.1984163960442,
+          "warm_tps_per_row": 48.24608291126425,
+          "warm_tps_aggregate": 48.24608291126425,
+          "warm_preparation_ms": 45.75431230477989,
+          "first_request_ttft_ms": 351.98887530714273,
+          "worker_initialization_seconds": 4.002182208467275,
+          "frontend_setup_seconds": 0.00045924982987344265,
+          "peak_child_rss_bytes": 3618111488
+        },
+        "threaded": {
+          "warm_ttft_ms": 202.74982298724353,
+          "warm_tps_per_row": 48.2889102955656,
+          "warm_tps_aggregate": 48.2889102955656,
+          "warm_preparation_ms": 34.81913520954549,
+          "first_request_ttft_ms": 308.1556875258684,
+          "worker_initialization_seconds": 4.045566562563181,
+          "frontend_setup_seconds": 0.0014629997313022614,
+          "peak_child_rss_bytes": 3621199872
+        }
+      },
+      "warm_ttft_reduction_percent": 2.617019621530703,
+      "warm_decode_ratio": 1.0008876862476093,
+      "first_request_ttft_fraction": 0.875469962671332
+    },
+    {
+      "run": "webp-thread-inference-20261013",
+      "batch": 1,
+      "backend": "vllm-metal",
+      "observations": {
+        "selected": {
+          "warm_ttft_ms": 262.461666832678,
+          "warm_tps_per_row": 26.301502037728994,
+          "warm_tps_aggregate": 26.301502037728994,
+          "warm_preparation_ms": 47.169926809147,
+          "first_request_ttft_ms": 309.2105835676193,
+          "worker_initialization_seconds": 33.2596624372527,
+          "frontend_setup_seconds": 0.0003350831102579832,
+          "peak_child_rss_bytes": 5922529280
+        },
+        "threaded": {
+          "warm_ttft_ms": 251.14712526556104,
+          "warm_tps_per_row": 26.47663248521988,
+          "warm_tps_aggregate": 26.47663248521988,
+          "warm_preparation_ms": 38.18088548723608,
+          "first_request_ttft_ms": 260.72489540092647,
+          "worker_initialization_seconds": 33.12113316683099,
+          "frontend_setup_seconds": 0.001653291517868638,
+          "peak_child_rss_bytes": 5662408704
+        }
+      },
+      "warm_ttft_reduction_percent": 4.310931079444114,
+      "warm_decode_ratio": 1.0066585720937027,
+      "first_request_ttft_fraction": 0.8431952502813028
+    },
+    {
+      "run": "webp-thread-inference-20261013",
+      "batch": 2,
+      "backend": "garnet",
+      "observations": {
+        "selected": {
+          "warm_ttft_ms": 385.9512603376061,
+          "warm_tps_per_row": 44.74597977150685,
+          "warm_tps_aggregate": 89.4919595430137,
+          "warm_preparation_ms": 48.51414612494409,
+          "first_request_ttft_ms": 573.9252499770373,
+          "worker_initialization_seconds": 4.028060812503099,
+          "frontend_setup_seconds": 0.0004551457241177559,
+          "peak_child_rss_bytes": 3647094784
+        },
+        "threaded": {
+          "warm_ttft_ms": 378.8140208926052,
+          "warm_tps_per_row": 44.723647538927096,
+          "warm_tps_aggregate": 89.44729507785419,
+          "warm_preparation_ms": 38.47059374675155,
+          "first_request_ttft_ms": 542.9388955235481,
+          "worker_initialization_seconds": 4.059765853919089,
+          "frontend_setup_seconds": 0.001486895838752389,
+          "peak_child_rss_bytes": 3641720832
+        }
+      },
+      "warm_ttft_reduction_percent": 1.8492592662497476,
+      "warm_decode_ratio": 0.999500910859617,
+      "first_request_ttft_fraction": 0.946009773128593
+    },
+    {
+      "run": "webp-thread-inference-20261013",
+      "batch": 2,
+      "backend": "vllm-metal",
+      "observations": {
+        "selected": {
+          "warm_ttft_ms": 442.21509364433587,
+          "warm_tps_per_row": 17.160346962100043,
+          "warm_tps_aggregate": 34.320693924200086,
+          "warm_preparation_ms": 50.860947580076754,
+          "first_request_ttft_ms": 515.8053960185498,
+          "worker_initialization_seconds": 32.80340795847587,
+          "frontend_setup_seconds": 0.00032731262035667896,
+          "peak_child_rss_bytes": 5881053184
+        },
+        "threaded": {
+          "warm_ttft_ms": 433.7471460457891,
+          "warm_tps_per_row": 17.07423188559714,
+          "warm_tps_aggregate": 34.14846377119428,
+          "warm_preparation_ms": 37.08230180200189,
+          "first_request_ttft_ms": 456.7577501293272,
+          "worker_initialization_seconds": 33.04683022899553,
+          "frontend_setup_seconds": 0.00168110360391438,
+          "peak_child_rss_bytes": 5828952064
+        }
+      },
+      "warm_ttft_reduction_percent": 1.9148933901739107,
+      "warm_decode_ratio": 0.9949817403638112,
+      "first_request_ttft_fraction": 0.8855234040880428
+    }
+  ]
+}

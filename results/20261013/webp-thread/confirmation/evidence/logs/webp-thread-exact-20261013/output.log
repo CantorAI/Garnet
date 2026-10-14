@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_webp_thread_exact.py", line 19, in <module>
+    library=Path(sys.argv[3]).resolve();decoder=WebPDecoder(library)
+                                                ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/frame_webp_threaded.py", line 11, in __init__
+    self.library=ctypes.CDLL(str(library));self.info=self.library.garnet_webp_info;self.decode=self.library.garnet_webp_decode
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/comparators/vllm/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/ctypes/__init__.py", line 379, in __init__
+    self._handle = _dlopen(self._name, mode)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: dlopen(/Users/zsdx/garnet-metal-investigation/logs/webp-thread-probe-20261013/jobs/libwebp_thread.dylib, 0x0006): Library not loaded: /DLC/PIL/.dylibs/libwebp.7.dylib
+  Referenced from: <64DCF484-1672-3000-8F0D-55A9D64972DD> /Users/zsdx/garnet-metal-investigation/logs/webp-thread-probe-20261013/jobs/libwebp_thread.dylib
+  Reason: tried: '/DLC/PIL/.dylibs/libwebp.7.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/DLC/PIL/.dylibs/libwebp.7.dylib' (no such file), '/DLC/PIL/.dylibs/libwebp.7.dylib' (no such file)

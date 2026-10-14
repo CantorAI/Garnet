@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Qwen3.5-0.8B-dtype-0",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/audit_comparator_dtypes.py",
+      "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3.5-0.8B",
+      "float32",
+      ".45"
+    ],
+    "exit_code": 0,
+    "interruption": null
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-0",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_webp_thread_inference.py",
+      "/Users/zsdx/garnet-metal-investigation",
+      "/Users/zsdx/garnet-metal-investigation/logs/webp-thread-inference-20261013/jobs/Qwen3.5-0.8B-b1-0",
+      "Qwen3.5-0.8B",
+      "1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-0",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_webp_thread_inference.py",
+      "/Users/zsdx/garnet-metal-investigation",
+      "/Users/zsdx/garnet-metal-investigation/logs/webp-thread-inference-20261013/jobs/Qwen3.5-0.8B-b2-0",
+      "Qwen3.5-0.8B",
+      "2"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-1",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/compare_webp_thread_inference.py",
+      "/Users/zsdx/garnet-metal-investigation",
+      "/Users/zsdx/garnet-metal-investigation/logs/webp-thread-inference-20261013/jobs/Qwen3.5-0.8B-b2-1",
+      "Qwen3.5-0.8B",
+      "2"
+    ],
+    "exit_code": 0
+  }
+]

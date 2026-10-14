@@ -34,12 +34,20 @@ for folder in sorted((e/'logs').glob('webp-thread-inference*')):
     for profile in top['profiles']:
         job=folder/'jobs'/Path(profile['evidence']).name;data=json.loads((job/'summary.json').read_text());rows=data['records'];assert len(rows)==24
         metadata=json.loads((job/'metadata.json').read_text());assert metadata['frontend_bridge_sha256']==test['metadata']['library_sha256']
+        proof=json.loads((job/'exact-value-equivalence.json').read_text())
+        assert proof['all_values_bit_exact'] and all(v['all_values_bit_exact'] for v in proof['tensors'])
+        assert metadata['source_checkpoint_sha256']==proof['source_sha256'] and metadata['comparator_checkpoint_sha256']==proof['destination_sha256']
+        assert hashlib.sha256((job/'exact-value-equivalence.json').read_bytes()).hexdigest()==metadata['equivalence_proof_sha256']
         expected_library='f2c5c448ec4f3c8431be37b48a2634d8fa4cc31de4aa163ec367a319c9263088' if profile['batch']==1 else '73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2'
         assert metadata['native_library_sha256']==expected_library
         for row in rows:
-            assert all(row[k]==rows[0][k] for k in ('normalized_token_ids','prompt_token_ids','finished','patch_sha256','rgb_sha256'))
+            assert all(row[k]==rows[0][k] for k in ('normalized_token_ids','prompt_token_ids','finished','patch_sha256','rgb_sha256','case'))
             assert row['frontend_setup_seconds']>=0
-            if row['backend']=='garnet':assert row['vision_reencoded']
+            assert row['decode_steps_after_first']==max(map(len,row['normalized_token_ids']))-1
+            assert row['patch_sha256']==row['case']['image_metadata']['patch_sha256']
+            if row['backend']=='garnet':
+                assert row['vision_reencoded']
+                assert row['prefill_chunk_plan']==([80] if profile['batch']==1 else [32,32,16])
             else:assert not row['prefix_caching'] and not row['speculative_decoding'] and row['configured_model_dtype'] in ('torch.float32','float32')
         for backend in ('garnet','vllm-metal'):
             for policy in ('selected','threaded'):
@@ -52,5 +60,10 @@ for folder in sorted((e/'logs').glob('webp-thread-inference*')):
                     child=job/(backend+'-'+policy+'-'+str(repeat));assert json.loads((child/'exit.json').read_text())['exit_code']==0
                     assert json.loads((child/'monitor.json').read_text())
                     if backend=='vllm-metal':assert len({identity for v in values for identity in v['encoder_cache_identities']})==profile['batch']*3
+        for policy in ('selected','threaded'):
+            value=data['policies'][policy];means=value['means']
+            assert abs(value['decode_ratio']-means['garnet']['decode_tps']/means['vllm-metal']['decode_tps'])<1e-12
+            assert abs(value['ttft_fraction']-means['garnet']['ttft_ms']/means['vllm-metal']['ttft_ms'])<1e-12
+            assert value['decode_target_met']==(value['decode_ratio']>=2) and value['ttft_target_met']==(value['ttft_fraction']<=.5)
         native_outputs+=len(rows)
 print(json.dumps(dict(files=len(files),cpu_timed_records=cpu_records,compatibility_checks=956,complete_matched_inference_outputs=native_outputs)))
