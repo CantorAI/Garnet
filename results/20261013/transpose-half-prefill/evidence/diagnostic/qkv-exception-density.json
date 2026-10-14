@@ -1,0 +1,492 @@
+{
+  "scope": "Read-only integer admission diagnostic; no inference, change or speed claim",
+  "initial_attempt_failed": "Initial audit incorrectly assumed every largest-value row passed current scale admission. That assertion failed before writing a report; corrected audit records rejection and clamped encoding separately.",
+  "reports": [
+    {
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 14,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 138,
+      "policies": {
+        "current": {
+          "exception_weights": 14336,
+          "exception_fraction": 0.0022786458333333335,
+          "rows_with_exceptions": 14,
+          "max_exceptions_per_row": 1024,
+          "max_exception_abs": 1.1754943508222875e-37
+        },
+        "clamped": {
+          "exception_weights": 14336,
+          "exception_fraction": 0.0022786458333333335,
+          "rows_with_exceptions": 14,
+          "max_exceptions_per_row": 1024,
+          "max_exception_abs": 1.1754943508222875e-37
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.1.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.10.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.12.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 22,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.13.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 18,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.14.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 22,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.16.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.17.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.18.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.2.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.20.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 16,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.21.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.22.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.4.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.5.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.6.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 18,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.8.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 18,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    },
+    {
+      "tensor": "model.language_model.layers.9.linear_attn.in_proj_qkv.weight",
+      "shape": [
+        6144,
+        1024
+      ],
+      "weights": 6291456,
+      "current_invalid_scale_rows": 0,
+      "ideal_scale_min": 17,
+      "ideal_scale_max": 21,
+      "policies": {
+        "current": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        },
+        "clamped": {
+          "exception_weights": 0,
+          "exception_fraction": 0.0,
+          "rows_with_exceptions": 0,
+          "max_exceptions_per_row": 0,
+          "max_exception_abs": 0
+        }
+      }
+    }
+  ]
+}

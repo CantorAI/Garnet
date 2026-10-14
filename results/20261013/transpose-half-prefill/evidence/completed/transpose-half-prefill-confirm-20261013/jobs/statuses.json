@@ -1,0 +1,90 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/transpose_half_prefill_probe.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/transpose_half_prefill_probe"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 1.9724248750135303
+  },
+  {
+    "name": "Qwen3-0.6B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_prefill_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 1.3265800420194864
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/transpose_half_prefill_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 5.264598791953176
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_prefill_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 1.3429765421897173
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/transpose_half_prefill_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 5.252440124750137
+  },
+  {
+    "name": "Qwen3.5-0.8B-prepare",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/prepare_prefill_tile_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B/model.safetensors",
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 2.014488416723907
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/transpose_half_prefill_probe",
+      "/Users/zsdx/garnet-metal-investigation/logs/transpose-half-prefill-confirm-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "diagnostic_wall_seconds": 4.620817250106484
+  }
+]

@@ -1,0 +1,152 @@
+[
+  {
+    "model": "Qwen3-0.6B",
+    "batch": 1,
+    "native": {
+      "requests": 4,
+      "ttft_ms": 51.21541710104793,
+      "decode_tps": 60.044380743517436,
+      "initialization_s": 1.8739594789221883,
+      "peak_child_rss_bytes": 2445139968
+    },
+    "needed_decode_tps": 75.8083609919162,
+    "needed_ttft_ms": 38.61945302924141,
+    "prefill_profile": {
+      "prepare_ms": 0.249083,
+      "encode_ms": 5.2427085,
+      "gpu_ms": 37.830698071047664,
+      "wait_ms": 38.7629685
+    },
+    "decode_phases": {
+      "prepare_ms": 0.14593739285714286,
+      "encode_ms": 0.4870030357142857,
+      "gpu_ms": 15.459165160012033,
+      "wait_ms": 15.879355678571429
+    }
+  },
+  {
+    "model": "Qwen3-0.6B",
+    "batch": 2,
+    "native": {
+      "requests": 4,
+      "ttft_ms": 85.82190633751452,
+      "decode_tps": 58.38337842228515,
+      "initialization_s": 2.15191727085039,
+      "peak_child_rss_bytes": 2491998208
+    },
+    "needed_decode_tps": 51.0061874034086,
+    "needed_ttft_ms": 48.82738005835563,
+    "prefill_profile": {
+      "prepare_ms": 0.2417085,
+      "encode_ms": 5.05855225,
+      "gpu_ms": 58.5794789949432,
+      "wait_ms": 59.2924685
+    },
+    "decode_phases": {
+      "prepare_ms": 0.14827078571428573,
+      "encode_ms": 0.4888170357142857,
+      "gpu_ms": 15.871934559462327,
+      "wait_ms": 16.321794571428573
+    }
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 1,
+    "native": {
+      "requests": 4,
+      "ttft_ms": 40.37446924485266,
+      "decode_tps": 71.19458246438776,
+      "initialization_s": 1.372997333528474,
+      "peak_child_rss_bytes": 2068840448
+    },
+    "needed_decode_tps": 94.29139559141153,
+    "needed_ttft_ms": 28.0623646103777,
+    "prefill_profile": {
+      "prepare_ms": 0.29002075,
+      "encode_ms": 4.9677395,
+      "gpu_ms": 32.411062507890165,
+      "wait_ms": 33.40011475
+    },
+    "decode_phases": {
+      "prepare_ms": 0.12948503125,
+      "encode_ms": 0.499458375,
+      "gpu_ms": 12.855159518949222,
+      "wait_ms": 13.277934921875
+    }
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 2,
+    "native": {
+      "requests": 4,
+      "ttft_ms": 62.063104240223765,
+      "decode_tps": 70.52007329232802,
+      "initialization_s": 1.3836096250452101,
+      "peak_child_rss_bytes": 2069643264
+    },
+    "needed_decode_tps": 56.750113339817645,
+    "needed_ttft_ms": 41.54282814124599,
+    "prefill_profile": {
+      "prepare_ms": 0.25131225,
+      "encode_ms": 5.1006255,
+      "gpu_ms": 52.00577084906399,
+      "wait_ms": 53.11563525
+    },
+    "decode_phases": {
+      "prepare_ms": 0.136808625,
+      "encode_ms": 0.5140384375,
+      "gpu_ms": 12.942192726768553,
+      "wait_ms": 13.378048703125
+    }
+  },
+  {
+    "model": "Qwen3.5-0.8B",
+    "batch": 1,
+    "native": {
+      "requests": 4,
+      "ttft_ms": 225.2209687139839,
+      "decode_tps": 48.30533598080136,
+      "initialization_s": 4.068024833453819,
+      "peak_child_rss_bytes": 3620356096
+    },
+    "needed_decode_tps": 52.348020331853576,
+    "needed_ttft_ms": 133.0056197475642,
+    "prefill_profile": {
+      "prepare_ms": 0.2250415,
+      "encode_ms": 5.65914575,
+      "gpu_ms": 103.69030199944973,
+      "wait_ms": 104.54936475
+    },
+    "image_phases_ms": {
+      "vision_seconds": 61.07084406539798,
+      "assembly_seconds": 0.32826000824570656,
+      "prefill_wall_seconds": 111.35902092792094,
+      "common_preprocessing_seconds": 49.91827066987753
+    }
+  },
+  {
+    "model": "Qwen3.5-0.8B",
+    "batch": 2,
+    "native": {
+      "requests": 4,
+      "ttft_ms": 388.40805215295404,
+      "decode_tps": 44.823866592211886,
+      "initialization_s": 4.107244979357347,
+      "peak_child_rss_bytes": 3638861824
+    },
+    "needed_decode_tps": 34.34658119210353,
+    "needed_ttft_ms": 221.52700502192602,
+    "prefill_profile": {
+      "prepare_ms": 0.6460619999999999,
+      "encode_ms": 16.5388855,
+      "gpu_ms": 185.76838553417474,
+      "wait_ms": 188.74030225
+    },
+    "image_phases_ms": {
+      "vision_seconds": 122.59538564831018,
+      "assembly_seconds": 0.3744476707652211,
+      "prefill_wall_seconds": 207.7173126162961,
+      "common_preprocessing_seconds": 55.11861469130963
+    }
+  }
+]

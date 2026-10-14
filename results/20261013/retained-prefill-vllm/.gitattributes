@@ -1,0 +1,2 @@
+# Keep raw comparator log bytes, including its multiline CRLF messages.
+evidence/**/*.log -text whitespace=cr-at-eol

@@ -1,0 +1,18 @@
+{
+  "scope": "Current retained prefill policy, equivalent-FP32 native/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n",
+  "counts_as_default_bf16_speedup": false,
+  "native_library_sha256": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2",
+  "learned_values_bit_exact": true,
+  "source_checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+  "comparator_checkpoint_sha256": "9cc20970e6f3d45757a2ee4fb635a1f091ad06acbd1da7981b9947468be18516",
+  "equivalence_proof_sha256": "608c4fb36679eb373298f8223cd85ac88ab0b2685cfeb612d22aeee86262b034",
+  "source_sha256": {
+    "compare_retained_prefill_vllm.py": "f4b4c46a0f771d630dd83cd7a640aec90315928fdf2afff55fbbdc4f36e1f04c",
+    "run_matched_garnet.py": "3c75de61df572e9011b9ff458eb89689ae2a53a0befebfa6c8e96e06191cf956",
+    "run_matched_vllm.py": "685ad3e5eec0d0b4fd121088f9ab316fe07b1c4449ee27c09ad76092885ffd24",
+    "frame_worker_garnet.py": "f4e8b6e5f199c6f9304b8c729ee8ac065cd14e199085351443f8a74de6347977",
+    "frame_worker_vllm.py": "7654dd031852e28b1c8bc130e42d2e14ed50b1f02362068953c65e825b21bac4",
+    "run_matched_frame_process.py": "793a140d3c1545f88da15792f9051d80f9e66d8ffac081242ae2285a19fa785e",
+    "benchmark_matched_process.py": "9a678e833dbb69da5169c24208cfb6f074be23c4db6454844b1080659282e494"
+  }
+}

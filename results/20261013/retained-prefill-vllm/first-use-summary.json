@@ -1,0 +1,116 @@
+[
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 1,
+    "timing_scope": "Fresh-model first use and startup; OS/driver caches were not flushed; not guaranteed cold hardware",
+    "runtimes": {
+      "garnet": {
+        "processes": 2,
+        "startup_ms": 1372.997333528474,
+        "first_request_ttft_ms": 123.0434374883771,
+        "first_request_decode_tps": 72.35711164032486
+      },
+      "vllm-metal": {
+        "processes": 2,
+        "startup_ms": 16002.728436840698,
+        "first_request_ttft_ms": 60.703770723193884,
+        "first_request_decode_tps": 47.29200226863736
+      }
+    }
+  },
+  {
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 2,
+    "timing_scope": "Fresh-model first use and startup; OS/driver caches were not flushed; not guaranteed cold hardware",
+    "runtimes": {
+      "garnet": {
+        "processes": 2,
+        "startup_ms": 1383.6096250452101,
+        "first_request_ttft_ms": 143.7807499896735,
+        "first_request_decode_tps": 71.0098732406666
+      },
+      "vllm-metal": {
+        "processes": 2,
+        "startup_ms": 15945.034229429439,
+        "first_request_ttft_ms": 98.50189602002501,
+        "first_request_decode_tps": 41.689895500993394
+      }
+    }
+  },
+  {
+    "model": "Qwen3-0.6B",
+    "batch": 1,
+    "timing_scope": "Fresh-model first use and startup; OS/driver caches were not flushed; not guaranteed cold hardware",
+    "runtimes": {
+      "garnet": {
+        "processes": 2,
+        "startup_ms": 1873.9594789221883,
+        "first_request_ttft_ms": 154.436937533319,
+        "first_request_decode_tps": 57.01062641628073
+      },
+      "vllm-metal": {
+        "processes": 2,
+        "startup_ms": 17063.417562283576,
+        "first_request_ttft_ms": 67.99031258560717,
+        "first_request_decode_tps": 38.47183850272371
+      }
+    }
+  },
+  {
+    "model": "Qwen3-0.6B",
+    "batch": 2,
+    "timing_scope": "Fresh-model first use and startup; OS/driver caches were not flushed; not guaranteed cold hardware",
+    "runtimes": {
+      "garnet": {
+        "processes": 2,
+        "startup_ms": 2151.91727085039,
+        "first_request_ttft_ms": 192.68872891552746,
+        "first_request_decode_tps": 55.69710431548697
+      },
+      "vllm-metal": {
+        "processes": 2,
+        "startup_ms": 16599.032479105517,
+        "first_request_ttft_ms": 107.75139601901174,
+        "first_request_decode_tps": 28.903233095113098
+      }
+    }
+  },
+  {
+    "model": "Qwen3.5-0.8B",
+    "batch": 1,
+    "timing_scope": "Fresh-model first use and startup; OS/driver caches were not flushed; not guaranteed cold hardware",
+    "runtimes": {
+      "garnet": {
+        "processes": 2,
+        "startup_ms": 4068.024833453819,
+        "first_request_ttft_ms": 369.1093537490815,
+        "first_request_decode_tps": 46.6440404506683
+      },
+      "vllm-metal": {
+        "processes": 2,
+        "startup_ms": 33677.53174994141,
+        "first_request_ttft_ms": 309.27968746982515,
+        "first_request_decode_tps": 25.900709151321806
+      }
+    }
+  },
+  {
+    "model": "Qwen3.5-0.8B",
+    "batch": 2,
+    "timing_scope": "Fresh-model first use and startup; OS/driver caches were not flushed; not guaranteed cold hardware",
+    "runtimes": {
+      "garnet": {
+        "processes": 2,
+        "startup_ms": 4107.244979357347,
+        "first_request_ttft_ms": 574.6099790558219,
+        "first_request_decode_tps": 44.57403024978731
+      },
+      "vllm-metal": {
+        "processes": 2,
+        "startup_ms": 33283.75997953117,
+        "first_request_ttft_ms": 517.6788750104606,
+        "first_request_decode_tps": 17.03525761545231
+      }
+    }
+  }
+]
