@@ -67,7 +67,9 @@ recorded separately and OS/driver caches were not flushed.
 
 Initial archive SHA-256:
 `6edb521245d913c8dd7af1b9ea4d5fa1bfcacc0c202ce78c50d9ce4097ffcb77`.
-Candidate library/source identities are pinned by archived checks metadata.
+Candidate library SHA-256 is
+`65a68b5ad8819fbdfeee4256fdf28069a540a18c83dce817921265a038184098`.
+Source identities are pinned by archived checks metadata.
 Partial counts are 6 for text, 5 for coder/VL B1 and 15 for VL B2; control
 and decode counts are zero. Reset byte/state/fallback counts passed the exact
 independent formula audit on every request.
@@ -105,5 +107,33 @@ No probe overlapped combined validation or serving.
 Fresh full-six repeat PID **52435** started only after the independent initial
 audit was uploaded and queue **33256** reached terminal status.
 `ROOT/logs/combined-prefill-reset-confirm-20261015` uses fresh sequential
-workers and the unchanged candidate/source identities. Terminal repeat timing
-and independent audit are pending; do not represent them as measured success.
+workers and unchanged candidate/source identities. It exited 0 after 144.52
+seconds. Both independent audits pass against 1081 combined archived files,
+all twenty-two validation stages, all recovery results and 72 complete
+requests in each run (144 total).
+
+| Model / batch | Repeat control TTFT ms | Repeat candidate TTFT ms | Repeat decode candidate/control |
+| --- | ---: | ---: | ---: |
+| Text / 1 | 49.457 | 40.452 | 0.9649 |
+| Text / 2 | 82.118 | 62.741 | 0.9544 |
+| Coder / 1 | 32.671 | 28.199 | 0.9952 |
+| Coder / 2 | 51.392 | 44.908 | 0.9973 |
+| VL / 1 | 195.558 | 190.886 | 0.9963 |
+| VL / 2 | 362.104 | 349.705 | 0.9949 |
+
+The direction repeats: warm TTFT falls 18.2%, 23.6%, 13.7%, 12.6%, 2.4% and
+3.4%, while decode is slower in every profile. Text decode loses 3.5% / 4.6%
+at B1/B2. Retain this as an optional latency tradeoff, not the throughput
+selection. Do not run a fresh vLLM comparison merely to rename this penalty
+as a gain; the overall targets still need native throughput improvement.
+
+`confirmation-phases.json` retains reset, prefill, initialization and first
+request AFTER initialization separately. Text B2 reset falls 22.437→2.193 ms,
+but prefill rises 58.470→59.320 ms. First request AFTER initialization improves
+in every profile. Clocks overlap and caches were not flushed.
+
+Combined archive SHA-256:
+`7a39cecabdee87f826cb908172176a905da78c177651e4704f5fc7937716d8db`.
+Initial and confirmation verification files retain exact complete output,
+actual count and means audits. The selected global-alpha reference libraries
+remain unchanged. No original GPT-OSS or Pi checkout was modified.
