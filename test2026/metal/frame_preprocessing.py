@@ -4,7 +4,12 @@ import numpy as np
 from PIL import ImageOps,Image
 
 def prepare_frame(image,config,processor,batch,budget=65536):
-    image=ImageOps.exif_transpose(image).convert('RGB');width,height=image.size
+    # Load before reading orientation, including EXIF chunks after image data.
+    # RGB frames with no transform can be borrowed without two full-image copies.
+    image.load()
+    if image.getexif().get(274) in (2,3,4,5,6,7,8):image=ImageOps.exif_transpose(image)
+    if image.mode!='RGB':image=image.convert('RGB')
+    width,height=image.size
     patch=config['patch_size'];merge=config['spatial_merge_size'];factor=patch*merge
     rh=max(factor,round(height/factor)*factor);rw=max(factor,round(width/factor)*factor)
     if rh*rw>budget:

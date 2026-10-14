@@ -8,9 +8,13 @@ import hashlib,json,os,subprocess,sys,time
 from pathlib import Path
 from PIL import Image
 from frame_preprocessing import prepare_frame
+from frame_preprocessing_control import prepare_frame as prepare_frame_control
 
 def main():
-    executable,build,source,model,casefile,backend,folder=sys.argv[1:]
+    executable,build,source,model,casefile,backend,folder,*options=sys.argv[1:]
+    frontend_policy=options[0] if options else 'selected'
+    if len(options)>1 or frontend_policy not in ('selected','control'):raise ValueError('Unknown common frontend policy')
+    prepare=prepare_frame if frontend_policy=='selected' else prepare_frame_control
     source=Path(source);model=Path(model);folder=Path(folder);folder.mkdir(parents=True,exist_ok=True)
     workload=json.loads(Path(casefile).read_text());metadata=workload['image_metadata'];batch=workload['batch']
     configuration=json.loads((model/'config.json').read_text());processor=json.loads((model/'preprocessor_config.json').read_text())
@@ -40,7 +44,7 @@ def main():
         print('frame_initialization',json.dumps(dict(seconds=initialization,command=command,backend=backend)),flush=True)
         for request in range(workload['requests']):
             begin=time.monotonic()
-            with Image.open(metadata['image']) as image:patches,rgb,resized=prepare_frame(image,configuration['vision_config'],processor,batch)
+            with Image.open(metadata['image']) as image:patches,rgb,resized=prepare(image,configuration['vision_config'],processor,batch)
             assert list(resized)==metadata['resized_hw'] and list(patches.shape)==metadata['shape']
             patchfile=folder/('frame-'+str(request)+'.f32');rgbfile=folder/('frame-'+str(request)+'.rgb')
             patches.tofile(patchfile);rgbfile.write_bytes(rgb)
@@ -56,6 +60,7 @@ def main():
                 decode_window_seconds=end-observed_first,
                 decode_wall_steps_per_second=result['decode_steps_after_first']/(end-observed_first),
                 common_preprocessing_seconds=preprocessing,patch_sha256=patch_sha,rgb_sha256=rgb_sha,
+                frontend_policy=frontend_policy,
                 timing_scope='common CPU source-image preparation plus persistent worker protocol and model execution')
             print('matched_frame_result',json.dumps(result),flush=True)
         send(dict(request=workload['requests'],stop=True));worker.wait(timeout=45)

@@ -1,0 +1,17 @@
+Starting sequential runtime Qwen3.5-0.8B-b1 garnet-control-0
+Completed exact runtime Qwen3.5-0.8B-b1 garnet-control-0
+Starting sequential runtime Qwen3.5-0.8B-b1 vllm-metal-control-0
+Completed exact runtime Qwen3.5-0.8B-b1 vllm-metal-control-0
+Starting sequential runtime Qwen3.5-0.8B-b1 vllm-metal-selected-0
+Completed exact runtime Qwen3.5-0.8B-b1 vllm-metal-selected-0
+Starting sequential runtime Qwen3.5-0.8B-b1 garnet-selected-0
+Completed exact runtime Qwen3.5-0.8B-b1 garnet-selected-0
+Starting sequential runtime Qwen3.5-0.8B-b1 garnet-selected-1
+Completed exact runtime Qwen3.5-0.8B-b1 garnet-selected-1
+Starting sequential runtime Qwen3.5-0.8B-b1 vllm-metal-selected-1
+Completed exact runtime Qwen3.5-0.8B-b1 vllm-metal-selected-1
+Starting sequential runtime Qwen3.5-0.8B-b1 vllm-metal-control-1
+Completed exact runtime Qwen3.5-0.8B-b1 vllm-metal-control-1
+Starting sequential runtime Qwen3.5-0.8B-b1 garnet-control-1
+Completed exact runtime Qwen3.5-0.8B-b1 garnet-control-1
+{"model": "Qwen3.5-0.8B", "batch": 1, "policies": {"control": {"means": {"garnet": {"requests": 4, "ttft_ms": 218.5848020017147, "decode_tps": 48.43537188545528, "preprocessing_ms": 49.571427050977945, "initialization_s": 4.005825332831591, "peak_child_rss_bytes": 3613499392}, "vllm-metal": {"requests": 4, "ttft_ms": 264.6990829380229, "decode_tps": 26.070532084430514, "preprocessing_ms": 53.43043711036444, "initialization_s": 34.00913316686638, "peak_child_rss_bytes": 5811068928}}, "decode_ratio": 1.8578589699893848, "ttft_fraction": 0.8257860192620861, "decode_target_met": false, "ttft_target_met": false}, "selected": {"means": {"garnet": {"requests": 4, "ttft_ms": 218.92924967687577, "decode_tps": 48.582931231629296, "preprocessing_ms": 46.66682262904942, "initialization_s": 4.0646789581514895, "peak_child_rss_bytes": 3614654464}, "vllm-metal": {"requests": 4, "ttft_ms": 266.2483333842829, "decode_tps": 26.450121495557816, "preprocessing_ms": 49.49908331036568, "initialization_s": 33.13060437492095, "peak_child_rss_bytes": 5847695360}}, "decode_ratio": 1.8367753524228079, "ttft_fraction": 0.8222746294561389, "decode_target_met": false, "ttft_target_met": false}}, "frontend_effects": {"garnet": {"ttft_fraction": 1.0015758079793597, "decode_ratio": 1.0030465203513452}, "vllm-metal": {"ttft_fraction": 1.005852874248993, "decode_ratio": 1.0145600945119948}}, "exact_complete_outputs": true, "counts_as_default_bf16_speedup": false, "scope": "Fresh-frame copy elision applied equally to Garnet/vLLM, sequential factorial ABBA.\n\nThis additional precision study does not establish default BF16 speedups.\n"}
