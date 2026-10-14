@@ -208,6 +208,12 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
             auto& headInput=head_->slots_[head_->inputs_[0]];
             gpu_->EncodeSliceGroups(current,headInput.matrix,1,chunk*headInput.columns,
                 size_t(predictionToken)*headInput.columns,headInput.columns);
+#ifdef GARNET_METAL_FUSED_HEAD_DECODE_ONLY
+            if(chunk>1) {
+                head_->Encode(*gpu_);
+                gpu_->EncodeArgmax(head_->slots_[head_->output_].matrix,prediction_);
+            } else
+#endif
             head_->EncodeGreedy(*gpu_,prediction_);
         }
         const auto encoded=std::chrono::steady_clock::now();

@@ -32,6 +32,7 @@ try:
         print('exact_tail_admission PASS',flush=True)
     single_coder_head_enabled='single_coder_head' in garnet.backend_info()
     fused_head_argmax_enabled='fused_head_argmax' in garnet.backend_info()
+    fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
     initialization=time.monotonic()-started
     for request in range(repeats):
         begin=time.monotonic();decoder.reset();reset_seconds=time.monotonic()-begin
@@ -81,6 +82,7 @@ try:
             joined_global_mlp_enabled='joined_global_mlp' in garnet.backend_info(),
             single_coder_head_enabled=single_coder_head_enabled,single_coder_head_counts=single_head_counts,
             fused_head_argmax_enabled=fused_head_argmax_enabled,fused_head_argmax_counts=fused_head_counts,
+            fused_head_decode_only_enabled=fused_head_decode_only_enabled,
             vision_global_alpha_enabled='vision_global_alpha' in garnet.backend_info(),vision_global_alpha_dispatches=0,
             residual_norm_dispatches=decoder.session.residual_norm_dispatches if 'residual_norm' in garnet.backend_info() else 0,
             constant_head_dispatches=decoder.session.constant_head_dispatches if 'constant_bf16_head' in garnet.backend_info() else 0,

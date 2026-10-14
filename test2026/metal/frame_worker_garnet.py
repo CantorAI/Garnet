@@ -59,6 +59,7 @@ try:
         assembled=time.monotonic()
         prediction=decoder.prefill_sequence(hidden,[positions for row in range(batch)])
         fused_head_enabled='fused_head_argmax' in garnet.backend_info()
+        fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
         fused_head_counts=[decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0]
         first=time.monotonic()
         emit('frame_first',dict(request=last,worker_ttft_seconds=first-start))
@@ -96,6 +97,7 @@ try:
             joined_global_mlp_enabled='joined_global_mlp' in garnet.backend_info(),
             single_coder_head_enabled='single_coder_head' in garnet.backend_info(),
             fused_head_argmax_enabled=fused_head_enabled,fused_head_argmax_counts=fused_head_counts,
+            fused_head_decode_only_enabled=fused_head_decode_only_enabled,
             vision_global_alpha_enabled='vision_global_alpha' in garnet.backend_info(),
             vision_global_alpha_dispatches=vision.graph.vision_global_alpha_dispatches if 'vision_global_alpha' in garnet.backend_info() else 0,
             single_coder_head_counts=[decoder.session.single_coder_head_dispatches if 'single_coder_head' in garnet.backend_info() else 0],

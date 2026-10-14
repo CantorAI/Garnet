@@ -43,6 +43,9 @@ public:
 #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
         info+="; fused_head_argmax";
 #endif
+#ifdef GARNET_METAL_FUSED_HEAD_DECODE_ONLY
+        info+="; fused_head_decode_only";
+#endif
 #ifdef GARNET_METAL_RESIDUAL_NORM
         info+="; residual_norm";
 #endif
