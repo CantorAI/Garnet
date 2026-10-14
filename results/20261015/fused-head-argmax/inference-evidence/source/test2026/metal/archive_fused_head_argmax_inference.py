@@ -3,9 +3,10 @@ import hashlib,io,json,sys,tarfile
 from pathlib import Path
 root=Path(sys.argv[1]).resolve();target=Path(sys.argv[2]).resolve();entries={};omitted={};jobs={}
 native_trial=sys.argv[3] if len(sys.argv)>3 else 'fused-head-argmax-native-20261015'
+confirmation_trial=sys.argv[4] if len(sys.argv)>4 else None
 def digest(p):
     with p.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
-for name in ('fused-head-argmax-checks-20261015',native_trial):
+for name in ('fused-head-argmax-checks-20261015',native_trial)+((confirmation_trial,) if confirmation_trial else ()):
     folder=root/'logs'/name;jobs[name]=json.loads((folder/'exit.json').read_text())
     for p in folder.rglob('*'):
         if not p.is_file():continue

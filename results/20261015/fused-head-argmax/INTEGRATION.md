@@ -1,4 +1,4 @@
-# Optional full-model integration: initial full run verified
+# Optional full-model integration: repeated full runs verified
 
 The component gain repeated, so `GARNET_METAL_FUSED_HEAD_ARGMAX` now enables
 an optional greedy-only native BF16 path. The option is OFF by default. Generic
@@ -61,16 +61,41 @@ AFTER initialization are separately retained in `inference-verification.json`;
 caches are not flushed, and their clocks must not be summed into a claimed
 hardware-cold end-to-end measurement.
 
-Full six-profile confirmation PID 93682 is running at
-`ROOT/logs/fused-head-argmax-confirm-native-20261015`. Live status must be checked
-against the actual handle. Production selection remains unchanged pending
-repeat measurements and assessment of the mixed TTFT behavior. Reference
-libraries and the original GPT-OSS and Pi checkouts remain preserved.
+Full six-profile confirmation PID 93682 exited 0 in 144.97 seconds at
+`ROOT/logs/fused-head-argmax-confirm-native-20261015`. The combined archive has
+1,519 independently verified files. Both audits verify all original 19 gates,
+the six trained recovery cases and 72 matching requests/run (144 across both).
+
+| Model / batch | Repeat control row tokens/s | Candidate row tokens/s | Decode ratio | TTFT fraction |
+| --- | ---: | ---: | ---: | ---: |
+| Text / 1 | 58.9135 | 60.0678 | 1.0196 | 1.0334 |
+| Text / 2 | 57.8939 | 58.5391 | 1.0111 | 1.0158 |
+| Coder / 1 | 72.1420 | 72.5434 | 1.0056 | 0.9928 |
+| Coder / 2 | 71.0357 | 72.0075 | 1.0137 | 0.9868 |
+| VL / 1 | 48.0328 | 49.1164 | 1.0226 | 0.9954 |
+| VL / 2 | 44.5569 | 45.2288 | 1.0151 | 0.9888 |
+
+Decode direction repeats in all six profiles, but the whole-model gain is
+0.39–2.26%, much smaller than the head-only gain. Warm TTFT has mixed direction:
+text B2 is 1.40%/1.58% slower in both runs, text B1 is flat then 3.34% slower,
+and the other small effects are not uniform. Keep this optional and OFF by
+default; it is not a uniform two-metric selection or a new vLLM victory.
+The complete init/first-after-init observations and warm means are retained
+separately in both verification files. Reference libraries and protected
+GPT-OSS/Pi checkouts remain unchanged.
+
+Next investigation: isolate fusion to decode so prefill's first prediction
+uses the established full-head route, then verify actual route counts and
+measure whether the TTFT penalty disappears. This is a proposed next action,
+not an implemented or measured gain. Further independent prefill optimization
+is still required to approach half TTFT.
 
 Initial-failure archive SHA-256:
 `d1c7c7cea9681d70832c29205f3ca8bbd69eb24a8cc3557dcf3184880b6c8712`.
 Successful initial inference archive SHA-256:
 `0259b835c0a8e0784ba547188c0bf636e9ecd6acf99366e7f7d0f752d4efa611`.
+Combined successful initial/confirmation archive SHA-256:
+`c490fe214a53ea4020dd378d2ecba14c2fd54a0adad62b4dcd74dfa3ec5a5775`.
 
 ```text
 python3 prepare_fused_head_argmax_sources.py
@@ -81,8 +106,9 @@ python3 launch_repaired_fused_head_argmax_profiles.py ROOT ROOT/logs/fused-head-
 python3 archive_fused_head_argmax_inference.py ROOT ARCHIVE fused-head-argmax-native-repair-20261015
 python -X utf8 verify_fused_head_argmax_inference.py EVIDENCE VERIFICATION_JSON fused-head-argmax-native-repair-20261015
 python3 launch_confirm_fused_head_argmax_profiles.py ROOT ROOT/logs/fused-head-argmax-confirm-native-20261015
+python3 archive_fused_head_argmax_inference.py ROOT ARCHIVE fused-head-argmax-native-repair-20261015 fused-head-argmax-confirm-native-20261015
+python -X utf8 verify_fused_head_argmax_inference.py EVIDENCE CONFIRMATION_JSON fused-head-argmax-native-repair-20261015 fused-head-argmax-confirm-native-20261015
 ```
 
-The full 2x decode / half-TTFT goal remains unmet. Archive and independently
-verify the repeat before selecting the candidate or issuing any new matched
-comparator claim.
+The full 2x decode / half-TTFT goal remains unmet. No comparator was rerun to
+substitute a different baseline for this small, mixed native result.

@@ -1,53 +1,166 @@
 {
-  "trial": "fused-head-argmax-confirm-20261015",
-  "verified_files": 48,
-  "captured_head_queries": 51,
-  "edge_checks": 96,
-  "timed_executions": 3264,
-  "pools": [
+  "verified_files": 1519,
+  "original_validation_stages": 19,
+  "trained_recovery_cases": 6,
+  "full_output_requests": 72,
+  "profiles": [
     {
       "model": "Qwen3-0.6B",
       "batch": 1,
-      "captured_queries": 8,
-      "gpu_fraction": 0.9229738452784898,
-      "wall_fraction": 0.9271459831725445
+      "means": {
+        "control": {
+          "decode_tps": 58.91353089010914,
+          "ttft_ms": 48.56471857056022
+        },
+        "candidate": {
+          "decode_tps": 60.067823013338426,
+          "ttft_ms": 50.185645814053714
+        }
+      },
+      "decode_ratio": 1.0195929883303443,
+      "ttft_fraction": 1.033376642369263,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 165.64497910439968,
+          "initialization_s": 1.650259291054681
+        },
+        "candidate": {
+          "ttft_ms": 152.9883744660765,
+          "initialization_s": 1.667427270906046
+        }
+      }
     },
     {
       "model": "Qwen3-0.6B",
       "batch": 2,
-      "captured_queries": 9,
-      "gpu_fraction": 0.8533650489648102,
-      "wall_fraction": 0.8637612176146183
+      "means": {
+        "control": {
+          "decode_tps": 57.89386421691624,
+          "ttft_ms": 81.10370847862214
+        },
+        "candidate": {
+          "decode_tps": 58.539113761596475,
+          "ttft_ms": 82.38537528086454
+        }
+      },
+      "decode_ratio": 1.0111453873982676,
+      "ttft_fraction": 1.0158028137835426,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 190.4115208890289,
+          "initialization_s": 1.693354353774339
+        },
+        "candidate": {
+          "ttft_ms": 188.83704207837582,
+          "initialization_s": 1.6817037919536233
+        }
+      }
     },
     {
       "model": "Qwen2.5-Coder-0.5B-Instruct",
       "batch": 1,
-      "captured_queries": 8,
-      "gpu_fraction": 0.9018621221720088,
-      "wall_fraction": 0.9126215929000112
+      "means": {
+        "control": {
+          "decode_tps": 72.14198764037278,
+          "ttft_ms": 33.391094068065286
+        },
+        "candidate": {
+          "decode_tps": 72.54336757172625,
+          "ttft_ms": 33.15033309627324
+        }
+      },
+      "decode_ratio": 1.005563749273923,
+      "ttft_fraction": 0.9927896650735292,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 126.07893696986139,
+          "initialization_s": 1.3942089166957885
+        },
+        "candidate": {
+          "ttft_ms": 122.5890836212784,
+          "initialization_s": 1.3835157710127532
+        }
+      }
     },
     {
       "model": "Qwen2.5-Coder-0.5B-Instruct",
       "batch": 2,
-      "captured_queries": 9,
-      "gpu_fraction": 0.8576874616562943,
-      "wall_fraction": 0.8736157292827632
+      "means": {
+        "control": {
+          "decode_tps": 71.03568812071603,
+          "ttft_ms": 51.41812493093312
+        },
+        "candidate": {
+          "decode_tps": 72.00749120060198,
+          "ttft_ms": 50.74101046193391
+        }
+      },
+      "decode_ratio": 1.0136804908292645,
+      "ttft_fraction": 0.986831210396942,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 142.8325839806348,
+          "initialization_s": 1.397561833029613
+        },
+        "candidate": {
+          "ttft_ms": 142.6738330628723,
+          "initialization_s": 1.3958574580028653
+        }
+      }
     },
     {
       "model": "Qwen3.5-0.8B",
       "batch": 1,
-      "captured_queries": 8,
-      "gpu_fraction": 0.8979330137623869,
-      "wall_fraction": 0.9044945843242458
+      "means": {
+        "control": {
+          "decode_tps": 48.03279803007676,
+          "ttft_ms": 197.07991648465395
+        },
+        "candidate": {
+          "decode_tps": 49.11641786390604,
+          "ttft_ms": 196.17220817599446
+        }
+      },
+      "decode_ratio": 1.022559998131917,
+      "ttft_fraction": 0.9953942120290569,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 338.31639564596117,
+          "initialization_s": 2.9683187084738165
+        },
+        "candidate": {
+          "ttft_ms": 354.9855414312333,
+          "initialization_s": 2.978699062252417
+        }
+      }
     },
     {
       "model": "Qwen3.5-0.8B",
       "batch": 2,
-      "captured_queries": 9,
-      "gpu_fraction": 0.8518429154809346,
-      "wall_fraction": 0.8572877490790305
+      "means": {
+        "control": {
+          "decode_tps": 44.556947698714026,
+          "ttft_ms": 362.05782287288457
+        },
+        "candidate": {
+          "decode_tps": 45.22877072632724,
+          "ttft_ms": 358.0121354898438
+        }
+      },
+      "decode_ratio": 1.0150778512064147,
+      "ttft_fraction": 0.9888258528680895,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 565.5484374146909,
+          "initialization_s": 2.975019020959735
+        },
+        "candidate": {
+          "ttft_ms": 562.0667710900307,
+          "initialization_s": 2.9986691041849554
+        }
+      }
     }
   ],
-  "scope": "Whole-head component only; captured complete logits, synthetic ties/nonfinite/tails; no new full-model or comparator gain",
+  "scope": "Native comparison only; init and first request after init separate, caches unflushed; no fresh vLLM ratio",
   "full_goal_met": false
 }
