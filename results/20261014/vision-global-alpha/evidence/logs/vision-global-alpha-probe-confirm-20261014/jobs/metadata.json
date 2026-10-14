@@ -1,0 +1,622 @@
+{
+  "scope": "Actual trained vision products: full F64 checks and sequential ABBA timing.",
+  "source_sha256": {
+    "test2026/metal/run_vision_global_alpha_probe.py": "a7cceb6a0354580e740e3cbb4899576ca3c461bbdc73d0dbf662a869ce3166a9",
+    "test2026/metal/vision_global_alpha_gpu.mm": "1981f0d0d2af8452a62a4ac71e5a4f930e33744f50348453481b1792e049230d",
+    "src/backends/metal/exact_half_codec.h": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9",
+    "test2026/metal/compare_vllm_metal.py": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0",
+    "test2026/metal/run_constant_bf16_probe.py": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "assets": {
+    "Qwen3.5-0.8B": {
+      "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+      "cases": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.0.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.0.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "8a4f1ed299b3a011e24c40074800e897906ec7578ce7018b074700763daeb4a6",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.0.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.0.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "067f6392bcb505d18a3baa11b1f1caaa6b63d33ca1ddc87c8ef0a247d881c3d3",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.0.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.0.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "c0ff42cf58a4336483f6306838afc118a972bd2fe4325b70ddccbc69793640ec",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.0.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.0.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "f9328661a0b0945722b35f51cd1bcad7f7715b2be0f4224377215a02bcb6064c",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.1.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.1.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "5c939524c87d4934341f43af62035aebab8563a2b278093ca7399f580b3ee14a",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.1.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.1.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "b57248b432041e95a99d46a6921bfcbc0120c9ac3ad7d1d9c74fe6765f220958",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.1.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.1.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "95eb62bf1a7dcb8eff3ebf4474a1650fdd5aae34f09fe13cc2d27daa3617ddb1",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.1.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.1.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "6b324548e05c28834ea1fefe03c3cc1600d1c69f6fc54330351bf11c8a4afd8b",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.10.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.10.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "fc73794a2b99ff38fb54ad2d86d780993d1288a84cba072a41ef7cb4b921fe61",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.10.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.10.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "aafd3803c7838b74f8d1c48436959cf7006a694b81f406ef8d331b1dbc16b75f",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.10.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.10.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "2c469754d6780bd1c4c4c123ae766b464d1916c3d4e0f6b0954686b726b21c40",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.10.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.10.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "5771a47f769a70022a9f7baadeb8e43cc6fefb065bbddaf4618cf47fc31cd744",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.11.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.11.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "2cfee51687c14520afb8dca2cf41aa0c1c3fc0510444cb98c35c7d59ee4fdba7",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.11.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.11.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "a3bc8fa31baad792a9a42085bf2ec05736599e5338de6a20c112dad0b4fd3ce2",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.11.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.11.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "ad46ad8c67c9d1dc4cde8204c2a4a4c10fd7e4cd8cd7b019cf55f53ae2766e20",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.11.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.11.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "2585047475f7fc6798f98d172d307f58d25188e2eaf006666fa965ccab371ce7",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.2.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.2.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "7817579b60224f45c07b539daf9671f21b64b2677fe481347c16919f54ae5eef",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.2.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.2.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "ffdd41eb511ced444bbb13b24dd02578b0277dc4075192f36230188cd151b7c0",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.2.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.2.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "328902097cbf0f6000dc798c1e72418558640c70179f48ebfecd78f14c4e2143",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.2.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.2.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "19c003aa6eb73b394b8421a64f23e48fc6e69a52532b155df5f51c45628fb7b3",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.3.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.3.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "918333705fd2855dcc4da89bc748db91be171a7252fede23c4349ab8c275ad18",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.3.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.3.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "86a6d71b0c506abc58f995b5d6b859696c8949f4609a5cb5e66b02c45dc2f310",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.3.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.3.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "2f83ce717ab9ac4c9da8d4265a1115c744b499b4f5bab95faf92e3d1a1cd6e3e",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.3.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.3.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "263920a3f2847c05e6c912f2bf0398cbb57bd6db60472b8fa9f065cca54f4852",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.4.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.4.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "064a317a3d50f4276e78234ffbdf3c685c8566643c5a16df809b94c4a98b97c9",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.4.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.4.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "1edb99f14f8c270d00a6ad098d1d3d05ac29497f8246aaae7199763ccd36fcc2",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.4.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.4.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "89a3b6759096a9143a8b11909fbc9e6bc793dc15c28c420b52fc161bf40641ac",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.4.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.4.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "f7fde795db8416a23f879ec7510bf69e56a93f49ff69295f9f99a9088c83403f",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.5.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.5.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "19a84f57aadfa9e73ecf1f663cb01cbcbf622c3d369378bcad6fcf026e852492",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.5.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.5.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "f9e79a8edc10caf123fa9d2fc63625b85106fec710d252b3d0b119ef0acf17fa",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.5.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.5.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "96874239e13088eaac08a22152ddb4c6d5d5bbafd09de280bbae3c8223c8b4f8",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.5.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.5.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "47eb5332b41c5ac76be7ec93754fc376aa960fc1d89c274d7e17c2dbed61e851",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.6.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.6.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "b5d0d5c67c7a81c5b4e8108292ea589f89addbc4baa2e903eb303f392d7b7824",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.6.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.6.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "6fefd28c5d41297f7b13920d83a1464cde2de0e3ce017122f500c6a8f3d67710",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.6.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.6.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "39d82411e5f3b48d1d505d3032876bd04657a822befe1579687b5f526914889c",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.6.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.6.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "60cd8a84856a3c9ea8a7183179fb26bbdddcb03093d40a37e277b3088c24d6a0",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.7.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.7.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "e3b9985341ff298ef05e3380ceae77bb1d56e3f33dd90fa5667a2a750f47b4a9",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.7.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.7.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "9d8d789bb8bcd1f071b7422d70a06fd7d80bc231e7c557b900f78533e5bbfaba",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.7.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.7.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "efb3f2fcc66e07eb91f2103748e6945d381171cede7d4cbc9c97dac58df1cacb",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.7.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.7.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "84a3db7d15c70e6638c46790bbc1c12ebc182335fcdacf863f029d82eb807509",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.8.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.8.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "7cda1996e22a7d0d90df6cb694fbc00164e9787bc96d8e6a7df54655293ad949",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.8.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.8.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "e8b6999444a9245fd1c564624162f58fc4c038d66268f056b74ca446088bd3f0",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.8.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.8.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "899ff1eb184c8599fc9e7370b12209e97ab3bc1addc5b0c62089bf75fd8f65cc",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.8.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.8.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "9b7f5d55eb2c27d716fcf75c538b47a27fef03b348cf6172129ebd3082993cd1",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.9.attn.proj.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.9.attn.proj.weight.bin",
+          "columns": 768,
+          "inner": 768,
+          "sha256": "d3f4a187401766380d50ea06c048790bdd7e858f4310cca1c30eb63afb74af64",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.9.attn.qkv.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.9.attn.qkv.weight.bin",
+          "columns": 2304,
+          "inner": 768,
+          "sha256": "e8f097e73e59cbbaa76f457bc1b9952dc9d2de2c09a65893f23711762d054a6c",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.9.mlp.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.9.mlp.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 768,
+          "sha256": "bac877ea120ee3dd162bc846a3624c9f0e39adcb599739a39fb9dd3106c5d465",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.blocks.9.mlp.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.blocks.9.mlp.linear_fc2.weight.bin",
+          "columns": 768,
+          "inner": 3072,
+          "sha256": "825411c5b3050b90f1853bb90eca60ba17c31d4cce301df59facff66b451bf94",
+          "rows": [
+            216,
+            432
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.merger.linear_fc1.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.merger.linear_fc1.weight.bin",
+          "columns": 3072,
+          "inner": 3072,
+          "sha256": "94224022006be543fcb782eff1b5002568a5209595e0c9112e6118e0b21c172c",
+          "rows": [
+            54,
+            108
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "tensor": "model.visual.merger.linear_fc2.weight",
+          "path": "/Users/zsdx/garnet-metal-investigation/logs/vision-global-alpha-probe-confirm-20261014/jobs/model.visual.merger.linear_fc2.weight.bin",
+          "columns": 1024,
+          "inner": 3072,
+          "sha256": "eba1c2ebfefb461405db793dbe7951505b6fa403f66279eaf05072555805a88a",
+          "rows": [
+            54,
+            108
+          ]
+        }
+      ]
+    }
+  },
+  "binary_sha256": "39e2bbfe94daa89561555c818c0f0af0b6aa4498553f80e82a4f466c2ad4a2b6"
+}

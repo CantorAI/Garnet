@@ -1,0 +1,4 @@
+/Users/zsdx/garnet-metal-investigation/source/test2026/metal/vision_global_alpha_gpu.mm:27:2: warning: 'auto' deduced as 'id' in declaration of 'manifest' [-Wauto-var-id]
+   27 |  auto manifest=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:argv[1]]] options:0 error:nil];size_t total=0;
+      |  ^~~~~~~~~~~~~
+1 warning generated.
