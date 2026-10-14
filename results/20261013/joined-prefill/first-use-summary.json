@@ -1,0 +1,192 @@
+{
+  "scope": "Keep first-use TTFT, startup and worker RSS separate from warm results.",
+  "cold_hardware_established": false,
+  "initialization_and_ttft_clocks_separate": true,
+  "unique_gpu_memory_established": false,
+  "profiles": [
+    {
+      "run": "joined-prefill-native-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "values": {
+        "control": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 153.9407290983945,
+          "initialization_s": 1.6587459577713162,
+          "peak_individual_rss_bytes": 2443526144,
+          "warm_ttft_ms": 54.82698988635093
+        },
+        "candidate": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 155.13895801268518,
+          "initialization_s": 1.6537896245718002,
+          "peak_individual_rss_bytes": 2443149312,
+          "warm_ttft_ms": 53.18470788188279
+        }
+      },
+      "first_use_ttft_fraction": 1.0077837029960068,
+      "rss_delta_mib": -0.359375
+    },
+    {
+      "run": "joined-prefill-native-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "values": {
+        "control": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 198.13983351923525,
+          "initialization_s": 1.6862108958885074,
+          "peak_individual_rss_bytes": 2498387968,
+          "warm_ttft_ms": 90.46506276354194
+        },
+        "candidate": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 259.53672896139324,
+          "initialization_s": 1.6734956242144108,
+          "peak_individual_rss_bytes": 2844712960,
+          "warm_ttft_ms": 87.78935391455889
+        }
+      },
+      "first_use_ttft_fraction": 1.3098664935347168,
+      "rss_delta_mib": 330.28125
+    },
+    {
+      "run": "joined-prefill-native-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "values": {
+        "control": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 128.63758276216686,
+          "initialization_s": 1.37526295799762,
+          "peak_individual_rss_bytes": 2069929984,
+          "warm_ttft_ms": 38.10983325820416
+        },
+        "candidate": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 192.68745835870504,
+          "initialization_s": 1.3727427499834448,
+          "peak_individual_rss_bytes": 2244558848,
+          "warm_ttft_ms": 36.83861461468041
+        }
+      },
+      "first_use_ttft_fraction": 1.4979095084129306,
+      "rss_delta_mib": 166.5390625
+    },
+    {
+      "run": "joined-prefill-native-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "values": {
+        "control": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 147.33368763700128,
+          "initialization_s": 1.3859483334235847,
+          "peak_individual_rss_bytes": 2069954560,
+          "warm_ttft_ms": 61.76104152109474
+        },
+        "candidate": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 141.9951869174838,
+          "initialization_s": 1.3765527915675193,
+          "peak_individual_rss_bytes": 2070200320,
+          "warm_ttft_ms": 62.97389592509717
+        }
+      },
+      "first_use_ttft_fraction": 0.9637659193553182,
+      "rss_delta_mib": 0.234375
+    },
+    {
+      "run": "joined-prefill-native-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "values": {
+        "control": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 356.73472890630364,
+          "initialization_s": 3.0046573125291616,
+          "peak_individual_rss_bytes": 3609411584,
+          "warm_ttft_ms": 226.59292735625058
+        },
+        "candidate": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 345.046125119552,
+          "initialization_s": 2.9816802295390517,
+          "peak_individual_rss_bytes": 3609985024,
+          "warm_ttft_ms": 220.99317668471485
+        }
+      },
+      "first_use_ttft_fraction": 0.9672344662865117,
+      "rss_delta_mib": 0.546875
+    },
+    {
+      "run": "joined-prefill-native-20261013",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "values": {
+        "control": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 578.0725837685168,
+          "initialization_s": 2.944428062532097,
+          "peak_individual_rss_bytes": 3629858816,
+          "warm_ttft_ms": 389.77253157645464
+        },
+        "candidate": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 571.5558743104339,
+          "initialization_s": 2.948559666518122,
+          "peak_individual_rss_bytes": 3629744128,
+          "warm_ttft_ms": 387.65418715775013
+        }
+      },
+      "first_use_ttft_fraction": 0.9887268318182472,
+      "rss_delta_mib": -0.109375
+    },
+    {
+      "run": "joined-prefill-native-confirm-20261013",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "values": {
+        "control": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 196.66058290749788,
+          "initialization_s": 1.6852278744336218,
+          "peak_individual_rss_bytes": 2494947328,
+          "warm_ttft_ms": 88.85679196100682
+        },
+        "candidate": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 255.35558350384235,
+          "initialization_s": 1.6825074376538396,
+          "peak_individual_rss_bytes": 2846433280,
+          "warm_ttft_ms": 86.47255203686655
+        }
+      },
+      "first_use_ttft_fraction": 1.2984583881964415,
+      "rss_delta_mib": 335.203125
+    },
+    {
+      "run": "joined-prefill-native-confirm-20261013",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "values": {
+        "control": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 127.93627078644931,
+          "initialization_s": 1.3771722705569118,
+          "peak_individual_rss_bytes": 2069790720,
+          "warm_ttft_ms": 38.94136438611895
+        },
+        "candidate": {
+          "first_use_requests": 2,
+          "first_use_ttft_ms": 188.64039541222155,
+          "initialization_s": 1.3759172081481665,
+          "peak_individual_rss_bytes": 2245091328,
+          "warm_ttft_ms": 38.106479216367006
+        }
+      },
+      "first_use_ttft_fraction": 1.4744872134587954,
+      "rss_delta_mib": 167.1796875
+    }
+  ]
+}

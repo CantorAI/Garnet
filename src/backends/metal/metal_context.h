@@ -54,6 +54,10 @@ public:
     MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false);
     // Preserve BF16 checkpoint values; use SIMD matvec for decode and FP32 tiled GEMM for up to 128 prompt rows.
     void EncodeBF16MatVec(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
+    // Try the bounded exact-half prefill pair; false leaves both outputs untouched.
+    bool EncodeJoinedBF16Prefill(const MetalMatrix&,const MetalBF16Weight&,
+        const MetalBF16Weight&,const MetalMatrix&,const MetalMatrix&);
+    size_t LastJoinedPrefillPairs() const;
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
     void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
     // Synchronous host update into an existing allocation, between command batches.

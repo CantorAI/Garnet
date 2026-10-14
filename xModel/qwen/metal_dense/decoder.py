@@ -7,7 +7,8 @@ from .layers import T,DenseLayer,norm
 class DenseMetalDecoder(MetalDecoder):
     def __init__(self,checkpoint,config,batch=1,capacity=256,bf16_head=True,resident=True,bf16_projections=True):
         self.session=None;self.bf16_projections=bf16_projections
-        if not garnet.backend_info().startswith('Garnet Metal/MPS '):raise ValueError('Native Metal package required')
+        backend=garnet.backend_info();self.joined_prefill_enabled='joined_mps_prefill' in backend
+        if not backend.startswith('Garnet Metal/MPS '):raise ValueError('Native Metal package required')
         if config.get('model_type') not in ('qwen3','qwen2'):raise ValueError('Only dense Qwen3/Qwen2 supported')
         if config.get('rope_scaling') is not None or config.get('use_sliding_window',False):raise ValueError('Scaled RoPE/sliding-window profiles are not implemented')
         if config.get('hidden_act','silu')!='silu':raise ValueError('Only SwiGLU dense MLP supported')

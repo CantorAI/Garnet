@@ -7,7 +7,8 @@ from .decoder_layer import T,norm,Qwen35LinearDecoderLayer,Qwen35FullDecoderLaye
 class MetalDecoder(CPUDecoder):
     def __init__(self,checkpoint,config,batch=1,capacity=256,bf16_head=True,resident=True,bf16_projections=True):
         self.session=None;self.bf16_projections=bf16_projections
-        if not garnet.backend_info().startswith('Garnet Metal/MPS '):
+        backend=garnet.backend_info();self.joined_prefill_enabled='joined_mps_prefill' in backend
+        if not backend.startswith('Garnet Metal/MPS '):
             raise ValueError('MetalDecoder requires the native Garnet Metal package')
         CPUDecoder.__init__(self,checkpoint,config,batch,capacity)
         try:
@@ -166,6 +167,7 @@ class MetalDecoder(CPUDecoder):
             if chunk not in profiles:profiles[chunk]=self._resident_prefill_graphs(chunk)
             offset+=chunk
         self.poisoned=True;prediction=None;self.prefill_profile=dict(prepare_ms=0,encode_ms=0,gpu_ms=0,wait_ms=0)
+        if self.joined_prefill_enabled:self.prefill_profile['joined_prefill_pairs']=0
         offset=0
         for chunk in self.prefill_chunk_plan:
             graphs=profiles[chunk]

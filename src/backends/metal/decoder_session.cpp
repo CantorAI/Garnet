@@ -19,11 +19,13 @@ X::Value TensorValue(X3PackageHost* host,MetalContext& gpu,const MetalMatrix& ma
 }
 }
 void MetalDecoderSession::Clear() {
+    joinedPrefillPairs_=0;
     hidden_=MetalMatrix();prediction_=MetalMatrix();hiddenShape_.clear();states_.clear();owners_.clear();head_=nullptr;
     gpu_.reset();kvInplaceUpdates_=0;poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
 }
 void MetalDecoderSession::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 void MetalDecoderSession::ResetUnlocked() {
+    joinedPrefillPairs_=0;
     if(!gpu_)throw std::logic_error("Metal session is closed");
     for(auto& state:states_)for(size_t i=0;i<2;++i)
         gpu_->Update(state.matrix[i],std::vector<float>(state.rows*state.columns[i],0));
@@ -158,9 +160,9 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         }
         const auto encoded=std::chrono::steady_clock::now();
         encodeMs_=std::chrono::duration<double,std::milli>(encoded-prepared).count();
-        gpu_->SubmitAndWait();gpuMs_=gpu_->LastGPUMs();
+        gpu_->SubmitAndWait();gpuMs_=gpu_->LastGPUMs();joinedPrefillPairs_=gpu_->LastJoinedPrefillPairs();
         waitMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-encoded).count();
-    }catch(...){kvInplaceUpdates_=0;gpu_->Abort();throw;}
+    }catch(...){kvInplaceUpdates_=0;joinedPrefillPairs_=0;gpu_->Abort();throw;}
     hiddenShape_=inputShape[0];
     auto result=X::Value::List(Host());
     if(predictionToken>=0) {

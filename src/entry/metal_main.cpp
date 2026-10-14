@@ -19,6 +19,9 @@ public:
 #ifdef GARNET_METAL_RESIDENT_KV_INPLACE
         info+="; resident_kv_inplace";
 #endif
+#ifdef GARNET_METAL_JOINED_PREFILL
+        info+="; joined_mps_prefill";
+#endif
         return info;
     }
     // Graphs own synchronous queues and release them through close(). There

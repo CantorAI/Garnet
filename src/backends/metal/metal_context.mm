@@ -45,6 +45,9 @@ struct MetalPipelines {
     id<MTLComputePipelineState> nativeBFSerial,nativeBFDot;
 #endif
     id<MTLComputePipelineState> halfRescale;
+#ifdef GARNET_METAL_JOINED_PREFILL
+    id<MTLComputePipelineState> joinedSplitRescale;
+#endif
     id<MTLComputePipelineState> rms;
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> kvInplace;
@@ -75,6 +78,15 @@ struct MetalContext::Impl {
     std::map<std::array<size_t,3>,MPSMatrixMultiplication*> halfMatmul;
     std::map<std::array<size_t,2>,MetalMatrix> halfScratch;
     std::map<std::array<size_t,3>,MetalMatrix> splitScratch;
+    size_t joinedPrefillPairs=0;
+#ifdef GARNET_METAL_JOINED_PREFILL
+    struct JoinedWeight {
+        MetalBF16Weight firstOwner,secondOwner;
+        id<MTLBuffer> data,scales;
+        MPSMatrix* view;
+    };
+    std::map<std::pair<const void*,const void*>,JoinedWeight> joinedWeights;
+#endif
 #ifdef GARNET_METAL_MPS_VISION_SCORES
     struct VisionScoreScratch {
         MetalMatrix query,key,scores;
@@ -958,6 +970,9 @@ kernel void vision_op(device const float* a [[buffer(0)]],device const float* b 
 }
 )METAL"];
         NSError* error=nil;
+#ifdef GARNET_METAL_JOINED_PREFILL
+        source=[source stringByAppendingString:@"\nkernel void joined_split_rescale(device const float* input [[buffer(0)]],device const int* scales [[buffer(1)]],device float* first [[buffer(2)]],device float* second [[buffer(3)]],constant HalfRescaleParams& p [[buffer(4)]],uint id [[thread_position_in_grid]]) {if(id>=p.rows*p.columns*2)return;ulong row=id/(p.columns*2),col=id%(p.columns*2);float v=ldexp(input[row*p.iStride+col],-scales[col]);if(col<p.columns)first[row*p.oStride+col]=v;else second[row*p.oStride+col-p.columns]=v;}\n"];
+#endif
         MTLCompileOptions* compileOptions=nil;
 #ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
         source=[source stringByAppendingString:[NSString stringWithUTF8String:R"METAL(
@@ -1054,6 +1069,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         if(!impl_->kernels->bf16Split||!impl_->kernels->bf16SplitReduce)throw std::runtime_error("Cannot create split key projection pipelines");
 #endif
         impl_->kernels->halfRescale=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"half_rescale"] error:&error];
+#ifdef GARNET_METAL_JOINED_PREFILL
+        impl_->kernels->joinedSplitRescale=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"joined_split_rescale"] error:&error];
+        if(!impl_->kernels->joinedSplitRescale)throw std::runtime_error("Cannot create joined prefill rescale pipeline");
+#endif
         impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
         impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
@@ -1202,6 +1221,68 @@ void MetalContext::EncodeArgmax(const MetalMatrix& input,const MetalMatrix& outp
         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }
+bool MetalContext::EncodeJoinedBF16Prefill(const MetalMatrix& input,const MetalBF16Weight& first,
+    const MetalBF16Weight& second,const MetalMatrix& firstOutput,const MetalMatrix& secondOutput) {
+#ifndef GARNET_METAL_JOINED_PREFILL
+    return false;
+#else
+    @autoreleasepool {
+        if(!input.impl_||!first.impl_||!second.impl_||!firstOutput.impl_||!secondOutput.impl_)return false;
+        auto a=input.impl_->matrix,x=firstOutput.impl_->matrix,y=secondOutput.impl_->matrix;
+        auto w0=first.impl_,w1=second.impl_;
+        const bool selected=(a.rows==44&&a.columns==1024&&w0->rows==3072)||
+            (a.rows==26&&a.columns==896&&w0->rows==4864);
+        if(!selected||w0->rows!=w1->rows||w0->columns!=w1->columns||w0->floatPrefill||w1->floatPrefill||
+            !w0->exactHalf||!w1->exactHalf||!w0->halfScales||!w1->halfScales)return false;
+        if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
+        if(a.device!=impl_->device||x.device!=impl_->device||y.device!=impl_->device||
+            w0->buffer.device!=impl_->device||w1->buffer.device!=impl_->device||
+            a.columns!=w0->columns||x.rows!=a.rows||y.rows!=a.rows||x.columns!=w0->rows||y.columns!=w1->rows)
+            throw std::invalid_argument("Joined prefill shape/device mismatch");
+        if(x.data==y.data||x.data==a.data||y.data==a.data||x.rowBytes!=y.rowBytes)return false;
+        auto usable=[&](const MetalMatrix& m){return m.impl_->ready||(m.impl_->pending&&impl_->pendingOutputs.count(m.impl_.get())!=0);};
+        if(!usable(input))throw std::logic_error("Uninitialized joined prefill input");
+        for(const auto* output:{&firstOutput,&secondOutput})if(output->impl_->pending&&impl_->pendingOutputs.count(output->impl_.get())==0)
+            throw std::logic_error("Joined prefill output belongs to another batch");
+        const auto identity=std::make_pair(static_cast<const void*>(w0.get()),static_cast<const void*>(w1.get()));
+        auto found=impl_->joinedWeights.find(identity);
+        if(found==impl_->joinedWeights.end()) {
+            const size_t rowBytes=[MPSMatrixDescriptor rowBytesFromColumns:a.columns dataType:MPSDataTypeFloat16];
+            auto descriptor=[MPSMatrixDescriptor matrixDescriptorWithRows:x.columns*2 columns:a.columns rowBytes:rowBytes dataType:MPSDataTypeFloat16];
+            Impl::JoinedWeight pack;pack.firstOwner=first;pack.secondOwner=second;
+            pack.data=[impl_->device newBufferWithLength:x.columns*2*rowBytes options:MTLResourceStorageModeShared];
+            pack.scales=[impl_->device newBufferWithLength:x.columns*8 options:MTLResourceStorageModeShared];
+            if(!pack.data||!pack.scales)throw std::runtime_error("Joined prefill allocation failed");
+            std::memset(pack.data.contents,0,x.columns*2*rowBytes);
+            for(size_t index=0;index<2;++index) {
+                auto weight=index?w1:w0;
+                for(size_t row=0;row<x.columns;++row)std::memcpy(static_cast<char*>(pack.data.contents)+(index*x.columns+row)*rowBytes,
+                    static_cast<const char*>(weight->exactHalf.data.contents)+row*weight->exactHalf.rowBytes,a.columns*2);
+                std::memcpy(static_cast<char*>(pack.scales.contents)+index*x.columns*4,weight->halfScales.contents,x.columns*4);
+            }
+            pack.view=[[MPSMatrix alloc] initWithBuffer:pack.data descriptor:descriptor];
+            if(!pack.view)throw std::runtime_error("Joined prefill matrix view failed");
+            found=impl_->joinedWeights.emplace(identity,std::move(pack)).first;
+        }
+        const std::array<size_t,3> key{a.rows,x.columns*2,a.columns};
+        auto product=impl_->halfMatmul.find(key);
+        if(product==impl_->halfMatmul.end())product=impl_->halfMatmul.emplace(key,[[MPSMatrixMultiplication alloc] initWithDevice:impl_->device transposeLeft:NO transposeRight:YES resultRows:a.rows resultColumns:x.columns*2 interiorColumns:a.columns alpha:1 beta:0]).first;
+        if(!product->second)throw std::runtime_error("Joined prefill product creation failed");
+        const std::array<size_t,2> shape{a.rows,x.columns*2};auto scratch=impl_->halfScratch.find(shape);
+        if(scratch==impl_->halfScratch.end())scratch=impl_->halfScratch.emplace(shape,Allocate(a.rows,x.columns*2)).first;
+        auto temporary=scratch->second.impl_->matrix;
+        [product->second encodeToCommandBuffer:impl_->command leftMatrix:a rightMatrix:found->second.view resultMatrix:temporary];
+        struct Params{uint64_t rows,columns,iStride,oStride;};Params p{a.rows,x.columns,temporary.rowBytes/4,x.rowBytes/4};
+        auto encoder=[impl_->command computeCommandEncoder];if(!encoder)throw std::runtime_error("Joined prefill encoder unavailable");
+        [encoder setComputePipelineState:impl_->kernels->joinedSplitRescale];[encoder setBuffer:temporary.data offset:0 atIndex:0];
+        [encoder setBuffer:found->second.scales offset:0 atIndex:1];[encoder setBuffer:x.data offset:0 atIndex:2];[encoder setBuffer:y.data offset:0 atIndex:3];[encoder setBytes:&p length:sizeof(p) atIndex:4];
+        [encoder dispatchThreads:MTLSizeMake(a.rows*x.columns*2,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
+        for(const auto* output:{&firstOutput,&secondOutput}){output->impl_->ready=false;output->impl_->pending=true;if(impl_->pendingOutputs.insert(output->impl_.get()).second)impl_->outputs.push_back(output->impl_);}
+        ++impl_->joinedPrefillPairs;return true;
+    }
+#endif
+}
+size_t MetalContext::LastJoinedPrefillPairs() const {return impl_->joinedPrefillPairs;}
 void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
     @autoreleasepool {
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
@@ -1322,6 +1403,7 @@ void MetalContext::Update(const MetalMatrix& matrix,const float* values,size_t c
 void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
+    impl_->joinedPrefillPairs=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
     }
@@ -1817,6 +1899,7 @@ void MetalContext::SubmitAndWait() {
 }
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
+    impl_->joinedPrefillPairs=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

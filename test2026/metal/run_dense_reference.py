@@ -29,6 +29,10 @@ try:
   control=list(inputs);control[1]=state[0];control[2]=state[1]
   explicit=graph.run(control).tolist()
   session.run([graph],inputs[0],inputs[3],inputs[4],inputs[5],-1)
+  if 'joined_mps_prefill' in garnet.backend_info():
+   expected_pair=int((batch*chunk==44 and c['hidden_size']==1024 and c['intermediate_size']==3072) or (batch*chunk==26 and c['hidden_size']==896 and c['intermediate_size']==4864)) if len(sys.argv)>4 and sys.argv[4]=='bf16' else 0
+   assert session.joined_prefill_pairs==expected_pair,'Joined prefill dispatch selection mismatch'
+   print('joined_prefill_dispatch PASS',batch,chunk,session.joined_prefill_pairs)
   h=session.hidden().tolist();state=session.snapshot(0);a=state[0].tolist();b=state[1].tolist();resident=[]
   for row in range(batch):
    resident+=h[row*(len(h)//batch):(row+1)*(len(h)//batch)]

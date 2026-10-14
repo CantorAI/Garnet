@@ -827,6 +827,17 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
         auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
+#ifdef GARNET_METAL_JOINED_PREFILL
+        if(!profileOps&&slots_[op.a].rows>2&&i+1<ops_.size()&&(packedOutput||residentOps_[i+1])) {
+            const auto& next=ops_[i+1];
+            auto projection=[&](const Op& value){return (value.kind==Kind::BF16MatVec||
+                (value.kind==Kind::MatMul&&value.transpose))&&slots_[value.b].bf16.Valid();};
+            if(projection(op)&&projection(next)&&op.a==next.a&&op.out!=next.out&&
+                gpu.EncodeJoinedBF16Prefill(a,slots_[op.b].bf16,slots_[next.b].bf16,out,slots_[next.out].matrix)) {
+                ++i;continue;
+            }
+        }
+#endif
         if(op.kind==Kind::MatMul) {
             if(slots_[op.b].bf16.Valid()){if(!op.transpose)throw std::logic_error("BF16 projection must transpose checkpoint rows");gpu.EncodeBF16MatVec(a,slots_[op.b].bf16,out);}
             else gpu.EncodeMatMul(a,b,out,op.transpose);
