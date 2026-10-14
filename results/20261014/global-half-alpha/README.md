@@ -73,22 +73,67 @@ scaled same-shape cache entries, independent FP64 checks, counter resets and
 common-scale rejection with lossless row-scale fallback. Library SHA-256 is
 `887b70f521d5af7f948bcb32a2cf94842377e2ecb828bc9280ffb38af6fe058f`.
 
-Owned validation PID **12334** is live at
-`ROOT/logs/global-half-alpha-checks-20261014`, executing all 19 original
-model/cache/vision/prefill stages. Complete tail fixtures retain their original
-random sequence and coverage and retry only on guarded contention. Dependency
-PID **15843**, directory `ROOT/logs/global-half-alpha-native-20261014`, verifies
-that exact live handle before waiting and starts all six sequential matched
-native profiles only after validation exits 0. Inspect current authoritative
-state before continuing. Historical snapshots are in `native/pending`.
-The latest snapshot records both dense tail suites and text/coder private-KV
-validation completed. All remaining stages are still required. The prepared
-native archiver pins candidate/control identities and original source bytes;
-the native verifier audits all accepted cases, all six complete-output profiles,
-actual global-alpha use and independently recomputed warm/first-use phases.
-No whole-model speed gain or runtime promotion is claimed. The unchanged
-overall 2x decode / half-TTFT goal remains unmet; selected libraries and
-protected checkouts remain untouched.
+Validation PID **12334** completed successfully in 1203.47 seconds. All 19
+model/cache/vision/prefill stages passed, including all eight complete dense-tail
+fixtures per dense model with their original random sequence and coverage.
+Dependent benchmark PID **15843** completed all six sequential native profiles.
+The local verifier checked 641 archived files, all 72 complete output requests,
+actual positive global-alpha counters versus zero control counters, source and
+library identities, contention monitors, fresh image preprocessing and independently
+recomputed warm means. Historical pending snapshots remain in `native/pending`.
+
+| Model / batch | Control -> candidate decode tokens/s per row | Control -> candidate warm TTFT ms | Warm TTFT reduction |
+| --- | ---: | ---: | ---: |
+| Text / 1 | 59.0555 -> 59.1669 | 52.4403 -> 49.5402 | 5.53% |
+| Text / 2 | 57.9704 -> 57.0927 | 87.4583 -> 82.3701 | 5.82% |
+| Coder / 1 | 71.6899 -> 72.1945 | 36.2565 -> 34.3173 | 5.35% |
+| Coder / 2 | 70.8400 -> 70.9176 | 56.1233 -> 51.9464 | 7.44% |
+| VL / 1 | 48.2369 -> 47.4741 | 208.5971 -> 195.9944 | 6.04% |
+| VL / 2 | 44.3473 -> 44.6104 | 380.6332 -> 360.9455 | 5.17% |
+
+Four warm requests per policy/profile, from two fresh sequential workers; each
+worker's first request is excluded from the warm mean. B2 aggregate TPS is twice
+the per-row rate. Decode changes range from -1.58% to +0.70% and are inconclusive.
+Prefill GPU durations decrease across all profiles, while encoding duration
+increases; exact phase observations are in `native/phases.json`.
+
+First request AFTER initialization is recorded separately: control -> candidate
+TTFT ms is text B1 150.15 -> 156.87, text B2 188.13 -> 184.08, coder B1
+121.81 -> 165.96, coder B2 143.88 -> 185.38, VL B1 352.05 -> 374.76 and
+VL B2 571.23 -> 685.93. Five profiles therefore regress on first use. These
+are observed phases with OS caches unflushed, not hardware-cold end-to-end sums.
+
+Initial archive SHA-256
+`7748269dd13518fb7305ee27ab2d8f5030093d5cf41755cd4acf386d82763133`.
+Fresh full-six confirmation PID **36981** completed successfully in 144.81 seconds.
+Combined archive SHA-256
+`d848315ee193958771d117a0aa347dee2f6383bc702cfaac3f7281dd1596d727`.
+All 950 preserved files and both sets of 72 complete requests independently
+verified. Full precision results are in `native/verification.json` and
+`native/confirmation.json`; separate prefill phases are also recorded.
+
+| Model / batch | Repeat control -> candidate tokens/s per row | Repeat control -> candidate warm TTFT ms | Repeat warm TTFT reduction |
+| --- | ---: | ---: | ---: |
+| Text / 1 | 59.1268 -> 58.7013 | 52.0985 -> 49.4033 | 5.17% |
+| Text / 2 | 57.9222 -> 57.6509 | 86.2570 -> 80.5807 | 6.58% |
+| Coder / 1 | 72.0331 -> 71.8944 | 36.1704 -> 33.1865 | 8.25% |
+| Coder / 2 | 70.7938 -> 70.7996 | 56.2728 -> 49.7387 | 11.61% |
+| VL / 1 | 47.7617 -> 47.5913 | 203.4895 -> 193.7058 | 4.81% |
+| VL / 2 | 44.3583 -> 44.4210 | 380.6422 -> 362.6300 | 4.73% |
+
+The warm latency direction repeats across all six profiles, though magnitude
+varies. Decode changes in the repeat are -0.72% to +0.14%, with no useful speed
+gain. Repeat first requests AFTER initialization are text B1 153.46 -> 153.91,
+text B2 190.23 -> 188.14, coder B1 122.47 -> 121.90, coder B2 142.28 ->
+142.64, VL B1 341.91 -> 331.90 and VL B2 574.80 -> 558.35 ms. Large first-use
+penalties from the initial run do not repeat. OS/driver caches were not flushed;
+the repeat must not erase those initial observations or establish cold improvement.
+
+The candidate stays optional and unselected. VL B2 uses attention control here,
+whereas the currently selected VL B2 library is the original resident-KV build;
+admission requires that selected-control comparison as well. No fresh vLLM
+comparison has been made for this candidate. The overall 2x decode / half-TTFT
+goal remains unmet. Selected libraries and protected checkouts remain untouched.
 
 ```text
 python3 audit_global_half_scale.py ROOT REPORT_JSON
@@ -102,6 +147,9 @@ python prepare_global_half_alpha_sources.py
 python3 install_global_half_alpha_sources.py ROOT
 python3 launch_global_half_alpha_checks.py ROOT ROOT/logs/global-half-alpha-checks-20261014 checks
 python3 queue_global_half_alpha_profiles.py ROOT ROOT/logs/global-half-alpha-native-20261014
+python3 archive_global_half_alpha_native.py ROOT ARCHIVE
+python verify_global_half_alpha_native.py RESULTS VERIFICATION_JSON
+python3 launch_confirm_global_half_alpha_profiles.py ROOT ROOT/logs/global-half-alpha-confirm-native-20261014
 ```
 
 Archive SHA-256:

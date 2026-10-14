@@ -10,4 +10,6 @@ source=source.replace("'METAL_PACKED_PREFILL_NORM' in meta['options']","'METAL_G
 source=source.replace("r['packed_prefill_norm_enabled']==candidate","r['global_half_alpha_enabled']==candidate")
 source=source.replace("assert r['prefill_profile'].get('packed_prefill_norm_dispatches',0)==(layers*len(r['prefill_chunk_plan']) if candidate else 0)","assert (r['prefill_profile'].get('global_half_alpha_dispatches',0)>0) if candidate else (r['prefill_profile'].get('global_half_alpha_dispatches',0)==0)\n  assert not r['packed_prefill_norm_enabled']")
 source=source.replace('all_actual_prefill_counters_match','all_actual_global_alpha_counters_match').replace('Packed prefill versus identical attention; no fresh vLLM comparison','Global alpha versus identical attention; no fresh vLLM comparison')
+if '--confirm' in __import__('sys').argv[3:]:
+ source=source.replace('global-half-alpha-native-20261014','global-half-alpha-confirm-native-20261014')
 exec(compile(source,str(Path(__file__)),'exec'))

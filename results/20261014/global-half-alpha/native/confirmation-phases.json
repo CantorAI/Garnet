@@ -1,0 +1,113 @@
+{
+  "scope": "Recompute native prefill phases from complete warm request records.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "control",
+      "prepare_ms": 0.288552,
+      "encode_ms": 5.89809375,
+      "gpu_ms": 38.09584362898022,
+      "wait_ms": 38.99737525
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "candidate",
+      "prepare_ms": 0.28547900000000004,
+      "encode_ms": 6.41760425,
+      "gpu_ms": 33.524291473440826,
+      "wait_ms": 34.47927075
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "prepare_ms": 0.31931225,
+      "encode_ms": 5.31671875,
+      "gpu_ms": 55.77553133480251,
+      "wait_ms": 56.63254175
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "prepare_ms": 0.318802,
+      "encode_ms": 5.8598125,
+      "gpu_ms": 50.637583481147885,
+      "wait_ms": 51.61335425
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "prepare_ms": 0.2553645,
+      "encode_ms": 5.14413525,
+      "gpu_ms": 27.94844808522612,
+      "wait_ms": 28.941021
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "prepare_ms": 0.24732274999999998,
+      "encode_ms": 5.541177,
+      "gpu_ms": 24.672218831256032,
+      "wait_ms": 25.60725025
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "control",
+      "prepare_ms": 0.27270875,
+      "encode_ms": 5.00932275,
+      "gpu_ms": 46.875833184458315,
+      "wait_ms": 47.981125
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "candidate",
+      "prepare_ms": 0.3019895,
+      "encode_ms": 5.681198,
+      "gpu_ms": 39.907312486320734,
+      "wait_ms": 40.8249585
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "control",
+      "prepare_ms": 0.21478125,
+      "encode_ms": 5.69677075,
+      "gpu_ms": 88.81687500979751,
+      "wait_ms": 89.855729
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "candidate",
+      "prepare_ms": 0.22445825,
+      "encode_ms": 6.28793775,
+      "gpu_ms": 77.56009371951222,
+      "wait_ms": 78.373927
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "prepare_ms": 0.6294584999999999,
+      "encode_ms": 16.787708249999998,
+      "gpu_ms": 185.16406253911555,
+      "wait_ms": 188.26554199999998
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "prepare_ms": 0.60959425,
+      "encode_ms": 18.611134999999997,
+      "gpu_ms": 164.544073282741,
+      "wait_ms": 167.369313
+    }
+  ]
+}
