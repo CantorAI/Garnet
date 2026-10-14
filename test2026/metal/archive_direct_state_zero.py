@@ -22,6 +22,19 @@ for name in ('run_joined_prefill_checks.py','compare_joined_prefill.py','compare
     files['evidence/source/test2026/metal/'+name]=r/'source/test2026/metal'/name
 files['evidence/source-manifest.json']=r/'work/direct-state-zero-manifest.json'
 files['evidence/installer.py']=r/'work/install_direct_state_zero.py'
+metadata=json.loads((r/'logs/direct-state-zero-checks-20261013/jobs/metadata.json').read_text())
+for status in json.loads((r/'logs/direct-state-zero-checks-20261013/jobs/statuses.json').read_text()):
+    for argument in status['command']:
+        path=Path(argument).resolve()
+        if path.is_file() and path.is_relative_to((r/'source').resolve()):
+            files['evidence/check-source/'+str(path.relative_to(r/'source'))]=path
+for name in ('test2026/metal/reference_dense.py','test2026/pi5b/reference_decoder.py',
+             'test2026/metal/test_qwen35_extended_prefill_reference.py'):
+    files['evidence/check-source/'+name]=r/'source'/name
+for name,expected in metadata['source_sha256'].items():
+    path=r/'source'/name
+    assert hashlib.sha256(path.read_bytes()).hexdigest()==expected,name
+    files['evidence/check-source/'+name]=path
 for target in ('garnet','garnet_metal'):
     files['evidence/build/'+target+'-flags.make']=r/'build-direct-state-zero/CMakeFiles'/(target+'.dir')/'flags.make'
 hashes={}

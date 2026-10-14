@@ -15,9 +15,21 @@ checks=e/'logs/direct-state-zero-checks-20261013'
 assert json.loads((checks/'exit.json').read_text())['exit_code']==0
 statuses=json.loads((checks/'jobs/statuses.json').read_text())
 assert len(statuses)==19 and all(s['exit_code']==0 and not s['interruption'] for s in statuses)
+validation_stages=len(statuses)
 ctest=(checks/'jobs/ctest.log').read_text()
 assert '100% tests passed' in ctest and 'metal_state_zero_reference' in ctest
+assert 'state_zero checks 36 PASS' in (checks/'jobs/CTest-LastTest.log').read_text()
+for model in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct'):
+    log=(checks/'jobs'/(model+'-exact-tails.log')).read_text()
+    assert log.count('pretrained dense PASS')==8
+    assert log.count('dense reference full_attention')==24
+for model in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct','Qwen3.5-0.8B'):
+    assert (checks/'jobs'/(model+'-private-kv.log')).read_text().count('private_kv_reference PASS')==8
+extended=(checks/'jobs/qwen35-extended-prefill.log').read_text()
+assert extended.count('pretrained chunk PASS')==12 and extended.count('chunk reference ')==36
 metadata=json.loads((checks/'jobs/metadata.json').read_text())
+for name,expected in metadata['source_sha256'].items():
+    assert hashlib.sha256((e/'check-source'/name).read_bytes()).hexdigest()==expected,name
 assert 'METAL_DIRECT_STATE_ZERO' in metadata['options']
 assert metadata['control_sha256']=='73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2'
 results=[];outputs=0
@@ -46,7 +58,8 @@ for job in sorted((e/'logs').glob('direct-state-zero-inference*')):
         assert abs(profile['decode_ratio']-means['candidate']['decode_tps']/means['control']['decode_tps'])<1e-12
         results.append(dict(run=job.name,model=profile['model'],batch=profile['batch'],
             ttft_fraction=profile['ttft_fraction'],decode_ratio=profile['decode_ratio'],
-            means=profile['means'],reset_ms={p:statistics.mean(r['reset_seconds'] for r in rows)*1000 for p,rows in warm.items()}))
+            means=profile['means'],reset_ms={p:statistics.mean(r['reset_seconds'] for r in rows)*1000 for p,rows in warm.items()},
+            first_request_ttft_ms={p:statistics.mean(r['ttft_seconds'] for r in records if r['build_policy']==p and r['request']==0)*1000 for p in warm}))
         outputs+=len(records)
     statuses=json.loads((job/'jobs/statuses.json').read_text())
     assert len(statuses)==24 and all(s['exit_code']==0 and 'interruption' not in s for s in statuses)
@@ -57,6 +70,6 @@ for job in sorted((e/'logs').glob('direct-state-zero-inference*')):
         assert monitors and all(m['guard_passed'] for m in monitors)
 assert results,'No complete inference evidence'
 result=dict(scope='Native candidate/control; not a fresh vLLM comparison',
-    files=len(files),validation_stages=len(statuses),complete_matched_outputs=outputs,profiles=results)
+    files=len(files),validation_stages=validation_stages,complete_matched_outputs=outputs,profiles=results)
 (root/'summary.json').write_bytes((json.dumps(result,indent=2)+'\n').encode())
-print(json.dumps(dict(files=len(files),validation_stages=len(statuses),complete_matched_outputs=outputs,profiles=len(results))))
+print(json.dumps(dict(files=len(files),validation_stages=validation_stages,complete_matched_outputs=outputs,profiles=len(results))))
