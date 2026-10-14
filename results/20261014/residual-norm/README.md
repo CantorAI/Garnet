@@ -49,8 +49,11 @@ uses library SHA-256
 `409246a7ab8e069d048177eb490fdf34cd354c8f4e2cb4b718ceead32c49d2ce`.
 Snapshots in `native/pending` are historical observations, not terminal proof.
 Owned numerical validation
-PID **35350** is running at `ROOT/logs/residual-norm-checks-20261014`; all 19
-model/vision/cache/prefill stages must pass. Owned dependency PID **36987** at
+PID **35350** is running at `ROOT/logs/residual-norm-checks-20261014`. The latest
+snapshot records completed configure/build/CTest, both dense exact-tail suites,
+all three private-KV suites, serving and mixed-image-pipeline checks. Qwen3.5
+layer validation is running; all 19 model/vision/cache/prefill stages must pass.
+Owned dependency PID **36987** at
 `ROOT/logs/residual-norm-native-20261014` verifies that exact live validation
 process before waiting, then starts six sequential native ABBA profiles only
 after validation exits 0. It requires full generated-output matches and
@@ -85,3 +88,9 @@ Initial archive SHA-256:
 BF16-to-FP32 learned-value expansion, shader identity, terminal stages,
 both-output/padding/FP64 gates and independently recomputes timing ratios.
 Full native raw evidence will be archived after the jobs become terminal.
+`archive_residual_norm_native.py` refuses live or failed jobs, pins candidate
+and control libraries and preserves executed source identities and prior bytes.
+`verify_residual_norm_native.py` checks all six profiles, 72 full outputs,
+actual last-session dispatch counts, fresh VL encodings and independently
+recomputes warm means, aggregate throughput and first-use latency after
+initialization. Its result explicitly retains the unmet overall goal.
