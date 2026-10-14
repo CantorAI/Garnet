@@ -43,7 +43,8 @@ class MetalCompiledGraph {
     size_t LowerVision(size_t input,const X::Value& attributes);
     void Clear();
     void PrepareInputs(X::Value,const std::unordered_set<size_t>& skip={});
-    void Encode(MetalContext&,bool packedOutput=true);
+    void Encode(MetalContext&,bool packedOutput=true,const MetalMatrix* greedyOutput=nullptr);
+    void EncodeGreedy(MetalContext&,const MetalMatrix& prediction);
     bool CanUpdateKVInPlace(size_t part) const;
     bool ComputeResetKVPrefix(size_t part) const;
     bool CanResetKVPrefix(size_t part) const {return part>=1&&part<=2&&resetKVPrefix_[part-1];}

@@ -71,6 +71,11 @@ public:
     size_t LastJoinedGlobalMlpBlocks() const;
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
     void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
+    // Greedy-only BF16 projection. False encodes nothing; generic logits remain separate.
+    // Optional full logits are emitted only for numerical validation.
+    bool EncodeBF16Argmax(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&,
+        const MetalMatrix* debugLogits=nullptr);
+    size_t LastFusedHeadArgmaxDispatches() const;
     // Synchronous host update into an existing allocation, between command batches.
     void Update(const MetalMatrix&,const std::vector<float>& values);
     void Update(const MetalMatrix&,const float* values,size_t count);

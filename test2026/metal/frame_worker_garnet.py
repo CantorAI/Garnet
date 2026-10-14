@@ -58,6 +58,8 @@ try:
             hidden.append(decoder.io.embedding([token]*batch));positions.append([current]*3);current+=1
         assembled=time.monotonic()
         prediction=decoder.prefill_sequence(hidden,[positions for row in range(batch)])
+        fused_head_enabled='fused_head_argmax' in garnet.backend_info()
+        fused_head_counts=[decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0]
         first=time.monotonic()
         emit('frame_first',dict(request=last,worker_ttft_seconds=first-start))
         output=[[] for row in range(batch)];active=[1]*batch;steps=0
@@ -67,6 +69,7 @@ try:
                 if prediction[row] in stops:active[row]=0
             if not any(active) or token==workload['max_tokens']-1:break
             prediction=decoder.step(prediction,active=active,positions=[[current]*3 for row in range(batch)])
+            fused_head_counts.append(decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0)
             current+=1;steps+=1
         end=time.monotonic()
         decoded=[tokenizer.decode(ids) for ids in output]
@@ -92,6 +95,7 @@ try:
             global_half_alpha_enabled='global_half_alpha' in garnet.backend_info(),
             joined_global_mlp_enabled='joined_global_mlp' in garnet.backend_info(),
             single_coder_head_enabled='single_coder_head' in garnet.backend_info(),
+            fused_head_argmax_enabled=fused_head_enabled,fused_head_argmax_counts=fused_head_counts,
             vision_global_alpha_enabled='vision_global_alpha' in garnet.backend_info(),
             vision_global_alpha_dispatches=vision.graph.vision_global_alpha_dispatches if 'vision_global_alpha' in garnet.backend_info() else 0,
             single_coder_head_counts=[decoder.session.single_coder_head_dispatches if 'single_coder_head' in garnet.backend_info() else 0],

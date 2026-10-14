@@ -876,7 +876,15 @@ bool MetalCompiledGraph::SwapOutputStorage(size_t part,MetalMatrix& replacement)
     for(auto id:outputStorageGroups_[part])slots_[id].matrix=replacement;
     replacement=finished;return true;
 }
-void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
+void MetalCompiledGraph::EncodeGreedy(MetalContext& gpu,const MetalMatrix& prediction) {
+#ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+    Encode(gpu,true,&prediction);
+#else
+    Encode(gpu);gpu.EncodeArgmax(slots_[output_].matrix,prediction);
+#endif
+}
+void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput,const MetalMatrix* greedyOutput) {
+    bool greedyEncoded=false;
     // Opt-in isolated-operation diagnostics deliberately split submissions.
     // They identify expensive kernels; their latency is not a serving metric.
     const char* profile=std::getenv("GARNET_METAL_PROFILE_OPS");
@@ -886,6 +894,13 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
         auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
+#ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+        if(greedyOutput&&!profileOps&&i+1==ops_.size()&&op.out==output_&&
+            (op.kind==Kind::BF16MatVec||(op.kind==Kind::MatMul&&op.transpose))&&
+            slots_[op.b].bf16.Valid()&&gpu.EncodeBF16Argmax(a,slots_[op.b].bf16,*greedyOutput)) {
+            greedyEncoded=true;continue;
+        }
+#endif
 #ifdef GARNET_METAL_PACKED_PREFILL_NORM
         if(!profileOps&&op.kind==Kind::Add&&i+2<ops_.size()&&
             (packedOutput||(residentOps_[i+1]&&residentOps_[i+2]))) {
@@ -1006,6 +1021,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
             gpu.Begin();
         }
     }
+    if(greedyOutput&&!greedyEncoded)gpu.EncodeArgmax(slots_[output_].matrix,*greedyOutput);
 }
 X::Value MetalCompiledGraph::Run(X::Value inputs) {
     std::lock_guard<std::mutex> lock(mutex_);

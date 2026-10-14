@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "metal_context.h"
 #include "exact_half_codec.h"
+#ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+#include "fused_head_argmax_shader.h"
+#endif
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 #import <MetalPerformanceShaders/MetalPerformanceShaders.h>
@@ -44,6 +47,9 @@ bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->g
 struct MetalPipelines {
     id<MTLLibrary> library;
     id<MTLComputePipelineState> argmax;
+#ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+    id<MTLComputePipelineState> fusedHead,fusedHeadReduce;
+#endif
     id<MTLComputePipelineState> bf16Decode,bf16DecodeSmall,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
     id<MTLComputePipelineState> bf16Split,bf16SplitReduce;
 #ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
@@ -88,6 +94,10 @@ struct MetalContext::Impl {
     id<MTLCommandBuffer> command;
     NSMutableArray<id<MTLCommandBuffer>>* submitted=nil;
     size_t partialSubmissions=0;
+    size_t fusedHeadArgmaxDispatches=0;
+#ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+    std::map<std::array<size_t,2>,MetalMatrix> fusedHeadScratch;
+#endif
     double gpuMs=0;
     std::vector<std::shared_ptr<MetalMatrix::Impl>> outputs;
     std::unordered_set<const MetalMatrix::Impl*> pendingOutputs;
@@ -1192,6 +1202,13 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
+#ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+        auto greedyLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:kFusedHeadArgmaxShader] options:compileOptions error:&error];
+        if(greedyLibrary) {
+            impl_->kernels->fusedHead=[impl_->device newComputePipelineStateWithFunction:[greedyLibrary newFunctionWithName:@"fused_head"] error:&error];
+            impl_->kernels->fusedHeadReduce=[impl_->device newComputePipelineStateWithFunction:[greedyLibrary newFunctionWithName:@"fused_head_reduce"] error:&error];
+        }
+#endif
 #ifdef GARNET_METAL_RESIDENT_KV_INPLACE
         impl_->kernels->kvInplace=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_update_inplace"] error:&error];
         if(!impl_->kernels->kvInplace)throw std::runtime_error("Cannot create private KV update pipeline");
@@ -1403,6 +1420,67 @@ void MetalContext::EncodeArgmax(const MetalMatrix& input,const MetalMatrix& outp
         [encoder dispatchThreadgroups:MTLSizeMake(a.rows,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
+}
+size_t MetalContext::LastFusedHeadArgmaxDispatches() const {return impl_->fusedHeadArgmaxDispatches;}
+bool MetalContext::EncodeBF16Argmax(const MetalMatrix& input,const MetalBF16Weight& weight,
+    const MetalMatrix& output,const MetalMatrix* debugLogits) {
+#ifndef GARNET_METAL_FUSED_HEAD_ARGMAX
+    return false;
+#else
+    @autoreleasepool {
+        if(!input.impl_||!weight.impl_||!output.impl_)return false;
+        auto a=input.impl_->matrix,o=output.impl_->matrix;auto w=weight.impl_;
+        auto projection=impl_->kernels->fusedHead,reduction=impl_->kernels->fusedHeadReduce;
+        if(a.rows>2||w->rows>16777216||!projection||!reduction||
+            projection.threadExecutionWidth!=32||projection.maxTotalThreadsPerThreadgroup<128||
+            projection.staticThreadgroupMemoryLength>impl_->device.maxThreadgroupMemoryLength||
+            reduction.threadExecutionWidth!=32||reduction.maxTotalThreadsPerThreadgroup<128||
+            reduction.staticThreadgroupMemoryLength>impl_->device.maxThreadgroupMemoryLength)return false;
+        if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
+        if(a.device!=impl_->device||o.device!=impl_->device||w->buffer.device!=impl_->device||
+            a.columns!=w->columns||o.rows!=a.rows||o.columns!=2||a.data==o.data||w->buffer==o.data)
+            throw std::invalid_argument("Fused greedy head shape/device mismatch");
+        if(!input.impl_->ready&&!(input.impl_->pending&&impl_->pendingOutputs.count(input.impl_.get())))
+            throw std::logic_error("Uninitialized fused greedy head input");
+        if(output.impl_->pending&&!impl_->pendingOutputs.count(output.impl_.get()))
+            throw std::logic_error("Fused prediction belongs to another command batch");
+        if(debugLogits) {
+            if(!debugLogits->impl_)throw std::invalid_argument("Empty fused debug logits");
+            auto debug=debugLogits->impl_->matrix;
+            if(debug.device!=impl_->device||debug.rows!=a.rows||debug.columns!=w->rows||
+                debug.data==a.data||debug.data==o.data||debug.data==w->buffer)
+                throw std::invalid_argument("Fused debug logits shape/device mismatch");
+            if(debugLogits->impl_->pending&&!impl_->pendingOutputs.count(debugLogits->impl_.get()))
+                throw std::logic_error("Fused debug output belongs to another command batch");
+        }
+        const size_t groups=(w->rows+15)/16;
+        const std::array<size_t,2> shape{a.rows,groups};auto scratch=impl_->fusedHeadScratch.find(shape);
+        if(scratch==impl_->fusedHeadScratch.end())scratch=impl_->fusedHeadScratch.emplace(shape,Allocate(a.rows,groups*3)).first;
+        auto parts=scratch->second.impl_->matrix;
+        struct ProjectionParams{uint64_t rows,inner,columns,aStride,oStride,partialStride;};
+        ProjectionParams p{a.rows,a.columns,w->rows,a.rowBytes/4,debugLogits?debugLogits->impl_->matrix.rowBytes/4:0,parts.rowBytes/4};
+        const uint32_t debugEnabled=debugLogits?1:0;
+        auto encoder=[impl_->command computeCommandEncoder];
+        if(!encoder)throw std::runtime_error("Cannot create fused projection encoder");
+        [encoder setComputePipelineState:projection];[encoder setBuffer:a.data offset:0 atIndex:0];
+        [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:parts.data offset:0 atIndex:2];
+        [encoder setBytes:&p length:sizeof(p) atIndex:3];
+        [encoder setBuffer:debugLogits?debugLogits->impl_->matrix.data:o.data offset:0 atIndex:4];
+        [encoder setBytes:&debugEnabled length:sizeof(debugEnabled) atIndex:5];
+        [encoder dispatchThreadgroups:MTLSizeMake(groups,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
+        struct ReduceParams{uint64_t rows,columns,iStride,oStride;};ReduceParams rp{a.rows,groups,parts.rowBytes/4,o.rowBytes/4};
+        encoder=[impl_->command computeCommandEncoder];
+        if(!encoder)throw std::runtime_error("Cannot create fused argmax reduction encoder");
+        [encoder setComputePipelineState:reduction];[encoder setBuffer:parts.data offset:0 atIndex:0];
+        [encoder setBuffer:o.data offset:0 atIndex:1];[encoder setBytes:&rp length:sizeof(rp) atIndex:2];
+        [encoder dispatchThreadgroups:MTLSizeMake(a.rows,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
+        for(const auto& target:{scratch->second.impl_,output.impl_,debugLogits?debugLogits->impl_:std::shared_ptr<MetalMatrix::Impl>()}) {
+            if(!target)continue;target->ready=false;target->pending=true;
+            if(impl_->pendingOutputs.insert(target.get()).second)impl_->outputs.push_back(target);
+        }
+        ++impl_->fusedHeadArgmaxDispatches;return true;
+    }
+#endif
 }
 bool MetalContext::EncodeJoinedBF16Prefill(const MetalMatrix& input,const MetalBF16Weight& first,
     const MetalBF16Weight& second,const MetalMatrix& firstOutput,const MetalMatrix& secondOutput) {
@@ -1745,6 +1823,7 @@ void MetalContext::Begin() {
     if(impl_->submitted.count)throw std::logic_error("Undrained Metal partial batches");
     impl_->partialSubmissions=0;
     impl_->joinedPrefillPairs=0;
+    impl_->fusedHeadArgmaxDispatches=0;
     impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
@@ -2367,6 +2446,7 @@ void MetalContext::Abort() {
     for(id<MTLCommandBuffer> prior in impl_->submitted)[prior waitUntilCompleted];
     impl_->submitted=nil;impl_->partialSubmissions=0;
     impl_->joinedPrefillPairs=0;
+    impl_->fusedHeadArgmaxDispatches=0;
     impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;

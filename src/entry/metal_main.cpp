@@ -40,6 +40,9 @@ public:
 #ifdef GARNET_METAL_SINGLE_CODER_HEAD
         info+="; single_coder_head";
 #endif
+#ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+        info+="; fused_head_argmax";
+#endif
 #ifdef GARNET_METAL_RESIDUAL_NORM
         info+="; residual_norm";
 #endif
