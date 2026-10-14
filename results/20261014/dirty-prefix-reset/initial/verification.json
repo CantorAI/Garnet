@@ -1,0 +1,335 @@
+{
+  "verified_files": 16,
+  "component_checks": 300,
+  "timed_resets": 3600,
+  "all_gpu_dirty_patterns_observed": false,
+  "scope": "Synthetic bounded GPU writes and reset only; no native inference/TTFT/TPS gain proven",
+  "profiles": [
+    {
+      "profile": "Qwen3-0.6B-b1-dirty0",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "dirty_tokens": 0,
+      "means_ms": {
+        "0": 4.7567326875,
+        "1": 0.964989625,
+        "2": 0.001678875
+      },
+      "prefix_over_legacy": 0.00035294709841733146,
+      "prefix_over_full_direct": 0.0017397855443264483
+    },
+    {
+      "profile": "Qwen3-0.6B-b1-dirty1",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "dirty_tokens": 1,
+      "means_ms": {
+        "0": 4.189760458333334,
+        "1": 0.7404799583333334,
+        "2": 0.022429645833333334
+      },
+      "prefix_over_legacy": 0.005353443485944716,
+      "prefix_over_full_direct": 0.030290685900287984
+    },
+    {
+      "profile": "Qwen3-0.6B-b1-dirty64",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "dirty_tokens": 64,
+      "means_ms": {
+        "0": 4.43749125,
+        "1": 0.60852075,
+        "2": 0.1380216875
+      },
+      "prefix_over_legacy": 0.031103540204163782,
+      "prefix_over_full_direct": 0.22681508806396491
+    },
+    {
+      "profile": "Qwen3-0.6B-b1-dirty256",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "dirty_tokens": 256,
+      "means_ms": {
+        "0": 3.8798923541666666,
+        "1": 0.9197439374999999,
+        "2": 0.9310798541666666
+      },
+      "prefix_over_legacy": 0.2399756924098082,
+      "prefix_over_full_direct": 1.0123250789752194
+    },
+    {
+      "profile": "Qwen3-0.6B-b2-dirty0",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "dirty_tokens": 0,
+      "means_ms": {
+        "0": 19.132750020833335,
+        "1": 1.3013941875,
+        "2": 0.0037013958333333334
+      },
+      "prefix_over_legacy": 0.00019345864182111536,
+      "prefix_over_full_direct": 0.002844177320665445
+    },
+    {
+      "profile": "Qwen3-0.6B-b2-dirty1",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "dirty_tokens": 1,
+      "means_ms": {
+        "0": 20.4797681875,
+        "1": 1.5199270833333334,
+        "2": 0.04434022916666667
+      },
+      "prefix_over_legacy": 0.0021650747586942952,
+      "prefix_over_full_direct": 0.02917260285238464
+    },
+    {
+      "profile": "Qwen3-0.6B-b2-dirty64",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "dirty_tokens": 64,
+      "means_ms": {
+        "0": 19.632933229166667,
+        "1": 1.6509028333333333,
+        "2": 0.36788716666666665
+      },
+      "prefix_over_legacy": 0.01873826811167135,
+      "prefix_over_full_direct": 0.22283998745332984
+    },
+    {
+      "profile": "Qwen3-0.6B-b2-dirty256",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "dirty_tokens": 256,
+      "means_ms": {
+        "0": 19.442393208333332,
+        "1": 1.4423385208333332,
+        "2": 1.4725200208333333
+      },
+      "prefix_over_legacy": 0.07573759079217608,
+      "prefix_over_full_direct": 1.0209253927313557
+    },
+    {
+      "profile": "Qwen2.5-Coder-0.5B-Instruct-b1-dirty0",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "dirty_tokens": 0,
+      "means_ms": {
+        "0": 0.3268238333333333,
+        "1": 0.06144877083333333,
+        "2": 0.0005789166666666666
+      },
+      "prefix_over_legacy": 0.0017713416453206442,
+      "prefix_over_full_direct": 0.009421126880419697
+    },
+    {
+      "profile": "Qwen2.5-Coder-0.5B-Instruct-b1-dirty1",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "dirty_tokens": 1,
+      "means_ms": {
+        "0": 0.31498787500000003,
+        "1": 0.06086104166666667,
+        "2": 0.002854229166666667
+      },
+      "prefix_over_legacy": 0.009061393765289113,
+      "prefix_over_full_direct": 0.04689747478032266
+    },
+    {
+      "profile": "Qwen2.5-Coder-0.5B-Instruct-b1-dirty64",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "dirty_tokens": 64,
+      "means_ms": {
+        "0": 0.3086336875,
+        "1": 0.052128458333333336,
+        "2": 0.0486865625
+      },
+      "prefix_over_legacy": 0.15774869844692507,
+      "prefix_over_full_direct": 0.9339728059609155
+    },
+    {
+      "profile": "Qwen2.5-Coder-0.5B-Instruct-b1-dirty256",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "dirty_tokens": 256,
+      "means_ms": {
+        "0": 0.3652161875,
+        "1": 0.09485154166666666,
+        "2": 0.0943463125
+      },
+      "prefix_over_legacy": 0.25833004047773755,
+      "prefix_over_full_direct": 0.994673474381237
+    },
+    {
+      "profile": "Qwen2.5-Coder-0.5B-Instruct-b2-dirty0",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "dirty_tokens": 0,
+      "means_ms": {
+        "0": 1.2125130416666667,
+        "1": 0.16978910416666668,
+        "2": 0.0011961041666666667
+      },
+      "prefix_over_legacy": 0.0009864670527770611,
+      "prefix_over_full_direct": 0.007044646195273867
+    },
+    {
+      "profile": "Qwen2.5-Coder-0.5B-Instruct-b2-dirty1",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "dirty_tokens": 1,
+      "means_ms": {
+        "0": 1.0980868333333333,
+        "1": 0.10267708333333334,
+        "2": 0.005849
+      },
+      "prefix_over_legacy": 0.005326536866164652,
+      "prefix_over_full_direct": 0.05696499949274627
+    },
+    {
+      "profile": "Qwen2.5-Coder-0.5B-Instruct-b2-dirty64",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "dirty_tokens": 64,
+      "means_ms": {
+        "0": 1.1075772708333333,
+        "1": 0.11145660416666667,
+        "2": 0.11172229166666667
+      },
+      "prefix_over_legacy": 0.1008708779141049,
+      "prefix_over_full_direct": 1.0023837752996916
+    },
+    {
+      "profile": "Qwen2.5-Coder-0.5B-Instruct-b2-dirty256",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "dirty_tokens": 256,
+      "means_ms": {
+        "0": 1.1466094166666667,
+        "1": 0.15583352083333332,
+        "2": 0.14124914583333334
+      },
+      "prefix_over_legacy": 0.12318854509669197,
+      "prefix_over_full_direct": 0.9064105404151253
+    },
+    {
+      "profile": "Qwen3.5-0.8B-b1-dirty0",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "dirty_tokens": 0,
+      "means_ms": {
+        "0": 2.747085916666667,
+        "1": 0.36128133333333334,
+        "2": 0.3285885416666667
+      },
+      "prefix_over_legacy": 0.11961349285550497,
+      "prefix_over_full_direct": 0.9095087715575304
+    },
+    {
+      "profile": "Qwen3.5-0.8B-b1-dirty1",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "dirty_tokens": 1,
+      "means_ms": {
+        "0": 2.7019209583333335,
+        "1": 0.42100525,
+        "2": 0.34965008333333336
+      },
+      "prefix_over_legacy": 0.12940796149307537,
+      "prefix_over_full_direct": 0.8305124065159125
+    },
+    {
+      "profile": "Qwen3.5-0.8B-b1-dirty64",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "dirty_tokens": 64,
+      "means_ms": {
+        "0": 2.6046708958333333,
+        "1": 0.446668375,
+        "2": 0.36472472916666665
+      },
+      "prefix_over_legacy": 0.14002718337664588,
+      "prefix_over_full_direct": 0.8165447781403075
+    },
+    {
+      "profile": "Qwen3.5-0.8B-b1-dirty256",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "dirty_tokens": 256,
+      "means_ms": {
+        "0": 3.084809791666667,
+        "1": 0.33995495833333333,
+        "2": 0.33570058333333336
+      },
+      "prefix_over_legacy": 0.10882375446298115,
+      "prefix_over_full_direct": 0.9874854744850391
+    },
+    {
+      "profile": "Qwen3.5-0.8B-b2-dirty0",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "dirty_tokens": 0,
+      "means_ms": {
+        "0": 8.698864541666666,
+        "1": 0.842598875,
+        "2": 0.421020875
+      },
+      "prefix_over_legacy": 0.04839952076312413,
+      "prefix_over_full_direct": 0.49966940081661043
+    },
+    {
+      "profile": "Qwen3.5-0.8B-b2-dirty1",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "dirty_tokens": 1,
+      "means_ms": {
+        "0": 8.832157958333333,
+        "1": 0.8585667083333334,
+        "2": 0.5828073541666666
+      },
+      "prefix_over_legacy": 0.06598697135129646,
+      "prefix_over_full_direct": 0.6788142942300008
+    },
+    {
+      "profile": "Qwen3.5-0.8B-b2-dirty64",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "dirty_tokens": 64,
+      "means_ms": {
+        "0": 8.794946229166667,
+        "1": 0.744881875,
+        "2": 0.6074531041666666
+      },
+      "prefix_over_legacy": 0.06906842729204765,
+      "prefix_over_full_direct": 0.8155025978671674
+    },
+    {
+      "profile": "Qwen3.5-0.8B-b2-dirty256",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "dirty_tokens": 256,
+      "means_ms": {
+        "0": 8.7622205625,
+        "1": 0.6798264166666667,
+        "2": 0.6104653958333334
+      },
+      "prefix_over_legacy": 0.06967016996193462,
+      "prefix_over_full_direct": 0.8979724542429153
+    },
+    {
+      "profile": "padded",
+      "model": "synthetic",
+      "batch": 3,
+      "dirty_tokens": 7,
+      "means_ms": {
+        "0": 0.0005581875,
+        "1": 0.00022047916666666667,
+        "2": 0.00020225
+      },
+      "prefix_over_legacy": 0.36233344530287764,
+      "prefix_over_full_direct": 0.9173202305584428
+    }
+  ],
+  "full_goal_met": false
+}

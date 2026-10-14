@@ -1,0 +1,7535 @@
+[
+  {
+    "name": "Qwen3-0.6B-b1-dirty0",
+    "model": "Qwen3-0.6B",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 0,
+    "states": [
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-b1-dirty1",
+    "model": "Qwen3-0.6B",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 1,
+    "states": [
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-b1-dirty64",
+    "model": "Qwen3-0.6B",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 64,
+    "states": [
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-b1-dirty256",
+    "model": "Qwen3-0.6B",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 256,
+    "states": [
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-b2-dirty0",
+    "model": "Qwen3-0.6B",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 0,
+    "states": [
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 0
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-b2-dirty1",
+    "model": "Qwen3-0.6B",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 1,
+    "states": [
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 128
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-b2-dirty64",
+    "model": "Qwen3-0.6B",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 64,
+    "states": [
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 8192
+      }
+    ]
+  },
+  {
+    "name": "Qwen3-0.6B-b2-dirty256",
+    "model": "Qwen3-0.6B",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 256,
+    "states": [
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      },
+      {
+        "columns": 262144,
+        "groups": 8,
+        "group_columns": 32768,
+        "dirty_columns": 32768
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-dirty0",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 0,
+    "states": [
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-dirty1",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 1,
+    "states": [
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-dirty64",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 64,
+    "states": [
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b1-dirty256",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 256,
+    "states": [
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-dirty0",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 0,
+    "states": [
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 0
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-dirty1",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 1,
+    "states": [
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 64
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-dirty64",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 64,
+    "states": [
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 4096
+      }
+    ]
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-b2-dirty256",
+    "model": "Qwen2.5-Coder-0.5B-Instruct",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 256,
+    "states": [
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 32768,
+        "groups": 2,
+        "group_columns": 16384,
+        "dirty_columns": 16384
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-dirty0",
+    "model": "Qwen3.5-0.8B",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 0,
+    "states": [
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-dirty1",
+    "model": "Qwen3.5-0.8B",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 1,
+    "states": [
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-dirty64",
+    "model": "Qwen3.5-0.8B",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 64,
+    "states": [
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-b1-dirty256",
+    "model": "Qwen3.5-0.8B",
+    "batch": 1,
+    "capacity": 256,
+    "dirty_tokens": 256,
+    "states": [
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-dirty0",
+    "model": "Qwen3.5-0.8B",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 0,
+    "states": [
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 0
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-dirty1",
+    "model": "Qwen3.5-0.8B",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 1,
+    "states": [
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 256
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-dirty64",
+    "model": "Qwen3.5-0.8B",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 64,
+    "states": [
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 16384
+      }
+    ]
+  },
+  {
+    "name": "Qwen3.5-0.8B-b2-dirty256",
+    "model": "Qwen3.5-0.8B",
+    "batch": 2,
+    "capacity": 256,
+    "dirty_tokens": 256,
+    "states": [
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 24576,
+        "groups": 1,
+        "group_columns": 24576,
+        "dirty_columns": 24576
+      },
+      {
+        "columns": 262144,
+        "groups": 1,
+        "group_columns": 262144,
+        "dirty_columns": 262144
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      },
+      {
+        "columns": 131072,
+        "groups": 2,
+        "group_columns": 65536,
+        "dirty_columns": 65536
+      }
+    ]
+  },
+  {
+    "name": "padded",
+    "model": "synthetic",
+    "batch": 3,
+    "capacity": 17,
+    "dirty_tokens": 7,
+    "states": [
+      {
+        "columns": 51,
+        "groups": 3,
+        "group_columns": 17,
+        "dirty_columns": 7
+      },
+      {
+        "columns": 65,
+        "groups": 1,
+        "group_columns": 65,
+        "dirty_columns": 65
+      }
+    ]
+  }
+]
