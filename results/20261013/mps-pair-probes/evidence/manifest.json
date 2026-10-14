@@ -1,0 +1,1165 @@
+{
+  "scope": "Archive completed scheduling/packing component probes, without model matrices.",
+  "jobs": {
+    "concurrent-mps-pair-20261013": {
+      "command": [
+        "/opt/homebrew/bin/python3",
+        "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_concurrent_mps_pair.py",
+        "/Users/zsdx/garnet-metal-investigation",
+        "/Users/zsdx/garnet-metal-investigation/logs/concurrent-mps-pair-20261013/checks"
+      ],
+      "exit_code": 0
+    },
+    "concurrent-mps-dependency-20261013": {
+      "command": [
+        "/opt/homebrew/bin/python3",
+        "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_concurrent_mps_dependency.py",
+        "/Users/zsdx/garnet-metal-investigation",
+        "/Users/zsdx/garnet-metal-investigation/logs/concurrent-mps-dependency-20261013/checks"
+      ],
+      "exit_code": 0
+    },
+    "joined-mps-pair-20261013": {
+      "command": [
+        "/opt/homebrew/bin/python3",
+        "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_joined_mps_pair.py",
+        "/Users/zsdx/garnet-metal-investigation",
+        "/Users/zsdx/garnet-metal-investigation/logs/joined-mps-pair-20261013/checks"
+      ],
+      "exit_code": 0
+    },
+    "joined-mps-pair-confirm-20261013": {
+      "command": [
+        "/opt/homebrew/bin/python3",
+        "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_joined_mps_pair.py",
+        "/Users/zsdx/garnet-metal-investigation",
+        "/Users/zsdx/garnet-metal-investigation/logs/joined-mps-pair-confirm-20261013/checks"
+      ],
+      "exit_code": 0
+    }
+  },
+  "files": [
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json",
+      "bytes": 2294,
+      "sha256": "56b5a7e13d049ced08902674c9ec5f7c2f5a2610534ef6d4db723ba261c1e3c0"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json",
+      "bytes": 157,
+      "sha256": "adef707d7138cffdcd4b52fd6ff432917f778b571b92e1130989c8024560ea19"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-gpu.log",
+      "bytes": 10428,
+      "sha256": "c1749899387e6c8538ec5b183fec9b4f4021a37666a3e9e1c8325e62dfab5562"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-prepare-monitor.json",
+      "bytes": 156,
+      "sha256": "b9011766ac999ea4fbe0d380067de328849e3d3af1866a63ccbd0ed418259ac0"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-prepare.log",
+      "bytes": 105,
+      "sha256": "036fdcdf827b979961dabc628bc841b53db9007631b5b4e1496a1d32e823025c"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/manifest.json",
+      "bytes": 2288,
+      "sha256": "b49ab1c8531d0472a62ec3c20e3a3477242bd5cc7564b1d7aabad4340db0af2f"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-gpu-monitor.json",
+      "bytes": 232,
+      "sha256": "c81fd08ad32b2bd2a09c4ac2f97b504f410c44163ca915ad48f0285d02066040"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-gpu.log",
+      "bytes": 10451,
+      "sha256": "22585878abecfffa6522033e31455168fd88eb6528cecbc81bf68c8ee7e571ac"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-prepare-monitor.json",
+      "bytes": 233,
+      "sha256": "dd8a89af1a73628e0b3e18714bad259a5eed8ba9444ea24104aabb2df2d6cded"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-prepare.log",
+      "bytes": 105,
+      "sha256": "38194b7bbbfde2349c79876469f3326ff4fbac905cefc2610beb2d75af4c2b46"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/manifest.json",
+      "bytes": 2656,
+      "sha256": "5fef6ea9ff7df986020472976905bc3415655e83329f2947dff1ad39d22bdda4"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-gpu-monitor.json",
+      "bytes": 156,
+      "sha256": "387dbe0417a762e5330e67c855c3f5dffc74d3f8bdc205001a5633540a81fbf3"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-gpu.log",
+      "bytes": 10448,
+      "sha256": "9b9f7b08ece06796356217f23fb681ba2a3a2f8c76843ce8d41f584cd83f0fa3"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-prepare-monitor.json",
+      "bytes": 234,
+      "sha256": "00a38867e86862c430b475bcbcc4a6d9ea823fa0ad44b626fc478402f62015af"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-prepare.log",
+      "bytes": 106,
+      "sha256": "9469e6f2e81c9e24c16f68bdc87068bd69acde9ca91efcba8c18e0b9b3e10454"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/background_service_checks.json",
+      "bytes": 25230,
+      "sha256": "303f654c6786857efedcc6590afd60f20ca26d4ce1630ea9eed68c229d0cf7f1"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/compile-monitor.json",
+      "bytes": 234,
+      "sha256": "2e1f8f2329d067c215627f0a8185ade5300007244af56aa932dd5e2c27be3199"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/compile.log",
+      "bytes": 322,
+      "sha256": "bea6419b0f40244f91c7022657978eff78aa3a45d4e5e3294cd169ea13c00287"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/metadata.json",
+      "bytes": 791,
+      "sha256": "a3d11b49caec13342fdece0c0178534715bdd7401ee84a6562d0e524a958c699"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/statuses.json",
+      "bytes": 3269,
+      "sha256": "029fd545b26ead7faa17625488d57214af6e11d9fd8bfd68a1de012d5b38d09d"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/summary.json",
+      "bytes": 16699,
+      "sha256": "b279565f00f3717c4a732f443a5997d770de39f859d30cc47ceeca9affc4eae7"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/exit.json",
+      "bytes": 301,
+      "sha256": "5b054fee0dd825b207ac4edb0ae0b93efe6637e5c4365fc0f33160f7f27792ba"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/output.log",
+      "bytes": 210,
+      "sha256": "4225604036bb30b44b04f1e61cb9e21799d9c2d39ca484cff3a78afa7def3d20"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/pid",
+      "bytes": 5,
+      "sha256": "3e3a1f6f6f1c74f04f83addb65c3c05929b61281e76a2707b088101a6c7fd43d"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json",
+      "bytes": 2294,
+      "sha256": "56b5a7e13d049ced08902674c9ec5f7c2f5a2610534ef6d4db723ba261c1e3c0"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json",
+      "bytes": 234,
+      "sha256": "1f29ad4fbddcf06011180ad4a33c8f1de6d5f8e6a4496b3c5f9e3410c96b1b75"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-gpu.log",
+      "bytes": 10815,
+      "sha256": "6226edde1ffbdb519030d2946cfae739f6db6c9d5db582334e77f179eca363fc"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-prepare-monitor.json",
+      "bytes": 156,
+      "sha256": "1d6f149f3826894796cc575be8b76b3ef27430efea883601853be409ee33e8ec"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-prepare.log",
+      "bytes": 105,
+      "sha256": "036fdcdf827b979961dabc628bc841b53db9007631b5b4e1496a1d32e823025c"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/manifest.json",
+      "bytes": 2288,
+      "sha256": "b49ab1c8531d0472a62ec3c20e3a3477242bd5cc7564b1d7aabad4340db0af2f"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-gpu-monitor.json",
+      "bytes": 309,
+      "sha256": "f8e457a11a0bd4bdc5a4ae5abf411146a34dbfd0a71fdd2c276c7243cb2b7e8f"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-gpu.log",
+      "bytes": 10649,
+      "sha256": "b71f3336464c0842a6671d3f758593f3773ea399bcafe8102c4c426161a68d19"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-prepare-monitor.json",
+      "bytes": 157,
+      "sha256": "7cbf5d3f865c1268e707f401f8728c7ad580729b6d870be609cd4dc98cfc5b0c"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-prepare.log",
+      "bytes": 105,
+      "sha256": "38194b7bbbfde2349c79876469f3326ff4fbac905cefc2610beb2d75af4c2b46"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/manifest.json",
+      "bytes": 2656,
+      "sha256": "5fef6ea9ff7df986020472976905bc3415655e83329f2947dff1ad39d22bdda4"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-gpu-monitor.json",
+      "bytes": 234,
+      "sha256": "0b211c73b1c95bde81c0a46512cb6047d7cc92fd0e1b59217c82bf618f1f6844"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-gpu.log",
+      "bytes": 10672,
+      "sha256": "7d61df146445d72811aecdf9a4533fdfaedfae0433cdbc1b48bf023c5fb33ba1"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-prepare-monitor.json",
+      "bytes": 233,
+      "sha256": "4ac4f390b99747b79148ed96aaa0ca136373892aa897b7a4baaec0955a2abc46"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-prepare.log",
+      "bytes": 106,
+      "sha256": "9469e6f2e81c9e24c16f68bdc87068bd69acde9ca91efcba8c18e0b9b3e10454"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/background_service_checks.json",
+      "bytes": 26808,
+      "sha256": "63e05385dc3d5e7b96d046fade52e959377c9867feea8b9a10691b172a9763ab"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/compile-monitor.json",
+      "bytes": 232,
+      "sha256": "c70e29241f1d862344b50914e4a26e71fa29b611d1663b82f790beb21994bd82"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/compile.log",
+      "bytes": 328,
+      "sha256": "40f7d5f374ce961502d380c1f4943fc83cadb68be96e9f8761d730bc2502eb62"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/metadata.json",
+      "bytes": 803,
+      "sha256": "614d8472c5ebbb72a37cb0d7db5298e7e9acc58afd0941f9161771ff72e81ed4"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/statuses.json",
+      "bytes": 3359,
+      "sha256": "1ce76d43822c3063ff8415e3ebaea78c12d875e523538f2d80ada9f366c30112"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/summary.json",
+      "bytes": 18321,
+      "sha256": "40b876b8709ebe4804c1764e53c8203935c8a157674801cb885a55038ebf7b93"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/exit.json",
+      "bytes": 313,
+      "sha256": "094e4f472d697acdd1469fa07261299f0b83f4022aeb7325e814e0b0ef821c66"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/output.log",
+      "bytes": 210,
+      "sha256": "4225604036bb30b44b04f1e61cb9e21799d9c2d39ca484cff3a78afa7def3d20"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/pid",
+      "bytes": 5,
+      "sha256": "5bf51d9d557047465e7df540ed0bba927d10ca876cb6dea1ca203b3578e22749"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json",
+      "bytes": 2294,
+      "sha256": "56b5a7e13d049ced08902674c9ec5f7c2f5a2610534ef6d4db723ba261c1e3c0"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json",
+      "bytes": 232,
+      "sha256": "59c125381e83621f9513ec110fa1eb9d9323a63978f84107eecad8229540d4a0"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-gpu.log",
+      "bytes": 10525,
+      "sha256": "c3d95806c7cd29710ace7841eeac6ca5d7e45865cce4f9b8596a4363ff580788"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-prepare-monitor.json",
+      "bytes": 157,
+      "sha256": "7553ae5bd2f7aa829799d041d516c77833ed4686fec9bb30a7c58a1fe32783e2"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-prepare.log",
+      "bytes": 105,
+      "sha256": "036fdcdf827b979961dabc628bc841b53db9007631b5b4e1496a1d32e823025c"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/manifest.json",
+      "bytes": 2288,
+      "sha256": "b49ab1c8531d0472a62ec3c20e3a3477242bd5cc7564b1d7aabad4340db0af2f"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-gpu-monitor.json",
+      "bytes": 232,
+      "sha256": "d3576ef83a5b39a0f388f3a297cb340d81c5b820d0ad7602db2a8852691700a2"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-gpu.log",
+      "bytes": 10559,
+      "sha256": "ce4e7af40e43a0a0aa3ec020eac9ea41346e0fce68f5d2898bb6fcfb5c2f5e6b"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-prepare-monitor.json",
+      "bytes": 232,
+      "sha256": "c8875b917e886dbae3ce6d42ae390041dd5c844d52ecbb086fde95430f0adafc"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-prepare.log",
+      "bytes": 105,
+      "sha256": "38194b7bbbfde2349c79876469f3326ff4fbac905cefc2610beb2d75af4c2b46"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/manifest.json",
+      "bytes": 2656,
+      "sha256": "5fef6ea9ff7df986020472976905bc3415655e83329f2947dff1ad39d22bdda4"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-gpu-monitor.json",
+      "bytes": 233,
+      "sha256": "5dcbfdaf371a1e225915222a45ac774fc6a5e36f382d9c1deaf6b1dae8c7cc42"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-gpu.log",
+      "bytes": 10550,
+      "sha256": "ae6909a9779b72f8c85a69fa934d32bc29fd8eec714a19fbc77faa01fd61a2de"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-prepare-monitor.json",
+      "bytes": 234,
+      "sha256": "5c80f67348c8d4bd4a4a689823cd5d72eab79fb3fde99f8a1a079b6b7749efc2"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-prepare.log",
+      "bytes": 106,
+      "sha256": "9469e6f2e81c9e24c16f68bdc87068bd69acde9ca91efcba8c18e0b9b3e10454"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/background_service_checks.json",
+      "bytes": 26805,
+      "sha256": "db3b67b53bb50b6a1602d2fbfbddb89c8eee696a8d7efe5e7b3b51ab2804c82b"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/compile-monitor.json",
+      "bytes": 234,
+      "sha256": "0cd2f0a745fd78f951dad8439a410ebc6925f114d4e0a6991837d71e1bd460e4"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/compile.log",
+      "bytes": 318,
+      "sha256": "20d0345935c14876b454cf38b1e81d8a2f6539dc2f59a718a23d15a16cd918be"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/metadata.json",
+      "bytes": 783,
+      "sha256": "2fec8e1c0b8c6bd6c86704bfd05e2c133d0f24170c0a7215a3650ae1660f8b16"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/statuses.json",
+      "bytes": 3208,
+      "sha256": "a702bb410ce467ad6ad91c37acadbb2de51949f748a24cfa37edd4588b4d5b0a"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/summary.json",
+      "bytes": 19028,
+      "sha256": "17cfa0de0288a0f18a4e4531dd999021777073868c5b1bbd471fb71ea21e31a4"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/exit.json",
+      "bytes": 293,
+      "sha256": "55adc09c9bd3f91e472af72f58be7d60839e6b51add2ef3235f484da755e80d1"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/output.log",
+      "bytes": 210,
+      "sha256": "4225604036bb30b44b04f1e61cb9e21799d9c2d39ca484cff3a78afa7def3d20"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/pid",
+      "bytes": 5,
+      "sha256": "0290f930b05064fe1a0f25517c3daec80ed9b03f8488daf111d1d1d90488c4d8"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json",
+      "bytes": 2294,
+      "sha256": "56b5a7e13d049ced08902674c9ec5f7c2f5a2610534ef6d4db723ba261c1e3c0"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json",
+      "bytes": 232,
+      "sha256": "4a8e73a30949b0eabf8749991c8872b73feb16dee429a179ccb5028d696a0e5c"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-gpu.log",
+      "bytes": 10524,
+      "sha256": "42a8bbe127455e74225507af0ea2bba636f1b4c7566876153cae16bdfb731538"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-prepare-monitor.json",
+      "bytes": 157,
+      "sha256": "55df5426497b368c3e8884738bbfba6459170d068c745b0b2a404e9c25a0214b"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-prepare.log",
+      "bytes": 105,
+      "sha256": "036fdcdf827b979961dabc628bc841b53db9007631b5b4e1496a1d32e823025c"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/manifest.json",
+      "bytes": 2288,
+      "sha256": "b49ab1c8531d0472a62ec3c20e3a3477242bd5cc7564b1d7aabad4340db0af2f"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-gpu-monitor.json",
+      "bytes": 233,
+      "sha256": "cf598fbe29d7d4c0e9258942433367af0643515b52932abf9b9da42b0f17875b"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-gpu.log",
+      "bytes": 10548,
+      "sha256": "3fb6dcd6f5569b61eabe6d7b4693deaf7748c3b34c87be10803e147ddad66310"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-prepare-monitor.json",
+      "bytes": 232,
+      "sha256": "50227769e35ebbdb4671363304510916cbe9074f2e51e19e75f740e767c50a3f"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-prepare.log",
+      "bytes": 105,
+      "sha256": "38194b7bbbfde2349c79876469f3326ff4fbac905cefc2610beb2d75af4c2b46"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/manifest.json",
+      "bytes": 2656,
+      "sha256": "5fef6ea9ff7df986020472976905bc3415655e83329f2947dff1ad39d22bdda4"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-gpu-monitor.json",
+      "bytes": 234,
+      "sha256": "433670b7751525dd00cb9c74871af067ff92ccab19691f723bc1cb2cf7be73bb"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-gpu.log",
+      "bytes": 10539,
+      "sha256": "b5cd5c9fbbe61f9fff205ed242a077ab0833091cba5d7b6b1f18b7500c90a024"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-prepare-monitor.json",
+      "bytes": 233,
+      "sha256": "7febd265530b25f298bb1916bb600615bdbc1382f43a1d7acce124e638edf680"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-prepare.log",
+      "bytes": 106,
+      "sha256": "9469e6f2e81c9e24c16f68bdc87068bd69acde9ca91efcba8c18e0b9b3e10454"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/background_service_checks.json",
+      "bytes": 26810,
+      "sha256": "45a07ee8507f18b5b11fdbb68c5fe3a6f2a69e0fcaad3077cf619370fd8168e5"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/compile-monitor.json",
+      "bytes": 232,
+      "sha256": "993695e4c36766cabfdb285395f172ba99cd445955b71d8c6e41720557bb9ebc"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/compile.log",
+      "bytes": 318,
+      "sha256": "20d0345935c14876b454cf38b1e81d8a2f6539dc2f59a718a23d15a16cd918be"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/metadata.json",
+      "bytes": 783,
+      "sha256": "2fec8e1c0b8c6bd6c86704bfd05e2c133d0f24170c0a7215a3650ae1660f8b16"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/statuses.json",
+      "bytes": 3289,
+      "sha256": "1592a2e4f791d59b5093df1431e9227f321c301f06861d75ba67a327f6af28a3"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/summary.json",
+      "bytes": 19001,
+      "sha256": "2e42e10ffe10bfad099c59549057685f36fc52e6aca4df72cb148c0aa20d975c"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/exit.json",
+      "bytes": 301,
+      "sha256": "5e8b5c14b5272b9ecc30b22f3ff045e17d69f7d0b811d632202955002d780778"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/output.log",
+      "bytes": 210,
+      "sha256": "4225604036bb30b44b04f1e61cb9e21799d9c2d39ca484cff3a78afa7def3d20"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/pid",
+      "bytes": 5,
+      "sha256": "e5046b612301590e119f7d242fcabb3c47d7d4f9dbf54dc5dabe2888283db9d5"
+    },
+    {
+      "path": "source/test2026/metal/concurrent_mps_pair_gpu.mm",
+      "bytes": 9951,
+      "sha256": "7e4c45b9a9e0c4f08ed1fd1597fba62a8893d81c1ede1866d7fe9d11211e1ffb"
+    },
+    {
+      "path": "source/test2026/metal/run_concurrent_mps_pair.py",
+      "bytes": 4827,
+      "sha256": "6aab128b05e376dfa6fdf9736d66f2828997b78166b16a68c87f21034d138315"
+    },
+    {
+      "path": "source/test2026/metal/concurrent_mps_dependency_gpu.mm",
+      "bytes": 14083,
+      "sha256": "38335b897d8b11b783d0197624da7be2bb999d165b1086f9d1a41032714ae670"
+    },
+    {
+      "path": "source/test2026/metal/run_concurrent_mps_dependency.py",
+      "bytes": 4908,
+      "sha256": "781a7bfee2e638f431104c8e63bb08ea68765ffeeb2d5ee26bc45dabec78efd8"
+    },
+    {
+      "path": "source/test2026/metal/joined_mps_pair_gpu.mm",
+      "bytes": 16113,
+      "sha256": "df613c4264da329c8d2a9870dd4e7892536ae325530d72d3624d6e480d521b9b"
+    },
+    {
+      "path": "source/test2026/metal/run_joined_mps_pair.py",
+      "bytes": 4862,
+      "sha256": "9eda4332992b2af884f4c52b125e00471f440d8bb64004d7243610ef2fd1e563"
+    },
+    {
+      "path": "source/test2026/metal/archive_mps_pair_probes.py",
+      "bytes": 2169,
+      "sha256": "3853291d888e532f36c74ce116459c2d12ca1874df7765129d499ad031007239"
+    },
+    {
+      "path": "source/test2026/metal/prepare_prefill_tile_probe.py",
+      "bytes": 1916,
+      "sha256": "1b55566d4738099ed87e10bc0f149c75555a7aceabeecc1e5f41af6a68598bd8"
+    },
+    {
+      "path": "source/test2026/metal/compare_vllm_metal.py",
+      "bytes": 12339,
+      "sha256": "1ee0a35e4c67fc01e8e30ad6537d18bfbaa5d405737d4386c3c0078b8b972b29"
+    },
+    {
+      "path": "source/test2026/metal/background_comparison.py",
+      "bytes": 1179,
+      "sha256": "15ae5068a01b9373932f3b993724520e63a3ef6db11cc7b35c8aaedddc3aa0cf"
+    },
+    {
+      "path": "source/src/backends/metal/exact_half_codec.h",
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    }
+  ],
+  "omitted": [
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-0.bin",
+      "bytes": 8716288,
+      "sha256": "7738979cfc99fcfc9fc081652c7afc2c421f3cad05b97d8b1d2790d27ac64057"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-1.bin",
+      "bytes": 8716288,
+      "sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-2.bin",
+      "bytes": 8716288,
+      "sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-3.bin",
+      "bytes": 229376,
+      "sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-4.bin",
+      "bytes": 1605632,
+      "sha256": "133d4e063b9bb208b7f2ed4f024363c281891cee52d295ed62cbfae32c1e6f4e"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-5.bin",
+      "bytes": 1605632,
+      "sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-6.bin",
+      "bytes": 229376,
+      "sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-0.bin",
+      "bytes": 6291456,
+      "sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-1.bin",
+      "bytes": 6291456,
+      "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-2.bin",
+      "bytes": 6291456,
+      "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-3.bin",
+      "bytes": 2097152,
+      "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-4.bin",
+      "bytes": 4194304,
+      "sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-5.bin",
+      "bytes": 4194304,
+      "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-6.bin",
+      "bytes": 2097152,
+      "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3-0.6B-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-0.bin",
+      "bytes": 32768,
+      "sha256": "e5197a79fc1daa00d06a0c04fd11a97ac3c10a6bd6460e957fd8383700d5d87b"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-1.bin",
+      "bytes": 32768,
+      "sha256": "02bab6a0eb77ad51435f77665d173876993d725ca3cd953f90c2b0754735db5e"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-2.bin",
+      "bytes": 12582912,
+      "sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-3.bin",
+      "bytes": 4194304,
+      "sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-4.bin",
+      "bytes": 4194304,
+      "sha256": "cbee28fc3b42e07e491fffd593b2ee9ec58ae952dc9133e178f8a80ea916d308"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-5.bin",
+      "bytes": 7340032,
+      "sha256": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-6.bin",
+      "bytes": 7340032,
+      "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-7.bin",
+      "bytes": 7340032,
+      "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/concurrent-mps-pair-20261013/checks/concurrent_mps_pair_gpu",
+      "bytes": 73192,
+      "sha256": "96d39ba8cabcc8ad5558ac47e91523073a8fd75e3ae401964b433a85e8e63a06"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-0.bin",
+      "bytes": 8716288,
+      "sha256": "7738979cfc99fcfc9fc081652c7afc2c421f3cad05b97d8b1d2790d27ac64057"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-1.bin",
+      "bytes": 8716288,
+      "sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-2.bin",
+      "bytes": 8716288,
+      "sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-3.bin",
+      "bytes": 229376,
+      "sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-4.bin",
+      "bytes": 1605632,
+      "sha256": "133d4e063b9bb208b7f2ed4f024363c281891cee52d295ed62cbfae32c1e6f4e"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-5.bin",
+      "bytes": 1605632,
+      "sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-6.bin",
+      "bytes": 229376,
+      "sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/matrix-0.bin",
+      "bytes": 6291456,
+      "sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/matrix-1.bin",
+      "bytes": 6291456,
+      "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/matrix-2.bin",
+      "bytes": 6291456,
+      "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/matrix-3.bin",
+      "bytes": 2097152,
+      "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/matrix-4.bin",
+      "bytes": 4194304,
+      "sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/matrix-5.bin",
+      "bytes": 4194304,
+      "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/matrix-6.bin",
+      "bytes": 2097152,
+      "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3-0.6B-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/matrix-0.bin",
+      "bytes": 32768,
+      "sha256": "e5197a79fc1daa00d06a0c04fd11a97ac3c10a6bd6460e957fd8383700d5d87b"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/matrix-1.bin",
+      "bytes": 32768,
+      "sha256": "02bab6a0eb77ad51435f77665d173876993d725ca3cd953f90c2b0754735db5e"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/matrix-2.bin",
+      "bytes": 12582912,
+      "sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/matrix-3.bin",
+      "bytes": 4194304,
+      "sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/matrix-4.bin",
+      "bytes": 4194304,
+      "sha256": "cbee28fc3b42e07e491fffd593b2ee9ec58ae952dc9133e178f8a80ea916d308"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/matrix-5.bin",
+      "bytes": 7340032,
+      "sha256": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/matrix-6.bin",
+      "bytes": 7340032,
+      "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/matrix-7.bin",
+      "bytes": 7340032,
+      "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/Qwen3.5-0.8B-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/concurrent-mps-dependency-20261013/checks/concurrent_mps_dependency_gpu",
+      "bytes": 73616,
+      "sha256": "284fe4e7012cda4d2857c23568d735b50d4e613417160ef3c863a0d2945a4812"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-0.bin",
+      "bytes": 8716288,
+      "sha256": "7738979cfc99fcfc9fc081652c7afc2c421f3cad05b97d8b1d2790d27ac64057"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-1.bin",
+      "bytes": 8716288,
+      "sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-2.bin",
+      "bytes": 8716288,
+      "sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-3.bin",
+      "bytes": 229376,
+      "sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-4.bin",
+      "bytes": 1605632,
+      "sha256": "133d4e063b9bb208b7f2ed4f024363c281891cee52d295ed62cbfae32c1e6f4e"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-5.bin",
+      "bytes": 1605632,
+      "sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-6.bin",
+      "bytes": 229376,
+      "sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-0.bin",
+      "bytes": 6291456,
+      "sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-1.bin",
+      "bytes": 6291456,
+      "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-2.bin",
+      "bytes": 6291456,
+      "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-3.bin",
+      "bytes": 2097152,
+      "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-4.bin",
+      "bytes": 4194304,
+      "sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-5.bin",
+      "bytes": 4194304,
+      "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/matrix-6.bin",
+      "bytes": 2097152,
+      "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3-0.6B-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-0.bin",
+      "bytes": 32768,
+      "sha256": "e5197a79fc1daa00d06a0c04fd11a97ac3c10a6bd6460e957fd8383700d5d87b"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-1.bin",
+      "bytes": 32768,
+      "sha256": "02bab6a0eb77ad51435f77665d173876993d725ca3cd953f90c2b0754735db5e"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-2.bin",
+      "bytes": 12582912,
+      "sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-3.bin",
+      "bytes": 4194304,
+      "sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-4.bin",
+      "bytes": 4194304,
+      "sha256": "cbee28fc3b42e07e491fffd593b2ee9ec58ae952dc9133e178f8a80ea916d308"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-5.bin",
+      "bytes": 7340032,
+      "sha256": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-6.bin",
+      "bytes": 7340032,
+      "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/matrix-7.bin",
+      "bytes": 7340032,
+      "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/Qwen3.5-0.8B-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/joined-mps-pair-20261013/checks/joined_mps_pair_gpu",
+      "bytes": 73136,
+      "sha256": "e52aab600dfe74fe49898d182f79c358ca5f997e399b202af7fe930a0faa174b"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-0.bin",
+      "bytes": 8716288,
+      "sha256": "7738979cfc99fcfc9fc081652c7afc2c421f3cad05b97d8b1d2790d27ac64057"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-1.bin",
+      "bytes": 8716288,
+      "sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-2.bin",
+      "bytes": 8716288,
+      "sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-3.bin",
+      "bytes": 229376,
+      "sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-4.bin",
+      "bytes": 1605632,
+      "sha256": "133d4e063b9bb208b7f2ed4f024363c281891cee52d295ed62cbfae32c1e6f4e"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-5.bin",
+      "bytes": 1605632,
+      "sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-6.bin",
+      "bytes": 229376,
+      "sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen2.5-Coder-0.5B-Instruct-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/matrix-0.bin",
+      "bytes": 6291456,
+      "sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/matrix-1.bin",
+      "bytes": 6291456,
+      "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/matrix-2.bin",
+      "bytes": 6291456,
+      "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/matrix-3.bin",
+      "bytes": 2097152,
+      "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/matrix-4.bin",
+      "bytes": 4194304,
+      "sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/matrix-5.bin",
+      "bytes": 4194304,
+      "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/matrix-6.bin",
+      "bytes": 2097152,
+      "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3-0.6B-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/matrix-0.bin",
+      "bytes": 32768,
+      "sha256": "e5197a79fc1daa00d06a0c04fd11a97ac3c10a6bd6460e957fd8383700d5d87b"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/matrix-1.bin",
+      "bytes": 32768,
+      "sha256": "02bab6a0eb77ad51435f77665d173876993d725ca3cd953f90c2b0754735db5e"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/matrix-2.bin",
+      "bytes": 12582912,
+      "sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/matrix-3.bin",
+      "bytes": 4194304,
+      "sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/matrix-4.bin",
+      "bytes": 4194304,
+      "sha256": "cbee28fc3b42e07e491fffd593b2ee9ec58ae952dc9133e178f8a80ea916d308"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/matrix-5.bin",
+      "bytes": 7340032,
+      "sha256": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/matrix-6.bin",
+      "bytes": 7340032,
+      "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/matrix-7.bin",
+      "bytes": 7340032,
+      "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/synthetic-129.bin",
+      "bytes": 16770,
+      "sha256": "60d4cd4b0b360ef6f59ad30c2d4362e6e8659204abebfb3aba2ca2ae6ccbadfe"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/Qwen3.5-0.8B-assets/synthetic-37.bin",
+      "bytes": 1406,
+      "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+    },
+    {
+      "path": "logs/joined-mps-pair-confirm-20261013/checks/joined_mps_pair_gpu",
+      "bytes": 73136,
+      "sha256": "e52aab600dfe74fe49898d182f79c358ca5f997e399b202af7fe930a0faa174b"
+    }
+  ],
+  "versions": {
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "macos": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n"
+  }
+}

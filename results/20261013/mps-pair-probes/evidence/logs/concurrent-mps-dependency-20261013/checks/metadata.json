@@ -1,0 +1,14 @@
+{
+  "scope": "Shared-event MPS pair dependency chain; component only, no serving claim.",
+  "source_sha256": {
+    "test2026/metal/concurrent_mps_dependency_gpu.mm": "38335b897d8b11b783d0197624da7be2bb999d165b1086f9d1a41032714ae670",
+    "test2026/metal/run_concurrent_mps_dependency.py": "781a7bfee2e638f431104c8e63bb08ea68765ffeeb2d5ee26bc45dabec78efd8",
+    "test2026/metal/prepare_prefill_tile_probe.py": "1b55566d4738099ed87e10bc0f149c75555a7aceabeecc1e5f41af6a68598bd8",
+    "test2026/metal/compare_vllm_metal.py": "1ee0a35e4c67fc01e8e30ad6537d18bfbaa5d405737d4386c3c0078b8b972b29",
+    "src/backends/metal/exact_half_codec.h": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "scope": "Joined exact-half MPS gate/up with producer and consumer; component only.",
+  "source_sha256": {
+    "test2026/metal/joined_mps_pair_gpu.mm": "df613c4264da329c8d2a9870dd4e7892536ae325530d72d3624d6e480d521b9b",
+    "test2026/metal/run_joined_mps_pair.py": "9eda4332992b2af884f4c52b125e00471f440d8bb64004d7243610ef2fd1e563",
+    "test2026/metal/prepare_prefill_tile_probe.py": "1b55566d4738099ed87e10bc0f149c75555a7aceabeecc1e5f41af6a68598bd8",
+    "test2026/metal/compare_vllm_metal.py": "1ee0a35e4c67fc01e8e30ad6537d18bfbaa5d405737d4386c3c0078b8b972b29",
+    "src/backends/metal/exact_half_codec.h": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  }
+}
