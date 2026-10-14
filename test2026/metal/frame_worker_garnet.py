@@ -81,6 +81,8 @@ try:
             reset_seconds=reset_seconds,
             direct_state_zero_enabled='direct_state_zero' in garnet.backend_info(),
             constant_head_enabled='constant_bf16_head' in garnet.backend_info(),
+            residual_norm_enabled='residual_norm' in garnet.backend_info(),
+            residual_norm_dispatches=decoder.session.residual_norm_dispatches if 'residual_norm' in garnet.backend_info() else 0,
             constant_head_dispatches=decoder.session.constant_head_dispatches if 'constant_bf16_head' in garnet.backend_info() else 0,
             vision_reencoded=True,attention_prefix_enabled='attention_prefix' in garnet.backend_info(),
             weights='BF16 checkpoint; FP32 native vision/activations/KV'))

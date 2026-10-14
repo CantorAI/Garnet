@@ -835,6 +835,16 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
         auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
+#ifdef GARNET_METAL_RESIDUAL_NORM
+        if(!profileOps&&op.kind==Kind::Add&&i+1<ops_.size()&&(packedOutput||residentOps_[i+1])) {
+            const auto& next=ops_[i+1];
+            if(next.kind==Kind::Norm&&next.a==op.out&&a.CompatibleLayout(b)&&a.CompatibleLayout(out)&&
+                a.CompatibleLayout(slots_[next.out].matrix)) {
+                gpu.EncodeResidualRMSNorm(a,b,slots_[next.b].matrix,out,slots_[next.out].matrix,next.epsilon,next.offset);
+                ++i;continue;
+            }
+        }
+#endif
 #ifdef GARNET_METAL_JOINED_PREFILL
         if(!profileOps&&slots_[op.a].rows>2&&i+1<ops_.size()&&(packedOutput||residentOps_[i+1])) {
             const auto& next=ops_[i+1];

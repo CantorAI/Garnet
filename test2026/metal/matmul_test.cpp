@@ -149,6 +149,40 @@ int main() {
         try {gpu.UploadBF16(&nonfinite,2,1,1);}catch(const std::invalid_argument&){bf16Rejected=true;}
         if(!bf16Rejected)throw std::runtime_error("Nonfinite BF16 weight accepted");
         for(size_t width:{7,1031})for(float offset:{0.0f,1.0f}) {
+#ifdef GARNET_METAL_RESIDUAL_NORM
+            for(size_t rows:{1,2,16,32})for(float scale:{1.0f,-1.0f,0.5f,2.0f}) {
+                std::vector<float> av(rows*width),bv(rows*width),wv(width);
+                for(size_t i=0;i<av.size();++i){av[i]=std::sin(float(i)*.013f)*scale;bv[i]=std::cos(float(i)*.027f)*.2f;}
+                for(size_t i=0;i<width;++i)wv[i]=std::cos(float(i)*.11f);
+                auto a=gpu.Upload(av,rows,width),b=gpu.Upload(bv,rows,width),w=gpu.Upload(wv,1,width);
+                auto r=gpu.Allocate(rows,width),n=gpu.Allocate(rows,width),fr=gpu.Allocate(rows,width),fn=gpu.Allocate(rows,width);
+                gpu.Begin();gpu.EncodeAdd(a,b,r);gpu.EncodeRMSNorm(r,w,n,1e-6f,offset);gpu.SubmitAndWait();
+                const auto expectedR=gpu.Download(r),expectedN=gpu.Download(n);
+                gpu.Begin();gpu.EncodeResidualRMSNorm(a,b,w,fr,fn,1e-6f,offset);
+                auto downstream=gpu.Allocate(rows,width);gpu.EncodeAdd(fr,fn,downstream);gpu.SubmitAndWait();
+                auto actualR=gpu.Download(fr),actualN=gpu.Download(fn),sum=gpu.Download(downstream);
+                if(actualR!=expectedR||actualN!=expectedN||std::memcmp(actualR.data(),expectedR.data(),actualR.size()*4)||
+                    std::memcmp(actualN.data(),expectedN.data(),actualN.size()*4)||gpu.LastResidualNormDispatches()!=1)
+                    throw std::runtime_error("Fused residual RMS differs from original outputs/counter");
+                for(size_t i=0;i<sum.size();++i)if(sum[i]!=expectedR[i]+expectedN[i])
+                    throw std::runtime_error("Fused residual RMS outputs unavailable to downstream consumer");
+                gpu.Begin();if(gpu.LastResidualNormDispatches())throw std::runtime_error("Residual RMS Begin counter not reset");
+                bool rejected=false;try{gpu.EncodeResidualRMSNorm(a,b,w,a,fn,1e-6f,offset);}catch(const std::invalid_argument&){rejected=true;}
+                if(!rejected)throw std::runtime_error("Residual RMS accepted input-output alias");
+                rejected=false;try{gpu.EncodeResidualRMSNorm(a,b,w,fr,fr,1e-6f,offset);}catch(const std::invalid_argument&){rejected=true;}
+                if(!rejected)throw std::runtime_error("Residual RMS accepted output-output alias");
+                rejected=false;try{gpu.EncodeResidualRMSNorm(a,b,w,fr,fn,0,offset);}catch(const std::invalid_argument&){rejected=true;}
+                if(!rejected)throw std::runtime_error("Residual RMS accepted zero epsilon");
+                auto empty=gpu.Allocate(rows,width);rejected=false;
+                try{gpu.EncodeResidualRMSNorm(empty,b,w,fr,fn,1e-6f,offset);}catch(const std::logic_error&){rejected=true;}
+                if(!rejected)throw std::runtime_error("Residual RMS accepted uninitialized input");
+                auto wrong=gpu.Allocate(rows,width+1);rejected=false;
+                try{gpu.EncodeResidualRMSNorm(a,b,w,wrong,fn,1e-6f,offset);}catch(const std::invalid_argument&){rejected=true;}
+                if(!rejected)throw std::runtime_error("Residual RMS accepted incompatible output");
+                gpu.EncodeResidualRMSNorm(a,b,w,fr,fn,1e-6f,offset);gpu.Abort();
+                if(gpu.LastResidualNormDispatches())throw std::runtime_error("Residual RMS Abort counter not reset");
+            }
+#endif
             std::vector<float> values(2*width),weights(width);
             for(size_t i=0;i<values.size();++i)values[i]=std::sin(float(i)*0.37f);
             for(size_t i=0;i<weights.size();++i)weights[i]=std::cos(float(i)*0.11f);

@@ -53,6 +53,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> joinedSplitRescale;
 #endif
     id<MTLComputePipelineState> rms;
+    id<MTLComputePipelineState> residualNorm;
     id<MTLComputePipelineState> silu;
     id<MTLComputePipelineState> kvInplace;
     id<MTLComputePipelineState> add;
@@ -84,6 +85,7 @@ struct MetalContext::Impl {
     std::map<std::array<size_t,3>,MetalMatrix> splitScratch;
     size_t joinedPrefillPairs=0;
     size_t constantHeadDispatches=0;
+    size_t residualNormDispatches=0;
 #ifdef GARNET_METAL_JOINED_PREFILL
     struct JoinedWeight {
         MetalBF16Weight firstOwner,secondOwner;
@@ -351,6 +353,21 @@ kernel void rms_norm(device const float* a [[buffer(0)]],device const float* wei
     sum=simd_sum(lane<4?partial[lane]:0.0f);
     float inverse=rsqrt(sum/float(p.columns)+p.epsilon);
     for(ulong j=tid;j<p.columns;j+=128)c[row*p.cStride+j]=a[row*p.aStride+j]*inverse*(weight[j]+p.offset);
+}
+kernel void residual_norm(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
+    device const float* weight [[buffer(2)]],device float* residual [[buffer(3)]],
+    device float* c [[buffer(4)]],constant Params& p [[buffer(5)]],uint row [[threadgroup_position_in_grid]],
+    uint tid [[thread_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
+    if(row>=p.rows)return;
+    threadgroup float partial[4];
+    float sum=0;
+    for(ulong j=tid;j<p.columns;j+=128){float x=a[row*p.aStride+j]+b[row*p.cStride+j];residual[row*p.cStride+j]=x;sum+=x*x;}
+    sum=simd_sum(sum);
+    if(lane==0)partial[simd]=sum;
+    threadgroup_barrier(mem_flags::mem_threadgroup|mem_flags::mem_device);
+    sum=simd_sum(lane<4?partial[lane]:0.0f);
+    float inverse=rsqrt(sum/float(p.columns)+p.epsilon);
+    for(ulong j=tid;j<p.columns;j+=128)c[row*p.cStride+j]=residual[row*p.cStride+j]*inverse*(weight[j]+p.offset);
 }
 kernel void silu_mul(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
     device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
@@ -1146,6 +1163,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         impl_->kernels->bf16Gemm16Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_16_64_64"] error:&error];
         impl_->kernels->bf16Gemm32Wide=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"gemm_32_64_32"] error:&error];
         impl_->kernels->rms=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"rms_norm"] error:&error];
+#ifdef GARNET_METAL_RESIDUAL_NORM
+        impl_->kernels->residualNorm=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"residual_norm"] error:&error];
+        if(!impl_->kernels->residualNorm)throw std::runtime_error("Cannot create residual normalization pipeline");
+#endif
         impl_->kernels->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
         impl_->kernels->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
         impl_->kernels->mask=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"mask_rows"] error:&error];
@@ -1370,6 +1391,7 @@ bool MetalContext::EncodeJoinedBF16Prefill(const MetalMatrix& input,const MetalB
 }
 size_t MetalContext::LastJoinedPrefillPairs() const {return impl_->joinedPrefillPairs;}
 size_t MetalContext::LastConstantHeadDispatches() const {return impl_->constantHeadDispatches;}
+size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualNormDispatches;}
 void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
     @autoreleasepool {
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
@@ -1511,7 +1533,7 @@ void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;
+    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
     }
@@ -1590,6 +1612,46 @@ void MetalContext::EncodePointwise(const MetalMatrix& left,const MetalMatrix& ri
 void MetalContext::EncodeRMSNorm(const MetalMatrix& input,const MetalMatrix& weight,
     const MetalMatrix& output,float epsilon,float weightOffset) {
     EncodePointwise(input,weight,output,0,epsilon,weightOffset);
+}
+void MetalContext::EncodeResidualRMSNorm(const MetalMatrix& left,const MetalMatrix& right,
+    const MetalMatrix& weight,const MetalMatrix& residual,const MetalMatrix& normalized,float epsilon,float offset) {
+#ifdef GARNET_METAL_RESIDUAL_NORM
+    @autoreleasepool {
+    if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
+    const std::array<MetalMatrix,5> matrices={left,right,weight,residual,normalized};
+    for(const auto& m:matrices)if(!m.impl_||m.impl_->matrix.device!=impl_->device)
+        throw std::invalid_argument("Invalid residual normalization matrix/device");
+    const auto a=left.impl_->matrix,w=weight.impl_->matrix;
+    if(!left.CompatibleLayout(right)||!left.CompatibleLayout(residual)||!left.CompatibleLayout(normalized)||
+        w.rows!=1||w.columns!=a.columns||!(epsilon>0)||!std::isfinite(epsilon)||!std::isfinite(offset))
+        throw std::invalid_argument("Residual normalization shape/layout/parameters mismatch");
+    for(size_t i=0;i<3;++i)if(!matrices[i].impl_->ready&&
+        !(matrices[i].impl_->pending&&impl_->pendingOutputs.count(matrices[i].impl_.get())))
+        throw std::logic_error("Uninitialized residual normalization input");
+    for(size_t i=3;i<5;++i) {
+        for(size_t j=0;j<i;++j)if(matrices[i].SharesStorage(matrices[j]))
+            throw std::invalid_argument("Aliased residual normalization output");
+        if(matrices[i].impl_->pending&&!impl_->pendingOutputs.count(matrices[i].impl_.get()))
+            throw std::logic_error("Residual normalization output belongs to another batch");
+    }
+    auto pipeline=impl_->kernels->residualNorm;
+    if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)
+        throw std::runtime_error("Residual normalization requires 32-lane SIMD groups");
+    struct Params {uint64_t rows,columns,aStride,bStride,cStride;float epsilon,offset;};
+    Params p{a.rows,a.columns,a.rowBytes/4,w.rowBytes/4,a.rowBytes/4,epsilon,offset};
+    auto encoder=[impl_->command computeCommandEncoder];if(!encoder)throw std::runtime_error("Cannot create residual normalization encoder");
+    [encoder setComputePipelineState:pipeline];
+    for(size_t i=0;i<5;++i)[encoder setBuffer:matrices[i].impl_->matrix.data offset:0 atIndex:i];
+    [encoder setBytes:&p length:sizeof(p) atIndex:5];
+    [encoder dispatchThreadgroups:MTLSizeMake(a.rows,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
+    [encoder endEncoding];
+    for(size_t i=3;i<5;++i){auto state=matrices[i].impl_;state->ready=false;state->pending=true;
+        if(impl_->pendingOutputs.insert(state.get()).second)impl_->outputs.push_back(state);}
+    ++impl_->residualNormDispatches;
+    }
+#else
+    throw std::logic_error("Residual normalization experiment is disabled");
+#endif
 }
 void MetalContext::EncodeSiluMul(const MetalMatrix& gate,const MetalMatrix& up,const MetalMatrix& output) {
     EncodePointwise(gate,up,output,1,0,0);
@@ -2022,7 +2084,7 @@ void MetalContext::SubmitAndWait() {
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;
+    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }
