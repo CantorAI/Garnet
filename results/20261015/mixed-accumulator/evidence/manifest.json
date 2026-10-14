@@ -1,0 +1,79 @@
+{
+  "files": {
+    "logs/mixed-accumulator-capability-20261015/dependency.json": {
+      "bytes": 78,
+      "sha256": "13e08451042b0c0c6bc56f067c27392ec804ef1d911d8c8162ce4412ea976f34"
+    },
+    "logs/mixed-accumulator-capability-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "997a31d4c281902d9eb98e4195ce799c3f1a31e1f210f521931e99786e7a3f82"
+    },
+    "logs/mixed-accumulator-capability-20261015/jobs/background_service_checks.json": {
+      "bytes": 3940,
+      "sha256": "a8d480583c3c8b69c6c9d58abc6e1c3e491372b7b8de6e86bc81abee115ba7db"
+    },
+    "logs/mixed-accumulator-capability-20261015/jobs/capabilities-monitor.json": {
+      "bytes": 81,
+      "sha256": "e7c79b815e42758524f1717afe992772fd578f10a8d9b34a06dfa5e1ab9e6299"
+    },
+    "logs/mixed-accumulator-capability-20261015/jobs/capabilities.log": {
+      "bytes": 601,
+      "sha256": "96805d5b37d807bb04934004d218e98dacdeedd243430275b69cac65870377d7"
+    },
+    "logs/mixed-accumulator-capability-20261015/jobs/compile-monitor.json": {
+      "bytes": 157,
+      "sha256": "0fa3eeeec9ad6dfed7d719ad7fa1eca46ce8aaa7699186dd9b6fd365ef501f2d"
+    },
+    "logs/mixed-accumulator-capability-20261015/jobs/compile.log": {
+      "bytes": 806,
+      "sha256": "ffea444a0e54e4527341b74fb56a233c76e27eba8cb7b1ad5be04a4085773ab6"
+    },
+    "logs/mixed-accumulator-capability-20261015/jobs/runner.py": {
+      "bytes": 389,
+      "sha256": "aff4b31aecab4d44cb3687fe159acacaa20ae2b12dfd0922541ec65f287d056d"
+    },
+    "logs/mixed-accumulator-capability-20261015/jobs/source.mm": {
+      "bytes": 3886,
+      "sha256": "441fabd6fccaf0d9051cdbd3a336a6c3f412e325aa74b7696de4d21a7cedde51"
+    },
+    "logs/mixed-accumulator-capability-20261015/jobs/statuses.json": {
+      "bytes": 707,
+      "sha256": "29733ab60a04d29d1ae2a8a0aa3d9cf5be0692c412b97747bf8d505c0062691e"
+    },
+    "logs/mixed-accumulator-capability-20261015/output.log": {
+      "bytes": 476,
+      "sha256": "66c6fbf1f582beebe86e76990cd89c4e6bdba070afb277445ea2bf55d6c31d26"
+    },
+    "logs/mixed-accumulator-capability-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "cc565180a75627c2639aea8b8f5bd604b2bfe744129e182addf1ca3b28fa12cc"
+    },
+    "source/test2026/metal/mixed_accumulator_capability_probe.mm": {
+      "bytes": 3886,
+      "sha256": "441fabd6fccaf0d9051cdbd3a336a6c3f412e325aa74b7696de4d21a7cedde51"
+    },
+    "source/test2026/metal/queue_mixed_accumulator_capability.py": {
+      "bytes": 1765,
+      "sha256": "c2c68db905e379ff48787f4a2c5524835e8928aeef2672c1df2cc28e3f983f33"
+    },
+    "source/test2026/metal/run_decode_subsimd_probe.py": {
+      "bytes": 5285,
+      "sha256": "422b2a307a8678a5ffe96bfe09b94607f13c151d17413dba16f1c0e3d6e011da"
+    },
+    "source/test2026/metal/run_metal_counter_capabilities.py": {
+      "bytes": 742,
+      "sha256": "6528edb6e3531a1d45d29ff86961a6763d5264b1736597bc23d446386c2305a1"
+    },
+    "source/test2026/metal/run_mixed_accumulator_capability.py": {
+      "bytes": 389,
+      "sha256": "aff4b31aecab4d44cb3687fe159acacaa20ae2b12dfd0922541ec65f287d056d"
+    }
+  },
+  "omitted": {
+    "logs/mixed-accumulator-capability-20261015/jobs/mixed_accumulator_capability_probe": {
+      "bytes": 54080,
+      "sha256": "248efc1350e02776b521617da2ece2f8d865888ec51baf608ddc12a542dd4c13"
+    }
+  },
+  "scope": "Hardware precision capability only; no model or speed evidence"
+}

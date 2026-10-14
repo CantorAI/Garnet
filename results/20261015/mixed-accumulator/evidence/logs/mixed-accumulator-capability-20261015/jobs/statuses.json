@@ -1,0 +1,27 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/mixed_accumulator_capability_probe.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/mixed-accumulator-capability-20261015/jobs/mixed_accumulator_capability_probe"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "capabilities",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/mixed-accumulator-capability-20261015/jobs/mixed_accumulator_capability_probe"
+    ],
+    "exit_code": 0
+  }
+]
