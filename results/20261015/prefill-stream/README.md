@@ -72,6 +72,13 @@ inference/probe jobs and only stop owned work.
 Repeated warm TTFT reductions are 11.7%, 5.3%, 12.4%, 8.5%, 3.5% and 2.9%.
 Decode is 0.1–1.5% slower in the repeat; text's initial positive direction did
 not repeat. The method is a latency tradeoff, not a throughput optimization.
+The independently derived `decode-time-share.json` uses the repeat's native
+control only. Across text/coder B1/B2, GPU spans account for 91.3–92.7% of
+observed decode wall time, while host encoding is 2.8–3.7%. These overlapping
+clocks support prioritizing GPU decode work; they do not isolate matrix
+kernels, prove bandwidth saturation, or establish a hypothetical speedup.
+VL workers did not save individual decode phase clocks, so their GPU and host
+shares are explicitly null rather than inferred from text/coder.
 Repeat first request AFTER initialization improves in every profile (text
 158.518→129.841 / 188.769→165.571 ms; coder 127.850→106.672 /
 139.929→116.341 ms; VL 335.761→316.931 / 563.676→528.435 ms).
@@ -109,4 +116,5 @@ python3 archive_prefill_stream_repaired_native.py ROOT ARCHIVE
 python verify_prefill_stream_repaired_native.py EVIDENCE VERIFICATION_JSON
 python verify_prefill_stream_repaired_native.py EVIDENCE CONFIRMATION_JSON --confirm
 python summarize_prefill_stream_phases.py JOBS PHASES_JSON
+python summarize_decode_time_share.py JOBS DECODE_TIME_SHARE_JSON
 ```

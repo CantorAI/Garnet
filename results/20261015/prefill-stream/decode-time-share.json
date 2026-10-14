@@ -1,0 +1,111 @@
+{
+  "scope": "Recorded native control only; no fresh comparator ratio or hypothetical speed claim",
+  "sources_sha256": {
+    "Qwen3-0.6B-b1-attempt0/summary.json": "731b422cfe61895bc48b93065701d89bd407fdc92c18d4f85abd3bc33d9cd99c",
+    "Qwen3-0.6B-b2-attempt0/summary.json": "7092b82c48157d8338bec7699137e6350d64d591422fe6509df66ec4e5ab2a1b",
+    "Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/summary.json": "bd648bb9982bf9a83eda9c183612e76960f62f624f2dd31342155d93f33e0c79",
+    "Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/summary.json": "a05938b44a1eaba77a6520f070849a3839174f2f2b1b3879cd90639e381f1e99",
+    "Qwen3.5-0.8B-b1-attempt0/summary.json": "80d44ef5bbf3bfeab65a8b23beb6cc112748e7048ec575494febabafc5377a08",
+    "Qwen3.5-0.8B-b2-attempt0/summary.json": "defb339f0e4e531f64f1ee7840251023c5fe22d07605f987c1a82f42c67555ec"
+  },
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "warm_requests": 4,
+      "decode_steps": 28,
+      "wall_ms_per_step": 16.93128721256341,
+      "native_run_ms_per_step": 16.756334785714287,
+      "individually_timed_step_ms": 16.893168146322882,
+      "phase_means_ms": {
+        "prepare_ms": 0.15651635714285714,
+        "encode_ms": 0.52752975,
+        "gpu_ms": 15.612401799964053,
+        "wait_ms": 16.07071282142857
+      },
+      "gpu_span_fraction_of_decode_wall": 0.9221036536654629,
+      "host_encode_fraction_of_decode_wall": 0.03115709652651575,
+      "observation": "Single-command decode; clocks overlap; no isolated matrix or bandwidth attribution"
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "warm_requests": 4,
+      "decode_steps": 28,
+      "wall_ms_per_step": 17.319078906439245,
+      "native_run_ms_per_step": 17.13719192857143,
+      "individually_timed_step_ms": 17.284284362436406,
+      "phase_means_ms": {
+        "prepare_ms": 0.14604460714285714,
+        "encode_ms": 0.48365928571428574,
+        "gpu_ms": 16.06022470098521,
+        "wait_ms": 16.50640475
+      },
+      "gpu_span_fraction_of_decode_wall": 0.9273140210137854,
+      "host_encode_fraction_of_decode_wall": 0.027926386173716254,
+      "observation": "Single-command decode; clocks overlap; no isolated matrix or bandwidth attribution"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "warm_requests": 4,
+      "decode_steps": 64,
+      "wall_ms_per_step": 13.83047199487919,
+      "native_run_ms_per_step": 13.68670053125,
+      "individually_timed_step_ms": 13.795413404295687,
+      "phase_means_ms": {
+        "prepare_ms": 0.13158265625,
+        "encode_ms": 0.505294890625,
+        "gpu_ms": 12.626594419998582,
+        "wait_ms": 13.048703125
+      },
+      "gpu_span_fraction_of_decode_wall": 0.9129547006547318,
+      "host_encode_fraction_of_decode_wall": 0.03653489850614558,
+      "observation": "Single-command decode; clocks overlap; no isolated matrix or bandwidth attribution"
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "warm_requests": 4,
+      "decode_steps": 64,
+      "wall_ms_per_step": 14.114449892076664,
+      "native_run_ms_per_step": 13.967574921875,
+      "individually_timed_step_ms": 14.079066313570365,
+      "phase_means_ms": {
+        "prepare_ms": 0.130401734375,
+        "encode_ms": 0.487788390625,
+        "gpu_ms": 12.90727475861786,
+        "wait_ms": 13.348135375
+      },
+      "gpu_span_fraction_of_decode_wall": 0.9144723922866829,
+      "host_encode_fraction_of_decode_wall": 0.03455950422119013,
+      "observation": "Single-command decode; clocks overlap; no isolated matrix or bandwidth attribution"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "warm_requests": 4,
+      "decode_steps": 108,
+      "wall_ms_per_step": 20.865593368566977,
+      "native_run_ms_per_step": null,
+      "individually_timed_step_ms": null,
+      "phase_means_ms": null,
+      "gpu_span_fraction_of_decode_wall": null,
+      "host_encode_fraction_of_decode_wall": null,
+      "observation": "VL worker did not retain individual decode phase clocks; GPU/host shares unavailable"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "warm_requests": 4,
+      "decode_steps": 108,
+      "wall_ms_per_step": 22.513584867637192,
+      "native_run_ms_per_step": null,
+      "individually_timed_step_ms": null,
+      "phase_means_ms": null,
+      "gpu_span_fraction_of_decode_wall": null,
+      "host_encode_fraction_of_decode_wall": null,
+      "observation": "VL worker did not retain individual decode phase clocks; GPU/host shares unavailable"
+    }
+  ]
+}
