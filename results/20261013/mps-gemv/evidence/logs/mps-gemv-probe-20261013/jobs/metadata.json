@@ -1,0 +1,19 @@
+{
+  "scope": "MPS GEMV losslessly expanded FP32 weights versus compact BF16 control; FP32 input/output; component only",
+  "numerical_bounds": "5e-6+5e-5*abs(control); both versus FP64 with gamma(ceil(K/32)+32)*sumabs+1e-7",
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "40b276447cb0f0bac5e30a8ef3af5f46ea36c706b9e7cbe4be6c7a522b99c68c",
+    "test2026/metal/make_decode_subsimd_probe.py": "3baf3ae3762af205a28c5e6671d61e8f160e6e63019305e2f3b12c94dd8864ad",
+    "test2026/metal/run_decode_subsimd_probe.py": "422b2a307a8678a5ffe96bfe09b94607f13c151d17413dba16f1c0e3d6e011da",
+    "test2026/metal/decode_wide_outputs_gpu.mm": "bb578c512d352224417591c60f8576bada476b4733c8850643d72645bbc763be",
+    "test2026/metal/make_mps_gemv_probe.py": "e9a39ad3c91ff413e5df83e29b7a700491965b5cd276ba412408bc3830a08a6a",
+    "test2026/metal/make_decode_subsimd_shader.py": "63859d066057b971764a7f09fd3502c3202a8964d655fc11242ea3d726648c63",
+    "test2026/metal/prepare_decode_tile_probe.py": "787166c08791d675ecc1cea030f0d94e8b8daf150dc6a4490749e3ceb45b5059",
+    "test2026/metal/run_mps_gemv_probe.py": "ce97085b1b5a7342b8e611240b2bf11d3faddae53e5bef479db57999e0d3675c",
+    "test2026/metal/compare_vllm_metal.py": "dbd05e692603f968b71649df4e1397f0952d35bf3558ebcff13aefac78aea7b7"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  }
+}
