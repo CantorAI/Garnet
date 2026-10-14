@@ -88,7 +88,7 @@ sessions, failed-run recovery and full-capacity boundaries before six-profile
 native ABBA timing. A repeated serving gain and fresh matched vLLM comparison
 are required before any selection change. The full 2x/half-latency goal is unmet.
 
-## Optional native trial in progress
+## Optional native implementation
 
 `GARNET_METAL_DIRTY_PREFIX_RESET` defaults OFF and is mutually exclusive with
 the earlier full direct-reset experiment. The new isolated build keeps global
@@ -101,7 +101,7 @@ four-dimensional cache layout admit the bounded reset. Admission is computed
 once per compiled graph. A session tracks the highest validated active slot
 plus one across decode/chunk calls and private storage swaps. It does not
 infer extent from token count or clear another session's buffers. Generic
-writers invalidate the proof; failed requests force full reset recovery.
+writers invalidate the proof; poisoned requests force full reset recovery.
 Every new state buffer is fully initialized. Convolution/recurrent and
 unsupported state retain the original full vector-copy reset. Padding is
 preserved and host clearing requires completed, initialized buffers with a
@@ -123,14 +123,21 @@ whole-buffer positive-zero checks after GPU writes/consumption across rows
 0/1/half/full. Invalid bounds, uninitialized buffers, open commands and abort
 recovery are also checked. The original numerical CTest remains intact.
 
-Owned validation PID **44364** is running all nineteen original stages in
-`ROOT/logs/dirty-prefix-reset-checks-20261014`; the text model's eight original
-dense-tail cases have passed. Dependent PID **45551** verifies that exact live
-handle and waits for terminal validation exit 0. It then runs six additional
-B1/B2 real-layer session gates for partial clearing, an unknown cache writer,
-nonfinite-head poisoning, full recovery and interleaved-session isolation,
-before all six sequential native ABBA performance profiles. The new gates
-retain deterministic input fixtures and do not provide serving timings.
+Owned validation PID **44364** exited 0 in 1205.88 seconds after all nineteen
+original stages. Dependent PID **45551** passed six B1/B2 real-layer recovery
+gates (partial clearing, unknown writer, nonfinite-head poisoning, full recovery
+and session isolation), then exited 1 in 1172.16 seconds including its wait.
+The first performance profile failed the actual bounded-state count assertion.
+All six completed control/candidate outputs matched, but both warm candidate
+requests cleared the full 58,720,256-byte text cache and recorded zero bounded
+states. These incomplete timing windows are rejected, with no speed claim.
+
+The failure archive SHA-256 is
+`a55880de3c40e979ad396f0d564ab8e200edb3d37a65ee7a1204146aba16ec9f`.
+`native/failure-verification.json` verifies all 461 archived files, original
+nineteen stages, six recovery checks, six completed matching outputs, actual
+fallback byte counts, exact source and preserved terminal failure. Evidence is
+under `native/failed`; the original first candidate binary remains intact.
 
 `native/pending` is a historical bounded snapshot of actual owned handles,
 source hashes, library identities, successful configure/build/CTest stages and
@@ -139,6 +146,35 @@ gates or serving measurements are complete. Preserve current source/binaries
 until their terminal records and exact executed-source archives are collected.
 No native TTFT/TPS gain or new vLLM comparison is claimed yet.
 
+## Cache-copy admission repair in progress
+
+Prefill returns its cache through a fresh `Layout` reshape copy. The first
+admission check expected the final writer itself to be KVUpdate/KVChunk and
+conservatively invalidated tracking. The repair traces a sole resident writer
+through complete row-preserving Layout copies, with unchanged rows/columns,
+zero layout operation, no auxiliary output and cycle detection. It must still
+end at the validated KV writer with the original cache/slot/active inputs and
+matching head/capacity/dimension metadata. Add, mask, reorder, partial copy and
+unknown producers remain ineligible. The numerical kernels are unchanged.
+
+All twelve prior source hashes were pinned against `32b90ea8` and saved before
+installation. A separate repaired build preserves the original candidate and
+all selected binaries. Repaired library SHA-256:
+`b5614830b706e3ae8bf8ca3333f492b7b79e47e1bca289041267d0fb706efaee`.
+Configure/build and both CTests pass. Six new actual trained chunk-prefill
+checks also pass, covering all three models and B1/B2. Sparse active slots
+0/3 clear only extent 4 at capacity 8; an inactive slot 7 must not enlarge it.
+Repeated full-cache snapshots verify all zero and preserve another session.
+These tests specifically detect the first implementation's fallback bug.
+
+Owned repair validation PID **66790** is running 22 stages: all original
+nineteen gates plus three new model-specific copy-regression stages. Dependent
+PID **68433** verifies that exact live handle before waiting for terminal exit
+0, then runs the six recovery gates and all six fresh native ABBA profiles.
+`native/repair-pending` records the actual live handles, source/binary hashes,
+unit output and completed copy-regression stages. Remaining full-model and
+serving results require terminal evidence. The overall goal remains unmet.
+
 ```text
 python prepare_dirty_prefix_reset_sources.py
 python3 install_dirty_prefix_reset_sources.py ROOT
@@ -146,4 +182,10 @@ python3 launch_dirty_prefix_reset_checks.py ROOT ROOT/logs/dirty-prefix-reset-ch
 python3 queue_dirty_prefix_reset_profiles.py ROOT ROOT/logs/dirty-prefix-reset-native-20261014
 python3 archive_dirty_prefix_reset_native.py ROOT ARCHIVE
 python verify_dirty_prefix_reset_native.py EVIDENCE VERIFICATION_JSON
+python prepare_dirty_prefix_reset_repair_sources.py
+python3 install_dirty_prefix_reset_repair_sources.py ROOT
+python3 launch_dirty_prefix_reset_repair_checks.py ROOT ROOT/logs/dirty-prefix-reset-repair-checks-20261014 checks
+python3 queue_dirty_prefix_reset_repair_profiles.py ROOT ROOT/logs/dirty-prefix-reset-repair-native-20261014
+python3 archive_dirty_prefix_reset_repair_native.py ROOT ARCHIVE
+python verify_dirty_prefix_reset_repair_native.py EVIDENCE VERIFICATION_JSON
 ```

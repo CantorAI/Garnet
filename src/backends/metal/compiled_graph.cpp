@@ -777,17 +777,32 @@ bool MetalCompiledGraph::ComputeResetKVPrefix(size_t part) const {
     if(part<1||part>2||inputs_.size()!=6||part>=outputStorageGroups_.size()||outputStorageGroups_[part].empty())return false;
     const auto& shape=inputShapes_[part];
     if(shape.size()!=4||std::any_of(shape.begin(),shape.end(),[](int64_t n){return n<=0;}))return false;
-    const auto& group=outputStorageGroups_[part];size_t writer=SIZE_MAX;
+    const auto& group=outputStorageGroups_[part];
     auto member=[&](size_t id){return std::find(group.begin(),group.end(),id)!=group.end();};
-    for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]&&
-        (member(ops_[i].out)||member(ops_[i].auxiliaryOutput))) {
-        const auto& op=ops_[i];
-        if(writer!=SIZE_MAX||(op.kind!=Kind::KVUpdate&&op.kind!=Kind::KVChunk)||op.arguments.size()!=5||
+    auto target=slots_[outputParts_[part]].matrix;std::unordered_set<size_t> visited;
+    for(;;) {
+        size_t writer=SIZE_MAX;
+        auto writes=[&](size_t id){return id!=SIZE_MAX&&target.SharesStorage(slots_[id].matrix);};
+        for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]&&
+            (writes(ops_[i].out)||writes(ops_[i].auxiliaryOutput))) {
+            if(writer!=SIZE_MAX)return false;writer=i;
+        }
+        if(writer==SIZE_MAX||!visited.insert(writer).second)return false;
+        const auto& op=ops_[writer];
+        if(op.kind==Kind::Layout) {
+            // Prefill returns the cache through a fresh reshape copy. Admit
+            // only a complete, row-preserving copy, then prove its producer.
+            const auto& input=slots_[op.a];const auto& output=slots_[op.out];
+            if(op.a!=op.b||op.dimensions!=std::vector<size_t>{0}||op.auxiliaryOutput!=SIZE_MAX||
+                input.rows!=size_t(shape[0])||output.rows!=input.rows||input.columns!=slots_[inputs_[part]].columns||output.columns!=input.columns)
+                return false;
+            target=input.matrix;continue;
+        }
+        if((op.kind!=Kind::KVUpdate&&op.kind!=Kind::KVChunk)||op.arguments.size()!=5||
             op.arguments[1]!=inputs_[part]||op.arguments[2]!=inputs_[4]||op.arguments[3]!=inputs_[5]||op.dimensions.size()!=4||
             op.dimensions[0]!=size_t(shape[1])||op.dimensions[1]!=size_t(shape[3])||op.dimensions[2]!=size_t(shape[2]))return false;
-        writer=i;
+        break;
     }
-    if(writer==SIZE_MAX)return false;
     // Reject a writer aliasing the input cache outside the proved output group.
     const auto& source=slots_[inputs_[part]].matrix;
     for(size_t i=0;i<ops_.size();++i)if(i<residentOps_.size()&&residentOps_[i]) {
