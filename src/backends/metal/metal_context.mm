@@ -59,6 +59,9 @@ struct MetalPipelines {
     id<MTLComputePipelineState> residualNorm;
     id<MTLComputePipelineState> packedPrefillNorm;
     id<MTLComputePipelineState> silu;
+#ifdef GARNET_METAL_JOINED_GLOBAL_MLP
+    id<MTLComputePipelineState> joinedGlobalSilu;
+#endif
     id<MTLComputePipelineState> kvInplace;
     id<MTLComputePipelineState> add;
     id<MTLComputePipelineState> mask;
@@ -93,6 +96,14 @@ struct MetalContext::Impl {
     size_t residualNormDispatches=0;
     size_t packedPrefillNormDispatches=0;
     size_t globalHalfAlphaDispatches=0;
+    size_t joinedGlobalMlpBlocks=0;
+#ifdef GARNET_METAL_JOINED_GLOBAL_MLP
+    struct JoinedGlobalWeight {
+        MetalBF16Weight firstOwner,secondOwner;
+        MPSMatrix* view;
+    };
+    std::map<std::pair<const void*,const void*>,JoinedGlobalWeight> joinedGlobalWeights;
+#endif
 #ifdef GARNET_METAL_JOINED_PREFILL
     struct JoinedWeight {
         MetalBF16Weight firstOwner,secondOwner;
@@ -397,6 +408,16 @@ kernel void silu_mul(device const float* a [[buffer(0)]],device const float* b [
     ulong row=id/p.columns,col=id%p.columns;
     float gate=a[row*p.aStride+col];
     c[row*p.cStride+col]=(gate/(1.0f+exp(-gate)))*b[row*p.bStride+col];
+}
+struct JoinedGlobalSiluParams {ulong rows,columns,iStride,gStride,uStride,oStride;};
+kernel void joined_global_silu(device const float* joined [[buffer(0)]],device float* gates [[buffer(1)]],
+    device float* ups [[buffer(2)]],device float* activated [[buffer(3)]],
+    constant JoinedGlobalSiluParams& p [[buffer(4)]],uint id [[thread_position_in_grid]]) {
+    if(id>=p.rows*p.columns)return;
+    ulong row=id/p.columns,col=id%p.columns;
+    float gate=joined[row*p.iStride+col],up=joined[row*p.iStride+p.columns+col];
+    gates[row*p.gStride+col]=gate;ups[row*p.uStride+col]=up;
+    activated[row*p.oStride+col]=(gate/(1.0f+exp(-gate)))*up;
 }
 kernel void add_matrix(device const float* a [[buffer(0)]],device const float* b [[buffer(1)]],
     device float* c [[buffer(2)]],constant Params& p [[buffer(3)]],uint id [[thread_position_in_grid]]) {
@@ -1194,6 +1215,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         if(!impl_->kernels->residualNorm)throw std::runtime_error("Cannot create residual normalization pipeline");
 #endif
         impl_->kernels->silu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"silu_mul"] error:&error];
+#ifdef GARNET_METAL_JOINED_GLOBAL_MLP
+        impl_->kernels->joinedGlobalSilu=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"joined_global_silu"] error:&error];
+        if(!impl_->kernels->joinedGlobalSilu)throw std::runtime_error("Cannot create joined global split-SiLU pipeline");
+#endif
         impl_->kernels->add=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"add_matrix"] error:&error];
         impl_->kernels->mask=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"mask_rows"] error:&error];
         impl_->kernels->conv=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"causal_conv"] error:&error];
@@ -1426,6 +1451,87 @@ bool MetalContext::EncodeJoinedBF16Prefill(const MetalMatrix& input,const MetalB
     }
 #endif
 }
+bool MetalContext::EncodeJoinedGlobalMlp(const MetalMatrix& input,const MetalBF16Weight& gate,
+    const MetalBF16Weight& up,const MetalMatrix& gateOutput,const MetalMatrix& upOutput,const MetalMatrix& activated) {
+#ifndef GARNET_METAL_JOINED_GLOBAL_MLP
+    return false;
+#else
+    @autoreleasepool {
+        if(!input.impl_||!gate.impl_||!up.impl_||!gateOutput.impl_||!upOutput.impl_||!activated.impl_)return false;
+        auto a=input.impl_->matrix,g=gateOutput.impl_->matrix,u=upOutput.impl_->matrix,o=activated.impl_->matrix;
+        auto w0=gate.impl_,w1=up.impl_;
+        const bool selected=(a.columns==1024&&w0->rows==3072&&(a.rows==24||a.rows==44))||
+            (a.columns==896&&w0->rows==4864&&a.rows==26)||
+            (a.columns==1024&&w0->rows==3584&&a.rows==32);
+        if(!selected||w0==w1||!gate.GlobalHalfReady()||!up.GlobalHalfReady()||
+            w0->floatPrefill||w1->floatPrefill||w0->rows!=w1->rows||w0->columns!=w1->columns||
+            w0->globalHalfScale!=w1->globalHalfScale)return false;
+        if(!impl_->command)throw std::logic_error("Begin a Metal command batch first");
+        if(a.device!=impl_->device||w0->buffer.device!=impl_->device||w1->buffer.device!=impl_->device||
+            a.columns!=w0->columns)throw std::invalid_argument("Joined global input/weight device or shape mismatch");
+        for(auto m:{g,u,o})if(m.device!=impl_->device||m.rows!=a.rows||m.columns!=w0->rows)
+            throw std::invalid_argument("Joined global output device or shape mismatch");
+        // Existing custom kernels use zero buffer offsets. Keep every public
+        // output allocation independent and materialize all three results.
+        if(a.offset||g.offset||u.offset||o.offset||g.data==u.data||g.data==o.data||u.data==o.data||
+            a.data==g.data||a.data==u.data||a.data==o.data)return false;
+        if(!input.impl_->ready&&!(input.impl_->pending&&impl_->pendingOutputs.count(input.impl_.get())))
+            throw std::logic_error("Uninitialized joined global input");
+        for(const auto* out:{&gateOutput,&upOutput,&activated})
+            if(out->impl_->pending&&!impl_->pendingOutputs.count(out->impl_.get()))
+                throw std::logic_error("Joined global output belongs to another command batch");
+        const auto identity=std::make_pair(static_cast<const void*>(w0.get()),static_cast<const void*>(w1.get()));
+        auto found=impl_->joinedGlobalWeights.find(identity);
+        if(found==impl_->joinedGlobalWeights.end()) {
+            const size_t rowBytes=[MPSMatrixDescriptor rowBytesFromColumns:a.columns dataType:MPSDataTypeFloat16];
+            auto descriptor=[MPSMatrixDescriptor matrixDescriptorWithRows:w0->rows*2 columns:a.columns rowBytes:rowBytes dataType:MPSDataTypeFloat16];
+            auto buffer=[impl_->device newBufferWithLength:w0->rows*2*rowBytes options:MTLResourceStorageModeShared];
+            if(!buffer)throw std::runtime_error("Joined global weight allocation failed");
+            std::memset(buffer.contents,0,w0->rows*2*rowBytes);
+            for(size_t index=0;index<2;++index) {
+                auto weight=index?w1:w0;
+                for(size_t row=0;row<w0->rows;++row)std::memcpy(static_cast<char*>(buffer.contents)+(index*w0->rows+row)*rowBytes,
+                    static_cast<const char*>(weight->exactHalf.data.contents)+weight->exactHalf.offset+row*weight->exactHalf.rowBytes,a.columns*2);
+            }
+            auto view=[[MPSMatrix alloc] initWithBuffer:buffer descriptor:descriptor];
+            auto single=[MPSMatrixDescriptor matrixDescriptorWithRows:w0->rows columns:a.columns rowBytes:rowBytes dataType:MPSDataTypeFloat16];
+            auto firstView=[[MPSMatrix alloc] initWithBuffer:buffer offset:0 descriptor:single];
+            auto secondView=[[MPSMatrix alloc] initWithBuffer:buffer offset:w0->rows*rowBytes descriptor:single];
+            if(!view||!firstView||!secondView)throw std::runtime_error("Joined global weight views failed");
+            // MPS honors half-weight offsets. Raw BF16 decode storage and each
+            // exact common scale stay unchanged; no duplicate half allocation.
+            w0->exactHalf=firstView;w1->exactHalf=secondView;
+            Impl::JoinedGlobalWeight pack;pack.firstOwner=gate;pack.secondOwner=up;pack.view=view;
+            found=impl_->joinedGlobalWeights.emplace(identity,std::move(pack)).first;
+        }
+        const std::array<size_t,4> key{a.rows,w0->rows*2,a.columns,size_t(w0->globalHalfScale+64)};
+        auto product=impl_->globalHalfMatmul.find(key);
+        if(product==impl_->globalHalfMatmul.end())product=impl_->globalHalfMatmul.emplace(key,
+            [[MPSMatrixMultiplication alloc] initWithDevice:impl_->device transposeLeft:NO transposeRight:YES
+                resultRows:a.rows resultColumns:w0->rows*2 interiorColumns:a.columns alpha:std::ldexp(1.0,-w0->globalHalfScale) beta:0]).first;
+        if(!product->second)throw std::runtime_error("Joined global MPS product creation failed");
+        const std::array<size_t,2> shape{a.rows,w0->rows*2};
+        auto scratch=impl_->halfScratch.find(shape);
+        if(scratch==impl_->halfScratch.end())scratch=impl_->halfScratch.emplace(shape,Allocate(a.rows,w0->rows*2)).first;
+        auto temporary=scratch->second.impl_->matrix;
+        [product->second encodeToCommandBuffer:impl_->command leftMatrix:a rightMatrix:found->second.view resultMatrix:temporary];
+        struct Params{uint64_t rows,columns,iStride,gStride,uStride,oStride;};
+        Params p{a.rows,w0->rows,temporary.rowBytes/4,g.rowBytes/4,u.rowBytes/4,o.rowBytes/4};
+        auto encoder=[impl_->command computeCommandEncoder];if(!encoder)throw std::runtime_error("Joined global split-SiLU encoder unavailable");
+        [encoder setComputePipelineState:impl_->kernels->joinedGlobalSilu];
+        [encoder setBuffer:temporary.data offset:0 atIndex:0];[encoder setBuffer:g.data offset:0 atIndex:1];
+        [encoder setBuffer:u.data offset:0 atIndex:2];[encoder setBuffer:o.data offset:0 atIndex:3];
+        [encoder setBytes:&p length:sizeof(p) atIndex:4];
+        [encoder dispatchThreads:MTLSizeMake(a.rows*w0->rows,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
+        for(const auto* out:{&gateOutput,&upOutput,&activated}) {
+            out->impl_->ready=false;out->impl_->pending=true;
+            if(impl_->pendingOutputs.insert(out->impl_.get()).second)impl_->outputs.push_back(out->impl_);
+        }
+        ++impl_->joinedGlobalMlpBlocks;++impl_->globalHalfAlphaDispatches;return true;
+    }
+#endif
+}
+size_t MetalContext::LastJoinedGlobalMlpBlocks() const {return impl_->joinedGlobalMlpBlocks;}
 size_t MetalContext::LastJoinedPrefillPairs() const {return impl_->joinedPrefillPairs;}
 size_t MetalContext::LastConstantHeadDispatches() const {return impl_->constantHeadDispatches;}
 size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualNormDispatches;}
@@ -1588,7 +1694,7 @@ void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;
+    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
     }
@@ -2182,7 +2288,7 @@ void MetalContext::SubmitAndWait() {
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;
+    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

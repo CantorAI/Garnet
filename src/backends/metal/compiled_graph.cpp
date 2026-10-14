@@ -860,6 +860,20 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput) {
             }
         }
 #endif
+#ifdef GARNET_METAL_JOINED_GLOBAL_MLP
+        if(!profileOps&&slots_[op.a].rows>2&&i+2<ops_.size()&&
+            (packedOutput||(residentOps_[i+1]&&residentOps_[i+2]))) {
+            const auto& next=ops_[i+1];const auto& silu=ops_[i+2];
+            auto projection=[&](const Op& v){return (v.kind==Kind::BF16MatVec||
+                (v.kind==Kind::MatMul&&v.transpose))&&slots_[v.b].bf16.Valid();};
+            if(projection(op)&&projection(next)&&op.a==next.a&&op.out!=next.out&&
+                silu.kind==Kind::Silu&&silu.a==op.out&&silu.b==next.out&&
+                gpu.EncodeJoinedGlobalMlp(a,slots_[op.b].bf16,slots_[next.b].bf16,
+                    out,slots_[next.out].matrix,slots_[silu.out].matrix)) {
+                i+=2;continue;
+            }
+        }
+#endif
 #ifdef GARNET_METAL_JOINED_PREFILL
         if(!profileOps&&slots_[op.a].rows>2&&i+1<ops_.size()&&(packedOutput||residentOps_[i+1])) {
             const auto& next=ops_[i+1];

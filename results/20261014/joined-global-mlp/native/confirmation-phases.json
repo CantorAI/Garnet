@@ -1,0 +1,41 @@
+{
+  "scope": "Recompute native prefill phases from complete warm request records.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "prepare_ms": 0.297479,
+      "encode_ms": 5.843833,
+      "gpu_ms": 51.76627077162266,
+      "wait_ms": 52.5281255
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "prepare_ms": 0.27079175,
+      "encode_ms": 5.38494775,
+      "gpu_ms": 51.20081233326346,
+      "wait_ms": 52.20990625
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "prepare_ms": 0.2691565,
+      "encode_ms": 5.67135425,
+      "gpu_ms": 23.516156361438334,
+      "wait_ms": 24.384521
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "prepare_ms": 0.267104,
+      "encode_ms": 5.2106562499999995,
+      "gpu_ms": 24.063854361884296,
+      "wait_ms": 25.06747925
+    }
+  ]
+}

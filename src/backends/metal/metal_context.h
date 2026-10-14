@@ -63,6 +63,10 @@ public:
     size_t LastResidualNormDispatches() const;
     size_t LastPackedPrefillNormDispatches() const;
     size_t LastGlobalHalfAlphaDispatches() const;
+    // False preserves all three independent outputs. Decode never takes this route.
+    bool EncodeJoinedGlobalMlp(const MetalMatrix&,const MetalBF16Weight&,const MetalBF16Weight&,
+        const MetalMatrix& gate,const MetalMatrix& up,const MetalMatrix& activated);
+    size_t LastJoinedGlobalMlpBlocks() const;
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
     void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
     // Synchronous host update into an existing allocation, between command batches.

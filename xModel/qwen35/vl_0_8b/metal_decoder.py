@@ -10,6 +10,7 @@ class MetalDecoder(CPUDecoder):
         backend=garnet.backend_info();self.joined_prefill_enabled='joined_mps_prefill' in backend
         self.packed_prefill_norm_enabled='packed_prefill_norm' in backend
         self.global_half_alpha_enabled='global_half_alpha' in backend
+        self.joined_global_mlp_enabled='joined_global_mlp' in backend
         if not backend.startswith('Garnet Metal/MPS '):
             raise ValueError('MetalDecoder requires the native Garnet Metal package')
         CPUDecoder.__init__(self,checkpoint,config,batch,capacity)
@@ -172,6 +173,7 @@ class MetalDecoder(CPUDecoder):
         if self.joined_prefill_enabled:self.prefill_profile['joined_prefill_pairs']=0
         if self.packed_prefill_norm_enabled:self.prefill_profile['packed_prefill_norm_dispatches']=0
         if self.global_half_alpha_enabled:self.prefill_profile['global_half_alpha_dispatches']=0
+        if self.joined_global_mlp_enabled:self.prefill_profile['joined_global_mlp_blocks']=0
         offset=0
         for chunk in self.prefill_chunk_plan:
             graphs=profiles[chunk]
