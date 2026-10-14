@@ -10,9 +10,10 @@ for p in outer['profiles']:
   value=dict(model=p['model'],batch=p['batch'],policy=policy,warm_requests=4,
    ttft_ms=statistics.mean(r['ttft_seconds'] for r in warm)*1000,
    reset_ms=statistics.mean(r['reset_seconds'] for r in warm)*1000,
-   cleared_bytes=statistics.mean(r['dirty_prefix_reset_bytes'] for r in warm),
-   bounded_states=statistics.mean(r['dirty_prefix_reset_states'] for r in warm),
-   fallback_states=statistics.mean(r['dirty_prefix_reset_fallback_states'] for r in warm),
+   reset_counters_instrumented=warm[0]['dirty_prefix_reset_enabled'],
+   cleared_bytes=statistics.mean(r['dirty_prefix_reset_bytes'] for r in warm) if warm[0]['dirty_prefix_reset_enabled'] else None,
+   bounded_states=statistics.mean(r['dirty_prefix_reset_states'] for r in warm) if warm[0]['dirty_prefix_reset_enabled'] else None,
+   fallback_states=statistics.mean(r['dirty_prefix_reset_fallback_states'] for r in warm) if warm[0]['dirty_prefix_reset_enabled'] else None,
    decode_tps_per_row=statistics.mean(r['decode_wall_steps_per_second'] for r in warm),
    first_request_after_init_ttft_ms=statistics.mean(r['ttft_seconds'] for r in first)*1000,
    initialization_s=statistics.mean(r['initialization_seconds'] for r in first))

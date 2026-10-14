@@ -10,4 +10,6 @@ for s in copies:
  values=[json.loads(line.split(' ',2)[2]) for line in text.splitlines() if line.startswith('prefix_reset_prefill PASS ')];assert len(values)==2 and {v['batch'] for v in values}=={1,2}
  assert all(all(v[k] for k in ('prefill_copy_admitted','complete_zero_verified','inactive_high_slot_ignored','other_session_unchanged')) for v in values)
 meta=json.loads((checks/'metadata.json').read_text())''')
+if '--confirm' in __import__('sys').argv[3:]:
+ source=source.replace('dirty-prefix-reset-repair-native-20261014','dirty-prefix-reset-repair-confirm-native-20261014')
 exec(compile(source,__file__,'exec'))

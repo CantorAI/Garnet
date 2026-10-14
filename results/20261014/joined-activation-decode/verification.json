@@ -1,0 +1,68 @@
+{
+  "verified_files": 47,
+  "matrix_batch_checks": 64,
+  "validated_executions": 51750,
+  "timed_executions": 6144,
+  "weight_exclusions": [
+    {
+      "model": "Qwen3-0.6B",
+      "kind": "excluded",
+      "reason": "Exact half weight admission failed; original native fallback required",
+      "matrix": "matrix-0"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "kind": "excluded",
+      "reason": "Exact half weight admission failed; original native fallback required",
+      "matrix": "matrix-3"
+    }
+  ],
+  "unweighted_trained_large_matrix_pools": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "matrix_count": 7,
+      "gpu_fraction": 1.1685078945119507,
+      "wall_fraction": 1.1315811733957577
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "matrix_count": 7,
+      "gpu_fraction": 1.2031260962710453,
+      "wall_fraction": 1.1466125107122023
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "matrix_count": 6,
+      "gpu_fraction": 1.103222333160363,
+      "wall_fraction": 1.0975468252899918
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "matrix_count": 6,
+      "gpu_fraction": 1.1650006199896943,
+      "wall_fraction": 1.1472500594787423
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "matrix_count": 6,
+      "gpu_fraction": 1.1074733575196412,
+      "wall_fraction": 1.1188987230143101
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "matrix_count": 6,
+      "gpu_fraction": 1.1038439488808556,
+      "wall_fraction": 1.0895963136581261
+    }
+  ],
+  "candidate_fp64_worst_ratio": 0.0075365995569406305,
+  "comparison_worst_ratio": 0.06863866008175297,
+  "scope": "Component only; exact representations and bounded products; no full inference or vLLM gain",
+  "full_goal_met": false
+}

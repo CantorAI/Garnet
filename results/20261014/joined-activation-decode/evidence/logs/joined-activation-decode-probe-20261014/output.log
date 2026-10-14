@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_joined_activation_decode_probe.py", line 31, in <module>
+    run(model+'-admission',[str(binary),str(shader),str(s/'joined_activation_decode.metal'),str(assets),'reject'])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_joined_activation_decode_probe.py", line 32, in run
+    run(model+'-gpu',[str(binary),str(shader),str(s/'joined_activation_decode.metal'),str(assets)])
+           ^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Qwen3-0.6B-admission

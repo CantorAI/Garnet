@@ -1,0 +1,3 @@
+{"kind":"hardware","device":"Apple M4","control":"Original BF16 shader\/default compile options","candidate":"One MPS half product with lossless three-component input and FP32 result\/recombination"}
+{"kind":"excluded","reason":"Exact half weight admission failed; original native fallback required","matrix":"matrix-0"}
+Wide-exponent input was admitted

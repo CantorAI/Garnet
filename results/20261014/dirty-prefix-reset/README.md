@@ -146,7 +146,7 @@ gates or serving measurements are complete. Preserve current source/binaries
 until their terminal records and exact executed-source archives are collected.
 No native TTFT/TPS gain or new vLLM comparison is claimed yet.
 
-## Cache-copy admission repair in progress
+## Completed cache-copy admission repair
 
 Prefill returns its cache through a fresh `Layout` reshape copy. The first
 admission check expected the final writer itself to be KVUpdate/KVChunk and
@@ -167,13 +167,55 @@ checks also pass, covering all three models and B1/B2. Sparse active slots
 Repeated full-cache snapshots verify all zero and preserve another session.
 These tests specifically detect the first implementation's fallback bug.
 
-Owned repair validation PID **66790** is running 22 stages: all original
-nineteen gates plus three new model-specific copy-regression stages. Dependent
-PID **68433** verifies that exact live handle before waiting for terminal exit
-0, then runs the six recovery gates and all six fresh native ABBA profiles.
-`native/repair-pending` records the actual live handles, source/binary hashes,
-unit output and completed copy-regression stages. Remaining full-model and
-serving results require terminal evidence. The overall goal remains unmet.
+Owned repair validation PID **66790** exited 0 in 1224.31 seconds after all
+22 stages: the original nineteen gates plus three model-specific copy stages.
+Dependent PID **68433** exited 0 in 1299.91 seconds including its validation
+wait, passing six recovery gates and all six native ABBA profiles (72 complete
+requests). Fresh confirmation PID **91803** exited 0 in 151.33 seconds after
+six more recovery gates and another 72 complete requests. The second run
+starts after the first is terminal. Actual cleared-byte/state/fallback counts
+match archived checkpoint configuration, prompt length and preceding decode
+steps for every request, including separate first-request accounting.
+
+| Model / batch | Initial TTFT control → candidate ms | Repeat TTFT control → candidate ms | Decode candidate/control initial / repeat |
+| --- | ---: | ---: | ---: |
+| Text / 1 | 50.979 → 44.536 | 48.678 → 43.907 | 1.0081 / 0.9846 |
+| Text / 2 | 82.604 → 66.170 | 80.444 → 66.484 | 0.9778 / 0.9831 |
+| Coder / 1 | 31.620 → 32.397 | 32.617 → 32.161 | 1.0053 / 0.9934 |
+| Coder / 2 | 52.059 → 50.959 | 51.434 → 49.430 | 1.0021 / 0.9985 |
+| VL / 1 | 196.462 → 192.869 | 195.229 → 194.557 | 0.9949 / 0.9942 |
+| VL / 2 | 359.408 → 355.739 | 360.893 → 357.563 | 0.9955 / 1.0055 |
+
+Text TTFT reductions repeat at 12.6% / 9.8% for B1 and 19.9% / 17.4% for
+B2. Text B2 decode decreases 2.2% / 1.7%; B1 throughput direction changes.
+Coder B2 TTFT improves 2.1% / 3.9% with essentially flat decode. Coder B1
+latency direction changes. VL warm gains are small, with no repeatable decode
+improvement. This remains an optional latency/throughput tradeoff; it is not
+selected as a uniform policy for the objective that requires both metrics.
+No favorable-sample rerun or new vLLM speed claim follows these results.
+
+Repeat text reset falls from 5.611 to 1.226 ms at B1 and 20.144 to 2.277 ms
+at B2. Actual candidate clearing is 6,651,904 / 13,303,808 bytes; the control
+library is not instrumented, so its recorded zero counters are unavailable
+instrumentation, not an absence of reset. Phase reports use null for them.
+Reset savings do not exactly equal full TTFT savings. The cause of the decode
+tradeoff is not independently established. GPU/wait intervals overlap.
+
+First request after initialization on repeat is 154.500 → 149.482 ms for
+text B1 and 188.011 → 166.792 ms for text B2. Initialization is separately
+reported and essentially unchanged. OS/driver caches were not flushed; these
+are not hardware-cold end-to-end measurements. Other first-use phases and
+resource observations are retained in the reports.
+
+The combined native archive SHA-256 is
+`331e44ebc223b26bcbf53ed8758eb7b825ac8a3b2cc9ecd943c3ee9cd2fca5d0`.
+Both independent audits verify 1,207 files, all 22 stages, six recovery gates
+per run, 72 complete outputs per run, fresh frame hashes, byte counts and raw
+timing means. Initial archive SHA-256 was
+`42828a0a33e9ecb9ff8d044bda0e89c7e72c3441b30e4b1bfdad9a45de1f7487`.
+Reports are `native/verification.json`, `native/confirmation.json` and their
+phase summaries. Historical pending snapshots are superseded. Selected
+libraries, GPT-OSS and Pi checkouts are preserved; the full goal remains unmet.
 
 ```text
 python prepare_dirty_prefix_reset_sources.py
