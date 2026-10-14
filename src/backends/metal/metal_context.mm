@@ -16,6 +16,7 @@
 #include <array>
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 #include <mutex>
 namespace Garnet {
 struct MetalMatrix::Impl {
@@ -94,6 +95,10 @@ struct MetalContext::Impl {
     id<MTLCommandBuffer> command;
     NSMutableArray<id<MTLCommandBuffer>>* submitted=nil;
     size_t partialSubmissions=0;
+    size_t deferredZeroBytes=0,deferredZeroStates=0;
+#ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+    std::unordered_map<const MetalMatrix::Impl*,std::shared_ptr<MetalMatrix::Impl>> zeroQueued;
+#endif
     size_t fusedHeadArgmaxDispatches=0;
 #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
     std::map<std::array<size_t,2>,MetalMatrix> fusedHeadScratch;
@@ -1784,9 +1789,16 @@ void MetalContext::Update(const MetalMatrix& matrix,const float* values,size_t c
     if(impl_->command)throw std::logic_error("Host update requires a closed command batch");
     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
         throw std::invalid_argument("Metal update matrix belongs to another device or is empty");
+#ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+    if(matrix.impl_->pending&&!impl_->zeroQueued.count(matrix.impl_.get()))throw std::logic_error("Cannot update pending Metal output");
+#else
     if(matrix.impl_->pending)throw std::logic_error("Cannot update pending Metal output");
+#endif
     auto native=matrix.impl_->matrix;
     if(!values||count!=Elements(native.rows,native.columns))throw std::invalid_argument("Metal update size mismatch");
+#ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+    if(impl_->zeroQueued.erase(matrix.impl_.get()))matrix.impl_->pending=false;
+#endif
     for(size_t i=0;i<native.rows;++i)
         std::memcpy(static_cast<char*>(native.data.contents)+i*native.rowBytes,
             values+i*native.columns,native.columns*sizeof(float));
@@ -1796,7 +1808,12 @@ void MetalContext::Zero(const MetalMatrix& matrix) {
     if(impl_->command)throw std::logic_error("Host zero requires a closed command batch");
     if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
         throw std::invalid_argument("Metal zero matrix belongs to another device or is empty");
+#ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+    if(matrix.impl_->pending&&!impl_->zeroQueued.count(matrix.impl_.get()))throw std::logic_error("Cannot zero pending Metal output");
+    if(impl_->zeroQueued.erase(matrix.impl_.get()))matrix.impl_->pending=false;
+#else
     if(matrix.impl_->pending)throw std::logic_error("Cannot zero pending Metal output");
+#endif
     auto native=matrix.impl_->matrix;
     // Match Update: change logical columns only, preserving row padding.
     for(size_t i=0;i<native.rows;++i)
@@ -1817,6 +1834,20 @@ void MetalContext::ZeroPrefixGroups(const MetalMatrix& matrix,size_t groups,size
         std::memset(static_cast<char*>(native.data.contents)+row*native.rowBytes+group*capacity*width*sizeof(float),
             0,dirtyTokens*width*sizeof(float));
 }
+size_t MetalContext::LastDeferredZeroBytes() const {return impl_->deferredZeroBytes;}
+size_t MetalContext::LastDeferredZeroStates() const {return impl_->deferredZeroStates;}
+void MetalContext::DeferZero(const MetalMatrix& matrix) {
+#ifndef GARNET_METAL_DEFERRED_STATE_ZERO
+    Zero(matrix);
+#else
+    if(impl_->command||impl_->submitted.count)throw std::logic_error("Deferred reset requires a closed, drained command batch");
+    if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)throw std::invalid_argument("Invalid deferred reset matrix/device");
+    if(matrix.impl_->pending&&!impl_->zeroQueued.count(matrix.impl_.get()))throw std::logic_error("Cannot defer reset of pending GPU work");
+    impl_->zeroQueued.emplace(matrix.impl_.get(),matrix.impl_);
+    // Pending/readability checks keep other contexts from stale physical state.
+    matrix.impl_->ready=false;matrix.impl_->pending=true;
+#endif
+}
 void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
@@ -1824,9 +1855,26 @@ void MetalContext::Begin() {
     impl_->partialSubmissions=0;
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
+    impl_->deferredZeroBytes=impl_->deferredZeroStates=0;
     impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
+#ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+    if(!impl_->zeroQueued.empty()) {
+        try {
+            auto encoder=[impl_->command blitCommandEncoder];
+            if(!encoder)throw std::runtime_error("Cannot create deferred state clear encoder");
+            for(const auto& entry:impl_->zeroQueued) {
+                const auto& target=entry.second;auto matrix=target->matrix;
+                if(impl_->pendingOutputs.insert(target.get()).second)impl_->outputs.push_back(target);
+                for(size_t row=0;row<matrix.rows;++row)
+                    [encoder fillBuffer:matrix.data range:NSMakeRange(row*matrix.rowBytes,matrix.columns*sizeof(float)) value:0];
+                impl_->deferredZeroBytes+=matrix.rows*matrix.columns*sizeof(float);++impl_->deferredZeroStates;
+            }
+            [encoder endEncoding];impl_->zeroQueued.clear();
+        }catch(...){Abort();throw;}
+    }
+#endif
     }
 }
 void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right,
@@ -2447,11 +2495,22 @@ void MetalContext::Abort() {
     impl_->submitted=nil;impl_->partialSubmissions=0;
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
+    impl_->deferredZeroBytes=impl_->deferredZeroStates=0;
+#ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+    for(const auto& entry:impl_->zeroQueued){entry.second->pending=false;entry.second->ready=false;}
+    impl_->zeroQueued.clear();
+#endif
     impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }
 std::vector<float> MetalContext::Download(const MetalMatrix& value) const {
+#ifdef GARNET_METAL_DEFERRED_STATE_ZERO
+    if(value.impl_&&impl_->zeroQueued.count(value.impl_.get())) {
+        auto matrix=value.impl_->matrix;
+        return std::vector<float>(Elements(matrix.rows,matrix.columns),0.0f);
+    }
+#endif
     if(!value.impl_||!value.impl_->ready||value.impl_->pending)
         throw std::logic_error("Metal matrix is not completed");
     auto matrix=value.impl_->matrix;

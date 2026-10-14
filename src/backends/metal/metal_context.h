@@ -81,6 +81,11 @@ public:
     void Update(const MetalMatrix&,const float* values,size_t count);
     // Clear logical elements of an existing shared allocation between batches.
     void Zero(const MetalMatrix&);
+    // Owner snapshots are logically zero immediately; physical zeroing precedes
+    // all consumers in the owner's next Begin. Host Update/Zero cancels the queue.
+    void DeferZero(const MetalMatrix&);
+    size_t LastDeferredZeroBytes() const;
+    size_t LastDeferredZeroStates() const;
     // Caller proves the remaining logical elements are already positive zero.
     void ZeroPrefixGroups(const MetalMatrix&,size_t groups,size_t capacity,size_t width,size_t dirtyTokens);
     void Begin();

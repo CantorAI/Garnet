@@ -33,6 +33,7 @@ try:
     single_coder_head_enabled='single_coder_head' in garnet.backend_info()
     fused_head_argmax_enabled='fused_head_argmax' in garnet.backend_info()
     fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
+    deferred_state_zero_enabled='deferred_state_zero' in garnet.backend_info()
     initialization=time.monotonic()-started
     for request in range(repeats):
         begin=time.monotonic();decoder.reset();reset_seconds=time.monotonic()-begin
@@ -83,6 +84,9 @@ try:
             single_coder_head_enabled=single_coder_head_enabled,single_coder_head_counts=single_head_counts,
             fused_head_argmax_enabled=fused_head_argmax_enabled,fused_head_argmax_counts=fused_head_counts,
             fused_head_decode_only_enabled=fused_head_decode_only_enabled,
+            deferred_state_zero_enabled=deferred_state_zero_enabled,
+            decode_deferred_zero_bytes=decoder.session.deferred_zero_bytes if deferred_state_zero_enabled else 0,
+            decode_deferred_zero_states=decoder.session.deferred_zero_states if deferred_state_zero_enabled else 0,
             vision_global_alpha_enabled='vision_global_alpha' in garnet.backend_info(),vision_global_alpha_dispatches=0,
             residual_norm_dispatches=decoder.session.residual_norm_dispatches if 'residual_norm' in garnet.backend_info() else 0,
             constant_head_dispatches=decoder.session.constant_head_dispatches if 'constant_bf16_head' in garnet.backend_info() else 0,

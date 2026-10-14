@@ -60,6 +60,7 @@ try:
         prediction=decoder.prefill_sequence(hidden,[positions for row in range(batch)])
         fused_head_enabled='fused_head_argmax' in garnet.backend_info()
         fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
+        deferred_state_zero_enabled='deferred_state_zero' in garnet.backend_info()
         fused_head_counts=[decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0]
         first=time.monotonic()
         emit('frame_first',dict(request=last,worker_ttft_seconds=first-start))
@@ -98,6 +99,9 @@ try:
             single_coder_head_enabled='single_coder_head' in garnet.backend_info(),
             fused_head_argmax_enabled=fused_head_enabled,fused_head_argmax_counts=fused_head_counts,
             fused_head_decode_only_enabled=fused_head_decode_only_enabled,
+            deferred_state_zero_enabled=deferred_state_zero_enabled,
+            decode_deferred_zero_bytes=decoder.session.deferred_zero_bytes if deferred_state_zero_enabled else 0,
+            decode_deferred_zero_states=decoder.session.deferred_zero_states if deferred_state_zero_enabled else 0,
             vision_global_alpha_enabled='vision_global_alpha' in garnet.backend_info(),
             vision_global_alpha_dispatches=vision.graph.vision_global_alpha_dispatches if 'vision_global_alpha' in garnet.backend_info() else 0,
             single_coder_head_counts=[decoder.session.single_coder_head_dispatches if 'single_coder_head' in garnet.backend_info() else 0],
