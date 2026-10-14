@@ -1,0 +1,166 @@
+{
+  "verified_files": 1523,
+  "original_validation_stages": 19,
+  "trained_recovery_cases": 6,
+  "full_output_requests": 72,
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "decode_tps": 59.12514461286479,
+          "ttft_ms": 50.088812597095966
+        },
+        "candidate": {
+          "decode_tps": 59.80522060325951,
+          "ttft_ms": 50.080499961040914
+        }
+      },
+      "decode_ratio": 1.0115023141989363,
+      "ttft_fraction": 0.9998340420620085,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 156.91227023489773,
+          "initialization_s": 1.6602420832496136
+        },
+        "candidate": {
+          "ttft_ms": 152.32935454696417,
+          "initialization_s": 1.6639777920208871
+        }
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "decode_tps": 57.87511972236862,
+          "ttft_ms": 82.73716678377241
+        },
+        "candidate": {
+          "decode_tps": 58.643587591482735,
+          "ttft_ms": 80.62356244772673
+        }
+      },
+      "decode_ratio": 1.0132780350658541,
+      "ttft_fraction": 0.9744539918611254,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 187.27629189379513,
+          "initialization_s": 1.6878042919561267
+        },
+        "candidate": {
+          "ttft_ms": 189.44099987857044,
+          "initialization_s": 1.6929721243213862
+        }
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "control": {
+          "decode_tps": 71.95374524879415,
+          "ttft_ms": 32.86071913316846
+        },
+        "candidate": {
+          "decode_tps": 72.37882811137644,
+          "ttft_ms": 33.80335425026715
+        }
+      },
+      "decode_ratio": 1.005907723928928,
+      "ttft_fraction": 1.0286857726174115,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 122.97172890976071,
+          "initialization_s": 1.3860631252173334
+        },
+        "candidate": {
+          "ttft_ms": 124.24099957570434,
+          "initialization_s": 1.3893115418031812
+        }
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "control": {
+          "decode_tps": 71.00421861695773,
+          "ttft_ms": 50.77602085657418
+        },
+        "candidate": {
+          "decode_tps": 71.93555198665382,
+          "ttft_ms": 50.99169770255685
+        }
+      },
+      "decode_ratio": 1.0131165920537806,
+      "ttft_fraction": 1.0042476122063972,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 149.8100832104683,
+          "initialization_s": 1.3956920204218477
+        },
+        "candidate": {
+          "ttft_ms": 143.32250016741455,
+          "initialization_s": 1.3849293335806578
+        }
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "decode_tps": 48.28168556778142,
+          "ttft_ms": 197.42039567790926
+        },
+        "candidate": {
+          "decode_tps": 48.841666850237914,
+          "ttft_ms": 196.0933436639607
+        }
+      },
+      "decode_ratio": 1.0115982131914254,
+      "ttft_fraction": 0.9932780399441928,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 348.7034374848008,
+          "initialization_s": 2.967465562047437
+        },
+        "candidate": {
+          "ttft_ms": 342.098000459373,
+          "initialization_s": 2.9621658748947084
+        }
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "decode_tps": 44.36034357451011,
+          "ttft_ms": 356.99128080159426
+        },
+        "candidate": {
+          "decode_tps": 45.21977673776583,
+          "ttft_ms": 360.32320791855454
+        }
+      },
+      "decode_ratio": 1.019373906827664,
+      "ttft_fraction": 1.0093333571326413,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 565.1358123868704,
+          "initialization_s": 2.9959338544867933
+        },
+        "candidate": {
+          "ttft_ms": 560.9592504333705,
+          "initialization_s": 2.9898458123207092
+        }
+      }
+    }
+  ],
+  "scope": "Native comparison only; init and first request after init separate, caches unflushed; no fresh vLLM ratio",
+  "full_goal_met": false
+}
