@@ -25,6 +25,9 @@ public:
 #ifdef GARNET_METAL_ATTENTION_PREFIX
         info+="; attention_prefix";
 #endif
+#ifdef GARNET_METAL_DIRECT_STATE_ZERO
+        info+="; direct_state_zero";
+#endif
         return info;
     }
     // Graphs own synchronous queues and release them through close(). There

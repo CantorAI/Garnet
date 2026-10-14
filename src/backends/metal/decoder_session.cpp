@@ -28,7 +28,11 @@ void MetalDecoderSession::ResetUnlocked() {
     joinedPrefillPairs_=0;
     if(!gpu_)throw std::logic_error("Metal session is closed");
     for(auto& state:states_)for(size_t i=0;i<2;++i)
+#ifdef GARNET_METAL_DIRECT_STATE_ZERO
+        gpu_->Zero(state.matrix[i]);
+#else
         gpu_->Update(state.matrix[i],std::vector<float>(state.rows*state.columns[i],0));
+#endif
     hidden_=MetalMatrix();hiddenShape_.clear();kvInplaceUpdates_=0;poisoned_=false;inferenceMs_=0;prepareMs_=encodeMs_=gpuMs_=waitMs_=0;
 }
 void MetalDecoderSession::Reset() {std::lock_guard<std::mutex> lock(mutex_);ResetUnlocked();}

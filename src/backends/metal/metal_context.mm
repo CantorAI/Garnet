@@ -1454,6 +1454,18 @@ void MetalContext::Update(const MetalMatrix& matrix,const float* values,size_t c
             values+i*native.columns,native.columns*sizeof(float));
     matrix.impl_->ready=true;
 }
+void MetalContext::Zero(const MetalMatrix& matrix) {
+    if(impl_->command)throw std::logic_error("Host zero requires a closed command batch");
+    if(!matrix.impl_||matrix.impl_->matrix.device!=impl_->device)
+        throw std::invalid_argument("Metal zero matrix belongs to another device or is empty");
+    if(matrix.impl_->pending)throw std::logic_error("Cannot zero pending Metal output");
+    auto native=matrix.impl_->matrix;
+    // Match Update: change logical columns only, preserving row padding.
+    for(size_t i=0;i<native.rows;++i)
+        std::memset(static_cast<char*>(native.data.contents)+i*native.rowBytes,
+            0,native.columns*sizeof(float));
+    matrix.impl_->ready=true;
+}
 void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");

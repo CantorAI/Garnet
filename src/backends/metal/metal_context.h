@@ -63,6 +63,8 @@ public:
     // Synchronous host update into an existing allocation, between command batches.
     void Update(const MetalMatrix&,const std::vector<float>& values);
     void Update(const MetalMatrix&,const float* values,size_t count);
+    // Clear logical elements of an existing shared allocation between batches.
+    void Zero(const MetalMatrix&);
     void Begin();
     void EncodeMatMul(const MetalMatrix& left, const MetalMatrix& right,
         const MetalMatrix& output, bool transposeRight = false);

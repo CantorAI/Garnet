@@ -32,7 +32,7 @@ try:
         print('exact_tail_admission PASS',flush=True)
     initialization=time.monotonic()-started
     for request in range(repeats):
-        begin=time.monotonic();decoder.reset()
+        begin=time.monotonic();decoder.reset();reset_seconds=time.monotonic()-begin
         hidden=[decoder.io.embedding([token]*batch) for token in ids]
         positions=[[[i]*3 for i in range(len(ids))] for row in range(batch)]
         prediction=decoder.prefill_sequence(hidden,positions);ttft=time.monotonic()-begin
@@ -53,6 +53,7 @@ try:
         result=dict(runtime='garnet',model=folder,request=request,
             clock='time.monotonic',initialization_seconds=initialization,ttft_seconds=ttft,total_seconds=total,
             token_ids=output,text=[tokenizer.decode(o) for o in output],finished=[not a for a in active],
+            reset_seconds=reset_seconds,
             prompt_token_ids=ids,decode_step_seconds=durations,decode_steps_after_first=len(durations),
             decode_steps_per_second=len(durations)/sum(durations) if durations else None,
             decode_window_seconds=decode_window,
@@ -60,6 +61,7 @@ try:
             native_decode_ms=native_ms,decode_phases=phases,prefill_profile=decoder.prefill_profile,
             prefill_chunk_plan=decoder.prefill_chunk_plan,prefill_inference_ms=decoder.prefill_inference_ms,
             attention_prefix_enabled='attention_prefix' in garnet.backend_info(),
+            direct_state_zero_enabled='direct_state_zero' in garnet.backend_info(),
             weights='checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV')
         result['case']=workload
         print('matched_result',json.dumps(result),flush=True)
