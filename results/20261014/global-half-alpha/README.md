@@ -81,6 +81,11 @@ PID **15843**, directory `ROOT/logs/global-half-alpha-native-20261014`, verifies
 that exact live handle before waiting and starts all six sequential matched
 native profiles only after validation exits 0. Inspect current authoritative
 state before continuing. Historical snapshots are in `native/pending`.
+The latest snapshot records both dense tail suites and text/coder private-KV
+validation completed. All remaining stages are still required. The prepared
+native archiver pins candidate/control identities and original source bytes;
+the native verifier audits all accepted cases, all six complete-output profiles,
+actual global-alpha use and independently recomputed warm/first-use phases.
 No whole-model speed gain or runtime promotion is claimed. The unchanged
 overall 2x decode / half-TTFT goal remains unmet; selected libraries and
 protected checkouts remain untouched.
