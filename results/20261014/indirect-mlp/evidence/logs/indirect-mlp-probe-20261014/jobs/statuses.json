@@ -1,0 +1,29 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/indirect_mlp_probe.mm",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/indirect-mlp-probe-20261014/jobs/indirect_mlp_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/indirect-mlp-probe-20261014/jobs/indirect_mlp_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/indirect-mlp-probe-20261014/jobs/native-mlp.metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/indirect-mlp-probe-20261014/jobs/mlp-assets.json"
+    ],
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,96 @@
+{
+  "files": [
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/exit.json",
+      "bytes": 51,
+      "sha256": "e01826023625d2af8a23406de8f89ed2b90f91e301cabc2d1243ada87aac8ccf"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/background_service_checks.json",
+      "bytes": 10251,
+      "sha256": "a42ddd272b1c88de3f5550effbf92d9021ee2cc647ad277ad9501efee3b5498c"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/compile-monitor.json",
+      "bytes": 158,
+      "sha256": "2f80bf79a64a1e2fa4e8ac7d3f35ee519062e0b0487d2033c9efb424d1328cab"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/compile.log",
+      "bytes": 518,
+      "sha256": "17841ce3e734439fcfdc91a349e9a8ddabd7865f16b8d5e1daf6ef6a67ec3773"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/gpu-monitor.json",
+      "bytes": 310,
+      "sha256": "d0ee262a5eb702cc98818ba042a05e16fd53420c13c3d36c34c0412a7642e7df"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/gpu.log",
+      "bytes": 125583,
+      "sha256": "9e5fd1bdbb2c1985a3abadeba786a0a336d6bcec15a7dec0b61ea7a0b4ad36b9"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/metadata.json",
+      "bytes": 4293,
+      "sha256": "3bc6f84bd00068eeadeee9f4011e3a307fbe22dabce379a67869ce384ef5ff3e"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/mlp-assets.json",
+      "bytes": 1452,
+      "sha256": "50d2999af3170f03f82bef6160aa19ae8ce8d58f34bb03e198072b328b183ace"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/native-mlp.metal",
+      "bytes": 2597,
+      "sha256": "76b256a7428d7586f5c10fb36cd15e0f89d4073935c4bfcbdee0f57a47f0146c"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/source-snapshot/src/backends/metal/metal_context.mm",
+      "bytes": 143972,
+      "sha256": "12ed987bdf001c5455542963d9ce6707481a90ad5f672566a42102a04796022d"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py",
+      "bytes": 12763,
+      "sha256": "dbd05e692603f968b71649df4e1397f0952d35bf3558ebcff13aefac78aea7b7"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/source-snapshot/test2026/metal/indirect_mlp_probe.mm",
+      "bytes": 11025,
+      "sha256": "88a6548d707650348cd3843b53076e990e492dd32070cb01562a38a91323cfa4"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/source-snapshot/test2026/metal/run_indirect_bf16_projection.py",
+      "bytes": 4811,
+      "sha256": "ba4fe2f1bc11ba24102ac4a445e0002afc1cd3783619f9f36580f330eff03808"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/source-snapshot/test2026/metal/run_indirect_mlp_probe.py",
+      "bytes": 4493,
+      "sha256": "f037b8979aabd350cf8c9d1f9006c9b0a8e681b43e635d191a556b63788f9798"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/statuses.json",
+      "bytes": 839,
+      "sha256": "1f3cdf70d6400984a07e4b86a496fe2930b0a66aa2ebccaee41ae42cfa6be2fa"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/output.log",
+      "bytes": 126,
+      "sha256": "2fa545511d1b59581b182a6de273b2201dd7240d09e5cf9f05b6f5b8424f95e5"
+    },
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/pid.json",
+      "bytes": 14,
+      "sha256": "6f631842ae91c0a447cb84e4cae1a2c3033a31abbae202c486a9d33877f9fdc0"
+    }
+  ],
+  "omitted": [
+    {
+      "path": "logs/indirect-mlp-confirm-20261014/jobs/indirect_mlp_gpu",
+      "bytes": 74080,
+      "sha256": "02af2cecfc82a13ab7a9c995699f24ee2a01f6e76624184c7c07fc580edc4ecd"
+    }
+  ]
+}

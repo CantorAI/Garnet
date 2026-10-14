@@ -1,0 +1,4 @@
+/Users/zsdx/garnet-metal-investigation/source/test2026/metal/indirect_mlp_probe.mm:27:84: warning: 'auto' deduced as 'id' in declaration of 'manifest' [-Wauto-var-id]
+   27 |  auto json=[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:argv[2]]];auto manifest=[NSJSONSerialization JSONObjectWithData:json options:0 error:&error];require(manifest!=nil,"MLP manifest unavailable");
+      |                                                                                    ^~~~~~~~~~~~~
+1 warning generated.
