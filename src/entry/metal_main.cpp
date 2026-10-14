@@ -37,6 +37,9 @@ public:
 #ifdef GARNET_METAL_PACKED_PREFILL_NORM
         info+="; packed_prefill_norm";
 #endif
+#ifdef GARNET_METAL_GLOBAL_HALF_ALPHA
+        info+="; global_half_alpha";
+#endif
         return info;
     }
     // Graphs own synchronous queues and release them through close(). There

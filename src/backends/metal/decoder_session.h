@@ -25,6 +25,7 @@ class MetalDecoderSession {
     size_t constantHeadDispatches_=0;
     size_t residualNormDispatches_=0;
     size_t packedPrefillNormDispatches_=0;
+    size_t globalHalfAlphaDispatches_=0;
     bool poisoned_=false;
     double inferenceMs_=0,prepareMs_=0,encodeMs_=0,gpuMs_=0,waitMs_=0;
     std::mutex mutex_;
@@ -43,6 +44,7 @@ public:
     size_t LastConstantHeadDispatches() const {return constantHeadDispatches_;}
     size_t LastResidualNormDispatches() const {return residualNormDispatches_;}
     size_t LastPackedPrefillNormDispatches() const {return packedPrefillNormDispatches_;}
+    size_t LastGlobalHalfAlphaDispatches() const {return globalHalfAlphaDispatches_;}
     double LastInferenceMs() const {return inferenceMs_;}
     double PrepareMs() const {return prepareMs_;}
     double EncodeMs() const {return encodeMs_;}
@@ -60,6 +62,7 @@ public:
         APISET().AddProp("constant_head_dispatches",&MetalDecoderSession::LastConstantHeadDispatches);
         APISET().AddProp("residual_norm_dispatches",&MetalDecoderSession::LastResidualNormDispatches);
         APISET().AddProp("packed_prefill_norm_dispatches",&MetalDecoderSession::LastPackedPrefillNormDispatches);
+        APISET().AddProp("global_half_alpha_dispatches",&MetalDecoderSession::LastGlobalHalfAlphaDispatches);
         APISET().AddProp("prepare_ms",&MetalDecoderSession::PrepareMs);
         APISET().AddProp("encode_ms",&MetalDecoderSession::EncodeMs);
         APISET().AddProp("gpu_ms",&MetalDecoderSession::GPUMs);

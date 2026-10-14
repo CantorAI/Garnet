@@ -33,10 +33,13 @@ struct MetalBF16Weight::Impl {
     MPSMatrix* exactHalf;
     id<MTLBuffer> halfScales;
     size_t halfScalesOffset=0;
+    bool globalHalf=false;
+    int32_t globalHalfScale=0;
     size_t rows,columns;
     bool floatPrefill=false;
 };
 bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&impl_->halfScales;}
+bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->globalHalf;}
 struct MetalPipelines {
     id<MTLLibrary> library;
     id<MTLComputePipelineState> argmax;
@@ -82,12 +85,14 @@ struct MetalContext::Impl {
     std::shared_ptr<MetalPipelines> kernels;
     std::map<std::array<size_t,4>,MPSMatrixMultiplication*> matmul;
     std::map<std::array<size_t,3>,MPSMatrixMultiplication*> halfMatmul;
+    std::map<std::array<size_t,4>,MPSMatrixMultiplication*> globalHalfMatmul;
     std::map<std::array<size_t,2>,MetalMatrix> halfScratch;
     std::map<std::array<size_t,3>,MetalMatrix> splitScratch;
     size_t joinedPrefillPairs=0;
     size_t constantHeadDispatches=0;
     size_t residualNormDispatches=0;
     size_t packedPrefillNormDispatches=0;
+    size_t globalHalfAlphaDispatches=0;
 #ifdef GARNET_METAL_JOINED_PREFILL
     struct JoinedWeight {
         MetalBF16Weight firstOwner,secondOwner;
@@ -1286,8 +1291,19 @@ MetalBF16Weight MetalContext::UploadBF16(const void* data,size_t bytes,size_t ro
                 if(!encoded)throw std::runtime_error("Exact half weight allocation failed");
                 auto* encodedBytes=static_cast<char*>(encoded.contents);
                 std::memset(encodedBytes,0,rows*stride);
-                std::vector<int32_t> scales(rows);bool exact=true;
-                for(size_t row=0;row<rows&&exact;++row) {
+                std::vector<int32_t> scales(rows);bool exact=true,common=false;
+#ifdef GARNET_METAL_GLOBAL_HALF_ALPHA
+                uint16_t largest=0;
+                for(size_t i=0;i<rows*columns;++i){uint16_t bits;std::memcpy(&bits,static_cast<const char*>(data)+2*i,2);largest=std::max(largest,uint16_t(bits&0x7fff));}
+                int32_t commonScale=0;common=ExactHalfRowScale(largest,commonScale);
+                for(size_t row=0;row<rows&&common;++row)for(size_t col=0;col<columns;++col) {
+                    uint16_t bits,half;std::memcpy(&bits,static_cast<const char*>(data)+2*(row*columns+col),2);
+                    if(!EncodeExactScaledHalf(bits,commonScale,half)){common=false;break;}
+                    std::memcpy(encodedBytes+row*stride+col*2,&half,2);
+                }
+                if(common){std::fill(scales.begin(),scales.end(),commonScale);value->globalHalf=true;value->globalHalfScale=commonScale;}
+#endif
+                for(size_t row=0;row<rows&&exact&&!common;++row) {
                     uint16_t largest=0;
                     for(size_t col=0;col<columns;++col) {
                         uint16_t bits;std::memcpy(&bits,static_cast<const char*>(data)+2*(row*columns+col),2);
@@ -1414,6 +1430,7 @@ size_t MetalContext::LastJoinedPrefillPairs() const {return impl_->joinedPrefill
 size_t MetalContext::LastConstantHeadDispatches() const {return impl_->constantHeadDispatches;}
 size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualNormDispatches;}
 size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->packedPrefillNormDispatches;}
+size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->globalHalfAlphaDispatches;}
 void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
     @autoreleasepool {
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
@@ -1450,6 +1467,22 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
 #endif
 #ifdef GARNET_METAL_EXACT_HALF_PREFILL
         if(a.rows>2&&w->exactHalf&&w->halfScales) {
+#ifdef GARNET_METAL_GLOBAL_HALF_ALPHA
+            if(w->globalHalf) {
+                const std::array<size_t,4> key{a.rows,o.columns,a.columns,size_t(w->globalHalfScale+64)};
+                auto found=impl_->globalHalfMatmul.find(key);
+                if(found==impl_->globalHalfMatmul.end()) {
+                    auto product=[[MPSMatrixMultiplication alloc] initWithDevice:impl_->device transposeLeft:NO transposeRight:YES
+                        resultRows:a.rows resultColumns:o.columns interiorColumns:a.columns alpha:std::ldexp(1.0,-w->globalHalfScale) beta:0];
+                    if(!product)throw std::runtime_error("Cannot create global half-alpha MPS product");
+                    found=impl_->globalHalfMatmul.emplace(key,product).first;
+                }
+                [found->second encodeToCommandBuffer:impl_->command leftMatrix:a rightMatrix:w->exactHalf resultMatrix:o];
+                output.impl_->ready=false;output.impl_->pending=true;
+                if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
+                ++impl_->globalHalfAlphaDispatches;return;
+            }
+#endif
             const std::array<size_t,3> key{a.rows,o.columns,a.columns};
             auto found=impl_->halfMatmul.find(key);
             if(found==impl_->halfMatmul.end()) {
@@ -1555,7 +1588,7 @@ void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;
+    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
     }
@@ -2149,7 +2182,7 @@ void MetalContext::SubmitAndWait() {
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     impl_->joinedPrefillPairs=0;
-    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;
+    impl_->constantHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

@@ -33,6 +33,7 @@ public:
     MetalBF16Weight()=default;
     bool Valid() const {return bool(impl_);}
     bool ExactHalfReady() const;
+    bool GlobalHalfReady() const;
 };
 // C++ interface keeps Objective-C ownership out of model-facing headers.
 class MetalContext {
@@ -61,6 +62,7 @@ public:
     size_t LastConstantHeadDispatches() const;
     size_t LastResidualNormDispatches() const;
     size_t LastPackedPrefillNormDispatches() const;
+    size_t LastGlobalHalfAlphaDispatches() const;
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
     void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
     // Synchronous host update into an existing allocation, between command batches.

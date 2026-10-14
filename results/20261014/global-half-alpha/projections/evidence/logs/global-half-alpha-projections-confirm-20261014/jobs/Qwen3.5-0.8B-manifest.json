@@ -1,0 +1,91 @@
+{
+  "cases": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/mps-gemv-probe-20261013/jobs/Qwen3.5-0.8B-assets/matrix-1.bin",
+      "name": "matrix-1",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+      "columns": 16,
+      "inner": 1024,
+      "sha256": "e5197a79fc1daa00d06a0c04fd11a97ac3c10a6bd6460e957fd8383700d5d87b"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/mps-gemv-probe-20261013/jobs/Qwen3.5-0.8B-assets/matrix-2.bin",
+      "name": "matrix-2",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+      "columns": 16,
+      "inner": 1024,
+      "sha256": "02bab6a0eb77ad51435f77665d173876993d725ca3cd953f90c2b0754735db5e"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/mps-gemv-probe-20261013/jobs/Qwen3.5-0.8B-assets/matrix-3.bin",
+      "name": "matrix-3",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_qkv.weight",
+      "columns": 6144,
+      "inner": 1024,
+      "sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/mps-gemv-probe-20261013/jobs/Qwen3.5-0.8B-assets/matrix-4.bin",
+      "name": "matrix-4",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_z.weight",
+      "columns": 2048,
+      "inner": 1024,
+      "sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/mps-gemv-probe-20261013/jobs/Qwen3.5-0.8B-assets/matrix-5.bin",
+      "name": "matrix-5",
+      "tensor": "model.language_model.layers.0.linear_attn.out_proj.weight",
+      "columns": 1024,
+      "inner": 2048,
+      "sha256": "cbee28fc3b42e07e491fffd593b2ee9ec58ae952dc9133e178f8a80ea916d308"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/mps-gemv-probe-20261013/jobs/Qwen3.5-0.8B-assets/matrix-6.bin",
+      "name": "matrix-6",
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight",
+      "columns": 1024,
+      "inner": 3584,
+      "sha256": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/mps-gemv-probe-20261013/jobs/Qwen3.5-0.8B-assets/matrix-7.bin",
+      "name": "matrix-7",
+      "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+      "columns": 3584,
+      "inner": 1024,
+      "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "path": "/Users/zsdx/garnet-metal-investigation/logs/mps-gemv-probe-20261013/jobs/Qwen3.5-0.8B-assets/matrix-8.bin",
+      "name": "matrix-8",
+      "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+      "columns": 3584,
+      "inner": 1024,
+      "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+    }
+  ],
+  "rows": [
+    8,
+    16,
+    22,
+    24,
+    26,
+    32,
+    44,
+    48,
+    52,
+    64,
+    80,
+    128,
+    160
+  ]
+}

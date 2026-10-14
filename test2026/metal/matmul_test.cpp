@@ -149,6 +149,42 @@ int main() {
         try {gpu.UploadBF16(&nonfinite,2,1,1);}catch(const std::invalid_argument&){bf16Rejected=true;}
         if(!bf16Rejected)throw std::runtime_error("Nonfinite BF16 weight accepted");
         for(size_t width:{7,1031})for(float offset:{0.0f,1.0f}) {
+#ifdef GARNET_METAL_GLOBAL_HALF_ALPHA
+            if(width==7&&offset==0) {
+                // Identical shapes with different common scales must not share
+                // an alpha-specific MPS product incorrectly.
+                for(size_t rows:{3,16,24,26}) {
+                    std::vector<float> av(rows*7),w1(5*7),w2(5*7);
+                    for(size_t i=0;i<av.size();++i)av[i]=std::sin(float(i)*.37f)*.125f;
+                    for(size_t i=0;i<w1.size();++i){w1[i]=float(int(i%7)-3)*.125f;w2[i]=w1[i]*2;}
+                    w1[0]=.5f;w2[0]=1.0f;
+                    std::vector<uint16_t> b1(w1.size()),b2(w2.size());
+                    for(size_t i=0;i<w1.size();++i){uint32_t x,y;std::memcpy(&x,&w1[i],4);std::memcpy(&y,&w2[i],4);b1[i]=uint16_t(x>>16);b2[i]=uint16_t(y>>16);}
+                    auto first=gpu.UploadBF16(b1.data(),b1.size()*2,5,7),second=gpu.UploadBF16(b2.data(),b2.size()*2,5,7);
+                    if(!first.GlobalHalfReady()||!second.GlobalHalfReady())throw std::runtime_error("Common exact half scale was not admitted");
+                    auto a=gpu.Upload(av,rows,7),out1=gpu.Allocate(rows,5),out2=gpu.Allocate(rows,5);
+                    gpu.Begin();gpu.EncodeBF16MatVec(a,first,out1);gpu.EncodeBF16MatVec(a,second,out2);gpu.SubmitAndWait();
+                    if(gpu.LastGlobalHalfAlphaDispatches()!=2)throw std::runtime_error("Global alpha dispatch count mismatch");
+                    auto actual1=gpu.Download(out1),actual2=gpu.Download(out2);
+                    for(size_t r=0;r<rows;++r)for(size_t c=0;c<5;++c){double e1=0,e2=0;for(size_t k=0;k<7;++k){e1+=double(av[r*7+k])*w1[c*7+k];e2+=double(av[r*7+k])*w2[c*7+k];}
+                        if(std::abs(actual1[r*5+c]-e1)>5e-6+5e-5*std::abs(e1)||std::abs(actual2[r*5+c]-e2)>5e-6+5e-5*std::abs(e2))
+                            throw std::runtime_error("Global alpha or scale-specific cache differs from FP64");}
+                    gpu.Begin();if(gpu.LastGlobalHalfAlphaDispatches())throw std::runtime_error("Global alpha Begin count not reset");
+                    gpu.EncodeBF16MatVec(a,first,out1);gpu.Abort();if(gpu.LastGlobalHalfAlphaDispatches())throw std::runtime_error("Global alpha Abort count not reset");
+                }
+                // Widely separated row magnitudes reject a common half scale
+                // while retaining the existing lossless per-row representation.
+                const uint16_t mixed[]={0x3f80,0x3f00,0x2b80,0x2b00};
+                auto fallback=gpu.UploadBF16(mixed,sizeof(mixed),2,2);
+                if(fallback.GlobalHalfReady()||!fallback.ExactHalfReady())throw std::runtime_error("Common-scale rejection lost row-scale fallback");
+                const std::vector<float> av={1.000001f,.312345f,-.712345f,.123456f,.412345f,-.612345f};
+                auto a=gpu.Upload(av,3,2),out=gpu.Allocate(3,2);
+                gpu.Begin();gpu.EncodeBF16MatVec(a,fallback,out);gpu.SubmitAndWait();auto actual=gpu.Download(out);
+                if(gpu.LastGlobalHalfAlphaDispatches())throw std::runtime_error("Fallback falsely counted as global alpha");
+                for(size_t r=0;r<3;++r)for(size_t c=0;c<2;++c){double expected=0;for(size_t k=0;k<2;++k){uint32_t bits=uint32_t(mixed[c*2+k])<<16;float w;std::memcpy(&w,&bits,4);expected+=double(av[r*2+k])*w;}
+                    if(std::abs(actual[r*2+c]-expected)>1e-30+5e-5*std::abs(expected))throw std::runtime_error("Row-scale fallback lost original learned values");}
+            }
+#endif
 #ifdef GARNET_METAL_PACKED_PREFILL_NORM
             for(size_t batch:{1,2})for(size_t chunk:{2,24,64,80})for(float scale:{1.0f,-1.0f,0.5f,2.0f}) {
                 if(chunk>Garnet::kMetalPrefillChunkLimit)continue;
