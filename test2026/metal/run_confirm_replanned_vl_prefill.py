@@ -7,6 +7,8 @@ meta=json.loads((origin/'jobs/metadata.json').read_text())
 def digest(p):
     with p.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
 assert digest(root/'build-interleaved-screen-index/libgarnet.dylib')==meta['library_sha256']
+assert digest(root/'models/Qwen3.5-0.8B/model.safetensors')==meta['checkpoint_sha256']
+assert digest(root/'models/Qwen3.5-0.8B/config.json')==meta['config_sha256']
 assert all(digest(root/'source'/name)==sha for name,sha in meta['source_sha256'].items())
 assert digest(Path('/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3'))==meta['runtime_sha256']
 (out/'dependency.json').write_bytes((json.dumps(dict(metadata=meta,reused_independent_profiles=12,reused_carried_steps=36),indent=2)+'\n').encode())

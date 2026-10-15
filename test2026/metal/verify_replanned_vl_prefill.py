@@ -7,6 +7,7 @@ for name,info in proof['files'].items():
     p=root/name;assert p.resolve().is_relative_to(root) and p.stat().st_size==info['bytes'] and digest(p)==info['sha256']
 assert 'replanned-vl-prefill-20261015' in proof['jobs'] and set(proof['jobs'])<={'replanned-vl-prefill-20261015','replanned-vl-prefill-confirm-20261015'} and all(v['exit_code']==0 for v in proof['jobs'].values())
 base='logs/replanned-vl-prefill-20261015/jobs';jobs=root/'evidence'/base;meta=json.loads((jobs/'metadata.json').read_text())
+assert 'Apple M4' in meta['hardware']['machdep.cpu.brand_string'] and int(meta['hardware']['hw.memsize'])==16*2**30
 assert meta['library_sha256']=='837d6f3a55598b3169be7569a00a2ab5935fd60e4643546131790a2e654e4471'
 assert proof['omitted']['build-interleaved-screen-index/libgarnet.dylib']['sha256']==meta['library_sha256']
 assert proof['omitted']['models/Qwen3.5-0.8B/model.safetensors']['sha256']==meta['checkpoint_sha256']
@@ -32,12 +33,15 @@ for path in fixtures:
         rel=str(PurePosixPath(step['expected']).relative_to('/Users/zsdx/garnet-metal-investigation'));assert proof['omitted'][rel]['bytes']==step['count']*4
 layers=text_config['num_hidden_layers'];assert coverage=={(kind,layer,chunk) for kind,indices in [('linear_attention',(0,layers-2)),('full_attention',(3,layers-1))] for layer in indices for chunk in (16,32,64)}
 outer=json.loads((jobs/'summary.json').read_text())['profiles'];assert len(outer)==2 and {p['maximum'] for p in outer}=={16,64};requests=0
-episodes=[(jobs,maximum,'initial') for maximum in (16,64)]
+episodes=[(jobs,maximum,'initial') for maximum in (16,64)];common_assets=None
 if 'replanned-vl-prefill-confirm-20261015' in proof['jobs']:
     repeat=root/'evidence/logs/replanned-vl-prefill-confirm-20261015/jobs';dep=json.loads((repeat/'dependency.json').read_text());assert dep==dict(metadata=meta,reused_independent_profiles=12,reused_carried_steps=36)
     episodes.append((repeat,64,'repeat'))
 for trial,maximum,trial_name in episodes:
     directory=trial/('chunk'+str(maximum));m=json.loads((directory/'metadata.json').read_text());assert m['library_sha256']=={'control':meta['library_sha256'],'candidate':meta['library_sha256']}
+    assets=m['assets']['Qwen3.5-0.8B'];assert assets['model.safetensors']==meta['checkpoint_sha256'] and assets['config.json']==meta['config_sha256']
+    if common_assets is None:common_assets=assets
+    else:assert assets==common_assets
     assert m['internal_prefill_replan']==dict(control_maximum=32,candidate_maximum=maximum,same_library=True,logical_inputs_unchanged=True,physical_total_slots=80,no_fresh_vllm_ratio=True)
     profile=json.loads((directory/'summary.json').read_text())['profiles'];assert len(profile)==1;profile=profile[0]
     trial_outer=json.loads((trial/'summary.json').read_text())['profiles'];assert next(p for p in trial_outer if p['maximum']==maximum)==dict(maximum=maximum,**profile)

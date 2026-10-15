@@ -27,7 +27,9 @@ preservation, reset and closed-graph rejection checks also pass.
 All passing fixtures are saved, including their input/expected-array sizes
 and hashes. Raw float arrays remain on the Mac and are omitted from Git.
 The 64-token repeat reuses these immutable passed references only after
-source, checkpoint/library/runtime identities and the first audit are checked.
+source, library/runtime identities and the first audit are checked. The final
+independent audit verifies that every comparison's checkpoint, config and
+tokenizer hashes match across all trials and the frozen checkpoint/config.
 It still uses new sequential serving workers and freshly encodes every image.
 No numerical allowances or logical workloads were changed to obtain a gain.
 
