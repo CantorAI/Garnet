@@ -1,0 +1,998 @@
+{
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "group": "mlp-gate-up",
+      "batch": 1,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0030652422504945853,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 607
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004894125,
+          "wall_ms": 0.7192665833333334,
+          "gpu_ms": 0.3562612982932478
+        },
+        "candidate": {
+          "encode_ms": 0.0047604583333333336,
+          "wall_ms": 0.7334436666666667,
+          "gpu_ms": 0.3560277885602166
+        }
+      },
+      "gpu_fraction": 0.9993445548698389,
+      "wall_fraction": 1.0197104712798304
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "mlp-gate-up",
+      "batch": 1,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0030652422504945853,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 607
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0049410416666666665,
+          "wall_ms": 0.8096354791666667,
+          "gpu_ms": 0.3798411732229094
+        },
+        "candidate": {
+          "encode_ms": 0.005160583333333333,
+          "wall_ms": 0.7216162708333334,
+          "gpu_ms": 0.3264322973943005
+        }
+      },
+      "gpu_fraction": 0.8593915573305532,
+      "wall_fraction": 0.891285386327278
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "mlp-gate-up",
+      "batch": 2,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0030652422504945853,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 723
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0043810624999999995,
+          "wall_ms": 0.4383187083333333,
+          "gpu_ms": 0.18039064404244223
+        },
+        "candidate": {
+          "encode_ms": 0.004157104166666667,
+          "wall_ms": 0.45682725,
+          "gpu_ms": 0.18209458600419262
+        }
+      },
+      "gpu_fraction": 1.009445844438304,
+      "wall_fraction": 1.0422262187645235
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "mlp-gate-up",
+      "batch": 2,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0030652422504945853,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 723
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0044244375,
+          "wall_ms": 0.43101391666666666,
+          "gpu_ms": 0.17801654757931828
+        },
+        "candidate": {
+          "encode_ms": 0.005210916666666667,
+          "wall_ms": 0.43628472916666666,
+          "gpu_ms": 0.1791744822791467
+        }
+      },
+      "gpu_fraction": 1.0065046464251448,
+      "wall_fraction": 1.012228868480078
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "attention-qkv",
+      "batch": 1,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0033608130185475136,
+        "projections": 3,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "attention-qkv",
+        "validated_executions": 679
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.005202229166666667,
+          "wall_ms": 0.6375356041666667,
+          "gpu_ms": 0.2042638952843845
+        },
+        "candidate": {
+          "encode_ms": 0.004471375,
+          "wall_ms": 0.5616570833333333,
+          "gpu_ms": 0.20206857395047942
+        }
+      },
+      "gpu_fraction": 0.9892525238939135,
+      "wall_fraction": 0.8809815164244584
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "attention-qkv",
+      "batch": 1,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0033608130185475136,
+        "projections": 3,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "attention-qkv",
+        "validated_executions": 679
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0048159375,
+          "wall_ms": 0.3781163125,
+          "gpu_ms": 0.0962482881732285
+        },
+        "candidate": {
+          "encode_ms": 0.005197083333333333,
+          "wall_ms": 0.39742622916666664,
+          "gpu_ms": 0.10653302888385952
+        }
+      },
+      "gpu_fraction": 1.106856349404578,
+      "wall_fraction": 1.0510687215237948
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "attention-qkv",
+      "batch": 2,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0033608130185475136,
+        "projections": 3,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "attention-qkv",
+        "validated_executions": 806
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.005514770833333333,
+          "wall_ms": 0.5387925625,
+          "gpu_ms": 0.23086980218067765
+        },
+        "candidate": {
+          "encode_ms": 0.005013020833333333,
+          "wall_ms": 0.5936926875,
+          "gpu_ms": 0.25977607583627105
+        }
+      },
+      "gpu_fraction": 1.125205953236671,
+      "wall_fraction": 1.1018947343023133
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "attention-qkv",
+      "batch": 2,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0033608130185475136,
+        "projections": 3,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "attention-qkv",
+        "validated_executions": 806
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0056328333333333334,
+          "wall_ms": 0.7103663541666667,
+          "gpu_ms": 0.30692537742046017
+        },
+        "candidate": {
+          "encode_ms": 0.005955645833333334,
+          "wall_ms": 0.73299475,
+          "gpu_ms": 0.2979340497404337
+        }
+      },
+      "gpu_fraction": 0.9707051669836048,
+      "wall_fraction": 1.031854543364288
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "irregular-readonly-pair",
+      "batch": 1,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.008946483554527707,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1138
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004387166666666667,
+          "wall_ms": 0.2005285,
+          "gpu_ms": 0.005059875547885895
+        },
+        "candidate": {
+          "encode_ms": 0.0041796875,
+          "wall_ms": 0.20295575,
+          "gpu_ms": 0.004802927530060212
+        }
+      },
+      "gpu_fraction": 0.9492185103380576,
+      "wall_fraction": 1.0121042644811087
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "irregular-readonly-pair",
+      "batch": 1,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.008946483554527707,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1138
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004608479166666667,
+          "wall_ms": 0.22264058333333334,
+          "gpu_ms": 0.007969637711842855
+        },
+        "candidate": {
+          "encode_ms": 0.004823,
+          "wall_ms": 0.20598533333333333,
+          "gpu_ms": 0.003068581766759356
+        }
+      },
+      "gpu_fraction": 0.38503403513555623,
+      "wall_fraction": 0.9251922100156194
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "irregular-readonly-pair",
+      "batch": 2,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.00902619627882109,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1579
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.005111958333333333,
+          "wall_ms": 0.2174973125,
+          "gpu_ms": 0.015145817693943778
+        },
+        "candidate": {
+          "encode_ms": 0.0047890625,
+          "wall_ms": 0.19036022916666667,
+          "gpu_ms": 0.007651872389639418
+        }
+      },
+      "gpu_fraction": 0.5052135542803412,
+      "wall_fraction": 0.8752302590712088
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "group": "irregular-readonly-pair",
+      "batch": 2,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.00902619627882109,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1579
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.005072083333333333,
+          "wall_ms": 0.23159197916666668,
+          "gpu_ms": 0.014231734288235506
+        },
+        "candidate": {
+          "encode_ms": 0.005155395833333333,
+          "wall_ms": 0.1683733125,
+          "gpu_ms": 0.004894982945794861
+        }
+      },
+      "gpu_fraction": 0.3439484497571909,
+      "wall_fraction": 0.7270256642991468
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "mlp-gate-up",
+      "batch": 1,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.003629604918431471,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 649
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004590291666666667,
+          "wall_ms": 0.5500295208333333,
+          "gpu_ms": 0.24452258367091417
+        },
+        "candidate": {
+          "encode_ms": 0.004349791666666667,
+          "wall_ms": 0.5595458541666667,
+          "gpu_ms": 0.24231420441841087
+        }
+      },
+      "gpu_fraction": 0.9909686082187181,
+      "wall_fraction": 1.0173014955977553
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "mlp-gate-up",
+      "batch": 1,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.003629604918431471,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 649
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004408916666666667,
+          "wall_ms": 0.448059875,
+          "gpu_ms": 0.18617706761385003
+        },
+        "candidate": {
+          "encode_ms": 0.0048325,
+          "wall_ms": 0.4513177291666667,
+          "gpu_ms": 0.18344876783279082
+        }
+      },
+      "gpu_fraction": 0.9853456721817212,
+      "wall_fraction": 1.007271024138608
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "mlp-gate-up",
+      "batch": 2,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0039221730578429545,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 725
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.005225625,
+          "wall_ms": 0.692769,
+          "gpu_ms": 0.36370137240737677
+        },
+        "candidate": {
+          "encode_ms": 0.004506979166666667,
+          "wall_ms": 0.6582821041666667,
+          "gpu_ms": 0.3460841641450922
+        }
+      },
+      "gpu_fraction": 0.9515613368581084,
+      "wall_fraction": 0.9502187658031273
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "mlp-gate-up",
+      "batch": 2,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0039221730578429545,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 725
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.00462675,
+          "wall_ms": 0.7781546458333334,
+          "gpu_ms": 0.3853550588246435
+        },
+        "candidate": {
+          "encode_ms": 0.004913208333333334,
+          "wall_ms": 0.667013875,
+          "gpu_ms": 0.32965893236299354
+        }
+      },
+      "gpu_fraction": 0.8554680282866234,
+      "wall_fraction": 0.8571739288219353
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "attention-qkv",
+      "batch": 1,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.002957378888394142,
+        "projections": 3,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "attention-qkv",
+        "validated_executions": 891
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0049193125,
+          "wall_ms": 0.29673,
+          "gpu_ms": 0.06528556696139276
+        },
+        "candidate": {
+          "encode_ms": 0.004437395833333333,
+          "wall_ms": 0.30556158333333333,
+          "gpu_ms": 0.06534461863338947
+        }
+      },
+      "gpu_fraction": 1.0009045134283912,
+      "wall_fraction": 1.029763028117593
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "attention-qkv",
+      "batch": 1,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.002957378888394142,
+        "projections": 3,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "attention-qkv",
+        "validated_executions": 891
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004972208333333334,
+          "wall_ms": 0.31013460416666666,
+          "gpu_ms": 0.06663452950306237
+        },
+        "candidate": {
+          "encode_ms": 0.005004375,
+          "wall_ms": 0.296366375,
+          "gpu_ms": 0.06075518710228304
+        }
+      },
+      "gpu_fraction": 0.9117673307724169,
+      "wall_fraction": 0.9556056338709382
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "attention-qkv",
+      "batch": 2,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0033561475588458657,
+        "projections": 3,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "attention-qkv",
+        "validated_executions": 848
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.005257770833333333,
+          "wall_ms": 0.5227603541666667,
+          "gpu_ms": 0.1171701296698302
+        },
+        "candidate": {
+          "encode_ms": 0.0049583125,
+          "wall_ms": 0.5651918333333333,
+          "gpu_ms": 0.1310338848270476
+        }
+      },
+      "gpu_fraction": 1.1183215824398556,
+      "wall_fraction": 1.0811681276678045
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "attention-qkv",
+      "batch": 2,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0033561475588458657,
+        "projections": 3,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "attention-qkv",
+        "validated_executions": 848
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.005109333333333333,
+          "wall_ms": 0.4692656666666667,
+          "gpu_ms": 0.09345485401960711
+        },
+        "candidate": {
+          "encode_ms": 0.005332541666666667,
+          "wall_ms": 0.5064557916666667,
+          "gpu_ms": 0.11153473557593922
+        }
+      },
+      "gpu_fraction": 1.1934611288627008,
+      "wall_fraction": 1.0792517493644325
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "irregular-readonly-pair",
+      "batch": 1,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.008946483554527707,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1404
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004578958333333333,
+          "wall_ms": 0.19872664583333333,
+          "gpu_ms": 0.004811648977920413
+        },
+        "candidate": {
+          "encode_ms": 0.0042595625,
+          "wall_ms": 0.21192283333333334,
+          "gpu_ms": 0.007918405268962184
+        }
+      },
+      "gpu_fraction": 1.6456739270254304,
+      "wall_fraction": 1.0664037147341947
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "irregular-readonly-pair",
+      "batch": 1,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.008946483554527707,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1404
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004422770833333333,
+          "wall_ms": 0.2032856875,
+          "gpu_ms": 0.004811619874089956
+        },
+        "candidate": {
+          "encode_ms": 0.004809125,
+          "wall_ms": 0.20386545833333333,
+          "gpu_ms": 0.003048655344173312
+        }
+      },
+      "gpu_fraction": 0.6336027001197634,
+      "wall_fraction": 1.0028520002586672
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "irregular-readonly-pair",
+      "batch": 2,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.00902619627882109,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1206
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004882854166666666,
+          "wall_ms": 0.32429522916666664,
+          "gpu_ms": 0.009127562710394463
+        },
+        "candidate": {
+          "encode_ms": 0.0047855,
+          "wall_ms": 0.34175514583333333,
+          "gpu_ms": 0.01604860881343484
+        }
+      },
+      "gpu_fraction": 1.7582578529051018,
+      "wall_fraction": 1.053839573007389
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "group": "irregular-readonly-pair",
+      "batch": 2,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.00902619627882109,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1206
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0049757291666666665,
+          "wall_ms": 0.307833375,
+          "gpu_ms": 0.008924456778913736
+        },
+        "candidate": {
+          "encode_ms": 0.005072833333333334,
+          "wall_ms": 0.28500258333333334,
+          "gpu_ms": 0.005332442621390025
+        }
+      },
+      "gpu_fraction": 0.597508930066114,
+      "wall_fraction": 0.9258339299087804
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "group": "mlp-gate-up",
+      "batch": 1,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0027138039566767308,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 642
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004576375,
+          "wall_ms": 0.5466779583333333,
+          "gpu_ms": 0.23235245801818868
+        },
+        "candidate": {
+          "encode_ms": 0.0043854375000000004,
+          "wall_ms": 0.5752813125,
+          "gpu_ms": 0.23685502431665859
+        }
+      },
+      "gpu_fraction": 1.0193781737317253,
+      "wall_fraction": 1.0523221281023845
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "group": "mlp-gate-up",
+      "batch": 1,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0027138039566767308,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 642
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004367104166666667,
+          "wall_ms": 0.429545875,
+          "gpu_ms": 0.16456076021616659
+        },
+        "candidate": {
+          "encode_ms": 0.0048038333333333336,
+          "wall_ms": 0.4185546875,
+          "gpu_ms": 0.156597214906166
+        }
+      },
+      "gpu_fraction": 0.9516072646994356,
+      "wall_fraction": 0.9744120753109315
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "group": "mlp-gate-up",
+      "batch": 2,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0036057397165309255,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 735
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004874041666666666,
+          "wall_ms": 0.6827811666666667,
+          "gpu_ms": 0.3480799011110018
+        },
+        "candidate": {
+          "encode_ms": 0.0047058125,
+          "wall_ms": 0.6947187083333334,
+          "gpu_ms": 0.36915017214293283
+        }
+      },
+      "gpu_fraction": 1.0605328574407167,
+      "wall_fraction": 1.0174837008538853
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "group": "mlp-gate-up",
+      "batch": 2,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.0036057397165309255,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "mlp-gate-up",
+        "validated_executions": 735
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0047656458333333335,
+          "wall_ms": 0.7831900625,
+          "gpu_ms": 0.374024297343567
+        },
+        "candidate": {
+          "encode_ms": 0.005256104166666667,
+          "wall_ms": 0.748221375,
+          "gpu_ms": 0.3552273944175492
+        }
+      },
+      "gpu_fraction": 0.9497441661958352,
+      "wall_fraction": 0.9553509560777911
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "group": "irregular-readonly-pair",
+      "batch": 1,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.008946483554527707,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1244
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.0044696250000000005,
+          "wall_ms": 0.20372739583333332,
+          "gpu_ms": 0.00470662295507888
+        },
+        "candidate": {
+          "encode_ms": 0.0041778541666666665,
+          "wall_ms": 0.21359033333333333,
+          "gpu_ms": 0.004906255829458435
+        }
+      },
+      "gpu_fraction": 1.0424153105708485,
+      "wall_fraction": 1.048412426122939
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "group": "irregular-readonly-pair",
+      "batch": 1,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.008946483554527707,
+        "projections": 2,
+        "rows": 1,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1244
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004414104166666667,
+          "wall_ms": 0.213887125,
+          "gpu_ms": 0.004889763658866286
+        },
+        "candidate": {
+          "encode_ms": 0.004988666666666666,
+          "wall_ms": 0.22154689583333334,
+          "gpu_ms": 0.006203995629524191
+        }
+      },
+      "gpu_fraction": 1.2687720843674917,
+      "wall_fraction": 1.0358122109188823
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "group": "irregular-readonly-pair",
+      "batch": 2,
+      "candidate_mode": 1,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.00902619627882109,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1304
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.005153583333333333,
+          "wall_ms": 0.33335591666666664,
+          "gpu_ms": 0.01209205947816372
+        },
+        "candidate": {
+          "encode_ms": 0.004811625,
+          "wall_ms": 0.3434435,
+          "gpu_ms": 0.009455698697517315
+        }
+      },
+      "gpu_fraction": 0.7819758672699849,
+      "wall_fraction": 1.030260699837586
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "group": "irregular-readonly-pair",
+      "batch": 2,
+      "candidate_mode": 2,
+      "checks": {
+        "input_variants": 4,
+        "padding_preserved": true,
+        "fp64_worst_ratio": 0.00902619627882109,
+        "projections": 2,
+        "rows": 2,
+        "bits_exact": true,
+        "kind": "check",
+        "group": "irregular-readonly-pair",
+        "validated_executions": 1304
+      },
+      "means": {
+        "control": {
+          "encode_ms": 0.004772625,
+          "wall_ms": 0.303181375,
+          "gpu_ms": 0.017400161596015096
+        },
+        "candidate": {
+          "encode_ms": 0.005300395833333333,
+          "wall_ms": 0.2931684583333333,
+          "gpu_ms": 0.0074991451886792975
+        }
+      },
+      "gpu_fraction": 0.430981353092532,
+      "wall_fraction": 0.966973839779351
+    }
+  ],
+  "full_goal_met": false
+}

@@ -1,0 +1,216 @@
+{
+  "jobs": {
+    "concurrent-bf16-groups-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 13.849643417168409
+    },
+    "concurrent-bf16-groups-confirm-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 13.137900874949992
+    }
+  },
+  "omitted_binaries": {
+    "logs/concurrent-bf16-groups-20261015/jobs/concurrent_bf16_group_gpu": {
+      "bytes": 73736,
+      "sha256": "9a7d0eb4501586a887e306709a3118a83f4ca4403ed94e8ac2c601a84b2b3fd2"
+    },
+    "logs/concurrent-bf16-groups-confirm-20261015/jobs/concurrent_bf16_group_gpu": {
+      "bytes": 73736,
+      "sha256": "9a7d0eb4501586a887e306709a3118a83f4ca4403ed94e8ac2c601a84b2b3fd2"
+    }
+  },
+  "files": {
+    "evidence/logs/concurrent-bf16-groups-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "d027881022457f04f6a3df3834fad3222c900469d537783433228c0db3c7c71a"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/groups.json": {
+      "bytes": 2064,
+      "sha256": "c771591a3cf52ab22a1e8615b5a4bcc3155231bd1f812c8fbee4b55ef60596c0"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 311,
+      "sha256": "7272967357492dfa5da47fa33cf5aa0b6124a6366f5d84d71416e7e3c3387b94"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 83231,
+      "sha256": "661c87e51dd7169e929add642d0f2dffd6338435b93a54a351cd6d7227fc0274"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen3-0.6B-assets/groups.json": {
+      "bytes": 2072,
+      "sha256": "4ad9f8f2441c704888ca9a49f349aaf36e146915fb973a232224425918122a17"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 388,
+      "sha256": "3bb819ee4132edeec61e42d54f38691571750a233c65d38fff361bc78e68d2f7"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 82834,
+      "sha256": "c460dcf3241e2b4f63e1da6681d4881fe1e3cb6dce4aa066c1a6689bec378bbe"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen3.5-0.8B-assets/groups.json": {
+      "bytes": 1278,
+      "sha256": "f3120150712e1b2ff706fe21c4b4bc78a32c71d39e9c577be584bd4b72e15ad2"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 235,
+      "sha256": "23599a7374ca3ec1f9229944c25c713d88052c59111ba2bfe2d31b402332646c"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 55705,
+      "sha256": "b48fc4069643fa48c566d5b54435221e29337841bb04db0eecd363e7837a49e5"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/background_service_checks.json": {
+      "bytes": 17341,
+      "sha256": "9348b973c62a5c262fc753aabdb0cf2aa0717c5abaa33d99b92130afdddb641d"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/compile-monitor.json": {
+      "bytes": 158,
+      "sha256": "36c562b31a6a1a25d297e725ba5dda13cc1da1582d5bb38ba2153912b1b041d1"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/compile.log": {
+      "bytes": 543,
+      "sha256": "cb8d11d2564c695d4719724d0bb5540a1ee8d7747f839fdd74b4bb3f654aba9e"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/metadata.json": {
+      "bytes": 7919,
+      "sha256": "cc7d7ab393306627203918d101a015ee513b47d2bbba5832dafe61f930f45372"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/native-decode.metal": {
+      "bytes": 3821,
+      "sha256": "26c30aed74e1b1e1bd87c168a39a25bab054b66f0b8621bc1c63a7f5f0ffa18d"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 180162,
+      "sha256": "82da4f31929cf39f38a7872e4254d4671ee0e75bb1fea003cec11223cd56311d"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/source-snapshot/test2026/metal/concurrent_bf16_group_gpu.mm": {
+      "bytes": 7790,
+      "sha256": "aa90d6eea6ccee69efec3bded272bc524f9756adf3b88056bf875fbf209ea913"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/source-snapshot/test2026/metal/run_concurrent_bf16_groups.py": {
+      "bytes": 5407,
+      "sha256": "bb7d95651fa236dbc329f57ff96cd61e68f9a4f8adb8a38348d3b3486455d599"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/statuses.json": {
+      "bytes": 1756,
+      "sha256": "4e221fac1a5da5c81f383e4eb8f8d9da7951b405c556962b6016af5fe64e9c8a"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/jobs/summary.json": {
+      "bytes": 27608,
+      "sha256": "96642af3d96ed4dd9dea0f51aecc7286b91c9602f6c3393dba1902675c1656b7"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/output.log": {
+      "bytes": 172,
+      "sha256": "0a2e0ceb94fa6ccbfedc577d5132460d95f7c78dee0354567b2c62bc7a787a86"
+    },
+    "evidence/logs/concurrent-bf16-groups-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "c409872c5b8de5c124fa1d1f57a340bf317bf7611402a48994d589c1b3e218c0"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "df682d87ecbf874ce969de0d7b02e1b75bb66c832d1c00f0fcbfce48f3a07f4d"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/groups.json": {
+      "bytes": 2064,
+      "sha256": "c771591a3cf52ab22a1e8615b5a4bcc3155231bd1f812c8fbee4b55ef60596c0"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 311,
+      "sha256": "89460be95b5344497333388a486176ea404c88ae0d1c71f90e0cb27ce3fc3bab"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 82974,
+      "sha256": "c189a1f3e0aec316935b7ee0db1f3bcef907dd808ef2a6d7c79f68bbf94f9633"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen3-0.6B-assets/groups.json": {
+      "bytes": 2072,
+      "sha256": "4ad9f8f2441c704888ca9a49f349aaf36e146915fb973a232224425918122a17"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 312,
+      "sha256": "eb50429432c8244a28af563c29bceabe36f30b8382a419cfd9edd3a7f13e5f4e"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 82255,
+      "sha256": "4e695558809d6a9876758b8e926edbc46aacbee2ed2463264dd4b203ef4feed8"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen3.5-0.8B-assets/groups.json": {
+      "bytes": 1278,
+      "sha256": "f3120150712e1b2ff706fe21c4b4bc78a32c71d39e9c577be584bd4b72e15ad2"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 235,
+      "sha256": "c18c1c934d075b5a69f8e7a15997202cca0d8086df4a7585304a9aba3b572292"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 55471,
+      "sha256": "01073e2e299aa9c1e721f3e83b74b0487385a73e87309c91ee8b1813a9bcad00"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/background_service_checks.json": {
+      "bytes": 16555,
+      "sha256": "660dbc944e55c89d90e6d22b18d4f1ce4650ff02370cf0db834052d6299933c2"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/compile-monitor.json": {
+      "bytes": 158,
+      "sha256": "2bf529c61ccaab8d9158ed24c353f0c44a678665f44a86e0966f1c5c59ab7f6b"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/compile.log": {
+      "bytes": 543,
+      "sha256": "cb8d11d2564c695d4719724d0bb5540a1ee8d7747f839fdd74b4bb3f654aba9e"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/metadata.json": {
+      "bytes": 7919,
+      "sha256": "cc7d7ab393306627203918d101a015ee513b47d2bbba5832dafe61f930f45372"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/native-decode.metal": {
+      "bytes": 3821,
+      "sha256": "26c30aed74e1b1e1bd87c168a39a25bab054b66f0b8621bc1c63a7f5f0ffa18d"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 180162,
+      "sha256": "82da4f31929cf39f38a7872e4254d4671ee0e75bb1fea003cec11223cd56311d"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/source-snapshot/test2026/metal/concurrent_bf16_group_gpu.mm": {
+      "bytes": 7790,
+      "sha256": "aa90d6eea6ccee69efec3bded272bc524f9756adf3b88056bf875fbf209ea913"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/source-snapshot/test2026/metal/run_concurrent_bf16_groups.py": {
+      "bytes": 5407,
+      "sha256": "bb7d95651fa236dbc329f57ff96cd61e68f9a4f8adb8a38348d3b3486455d599"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/statuses.json": {
+      "bytes": 1836,
+      "sha256": "bd3d76b9e1799d123afdc1e5680d3a372398b86bf1816e16de81bfe953d82016"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/jobs/summary.json": {
+      "bytes": 27610,
+      "sha256": "7f54442b83fa9ff32e707e347be13120c65ea713b892db70620fa110f7ad2e71"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/output.log": {
+      "bytes": 172,
+      "sha256": "0a2e0ceb94fa6ccbfedc577d5132460d95f7c78dee0354567b2c62bc7a787a86"
+    },
+    "evidence/logs/concurrent-bf16-groups-confirm-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "9827ad480590915a8d6cca5fb0a7511205c0b090568821e7e1ba00024408c0ab"
+    }
+  }
+}
