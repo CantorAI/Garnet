@@ -1,0 +1,2905 @@
+{
+  "cohorts": 2,
+  "numeric_checks": 960,
+  "safety_profiles": 378,
+  "timed_executions": 15360,
+  "identical_runtime_source_flags_assets_versions_binary": true,
+  "same_original_shader_and_pipeline": true,
+  "null_comparisons_per_cohort": 40,
+  "null_summary": [
+    {
+      "cohort": "initial",
+      "profiles": 40,
+      "gpu_fractions": {
+        "minimum": 0.8621064451578538,
+        "maximum": 1.143510975058859,
+        "mean": 1.0046442937083244,
+        "outside_five_percent": 18
+      },
+      "wall_fractions": {
+        "minimum": 0.878355671389516,
+        "maximum": 1.0833769378619795,
+        "mean": 0.9962121465070248,
+        "outside_five_percent": 12
+      }
+    },
+    {
+      "cohort": "confirmation",
+      "profiles": 40,
+      "gpu_fractions": {
+        "minimum": 0.8517101878111528,
+        "maximum": 1.3471763649960407,
+        "mean": 1.0183406152571672,
+        "outside_five_percent": 16
+      },
+      "wall_fractions": {
+        "minimum": 0.8952764879173014,
+        "maximum": 1.2023553939230052,
+        "mean": 1.0058223832454278,
+        "outside_five_percent": 15
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "batch": 1,
+      "output_rows": 896,
+      "inner": 4864,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-0",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9772419352310754,
+            0.9533255926881276
+          ],
+          "wall_fractions": [
+            1.0010470740418551,
+            1.0015806365849418
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-0",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0373880950835297,
+            0.9256727901108935
+          ],
+          "wall_fractions": [
+            0.9781022584155268,
+            0.9513342629449484
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 0.9772419352310754,
+      "worst_wall_fraction": 1.0015806365849418,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 896,
+      "inner": 4864,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-0",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9631102041738163,
+            0.9412641035320316
+          ],
+          "wall_fractions": [
+            0.9506312233358342,
+            0.9865993429548002
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-0",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0373880950835297,
+            0.9256727901108935
+          ],
+          "wall_fractions": [
+            0.9781022584155268,
+            0.9513342629449484
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 0.9631102041738163,
+      "worst_wall_fraction": 0.9865993429548002,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 1024,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-6",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            0.8526049896273366,
+            0.9024568992349237
+          ],
+          "wall_fractions": [
+            0.8142670292968576,
+            0.9841926213544114
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-6",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.062842072578356,
+            1.3471763649960407
+          ],
+          "wall_fractions": [
+            1.0700198194988868,
+            1.2023553939230052
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 0.9024568992349237,
+      "worst_wall_fraction": 0.9841926213544114,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 1024,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-6",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.1123786925195365,
+            0.8259648206453142
+          ],
+          "wall_fractions": [
+            1.1203926463061167,
+            1.0043594618956104
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-6",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.062842072578356,
+            1.3471763649960407
+          ],
+          "wall_fractions": [
+            1.0700198194988868,
+            1.2023553939230052
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1123786925195365,
+      "worst_wall_fraction": 1.1203926463061167,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 1024,
+      "inner": 2048,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-4",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9672513279487739,
+            1.0549441583980195
+          ],
+          "wall_fractions": [
+            0.9798914472711655,
+            0.9914423851106876
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-12",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0321537058508439,
+            1.0488883552376704
+          ],
+          "wall_fractions": [
+            0.9714836657245955,
+            1.0234930212397817
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-4",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0654227718699683,
+            1.0068569303530344
+          ],
+          "wall_fractions": [
+            1.0463387824021673,
+            1.0947139976178997
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-4",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.8621064451578538,
+            1.0961268484540077
+          ],
+          "wall_fractions": [
+            0.9465695700543159,
+            1.060414211498681
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-12",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.017424282085486,
+            0.8517101878111528
+          ],
+          "wall_fractions": [
+            1.012806113167147,
+            0.9335214223585214
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-4",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0522832749384876,
+            0.9999231594117768
+          ],
+          "wall_fractions": [
+            1.0405138231810167,
+            0.9464226368180876
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0654227718699683,
+      "worst_wall_fraction": 1.0947139976178997,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 1024,
+      "inner": 2048,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-4",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0554737698799894,
+            1.0091931206701037
+          ],
+          "wall_fractions": [
+            0.9556262081427984,
+            1.2218906530349707
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-12",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9903790300767549,
+            0.9658415403354217
+          ],
+          "wall_fractions": [
+            0.9867315791242167,
+            0.9368076105451536
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-4",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9907245755005712,
+            1.2417955731644803
+          ],
+          "wall_fractions": [
+            0.9966254710360991,
+            1.139660117664937
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-4",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.8621064451578538,
+            1.0961268484540077
+          ],
+          "wall_fractions": [
+            0.9465695700543159,
+            1.060414211498681
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-12",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.017424282085486,
+            0.8517101878111528
+          ],
+          "wall_fractions": [
+            1.012806113167147,
+            0.9335214223585214
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-4",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0522832749384876,
+            0.9999231594117768
+          ],
+          "wall_fractions": [
+            1.0405138231810167,
+            0.9464226368180876
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.2417955731644803,
+      "worst_wall_fraction": 1.2218906530349707,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 1024,
+      "inner": 3072,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-0",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.1309157796565366,
+            1.1097095144356581
+          ],
+          "wall_fractions": [
+            1.0072254684810835,
+            1.035290023208958
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-0",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0454171837380677,
+            0.9736976915709132
+          ],
+          "wall_fractions": [
+            1.037939414613973,
+            1.0156511493980895
+          ]
+        }
+      ],
+      "null_within_five_percent": true,
+      "worst_gpu_fraction": 1.1309157796565366,
+      "worst_wall_fraction": 1.035290023208958,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 1024,
+      "inner": 3072,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-0",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.2003707126088825,
+            1.1856826424724716
+          ],
+          "wall_fractions": [
+            1.0989712753072276,
+            1.0501163562646842
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-0",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0454171837380677,
+            0.9736976915709132
+          ],
+          "wall_fractions": [
+            1.037939414613973,
+            1.0156511493980895
+          ]
+        }
+      ],
+      "null_within_five_percent": true,
+      "worst_gpu_fraction": 1.2003707126088825,
+      "worst_wall_fraction": 1.0989712753072276,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 1024,
+      "inner": 3584,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-5",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9883586909440886,
+            1.016633801360085
+          ],
+          "wall_fractions": [
+            1.0070168179825933,
+            1.0080204479364392
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-8",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0063120718260457,
+            0.9803765719430436
+          ],
+          "wall_fractions": [
+            0.9847451055199354,
+            0.878142439678183
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-5",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.911329237149772,
+            0.9162871094446391
+          ],
+          "wall_fractions": [
+            0.9633845212248162,
+            0.9272018784668262
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-8",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.030415895601056,
+            1.0105412794785769
+          ],
+          "wall_fractions": [
+            1.024900025364235,
+            0.9862204786794817
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.016633801360085,
+      "worst_wall_fraction": 1.0080204479364392,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 1024,
+      "inner": 3584,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-5",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.2217773869697888,
+            1.1201263717342993
+          ],
+          "wall_fractions": [
+            1.09703882404311,
+            0.9932269977849478
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-8",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0892001784446947,
+            1.054727074686402
+          ],
+          "wall_fractions": [
+            1.057627740308907,
+            1.147279219028535
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-5",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.911329237149772,
+            0.9162871094446391
+          ],
+          "wall_fractions": [
+            0.9633845212248162,
+            0.9272018784668262
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-8",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.030415895601056,
+            1.0105412794785769
+          ],
+          "wall_fractions": [
+            1.024900025364235,
+            0.9862204786794817
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.2217773869697888,
+      "worst_wall_fraction": 1.147279219028535,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 2048,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-5",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0655493774372562,
+            1.1105296568895626
+          ],
+          "wall_fractions": [
+            1.0234642668782061,
+            1.0410237674254805
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-3",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9573864247926085,
+            1.17976149215357
+          ],
+          "wall_fractions": [
+            1.0345113690793166,
+            1.064564292369368
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-5",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0190480585546744,
+            1.1321943841994355
+          ],
+          "wall_fractions": [
+            1.0185435741953517,
+            1.0282206328997903
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-3",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.8777949353364826,
+            0.9806794754872282
+          ],
+          "wall_fractions": [
+            0.878355671389516,
+            0.9183461458272701
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.17976149215357,
+      "worst_wall_fraction": 1.064564292369368,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 2048,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-5",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9269716653988034,
+            1.0236864068006715
+          ],
+          "wall_fractions": [
+            0.9945026904095795,
+            1.0648807208895785
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-3",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0146073501170843,
+            0.9226327725512853
+          ],
+          "wall_fractions": [
+            0.9861650263254836,
+            1.0021668287755405
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-5",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0190480585546744,
+            1.1321943841994355
+          ],
+          "wall_fractions": [
+            1.0185435741953517,
+            1.0282206328997903
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-3",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.8777949353364826,
+            0.9806794754872282
+          ],
+          "wall_fractions": [
+            0.878355671389516,
+            0.9183461458272701
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0236864068006715,
+      "worst_wall_fraction": 1.0648807208895785,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 3072,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-1",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.005786773615703,
+            1.0028028150822956
+          ],
+          "wall_fractions": [
+            1.0189201363464209,
+            1.0192179726114003
+          ]
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9782413443661154,
+            0.9841770553058651
+          ],
+          "wall_fractions": [
+            0.9969488544190804,
+            0.995814976858438
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-1",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9749191210737193,
+            1.062788002545879
+          ],
+          "wall_fractions": [
+            0.991442896922545,
+            1.0565775495988257
+          ]
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0069635635901995,
+            1.0017628755393366
+          ],
+          "wall_fractions": [
+            1.011119231771668,
+            1.028043615113473
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.005786773615703,
+      "worst_wall_fraction": 1.0192179726114003,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 3072,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-1",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.1428578829942895,
+            1.0264061385602912
+          ],
+          "wall_fractions": [
+            1.0713000215138055,
+            1.0169143227742883
+          ]
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0750317426586091,
+            1.0339950153150583
+          ],
+          "wall_fractions": [
+            1.0748722413092155,
+            1.0327309469305055
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-1",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9749191210737193,
+            1.062788002545879
+          ],
+          "wall_fractions": [
+            0.991442896922545,
+            1.0565775495988257
+          ]
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0069635635901995,
+            1.0017628755393366
+          ],
+          "wall_fractions": [
+            1.011119231771668,
+            1.028043615113473
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1428578829942895,
+      "worst_wall_fraction": 1.0748722413092155,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 3584,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-10",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0296990182647037,
+            0.914616286360367
+          ],
+          "wall_fractions": [
+            1.010617871929914,
+            1.0213346132208738
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-6",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9708513144543276,
+            0.905153914860377
+          ],
+          "wall_fractions": [
+            0.9768632776520538,
+            0.9338919945121593
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-7",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0594016935731712,
+            1.0709032293340466
+          ],
+          "wall_fractions": [
+            1.0265138829034843,
+            1.0405303589145296
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-9",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9365477822104648,
+            1.1438316891592373
+          ],
+          "wall_fractions": [
+            0.9625750130042726,
+            1.1512989609719166
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-10",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.059246498642524,
+            1.0510927112721165
+          ],
+          "wall_fractions": [
+            0.9740939140242767,
+            1.0325651804335731
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-6",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9527011594751136,
+            0.9994558982318802
+          ],
+          "wall_fractions": [
+            0.9568865132092107,
+            1.0078078994834292
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-7",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9876379827268468,
+            0.9828896164472151
+          ],
+          "wall_fractions": [
+            0.9732430928945149,
+            1.0133768168301531
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-9",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.967160343747913,
+            0.9854530935802144
+          ],
+          "wall_fractions": [
+            0.9525016764727754,
+            1.0013570988298564
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1438316891592373,
+      "worst_wall_fraction": 1.1512989609719166,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 3584,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-10",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.1208398762219531,
+            1.015064385804074
+          ],
+          "wall_fractions": [
+            1.0587264026116276,
+            0.9867326912305308
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-6",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0630673478335462,
+            1.069664894839735
+          ],
+          "wall_fractions": [
+            0.9921117433451003,
+            1.0103397703707253
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-7",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.1073469351371923,
+            1.0923618099905004
+          ],
+          "wall_fractions": [
+            1.038502373206986,
+            1.0370182562805708
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-9",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.1995135179101568,
+            1.1268660785980633
+          ],
+          "wall_fractions": [
+            1.0263911910696604,
+            1.0764652407070097
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-10",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.059246498642524,
+            1.0510927112721165
+          ],
+          "wall_fractions": [
+            0.9740939140242767,
+            1.0325651804335731
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-6",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9527011594751136,
+            0.9994558982318802
+          ],
+          "wall_fractions": [
+            0.9568865132092107,
+            1.0078078994834292
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-7",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9876379827268468,
+            0.9828896164472151
+          ],
+          "wall_fractions": [
+            0.9732430928945149,
+            1.0133768168301531
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-9",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.967160343747913,
+            0.9854530935802144
+          ],
+          "wall_fractions": [
+            0.9525016764727754,
+            1.0013570988298564
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1995135179101568,
+      "worst_wall_fraction": 1.0764652407070097,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 4096,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-13",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.06460685085369,
+            0.9931829941989457
+          ],
+          "wall_fractions": [
+            1.0672292578228109,
+            0.9867309940711492
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-13",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.017424644311163,
+            0.95975099888992
+          ],
+          "wall_fractions": [
+            1.012771446400593,
+            1.0033854908222188
+          ]
+        }
+      ],
+      "null_within_five_percent": true,
+      "worst_gpu_fraction": 1.06460685085369,
+      "worst_wall_fraction": 1.0672292578228109,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 4096,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-13",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9870219945926129,
+            0.9691944196377368
+          ],
+          "wall_fractions": [
+            1.025293553257055,
+            0.9351945721555148
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-13",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.017424644311163,
+            0.95975099888992
+          ],
+          "wall_fractions": [
+            1.012771446400593,
+            1.0033854908222188
+          ]
+        }
+      ],
+      "null_within_five_percent": true,
+      "worst_gpu_fraction": 0.9870219945926129,
+      "worst_wall_fraction": 1.025293553257055,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 4864,
+      "inner": 896,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-1",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.1590277212079736,
+            0.949094251056542
+          ],
+          "wall_fractions": [
+            1.0934462289261677,
+            0.9758792607338205
+          ]
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.1096836682060403,
+            0.9571216868145108
+          ],
+          "wall_fractions": [
+            1.0181578911912634,
+            1.0543185853332475
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-1",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0607574148569534,
+            0.9307442643397023
+          ],
+          "wall_fractions": [
+            1.0526215857269408,
+            0.9830194367587283
+          ]
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9971681019969693,
+            1.0730960892330668
+          ],
+          "wall_fractions": [
+            1.0788465543578643,
+            1.0300935344339839
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1590277212079736,
+      "worst_wall_fraction": 1.0934462289261677,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 4864,
+      "inner": 896,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-1",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.00221497324581,
+            0.9196715535796794
+          ],
+          "wall_fractions": [
+            0.9939747328324893,
+            0.9733493269820781
+          ]
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0165454296715009,
+            1.0325293552588024
+          ],
+          "wall_fractions": [
+            1.1181702779969638,
+            1.0419758502012484
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-1",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0607574148569534,
+            0.9307442643397023
+          ],
+          "wall_fractions": [
+            1.0526215857269408,
+            0.9830194367587283
+          ]
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9971681019969693,
+            1.0730960892330668
+          ],
+          "wall_fractions": [
+            1.0788465543578643,
+            1.0300935344339839
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0325293552588024,
+      "worst_wall_fraction": 1.1181702779969638,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 6144,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0658122459090529,
+            1.0008324534498132
+          ],
+          "wall_fractions": [
+            1.0403206371401648,
+            0.9941942252991401
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0504059606087566,
+            0.955202641335259
+          ],
+          "wall_fractions": [
+            1.0379106766453277,
+            0.9870576423161633
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0658122459090529,
+      "worst_wall_fraction": 1.0403206371401648,
+      "eligible": false
+    },
+    {
+      "batch": 1,
+      "output_rows": 6144,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9556589306031923,
+            0.9866560452488662
+          ],
+          "wall_fractions": [
+            0.9718755110894787,
+            0.9321610730741877
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-2",
+          "batch": 1,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0504059606087566,
+            0.955202641335259
+          ],
+          "wall_fractions": [
+            1.0379106766453277,
+            0.9870576423161633
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 0.9866560452488662,
+      "worst_wall_fraction": 0.9718755110894787,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 896,
+      "inner": 4864,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-0",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0583020235575549,
+            1.014699628642929
+          ],
+          "wall_fractions": [
+            1.0858611049362306,
+            0.9719576558255925
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-0",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.052440178098718,
+            1.063648326950153
+          ],
+          "wall_fractions": [
+            1.0577108291067028,
+            1.0363110352560905
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0583020235575549,
+      "worst_wall_fraction": 1.0858611049362306,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 896,
+      "inner": 4864,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-0",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9493625262376639,
+            0.995417247969908
+          ],
+          "wall_fractions": [
+            0.9569584319698261,
+            0.9616289901619559
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-0",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.052440178098718,
+            1.063648326950153
+          ],
+          "wall_fractions": [
+            1.0577108291067028,
+            1.0363110352560905
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 0.995417247969908,
+      "worst_wall_fraction": 0.9616289901619559,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 1024,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-6",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.8439208220369853,
+            0.8615638234626759
+          ],
+          "wall_fractions": [
+            0.9280001715208825,
+            0.9565011479823143
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-6",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9867263166715238,
+            1.2150387390417459
+          ],
+          "wall_fractions": [
+            0.9598620416937218,
+            1.0931887034223093
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 0.8615638234626759,
+      "worst_wall_fraction": 0.9565011479823143,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 1024,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-6",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.08732333829388,
+            1.0676089930257304
+          ],
+          "wall_fractions": [
+            1.0274079691266147,
+            1.028917435143845
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-6",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9867263166715238,
+            1.2150387390417459
+          ],
+          "wall_fractions": [
+            0.9598620416937218,
+            1.0931887034223093
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.08732333829388,
+      "worst_wall_fraction": 1.028917435143845,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 1024,
+      "inner": 2048,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-4",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0351215264767493,
+            0.8848830556520438
+          ],
+          "wall_fractions": [
+            1.0618290354666526,
+            0.9465497224208653
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-12",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9729934567333943,
+            0.8299635117435203
+          ],
+          "wall_fractions": [
+            1.0198859202042558,
+            0.9498504677823811
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-4",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9924761253174211,
+            1.0905216219778289
+          ],
+          "wall_fractions": [
+            1.008474633379014,
+            1.0232701380586755
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-4",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9466039691210588,
+            0.9900809257098816
+          ],
+          "wall_fractions": [
+            0.9691268679909261,
+            1.0172899309032426
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-12",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.077595205261483,
+            0.9597397594599798
+          ],
+          "wall_fractions": [
+            0.9325051002050366,
+            0.914877942753121
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-4",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9268042535526262,
+            0.9643493991766792
+          ],
+          "wall_fractions": [
+            0.9065304275769528,
+            1.003399471813211
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0905216219778289,
+      "worst_wall_fraction": 1.0618290354666526,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 1024,
+      "inner": 2048,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-4",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.1747862471331825,
+            1.171733312044394
+          ],
+          "wall_fractions": [
+            1.0496426000663552,
+            1.0237359287637193
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-12",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.009147808943436,
+            1.1346784214868555
+          ],
+          "wall_fractions": [
+            0.889707135513412,
+            1.1126390173146308
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-4",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            0.889571541104822,
+            1.0004565506635603
+          ],
+          "wall_fractions": [
+            0.9422988758095657,
+            0.9247524143307441
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-4",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9466039691210588,
+            0.9900809257098816
+          ],
+          "wall_fractions": [
+            0.9691268679909261,
+            1.0172899309032426
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-12",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.077595205261483,
+            0.9597397594599798
+          ],
+          "wall_fractions": [
+            0.9325051002050366,
+            0.914877942753121
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-4",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9268042535526262,
+            0.9643493991766792
+          ],
+          "wall_fractions": [
+            0.9065304275769528,
+            1.003399471813211
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1747862471331825,
+      "worst_wall_fraction": 1.1126390173146308,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 1024,
+      "inner": 3072,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-0",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0799175351537316,
+            1.0555265571109012
+          ],
+          "wall_fractions": [
+            1.0409010221245,
+            0.9776060435683318
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-0",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.897220286050336,
+            1.1409940325209202
+          ],
+          "wall_fractions": [
+            0.9379852938910009,
+            1.0868635871585788
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0799175351537316,
+      "worst_wall_fraction": 1.0409010221245,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 1024,
+      "inner": 3072,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-0",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.133270770368019,
+            1.004835638794981
+          ],
+          "wall_fractions": [
+            1.0386138410130132,
+            1.0111639021798418
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-0",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.897220286050336,
+            1.1409940325209202
+          ],
+          "wall_fractions": [
+            0.9379852938910009,
+            1.0868635871585788
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.133270770368019,
+      "worst_wall_fraction": 1.0386138410130132,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 1024,
+      "inner": 3584,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-5",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0244624362043682,
+            1.0019144541853962
+          ],
+          "wall_fractions": [
+            0.9784345241323873,
+            1.0897612057585218
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-8",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0073347165447295,
+            1.0427029844942108
+          ],
+          "wall_fractions": [
+            1.0314875642632177,
+            0.98775271529363
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-5",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9710605234748689,
+            1.0466187487961776
+          ],
+          "wall_fractions": [
+            1.0541840495021264,
+            1.1043031513624508
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-8",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0404486791349379,
+            0.9724210834917929
+          ],
+          "wall_fractions": [
+            1.0062701558236553,
+            1.0039865577573939
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0427029844942108,
+      "worst_wall_fraction": 1.0897612057585218,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 1024,
+      "inner": 3584,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-5",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0776276325869607,
+            1.1954670428537935
+          ],
+          "wall_fractions": [
+            0.9785902950581702,
+            1.1047879012527364
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-8",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.1780637858056895,
+            1.0610007166735662
+          ],
+          "wall_fractions": [
+            1.0199954115239211,
+            1.0127373947806715
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-5",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9710605234748689,
+            1.0466187487961776
+          ],
+          "wall_fractions": [
+            1.0541840495021264,
+            1.1043031513624508
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-8",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0404486791349379,
+            0.9724210834917929
+          ],
+          "wall_fractions": [
+            1.0062701558236553,
+            1.0039865577573939
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1954670428537935,
+      "worst_wall_fraction": 1.1047879012527364,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 2048,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-5",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9217575819349338,
+            1.1318798771579448
+          ],
+          "wall_fractions": [
+            0.9470169773233719,
+            1.0878451285099842
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-3",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.1348433493297116,
+            0.8942820939763677
+          ],
+          "wall_fractions": [
+            1.0404316223710015,
+            0.9288647570379264
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-5",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9687593969014674,
+            0.9804375755353837
+          ],
+          "wall_fractions": [
+            0.9967015703814207,
+            0.9886386242399294
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-3",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.1332257746417145,
+            1.2221684050745556
+          ],
+          "wall_fractions": [
+            1.0833769378619795,
+            1.070597223114103
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1348433493297116,
+      "worst_wall_fraction": 1.0878451285099842,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 2048,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-5",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.1442971735169674,
+            1.0067224273107065
+          ],
+          "wall_fractions": [
+            1.029491857390831,
+            1.0081744739106786
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-3",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.020474553546831,
+            1.0610373673441889
+          ],
+          "wall_fractions": [
+            1.0107900039311193,
+            1.0158884793516585
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-5",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9687593969014674,
+            0.9804375755353837
+          ],
+          "wall_fractions": [
+            0.9967015703814207,
+            0.9886386242399294
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-3",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.1332257746417145,
+            1.2221684050745556
+          ],
+          "wall_fractions": [
+            1.0833769378619795,
+            1.070597223114103
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1442971735169674,
+      "worst_wall_fraction": 1.029491857390831,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 3072,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-1",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.89702566947679,
+            1.1138168038386154
+          ],
+          "wall_fractions": [
+            0.9112425639739824,
+            1.042886565024694
+          ]
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9411303491370279,
+            0.9297006107244291
+          ],
+          "wall_fractions": [
+            1.063641205934249,
+            0.9702655745007686
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-1",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0857647014494007,
+            0.9546439866231783
+          ],
+          "wall_fractions": [
+            1.0338717996812736,
+            0.9132322424394554
+          ]
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0389314678486317,
+            0.9502559806508646
+          ],
+          "wall_fractions": [
+            0.958853533429578,
+            0.9689921470881794
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1138168038386154,
+      "worst_wall_fraction": 1.063641205934249,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 3072,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-1",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9255381233503813,
+            1.1303255114619817
+          ],
+          "wall_fractions": [
+            0.9561001305957031,
+            1.0271550202289346
+          ]
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.091565310246067,
+            0.983983380583102
+          ],
+          "wall_fractions": [
+            1.00867250398571,
+            1.0025653152437726
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-1",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0857647014494007,
+            0.9546439866231783
+          ],
+          "wall_fractions": [
+            1.0338717996812736,
+            0.9132322424394554
+          ]
+        },
+        {
+          "model": "Qwen3-0.6B",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0389314678486317,
+            0.9502559806508646
+          ],
+          "wall_fractions": [
+            0.958853533429578,
+            0.9689921470881794
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1303255114619817,
+      "worst_wall_fraction": 1.0271550202289346,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 3584,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-10",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0199536839347432,
+            0.9913604179833435
+          ],
+          "wall_fractions": [
+            1.0287208425007242,
+            1.0001360956465517
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-6",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9835858799754813,
+            0.9766031870078561
+          ],
+          "wall_fractions": [
+            0.9632850426195778,
+            0.9689265931124609
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-7",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.029914987710781,
+            1.0795482212998462
+          ],
+          "wall_fractions": [
+            1.0369838480187663,
+            1.0488388095004921
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-9",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9313923454102011,
+            1.008743524474624
+          ],
+          "wall_fractions": [
+            0.9440339249032895,
+            0.9802800674291425
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-10",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.955570356407429,
+            1.000954317131775
+          ],
+          "wall_fractions": [
+            0.9728898079063877,
+            0.9730103543097586
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-6",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9861397044906696,
+            1.0090255107869743
+          ],
+          "wall_fractions": [
+            0.95677671695351,
+            0.9536203171751166
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-7",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9758782797461232,
+            1.003415017363185
+          ],
+          "wall_fractions": [
+            0.9817134840703345,
+            1.02553866779974
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-9",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9190216847313923,
+            0.9908218507468024
+          ],
+          "wall_fractions": [
+            0.9621905542396783,
+            0.9816004076765624
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0795482212998462,
+      "worst_wall_fraction": 1.0488388095004921,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 3584,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-10",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9605223803363764,
+            0.9549780554864293
+          ],
+          "wall_fractions": [
+            0.9005196067149962,
+            0.9863063743304263
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-6",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9834834571171367,
+            1.1732486825706576
+          ],
+          "wall_fractions": [
+            0.879249663787571,
+            1.0784606829218237
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-7",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0355159486259744,
+            1.07226821342231
+          ],
+          "wall_fractions": [
+            0.9919874116651344,
+            1.034231918617591
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-9",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0711076311931838,
+            0.809294040327981
+          ],
+          "wall_fractions": [
+            1.0530218484192069,
+            0.9272513070776175
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-10",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.955570356407429,
+            1.000954317131775
+          ],
+          "wall_fractions": [
+            0.9728898079063877,
+            0.9730103543097586
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-6",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9861397044906696,
+            1.0090255107869743
+          ],
+          "wall_fractions": [
+            0.95677671695351,
+            0.9536203171751166
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-7",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9758782797461232,
+            1.003415017363185
+          ],
+          "wall_fractions": [
+            0.9817134840703345,
+            1.02553866779974
+          ]
+        },
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-9",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            0.9190216847313923,
+            0.9908218507468024
+          ],
+          "wall_fractions": [
+            0.9621905542396783,
+            0.9816004076765624
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.1732486825706576,
+      "worst_wall_fraction": 1.0784606829218237,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 4096,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-13",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9066806338226598,
+            0.9446197846564369
+          ],
+          "wall_fractions": [
+            0.9133425232422555,
+            1.0167553066382333
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-13",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.143510975058859,
+            0.8990709705715587
+          ],
+          "wall_fractions": [
+            1.0582426562646845,
+            0.8952764879173014
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 0.9446197846564369,
+      "worst_wall_fraction": 1.0167553066382333,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 4096,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-13",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0541898250618924,
+            1.081747095802728
+          ],
+          "wall_fractions": [
+            1.0487511989982754,
+            1.0998606554967925
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-13",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.143510975058859,
+            0.8990709705715587
+          ],
+          "wall_fractions": [
+            1.0582426562646845,
+            0.8952764879173014
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.081747095802728,
+      "worst_wall_fraction": 1.0998606554967925,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 4864,
+      "inner": 896,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-1",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0913419130417874,
+            0.9909986934593612
+          ],
+          "wall_fractions": [
+            1.0969572720995056,
+            0.9928017810164094
+          ]
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            0.9200221231335415,
+            1.0088651259523915
+          ],
+          "wall_fractions": [
+            0.9570857735135705,
+            1.008930651880686
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-1",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0052272627131165,
+            1.0458560092813791
+          ],
+          "wall_fractions": [
+            0.996090362041014,
+            1.0367405492972601
+          ]
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0530209417980427,
+            0.9968915674443085
+          ],
+          "wall_fractions": [
+            0.9901928683583843,
+            0.9915150173718561
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0913419130417874,
+      "worst_wall_fraction": 1.0969572720995056,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 4864,
+      "inner": 896,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-1",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0925434744912002,
+            0.9766196169230091
+          ],
+          "wall_fractions": [
+            1.0286524577237066,
+            0.9610264488706015
+          ]
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            0.9705641303306641,
+            1.0553223911221346
+          ],
+          "wall_fractions": [
+            0.9877593818243706,
+            1.0300589513185516
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-1",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0052272627131165,
+            1.0458560092813791
+          ],
+          "wall_fractions": [
+            0.996090362041014,
+            1.0367405492972601
+          ]
+        },
+        {
+          "model": "Qwen2.5-Coder-0.5B-Instruct",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0530209417980427,
+            0.9968915674443085
+          ],
+          "wall_fractions": [
+            0.9901928683583843,
+            0.9915150173718561
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0925434744912002,
+      "worst_wall_fraction": 1.0300589513185516,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 6144,
+      "inner": 1024,
+      "threads": 128,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 2,
+          "gpu_fractions": [
+            1.0616632449919123,
+            0.9837724432427085
+          ],
+          "wall_fractions": [
+            1.0123652330416115,
+            0.9945912828923973
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0313875199266491,
+            1.0909469215501415
+          ],
+          "wall_fractions": [
+            1.0208384237721222,
+            1.0609404335263508
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0616632449919123,
+      "worst_wall_fraction": 1.0123652330416115,
+      "eligible": false
+    },
+    {
+      "batch": 2,
+      "output_rows": 6144,
+      "inner": 1024,
+      "threads": 256,
+      "observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 3,
+          "gpu_fractions": [
+            1.0222070468195168,
+            1.0254639906548981
+          ],
+          "wall_fractions": [
+            1.0079222778632122,
+            1.0277486486314544
+          ]
+        }
+      ],
+      "null_observations": [
+        {
+          "model": "Qwen3.5-0.8B",
+          "matrix": "matrix-2",
+          "batch": 2,
+          "policy": 1,
+          "gpu_fractions": [
+            1.0313875199266491,
+            1.0909469215501415
+          ],
+          "wall_fractions": [
+            1.0208384237721222,
+            1.0609404335263508
+          ]
+        }
+      ],
+      "null_within_five_percent": false,
+      "worst_gpu_fraction": 1.0254639906548981,
+      "worst_wall_fraction": 1.0277486486314544,
+      "eligible": false
+    }
+  ],
+  "selected": [],
+  "selection_rule": "GPU fraction<=0.95 and wall<1 for every duplicate geometry/matrix observation in both cohorts; null GPU/wall within5% in both. Minimum worst GPU fraction wins. Original64 otherwise.",
+  "scope": "Repeated resident one-projection diagnostic/calibration. Null GPU work identical but CPU hook overhead is included; observed variability is not causally attributed. No confidence interval, full-model gain or vLLM ratio.",
+  "full_goal_met": false
+}

@@ -120,6 +120,20 @@ def main():
         assert cells[2].strip()=={1:'placeholder',2:'constant'}[r['policy']]
         assert [c.strip() for c in cells[3:]]==[f"{v:.6f}" for v in (r['wall_ms']['control'],r['wall_ms']['candidate'],r['wall_fraction'])]
         bf16_numbers+=3
+    p=ROOT/'results/20261015/four-threadgroup-probe'
+    calibration=json.loads((p/'confirmation-comparison.json').read_text())
+    assert calibration['selected']==[]
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
+          if line.startswith(('| initial |','| confirmation |'))]
+    assert len(rows)==len(calibration['null_summary'])==2
+    null_numbers=0
+    for cells,r in zip(rows,calibration['null_summary']):
+        assert cells[0].strip()==r['cohort']
+        g,w=r['gpu_fractions'],r['wall_fractions']
+        assert [c.strip() for c in cells[1:]]==[
+            f"{g['minimum']:.6f} / {g['maximum']:.6f}",str(g['outside_five_percent']),
+            f"{w['minimum']:.6f} / {w['maximum']:.6f}",str(w['outside_five_percent'])]
+        null_numbers+=6
     p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
@@ -137,7 +151,7 @@ def main():
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
                   component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,
                   selected_native_table_values_checked=selected_native_numbers,bf16_component_table_values_checked=bf16_numbers,
-                  phase_table_values_checked=phase_numbers,status='passed',
+                  phase_table_values_checked=phase_numbers,null_calibration_table_values_checked=null_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

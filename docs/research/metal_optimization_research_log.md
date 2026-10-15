@@ -772,6 +772,28 @@ Fresh full-model and matched confirmation remain required. The frozen auditor
 retains all original assertions while eliminating live wrapper dependencies.
 [Protocol, source identity and limitations](../../results/20261015/four-threadgroup-probe/README.md).
 
+### 2026-10-15 — same-pipeline scheduling calibrated; no geometry selected
+
+Actual PID74228 and74935 exited0 in31.738427s and31.689417s. Both Mac and
+Windows audits pass59 files per cohort, all480 exact/numerical records plus189
+safety profiles before7,680 timings each. Runtime sources/flags/assets/versions/
+binary match; control and candidate use the same original shader/pipeline.
+The predeclared>=5% GPU/wall/null rule selects zero geometries across cohorts.
+
+Null GPU fractions span0.862107–1.143511 initially and0.851710–1.347176 in
+confirmation, with18/40 and16/40 outside5%. CPU hook overhead remains in wall
+time. These are observed short-burst variations, not a causal attribution or
+confidence bound for other workloads. Earlier small single-projection signals
+remain exploratory; full-model rejection and matched benchmark data stand.
+[Complete calibration, all observations and decision](../../results/20261015/four-threadgroup-probe/README.md).
+
+Keep original64. The next scheduling study should use the same library across
+settings and actual full-model timing/counters rather than select from these
+short cache-resident windows. Prefill remains a separate priority: local SDK
+inspection found MPSNDArrayMatrixMultiplication and its alpha/beta API, but no
+mixed-storage execution, precision compatibility or latency claim exists.
+No new serving defaults or matched target passes are claimed. Full goal active.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
