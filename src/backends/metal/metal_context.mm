@@ -161,6 +161,7 @@ struct MetalContext::Impl {
     size_t residualNormDispatches=0;
     size_t packedPrefillNormDispatches=0;
     size_t globalHalfAlphaDispatches=0;
+    size_t wideBatchPrefillDispatches=0;
     size_t visionGlobalAlphaDispatches=0;
     size_t visionParallelDispatches=0;
     size_t joinedGlobalMlpBlocks=0;
@@ -1719,6 +1720,7 @@ size_t MetalContext::LastSingleCoderHeadDispatches() const {return impl_->single
 size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualNormDispatches;}
 size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->packedPrefillNormDispatches;}
 size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->globalHalfAlphaDispatches;}
+size_t MetalContext::LastWideBatchPrefillDispatches() const {return impl_->wideBatchPrefillDispatches;}
 size_t MetalContext::LastVisionGlobalAlphaDispatches() const {return impl_->visionGlobalAlphaDispatches;}
 size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
 size_t MetalContext::LastVisionPrefetchDispatches() const {return impl_->visionPrefetchDispatches;}
@@ -1769,15 +1771,20 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
     @autoreleasepool {
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
         auto a=input.impl_->matrix,o=output.impl_->matrix;auto w=weight.impl_;
+        bool supportedDecoderRows=a.rows<=128;
+#ifdef GARNET_METAL_QWEN35_WIDE_BATCH_PREFILL
+        supportedDecoderRows=supportedDecoderRows||a.rows==160;
+#endif
         if(a.device!=impl_->device||o.device!=impl_->device||w->buffer.device!=impl_->device||
             a.columns!=w->columns||o.rows!=a.rows||o.columns!=w->rows||
-            (w->visionPrefill?a.rows>32768:a.rows>128)||o.data==a.data)
-            throw std::invalid_argument("BF16 projection shape/device mismatch (rows 1..128)");
+            (w->visionPrefill?a.rows>32768:!supportedDecoderRows)||o.data==a.data)
+            throw std::invalid_argument("BF16 projection shape/device mismatch or unsupported row count");
         auto usable=[&](const MetalMatrix& m){return m.impl_->ready||(m.impl_->pending&&
             impl_->pendingOutputs.count(m.impl_.get())!=0);};
         if(!usable(input))throw std::logic_error("Uninitialized BF16 projection input");
         if(output.impl_->pending&&impl_->pendingOutputs.count(output.impl_.get())==0)
             throw std::logic_error("BF16 output belongs to another command batch");
+        if(!w->visionPrefill&&a.rows==160)++impl_->wideBatchPrefillDispatches;
 #ifdef GARNET_METAL_FLOAT_DENSE_KEY_PREFILL
         if(w->floatPrefill&&a.rows>2&&a.columns<=1024) {
             const size_t parts=(a.columns+63)/64;
@@ -1991,7 +1998,7 @@ void MetalContext::Begin() {
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
     impl_->deferredZeroBytes=impl_->deferredZeroStates=0;
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
 #ifdef GARNET_METAL_DEFERRED_STATE_ZERO
@@ -2663,7 +2670,7 @@ void MetalContext::Abort() {
     for(const auto& entry:impl_->zeroQueued){entry.second->pending=false;entry.second->ready=false;}
     impl_->zeroQueued.clear();
 #endif
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

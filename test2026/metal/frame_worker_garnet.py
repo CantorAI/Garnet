@@ -28,7 +28,7 @@ try:
         extended='qwen35_extended_prefill' in garnet.backend_info()
         checks=[(80,'mps',True),(40,'shared',False)]
         if not extended:checks.extend([(40,'shared',True),(80,'shared',True)])
-        elif batch==2:checks.append((80,'shared',True))
+        elif batch==2 and 'qwen35_wide_batch_prefill' not in garnet.backend_info():checks.append((80,'shared',True))
         before=(decoder.chunk,decoder.prefill_projection,decoder.linear_chunk,decoder.prefill_graphs,list(decoder.slots))
         rejected=[]
         for size,projection,linear in checks:

@@ -77,8 +77,9 @@ class MetalDecoder(CPUDecoder):
     def enable_prefill(self,chunk=16,projection='shared',linear_chunk=False):
         if chunk not in self._prefill_profiles():raise ValueError('Unsupported Metal prefill chunk')
         if projection not in ('shared','mps'):raise ValueError('Prefill projection must be shared or mps')
-        if chunk in (40,80) and (projection!='shared' or not linear_chunk or self.session is None or self.batch*chunk>128 or self.config['hidden_size']>1024):
-            raise ValueError('Extended Qwen3.5 chunks require resident shared chunk recurrence and batch*chunk <= 128, hidden size <= 1024')
+        wide_batch=self.batch==2 and chunk==80 and 'qwen35_wide_batch_prefill' in garnet.backend_info()
+        if chunk in (40,80) and (projection!='shared' or not linear_chunk or self.session is None or (self.batch*chunk>128 and not wide_batch) or self.config['hidden_size']>1024):
+            raise ValueError('Extended Qwen3.5 chunks require resident shared chunk recurrence, an admitted row count, and hidden size <= 1024')
         if hasattr(self,'prefill_graphs') and (getattr(self,'chunk',None)!=chunk or getattr(self,'prefill_projection','shared')!=projection or getattr(self,'linear_chunk',False)!=linear_chunk):
             for graph in self.prefill_graphs.values():graph.close()
             self.prefill_graphs={}
@@ -173,6 +174,7 @@ class MetalDecoder(CPUDecoder):
         if self.joined_prefill_enabled:self.prefill_profile['joined_prefill_pairs']=0
         if self.packed_prefill_norm_enabled:self.prefill_profile['packed_prefill_norm_dispatches']=0
         if self.global_half_alpha_enabled:self.prefill_profile['global_half_alpha_dispatches']=0
+        if 'qwen35_wide_batch_prefill' in garnet.backend_info():self.prefill_profile['wide_batch_prefill_dispatches']=0
         if 'prefill_stream' in garnet.backend_info():self.prefill_profile['prefill_partial_submissions']=0
         if 'deferred_state_zero' in garnet.backend_info():
             self.prefill_profile['deferred_zero_bytes']=0;self.prefill_profile['deferred_zero_states']=0

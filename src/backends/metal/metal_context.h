@@ -83,6 +83,7 @@ public:
     size_t LastResidualNormDispatches() const;
     size_t LastPackedPrefillNormDispatches() const;
     size_t LastGlobalHalfAlphaDispatches() const;
+    size_t LastWideBatchPrefillDispatches() const;
     size_t LastVisionGlobalAlphaDispatches() const;
     size_t LastVisionParallelDispatches() const;
     size_t LastVisionPrefetchDispatches() const;
