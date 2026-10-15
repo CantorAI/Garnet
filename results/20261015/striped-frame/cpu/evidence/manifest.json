@@ -1,0 +1,158 @@
+{
+  "jobs": {
+    "striped-frame-probe-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 58.971729333046824
+    },
+    "striped-frame-probe-confirm-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 58.95051904208958
+    }
+  },
+  "files": {
+    "evidence/logs/striped-frame-probe-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "de6f632534f6d1b097ad704583d7a342b423b45203309a056b1cedc763a89971"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/background_service_checks.json": {
+      "bytes": 168734,
+      "sha256": "3628738a1ead7d5a847a6f91e3bc4a5cfdeafc6e98c579ec69e231d16b0865d4"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/compatibility-status.json": {
+      "bytes": 300,
+      "sha256": "29ca36a34e1ccfcdadca8ac51ed3983116039af766207d6f3745de43510c8bd3"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/compatibility.log": {
+      "bytes": 223,
+      "sha256": "b911e67e43aa93cd7acabb4fb7a916caf4139d61026cadbb56c31c426e1eedd9"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/compatibility/verification.json": {
+      "bytes": 461505,
+      "sha256": "86e63ec70e20e947715eb98619bea7de5a5b046246cd77d480c48b4a44160d8b"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/source-snapshot/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/source-snapshot/frame_preprocessing.py": {
+      "bytes": 1639,
+      "sha256": "e8bfb8adc169b3ab322378a5685e7a835b3def0c585835f3ae3ba5b662492a95"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/source-snapshot/frame_preprocessing_striped.py": {
+      "bytes": 3492,
+      "sha256": "70c506c27338502a0f09c0ff16c6a1349365648302e50a8e9f193b67a8c1cba9"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/source-snapshot/run_compact_frame_probe.py": {
+      "bytes": 3951,
+      "sha256": "98aa33e1e89c5962017d73ad89607983960108d826fe9b533b86a394fc5c7fa7"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/source-snapshot/run_striped_frame_probe.py": {
+      "bytes": 1080,
+      "sha256": "3281012bbfb015eceac0ea62d69212cd2fa6fffd70d9067e78cc046873f5b2bf"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/source-snapshot/test_compact_frame_preprocessing.py": {
+      "bytes": 2051,
+      "sha256": "46a4c0362fded307ae0d6e64b7c236af0e1c6ba8387bc8a44a80d462895502f3"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/source-snapshot/test_striped_frame_preprocessing.py": {
+      "bytes": 917,
+      "sha256": "7b8114ef74cebcafdddad9dae4609f314b2cb9de2bf48b5c6b00af1effe4051c"
+    },
+    "evidence/logs/striped-frame-probe-20261015/jobs/summary.json": {
+      "bytes": 75619,
+      "sha256": "85d044f039a7b54e020aa4163436729b1e175c47b739ac03125df58a79d02044"
+    },
+    "evidence/logs/striped-frame-probe-20261015/output.log": {
+      "bytes": 232,
+      "sha256": "bdc213647181191f5bfea8dc26f23a46921d3963bb4a84ce1c8aab51570e69e2"
+    },
+    "evidence/logs/striped-frame-probe-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "b590f63c968225bec84d0febc30a0ff6f092e85b3545b5239dbc8faf59f1b46b"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "318998e9e308db000365f370aeed9b5ee095eef3991196a039e967192f6ba3c4"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/background_service_checks.json": {
+      "bytes": 168737,
+      "sha256": "d58e879a9926363eb2932f2a29f1f0c5bae444e40bba08043b57a98be0f542cd"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/compatibility-status.json": {
+      "bytes": 308,
+      "sha256": "481e62cfb314933aae488d6c797fa5cd2ff767d3da206618875add7fca335fe5"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/compatibility.log": {
+      "bytes": 223,
+      "sha256": "b911e67e43aa93cd7acabb4fb7a916caf4139d61026cadbb56c31c426e1eedd9"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/compatibility/verification.json": {
+      "bytes": 461505,
+      "sha256": "86e63ec70e20e947715eb98619bea7de5a5b046246cd77d480c48b4a44160d8b"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/source-snapshot/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/source-snapshot/frame_preprocessing.py": {
+      "bytes": 1639,
+      "sha256": "e8bfb8adc169b3ab322378a5685e7a835b3def0c585835f3ae3ba5b662492a95"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/source-snapshot/frame_preprocessing_striped.py": {
+      "bytes": 3492,
+      "sha256": "70c506c27338502a0f09c0ff16c6a1349365648302e50a8e9f193b67a8c1cba9"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/source-snapshot/run_compact_frame_probe.py": {
+      "bytes": 3951,
+      "sha256": "98aa33e1e89c5962017d73ad89607983960108d826fe9b533b86a394fc5c7fa7"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/source-snapshot/run_striped_frame_probe.py": {
+      "bytes": 1080,
+      "sha256": "3281012bbfb015eceac0ea62d69212cd2fa6fffd70d9067e78cc046873f5b2bf"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/source-snapshot/test_compact_frame_preprocessing.py": {
+      "bytes": 2051,
+      "sha256": "46a4c0362fded307ae0d6e64b7c236af0e1c6ba8387bc8a44a80d462895502f3"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/source-snapshot/test_striped_frame_preprocessing.py": {
+      "bytes": 917,
+      "sha256": "7b8114ef74cebcafdddad9dae4609f314b2cb9de2bf48b5c6b00af1effe4051c"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/jobs/summary.json": {
+      "bytes": 75593,
+      "sha256": "be4a68967a01d49d6d6a1d869a9f3b77f187308337af322447ef0e3c18e09b72"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/output.log": {
+      "bytes": 226,
+      "sha256": "1da6b0908a5d46a41babf83d433cceee9a502a75e40f16e22b3ab48f2618da76"
+    },
+    "evidence/logs/striped-frame-probe-confirm-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "cb166686adf2e4dd4f87e91857295e46ffa64bf7499e9cb452cade3cbef2b9a1"
+    },
+    "evidence/source/archive_striped_frame_probe.py": {
+      "bytes": 1385,
+      "sha256": "f52c73a48820003bc42410bdd1145e2ebf9f7be19a1bd743517f49598d0a6c64"
+    },
+    "evidence/source/frame_preprocessing_striped.py": {
+      "bytes": 3492,
+      "sha256": "70c506c27338502a0f09c0ff16c6a1349365648302e50a8e9f193b67a8c1cba9"
+    },
+    "evidence/source/launch_striped_frame_probe.py": {
+      "bytes": 583,
+      "sha256": "42faaa8e4e17b72f70cfcc2c840457ae4f999c091a66bf141759c63580ed890e"
+    },
+    "evidence/source/run_striped_frame_probe.py": {
+      "bytes": 1080,
+      "sha256": "3281012bbfb015eceac0ea62d69212cd2fa6fffd70d9067e78cc046873f5b2bf"
+    },
+    "evidence/source/test_striped_frame_preprocessing.py": {
+      "bytes": 917,
+      "sha256": "7b8114ef74cebcafdddad9dae4609f314b2cb9de2bf48b5c6b00af1effe4051c"
+    },
+    "evidence/source/verify_striped_frame_probe.py": {
+      "bytes": 3431,
+      "sha256": "a3059893d48a0defaec6cfb40b6fa6d120670ccff04c463649a74635d0467a16"
+    }
+  }
+}
