@@ -1,0 +1,186 @@
+{
+  "files": {
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/background_service_checks.json": {
+      "bytes": 7100,
+      "sha256": "7f8df54f6cccaec7ce56930bb4da94118fda0bf91bad807f1475559c8b5e2618"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "4c8b0cbb1bf1945563a361ada49cea5de5ff1018dce3bfa9a0803934830c41c9"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs.executed.py": {
+      "bytes": 3687,
+      "sha256": "1e99772bf125fc8dd30a18b696eddd13da5f6f7deb411c43b15148815e66137a"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/MPSCommandBuffer.h": {
+      "bytes": 13482,
+      "sha256": "4f6a563148509ab3987aab4c09d8998eb814212938d3a436bba2f9be8d83c14a"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/MPSCoreTypes.h": {
+      "bytes": 25512,
+      "sha256": "20b2f712c77dfaacec665b1070470373f873b1c1f3206a6f930c7ace8ab2dcf2"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/MPSGraph.h": {
+      "bytes": 21593,
+      "sha256": "45e2e964841078426524210f1458e98a46cafbb1ea10394137bb3a90c1fbe154"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/background_service_checks.json": {
+      "bytes": 9466,
+      "sha256": "4e313ebf1f3b3c34035ccde587141cbcc772e32cec63e1e2502004cd66e0fe1c"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/compile-monitor.json": {
+      "bytes": 465,
+      "sha256": "a9d949e66c83bfcf08988e0c09de9662dc5a0ac7d4abea75f8867724de0761c7"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/compile.log": {
+      "bytes": 1668,
+      "sha256": "9ce68ef2179904317c5d78b3bbc0f55710fd0247937b80caeea12db444b75e57"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/metadata.json": {
+      "bytes": 5151,
+      "sha256": "a19d1a2e11adb88ab38b36241cc74273bc4336c6fd65756948f0f1e500fddfb4"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/metal_context.h": {
+      "bytes": 11768,
+      "sha256": "6ec2972a9f8cdd3aeda45e12285c5e199187a7373346043dce0ab29942a23df5"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/metal_context.mm": {
+      "bytes": 198623,
+      "sha256": "8eefbc1e4ce2176284fdfebde71691a454b83ac6558db867e07053a8fce9d2f7"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/mlp_command_buffer_primitive.cpp": {
+      "bytes": 7488,
+      "sha256": "033560bd1bf725c7b71e57fee14af5d3a662430092eb37dbdecb01cd7f9993e1"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/mlp_prefill_graph_impl.h": {
+      "bytes": 7230,
+      "sha256": "1d151c81e7707186c284c26be5c10e95350d1ec225ed6d3b5057e7e1dc70e754"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/primitive-monitor.json": {
+      "bytes": 158,
+      "sha256": "a99ed0c38b04447710eef79f60c11a9c7e7cd135c8c53ca2e44546cb5e6de96c"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/primitive.log": {
+      "bytes": 172,
+      "sha256": "305b11aad291da87f0ac3387ebbb117cc8a1e4fb1b4f56550f1d3a96e7487a9c"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/body_shape_shader.h": {
+      "bytes": 4910,
+      "sha256": "d5053a0b10a3ce0a08e1dce6591066abf6da291e9152518a4f75555838582b34"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/coalesced_body_block_shader.h": {
+      "bytes": 2406,
+      "sha256": "d9220433e36f81c46f35a72fa1f88f55ac3bc9f1bc3f07b62e39f12972c319fa"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/compiled_graph.h": {
+      "bytes": 4845,
+      "sha256": "26a1a34264d02e8ec0053f601b2d8bae2b4a91da65d3cb4977618d11fada7ce6"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/decoder_session.h": {
+      "bytes": 8533,
+      "sha256": "d6638d9478f70f241507a8c6e03bd92396389c8d60fe58114e4f059754d3b23b"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/exact_half_codec.h": {
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/fused_head_argmax_shader.h": {
+      "bytes": 4605,
+      "sha256": "04fd51053519882b5cc6d2d0a8df22c99d9fe3e0dcb9c4cb6130a23223b3b34d"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/interleaved_bf16_body_shader.h": {
+      "bytes": 2198,
+      "sha256": "65ca4710cd576e1fddce73adb3bd0922721a8702bf1949bb9fd68329a71a5ecd"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/metal_context.h": {
+      "bytes": 11768,
+      "sha256": "6ec2972a9f8cdd3aeda45e12285c5e199187a7373346043dce0ab29942a23df5"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 197416,
+      "sha256": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/mlp_prefill_graph_impl.h": {
+      "bytes": 7456,
+      "sha256": "4c886a0288aab0e4d58f64738a853640e32e52cd2d99c3ccd5f1d3989ab24519"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/parallel_vision_context_shader.h": {
+      "bytes": 2183,
+      "sha256": "4b126294e70f0aabcf3dd574ea555be15fa4b9e18504bdbed62e57aef9ab73cf"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/screened_head_index.h": {
+      "bytes": 2066,
+      "sha256": "3eb62e8c510ca49ac718ec510b36c7dec017b91d03ec9c4816de48e167e3726a"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/screened_head_native_impl.h": {
+      "bytes": 9090,
+      "sha256": "6ba7906bb0560d6113c3b2deeb9c1d2f92ddedc03527a109cf5800ce8990c1e2"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/screened_head_shader.h": {
+      "bytes": 6054,
+      "sha256": "5f827261980ca1af04734eb74aa2fdba6d78b9fe05bee925038b7bd66b5df689"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/src/backends/metal/serial_vision_prefetch_shader.h": {
+      "bytes": 2133,
+      "sha256": "7acb585b296ebc22bcbe10c8a1df189e3c4f474551fe21f88c034c71e5893526"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12897,
+      "sha256": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/test2026/metal/make_mlp_bf16_feed_graph.py": {
+      "bytes": 1949,
+      "sha256": "2c3ce6bfbd0506d36e939c34a4a3cdb47ccdd92735845c44e60e2e0ebf7bc385"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/test2026/metal/make_mlp_command_buffer_context.py": {
+      "bytes": 8627,
+      "sha256": "2dbff46da5643ea3924505ac10ce9901e0aa21b0d0fa74633afcf89bc142d5d9"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/test2026/metal/mlp_prefill_graph_test.cpp": {
+      "bytes": 4872,
+      "sha256": "c9c8a9ad67c903c6d9ed94ad02b3ccede1af0c61aaaf07dd008de8b8ca606984"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/test2026/metal/run_mlp_bf16_feed_primitive.py": {
+      "bytes": 1842,
+      "sha256": "d0455339b9a03147841d43d6b3b8d90d655edee9008469be984e3e7f2ea02ddc"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/source-snapshot/test2026/metal/run_mlp_command_buffer_primitive.py": {
+      "bytes": 3417,
+      "sha256": "e0a31bd1f565a852a850d2bcf6d57d250f00c1a7ffb7ec937b7dc3d3dbbfe482"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/jobs/statuses.json": {
+      "bytes": 2071,
+      "sha256": "2dd39b1659b002325200abdc27b1ece42575c327bde335a6f5b0f4d880aac162"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/output.log": {
+      "bytes": 177,
+      "sha256": "c53f26d7142e78a86299580c12e729d5a4dafca6fdbb57f886a9a186326ab22f"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "0fb3d3ebb6dae7133fa13e3625512bebaec00ac1e7afeb16c87f8e090ddcbb21"
+    },
+    "evidence/logs/mlp-bf16-feed-primitive-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  "omitted": {
+    "logs/mlp-bf16-feed-primitive-20261015/jobs/mlp_bf16_feed_gpu": {
+      "bytes": 286880,
+      "sha256": "2f737720a2328424d9fd47531c3ada7e2c1bffa713318cc5a54d5c2edd74888a"
+    }
+  },
+  "jobs": {
+    "mlp-bf16-feed-primitive-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 11.376850041560829
+    }
+  },
+  "scope": "BF16-storage/FP32-cast private primitive; preserves terminal failures too. No trained inference or speed claim.",
+  "full_goal_met": false
+}

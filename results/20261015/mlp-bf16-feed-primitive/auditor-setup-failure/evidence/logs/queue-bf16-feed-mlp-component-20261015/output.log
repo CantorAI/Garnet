@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/queue_bf16_feed_mlp_component.py", line 32, in <module>
+    assert status['exit_code']==0 and status['state']=='native_and_bf16_primitive_audited'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

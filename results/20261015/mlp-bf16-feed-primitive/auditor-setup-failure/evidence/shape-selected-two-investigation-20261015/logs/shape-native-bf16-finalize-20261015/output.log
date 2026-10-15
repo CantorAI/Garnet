@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_shape_native_and_probe.py", line 65, in <module>
+    freeze_audit('bf16',parent,archive,'archive_mlp_bf16_feed_primitive.py','verify_mlp_bf16_feed_primitive.py',parent/'mlp-bf16-feed-primitive-verification.json')
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_shape_native_and_probe.py", line 38, in freeze_audit
+    run(label+'-audit',command)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_shape_native_and_probe.py", line 30, in run
+    (out/'commands.json').write_text(json.dumps(commands,indent=2));assert result.returncode==0,(label,result.returncode)
+                                                                           ^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('bf16-audit', 1)

@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T22:43:08.747370+00:00
+Generated UTC: 2026-10-15T22:52:51.087463+00:00
 
-Base HEAD at generation: `f96dc99d371db5703ab3db3f4fb6f11dae859a6e`. Reports indexed: **153**.
+Base HEAD at generation: `d57944029be51a86f00f4cceb44cf45f14b07d37`. Reports indexed: **153**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -114,7 +114,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/interleaved-screen-index](../../../results/20261015/interleaved-screen-index/README.md) | Lossless four-column screening index: repeated component gain |
 | [results/20261015/joint-state-zero](../../../results/20261015/joint-state-zero/README.md) | Reset and dependent GPU read in one command buffer: repeated component signal |
 | [results/20261015/mixed-accumulator](../../../results/20261015/mixed-accumulator/README.md) | Apple M4 mixed-input FP32 accumulator capability |
-| [results/20261015/mlp-bf16-feed-primitive](../../../results/20261015/mlp-bf16-feed-primitive/README.md) | BF16 graph feeds with exact FP32 casts: prepared, execution gated |
+| [results/20261015/mlp-bf16-feed-primitive](../../../results/20261015/mlp-bf16-feed-primitive/README.md) | BF16 graph feeds: primitive passed; trained performance rejected |
 | [results/20261015/mlp-command-buffer-native](../../../results/20261015/mlp-command-buffer-native/README.md) | Command-buffer MLP: full validation passed; native integration rejected |
 | [results/20261015/mlp-command-buffer-primitive](../../../results/20261015/mlp-command-buffer-primitive/README.md) | MLP graph command-buffer encoding: 64-case private safety probe passed |
 | [results/20261015/mlp-prefill-native](../../../results/20261015/mlp-prefill-native/README.md) | Native dependent MLP graph: correct outputs, rejected for latency and memory |
@@ -135,7 +135,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/screened-seed-sweep](../../../results/20261015/screened-seed-sweep/README.md) | Exact screened-head seed-width exploration |
 | [results/20261015/serial-vision-context](../../../results/20261015/serial-vision-context/README.md) | Original-order vision context prefetch |
 | [results/20261015/serial-vision-native](../../../results/20261015/serial-vision-native/README.md) | Repeated native inference with original-order vision prefetch |
-| [results/20261015/shape-selected-two-native](../../../results/20261015/shape-selected-two-native/README.md) | Shape-selected two-output native integration: validated; model comparison running |
+| [results/20261015/shape-selected-two-native](../../../results/20261015/shape-selected-two-native/README.md) | Shape-selected two-output native integration: correct, rejected for promotion |
 | [results/20261015/shape-specialized-bf16](../../../results/20261015/shape-specialized-bf16/README.md) | Full-shape BF16 decode specialization: head regressions, mixed body gains |
 | [results/20261015/small-body-threshold](../../../results/20261015/small-body-threshold/README.md) | Smaller lossless body admission: rejected after confirmation |
 | [results/20261015/small-seed-native](../../../results/20261015/small-seed-native/README.md) | Native exact seed 1024 versus 8192: small mixed gains |

@@ -95,6 +95,31 @@ def main():
                 f"{(rss['candidate']-rss['control'])/2**30:.3f}"]
             assert [c.strip() for c in cells[2:]]==formatted
             native_numbers+=6
+    selected_native_numbers=0
+    p=ROOT/'results/20261015/shape-selected-two-native'
+    selected=json.loads((p/'comparison/verification.json').read_text())['profiles']
+    decision=json.loads((p/'decision-analysis.json').read_text())['profiles']
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==len(selected)==len(decision)==6
+    for cells,r,d in zip(rows,selected,decision):
+        assert cells[0].strip()==r['model']==d['model'] and int(cells[1])==r['batch']==d['batch']
+        assert int(cells[2])==d['selected_dispatches_per_decode_step']
+        m=r['means'];formatted=[
+            ' / '.join(f"{m[k]['decode_tps']:.4f}" for k in ('control','candidate')),
+            ' / '.join(f"{m[k]['ttft_ms']:.4f}" for k in ('control','candidate')),
+            f"{r['decode_ratio']:.6f}",f"{r['ttft_fraction']:.6f}"]
+        assert [c.strip() for c in cells[3:]]==formatted
+        selected_native_numbers+=7
+    p=ROOT/'results/20261015/mlp-bf16-feed-primitive'
+    bf16=json.loads((p/'component/verification.json').read_text())['profiles']
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==len(bf16)==6
+    bf16_numbers=0
+    for cells,r in zip(rows,bf16):
+        assert cells[0].strip()==r['model'] and int(cells[1])==r['batch']
+        assert cells[2].strip()=={1:'placeholder',2:'constant'}[r['policy']]
+        assert [c.strip() for c in cells[3:]]==[f"{v:.6f}" for v in (r['wall_ms']['control'],r['wall_ms']['candidate'],r['wall_fraction'])]
+        bf16_numbers+=3
     p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
@@ -110,7 +135,9 @@ def main():
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
-                  component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,phase_table_values_checked=phase_numbers,status='passed',
+                  component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,
+                  selected_native_table_values_checked=selected_native_numbers,bf16_component_table_values_checked=bf16_numbers,
+                  phase_table_values_checked=phase_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

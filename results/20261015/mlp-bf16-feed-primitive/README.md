@@ -1,4 +1,4 @@
-# BF16 graph feeds with exact FP32 casts: prepared, execution gated
+# BF16 graph feeds: primitive passed; trained performance rejected
 
 Hypothesis: feeding original BF16 buffers to MPSGraph may avoid the retained
 expanded FP32 weight cache used by the rejected command-buffer MLP trial.
@@ -29,9 +29,9 @@ writers, alias rejection, uninitialized input, counter reset and abort recovery
 remain mandatory. The auditor regenerates every private source from its
 archived original and checks both storage and arithmetic dtype paths.
 
-Local transformation and expanded-driver/auditor syntax checks passed. No Mac
-compile, runtime execution, trained-model numerical pass, memory reduction or
-speed gain is claimed. The earlier [cast-half projection experiment](../mpsgraph-prefill/README.md)
+Launch-time protocol: local transformation and expanded-driver/auditor syntax
+checks passed; Mac execution and performance were then unproven. Actual
+terminal outcomes and their limitations are recorded below. The earlier [cast-half projection experiment](../mpsgraph-prefill/README.md)
 was slower; this BF16-storage dependent graph is a distinct test and must earn
 its own evidence. The [FP32-cache command-buffer integration](../mlp-command-buffer-native/README.md)
 stays rejected regardless of this probe's future result.
@@ -77,8 +77,8 @@ include one synchronous graph call per MLP, with setup/first costs separate.
 These component times cannot establish model TTFT, memory savings or a vLLM
 ratio, even if a storage policy improves them.
 
-Local source generation and expanded driver/auditor syntax checks passed.
-No Mac compilation or execution is claimed. Exact queue PID60730 observes
+Launch-time status: local generation and expanded driver/auditor syntax
+checks passed; Mac execution was then unproven. Exact queue PID60730 observes
 controller53701 and requires its audited completion before launch, then waits
 for the actual returned component handle and freezes/audits the outcome.
 
@@ -89,3 +89,60 @@ python3 launch_bf16_feed_mlp_component.py ROOT ROOT/logs/bf16-feed-mlp-component
 python3 archive_bf16_feed_mlp_component.py ROOT ARCHIVE
 python -X utf8 test2026/metal/verify_bf16_feed_mlp_component.py AUDIT AUDIT_RESULT
 ```
+
+## Actual primitive, setup failure and repair — 2026-10-15
+
+Primitive PID72603 exited0 in11.376850s. Both Mac and Windows audits pass
+all64 original plus64 dependent two-graph cases, retained original comparison
+bounds, producers/consumers, ownership/abort semantics and exact generated
+BF16-storage/FP32-cast source. The42-file runtime archive SHA256 is
+`914fce255ea3d8b17e2ed4e7034ced808b57438df03a5904b33c1cf556573f1b`.
+[Primitive audit](primitive/verification.json).
+
+The first follow-on audit failed before checking data because its base helper
+verify_mlp_command_buffer_primitive.py had not been copied to the Mac. Controller
+53701 exited1 in state auditing_bf16_primitive; queue60730 exited1 without
+launching trained work. Both runtime jobs were already terminal and archived.
+The17-file controller/setup failure archive SHA256 is
+`2ee0de408886677b70e100098e167d412b504381bc08c4fdf5d9e696372b40b8`.
+[Original failure bytes](auditor-setup-failure/archive-verification.json),
+[repair provenance](manual-auditor-repair.json).
+
+Only the missing base helper was added. Three trained-auditor dependencies
+were synchronized with byte-identical copies already present in the frozen
+native tool snapshot. The primitive audit then passed against its original
+archive. No GPU runtime, learned value, source transformation or numerical
+predicate changed, and the primitive was not rerun. CPU-only expanded-runner
+generation/compilation preflight also passed before the trained launch.
+
+## Actual trained component: reject promotion
+
+After all archive transfers completed, direct component PID73088 exited0 in
+39.209634s. The38-file archive SHA256 is
+`bec11fdac713dd8149993c0912b540a6f59c57008d77b46dc6ad81c1288bf361`.
+Both Mac and Windows audits verify all48 original numerical records,12 first
+graph calls and384 timed executions across six admitted profiles. Twelve
+complete learned tensor casts reproduce44,531,712 original FP32 value bits
+exactly. [Full audit and rejected numerical records](component/verification.json),
+[cast coverage and decision](component-decision.json).
+
+Six model/batch/policy profiles fail the unchanged stage-rounded reference
+envelope on pattern1 in both the native control and graph candidate: text B1,
+text B2 and coder B2, each at both storage policies. All48 candidate/native
+comparisons pass their original envelope. The six failed profiles have no
+timing windows; no coefficient or input is adjusted to obtain admission.
+
+| Model | Batch | Weight policy | Native wall ms | Graph wall ms | Graph/native wall fraction |
+|---|---:|---|---:|---:|---:|
+| Qwen2.5-Coder-0.5B-Instruct | 1 | placeholder | 1.324849 | 2.096150 | 1.582180 |
+| Qwen2.5-Coder-0.5B-Instruct | 1 | constant | 1.251577 | 2.069986 | 1.653902 |
+| Qwen3.5-0.8B | 1 | placeholder | 3.439736 | 4.356909 | 1.266641 |
+| Qwen3.5-0.8B | 1 | constant | 4.304856 | 5.576172 | 1.295321 |
+| Qwen3.5-0.8B | 2 | placeholder | 4.942412 | 6.103254 | 1.234874 |
+| Qwen3.5-0.8B | 2 | constant | 5.160979 | 6.597787 | 1.278398 |
+
+Every admitted policy is slower:~23.5–65.4% higher wall time. Reject this
+tested BF16-fed graph for performance integration. Exact learned-value casts
+and primitive compatibility do not establish a model or memory saving. No
+full-model BF16 graph benchmark, fresh vLLM ratio or hardware-cold result is
+claimed. Retain the existing native prefill and serving build; full goal unmet.

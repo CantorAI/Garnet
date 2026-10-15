@@ -719,6 +719,43 @@ is incomplete and no new speed/TTFT/vLLM ratio is claimed. Controllers53701
 and60730 continue to wait in sequence; BF16 GPU work has not started.
 [Identities, protocol and scope](../../results/20261015/shape-selected-two-native/README.md).
 
+### 2026-10-15 — selected-shape full-model cohort passed; promotion rejected
+
+Native PID68805 exited0 in192.245289s. Mac and Windows audits pass the5,094-file
+f18be819... archive,72 complete outputs,1,199 serving and980 external-driver
+identities, fresh full28 validation and actual routes. None of the three
+active selected-kernel workloads improves both decode and warm TTFT. Coder B2
+decode regresses~1.7%, VL B2~1.5%; VL B1 gains~0.8% decode with~4.5% worse
+TTFT. Text/coder B1 execute zero selected kernels; their positive observations
+cannot establish benefit from executing this kernel. Reject promotion, retain
+c186, and leave the repeated matched chart unchanged. No fresh vLLM ratio.
+[All profiles, raw evidence and route-aware decision](../../results/20261015/shape-selected-two-native/README.md).
+
+### 2026-10-15 — BF16-feed primitive passed; missing-auditor setup failure repaired
+
+Primitive PID72603 exited0 in11.376850s;42-file archive914fce25... passes
+all64 original plus64 dependent-chain cases on Mac and Windows. Controller53701
+failed before audit because a base verifier had not been copied; queue60730
+stopped without trained execution. Preserve the17-file setup failure2ee0de40...
+before interpretation. Add the missing helper after terminal runtime archival;
+three other dependencies match their prior frozen hashes exactly. Re-audit
+the same primitive without rerunning it or changing a numerical predicate.
+CPU-only expanded-runner preflight passes before direct trained launch73088.
+[Failure, repair identities and primitive proof](../../results/20261015/mlp-bf16-feed-primitive/README.md).
+
+### 2026-10-15 — trained BF16-feed graph slower; rejected
+
+Direct PID73088 exited0 in39.209634s;38-file archivebec11fda... is independently
+audited on Mac and Windows. All12 complete learned tensor casts reproduce
+44,531,712 FP32 values bit exactly. There are48 numerical records and12 first
+graph calls. Six profiles fail the original stage-rounded reference in BOTH
+native and candidate and remain excluded; every candidate/native comparison
+passes. The six admitted profiles execute384 timed samples and ALL regress
+wall time by~23.5–65.4%. Reject integration; no complete-model or memory saving
+claim, no new vLLM ratio, no favorable-repeat search. The full goal remains
+active and unmet, and existing native prefill/defaults remain selected.
+[Exact timing table, rejected records and cast coverage](../../results/20261015/mlp-bf16-feed-primitive/README.md#actual-trained-component-reject-promotion).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
