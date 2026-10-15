@@ -1,0 +1,2424 @@
+{
+  "files": {
+    "evidence/logs/screened-head-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "4af497bdcc4a3f4d11e05ee604981888d3b6bffc1bd63f10c3aae8027ae1beff"
+    },
+    "evidence/logs/screened-head-20261015/output.log": {
+      "bytes": 363,
+      "sha256": "d5cf89f53e3a2d86096363636ad25d869067662a201f615a85b2ed6519092426"
+    },
+    "evidence/logs/screened-head-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "c7fb97ac4aaae96ddec2d699def15b5adb892eeb992151302240381a9cf7038d"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/background_service_checks.json": {
+      "bytes": 7099,
+      "sha256": "231daae9360fda9fd95a42f4069bb551b8ecf2bdfafbd3d82b5327b0897cdc66"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "6267e7fced0fc172583a1e122e88ea5d577081ebef569d0c6ece1e72d35b2be5"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json": {
+      "bytes": 6514,
+      "sha256": "d9a8e3c0307279ec812a6f732247556effad058276109fa570263bd37bc1a7ba"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 1073,
+      "sha256": "aff8c3573faec577323cc7c9c6f440af56ffd5a752fe76a1438a9bec0907ad76"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 60573,
+      "sha256": "c01a8a526f02bd7f52ce472c3380ea96889fa70ae18a99ca99fe948a8d88b207"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-prepare-monitor.json": {
+      "bytes": 464,
+      "sha256": "a0e466cd64cee3ef3387b4b0e05f7860072338a3c53a9c887be82b7fa5a18228"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-prepare.log": {
+      "bytes": 169,
+      "sha256": "b88f9059f90f161c97980664d8016f50b6cdaadc42df277b3784565131aaa961"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/manifest.json": {
+      "bytes": 6506,
+      "sha256": "9a87fc6fae588b02fe17fc0e82284b9d92f53a7958946e7e649b66b3db5e2941"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 1145,
+      "sha256": "714f4104209a866d432bb262c1dc58d2281cf21ab9914e8ec0382a14baa3a9ab"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 60541,
+      "sha256": "66550a67a5405ac11b9591e01086084ca379833b7fe16d66247b8dfc5572884e"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-prepare-monitor.json": {
+      "bytes": 616,
+      "sha256": "308889d1761dc327835b3ee400a5393fe6484ecc1757a78e53d6edfa3dfa95ee"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-prepare.log": {
+      "bytes": 154,
+      "sha256": "fd2ae1bc19e10546ab903377d5d474b814102e96ea60e6b7e213cd5cab7fd2cf"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/manifest.json": {
+      "bytes": 6507,
+      "sha256": "30c26016a2ec649d3372452c419bc5c65558891833fb8d815762e2fdd2556c7c"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 1458,
+      "sha256": "e358b9224308af009f8fa72df5edea07469d4e37505876c2a22d5d8acadf66ff"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 60559,
+      "sha256": "b4c18ba506f8a974d53c2351a072bf5842e4eccb12128cbcc74d4c33d77c1cd2"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-prepare-monitor.json": {
+      "bytes": 843,
+      "sha256": "af926e7e8039edc2965e0a074883b7841cfe43715c746dc26e29a29695414b97"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-prepare.log": {
+      "bytes": 156,
+      "sha256": "809b7947dde6759ad5b5a462bd07ee059ff746bce5adcf0c818b7024ee2348f5"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/background_service_checks.json": {
+      "bytes": 70167,
+      "sha256": "749112b7953977dd3fff91d66375995dcf1c851a06b3eae4241ed2eb07985c9e"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/compile-monitor.json": {
+      "bytes": 157,
+      "sha256": "9f6a82993121f4680cc4963fc4442e652117065b0633e5edac339e7396309826"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/metadata.json": {
+      "bytes": 24417,
+      "sha256": "dbe0b10b125eee4c524c0bc724bd1d709b37f1c0aa04aea9866275798755b018"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/screened-head.metal": {
+      "bytes": 10444,
+      "sha256": "699c6f58b089d27a2bd948b9e40ceaf8fa59e5ffbb73300b73dcd23bf5d7ea5e"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/screened_head_gpu.mm": {
+      "bytes": 10956,
+      "sha256": "35e3b81a0a13648678bf7bbc6c5889725352585a72ef45ce352a79743ca2d46d"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 185088,
+      "sha256": "c7a69cf614faa46f546ccb37aa8a37f2fe192fa04e66731d9449136ef1296b8b"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/source-snapshot/test2026/metal/make_screened_head_harness.py": {
+      "bytes": 2214,
+      "sha256": "323e5b4830ef8768bd4c70f3cbfa01b5c0aa4322fa4b73f5adc325f17a6d92f2"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/source-snapshot/test2026/metal/prepare_screened_head.py": {
+      "bytes": 3438,
+      "sha256": "f50d2f23e41ca17c0bcd8457a6dd603e39795684ad346b7066e4be1a7c4eef6e"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/source-snapshot/test2026/metal/pruned_head_gpu.mm": {
+      "bytes": 10108,
+      "sha256": "d1a19781ff033eaee651213ddd076bdfd8e1ecf313e870152c7f4d1ab786ae9f"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/source-snapshot/test2026/metal/run_screened_head.py": {
+      "bytes": 4864,
+      "sha256": "bef6db3856868f04d44375ac387b515fd194a8a468df16f77e16555ee67ef399"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/source-snapshot/test2026/metal/screened_head.metal": {
+      "bytes": 4986,
+      "sha256": "6763a6150e7e87acc079a605c4f2eca3c56295349aa146f03b27bf56ad9bfa03"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/statuses.json": {
+      "bytes": 3079,
+      "sha256": "0545365eb0ed33689280285c208bcdf729613ff71a165a5d0cdd1ba27ae6a278"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/jobs/summary.json": {
+      "bytes": 35364,
+      "sha256": "c5f2248d01958475e53c2cf59f16d1bbf56fa03891b64413144337bc02c2a29e"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/output.log": {
+      "bytes": 262,
+      "sha256": "3391c21c2d658eaed626b7b8564232117f2e178cdab35f77c85bf1a84ec6b5b4"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "2bf17d88261c5cd22b3aa32090f61727505e5c25e74a08179ee3f61d2a2d8b70"
+    },
+    "evidence/logs/screened-head-after-vision-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "evidence/logs/screened-head-confirm-20261015/background_service_checks.json": {
+      "bytes": 7096,
+      "sha256": "e5ea8df92455d05edacdb07ac193982b3cc089724828bc36e308e5b919cfc693"
+    },
+    "evidence/logs/screened-head-confirm-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "6e89b816324cdc540eb326634d6233681c7e95f532de5f516356439ebcebf940"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json": {
+      "bytes": 6514,
+      "sha256": "d9a8e3c0307279ec812a6f732247556effad058276109fa570263bd37bc1a7ba"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/reuse.json": {
+      "bytes": 186,
+      "sha256": "de10ad24583d8890fab2fe622c73d963519a6ebded991bab91000f66123f792d"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 996,
+      "sha256": "4a99768d6e57ba226878b25e76abcd4fc284cd12219164fe1ea2819d8833b029"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 60569,
+      "sha256": "c92f1960b6b606d179dd75425b89cd48596b6b5d379d57ee6c6f73a69f84b2e3"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/manifest.json": {
+      "bytes": 6506,
+      "sha256": "9a87fc6fae588b02fe17fc0e82284b9d92f53a7958946e7e649b66b3db5e2941"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/reuse.json": {
+      "bytes": 169,
+      "sha256": "65fc606ba5bf063ca45856203cb16d1c4f0ccc2dd2e6c998bbff5e08261c90ac"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 1143,
+      "sha256": "d0b0c1979778ebb1b5fb3b02e2469c429521e10ef9965ddbc3a16ba70a4797d9"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 60578,
+      "sha256": "8b823c3d8cb28a01972af1950edcae557fca4e754c9f6b86a0182c8786b1b140"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/manifest.json": {
+      "bytes": 6507,
+      "sha256": "30c26016a2ec649d3372452c419bc5c65558891833fb8d815762e2fdd2556c7c"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/reuse.json": {
+      "bytes": 171,
+      "sha256": "eb3904fc20ea3421103086ac97e8afcdb64473a14499235dc21490d8ea0fb686"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 1453,
+      "sha256": "f9908211199692b82a1d5d752adff5eed71916b1162645b6209e65187def8d32"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 60564,
+      "sha256": "cc422e119b6ef02d3ce351cad60d078b2b1cb84d33bde75be8c07e3f249ee965"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/background_service_checks.json": {
+      "bytes": 44947,
+      "sha256": "7ad72d7fa579ed6306c6be73463bc7d75d05141563694b04721ebed6db8648e7"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/compile-monitor.json": {
+      "bytes": 158,
+      "sha256": "85a43fb3b8e82413fd307672e26f45e110c2f55cad5dcdfeee4bc3a63f1a1cae"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/metadata.json": {
+      "bytes": 24535,
+      "sha256": "27c5028e8e3e75dd74f9b013bb0efc1a12c8374c97aad098ee230dfda553719b"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/screened-head.metal": {
+      "bytes": 10444,
+      "sha256": "699c6f58b089d27a2bd948b9e40ceaf8fa59e5ffbb73300b73dcd23bf5d7ea5e"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/screened_head_gpu.mm": {
+      "bytes": 10956,
+      "sha256": "35e3b81a0a13648678bf7bbc6c5889725352585a72ef45ce352a79743ca2d46d"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 185088,
+      "sha256": "c7a69cf614faa46f546ccb37aa8a37f2fe192fa04e66731d9449136ef1296b8b"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/test2026/metal/make_screened_head_harness.py": {
+      "bytes": 2214,
+      "sha256": "323e5b4830ef8768bd4c70f3cbfa01b5c0aa4322fa4b73f5adc325f17a6d92f2"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/test2026/metal/prepare_screened_head.py": {
+      "bytes": 3438,
+      "sha256": "f50d2f23e41ca17c0bcd8457a6dd603e39795684ad346b7066e4be1a7c4eef6e"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/test2026/metal/pruned_head_gpu.mm": {
+      "bytes": 10108,
+      "sha256": "d1a19781ff033eaee651213ddd076bdfd8e1ecf313e870152c7f4d1ab786ae9f"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/test2026/metal/run_screened_head.py": {
+      "bytes": 4864,
+      "sha256": "bef6db3856868f04d44375ac387b515fd194a8a468df16f77e16555ee67ef399"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/test2026/metal/run_screened_head_repeat.py": {
+      "bytes": 1234,
+      "sha256": "06852b4c29fbe84526affc3a37c01659893f1cb09fb1ef5d243166d20697f35e"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/source-snapshot/test2026/metal/screened_head.metal": {
+      "bytes": 4986,
+      "sha256": "6763a6150e7e87acc079a605c4f2eca3c56295349aa146f03b27bf56ad9bfa03"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/statuses.json": {
+      "bytes": 1725,
+      "sha256": "d9fa91bffb5569de1312ee7ddeb60a71db1115c3712ee50c87a09d1793ac6139"
+    },
+    "evidence/logs/screened-head-confirm-20261015/jobs/summary.json": {
+      "bytes": 35361,
+      "sha256": "91bbac5f35da89e20c6eeae046d75368820c77810cda3d671cc495c5fd8322c7"
+    },
+    "evidence/logs/screened-head-confirm-20261015/output.log": {
+      "bytes": 262,
+      "sha256": "3391c21c2d658eaed626b7b8564232117f2e178cdab35f77c85bf1a84ec6b5b4"
+    },
+    "evidence/logs/screened-head-confirm-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "8dc8db1f619f4c2e03bc6e6c054b8eda85a5999bda6db94e7fc84eb1e712bd5f"
+    },
+    "evidence/logs/screened-head-confirm-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "evidence/logs/screened-head-int4-20261015/command.json": {
+      "bytes": 287,
+      "sha256": "25c5d50db9dc935753310b292c4254db4b422e8d01b1ed641920584594e2c4a4"
+    },
+    "evidence/logs/screened-head-int4-20261015/dependency.json": {
+      "bytes": 77,
+      "sha256": "1d1b7313611caa766aa5f20accbfc6682d037a9a08f5a32c173a6708e9f7e159"
+    },
+    "evidence/logs/screened-head-int4-20261015/exit.json": {
+      "bytes": 50,
+      "sha256": "f6168f243b9f9d80b06e632b91a2a86f465b36e759682655a4fa6657999e0d97"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json": {
+      "bytes": 6513,
+      "sha256": "a0d698ffac2049151225181ad4b9cb74bcb25f3d4d10b1a6fabc00eb786b1dce"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 1066,
+      "sha256": "055a61258f5b11710bdeca57f9555a69bc30997cde924748f93debc60cbae846"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 60545,
+      "sha256": "53db096f4180887a171be9a0543742bfd6fea416e5bcb3ab404bb91d3ad6e5bc"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-prepare-monitor.json": {
+      "bytes": 465,
+      "sha256": "a1fe9eb0c4b3324091994eac1e2faeb4af018f9ab149f83f61d30b262e651ba5"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-prepare.log": {
+      "bytes": 167,
+      "sha256": "877b5ac748eed8e898d9c76df637034457c7acf26cc7e25323fb293ab4a23677"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/manifest.json": {
+      "bytes": 6501,
+      "sha256": "65cfafc68d95bbb76c54dd327b8dc5d31781d59759ab5fefb395b747726a2798"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 1223,
+      "sha256": "9206cbdf0b676ce4a5533c57478145505d4fe51fb82cc9eef082add522575b3a"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 60599,
+      "sha256": "22cff1d7d950438b9c0b0c16d204177e8549763cf51e19541e522ac9e00197b9"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-prepare-monitor.json": {
+      "bytes": 539,
+      "sha256": "b51ff1b65fa1186f078754a31352033e5972dfaaa07fb88718e556ee53953ed9"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-prepare.log": {
+      "bytes": 148,
+      "sha256": "abe11cf4b447a6d5b315175435e99d3273110d72ffa0b6aa2884bd51a3e89cd9"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/manifest.json": {
+      "bytes": 6505,
+      "sha256": "5a169b8b557cb978a4b70a11aa9ab4550bdf12bf5e06d7c2580e60e7af276efe"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 1533,
+      "sha256": "aa8742de59919e549ea2a8bf3da1b5de01ce23b7d5b2ace4f9eed3ee6fe897d1"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 60613,
+      "sha256": "46124bcad5b70c9ae5be2db86fd8a92552644cc685e6a40737731ac6e07ed9db"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-prepare-monitor.json": {
+      "bytes": 845,
+      "sha256": "06757492ae6009c0d2959f7b337eb8ce3113a9e92ab8045056c83dddd34dcbe3"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-prepare.log": {
+      "bytes": 154,
+      "sha256": "2c846de8241f6dc7c6441801d1a0751d132bb20df8cfe0b9cf9631af1bacf89b"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/background_service_checks.json": {
+      "bytes": 70970,
+      "sha256": "bd7be9be63578f44fdb7e199f113725ecd564f9bdf0f48be5e8a08ce22237016"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/compile-monitor.json": {
+      "bytes": 156,
+      "sha256": "a1b0eb755bcdd12321bb9a5ff2ab425a891a395da6144c8f0bf481689c119329"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/metadata.json": {
+      "bytes": 24745,
+      "sha256": "4b40fc3ed9da4d2ae4741990cb42edbc7ce5d9528c0eab475c85d963c4674774"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/screened-head.metal": {
+      "bytes": 10544,
+      "sha256": "3ce28e3cb1d157d8b7eaedd6645c730e7949f63b102058e8b843444b414ea433"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/screened_head_gpu.mm": {
+      "bytes": 10960,
+      "sha256": "ae4fb376d6ed4a280bdd2be338717bcd2fe67c41f15a06ec87d1a9d48ba1245e"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 185088,
+      "sha256": "c7a69cf614faa46f546ccb37aa8a37f2fe192fa04e66731d9449136ef1296b8b"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/make_screened_head_harness.py": {
+      "bytes": 2214,
+      "sha256": "323e5b4830ef8768bd4c70f3cbfa01b5c0aa4322fa4b73f5adc325f17a6d92f2"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/make_screened_head_int4.py": {
+      "bytes": 1375,
+      "sha256": "272a470532fec76149355b94f038d9a2e0fff38f4ce033bc31c8a2fbe6193b5b"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/prepare_screened_head.py": {
+      "bytes": 3438,
+      "sha256": "f50d2f23e41ca17c0bcd8457a6dd603e39795684ad346b7066e4be1a7c4eef6e"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/prepare_screened_head_int4.py": {
+      "bytes": 928,
+      "sha256": "f7f20669689220bdada29ac1478fca303b8c3d0b96fbd3bbbdbbf6fdc7472af1"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/pruned_head_gpu.mm": {
+      "bytes": 10108,
+      "sha256": "d1a19781ff033eaee651213ddd076bdfd8e1ecf313e870152c7f4d1ab786ae9f"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/run_screened_head.py": {
+      "bytes": 4864,
+      "sha256": "bef6db3856868f04d44375ac387b515fd194a8a468df16f77e16555ee67ef399"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/run_screened_head_int4.py": {
+      "bytes": 865,
+      "sha256": "59a4a9c8b0bf329331a90d0f8470a159cb21ff53ab1b095b913aea602884c129"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/source-snapshot/test2026/metal/screened_head.metal": {
+      "bytes": 4986,
+      "sha256": "6763a6150e7e87acc079a605c4f2eca3c56295349aa146f03b27bf56ad9bfa03"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/statuses.json": {
+      "bytes": 3063,
+      "sha256": "b391316ff44f939e11e0d447f3f99b0940ede75e2aaa51c7b6116291d7bab7dc"
+    },
+    "evidence/logs/screened-head-int4-20261015/jobs/summary.json": {
+      "bytes": 35340,
+      "sha256": "9ef3ae215ac5d0c02549ca0e6bd47efa14420595a18ec0dfa614097187846696"
+    },
+    "evidence/logs/screened-head-int4-20261015/output.log": {
+      "bytes": 205,
+      "sha256": "99caea99728d8ab63942f8874707e5be0610e745488e9ff88593fa6cf98af185"
+    },
+    "evidence/logs/screened-head-int4-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "000e7afb70f079881f44b70923445910a3560858eb88b36fa183b6499b0c5ad6"
+    },
+    "evidence/logs/screened-head-int6-20261015/background_service_checks.json": {
+      "bytes": 7099,
+      "sha256": "5f2a861d625f0ad18f66288663a90364f372e67a36176bed6290e372b2c70cfe"
+    },
+    "evidence/logs/screened-head-int6-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "8014045e9792c86a1f1786f2571fe7bc1e46632ef772a0652bf99fbb1684c3c0"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json": {
+      "bytes": 6514,
+      "sha256": "b6e9b7af10d09d1d6051625186678fb9fbe04d8aa29d1a307d4b7b5412ff13f2"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 1145,
+      "sha256": "d07e2eba62b6321d7627c334c64a4e366904b78c1b4ed7309b164d7999a57324"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 60656,
+      "sha256": "a64350d67589765a951c7b90049c2da174ce8587223898a2287d632c531450ca"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-prepare-monitor.json": {
+      "bytes": 538,
+      "sha256": "338fc61dc70bbbeb612cf7118ee4dec43f3c8b8b2e74536e26af3b241e2e5262"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-prepare.log": {
+      "bytes": 169,
+      "sha256": "7442302dd267958dba64331542c7eac64e53e1d0ffbba15f7110f569150eec58"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/manifest.json": {
+      "bytes": 6505,
+      "sha256": "02c96542e99d788d24ecdab38745b5cdedd8a47f5461503b78c1b546108f7666"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 1218,
+      "sha256": "27b308cea223987a99dec5cc06a7d0246185ff6edbe2426e97e6b492b8e71b9f"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 60600,
+      "sha256": "2606205d01b2c3641303fa2f52317f22f463f3f8f21111483dbc7d431f939fb9"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-prepare-monitor.json": {
+      "bytes": 690,
+      "sha256": "5011d3bc7451d6e26a5feb5b9dde80583112fefc56df6449d177c5fdfdd1ec42"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-prepare.log": {
+      "bytes": 153,
+      "sha256": "af206a3d0fad4b1a28ee470070079ec722faf832025e39020d03865f746e4dca"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/manifest.json": {
+      "bytes": 6506,
+      "sha256": "c6d6b33c875115d175f72fa861fb18512b94a3b7cc0a85b5071d0b98658ec98f"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 1608,
+      "sha256": "f1251693d8101f047c57f7c65b8a3e01a5a09d191f38419d590f0276e8a9a136"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 60613,
+      "sha256": "3c40e46208cc5f6b8f2710fae41d00eca240ac3f7a5692962a9be835a9746706"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-prepare-monitor.json": {
+      "bytes": 994,
+      "sha256": "7ef0faaea7c49aba56fae32178eaecbe7df072d88aa0454d07ab562357d9609d"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-prepare.log": {
+      "bytes": 155,
+      "sha256": "2c3b37fe27b3536ce50fecf0720308d3f864f4a9a715af3ab6e77238cc849020"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/background_service_checks.json": {
+      "bytes": 76466,
+      "sha256": "92359999858fbabc8d84cdf56cc88d6d9ce956be1999cc23e652578667c8dc4a"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/compile-monitor.json": {
+      "bytes": 158,
+      "sha256": "fb5b7debef6bf385a877c60e921710aec7649eb2290ed45fca90391a1be2be76"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/metadata.json": {
+      "bytes": 24768,
+      "sha256": "1285def5cfb2438a408785801efea873d0fc8b155ffa925f6fd0bea313d453c9"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/screened-head.metal": {
+      "bytes": 11047,
+      "sha256": "ef02346e14f4a03c5041dbdf67144edad3b0e7f165544911e2b7a1702a04ba47"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/screened_head_gpu.mm": {
+      "bytes": 12277,
+      "sha256": "4f552ec7eaa13a0bf295df117dc5e4c9193037a90abd9f8072214fd3b65d0078"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 185088,
+      "sha256": "c7a69cf614faa46f546ccb37aa8a37f2fe192fa04e66731d9449136ef1296b8b"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/make_screened_head_harness.py": {
+      "bytes": 2214,
+      "sha256": "323e5b4830ef8768bd4c70f3cbfa01b5c0aa4322fa4b73f5adc325f17a6d92f2"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/make_screened_head_int6.py": {
+      "bytes": 3299,
+      "sha256": "9325ad75c68f2b8acca97f3149a16f96a156400a9de0fa0f63eeba8d5e8b7a61"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/prepare_screened_head.py": {
+      "bytes": 3438,
+      "sha256": "f50d2f23e41ca17c0bcd8457a6dd603e39795684ad346b7066e4be1a7c4eef6e"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/prepare_screened_head_int6.py": {
+      "bytes": 1135,
+      "sha256": "760125f5c5b73de07f9806c898010f22b7e9a154550f8ff24bb6004da89203d4"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/pruned_head_gpu.mm": {
+      "bytes": 10108,
+      "sha256": "d1a19781ff033eaee651213ddd076bdfd8e1ecf313e870152c7f4d1ab786ae9f"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/run_screened_head.py": {
+      "bytes": 4864,
+      "sha256": "bef6db3856868f04d44375ac387b515fd194a8a468df16f77e16555ee67ef399"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/run_screened_head_int6.py": {
+      "bytes": 861,
+      "sha256": "3df268b3a2f889f593691932157256671ce8a3f244c3ea7a5950775e3b012250"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/source-snapshot/test2026/metal/screened_head.metal": {
+      "bytes": 4986,
+      "sha256": "6763a6150e7e87acc079a605c4f2eca3c56295349aa146f03b27bf56ad9bfa03"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/statuses.json": {
+      "bytes": 2982,
+      "sha256": "247e4fda0229280b1c1602dbf4b29a5561cade520eb21c7e74371b8e8300ab9f"
+    },
+    "evidence/logs/screened-head-int6-20261015/jobs/summary.json": {
+      "bytes": 35352,
+      "sha256": "ff521c4e093d8c7153bbbc3ebc54940c7ea94e0ce43ca143c3d3b5a17063ed0d"
+    },
+    "evidence/logs/screened-head-int6-20261015/output.log": {
+      "bytes": 262,
+      "sha256": "3391c21c2d658eaed626b7b8564232117f2e178cdab35f77c85bf1a84ec6b5b4"
+    },
+    "evidence/logs/screened-head-int6-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "cc295afc694d61ddf02e336e92ff67fac1651f34ae4410d4b06971383e5944bd"
+    },
+    "evidence/logs/screened-head-int6-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  "omitted": {
+    "logs/screened-head-after-vision-20261015/jobs/screened_head_gpu": {
+      "bytes": 72624,
+      "sha256": "ecee099eac47a94aa0a47ee2ef74c713d5ba393c5cb657163a6bd1d54229da9f"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step4.input.bin": {
+      "bytes": 4096,
+      "sha256": "5f26b82fbf980c31363546b11a993f48a6a540021327071ffc9d7f54908b0b25"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step0.input.bin": {
+      "bytes": 8192,
+      "sha256": "af3a0be6d0ec6065eef6fef4bb2825096a2befb6207f9a9f1a1a634ed6bbe337"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/raw.bin": {
+      "bytes": 508559360,
+      "sha256": "3247e63f0f265462e2fba5316dfb2819941ea8ed62ab5b2c4904e4aab5b9d7aa"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step6.input.bin": {
+      "bytes": 8192,
+      "sha256": "b70d216fb97a4eff0fa22c280f2b943a63f5a3ca5aa088d8e953fd3e8655ea57"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step2.input.bin": {
+      "bytes": 4096,
+      "sha256": "a1ded1462cadb22260afbd2e25fa9fe0ca711f421102c18aeda7fff50b6fe870"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step5.input.bin": {
+      "bytes": 4096,
+      "sha256": "6489aff5094bf14ea1692bbad82c37656dd26b2513276816460e6c6fb2576381"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step7.reference.bin": {
+      "bytes": 993280,
+      "sha256": "8ad1637839d2826f5b0d4f7d3780c116811821c2faed7bd8d4d2f692e06d371c"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step1.input.bin": {
+      "bytes": 8192,
+      "sha256": "d8819ded5307d79e6088b0c87c2366c6b54b9b4569bc618fc376a10a65737320"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step3.reference.bin": {
+      "bytes": 993280,
+      "sha256": "485e57a3ddc1d58bd95189b2b1a6d77f91a3858899979e200fadebfb3a96eede"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step3.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "ae21a7ac08ffbb5beb02c612e1134bbff1e31c32ead84700ba08f2ebccd024a7"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step7.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "1a7ae702e25b5425394c455e6080ba44b3e1497cb32684f712c143cac77ff81e"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step0.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "c337600dc5d6af45864768074bf41d6c02143a07d0e5784ed1b67dd6dc2c5e80"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step7.input.bin": {
+      "bytes": 8192,
+      "sha256": "0779f0dec71fbdb1733ae65a83470d36ef67d914a4ad26db02438613dd51539f"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step4.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "ce14a782730e6c509eaae400dd957b69c3f2bf95a34979626b2bbdca6bd95965"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step3.input.bin": {
+      "bytes": 4096,
+      "sha256": "df813f29d3b0ef7ab668695f0e1b0a8de9b1dd703aa087b1cca1846532b4aec0"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step4.reference.bin": {
+      "bytes": 993280,
+      "sha256": "d6c477a27d31c88174d09b9193fd63e5f06c3624e2e6cc96c59d622c724660e6"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step0.reference.bin": {
+      "bytes": 993280,
+      "sha256": "267da0cb948bc008eaf08def16c439165122368a90c89325a0d1ad5eec0f0d0a"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step2.input.bin": {
+      "bytes": 8192,
+      "sha256": "611f97be1c293d20657654b08e310eae483d2476a32e8df0ceecb8dd1b3a4127"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step5.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "5dda32963bc361d6edc3405db75ce45e07bbaac59e935e59d0c0542d5216a0b7"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step6.input.bin": {
+      "bytes": 4096,
+      "sha256": "489794f071804e11d91e532431a21c6de34e9952cd4ca2bf00b288a927cc4de8"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step1.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "a5114d5fd1c2f957e843247faf124b1e3df26d90e6cba7919737ec2feb9ace3d"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step1.reference.bin": {
+      "bytes": 993280,
+      "sha256": "dd451efd34e235c4ca99cf85b515e47c46d0ee7ba8f541ca020cfb47c65cfbdd"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step5.reference.bin": {
+      "bytes": 993280,
+      "sha256": "e8ff2d9b6135668e65177440532f3d3c1664889f8bbefdd9c5ef99818693e1fa"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step2.reference.bin": {
+      "bytes": 993280,
+      "sha256": "4d0d18b4e8a8559da0a45078fc87b4934c37dd52ce94d6c2f98c61608be8ebfe"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step0.input.bin": {
+      "bytes": 4096,
+      "sha256": "73c9c6809f235b124d5546fb7ee98a9b20873d67d74355c3c7b4727d46d5fb53"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step4.input.bin": {
+      "bytes": 8192,
+      "sha256": "c6d21698d9205f8d0cf696a6e7c428a219683341a39d718f3121bbc9a647b549"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step6.reference.bin": {
+      "bytes": 993280,
+      "sha256": "6872305725083dba5981cf75e45205c9ce796a2360c1c2e4f015a84fb06ff86d"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step6.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "96b5628c500ef33aba4fa50fd4b8ad3399a8f494ec9bfd80ccb19f4e07a9c64b"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step2.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "9d776ee5d0db130199e417774e6dbdff4c09d42b1f7603668a3fb65698577fed"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step3.input.bin": {
+      "bytes": 8192,
+      "sha256": "37471a42a3c217d03de0c188a171cece4efefe9907f5eee8a654528278845d10"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step7.input.bin": {
+      "bytes": 4096,
+      "sha256": "1edb70c81283c0e2472079aab76fa70c0913702931f83ca4648a5850906d1a9c"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/remaining.bin": {
+      "bytes": 3973120,
+      "sha256": "f830018f103e8d1264d60df713d9f59b82e117870bd65813fd6b14ec094c4f3f"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "3df8e1a757a7a6792509a0e3a938acbcb143e184eeaf5565d3ed267a9ab89ca5"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b1-step1.input.bin": {
+      "bytes": 4096,
+      "sha256": "86feb40d142d67b5ac2bd5f0532c2647faf2152991e2330cddc387bbab56d8bd"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-step5.input.bin": {
+      "bytes": 8192,
+      "sha256": "233bf7bb23f11b2305074ed34625c12eadf7c970a66f0064ce4beedd7418cfa8"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/approximate.bin": {
+      "bytes": 254279680,
+      "sha256": "7550f597d121be1426a2df9c7402e1158bb2dfe1eae37644200bbc9dcce0879a"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3.5-0.8B-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 8192,
+      "sha256": "ee6244d4f2a4e3b30d421dc91818f1b5fd1ccc70d815cdf01cc45b707968fc17"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step4.input.bin": {
+      "bytes": 4096,
+      "sha256": "9ee7e7d7895ea2bfd5e6652f372438a83e88604be991eafaa4beece9652cf71f"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step0.input.bin": {
+      "bytes": 8192,
+      "sha256": "58854f3a2f1e954c30b26e58cc847eef0fa86da892864de10df31c4b7283370d"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/raw.bin": {
+      "bytes": 311164928,
+      "sha256": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step6.input.bin": {
+      "bytes": 8192,
+      "sha256": "83bf14abc933f73cf3293dc2f9a819155116a6b5a709f2bfcb7ff9bfd5775712"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step2.input.bin": {
+      "bytes": 4096,
+      "sha256": "d4598f25a6c87a18bf733cec327abde92079043be7df3b08448474f2c50acae8"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step5.input.bin": {
+      "bytes": 4096,
+      "sha256": "affc25677e845a05f972c4e6b3c467a30439cd65a6d8bb5dc6d210b4ff97c159"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step7.reference.bin": {
+      "bytes": 607744,
+      "sha256": "81dbff25b96d20cb2a6de5c34b88de13da8acaba33460749cd50ec8e2190cc3b"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step1.input.bin": {
+      "bytes": 8192,
+      "sha256": "07697e9f4a64a53faf1de8f8d49f7996714c4eb587dcaac132901a607c8a4a35"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step3.reference.bin": {
+      "bytes": 607744,
+      "sha256": "99c7381caf388968f436ca816b1bc900066c89ee20232c510bd1fabe276e4096"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step3.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "33ca4d3c156ff01156b361d65eb73ac8a99097c4d7a45df127cfc8dfeb752a8e"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step7.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "ba2eb33c6cf64f7c7fd2ebe40a1df33388c762df3ae2221d4dd4439e648a7a0b"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step0.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "deb2434226a24a1de117eab0ed74f88dad52d67ebff26b5bc5da9ede9a1f4735"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step7.input.bin": {
+      "bytes": 8192,
+      "sha256": "ad71fc484b3664714eb88b72095c53e40c0db45de4b133be2e160399130c89ef"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step4.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e4f54a98d81d57f154534ef746995ff8b8505ae7aede72bc465d43d87b4fcfc9"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step3.input.bin": {
+      "bytes": 4096,
+      "sha256": "f18a7c2549596a09feaf4d8edef92693c4c4c7aafc2fbb181390fceee41bf28a"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step4.reference.bin": {
+      "bytes": 607744,
+      "sha256": "91cd13a54aec416decb704ef1d944d362fc89b0ee63ba28f2e0c0d96177b9ec9"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step0.reference.bin": {
+      "bytes": 607744,
+      "sha256": "1482e2343e66bf35a632521b8e5a50d1d2f31fc49918565e2b9909f94d7208e9"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step2.input.bin": {
+      "bytes": 8192,
+      "sha256": "996812f67321000cde44815eb44871678024dbb2affd3bdc81e823b266343966"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step5.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "d9e61b3b96e7513e8f02e860462ce022a08f4daa5761d658ecf1757c2b41c7cc"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step6.input.bin": {
+      "bytes": 4096,
+      "sha256": "cd5934851fa26558b1f31cf31b41c9e4c43182acddf7ce3f85f00608fee22147"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step1.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "23c862464c63cdf0f816f31a2a618bee3aa07031391c153dd6599ea6c91af2ef"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step1.reference.bin": {
+      "bytes": 607744,
+      "sha256": "c85a20da42af5a7f66fbb86d3d68590d43ba4715fd2c5f93b83ae476287f94d0"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step5.reference.bin": {
+      "bytes": 607744,
+      "sha256": "81238e14df3dfac79cfd4ccfa973e9f411ac2c4dc428ca1cb4d5158ea5dba81e"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step2.reference.bin": {
+      "bytes": 607744,
+      "sha256": "97095a47c5ac80eae21c41d25a5ec6fda47c7e709ce0ce9205e43cf823f76afb"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step0.input.bin": {
+      "bytes": 4096,
+      "sha256": "daaa99967837904e09f122560bf8fe65c601cac838b5b9bd84babd82094215b7"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step4.input.bin": {
+      "bytes": 8192,
+      "sha256": "c74870e0d1d63a9279db7af1cbe2be22002933e1ba5108f674f00b416732c013"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step6.reference.bin": {
+      "bytes": 607744,
+      "sha256": "da59584ffad7ae0fa7d5a3b9538c16fbb7e4b43d26383590166a856648d9626a"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step6.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "2167127179c1880494fcd8e9f99c6c7a968acf6e418d16aa21a43de900bdf0a0"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step2.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "34bf743ce14c503f7ffe0b1391758614419167c13d72ba267f3414c18a1f64e8"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step3.input.bin": {
+      "bytes": 8192,
+      "sha256": "92f9854346f629be0eb001b4c3189a7b16ad3b6603fe0d420eff4903ab685f3f"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step7.input.bin": {
+      "bytes": 4096,
+      "sha256": "3b3c5b32f35f9a28db370e7473669e8e7fe3a9c4336fbb723bd671a90c7f6d82"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/remaining.bin": {
+      "bytes": 2430976,
+      "sha256": "e3312eb91cb99a163b9e78f199592ba5185a57bccfa24ca136d2f4b391d81314"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "1a6a9ff917952b3d1c626603bdd4f2e477af337169ec520fe0bd30e46ff7028a"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b1-step1.input.bin": {
+      "bytes": 4096,
+      "sha256": "b2f88b331c173b12627882cca2b821fb0efbd69d81103a37460d5d60a12fd441"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-step5.input.bin": {
+      "bytes": 8192,
+      "sha256": "449ff7e024bddc8d4bb44c2ff0b495a8dd36b358f205af5e6417e89c82732571"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/approximate.bin": {
+      "bytes": 155582464,
+      "sha256": "95abb71ebc4b0e8c51ba7433f794cc0e4355419cdbd9c62cee1613acade4fc64"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen3-0.6B-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 8192,
+      "sha256": "a0ab424a41b9e9d372e8aacb392a5b1949d1777baa9af6af23d10a01eded6cbc"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step4.input.bin": {
+      "bytes": 3584,
+      "sha256": "86f240fb9a824d963c97ee7e769b5de383c41352b4f2cdd5bfe8e18bef3c457a"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step0.input.bin": {
+      "bytes": 7168,
+      "sha256": "1a4e300802489f4b3c8a0911ad320126ea65141bbee553e1372d4f6cd09b84e8"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/raw.bin": {
+      "bytes": 272269312,
+      "sha256": "fa8f961560d25293a0de13d7855335f76c738a42352cfd8446ec05db3b80c3ae"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step6.input.bin": {
+      "bytes": 7168,
+      "sha256": "2f670fc419520d8d8a1a36da1e27351557ad52fd4ae318e0e7fbb6ca0e6fd16e"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step2.input.bin": {
+      "bytes": 3584,
+      "sha256": "43d281b96cdb9b0d3cecbc439d01bf5a101a426ad808b870b3309c86b4b21b7d"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step5.input.bin": {
+      "bytes": 3584,
+      "sha256": "e9f2fb67dd272367d23f7abc73512bf23538aaebd0c7b45ff0bce4d9cca3e1ad"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step7.reference.bin": {
+      "bytes": 607744,
+      "sha256": "b250ae1ec2faccaa6b8a5e7a3002bf1a0bcac0bc7b0c7e083138211a2119d3fd"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step1.input.bin": {
+      "bytes": 7168,
+      "sha256": "54e1565842ace219b2805ec8d90f7f26c3f820472a905c3d792b24746e5f7bb3"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step3.reference.bin": {
+      "bytes": 607744,
+      "sha256": "2899c736b35e7f218e297d673534fe35a405e40f08ee542859411584b3941d95"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step3.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "551f150b9f375c69e8a26e5b3702fb1453ebaafc56f78c704825daefd75c1aef"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step7.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "fd182d32786ed74fde939b784b4c56e5fee6e8b5ced8a8f2e1ad4daaeacef3d3"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step0.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "0a7d6e1c40f37ef752790c93bf03cf99632022e09138af8cfd606ac464b02a7f"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step7.input.bin": {
+      "bytes": 7168,
+      "sha256": "8288ce0ff83b46875b06f421da6c3914868b5c09eb9520889d4553da1a28d761"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step4.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "2bff03a67935c35f8095b0c0802f0f8d174a23976b0595d5b920f95410db0019"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step3.input.bin": {
+      "bytes": 3584,
+      "sha256": "c5ffe7e12da8467861b1fc11d58c36abf2b9d15088b0b36b828a77ef8aabda8c"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step4.reference.bin": {
+      "bytes": 607744,
+      "sha256": "70d5766f38ca63e4f10b22b540dd224bb664ec3cb50d1394520844d7a75bdd36"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step0.reference.bin": {
+      "bytes": 607744,
+      "sha256": "e41f22dbcc5fd4ccaefb991204c1f324550a295a2cc710302add3d8b3455d19b"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step2.input.bin": {
+      "bytes": 7168,
+      "sha256": "e97ff80c6863a8a521f8e0be9e1c924fdbc46d76615c62370a7c824dc5ac9c7c"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step5.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "64aa114f18341147cfd24010085621d8012cd6ef780397d30d4eed6c48ec7d81"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step6.input.bin": {
+      "bytes": 3584,
+      "sha256": "aec68edfeab2a80f4eea7ceff470f4dd5375e9726464ce0c6dceb35f2fbe349b"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step1.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "f4e7026a6771d5141b7afc91419f1fb42ed04cca144c695b187f3a2d9c2f4cd3"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step1.reference.bin": {
+      "bytes": 607744,
+      "sha256": "15031dac932c774be5f8718017cbc31d667ef2f9d4a24d7e4d5c8be32f4f1091"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step5.reference.bin": {
+      "bytes": 607744,
+      "sha256": "946cc70a2e068f7d327cef1505d6c1008887ad5955229b3830470cd075c38580"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step2.reference.bin": {
+      "bytes": 607744,
+      "sha256": "87b775fcfdcd15e16e987e4ea907acf25087c68ef70e967b731132bbc6bff0f2"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step0.input.bin": {
+      "bytes": 3584,
+      "sha256": "94d7dea67cbd6e997d2f423590a7bf42656b284dfc7db211875fee17683bedae"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step4.input.bin": {
+      "bytes": 7168,
+      "sha256": "0f4337dc0616988910f7a0c402060ba91ee6f9f4b02610c5d7b9ee117e4eb818"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step6.reference.bin": {
+      "bytes": 607744,
+      "sha256": "555f2fde5469bf98b991053ab6fc5714c1c739e8472aab50aae922570ac6c61a"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step6.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "8f180a6c7213ffef2baaf0de3a5abcea53db7d9fd1aa9a1809da4bd8a23a3f32"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step2.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e3f08c24dc73214b3317970a93a259afc6d46bfa90b8121d0edae5c20f0b1f88"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step3.input.bin": {
+      "bytes": 7168,
+      "sha256": "e565981cb85266f0c4501d949fc459864d6abc1428b07b33e6834f560f9825e3"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step7.input.bin": {
+      "bytes": 3584,
+      "sha256": "604ff0daf4618882fb6a82f2129f5e3b0cc746a4c2e6a29609a4a46a532b36d5"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/remaining.bin": {
+      "bytes": 2430976,
+      "sha256": "b5a4c81fc0421560e9115386d97625489ffa0c620729107a4b7f30e970c16fae"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e555bea7ddf90f527f99b20a4405459929504768596576b3170bb1592793d737"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step1.input.bin": {
+      "bytes": 3584,
+      "sha256": "2198bfb85075d467960fae145aa7baeb91f278f8a126ed56b86e953a827c6dad"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step5.input.bin": {
+      "bytes": 7168,
+      "sha256": "13938da15d1b0ee455143fc2e79993519e94cf9451e95f00fae1073f90e019df"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/approximate.bin": {
+      "bytes": 136134656,
+      "sha256": "08d30aa04299b891d8894a2d5f689cd1f2b22c765784833d7a0ec6fd884d4ad8"
+    },
+    "logs/screened-head-after-vision-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 7168,
+      "sha256": "7a3274efd880425180b05b201732e67613d348fb61843cae1323400aeec53744"
+    },
+    "logs/screened-head-confirm-20261015/jobs/screened_head_gpu": {
+      "bytes": 72624,
+      "sha256": "ecee099eac47a94aa0a47ee2ef74c713d5ba393c5cb657163a6bd1d54229da9f"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step4.input.bin": {
+      "bytes": 4096,
+      "sha256": "5f26b82fbf980c31363546b11a993f48a6a540021327071ffc9d7f54908b0b25"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step0.input.bin": {
+      "bytes": 8192,
+      "sha256": "af3a0be6d0ec6065eef6fef4bb2825096a2befb6207f9a9f1a1a634ed6bbe337"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/raw.bin": {
+      "bytes": 508559360,
+      "sha256": "3247e63f0f265462e2fba5316dfb2819941ea8ed62ab5b2c4904e4aab5b9d7aa"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step6.input.bin": {
+      "bytes": 8192,
+      "sha256": "b70d216fb97a4eff0fa22c280f2b943a63f5a3ca5aa088d8e953fd3e8655ea57"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step2.input.bin": {
+      "bytes": 4096,
+      "sha256": "a1ded1462cadb22260afbd2e25fa9fe0ca711f421102c18aeda7fff50b6fe870"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step5.input.bin": {
+      "bytes": 4096,
+      "sha256": "6489aff5094bf14ea1692bbad82c37656dd26b2513276816460e6c6fb2576381"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step7.reference.bin": {
+      "bytes": 993280,
+      "sha256": "8ad1637839d2826f5b0d4f7d3780c116811821c2faed7bd8d4d2f692e06d371c"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step1.input.bin": {
+      "bytes": 8192,
+      "sha256": "d8819ded5307d79e6088b0c87c2366c6b54b9b4569bc618fc376a10a65737320"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step3.reference.bin": {
+      "bytes": 993280,
+      "sha256": "485e57a3ddc1d58bd95189b2b1a6d77f91a3858899979e200fadebfb3a96eede"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step3.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "ae21a7ac08ffbb5beb02c612e1134bbff1e31c32ead84700ba08f2ebccd024a7"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step7.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "1a7ae702e25b5425394c455e6080ba44b3e1497cb32684f712c143cac77ff81e"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step0.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "c337600dc5d6af45864768074bf41d6c02143a07d0e5784ed1b67dd6dc2c5e80"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step7.input.bin": {
+      "bytes": 8192,
+      "sha256": "0779f0dec71fbdb1733ae65a83470d36ef67d914a4ad26db02438613dd51539f"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step4.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "ce14a782730e6c509eaae400dd957b69c3f2bf95a34979626b2bbdca6bd95965"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step3.input.bin": {
+      "bytes": 4096,
+      "sha256": "df813f29d3b0ef7ab668695f0e1b0a8de9b1dd703aa087b1cca1846532b4aec0"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step4.reference.bin": {
+      "bytes": 993280,
+      "sha256": "d6c477a27d31c88174d09b9193fd63e5f06c3624e2e6cc96c59d622c724660e6"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step0.reference.bin": {
+      "bytes": 993280,
+      "sha256": "267da0cb948bc008eaf08def16c439165122368a90c89325a0d1ad5eec0f0d0a"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step2.input.bin": {
+      "bytes": 8192,
+      "sha256": "611f97be1c293d20657654b08e310eae483d2476a32e8df0ceecb8dd1b3a4127"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step5.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "5dda32963bc361d6edc3405db75ce45e07bbaac59e935e59d0c0542d5216a0b7"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step6.input.bin": {
+      "bytes": 4096,
+      "sha256": "489794f071804e11d91e532431a21c6de34e9952cd4ca2bf00b288a927cc4de8"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step1.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "a5114d5fd1c2f957e843247faf124b1e3df26d90e6cba7919737ec2feb9ace3d"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step1.reference.bin": {
+      "bytes": 993280,
+      "sha256": "dd451efd34e235c4ca99cf85b515e47c46d0ee7ba8f541ca020cfb47c65cfbdd"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step5.reference.bin": {
+      "bytes": 993280,
+      "sha256": "e8ff2d9b6135668e65177440532f3d3c1664889f8bbefdd9c5ef99818693e1fa"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step2.reference.bin": {
+      "bytes": 993280,
+      "sha256": "4d0d18b4e8a8559da0a45078fc87b4934c37dd52ce94d6c2f98c61608be8ebfe"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step0.input.bin": {
+      "bytes": 4096,
+      "sha256": "73c9c6809f235b124d5546fb7ee98a9b20873d67d74355c3c7b4727d46d5fb53"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step4.input.bin": {
+      "bytes": 8192,
+      "sha256": "c6d21698d9205f8d0cf696a6e7c428a219683341a39d718f3121bbc9a647b549"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step6.reference.bin": {
+      "bytes": 993280,
+      "sha256": "6872305725083dba5981cf75e45205c9ce796a2360c1c2e4f015a84fb06ff86d"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step6.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "96b5628c500ef33aba4fa50fd4b8ad3399a8f494ec9bfd80ccb19f4e07a9c64b"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step2.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "9d776ee5d0db130199e417774e6dbdff4c09d42b1f7603668a3fb65698577fed"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step3.input.bin": {
+      "bytes": 8192,
+      "sha256": "37471a42a3c217d03de0c188a171cece4efefe9907f5eee8a654528278845d10"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step7.input.bin": {
+      "bytes": 4096,
+      "sha256": "1edb70c81283c0e2472079aab76fa70c0913702931f83ca4648a5850906d1a9c"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/remaining.bin": {
+      "bytes": 3973120,
+      "sha256": "f830018f103e8d1264d60df713d9f59b82e117870bd65813fd6b14ec094c4f3f"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "3df8e1a757a7a6792509a0e3a938acbcb143e184eeaf5565d3ed267a9ab89ca5"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b1-step1.input.bin": {
+      "bytes": 4096,
+      "sha256": "86feb40d142d67b5ac2bd5f0532c2647faf2152991e2330cddc387bbab56d8bd"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-step5.input.bin": {
+      "bytes": 8192,
+      "sha256": "233bf7bb23f11b2305074ed34625c12eadf7c970a66f0064ce4beedd7418cfa8"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/approximate.bin": {
+      "bytes": 254279680,
+      "sha256": "7550f597d121be1426a2df9c7402e1158bb2dfe1eae37644200bbc9dcce0879a"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3.5-0.8B-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 8192,
+      "sha256": "ee6244d4f2a4e3b30d421dc91818f1b5fd1ccc70d815cdf01cc45b707968fc17"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step4.input.bin": {
+      "bytes": 4096,
+      "sha256": "9ee7e7d7895ea2bfd5e6652f372438a83e88604be991eafaa4beece9652cf71f"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step0.input.bin": {
+      "bytes": 8192,
+      "sha256": "58854f3a2f1e954c30b26e58cc847eef0fa86da892864de10df31c4b7283370d"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/raw.bin": {
+      "bytes": 311164928,
+      "sha256": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step6.input.bin": {
+      "bytes": 8192,
+      "sha256": "83bf14abc933f73cf3293dc2f9a819155116a6b5a709f2bfcb7ff9bfd5775712"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step2.input.bin": {
+      "bytes": 4096,
+      "sha256": "d4598f25a6c87a18bf733cec327abde92079043be7df3b08448474f2c50acae8"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step5.input.bin": {
+      "bytes": 4096,
+      "sha256": "affc25677e845a05f972c4e6b3c467a30439cd65a6d8bb5dc6d210b4ff97c159"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step7.reference.bin": {
+      "bytes": 607744,
+      "sha256": "81dbff25b96d20cb2a6de5c34b88de13da8acaba33460749cd50ec8e2190cc3b"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step1.input.bin": {
+      "bytes": 8192,
+      "sha256": "07697e9f4a64a53faf1de8f8d49f7996714c4eb587dcaac132901a607c8a4a35"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step3.reference.bin": {
+      "bytes": 607744,
+      "sha256": "99c7381caf388968f436ca816b1bc900066c89ee20232c510bd1fabe276e4096"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step3.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "33ca4d3c156ff01156b361d65eb73ac8a99097c4d7a45df127cfc8dfeb752a8e"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step7.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "ba2eb33c6cf64f7c7fd2ebe40a1df33388c762df3ae2221d4dd4439e648a7a0b"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step0.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "deb2434226a24a1de117eab0ed74f88dad52d67ebff26b5bc5da9ede9a1f4735"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step7.input.bin": {
+      "bytes": 8192,
+      "sha256": "ad71fc484b3664714eb88b72095c53e40c0db45de4b133be2e160399130c89ef"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step4.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e4f54a98d81d57f154534ef746995ff8b8505ae7aede72bc465d43d87b4fcfc9"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step3.input.bin": {
+      "bytes": 4096,
+      "sha256": "f18a7c2549596a09feaf4d8edef92693c4c4c7aafc2fbb181390fceee41bf28a"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step4.reference.bin": {
+      "bytes": 607744,
+      "sha256": "91cd13a54aec416decb704ef1d944d362fc89b0ee63ba28f2e0c0d96177b9ec9"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step0.reference.bin": {
+      "bytes": 607744,
+      "sha256": "1482e2343e66bf35a632521b8e5a50d1d2f31fc49918565e2b9909f94d7208e9"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step2.input.bin": {
+      "bytes": 8192,
+      "sha256": "996812f67321000cde44815eb44871678024dbb2affd3bdc81e823b266343966"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step5.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "d9e61b3b96e7513e8f02e860462ce022a08f4daa5761d658ecf1757c2b41c7cc"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step6.input.bin": {
+      "bytes": 4096,
+      "sha256": "cd5934851fa26558b1f31cf31b41c9e4c43182acddf7ce3f85f00608fee22147"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step1.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "23c862464c63cdf0f816f31a2a618bee3aa07031391c153dd6599ea6c91af2ef"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step1.reference.bin": {
+      "bytes": 607744,
+      "sha256": "c85a20da42af5a7f66fbb86d3d68590d43ba4715fd2c5f93b83ae476287f94d0"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step5.reference.bin": {
+      "bytes": 607744,
+      "sha256": "81238e14df3dfac79cfd4ccfa973e9f411ac2c4dc428ca1cb4d5158ea5dba81e"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step2.reference.bin": {
+      "bytes": 607744,
+      "sha256": "97095a47c5ac80eae21c41d25a5ec6fda47c7e709ce0ce9205e43cf823f76afb"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step0.input.bin": {
+      "bytes": 4096,
+      "sha256": "daaa99967837904e09f122560bf8fe65c601cac838b5b9bd84babd82094215b7"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step4.input.bin": {
+      "bytes": 8192,
+      "sha256": "c74870e0d1d63a9279db7af1cbe2be22002933e1ba5108f674f00b416732c013"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step6.reference.bin": {
+      "bytes": 607744,
+      "sha256": "da59584ffad7ae0fa7d5a3b9538c16fbb7e4b43d26383590166a856648d9626a"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step6.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "2167127179c1880494fcd8e9f99c6c7a968acf6e418d16aa21a43de900bdf0a0"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step2.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "34bf743ce14c503f7ffe0b1391758614419167c13d72ba267f3414c18a1f64e8"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step3.input.bin": {
+      "bytes": 8192,
+      "sha256": "92f9854346f629be0eb001b4c3189a7b16ad3b6603fe0d420eff4903ab685f3f"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step7.input.bin": {
+      "bytes": 4096,
+      "sha256": "3b3c5b32f35f9a28db370e7473669e8e7fe3a9c4336fbb723bd671a90c7f6d82"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/remaining.bin": {
+      "bytes": 2430976,
+      "sha256": "e3312eb91cb99a163b9e78f199592ba5185a57bccfa24ca136d2f4b391d81314"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "1a6a9ff917952b3d1c626603bdd4f2e477af337169ec520fe0bd30e46ff7028a"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b1-step1.input.bin": {
+      "bytes": 4096,
+      "sha256": "b2f88b331c173b12627882cca2b821fb0efbd69d81103a37460d5d60a12fd441"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-step5.input.bin": {
+      "bytes": 8192,
+      "sha256": "449ff7e024bddc8d4bb44c2ff0b495a8dd36b358f205af5e6417e89c82732571"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/approximate.bin": {
+      "bytes": 155582464,
+      "sha256": "95abb71ebc4b0e8c51ba7433f794cc0e4355419cdbd9c62cee1613acade4fc64"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen3-0.6B-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 8192,
+      "sha256": "a0ab424a41b9e9d372e8aacb392a5b1949d1777baa9af6af23d10a01eded6cbc"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step4.input.bin": {
+      "bytes": 3584,
+      "sha256": "86f240fb9a824d963c97ee7e769b5de383c41352b4f2cdd5bfe8e18bef3c457a"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step0.input.bin": {
+      "bytes": 7168,
+      "sha256": "1a4e300802489f4b3c8a0911ad320126ea65141bbee553e1372d4f6cd09b84e8"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/raw.bin": {
+      "bytes": 272269312,
+      "sha256": "fa8f961560d25293a0de13d7855335f76c738a42352cfd8446ec05db3b80c3ae"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step6.input.bin": {
+      "bytes": 7168,
+      "sha256": "2f670fc419520d8d8a1a36da1e27351557ad52fd4ae318e0e7fbb6ca0e6fd16e"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step2.input.bin": {
+      "bytes": 3584,
+      "sha256": "43d281b96cdb9b0d3cecbc439d01bf5a101a426ad808b870b3309c86b4b21b7d"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step5.input.bin": {
+      "bytes": 3584,
+      "sha256": "e9f2fb67dd272367d23f7abc73512bf23538aaebd0c7b45ff0bce4d9cca3e1ad"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step7.reference.bin": {
+      "bytes": 607744,
+      "sha256": "b250ae1ec2faccaa6b8a5e7a3002bf1a0bcac0bc7b0c7e083138211a2119d3fd"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step1.input.bin": {
+      "bytes": 7168,
+      "sha256": "54e1565842ace219b2805ec8d90f7f26c3f820472a905c3d792b24746e5f7bb3"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step3.reference.bin": {
+      "bytes": 607744,
+      "sha256": "2899c736b35e7f218e297d673534fe35a405e40f08ee542859411584b3941d95"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step3.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "551f150b9f375c69e8a26e5b3702fb1453ebaafc56f78c704825daefd75c1aef"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step7.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "fd182d32786ed74fde939b784b4c56e5fee6e8b5ced8a8f2e1ad4daaeacef3d3"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step0.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "0a7d6e1c40f37ef752790c93bf03cf99632022e09138af8cfd606ac464b02a7f"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step7.input.bin": {
+      "bytes": 7168,
+      "sha256": "8288ce0ff83b46875b06f421da6c3914868b5c09eb9520889d4553da1a28d761"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step4.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "2bff03a67935c35f8095b0c0802f0f8d174a23976b0595d5b920f95410db0019"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step3.input.bin": {
+      "bytes": 3584,
+      "sha256": "c5ffe7e12da8467861b1fc11d58c36abf2b9d15088b0b36b828a77ef8aabda8c"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step4.reference.bin": {
+      "bytes": 607744,
+      "sha256": "70d5766f38ca63e4f10b22b540dd224bb664ec3cb50d1394520844d7a75bdd36"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step0.reference.bin": {
+      "bytes": 607744,
+      "sha256": "e41f22dbcc5fd4ccaefb991204c1f324550a295a2cc710302add3d8b3455d19b"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step2.input.bin": {
+      "bytes": 7168,
+      "sha256": "e97ff80c6863a8a521f8e0be9e1c924fdbc46d76615c62370a7c824dc5ac9c7c"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step5.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "64aa114f18341147cfd24010085621d8012cd6ef780397d30d4eed6c48ec7d81"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step6.input.bin": {
+      "bytes": 3584,
+      "sha256": "aec68edfeab2a80f4eea7ceff470f4dd5375e9726464ce0c6dceb35f2fbe349b"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step1.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "f4e7026a6771d5141b7afc91419f1fb42ed04cca144c695b187f3a2d9c2f4cd3"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step1.reference.bin": {
+      "bytes": 607744,
+      "sha256": "15031dac932c774be5f8718017cbc31d667ef2f9d4a24d7e4d5c8be32f4f1091"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step5.reference.bin": {
+      "bytes": 607744,
+      "sha256": "946cc70a2e068f7d327cef1505d6c1008887ad5955229b3830470cd075c38580"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step2.reference.bin": {
+      "bytes": 607744,
+      "sha256": "87b775fcfdcd15e16e987e4ea907acf25087c68ef70e967b731132bbc6bff0f2"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step0.input.bin": {
+      "bytes": 3584,
+      "sha256": "94d7dea67cbd6e997d2f423590a7bf42656b284dfc7db211875fee17683bedae"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step4.input.bin": {
+      "bytes": 7168,
+      "sha256": "0f4337dc0616988910f7a0c402060ba91ee6f9f4b02610c5d7b9ee117e4eb818"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step6.reference.bin": {
+      "bytes": 607744,
+      "sha256": "555f2fde5469bf98b991053ab6fc5714c1c739e8472aab50aae922570ac6c61a"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step6.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "8f180a6c7213ffef2baaf0de3a5abcea53db7d9fd1aa9a1809da4bd8a23a3f32"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step2.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e3f08c24dc73214b3317970a93a259afc6d46bfa90b8121d0edae5c20f0b1f88"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step3.input.bin": {
+      "bytes": 7168,
+      "sha256": "e565981cb85266f0c4501d949fc459864d6abc1428b07b33e6834f560f9825e3"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step7.input.bin": {
+      "bytes": 3584,
+      "sha256": "604ff0daf4618882fb6a82f2129f5e3b0cc746a4c2e6a29609a4a46a532b36d5"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/remaining.bin": {
+      "bytes": 2430976,
+      "sha256": "b5a4c81fc0421560e9115386d97625489ffa0c620729107a4b7f30e970c16fae"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e555bea7ddf90f527f99b20a4405459929504768596576b3170bb1592793d737"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step1.input.bin": {
+      "bytes": 3584,
+      "sha256": "2198bfb85075d467960fae145aa7baeb91f278f8a126ed56b86e953a827c6dad"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step5.input.bin": {
+      "bytes": 7168,
+      "sha256": "13938da15d1b0ee455143fc2e79993519e94cf9451e95f00fae1073f90e019df"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/approximate.bin": {
+      "bytes": 136134656,
+      "sha256": "08d30aa04299b891d8894a2d5f689cd1f2b22c765784833d7a0ec6fd884d4ad8"
+    },
+    "logs/screened-head-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 7168,
+      "sha256": "7a3274efd880425180b05b201732e67613d348fb61843cae1323400aeec53744"
+    },
+    "logs/screened-head-int4-20261015/jobs/screened_head_gpu": {
+      "bytes": 72624,
+      "sha256": "acbbc65cf9d066c98e50ad3b0062f9397125b4af240bf66357e0d091928b05ae"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step4.input.bin": {
+      "bytes": 4096,
+      "sha256": "5f26b82fbf980c31363546b11a993f48a6a540021327071ffc9d7f54908b0b25"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step0.input.bin": {
+      "bytes": 8192,
+      "sha256": "af3a0be6d0ec6065eef6fef4bb2825096a2befb6207f9a9f1a1a634ed6bbe337"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/raw.bin": {
+      "bytes": 508559360,
+      "sha256": "3247e63f0f265462e2fba5316dfb2819941ea8ed62ab5b2c4904e4aab5b9d7aa"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step6.input.bin": {
+      "bytes": 8192,
+      "sha256": "b70d216fb97a4eff0fa22c280f2b943a63f5a3ca5aa088d8e953fd3e8655ea57"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step2.input.bin": {
+      "bytes": 4096,
+      "sha256": "a1ded1462cadb22260afbd2e25fa9fe0ca711f421102c18aeda7fff50b6fe870"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step5.input.bin": {
+      "bytes": 4096,
+      "sha256": "6489aff5094bf14ea1692bbad82c37656dd26b2513276816460e6c6fb2576381"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step7.reference.bin": {
+      "bytes": 993280,
+      "sha256": "8ad1637839d2826f5b0d4f7d3780c116811821c2faed7bd8d4d2f692e06d371c"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step1.input.bin": {
+      "bytes": 8192,
+      "sha256": "d8819ded5307d79e6088b0c87c2366c6b54b9b4569bc618fc376a10a65737320"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step3.reference.bin": {
+      "bytes": 993280,
+      "sha256": "485e57a3ddc1d58bd95189b2b1a6d77f91a3858899979e200fadebfb3a96eede"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step3.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "ae21a7ac08ffbb5beb02c612e1134bbff1e31c32ead84700ba08f2ebccd024a7"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step7.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "1a7ae702e25b5425394c455e6080ba44b3e1497cb32684f712c143cac77ff81e"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step0.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "c337600dc5d6af45864768074bf41d6c02143a07d0e5784ed1b67dd6dc2c5e80"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step7.input.bin": {
+      "bytes": 8192,
+      "sha256": "0779f0dec71fbdb1733ae65a83470d36ef67d914a4ad26db02438613dd51539f"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step4.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "ce14a782730e6c509eaae400dd957b69c3f2bf95a34979626b2bbdca6bd95965"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step3.input.bin": {
+      "bytes": 4096,
+      "sha256": "df813f29d3b0ef7ab668695f0e1b0a8de9b1dd703aa087b1cca1846532b4aec0"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step4.reference.bin": {
+      "bytes": 993280,
+      "sha256": "d6c477a27d31c88174d09b9193fd63e5f06c3624e2e6cc96c59d622c724660e6"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step0.reference.bin": {
+      "bytes": 993280,
+      "sha256": "267da0cb948bc008eaf08def16c439165122368a90c89325a0d1ad5eec0f0d0a"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step2.input.bin": {
+      "bytes": 8192,
+      "sha256": "611f97be1c293d20657654b08e310eae483d2476a32e8df0ceecb8dd1b3a4127"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step5.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "5dda32963bc361d6edc3405db75ce45e07bbaac59e935e59d0c0542d5216a0b7"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step6.input.bin": {
+      "bytes": 4096,
+      "sha256": "489794f071804e11d91e532431a21c6de34e9952cd4ca2bf00b288a927cc4de8"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step1.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "a5114d5fd1c2f957e843247faf124b1e3df26d90e6cba7919737ec2feb9ace3d"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step1.reference.bin": {
+      "bytes": 993280,
+      "sha256": "dd451efd34e235c4ca99cf85b515e47c46d0ee7ba8f541ca020cfb47c65cfbdd"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step5.reference.bin": {
+      "bytes": 993280,
+      "sha256": "e8ff2d9b6135668e65177440532f3d3c1664889f8bbefdd9c5ef99818693e1fa"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step2.reference.bin": {
+      "bytes": 993280,
+      "sha256": "4d0d18b4e8a8559da0a45078fc87b4934c37dd52ce94d6c2f98c61608be8ebfe"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step0.input.bin": {
+      "bytes": 4096,
+      "sha256": "73c9c6809f235b124d5546fb7ee98a9b20873d67d74355c3c7b4727d46d5fb53"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step4.input.bin": {
+      "bytes": 8192,
+      "sha256": "c6d21698d9205f8d0cf696a6e7c428a219683341a39d718f3121bbc9a647b549"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step6.reference.bin": {
+      "bytes": 993280,
+      "sha256": "6872305725083dba5981cf75e45205c9ce796a2360c1c2e4f015a84fb06ff86d"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step6.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "96b5628c500ef33aba4fa50fd4b8ad3399a8f494ec9bfd80ccb19f4e07a9c64b"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step2.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "9d776ee5d0db130199e417774e6dbdff4c09d42b1f7603668a3fb65698577fed"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step3.input.bin": {
+      "bytes": 8192,
+      "sha256": "37471a42a3c217d03de0c188a171cece4efefe9907f5eee8a654528278845d10"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step7.input.bin": {
+      "bytes": 4096,
+      "sha256": "1edb70c81283c0e2472079aab76fa70c0913702931f83ca4648a5850906d1a9c"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/remaining.bin": {
+      "bytes": 3973120,
+      "sha256": "99a8725ce1139162a348d65071c9397adf11bb55c4fb5b463db94957cf5737fd"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "3df8e1a757a7a6792509a0e3a938acbcb143e184eeaf5565d3ed267a9ab89ca5"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b1-step1.input.bin": {
+      "bytes": 4096,
+      "sha256": "86feb40d142d67b5ac2bd5f0532c2647faf2152991e2330cddc387bbab56d8bd"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-step5.input.bin": {
+      "bytes": 8192,
+      "sha256": "233bf7bb23f11b2305074ed34625c12eadf7c970a66f0064ce4beedd7418cfa8"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/approximate.bin": {
+      "bytes": 127139840,
+      "sha256": "ff5ff030a2ac18c0869287367b31f7a1402b7acfe8bc48e8a7d29fe87011476d"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3.5-0.8B-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 8192,
+      "sha256": "ee6244d4f2a4e3b30d421dc91818f1b5fd1ccc70d815cdf01cc45b707968fc17"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step4.input.bin": {
+      "bytes": 4096,
+      "sha256": "9ee7e7d7895ea2bfd5e6652f372438a83e88604be991eafaa4beece9652cf71f"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step0.input.bin": {
+      "bytes": 8192,
+      "sha256": "58854f3a2f1e954c30b26e58cc847eef0fa86da892864de10df31c4b7283370d"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/raw.bin": {
+      "bytes": 311164928,
+      "sha256": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step6.input.bin": {
+      "bytes": 8192,
+      "sha256": "83bf14abc933f73cf3293dc2f9a819155116a6b5a709f2bfcb7ff9bfd5775712"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step2.input.bin": {
+      "bytes": 4096,
+      "sha256": "d4598f25a6c87a18bf733cec327abde92079043be7df3b08448474f2c50acae8"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step5.input.bin": {
+      "bytes": 4096,
+      "sha256": "affc25677e845a05f972c4e6b3c467a30439cd65a6d8bb5dc6d210b4ff97c159"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step7.reference.bin": {
+      "bytes": 607744,
+      "sha256": "81dbff25b96d20cb2a6de5c34b88de13da8acaba33460749cd50ec8e2190cc3b"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step1.input.bin": {
+      "bytes": 8192,
+      "sha256": "07697e9f4a64a53faf1de8f8d49f7996714c4eb587dcaac132901a607c8a4a35"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step3.reference.bin": {
+      "bytes": 607744,
+      "sha256": "99c7381caf388968f436ca816b1bc900066c89ee20232c510bd1fabe276e4096"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step3.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "33ca4d3c156ff01156b361d65eb73ac8a99097c4d7a45df127cfc8dfeb752a8e"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step7.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "ba2eb33c6cf64f7c7fd2ebe40a1df33388c762df3ae2221d4dd4439e648a7a0b"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step0.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "deb2434226a24a1de117eab0ed74f88dad52d67ebff26b5bc5da9ede9a1f4735"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step7.input.bin": {
+      "bytes": 8192,
+      "sha256": "ad71fc484b3664714eb88b72095c53e40c0db45de4b133be2e160399130c89ef"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step4.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e4f54a98d81d57f154534ef746995ff8b8505ae7aede72bc465d43d87b4fcfc9"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step3.input.bin": {
+      "bytes": 4096,
+      "sha256": "f18a7c2549596a09feaf4d8edef92693c4c4c7aafc2fbb181390fceee41bf28a"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step4.reference.bin": {
+      "bytes": 607744,
+      "sha256": "91cd13a54aec416decb704ef1d944d362fc89b0ee63ba28f2e0c0d96177b9ec9"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step0.reference.bin": {
+      "bytes": 607744,
+      "sha256": "1482e2343e66bf35a632521b8e5a50d1d2f31fc49918565e2b9909f94d7208e9"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step2.input.bin": {
+      "bytes": 8192,
+      "sha256": "996812f67321000cde44815eb44871678024dbb2affd3bdc81e823b266343966"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step5.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "d9e61b3b96e7513e8f02e860462ce022a08f4daa5761d658ecf1757c2b41c7cc"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step6.input.bin": {
+      "bytes": 4096,
+      "sha256": "cd5934851fa26558b1f31cf31b41c9e4c43182acddf7ce3f85f00608fee22147"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step1.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "23c862464c63cdf0f816f31a2a618bee3aa07031391c153dd6599ea6c91af2ef"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step1.reference.bin": {
+      "bytes": 607744,
+      "sha256": "c85a20da42af5a7f66fbb86d3d68590d43ba4715fd2c5f93b83ae476287f94d0"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step5.reference.bin": {
+      "bytes": 607744,
+      "sha256": "81238e14df3dfac79cfd4ccfa973e9f411ac2c4dc428ca1cb4d5158ea5dba81e"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step2.reference.bin": {
+      "bytes": 607744,
+      "sha256": "97095a47c5ac80eae21c41d25a5ec6fda47c7e709ce0ce9205e43cf823f76afb"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step0.input.bin": {
+      "bytes": 4096,
+      "sha256": "daaa99967837904e09f122560bf8fe65c601cac838b5b9bd84babd82094215b7"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step4.input.bin": {
+      "bytes": 8192,
+      "sha256": "c74870e0d1d63a9279db7af1cbe2be22002933e1ba5108f674f00b416732c013"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step6.reference.bin": {
+      "bytes": 607744,
+      "sha256": "da59584ffad7ae0fa7d5a3b9538c16fbb7e4b43d26383590166a856648d9626a"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step6.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "2167127179c1880494fcd8e9f99c6c7a968acf6e418d16aa21a43de900bdf0a0"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step2.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "34bf743ce14c503f7ffe0b1391758614419167c13d72ba267f3414c18a1f64e8"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step3.input.bin": {
+      "bytes": 8192,
+      "sha256": "92f9854346f629be0eb001b4c3189a7b16ad3b6603fe0d420eff4903ab685f3f"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step7.input.bin": {
+      "bytes": 4096,
+      "sha256": "3b3c5b32f35f9a28db370e7473669e8e7fe3a9c4336fbb723bd671a90c7f6d82"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/remaining.bin": {
+      "bytes": 2430976,
+      "sha256": "0ab5ef17ddbc0a9472acae6057555cc5f4b7ab3f2a237d6d0aaa4870f21fa100"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "1a6a9ff917952b3d1c626603bdd4f2e477af337169ec520fe0bd30e46ff7028a"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b1-step1.input.bin": {
+      "bytes": 4096,
+      "sha256": "b2f88b331c173b12627882cca2b821fb0efbd69d81103a37460d5d60a12fd441"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-step5.input.bin": {
+      "bytes": 8192,
+      "sha256": "449ff7e024bddc8d4bb44c2ff0b495a8dd36b358f205af5e6417e89c82732571"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/approximate.bin": {
+      "bytes": 77791232,
+      "sha256": "cb495a516a0c86d86218a4a3f08381a2c09f170ccc41cfc9949a472a9851cf6f"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen3-0.6B-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 8192,
+      "sha256": "a0ab424a41b9e9d372e8aacb392a5b1949d1777baa9af6af23d10a01eded6cbc"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step4.input.bin": {
+      "bytes": 3584,
+      "sha256": "86f240fb9a824d963c97ee7e769b5de383c41352b4f2cdd5bfe8e18bef3c457a"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step0.input.bin": {
+      "bytes": 7168,
+      "sha256": "1a4e300802489f4b3c8a0911ad320126ea65141bbee553e1372d4f6cd09b84e8"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/raw.bin": {
+      "bytes": 272269312,
+      "sha256": "fa8f961560d25293a0de13d7855335f76c738a42352cfd8446ec05db3b80c3ae"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step6.input.bin": {
+      "bytes": 7168,
+      "sha256": "2f670fc419520d8d8a1a36da1e27351557ad52fd4ae318e0e7fbb6ca0e6fd16e"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step2.input.bin": {
+      "bytes": 3584,
+      "sha256": "43d281b96cdb9b0d3cecbc439d01bf5a101a426ad808b870b3309c86b4b21b7d"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step5.input.bin": {
+      "bytes": 3584,
+      "sha256": "e9f2fb67dd272367d23f7abc73512bf23538aaebd0c7b45ff0bce4d9cca3e1ad"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step7.reference.bin": {
+      "bytes": 607744,
+      "sha256": "b250ae1ec2faccaa6b8a5e7a3002bf1a0bcac0bc7b0c7e083138211a2119d3fd"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step1.input.bin": {
+      "bytes": 7168,
+      "sha256": "54e1565842ace219b2805ec8d90f7f26c3f820472a905c3d792b24746e5f7bb3"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step3.reference.bin": {
+      "bytes": 607744,
+      "sha256": "2899c736b35e7f218e297d673534fe35a405e40f08ee542859411584b3941d95"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step3.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "551f150b9f375c69e8a26e5b3702fb1453ebaafc56f78c704825daefd75c1aef"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step7.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "fd182d32786ed74fde939b784b4c56e5fee6e8b5ced8a8f2e1ad4daaeacef3d3"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step0.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "0a7d6e1c40f37ef752790c93bf03cf99632022e09138af8cfd606ac464b02a7f"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step7.input.bin": {
+      "bytes": 7168,
+      "sha256": "8288ce0ff83b46875b06f421da6c3914868b5c09eb9520889d4553da1a28d761"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step4.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "2bff03a67935c35f8095b0c0802f0f8d174a23976b0595d5b920f95410db0019"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step3.input.bin": {
+      "bytes": 3584,
+      "sha256": "c5ffe7e12da8467861b1fc11d58c36abf2b9d15088b0b36b828a77ef8aabda8c"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step4.reference.bin": {
+      "bytes": 607744,
+      "sha256": "70d5766f38ca63e4f10b22b540dd224bb664ec3cb50d1394520844d7a75bdd36"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step0.reference.bin": {
+      "bytes": 607744,
+      "sha256": "e41f22dbcc5fd4ccaefb991204c1f324550a295a2cc710302add3d8b3455d19b"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step2.input.bin": {
+      "bytes": 7168,
+      "sha256": "e97ff80c6863a8a521f8e0be9e1c924fdbc46d76615c62370a7c824dc5ac9c7c"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step5.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "64aa114f18341147cfd24010085621d8012cd6ef780397d30d4eed6c48ec7d81"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step6.input.bin": {
+      "bytes": 3584,
+      "sha256": "aec68edfeab2a80f4eea7ceff470f4dd5375e9726464ce0c6dceb35f2fbe349b"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step1.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "f4e7026a6771d5141b7afc91419f1fb42ed04cca144c695b187f3a2d9c2f4cd3"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step1.reference.bin": {
+      "bytes": 607744,
+      "sha256": "15031dac932c774be5f8718017cbc31d667ef2f9d4a24d7e4d5c8be32f4f1091"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step5.reference.bin": {
+      "bytes": 607744,
+      "sha256": "946cc70a2e068f7d327cef1505d6c1008887ad5955229b3830470cd075c38580"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step2.reference.bin": {
+      "bytes": 607744,
+      "sha256": "87b775fcfdcd15e16e987e4ea907acf25087c68ef70e967b731132bbc6bff0f2"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step0.input.bin": {
+      "bytes": 3584,
+      "sha256": "94d7dea67cbd6e997d2f423590a7bf42656b284dfc7db211875fee17683bedae"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step4.input.bin": {
+      "bytes": 7168,
+      "sha256": "0f4337dc0616988910f7a0c402060ba91ee6f9f4b02610c5d7b9ee117e4eb818"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step6.reference.bin": {
+      "bytes": 607744,
+      "sha256": "555f2fde5469bf98b991053ab6fc5714c1c739e8472aab50aae922570ac6c61a"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step6.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "8f180a6c7213ffef2baaf0de3a5abcea53db7d9fd1aa9a1809da4bd8a23a3f32"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step2.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e3f08c24dc73214b3317970a93a259afc6d46bfa90b8121d0edae5c20f0b1f88"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step3.input.bin": {
+      "bytes": 7168,
+      "sha256": "e565981cb85266f0c4501d949fc459864d6abc1428b07b33e6834f560f9825e3"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step7.input.bin": {
+      "bytes": 3584,
+      "sha256": "604ff0daf4618882fb6a82f2129f5e3b0cc746a4c2e6a29609a4a46a532b36d5"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/remaining.bin": {
+      "bytes": 2430976,
+      "sha256": "6cb79bc012768718a33c87c5f5135cad0e2d5eb0c342712916250a95d8301270"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e555bea7ddf90f527f99b20a4405459929504768596576b3170bb1592793d737"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step1.input.bin": {
+      "bytes": 3584,
+      "sha256": "2198bfb85075d467960fae145aa7baeb91f278f8a126ed56b86e953a827c6dad"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step5.input.bin": {
+      "bytes": 7168,
+      "sha256": "13938da15d1b0ee455143fc2e79993519e94cf9451e95f00fae1073f90e019df"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/approximate.bin": {
+      "bytes": 68067328,
+      "sha256": "2e57f178afb66fd41bc76988c8ea44a1d63a3306fca434ff8af799ed0120e935"
+    },
+    "logs/screened-head-int4-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 7168,
+      "sha256": "7a3274efd880425180b05b201732e67613d348fb61843cae1323400aeec53744"
+    },
+    "logs/screened-head-int6-20261015/jobs/screened_head_gpu": {
+      "bytes": 72800,
+      "sha256": "d31a12cf25483d8a2a2947301a22676226f36c6c065d0c516b35fcf0ec6d0fff"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step4.input.bin": {
+      "bytes": 4096,
+      "sha256": "5f26b82fbf980c31363546b11a993f48a6a540021327071ffc9d7f54908b0b25"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step0.input.bin": {
+      "bytes": 8192,
+      "sha256": "af3a0be6d0ec6065eef6fef4bb2825096a2befb6207f9a9f1a1a634ed6bbe337"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/raw.bin": {
+      "bytes": 508559360,
+      "sha256": "3247e63f0f265462e2fba5316dfb2819941ea8ed62ab5b2c4904e4aab5b9d7aa"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step6.input.bin": {
+      "bytes": 8192,
+      "sha256": "b70d216fb97a4eff0fa22c280f2b943a63f5a3ca5aa088d8e953fd3e8655ea57"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step2.input.bin": {
+      "bytes": 4096,
+      "sha256": "a1ded1462cadb22260afbd2e25fa9fe0ca711f421102c18aeda7fff50b6fe870"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step5.input.bin": {
+      "bytes": 4096,
+      "sha256": "6489aff5094bf14ea1692bbad82c37656dd26b2513276816460e6c6fb2576381"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step7.reference.bin": {
+      "bytes": 993280,
+      "sha256": "8ad1637839d2826f5b0d4f7d3780c116811821c2faed7bd8d4d2f692e06d371c"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step1.input.bin": {
+      "bytes": 8192,
+      "sha256": "d8819ded5307d79e6088b0c87c2366c6b54b9b4569bc618fc376a10a65737320"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step3.reference.bin": {
+      "bytes": 993280,
+      "sha256": "485e57a3ddc1d58bd95189b2b1a6d77f91a3858899979e200fadebfb3a96eede"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step3.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "ae21a7ac08ffbb5beb02c612e1134bbff1e31c32ead84700ba08f2ebccd024a7"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step7.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "1a7ae702e25b5425394c455e6080ba44b3e1497cb32684f712c143cac77ff81e"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step0.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "c337600dc5d6af45864768074bf41d6c02143a07d0e5784ed1b67dd6dc2c5e80"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step7.input.bin": {
+      "bytes": 8192,
+      "sha256": "0779f0dec71fbdb1733ae65a83470d36ef67d914a4ad26db02438613dd51539f"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step4.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "ce14a782730e6c509eaae400dd957b69c3f2bf95a34979626b2bbdca6bd95965"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step3.input.bin": {
+      "bytes": 4096,
+      "sha256": "df813f29d3b0ef7ab668695f0e1b0a8de9b1dd703aa087b1cca1846532b4aec0"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step4.reference.bin": {
+      "bytes": 993280,
+      "sha256": "d6c477a27d31c88174d09b9193fd63e5f06c3624e2e6cc96c59d622c724660e6"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step0.reference.bin": {
+      "bytes": 993280,
+      "sha256": "267da0cb948bc008eaf08def16c439165122368a90c89325a0d1ad5eec0f0d0a"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step2.input.bin": {
+      "bytes": 8192,
+      "sha256": "611f97be1c293d20657654b08e310eae483d2476a32e8df0ceecb8dd1b3a4127"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step5.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "5dda32963bc361d6edc3405db75ce45e07bbaac59e935e59d0c0542d5216a0b7"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step6.input.bin": {
+      "bytes": 4096,
+      "sha256": "489794f071804e11d91e532431a21c6de34e9952cd4ca2bf00b288a927cc4de8"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step1.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "a5114d5fd1c2f957e843247faf124b1e3df26d90e6cba7919737ec2feb9ace3d"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step1.reference.bin": {
+      "bytes": 993280,
+      "sha256": "dd451efd34e235c4ca99cf85b515e47c46d0ee7ba8f541ca020cfb47c65cfbdd"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step5.reference.bin": {
+      "bytes": 993280,
+      "sha256": "e8ff2d9b6135668e65177440532f3d3c1664889f8bbefdd9c5ef99818693e1fa"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step2.reference.bin": {
+      "bytes": 993280,
+      "sha256": "4d0d18b4e8a8559da0a45078fc87b4934c37dd52ce94d6c2f98c61608be8ebfe"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step0.input.bin": {
+      "bytes": 4096,
+      "sha256": "73c9c6809f235b124d5546fb7ee98a9b20873d67d74355c3c7b4727d46d5fb53"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step4.input.bin": {
+      "bytes": 8192,
+      "sha256": "c6d21698d9205f8d0cf696a6e7c428a219683341a39d718f3121bbc9a647b549"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step6.reference.bin": {
+      "bytes": 993280,
+      "sha256": "6872305725083dba5981cf75e45205c9ce796a2360c1c2e4f015a84fb06ff86d"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step6.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "96b5628c500ef33aba4fa50fd4b8ad3399a8f494ec9bfd80ccb19f4e07a9c64b"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step2.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "9d776ee5d0db130199e417774e6dbdff4c09d42b1f7603668a3fb65698577fed"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step3.input.bin": {
+      "bytes": 8192,
+      "sha256": "37471a42a3c217d03de0c188a171cece4efefe9907f5eee8a654528278845d10"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step7.input.bin": {
+      "bytes": 4096,
+      "sha256": "1edb70c81283c0e2472079aab76fa70c0913702931f83ca4648a5850906d1a9c"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/remaining.bin": {
+      "bytes": 3973120,
+      "sha256": "b2c1bac59a5d961c93522232b337127774c91ddda69d4fa0a41e0f9980249c12"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1986560,
+      "sha256": "3df8e1a757a7a6792509a0e3a938acbcb143e184eeaf5565d3ed267a9ab89ca5"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b1-step1.input.bin": {
+      "bytes": 4096,
+      "sha256": "86feb40d142d67b5ac2bd5f0532c2647faf2152991e2330cddc387bbab56d8bd"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-step5.input.bin": {
+      "bytes": 8192,
+      "sha256": "233bf7bb23f11b2305074ed34625c12eadf7c970a66f0064ce4beedd7418cfa8"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/approximate.bin": {
+      "bytes": 190709760,
+      "sha256": "27115f7859516ae0c9e41b4b99fa04b51390b16a5345b3a35a3911cd59e54142"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3.5-0.8B-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 8192,
+      "sha256": "ee6244d4f2a4e3b30d421dc91818f1b5fd1ccc70d815cdf01cc45b707968fc17"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step4.input.bin": {
+      "bytes": 4096,
+      "sha256": "9ee7e7d7895ea2bfd5e6652f372438a83e88604be991eafaa4beece9652cf71f"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step0.input.bin": {
+      "bytes": 8192,
+      "sha256": "58854f3a2f1e954c30b26e58cc847eef0fa86da892864de10df31c4b7283370d"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/raw.bin": {
+      "bytes": 311164928,
+      "sha256": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step6.input.bin": {
+      "bytes": 8192,
+      "sha256": "83bf14abc933f73cf3293dc2f9a819155116a6b5a709f2bfcb7ff9bfd5775712"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step2.input.bin": {
+      "bytes": 4096,
+      "sha256": "d4598f25a6c87a18bf733cec327abde92079043be7df3b08448474f2c50acae8"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step5.input.bin": {
+      "bytes": 4096,
+      "sha256": "affc25677e845a05f972c4e6b3c467a30439cd65a6d8bb5dc6d210b4ff97c159"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step7.reference.bin": {
+      "bytes": 607744,
+      "sha256": "81dbff25b96d20cb2a6de5c34b88de13da8acaba33460749cd50ec8e2190cc3b"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step1.input.bin": {
+      "bytes": 8192,
+      "sha256": "07697e9f4a64a53faf1de8f8d49f7996714c4eb587dcaac132901a607c8a4a35"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step3.reference.bin": {
+      "bytes": 607744,
+      "sha256": "99c7381caf388968f436ca816b1bc900066c89ee20232c510bd1fabe276e4096"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step3.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "33ca4d3c156ff01156b361d65eb73ac8a99097c4d7a45df127cfc8dfeb752a8e"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step7.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "ba2eb33c6cf64f7c7fd2ebe40a1df33388c762df3ae2221d4dd4439e648a7a0b"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step0.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "deb2434226a24a1de117eab0ed74f88dad52d67ebff26b5bc5da9ede9a1f4735"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step7.input.bin": {
+      "bytes": 8192,
+      "sha256": "ad71fc484b3664714eb88b72095c53e40c0db45de4b133be2e160399130c89ef"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step4.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e4f54a98d81d57f154534ef746995ff8b8505ae7aede72bc465d43d87b4fcfc9"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step3.input.bin": {
+      "bytes": 4096,
+      "sha256": "f18a7c2549596a09feaf4d8edef92693c4c4c7aafc2fbb181390fceee41bf28a"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step4.reference.bin": {
+      "bytes": 607744,
+      "sha256": "91cd13a54aec416decb704ef1d944d362fc89b0ee63ba28f2e0c0d96177b9ec9"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step0.reference.bin": {
+      "bytes": 607744,
+      "sha256": "1482e2343e66bf35a632521b8e5a50d1d2f31fc49918565e2b9909f94d7208e9"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step2.input.bin": {
+      "bytes": 8192,
+      "sha256": "996812f67321000cde44815eb44871678024dbb2affd3bdc81e823b266343966"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step5.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "d9e61b3b96e7513e8f02e860462ce022a08f4daa5761d658ecf1757c2b41c7cc"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step6.input.bin": {
+      "bytes": 4096,
+      "sha256": "cd5934851fa26558b1f31cf31b41c9e4c43182acddf7ce3f85f00608fee22147"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step1.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "23c862464c63cdf0f816f31a2a618bee3aa07031391c153dd6599ea6c91af2ef"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step1.reference.bin": {
+      "bytes": 607744,
+      "sha256": "c85a20da42af5a7f66fbb86d3d68590d43ba4715fd2c5f93b83ae476287f94d0"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step5.reference.bin": {
+      "bytes": 607744,
+      "sha256": "81238e14df3dfac79cfd4ccfa973e9f411ac2c4dc428ca1cb4d5158ea5dba81e"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step2.reference.bin": {
+      "bytes": 607744,
+      "sha256": "97095a47c5ac80eae21c41d25a5ec6fda47c7e709ce0ce9205e43cf823f76afb"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step0.input.bin": {
+      "bytes": 4096,
+      "sha256": "daaa99967837904e09f122560bf8fe65c601cac838b5b9bd84babd82094215b7"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step4.input.bin": {
+      "bytes": 8192,
+      "sha256": "c74870e0d1d63a9279db7af1cbe2be22002933e1ba5108f674f00b416732c013"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step6.reference.bin": {
+      "bytes": 607744,
+      "sha256": "da59584ffad7ae0fa7d5a3b9538c16fbb7e4b43d26383590166a856648d9626a"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step6.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "2167127179c1880494fcd8e9f99c6c7a968acf6e418d16aa21a43de900bdf0a0"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step2.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "34bf743ce14c503f7ffe0b1391758614419167c13d72ba267f3414c18a1f64e8"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step3.input.bin": {
+      "bytes": 8192,
+      "sha256": "92f9854346f629be0eb001b4c3189a7b16ad3b6603fe0d420eff4903ab685f3f"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step7.input.bin": {
+      "bytes": 4096,
+      "sha256": "3b3c5b32f35f9a28db370e7473669e8e7fe3a9c4336fbb723bd671a90c7f6d82"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/remaining.bin": {
+      "bytes": 2430976,
+      "sha256": "a786922aa35b748db96e14d8e2679906df1846e416a4c246b6a7df8e7ad52150"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "1a6a9ff917952b3d1c626603bdd4f2e477af337169ec520fe0bd30e46ff7028a"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b1-step1.input.bin": {
+      "bytes": 4096,
+      "sha256": "b2f88b331c173b12627882cca2b821fb0efbd69d81103a37460d5d60a12fd441"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-step5.input.bin": {
+      "bytes": 8192,
+      "sha256": "449ff7e024bddc8d4bb44c2ff0b495a8dd36b358f205af5e6417e89c82732571"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/approximate.bin": {
+      "bytes": 116686848,
+      "sha256": "9f1b2d9e5b8ddea825f62f247002df20d3aaf113c1493afc914408870a08ad0d"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen3-0.6B-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 8192,
+      "sha256": "a0ab424a41b9e9d372e8aacb392a5b1949d1777baa9af6af23d10a01eded6cbc"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step4.input.bin": {
+      "bytes": 3584,
+      "sha256": "86f240fb9a824d963c97ee7e769b5de383c41352b4f2cdd5bfe8e18bef3c457a"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step0.input.bin": {
+      "bytes": 7168,
+      "sha256": "1a4e300802489f4b3c8a0911ad320126ea65141bbee553e1372d4f6cd09b84e8"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/raw.bin": {
+      "bytes": 272269312,
+      "sha256": "fa8f961560d25293a0de13d7855335f76c738a42352cfd8446ec05db3b80c3ae"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step6.input.bin": {
+      "bytes": 7168,
+      "sha256": "2f670fc419520d8d8a1a36da1e27351557ad52fd4ae318e0e7fbb6ca0e6fd16e"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step2.input.bin": {
+      "bytes": 3584,
+      "sha256": "43d281b96cdb9b0d3cecbc439d01bf5a101a426ad808b870b3309c86b4b21b7d"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step5.input.bin": {
+      "bytes": 3584,
+      "sha256": "e9f2fb67dd272367d23f7abc73512bf23538aaebd0c7b45ff0bce4d9cca3e1ad"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step7.reference.bin": {
+      "bytes": 607744,
+      "sha256": "b250ae1ec2faccaa6b8a5e7a3002bf1a0bcac0bc7b0c7e083138211a2119d3fd"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step1.input.bin": {
+      "bytes": 7168,
+      "sha256": "54e1565842ace219b2805ec8d90f7f26c3f820472a905c3d792b24746e5f7bb3"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step3.reference.bin": {
+      "bytes": 607744,
+      "sha256": "2899c736b35e7f218e297d673534fe35a405e40f08ee542859411584b3941d95"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step3.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "551f150b9f375c69e8a26e5b3702fb1453ebaafc56f78c704825daefd75c1aef"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step7.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "fd182d32786ed74fde939b784b4c56e5fee6e8b5ced8a8f2e1ad4daaeacef3d3"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step0.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "0a7d6e1c40f37ef752790c93bf03cf99632022e09138af8cfd606ac464b02a7f"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step7.input.bin": {
+      "bytes": 7168,
+      "sha256": "8288ce0ff83b46875b06f421da6c3914868b5c09eb9520889d4553da1a28d761"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step4.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "2bff03a67935c35f8095b0c0802f0f8d174a23976b0595d5b920f95410db0019"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step3.input.bin": {
+      "bytes": 3584,
+      "sha256": "c5ffe7e12da8467861b1fc11d58c36abf2b9d15088b0b36b828a77ef8aabda8c"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step4.reference.bin": {
+      "bytes": 607744,
+      "sha256": "70d5766f38ca63e4f10b22b540dd224bb664ec3cb50d1394520844d7a75bdd36"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step0.reference.bin": {
+      "bytes": 607744,
+      "sha256": "e41f22dbcc5fd4ccaefb991204c1f324550a295a2cc710302add3d8b3455d19b"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step2.input.bin": {
+      "bytes": 7168,
+      "sha256": "e97ff80c6863a8a521f8e0be9e1c924fdbc46d76615c62370a7c824dc5ac9c7c"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step5.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "64aa114f18341147cfd24010085621d8012cd6ef780397d30d4eed6c48ec7d81"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step6.input.bin": {
+      "bytes": 3584,
+      "sha256": "aec68edfeab2a80f4eea7ceff470f4dd5375e9726464ce0c6dceb35f2fbe349b"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step1.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "f4e7026a6771d5141b7afc91419f1fb42ed04cca144c695b187f3a2d9c2f4cd3"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step1.reference.bin": {
+      "bytes": 607744,
+      "sha256": "15031dac932c774be5f8718017cbc31d667ef2f9d4a24d7e4d5c8be32f4f1091"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step5.reference.bin": {
+      "bytes": 607744,
+      "sha256": "946cc70a2e068f7d327cef1505d6c1008887ad5955229b3830470cd075c38580"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step2.reference.bin": {
+      "bytes": 607744,
+      "sha256": "87b775fcfdcd15e16e987e4ea907acf25087c68ef70e967b731132bbc6bff0f2"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step0.input.bin": {
+      "bytes": 3584,
+      "sha256": "94d7dea67cbd6e997d2f423590a7bf42656b284dfc7db211875fee17683bedae"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step4.input.bin": {
+      "bytes": 7168,
+      "sha256": "0f4337dc0616988910f7a0c402060ba91ee6f9f4b02610c5d7b9ee117e4eb818"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step6.reference.bin": {
+      "bytes": 607744,
+      "sha256": "555f2fde5469bf98b991053ab6fc5714c1c739e8472aab50aae922570ac6c61a"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step6.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "8f180a6c7213ffef2baaf0de3a5abcea53db7d9fd1aa9a1809da4bd8a23a3f32"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step2.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e3f08c24dc73214b3317970a93a259afc6d46bfa90b8121d0edae5c20f0b1f88"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step3.input.bin": {
+      "bytes": 7168,
+      "sha256": "e565981cb85266f0c4501d949fc459864d6abc1428b07b33e6834f560f9825e3"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step7.input.bin": {
+      "bytes": 3584,
+      "sha256": "604ff0daf4618882fb6a82f2129f5e3b0cc746a4c2e6a29609a4a46a532b36d5"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/remaining.bin": {
+      "bytes": 2430976,
+      "sha256": "3ec0907d2b4c5748da2aef97e9486eee141fd7dcbfe1fc578abea3e8b14f5fd0"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-mixed-first-last.reference.bin": {
+      "bytes": 1215488,
+      "sha256": "e555bea7ddf90f527f99b20a4405459929504768596576b3170bb1592793d737"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b1-step1.input.bin": {
+      "bytes": 3584,
+      "sha256": "2198bfb85075d467960fae145aa7baeb91f278f8a126ed56b86e953a827c6dad"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-step5.input.bin": {
+      "bytes": 7168,
+      "sha256": "13938da15d1b0ee455143fc2e79993519e94cf9451e95f00fae1073f90e019df"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/approximate.bin": {
+      "bytes": 102100992,
+      "sha256": "6499cde1a8fca04fca986b92d6f0e9d36dc2cde11c4ef8c73d664d2145bcab26"
+    },
+    "logs/screened-head-int6-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/b2-mixed-first-last.input.bin": {
+      "bytes": 7168,
+      "sha256": "7a3274efd880425180b05b201732e67613d348fb61843cae1323400aeec53744"
+    }
+  },
+  "jobs": {
+    "screened-head-20261015": {
+      "exit_code": 1,
+      "wall_seconds": 85.12158341705799
+    },
+    "screened-head-after-vision-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 58.688305125106126
+    },
+    "screened-head-confirm-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 40.15596841601655
+    },
+    "screened-head-int4-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 54.0472129592672
+    },
+    "screened-head-int6-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 63.93664841679856
+    }
+  }
+}

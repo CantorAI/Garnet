@@ -1,0 +1,7 @@
+trained full-grid fresh encoding and counters PASS 1 False [0, 0]
+trained full-grid fresh encoding and counters PASS 1 True [12, 12]
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_parallel_vision_grid.py", line 20, in <module>
+    bound=5e-6+5e-5*np.abs(a);error=np.abs(b-a);assert np.all(error<=bound),dict(batch=batch,worst_ratio=float(np.max(error/bound)))
+                                                       ~~~~~~^^^^^^^^^^^^^^
+AssertionError: {'batch': 1, 'worst_ratio': 1.2947852193021563}

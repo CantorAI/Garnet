@@ -1,0 +1,207 @@
+{
+  "model": "Qwen2.5-Coder-0.5B-Instruct",
+  "rows": 151936,
+  "inner": 896,
+  "seed_rows": 8192,
+  "block": 128,
+  "weights": "Original exact BF16 bits, hard-linked read-only input to the isolated experiment",
+  "raw_sha256": "fa8f961560d25293a0de13d7855335f76c738a42352cfd8446ec05db3b80c3ae",
+  "remaining_norm_sha256": "3ec0907d2b4c5748da2aef97e9486eee141fd7dcbfe1fc578abea3e8b14f5fd0",
+  "capture_sha256": {
+    "1": "4a831b0a9f11a4582cad8883926342eaf8e1443013a55182c41533a6ac7ba8ce",
+    "2": "d2474a27d161486f457c7538f574d64aabdf7e9267a14a91b5ee571c9c43dd4a"
+  },
+  "queries": [
+    {
+      "name": "b1-step0",
+      "batch": 1,
+      "step": 0,
+      "predictions": [
+        73594
+      ],
+      "input_sha256": "94d7dea67cbd6e997d2f423590a7bf42656b284dfc7db211875fee17683bedae",
+      "reference_sha256": "e41f22dbcc5fd4ccaefb991204c1f324550a295a2cc710302add3d8b3455d19b"
+    },
+    {
+      "name": "b1-step1",
+      "batch": 1,
+      "step": 1,
+      "predictions": [
+        12669
+      ],
+      "input_sha256": "2198bfb85075d467960fae145aa7baeb91f278f8a126ed56b86e953a827c6dad",
+      "reference_sha256": "15031dac932c774be5f8718017cbc31d667ef2f9d4a24d7e4d5c8be32f4f1091"
+    },
+    {
+      "name": "b1-step2",
+      "batch": 1,
+      "step": 2,
+      "predictions": [
+        198
+      ],
+      "input_sha256": "43d281b96cdb9b0d3cecbc439d01bf5a101a426ad808b870b3309c86b4b21b7d",
+      "reference_sha256": "87b775fcfdcd15e16e987e4ea907acf25087c68ef70e967b731132bbc6bff0f2"
+    },
+    {
+      "name": "b1-step3",
+      "batch": 1,
+      "step": 3,
+      "predictions": [
+        750
+      ],
+      "input_sha256": "c5ffe7e12da8467861b1fc11d58c36abf2b9d15088b0b36b828a77ef8aabda8c",
+      "reference_sha256": "2899c736b35e7f218e297d673534fe35a405e40f08ee542859411584b3941d95"
+    },
+    {
+      "name": "b1-step4",
+      "batch": 1,
+      "step": 4,
+      "predictions": [
+        912
+      ],
+      "input_sha256": "86f240fb9a824d963c97ee7e769b5de383c41352b4f2cdd5bfe8e18bef3c457a",
+      "reference_sha256": "70d5766f38ca63e4f10b22b540dd224bb664ec3cb50d1394520844d7a75bdd36"
+    },
+    {
+      "name": "b1-step5",
+      "batch": 1,
+      "step": 5,
+      "predictions": [
+        2877
+      ],
+      "input_sha256": "e9f2fb67dd272367d23f7abc73512bf23538aaebd0c7b45ff0bce4d9cca3e1ad",
+      "reference_sha256": "946cc70a2e068f7d327cef1505d6c1008887ad5955229b3830470cd075c38580"
+    },
+    {
+      "name": "b1-step6",
+      "batch": 1,
+      "step": 6,
+      "predictions": [
+        11
+      ],
+      "input_sha256": "aec68edfeab2a80f4eea7ceff470f4dd5375e9726464ce0c6dceb35f2fbe349b",
+      "reference_sha256": "555f2fde5469bf98b991053ab6fc5714c1c739e8472aab50aae922570ac6c61a"
+    },
+    {
+      "name": "b1-step7",
+      "batch": 1,
+      "step": 7,
+      "predictions": [
+        293
+      ],
+      "input_sha256": "604ff0daf4618882fb6a82f2129f5e3b0cc746a4c2e6a29609a4a46a532b36d5",
+      "reference_sha256": "b250ae1ec2faccaa6b8a5e7a3002bf1a0bcac0bc7b0c7e083138211a2119d3fd"
+    },
+    {
+      "name": "b2-step0",
+      "batch": 2,
+      "step": 0,
+      "predictions": [
+        73594,
+        73594
+      ],
+      "input_sha256": "1a4e300802489f4b3c8a0911ad320126ea65141bbee553e1372d4f6cd09b84e8",
+      "reference_sha256": "0a7d6e1c40f37ef752790c93bf03cf99632022e09138af8cfd606ac464b02a7f"
+    },
+    {
+      "name": "b2-step1",
+      "batch": 2,
+      "step": 1,
+      "predictions": [
+        12669,
+        12669
+      ],
+      "input_sha256": "54e1565842ace219b2805ec8d90f7f26c3f820472a905c3d792b24746e5f7bb3",
+      "reference_sha256": "f4e7026a6771d5141b7afc91419f1fb42ed04cca144c695b187f3a2d9c2f4cd3"
+    },
+    {
+      "name": "b2-step2",
+      "batch": 2,
+      "step": 2,
+      "predictions": [
+        198,
+        198
+      ],
+      "input_sha256": "e97ff80c6863a8a521f8e0be9e1c924fdbc46d76615c62370a7c824dc5ac9c7c",
+      "reference_sha256": "e3f08c24dc73214b3317970a93a259afc6d46bfa90b8121d0edae5c20f0b1f88"
+    },
+    {
+      "name": "b2-step3",
+      "batch": 2,
+      "step": 3,
+      "predictions": [
+        750,
+        750
+      ],
+      "input_sha256": "e565981cb85266f0c4501d949fc459864d6abc1428b07b33e6834f560f9825e3",
+      "reference_sha256": "551f150b9f375c69e8a26e5b3702fb1453ebaafc56f78c704825daefd75c1aef"
+    },
+    {
+      "name": "b2-step4",
+      "batch": 2,
+      "step": 4,
+      "predictions": [
+        912,
+        912
+      ],
+      "input_sha256": "0f4337dc0616988910f7a0c402060ba91ee6f9f4b02610c5d7b9ee117e4eb818",
+      "reference_sha256": "2bff03a67935c35f8095b0c0802f0f8d174a23976b0595d5b920f95410db0019"
+    },
+    {
+      "name": "b2-step5",
+      "batch": 2,
+      "step": 5,
+      "predictions": [
+        2877,
+        2877
+      ],
+      "input_sha256": "13938da15d1b0ee455143fc2e79993519e94cf9451e95f00fae1073f90e019df",
+      "reference_sha256": "64aa114f18341147cfd24010085621d8012cd6ef780397d30d4eed6c48ec7d81"
+    },
+    {
+      "name": "b2-step6",
+      "batch": 2,
+      "step": 6,
+      "predictions": [
+        11,
+        11
+      ],
+      "input_sha256": "2f670fc419520d8d8a1a36da1e27351557ad52fd4ae318e0e7fbb6ca0e6fd16e",
+      "reference_sha256": "8f180a6c7213ffef2baaf0de3a5abcea53db7d9fd1aa9a1809da4bd8a23a3f32"
+    },
+    {
+      "name": "b2-step7",
+      "batch": 2,
+      "step": 7,
+      "predictions": [
+        293,
+        293
+      ],
+      "input_sha256": "8288ce0ff83b46875b06f421da6c3914868b5c09eb9520889d4553da1a28d761",
+      "reference_sha256": "fd182d32786ed74fde939b784b4c56e5fee6e8b5ced8a8f2e1ad4daaeacef3d3"
+    },
+    {
+      "name": "b2-mixed-first-last",
+      "batch": 2,
+      "step": -1,
+      "predictions": [
+        73594,
+        293
+      ],
+      "input_sha256": "7a3274efd880425180b05b201732e67613d348fb61843cae1323400aeec53744",
+      "reference_sha256": "e555bea7ddf90f527f99b20a4405459929504768596576b3170bb1592793d737"
+    }
+  ],
+  "scope": "Derived INT6 screening index; unchanged original BF16 heads and actual native queries.",
+  "checkpoint_sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44",
+  "head_tensor": "model.embed_tokens.weight",
+  "approximate_sha256": "6499cde1a8fca04fca986b92d6f0e9d36dc2cde11c4ef8c73d664d2145bcab26",
+  "metadata_layout": [
+    "upward residual L2",
+    "upward original L2",
+    "upward reconstructed L2",
+    "exact power-of-two scale"
+  ],
+  "screen_index": "INT6 with per-row dyadic scale; used only for rejection bounds, retained results always original BF16/FP32 dot",
+  "largest_relative_weight_L2_error": 0.23367602635216014
+}

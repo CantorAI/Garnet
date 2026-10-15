@@ -1,5 +1,9 @@
 # Parallel FP32 vision value contraction
 
+Status: native integration is rejected by the unchanged trained full-grid
+embedding bound. The original nineteen stages passed, but five batch-1
+embedding values exceed the added gate's tolerance. No serving benchmark ran.
+
 Two actual component trials pass the original numerical envelopes and show
 lower time at the frozen 216-token, 12-head, 64-dimension shape. Independent
 audit covers 42 archived files, 48 shape checks and 7680 timed submissions.
@@ -44,7 +48,7 @@ never overlapped inference. Initial archive SHA-256:
 Combined archive SHA-256:
 `0176cc262ae83d4288e2d15bdd3eaf8d6e623f63223bbd9279333f6c4b9d36ca`.
 
-## Optional native integration under validation
+## Optional native integration: rejected
 
 `GARNET_METAL_PARALLEL_VISION_CONTEXT` defaults OFF and requires the existing
 fused context and MPS score flags. It embeds the independently measured shader
@@ -61,21 +65,31 @@ FP32 activations/KV, prompt/caps/stops and decoder kernels remain unchanged.
 
 Installation verified seven original source identities against `00f524e9`,
 preserved their bytes and installed twelve pinned candidate files. Owned
-validation PID 61469 at `logs/parallel-vision-checks-20261015` has completed
-configure, build and CTest, and continues the original nineteen gates plus a
-trained full-grid gate. The latter freshly encodes the canonical real image
-twice per policy at B1/B2, checks every trained embedding against selected
-global-alpha under the unchanged envelope, verifies twelve actual candidate
-dispatches per image and zero published count after close. It is not yet a
-passed gate or an inference speed claim.
+validation PID 61469 at `logs/parallel-vision-checks-20261015` terminated exit 1
+after 1211.3553 seconds. Configure, build, CTest and all nineteen original
+stages passed. The added full-grid gate freshly encoded the canonical real
+image twice per policy at B1, verified twelve actual candidate dispatches per
+image and zero published count after close, then failed the embedding comparison.
+Of 55,296 values, five exceed `5e-6 + 5e-5*abs(control)`, with worst ratio
+1.2947852 and maximum absolute difference 2.6106834e-5. B2 did not execute.
 
-Owned queue PID 64917 at `logs/parallel-vision-native-20261015` waits for exact
-validation PID 61469, all twenty terminal successful stages and unchanged
-installed source hashes. Only then does it run six sequential native ABBA
-profiles. VL uses the same combined CPU frontend on both builds, with fresh
-encoding and canonical patch/RGB hashes. Full generated token IDs, prompts,
-stops, counts and flags must match before timings are accepted. Initialization,
-first request after initialization, warm means and RSS remain separate.
+Owned queue PID 64917 at `logs/parallel-vision-native-20261015` terminated exit 1
+after 1031.1881 seconds including its wait, correctly refusing performance work
+after the failed dependency. Zero serving requests ran. The dependent head
+component queue also stopped before executing; it was later launched separately
+against the original head calculations after this rejection was archived/audited.
+
+`rejected-native/verification.json` independently verifies 321 archived files,
+all nineteen successful stages and their accepted cases, original/candidate
+source identities, all 55,296 actual embeddings, real counters and the failed
+bound. It does not convert component success into trained-model success. The
+tolerance is unchanged, the flag remains OFF and the selected libraries remain
+preserved. A repair would require new evidence before any serving measurements.
+
+Rejected candidate dylib SHA-256:
+`5d07b2e8fa01c8050dadad3989466f81398dbacde698935a521260c1e214ce53`.
+Complete rejection archive SHA-256:
+`1d7fade597bb2b508c88f6690295b26d40527ad142d2211f0bc3aed085194ae6`.
 
 The full three-model 2x decode / half-TTFT goal remains active and unmet. A
 component speedup, successful build or queued serving study is insufficient

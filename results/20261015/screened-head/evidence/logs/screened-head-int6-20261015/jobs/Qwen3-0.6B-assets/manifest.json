@@ -1,0 +1,207 @@
+{
+  "model": "Qwen3-0.6B",
+  "rows": 151936,
+  "inner": 1024,
+  "seed_rows": 8192,
+  "block": 128,
+  "weights": "Original exact BF16 bits, hard-linked read-only input to the isolated experiment",
+  "raw_sha256": "8f29acf519434862d95613b2b4f6b9d14933a5e4d16baebf8ac0b33b410acfb6",
+  "remaining_norm_sha256": "a786922aa35b748db96e14d8e2679906df1846e416a4c246b6a7df8e7ad52150",
+  "capture_sha256": {
+    "1": "61b82615d027fd2a6c71bf3c2dd4bce4f9741fca62ef605529aaabea7ef0e3a8",
+    "2": "a4bd2065a1f3c159b3ffd6c46746674cf9ea7bf09e163aa3c78560b707fee17c"
+  },
+  "queries": [
+    {
+      "name": "b1-step0",
+      "batch": 1,
+      "step": 0,
+      "predictions": [
+        785
+      ],
+      "input_sha256": "daaa99967837904e09f122560bf8fe65c601cac838b5b9bd84babd82094215b7",
+      "reference_sha256": "1482e2343e66bf35a632521b8e5a50d1d2f31fc49918565e2b9909f94d7208e9"
+    },
+    {
+      "name": "b1-step1",
+      "batch": 1,
+      "step": 1,
+      "predictions": [
+        6722
+      ],
+      "input_sha256": "b2f88b331c173b12627882cca2b821fb0efbd69d81103a37460d5d60a12fd441",
+      "reference_sha256": "c85a20da42af5a7f66fbb86d3d68590d43ba4715fd2c5f93b83ae476287f94d0"
+    },
+    {
+      "name": "b1-step2",
+      "batch": 1,
+      "step": 2,
+      "predictions": [
+        315
+      ],
+      "input_sha256": "d4598f25a6c87a18bf733cec327abde92079043be7df3b08448474f2c50acae8",
+      "reference_sha256": "97095a47c5ac80eae21c41d25a5ec6fda47c7e709ce0ce9205e43cf823f76afb"
+    },
+    {
+      "name": "b1-step3",
+      "batch": 1,
+      "step": 3,
+      "predictions": [
+        9625
+      ],
+      "input_sha256": "f18a7c2549596a09feaf4d8edef92693c4c4c7aafc2fbb181390fceee41bf28a",
+      "reference_sha256": "99c7381caf388968f436ca816b1bc900066c89ee20232c510bd1fabe276e4096"
+    },
+    {
+      "name": "b1-step4",
+      "batch": 1,
+      "step": 4,
+      "predictions": [
+        374
+      ],
+      "input_sha256": "9ee7e7d7895ea2bfd5e6652f372438a83e88604be991eafaa4beece9652cf71f",
+      "reference_sha256": "91cd13a54aec416decb704ef1d944d362fc89b0ee63ba28f2e0c0d96177b9ec9"
+    },
+    {
+      "name": "b1-step5",
+      "batch": 1,
+      "step": 5,
+      "predictions": [
+        12095
+      ],
+      "input_sha256": "affc25677e845a05f972c4e6b3c467a30439cd65a6d8bb5dc6d210b4ff97c159",
+      "reference_sha256": "81238e14df3dfac79cfd4ccfa973e9f411ac2c4dc428ca1cb4d5158ea5dba81e"
+    },
+    {
+      "name": "b1-step6",
+      "batch": 1,
+      "step": 6,
+      "predictions": [
+        13
+      ],
+      "input_sha256": "cd5934851fa26558b1f31cf31b41c9e4c43182acddf7ce3f85f00608fee22147",
+      "reference_sha256": "da59584ffad7ae0fa7d5a3b9538c16fbb7e4b43d26383590166a856648d9626a"
+    },
+    {
+      "name": "b1-step7",
+      "batch": 1,
+      "step": 7,
+      "predictions": [
+        151645
+      ],
+      "input_sha256": "3b3c5b32f35f9a28db370e7473669e8e7fe3a9c4336fbb723bd671a90c7f6d82",
+      "reference_sha256": "81dbff25b96d20cb2a6de5c34b88de13da8acaba33460749cd50ec8e2190cc3b"
+    },
+    {
+      "name": "b2-step0",
+      "batch": 2,
+      "step": 0,
+      "predictions": [
+        785,
+        785
+      ],
+      "input_sha256": "58854f3a2f1e954c30b26e58cc847eef0fa86da892864de10df31c4b7283370d",
+      "reference_sha256": "deb2434226a24a1de117eab0ed74f88dad52d67ebff26b5bc5da9ede9a1f4735"
+    },
+    {
+      "name": "b2-step1",
+      "batch": 2,
+      "step": 1,
+      "predictions": [
+        6722,
+        6722
+      ],
+      "input_sha256": "07697e9f4a64a53faf1de8f8d49f7996714c4eb587dcaac132901a607c8a4a35",
+      "reference_sha256": "23c862464c63cdf0f816f31a2a618bee3aa07031391c153dd6599ea6c91af2ef"
+    },
+    {
+      "name": "b2-step2",
+      "batch": 2,
+      "step": 2,
+      "predictions": [
+        315,
+        315
+      ],
+      "input_sha256": "996812f67321000cde44815eb44871678024dbb2affd3bdc81e823b266343966",
+      "reference_sha256": "34bf743ce14c503f7ffe0b1391758614419167c13d72ba267f3414c18a1f64e8"
+    },
+    {
+      "name": "b2-step3",
+      "batch": 2,
+      "step": 3,
+      "predictions": [
+        9625,
+        9625
+      ],
+      "input_sha256": "92f9854346f629be0eb001b4c3189a7b16ad3b6603fe0d420eff4903ab685f3f",
+      "reference_sha256": "33ca4d3c156ff01156b361d65eb73ac8a99097c4d7a45df127cfc8dfeb752a8e"
+    },
+    {
+      "name": "b2-step4",
+      "batch": 2,
+      "step": 4,
+      "predictions": [
+        374,
+        374
+      ],
+      "input_sha256": "c74870e0d1d63a9279db7af1cbe2be22002933e1ba5108f674f00b416732c013",
+      "reference_sha256": "e4f54a98d81d57f154534ef746995ff8b8505ae7aede72bc465d43d87b4fcfc9"
+    },
+    {
+      "name": "b2-step5",
+      "batch": 2,
+      "step": 5,
+      "predictions": [
+        12095,
+        12095
+      ],
+      "input_sha256": "449ff7e024bddc8d4bb44c2ff0b495a8dd36b358f205af5e6417e89c82732571",
+      "reference_sha256": "d9e61b3b96e7513e8f02e860462ce022a08f4daa5761d658ecf1757c2b41c7cc"
+    },
+    {
+      "name": "b2-step6",
+      "batch": 2,
+      "step": 6,
+      "predictions": [
+        13,
+        13
+      ],
+      "input_sha256": "83bf14abc933f73cf3293dc2f9a819155116a6b5a709f2bfcb7ff9bfd5775712",
+      "reference_sha256": "2167127179c1880494fcd8e9f99c6c7a968acf6e418d16aa21a43de900bdf0a0"
+    },
+    {
+      "name": "b2-step7",
+      "batch": 2,
+      "step": 7,
+      "predictions": [
+        151645,
+        151645
+      ],
+      "input_sha256": "ad71fc484b3664714eb88b72095c53e40c0db45de4b133be2e160399130c89ef",
+      "reference_sha256": "ba2eb33c6cf64f7c7fd2ebe40a1df33388c762df3ae2221d4dd4439e648a7a0b"
+    },
+    {
+      "name": "b2-mixed-first-last",
+      "batch": 2,
+      "step": -1,
+      "predictions": [
+        785,
+        151645
+      ],
+      "input_sha256": "a0ab424a41b9e9d372e8aacb392a5b1949d1777baa9af6af23d10a01eded6cbc",
+      "reference_sha256": "1a6a9ff917952b3d1c626603bdd4f2e477af337169ec520fe0bd30e46ff7028a"
+    }
+  ],
+  "scope": "Derived INT6 screening index; unchanged original BF16 heads and actual native queries.",
+  "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+  "head_tensor": "model.embed_tokens.weight",
+  "approximate_sha256": "9f1b2d9e5b8ddea825f62f247002df20d3aaf113c1493afc914408870a08ad0d",
+  "metadata_layout": [
+    "upward residual L2",
+    "upward original L2",
+    "upward reconstructed L2",
+    "exact power-of-two scale"
+  ],
+  "screen_index": "INT6 with per-row dyadic scale; used only for rejection bounds, retained results always original BF16/FP32 dot",
+  "largest_relative_weight_L2_error": 0.14354119264770857
+}
