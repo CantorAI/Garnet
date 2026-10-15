@@ -1,0 +1,4 @@
+"""Freeze terminal vector-dimension component, including generated scalar control and null."""
+from pathlib import Path
+source=Path(__file__).with_name('archive_padded_mps_body.py').read_text().replace("['padded-mps-body-20261015']","['vector-vision-context-20261015']")
+exec(compile(source,__file__,'exec'))

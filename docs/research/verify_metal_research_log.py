@@ -37,7 +37,7 @@ def main():
               ('dependent-mlp-graph', 'stage-rounded-mlp-graph', 'mlp-prefill-native',
                'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native','eight-fma-body',
                'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
-               'ndarray-matrix-api','ndarray-prefill','ndarray-native')]
+               'ndarray-matrix-api','ndarray-prefill','ndarray-native','vector-vision-context')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):

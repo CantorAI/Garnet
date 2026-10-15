@@ -898,6 +898,25 @@ required for full goal completion. Methods/results already retained are not
 redefined as the goal. No new accepted speed/TTFT gain or target pass yet.
 [Protocol, exact queue and admission rule](../../results/20261015/ndarray-native/README.md#complete-model-comparison-prepared-and-conditionally-queued).
 
+### 2026-10-15 — vector-dimension vision component prepared locally; no execution
+
+During the verified wait on PID84121/controller90454, inspect prior methods:
+parallel contraction failed trained accuracy; scalar eight-key prefetch is
+retained; old fused softmax/context is not a broad repeated gain. Prepare a
+distinct local-only float2/float4 adjacent-dimension contraction. Share probability
+loads while preserving all per-output key FMAs and the tail loop. Current
+selected scalar prefetch8 is the exact source control, both128-thread, with a
+same-pipeline null. No weight/input/resolution/softmax/precision change.
+
+Retain24 shapes, four generations, output/padding bit identity, original FP64
+bound and ABBA raw samples. Predeclare>=5% GPU/wall gain at BOTH serving batches
+with null within5%, all numerical gates and unchanged full-cohort confirmation;
+tie selection by repeated serving geometric wall fraction then float2. No
+statistical-confidence/model claim. Local source generation and Python AST
+pass only. Metal/C++ uncompiled; nothing copied to Mac or launched. Keep the
+current validation/native chain exclusive and frozen. Goal active/unmet.
+[Prepared scope, source differences and future admission rule](../../results/20261015/vector-vision-context/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

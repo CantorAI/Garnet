@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T23:50:07.904282+00:00
+Generated UTC: 2026-10-15T23:52:27.988051+00:00
 
-Base HEAD at generation: `65349f5ed733c46a685588039c37a197cf130a40`. Reports indexed: **157**.
+Base HEAD at generation: `134439a89401dcdcd06aa3866ab61dac06f55d77`. Reports indexed: **158**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -150,6 +150,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/threaded-striped-frame](../../../results/20261015/threaded-striped-frame/README.md) | Combined threaded WebP decode and exact striped resize |
 | [results/20261015/two-body](../../../results/20261015/two-body/README.md) | Two-output SIMD decode: repeated component signals, no model gain established |
 | [results/20261015/two-matrix-probe](../../../results/20261015/two-matrix-probe/README.md) | Per-matrix two-output probe: three dispatch candidates selected |
+| [results/20261015/vector-vision-context](../../../results/20261015/vector-vision-context/README.md) | Adjacent-dimension vision vectorization: local preparation only |
 | [results/20261015/wide-batch-prefill](../../../results/20261015/wide-batch-prefill/README.md) | Exact 160-row VL batch-2 prefill investigation |
 | [results/20261015/wide-batch-vllm](../../../results/20261015/wide-batch-vllm/README.md) | Fresh matched comparison for the validated latency bundle |
 | [results/20261015/wide-body-decode](../../../results/20261015/wide-body-decode/README.md) | Eight-output BF16 body layout: no broad promotion |

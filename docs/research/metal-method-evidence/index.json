@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-15T23:50:07.904282+00:00",
-  "source_commit": "65349f5ed733c46a685588039c37a197cf130a40",
+  "generated_at_utc": "2026-10-15T23:52:27.988051+00:00",
+  "source_commit": "134439a89401dcdcd06aa3866ab61dac06f55d77",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 157,
+  "report_count": 158,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -3972,6 +3972,21 @@
         "confirmation",
         "initial"
       ]
+    },
+    {
+      "experiment_id": "results/20261015/vector-vision-context",
+      "title": "Adjacent-dimension vision vectorization: local preparation only",
+      "report_path": "results/20261015/vector-vision-context/README.md",
+      "report_sha256": "4b72e44f5b9500266a72a82aee97d7f65f7b46469704b799f4ab4f748ae30b86",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Adjacent-dimension vision vectorization: local preparation only\n\nStatus: generated locally; Python runner/auditor AST passes. Metal/Objective-C++\nis uncompiled and unexecuted. Files have not been copied to the Mac. No numerical\ncompatibility, latency, throughput, memory or model gain is established.\nThe live NDArray validation/comparison chain retains exclusive Mac use.\n\nHypothesis: sharing each probability across two/four adjacent value dimensions\nmay reduce load/scheduling work while retaining each output's original FMA order.\nUse float2/float4 value loads and separate vector components; no reduction across\nkeys/dimensions and no partial-sum regrouping. Checkpoint, vision patch dimensions,\nsoftmax, keys, probabilities and FP32 per-output key order remain unchanged.\nWhether the compiler/hardware preserves exact outputs and improves speed must\nbe tested; vector source syntax or fewer logical loads does not prove either.\n\nThis differs from the [rejected parallel contraction](../parallel-vision-context/README.md),\nwhich changed the key reduction order. It also differs from the prior\n[scalar prefetch variants](../serial-vision-context/README.md), which only changed\nprefetch width/threadgroup. The control comes directly from the selected native\n`serial_vision_prefetch_shader.h` scalar eight-key kernel, compiled with fast\nmath disabled. Candidate components retain all eight FMAs in order and the\noriginal tail loop. Vector widths require aligned hidden/head dimensions and\ninput/output row strides; only the original aligned component shapes are used.\n\nThree policies: same-scalar/same-pipeline null, float2, float4;128 threads per\ngroup for all. Null and control dispatch identical GPU work. Softmax stays\nseparate and unchanged in both arms. Dispatch count divides by vector width\nonly for vector candidates. Padding and typed vector alignment are checked.\n\nPreserve all24 original shapes (B1/B2,4/24/216 keys,2/12 heads,8/64 dimensions),\nfour changed-input generations including large scores, full output/padding bit\nidentity and unchanged FP64 `5e-6+5e-5*abs(reference)` bound. Failed admission\ngets no timings. Passing groups retain250ms alternating warmup, two ABBA rounds,\n20 raw GPU/wall samples per position and all original guard/source identities.\nThese synthetic inputs are not the trained vision model or full inference.\n\nBefore any GPU timing, declare the screen: repeat the unchanged complete\nthree-policy cohort only if a vector policy passes every original numerical\ngate and, at both serving-shaped batches (216 keys,12 heads,64 dimensions),\nGPU and wall means are <=0.95 of control with own null GPU/wall within5%.\nConfirmation must satisfy the same conditions. If both widths qualify, choose\nthe lower geometric-mean serving wall fraction across the two cohorts, with\nfloat2 on an exact tie. This is a pragmatic screen, not a confidence interval.\nNo favorable-repeat search. Whole trained-grid bit equality, native validation,\nfull model and fresh matched vLLM evidence remain required for later promotion.\n\nPrepared generators, runner, frozen original-gate auditor and terminal archiver\nare under `test2026/metal/*vector_vision*`. The helper\n`freeze_vector_vision_auditor.py` preserves the original assertions while adding\nselected-control regeneration, current-host identity and exact null output.\nNo launcher is provided yet: finish/archive the current NDArray chain before\nchoosing the next exclusive GPU experiment. Do not run another inference/probe\nwhile a confirmed live validation/native/comparator job remains active.\n",
+      "commands_as_documented": [],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "README.md"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261015/wide-batch-prefill",
