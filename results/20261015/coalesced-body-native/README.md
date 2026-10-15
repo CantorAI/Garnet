@@ -29,6 +29,16 @@ flags off. `primitive-ctest.log` and `disabled-compile.json` retain these
 preliminary results. Full vision-grid and51 trained-head checks also passed.
 Complete trained-model validation and serving measurements are still pending.
 
+A separate CPU-only audit checks byte/nibble reconstruction across every
+checkpoint matrix matching the decoder-layer name and shape admission:
+168 text,72 coder and138 VL matrices. All compact values recover exactly.
+Compact block fractions are96.44%,95.99% and96.31%, respectively. The added
+one-copy buffers estimate to591.06,451.21 and705.66MiB. `checkpoint-coverage/`
+preserves the executed source and report. These are checkpoint counts and
+one-copy storage estimates, not proof of graph usage/sharing, actual GPU
+allocations, process RSS or performance. The upcoming native run measures
+the real initialization and memory costs.
+
 Validation PID88930 is running the full28 original trained/reference/recovery
 stages. Queue PID88983 requires that exact handle to finish successfully and
 all28 stage records to pass before six complete native ABBA profiles. No other

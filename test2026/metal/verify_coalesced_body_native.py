@@ -27,5 +27,15 @@ for case in off['cases']:
     assert case['exit_code']==0 and '-fsyntax-only' in case['command'] and '-DGARNET_METAL_COALESCED_BF16_BODY=1' not in case['command']
     assert ('-DGARNET_METAL_INTERLEAVED_BF16_BODY=1' in case['command'])==(case['name']=='coalesced_off')
 result.update(disabled_context_syntax_cases=2)
+coverage=root/'logs/coalesced-checkpoint-coverage-20261015'
+coverage_report=json.loads((coverage/'report.json').read_text())
+assert digest(coverage/'source.py')==coverage_report['source_sha256']==digest(root/'source/test2026/metal/audit_coalesced_checkpoint_coverage.py')
+for model in coverage_report['models']:
+    assert model['checkpoint_sha256']==proof['omitted']['models/'+model['model']+'/model.safetensors']['sha256']
+    assert model['eligible_matrices']==len(model['cases']) and model['blocks']==sum(c['blocks'] for c in model['cases']) and model['compact_blocks']==sum(c['compact_blocks'] for c in model['cases'])
+    for c in model['cases']:
+        assert c['exact_byte_plane_roundtrip'] and 0<=c['compact_blocks']<=c['blocks']
+        assert c['additional_compact_bytes_one_copy']==(c['blocks']*772 if c['compact_blocks'] else 0)
+result.update(cpu_checkpoint_matrices=sum(m['eligible_matrices'] for m in coverage_report['models']))
 '''+needle)
 exec(compile(source,__file__,'exec'))

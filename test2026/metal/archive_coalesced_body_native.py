@@ -6,4 +6,5 @@ for old,new in [('build-interleaved-bf16-body','build-coalesced-bf16-body'),('in
 source=source.replace("'garnet_interleaved_bf16_body_test','libgarnet.dylib'","'garnet_interleaved_bf16_body_test','garnet_coalesced_bf16_body_test','libgarnet.dylib'")
 needle='proof=dict(hardware=hardware,';assert source.count(needle)==1
 source=source.replace(needle,"off=root/'logs/coalesced-native-disabled-compile-20261015'\noff_report=json.loads((off/'report.json').read_text());assert all(v['exit_code']==0 for v in off_report['cases'])\nassert off_report['source_sha256']==digest(root/'source/src/backends/metal/metal_context.mm')\nfor p in off.glob('*'):\n    if p.is_file():entries[str(p.relative_to(root))]=p\n"+needle)
+source=source.replace(needle,"coverage=root/'logs/coalesced-checkpoint-coverage-20261015'\ncoverage_report=json.loads((coverage/'report.json').read_text());assert coverage_report['source_sha256']==digest(coverage/'source.py')\nfor p in coverage.glob('*'):\n    if p.is_file():entries[str(p.relative_to(root))]=p\n"+needle)
 exec(compile(source,__file__,'exec'))
