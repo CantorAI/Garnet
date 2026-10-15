@@ -1,0 +1,13 @@
+Test project /Users/zsdx/garnet-metal-investigation/build-interleaved-screen-index
+    Start 1: metal_prefill_stream_reference
+1/4 Test #1: metal_prefill_stream_reference .......   Passed    0.79 sec
+    Start 2: metal_dirty_prefix_reset_reference
+2/4 Test #2: metal_dirty_prefix_reset_reference ...   Passed    0.51 sec
+    Start 3: metal_mps_matmul_reference
+3/4 Test #3: metal_mps_matmul_reference ...........   Passed    1.83 sec
+    Start 4: metal_screened_head_reference
+4/4 Test #4: metal_screened_head_reference ........   Passed    0.56 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   3.69 sec

@@ -44,9 +44,11 @@ mixed-row fixture. Candidate/control below 1 means faster.
 
 Wall reductions repeat at 10.6–10.8% for text/coder B1, 14.2–16.1% for
 text/coder B2, 15.2–15.4% for VL B1 and 17.2–17.4% for VL B2. These are
-component improvements, not decoder tokens/s or TTFT gains. A separate native
-integration is now under validation, as recorded below. No serving result
-or new vLLM comparison is claimed yet. The full goal remains unmet.
+component improvements, not decoder tokens/s or TTFT gains. The subsequent
+[native validation and repeat](../interleaved-head-native/README.md) pass 144
+complete outputs but show mixed profile-dependent effects: VL decode improves
+about 3%, text B1 decode regresses and some TTFTs worsen. No fresh vLLM ratio
+is claimed. The full goal remains unmet.
 
 The OFF-by-default `GARNET_METAL_INTERLEAVED_SCREEN_INDEX` native option
 requires SCREENED_HEAD and retains original shape/admission and fallback
@@ -60,18 +62,18 @@ their frozen row-major configuration without accessing the new property.
 Installation pins 18 files and preserves 14 verified originals from base
 `b0b0e134cd3e0668e553e84964d4d7e93212f703`. All preceding native/component jobs
 were terminal and archived before the source change. Validation PID 33362
-has passed build, CTest, bit-identical trained full-grid vision and all 51
-trained heads. CTest includes nonmultiple-of-four vocabulary size, outside-seed
+passed all 27 stages, including build, CTest, bit-identical trained full-grid
+vision and all 51 trained heads. CTest includes nonmultiple-of-four vocabulary size, outside-seed
 ties, bounded/nonfinite/mixed fallback, ownership and Begin/Abort recovery.
 Actual trained checks record seed width 1024 and interleaved dispatch count 1.
-Remaining original-model and trained session recovery stages are running.
+All original-model and trained session recovery stages also pass.
 
-Queue PID 33417 waits for that exact owned job and all 27 passing stages before
-six-profile native ABBA against `build-small-screen-seed` (d27e7465...). Both
+PID 33417 then completed six-profile native ABBA against
+`build-small-screen-seed` (d27e7465...), followed by fresh repeat PID 59868. Both
 policies retain the same 1024 seed, prefill/reset bundle and serial vision
 prefetch; only index layout and observation counters differ. The source stays
-fixed until terminal results are archived. A fresh native repeat follows the
-first independent audit if the candidate warrants it. The 1024-versus-8192
+fixed until terminal results were archived. The independent audits verify
+1,861 files and 144 complete outputs. The 1024-versus-8192
 tradeoffs remain separate in [the small-seed native record](../small-seed-native/README.md).
 
 Both Objective-C++ harnesses compiled on the M4. Xcode's offline Metal tool
