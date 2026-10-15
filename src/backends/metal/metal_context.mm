@@ -3,6 +3,9 @@
 #include "exact_half_codec.h"
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
 #include "interleaved_bf16_body_shader.h"
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+#include "coalesced_body_block_shader.h"
+#endif
 #endif
 #ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
 #include "serial_vision_prefetch_shader.h"
@@ -58,6 +61,9 @@ struct MetalBF16Weight::Impl {
     id<MTLBuffer> buffer;
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
     id<MTLBuffer> interleavedBody;
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+    id<MTLBuffer> coalescedPayload,coalescedMetadata;size_t coalescedBlocks=0,coalescedCompact=0;
+#endif
 #endif
     MPSMatrix* exactHalf;
     id<MTLBuffer> halfScales;
@@ -70,6 +76,27 @@ struct MetalBF16Weight::Impl {
 };
 bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&impl_->halfScales;}
 bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->globalHalf;}
+bool MetalBF16Weight::CoalescedBlockReady() const {
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+    return impl_&&impl_->coalescedPayload&&impl_->coalescedMetadata;
+#else
+    return false;
+#endif
+}
+size_t MetalBF16Weight::CoalescedBlockCount() const {
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+    return impl_?impl_->coalescedBlocks:0;
+#else
+    return 0;
+#endif
+}
+size_t MetalBF16Weight::CoalescedCompactCount() const {
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+    return impl_?impl_->coalescedCompact:0;
+#else
+    return 0;
+#endif
+}
 bool MetalBF16Weight::InterleavedBodyReady() const {
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
     return impl_&&impl_->interleavedBody;
@@ -98,6 +125,9 @@ struct MetalPipelines {
     id<MTLComputePipelineState> bf16Decode,bf16DecodeSmall,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
     id<MTLComputePipelineState> bf16BodyInterleaved;
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+    id<MTLComputePipelineState> bf16BodyCoalescedBlock;
+#endif
 #endif
     id<MTLComputePipelineState> bf16Split,bf16SplitReduce;
 #ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
@@ -178,7 +208,7 @@ struct MetalContext::Impl {
     size_t packedPrefillNormDispatches=0;
     size_t globalHalfAlphaDispatches=0;
     size_t wideBatchPrefillDispatches=0;
-    size_t interleavedBodyDispatches=0;
+    size_t interleavedBodyDispatches=0,coalescedBlockDispatches=0;
     size_t visionGlobalAlphaDispatches=0;
     size_t visionParallelDispatches=0;
     size_t joinedGlobalMlpBlocks=0;
@@ -1274,6 +1304,9 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
         source=[source stringByAppendingString:[NSString stringWithUTF8String:kInterleavedBF16BodyShader]];
 #endif
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+        source=[source stringByAppendingString:[NSString stringWithUTF8String:kCoalescedBodyBlockShader]];
+#endif
         auto library=[impl_->device newLibraryWithSource:source options:compileOptions error:&error];
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
@@ -1311,6 +1344,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
         impl_->kernels->bf16BodyInterleaved=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_body_interleaved"] error:&error];
         if(!impl_->kernels->bf16BodyInterleaved)throw std::runtime_error("Cannot create interleaved BF16 body pipeline");
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+        impl_->kernels->bf16BodyCoalescedBlock=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_body_coalesced_block"] error:&error];
+        if(!impl_->kernels->bf16BodyCoalescedBlock)throw std::runtime_error("Cannot create coalesced block pipeline");
+#endif
 #endif
 #ifdef GARNET_METAL_SINGLE_CODER_HEAD
         impl_->kernels->singleCoderHead=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_single_coder_head"] error:&error];
@@ -1466,6 +1503,29 @@ MetalBF16Weight MetalContext::UploadBF16(const void* data,size_t bytes,size_t ro
                 }
                 value->interleavedBody=[impl_->device newBufferWithBytes:packed.data() length:packed.size()*2 options:MTLResourceStorageModeShared];
                 if(!value->interleavedBody)throw std::runtime_error("Interleaved BF16 body allocation failed");
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+                if(columns%128==0) {
+                    size_t blocks=padded/4*(columns/128);
+                    if(blocks>impl_->device.maxBufferLength/768||blocks>impl_->device.maxBufferLength/4)throw std::runtime_error("Coalesced block storage overflow");
+                    std::vector<uint8_t> payload(blocks*768,0);std::vector<uint32_t> metadata(blocks,0);
+                    size_t compact=0;
+                    for(size_t group=0;group<padded/4;++group)for(size_t block=0;block<columns/128;++block) {
+                        size_t index=group*(columns/128)+block;uint16_t low=255,high=0;
+                        for(size_t k=0;k<128;++k)for(size_t j=0;j<4;++j){uint16_t bits=packed[group*columns*4+(block*128+k)*4+j],e=(bits>>7)&255;low=std::min(low,e);high=std::max(high,e);}
+                        if(high-low>15)continue;
+                        metadata[index]=uint32_t(low)|256u;++compact;
+                        for(size_t k=0;k<128;++k)for(size_t j=0;j<4;++j){size_t position=k*4+j,at=index*768;
+                            uint16_t bits=packed[group*columns*4+(block*128+k)*4+j];payload[at+position]=uint8_t((bits&127)|((bits>>8)&128));
+                            uint8_t tag=uint8_t(((bits>>7)&255)-low);payload[at+512+position/2]|=uint8_t(tag<<((position%2)*4));}
+                        for(size_t k=0;k<128;++k)for(size_t j=0;j<4;++j){size_t position=k*4+j,at=index*768;uint16_t sm=payload[at+position],tag=(payload[at+512+position/2]>>((position%2)*4))&15;
+                            uint16_t bits=uint16_t((sm&127)|((sm&128)<<8)|((tag+low)<<7));
+                            if(bits!=packed[group*columns*4+(block*128+k)*4+j])throw std::runtime_error("Coalesced block original-bit roundtrip failed");}
+                    }
+                    value->coalescedBlocks=blocks;value->coalescedCompact=compact;
+                    if(compact){value->coalescedPayload=[impl_->device newBufferWithBytes:payload.data() length:payload.size() options:MTLResourceStorageModeShared];value->coalescedMetadata=[impl_->device newBufferWithBytes:metadata.data() length:metadata.size()*4 options:MTLResourceStorageModeShared];if(!value->coalescedPayload||!value->coalescedMetadata)throw std::runtime_error("Coalesced block allocation failed");}
+                }
+
+#endif
             }
         }
 #endif
@@ -1765,6 +1825,7 @@ size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->pack
 size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->globalHalfAlphaDispatches;}
 size_t MetalContext::LastWideBatchPrefillDispatches() const {return impl_->wideBatchPrefillDispatches;}
 size_t MetalContext::LastInterleavedBodyDispatches() const {return impl_->interleavedBodyDispatches;}
+size_t MetalContext::LastCoalescedBlockDispatches() const {return impl_->coalescedBlockDispatches;}
 size_t MetalContext::LastVisionGlobalAlphaDispatches() const {return impl_->visionGlobalAlphaDispatches;}
 size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
 size_t MetalContext::LastVisionPrefetchDispatches() const {return impl_->visionPrefetchDispatches;}
@@ -1938,6 +1999,11 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
         const bool interleaved=a.rows<=2&&w->interleavedBody;
         if(interleaved){pipeline=impl_->kernels->bf16BodyInterleaved;threads=128;decodeColumns=16;}
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+        const bool coalesced=interleaved&&w->coalescedPayload;
+        if(coalesced){pipeline=impl_->kernels->bf16BodyCoalescedBlock;threads=64;decodeColumns=8;++impl_->coalescedBlockDispatches;}
+#endif
+
 #endif
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)
             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
@@ -1949,6 +2015,9 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
         [encoder setBuffer:interleaved?w->interleavedBody:w->buffer offset:0 atIndex:1];
         if(interleaved)++impl_->interleavedBodyDispatches;
+#ifdef GARNET_METAL_COALESCED_BF16_BODY
+        if(coalesced){[encoder setBuffer:w->coalescedPayload offset:0 atIndex:4];[encoder setBuffer:w->coalescedMetadata offset:0 atIndex:5];}
+#endif
 #else
         [encoder setBuffer:w->buffer offset:0 atIndex:1];
 #endif
@@ -2052,7 +2121,7 @@ void MetalContext::Begin() {
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
     impl_->deferredZeroBytes=impl_->deferredZeroStates=0;
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->coalescedBlockDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
 #ifdef GARNET_METAL_DEFERRED_STATE_ZERO
@@ -2724,7 +2793,7 @@ void MetalContext::Abort() {
     for(const auto& entry:impl_->zeroQueued){entry.second->pending=false;entry.second->ready=false;}
     impl_->zeroQueued.clear();
 #endif
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->coalescedBlockDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

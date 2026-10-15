@@ -35,6 +35,9 @@ public:
     bool ExactHalfReady() const;
     bool GlobalHalfReady() const;
     bool InterleavedBodyReady() const;
+    bool CoalescedBlockReady() const;
+    size_t CoalescedBlockCount() const;
+    size_t CoalescedCompactCount() const;
 };
 // C++ interface keeps Objective-C ownership out of model-facing headers.
 struct MetalScreenedDiagnostics {
@@ -86,6 +89,7 @@ public:
     size_t LastGlobalHalfAlphaDispatches() const;
     size_t LastWideBatchPrefillDispatches() const;
     size_t LastInterleavedBodyDispatches() const;
+    size_t LastCoalescedBlockDispatches() const;
     size_t LastVisionGlobalAlphaDispatches() const;
     size_t LastVisionParallelDispatches() const;
     size_t LastVisionPrefetchDispatches() const;
