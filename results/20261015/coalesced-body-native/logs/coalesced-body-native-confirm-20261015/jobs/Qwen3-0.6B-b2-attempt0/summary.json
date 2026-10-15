@@ -1,0 +1,3450 @@
+{
+  "scope": "Full native ABBA: original latency bundle, exact coalesced BF16 body blocks with64-thread decode; both VL B2 plans80. No fresh vLLM ratio.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 59.201895841397345,
+          "decode_tps": 60.463967032392205,
+          "initialization_s": 2.39648854220286,
+          "peak_individual_rss_bytes": 2553487360
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 56.29202083218843,
+          "decode_tps": 71.33969509745471,
+          "initialization_s": 3.4803561670705676,
+          "peak_individual_rss_bytes": 4000325632
+        }
+      },
+      "decode_ratio": 1.179871229078239,
+      "ttft_fraction": 0.9508482799773084,
+      "exact_complete_outputs": true
+    }
+  ],
+  "records": [
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.3938817093148828,
+      "ttft_seconds": 0.14387999987229705,
+      "total_seconds": 0.2590210409834981,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 5.054101347923279e-05,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.023581292014569044,
+        0.015988000202924013,
+        0.015067624859511852,
+        0.014787832740694284,
+        0.015151874627918005,
+        0.015221249777823687,
+        0.014989083167165518
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 60.98253807860618,
+      "decode_window_seconds": 0.11514104111120105,
+      "decode_wall_steps_per_second": 60.79500352302297,
+      "native_decode_ms": [
+        23.380667,
+        15.191917,
+        14.943833,
+        14.648625,
+        15.017875,
+        15.080416,
+        14.848375
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.214042,
+          "encode_ms": 0.568875,
+          "gpu_ms": 13.807624578475952,
+          "wait_ms": 22.595125
+        },
+        {
+          "prepare_ms": 0.156333,
+          "encode_ms": 0.540709,
+          "gpu_ms": 13.64450016990304,
+          "wait_ms": 14.493541
+        },
+        {
+          "prepare_ms": 0.14475,
+          "encode_ms": 0.480583,
+          "gpu_ms": 13.871375005692244,
+          "wait_ms": 14.315667
+        },
+        {
+          "prepare_ms": 0.15,
+          "encode_ms": 0.513083,
+          "gpu_ms": 13.589666690677404,
+          "wait_ms": 13.982625
+        },
+        {
+          "prepare_ms": 0.155584,
+          "encode_ms": 0.532916,
+          "gpu_ms": 13.864041771739721,
+          "wait_ms": 14.327
+        },
+        {
+          "prepare_ms": 0.152125,
+          "encode_ms": 0.530458,
+          "gpu_ms": 13.86695820838213,
+          "wait_ms": 14.394583
+        },
+        {
+          "prepare_ms": 0.170417,
+          "encode_ms": 0.521208,
+          "gpu_ms": 13.694500084966421,
+          "wait_ms": 14.15425
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.229791,
+        "encode_ms": 20.653417,
+        "gpu_ms": 58.79033310338855,
+        "wait_ms": 58.057208,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 78.94425,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": false,
+      "interleaved_body_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "coalesced_block_enabled": false,
+      "coalesced_block_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2554019840
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.3938817093148828,
+      "ttft_seconds": 0.05477591697126627,
+      "total_seconds": 0.17293666675686836,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0023957076482474804,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 13303808,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.016102041117846966,
+        0.01599479140713811,
+        0.016607791651040316,
+        0.016467790585011244,
+        0.01769279222935438,
+        0.01751687517389655,
+        0.01743341702967882
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 59.41493307663621,
+      "decode_window_seconds": 0.11816074978560209,
+      "decode_wall_steps_per_second": 59.24133024461352,
+      "native_decode_ms": [
+        15.886041,
+        15.832541,
+        16.465083,
+        16.335083,
+        17.578375,
+        17.406875,
+        17.336542
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.261833,
+          "encode_ms": 0.673125,
+          "gpu_ms": 14.5112918689847,
+          "wait_ms": 14.947417
+        },
+        {
+          "prepare_ms": 0.186875,
+          "encode_ms": 0.615875,
+          "gpu_ms": 14.539416413754225,
+          "wait_ms": 15.027083
+        },
+        {
+          "prepare_ms": 0.174417,
+          "encode_ms": 0.58625,
+          "gpu_ms": 14.990749768912792,
+          "wait_ms": 15.702458
+        },
+        {
+          "prepare_ms": 0.1815,
+          "encode_ms": 0.587208,
+          "gpu_ms": 15.117416623979807,
+          "wait_ms": 15.565333
+        },
+        {
+          "prepare_ms": 0.16225,
+          "encode_ms": 0.544667,
+          "gpu_ms": 16.484958585351706,
+          "wait_ms": 16.870625
+        },
+        {
+          "prepare_ms": 0.157417,
+          "encode_ms": 0.53325,
+          "gpu_ms": 16.329541336745024,
+          "wait_ms": 16.7155
+        },
+        {
+          "prepare_ms": 0.143167,
+          "encode_ms": 0.457458,
+          "gpu_ms": 16.25500014051795,
+          "wait_ms": 16.73525
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.225917,
+        "encode_ms": 5.92975,
+        "gpu_ms": 47.95704176649451,
+        "wait_ms": 43.717541,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 49.87725,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": false,
+      "interleaved_body_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "coalesced_block_enabled": false,
+      "coalesced_block_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2554019840
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.3938817093148828,
+      "ttft_seconds": 0.06399462511762977,
+      "total_seconds": 0.17685050005093217,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0009476249106228352,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 13303808,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.017289291601628065,
+        0.016006417106837034,
+        0.015840415842831135,
+        0.016163082793354988,
+        0.015912333969026804,
+        0.015865125227719545,
+        0.015522082801908255
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 62.1676532006362,
+      "decode_window_seconds": 0.1128558749333024,
+      "decode_wall_steps_per_second": 62.026013303578445,
+      "native_decode_ms": [
+        17.142125,
+        15.899792,
+        15.741042,
+        16.053125,
+        15.818833,
+        15.770458,
+        15.427125
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.187542,
+          "encode_ms": 0.4855,
+          "gpu_ms": 16.029749996960163,
+          "wait_ms": 16.468208
+        },
+        {
+          "prepare_ms": 0.137542,
+          "encode_ms": 0.46025,
+          "gpu_ms": 14.945374801754951,
+          "wait_ms": 15.301291
+        },
+        {
+          "prepare_ms": 0.138875,
+          "encode_ms": 0.457,
+          "gpu_ms": 14.635625295341015,
+          "wait_ms": 15.144333
+        },
+        {
+          "prepare_ms": 0.161084,
+          "encode_ms": 0.529041,
+          "gpu_ms": 14.84387507662177,
+          "wait_ms": 15.362375
+        },
+        {
+          "prepare_ms": 0.140666,
+          "encode_ms": 0.454292,
+          "gpu_ms": 14.777250122278929,
+          "wait_ms": 15.223125
+        },
+        {
+          "prepare_ms": 0.138333,
+          "encode_ms": 0.454792,
+          "gpu_ms": 14.597291592508554,
+          "wait_ms": 15.176625
+        },
+        {
+          "prepare_ms": 0.138208,
+          "encode_ms": 0.455583,
+          "gpu_ms": 14.339500106871128,
+          "wait_ms": 14.832584
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.247458,
+        "encode_ms": 5.828,
+        "gpu_ms": 59.47074992582202,
+        "wait_ms": 55.585667,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 61.662208,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": false,
+      "interleaved_body_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "coalesced_block_enabled": false,
+      "coalesced_block_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 2554019840
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 3.4730068342760205,
+      "ttft_seconds": 0.14302162500098348,
+      "total_seconds": 0.24312649993225932,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 5.050003528594971e-05,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.02177025005221367,
+        0.012794084381312132,
+        0.012796291150152683,
+        0.012902125250548124,
+        0.013117999769747257,
+        0.013184583745896816,
+        0.013206125237047672
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 70.16034474169217,
+      "decode_window_seconds": 0.10010487493127584,
+      "decode_wall_steps_per_second": 69.92666445870545,
+      "native_decode_ms": [
+        21.446291,
+        12.662958,
+        12.650833,
+        12.782625,
+        13.007834,
+        13.081666,
+        13.10925
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.200416,
+          "encode_ms": 0.667542,
+          "gpu_ms": 11.562250088900328,
+          "wait_ms": 20.575458
+        },
+        {
+          "prepare_ms": 0.153417,
+          "encode_ms": 0.546958,
+          "gpu_ms": 11.573791969567537,
+          "wait_ms": 11.959792
+        },
+        {
+          "prepare_ms": 0.154,
+          "encode_ms": 0.55725,
+          "gpu_ms": 11.531041469424963,
+          "wait_ms": 11.938416
+        },
+        {
+          "prepare_ms": 0.142125,
+          "encode_ms": 0.519791,
+          "gpu_ms": 11.731041595339775,
+          "wait_ms": 12.119625
+        },
+        {
+          "prepare_ms": 0.13875,
+          "encode_ms": 0.495667,
+          "gpu_ms": 11.948375031352043,
+          "wait_ms": 12.372542
+        },
+        {
+          "prepare_ms": 0.135583,
+          "encode_ms": 0.483708,
+          "gpu_ms": 12.100249994546175,
+          "wait_ms": 12.461667
+        },
+        {
+          "prepare_ms": 0.134333,
+          "encode_ms": 0.482375,
+          "gpu_ms": 12.096708174794912,
+          "wait_ms": 12.491875
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.225333,
+        "encode_ms": 20.865542,
+        "gpu_ms": 55.01937493681908,
+        "wait_ms": 54.006458,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 75.102292,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": true,
+      "interleaved_body_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "coalesced_block_enabled": true,
+      "coalesced_block_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 4013162496
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 3.4730068342760205,
+      "ttft_seconds": 0.05488404119387269,
+      "total_seconds": 0.15228400006890297,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0024256249889731407,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 13303808,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.01392800034955144,
+        0.013655333314090967,
+        0.013875707983970642,
+        0.014079874847084284,
+        0.013661374803632498,
+        0.013743625022470951,
+        0.01418729079887271
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 72.06746634349386,
+      "decode_window_seconds": 0.09739995887503028,
+      "decode_wall_steps_per_second": 71.86861350713095,
+      "native_decode_ms": [
+        13.783833,
+        13.55575,
+        13.763916,
+        13.985667,
+        13.568292,
+        13.650042,
+        14.095333
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.175542,
+          "encode_ms": 0.537125,
+          "gpu_ms": 12.66462542116642,
+          "wait_ms": 13.070208
+        },
+        {
+          "prepare_ms": 0.138458,
+          "encode_ms": 0.498833,
+          "gpu_ms": 12.53920840099454,
+          "wait_ms": 12.917625
+        },
+        {
+          "prepare_ms": 0.15625,
+          "encode_ms": 0.554291,
+          "gpu_ms": 12.612791266292334,
+          "wait_ms": 13.052584
+        },
+        {
+          "prepare_ms": 0.137167,
+          "encode_ms": 0.48025,
+          "gpu_ms": 12.99229171127081,
+          "wait_ms": 13.367541
+        },
+        {
+          "prepare_ms": 0.135333,
+          "encode_ms": 0.482375,
+          "gpu_ms": 12.582499999552965,
+          "wait_ms": 12.949917
+        },
+        {
+          "prepare_ms": 0.134792,
+          "encode_ms": 0.474,
+          "gpu_ms": 12.67262501642108,
+          "wait_ms": 13.040583
+        },
+        {
+          "prepare_ms": 0.137042,
+          "encode_ms": 0.477958,
+          "gpu_ms": 13.076375238597393,
+          "wait_ms": 13.479583
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.331333,
+        "encode_ms": 6.168542,
+        "gpu_ms": 48.346125055104494,
+        "wait_ms": 44.362458,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 50.863417,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": true,
+      "interleaved_body_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "coalesced_block_enabled": true,
+      "coalesced_block_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 4013162496
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 3.4730068342760205,
+      "ttft_seconds": 0.05719370907172561,
+      "total_seconds": 0.15522500034421682,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0007555843330919743,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 13303808,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.013992291875183582,
+        0.014471916947513819,
+        0.013613707851618528,
+        0.014149167109280825,
+        0.013992291875183582,
+        0.013578584417700768,
+        0.013876667246222496
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 71.66651352426418,
+      "decode_window_seconds": 0.09803129127249122,
+      "decode_wall_steps_per_second": 71.40577165858761,
+      "native_decode_ms": [
+        13.846917,
+        14.360625,
+        13.470958,
+        14.018416,
+        13.862083,
+        13.441875,
+        13.738084
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.16,
+          "encode_ms": 0.521042,
+          "gpu_ms": 12.78849970549345,
+          "wait_ms": 13.165125
+        },
+        {
+          "prepare_ms": 0.136417,
+          "encode_ms": 0.478875,
+          "gpu_ms": 13.03349994122982,
+          "wait_ms": 13.74275
+        },
+        {
+          "prepare_ms": 0.150125,
+          "encode_ms": 0.552083,
+          "gpu_ms": 12.37570820376277,
+          "wait_ms": 12.766292
+        },
+        {
+          "prepare_ms": 0.154583,
+          "encode_ms": 0.547125,
+          "gpu_ms": 12.870999984443188,
+          "wait_ms": 13.314083
+        },
+        {
+          "prepare_ms": 0.168417,
+          "encode_ms": 0.557708,
+          "gpu_ms": 12.752541806548834,
+          "wait_ms": 13.13375
+        },
+        {
+          "prepare_ms": 0.147375,
+          "encode_ms": 0.537541,
+          "gpu_ms": 12.384375091642141,
+          "wait_ms": 12.753834
+        },
+        {
+          "prepare_ms": 0.176584,
+          "encode_ms": 0.624791,
+          "gpu_ms": 12.561374809592962,
+          "wait_ms": 12.935042
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.230125,
+        "encode_ms": 5.462041,
+        "gpu_ms": 52.8974998742342,
+        "wait_ms": 49.149667,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 54.842708,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": true,
+      "interleaved_body_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "coalesced_block_enabled": true,
+      "coalesced_block_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 0,
+      "peak_individual_rss_bytes": 4013162496
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 3.4877054998651147,
+      "ttft_seconds": 0.14291016710922122,
+      "total_seconds": 0.24396829213947058,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 4.7625042498111725e-05,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.022225375287234783,
+        0.012974124867469072,
+        0.013104500249028206,
+        0.01295475009828806,
+        0.013051999732851982,
+        0.01318341726437211,
+        0.01327625010162592
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 69.46483071773592,
+      "decode_window_seconds": 0.10105812503024936,
+      "decode_wall_steps_per_second": 69.2670678177011,
+      "native_decode_ms": [
+        22.023792,
+        12.842458,
+        12.995667,
+        12.853917,
+        12.956208,
+        13.085375,
+        13.182833
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.201125,
+          "encode_ms": 0.6795,
+          "gpu_ms": 11.712499894201756,
+          "wait_ms": 21.139084
+        },
+        {
+          "prepare_ms": 0.168833,
+          "encode_ms": 0.596375,
+          "gpu_ms": 11.66324969381094,
+          "wait_ms": 12.075834
+        },
+        {
+          "prepare_ms": 0.148792,
+          "encode_ms": 0.524083,
+          "gpu_ms": 11.947249993681908,
+          "wait_ms": 12.321625
+        },
+        {
+          "prepare_ms": 0.142542,
+          "encode_ms": 0.501416,
+          "gpu_ms": 11.830625124275684,
+          "wait_ms": 12.209125
+        },
+        {
+          "prepare_ms": 0.138666,
+          "encode_ms": 0.497375,
+          "gpu_ms": 11.895624920725822,
+          "wait_ms": 12.319459
+        },
+        {
+          "prepare_ms": 0.136709,
+          "encode_ms": 0.495,
+          "gpu_ms": 12.057499960064888,
+          "wait_ms": 12.452916
+        },
+        {
+          "prepare_ms": 0.139625,
+          "encode_ms": 0.486416,
+          "gpu_ms": 12.13849987834692,
+          "wait_ms": 12.556084
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.236167,
+        "encode_ms": 22.719875,
+        "gpu_ms": 59.25700021907687,
+        "wait_ms": 58.260417,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 81.220334,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": true,
+      "interleaved_body_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "coalesced_block_enabled": true,
+      "coalesced_block_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 3987488768
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 3.4877054998651147,
+      "ttft_seconds": 0.054059207905083895,
+      "total_seconds": 0.15318404231220484,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.001836417242884636,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 13303808,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.014149291906505823,
+        0.013882458209991455,
+        0.014191833324730396,
+        0.014064374845474958,
+        0.014006499666720629,
+        0.01437133364379406,
+        0.01419587479904294
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 70.80600858923815,
+      "decode_window_seconds": 0.09912483440712094,
+      "decode_wall_steps_per_second": 70.61802465414392,
+      "native_decode_ms": [
+        13.968417,
+        13.778,
+        14.0825,
+        13.969875,
+        13.913583,
+        14.277375,
+        14.103708
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.177834,
+          "encode_ms": 0.541541,
+          "gpu_ms": 12.876583263278008,
+          "wait_ms": 13.248125
+        },
+        {
+          "prepare_ms": 0.138292,
+          "encode_ms": 0.501208,
+          "gpu_ms": 12.778874952346087,
+          "wait_ms": 13.13775
+        },
+        {
+          "prepare_ms": 0.158625,
+          "encode_ms": 0.574,
+          "gpu_ms": 12.909249868243933,
+          "wait_ms": 13.349166
+        },
+        {
+          "prepare_ms": 0.142708,
+          "encode_ms": 0.491917,
+          "gpu_ms": 12.877875007689,
+          "wait_ms": 13.334583
+        },
+        {
+          "prepare_ms": 0.137166,
+          "encode_ms": 0.483792,
+          "gpu_ms": 12.778500095009804,
+          "wait_ms": 13.292
+        },
+        {
+          "prepare_ms": 0.138833,
+          "encode_ms": 0.483,
+          "gpu_ms": 13.291166629642248,
+          "wait_ms": 13.654917
+        },
+        {
+          "prepare_ms": 0.137125,
+          "encode_ms": 0.486125,
+          "gpu_ms": 12.989041395485401,
+          "wait_ms": 13.479792
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.251166,
+        "encode_ms": 5.790459,
+        "gpu_ms": 48.97624999284744,
+        "wait_ms": 44.804333,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 50.847,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": true,
+      "interleaved_body_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "coalesced_block_enabled": true,
+      "coalesced_block_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 3987488768
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 3.4877054998651147,
+      "ttft_seconds": 0.05903112515807152,
+      "total_seconds": 0.156979292165488,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0015853331424295902,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 13303808,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.014174958225339651,
+        0.013822084292769432,
+        0.013811666052788496,
+        0.013799041975289583,
+        0.014032999984920025,
+        0.014227875042706728,
+        0.013693084008991718
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 71.74946021275632,
+      "decode_window_seconds": 0.09794816700741649,
+      "decode_wall_steps_per_second": 71.46637056995635,
+      "native_decode_ms": [
+        13.950792,
+        13.65525,
+        13.672791,
+        13.657417,
+        13.841917,
+        14.08675,
+        13.572042
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.17725,
+          "encode_ms": 0.54775,
+          "gpu_ms": 12.82324967905879,
+          "wait_ms": 13.221708
+        },
+        {
+          "prepare_ms": 0.158166,
+          "encode_ms": 0.569959,
+          "gpu_ms": 12.542999815195799,
+          "wait_ms": 12.92425
+        },
+        {
+          "prepare_ms": 0.173625,
+          "encode_ms": 0.561625,
+          "gpu_ms": 12.50250032171607,
+          "wait_ms": 12.935666
+        },
+        {
+          "prepare_ms": 0.155333,
+          "encode_ms": 0.530584,
+          "gpu_ms": 12.592458166182041,
+          "wait_ms": 12.966666
+        },
+        {
+          "prepare_ms": 0.168583,
+          "encode_ms": 0.602834,
+          "gpu_ms": 12.5965834595263,
+          "wait_ms": 13.068125
+        },
+        {
+          "prepare_ms": 0.1485,
+          "encode_ms": 0.543209,
+          "gpu_ms": 12.88349973037839,
+          "wait_ms": 13.3925
+        },
+        {
+          "prepare_ms": 0.15475,
+          "encode_ms": 0.534958,
+          "gpu_ms": 12.513666413724422,
+          "wait_ms": 12.880792
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.188083,
+        "encode_ms": 5.3725,
+        "gpu_ms": 54.09595835953951,
+        "wait_ms": 50.481167,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 56.04375,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": true,
+      "interleaved_body_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "coalesced_block_enabled": true,
+      "coalesced_block_counts": [
+        0,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168,
+        168
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "candidate",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 3987488768
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.3990953750908375,
+      "ttft_seconds": 0.14222074998542666,
+      "total_seconds": 0.25524220801889896,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 4.9999915063381195e-05,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.022612249944359064,
+        0.01504825009033084,
+        0.015008917078375816,
+        0.014939999673515558,
+        0.015224083792418242,
+        0.014978082850575447,
+        0.014854374807327986
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 62.13056818174914,
+      "decode_window_seconds": 0.1130214580334723,
+      "decode_wall_steps_per_second": 61.93514153681232,
+      "native_decode_ms": [
+        22.412708,
+        14.904167,
+        14.849166,
+        14.801958,
+        15.089958,
+        14.8355,
+        14.729917
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.206542,
+          "encode_ms": 0.562166,
+          "gpu_ms": 13.735958375036716,
+          "wait_ms": 21.64025
+        },
+        {
+          "prepare_ms": 0.156625,
+          "encode_ms": 0.544792,
+          "gpu_ms": 13.757791835814714,
+          "wait_ms": 14.19975
+        },
+        {
+          "prepare_ms": 0.150291,
+          "encode_ms": 0.515417,
+          "gpu_ms": 13.749375008046627,
+          "wait_ms": 14.180958
+        },
+        {
+          "prepare_ms": 0.148708,
+          "encode_ms": 0.507334,
+          "gpu_ms": 13.761499896645546,
+          "wait_ms": 14.142875
+        },
+        {
+          "prepare_ms": 0.159167,
+          "encode_ms": 0.513708,
+          "gpu_ms": 13.93362507224083,
+          "wait_ms": 14.413458
+        },
+        {
+          "prepare_ms": 0.153333,
+          "encode_ms": 0.53075,
+          "gpu_ms": 13.773666694760323,
+          "wait_ms": 14.149375
+        },
+        {
+          "prepare_ms": 0.157583,
+          "encode_ms": 0.509375,
+          "gpu_ms": 13.613374903798103,
+          "wait_ms": 14.061292
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.266083,
+        "encode_ms": 20.989417,
+        "gpu_ms": 53.11474995687604,
+        "wait_ms": 53.563583,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 74.822958,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": false,
+      "interleaved_body_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "coalesced_block_enabled": false,
+      "coalesced_block_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2552954880
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.3990953750908375,
+      "ttft_seconds": 0.05468362523242831,
+      "total_seconds": 0.1718927090987563,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.002009542193263769,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 13303808,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.01626295829191804,
+        0.016155207995325327,
+        0.016311957966536283,
+        0.016517375130206347,
+        0.016999708954244852,
+        0.017380958888679743,
+        0.01727020787075162
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 59.881071863932085,
+      "decode_window_seconds": 0.117209083866328,
+      "decode_wall_steps_per_second": 59.72233353502877,
+      "native_decode_ms": [
+        16.058542,
+        16.005167,
+        16.174583,
+        16.397791,
+        16.887958,
+        17.270042,
+        17.160667
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.248083,
+          "encode_ms": 0.647,
+          "gpu_ms": 14.463750179857016,
+          "wait_ms": 15.160042
+        },
+        {
+          "prepare_ms": 0.183959,
+          "encode_ms": 0.616375,
+          "gpu_ms": 14.69149999320507,
+          "wait_ms": 15.202708
+        },
+        {
+          "prepare_ms": 0.175083,
+          "encode_ms": 0.574542,
+          "gpu_ms": 14.88837506622076,
+          "wait_ms": 15.424083
+        },
+        {
+          "prepare_ms": 0.162416,
+          "encode_ms": 0.550542,
+          "gpu_ms": 15.254999976605177,
+          "wait_ms": 15.684
+        },
+        {
+          "prepare_ms": 0.160375,
+          "encode_ms": 0.530208,
+          "gpu_ms": 15.760375186800957,
+          "wait_ms": 16.196458
+        },
+        {
+          "prepare_ms": 0.154917,
+          "encode_ms": 0.522333,
+          "gpu_ms": 16.05537487193942,
+          "wait_ms": 16.591959
+        },
+        {
+          "prepare_ms": 0.154542,
+          "encode_ms": 0.522458,
+          "gpu_ms": 15.98262507468462,
+          "wait_ms": 16.483
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.351542,
+        "encode_ms": 5.957833,
+        "gpu_ms": 48.97525021806359,
+        "wait_ms": 44.95125,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 51.263375,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": false,
+      "interleaved_body_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "coalesced_block_enabled": false,
+      "coalesced_block_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2552954880
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.3990953750908375,
+      "ttft_seconds": 0.06335341604426503,
+      "total_seconds": 0.1783597911708057,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.0007087080739438534,
+      "prefill_stream_enabled": true,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": true,
+      "dirty_prefix_reset_bytes": 13303808,
+      "dirty_prefix_reset_states": 56,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.017315708100795746,
+        0.017047833651304245,
+        0.01632412476465106,
+        0.01607199991121888,
+        0.015943416859954596,
+        0.01626720931380987,
+        0.015786082949489355
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 60.99878953457721,
+      "decode_window_seconds": 0.11500637512654066,
+      "decode_wall_steps_per_second": 60.8661910463481,
+      "native_decode_ms": [
+        17.175209,
+        16.950208,
+        16.213334,
+        15.979833,
+        15.847584,
+        16.172042,
+        15.691084
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.17575,
+          "encode_ms": 0.478375,
+          "gpu_ms": 16.117083374410868,
+          "wait_ms": 16.520292
+        },
+        {
+          "prepare_ms": 0.135208,
+          "encode_ms": 0.457959,
+          "gpu_ms": 15.975999645888805,
+          "wait_ms": 16.35625
+        },
+        {
+          "prepare_ms": 0.155125,
+          "encode_ms": 0.531209,
+          "gpu_ms": 15.051583293825388,
+          "wait_ms": 15.526333
+        },
+        {
+          "prepare_ms": 0.134791,
+          "encode_ms": 0.451209,
+          "gpu_ms": 14.830500353127718,
+          "wait_ms": 15.393125
+        },
+        {
+          "prepare_ms": 0.133542,
+          "encode_ms": 0.452292,
+          "gpu_ms": 14.809583313763142,
+          "wait_ms": 15.261083
+        },
+        {
+          "prepare_ms": 0.1335,
+          "encode_ms": 0.449667,
+          "gpu_ms": 15.016500372439623,
+          "wait_ms": 15.588208
+        },
+        {
+          "prepare_ms": 0.133167,
+          "encode_ms": 0.45125,
+          "gpu_ms": 14.558374881744385,
+          "wait_ms": 15.106
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.306042,
+        "encode_ms": 5.74425,
+        "gpu_ms": 59.072458650916815,
+        "wait_ms": 55.224167,
+        "global_half_alpha_dispatches": 168,
+        "wide_batch_prefill_dispatches": 0,
+        "prefill_partial_submissions": 6
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 61.27525,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "small_screen_seed_enabled": true,
+      "screened_head_seed_rows": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "interleaved_screen_enabled": true,
+      "interleaved_screen_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interleaved_body_enabled": false,
+      "interleaved_body_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "coalesced_block_enabled": false,
+      "coalesced_block_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "model_name": "Qwen3-0.6B",
+      "build_policy": "control",
+      "repeat": 1,
+      "peak_individual_rss_bytes": 2552954880
+    }
+  ]
+}

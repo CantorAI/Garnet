@@ -1,0 +1,22 @@
+{
+  "pid": 88930,
+  "status": {
+    "exit_code": 0,
+    "wall_seconds": 1419.8315604170784
+  },
+  "completed_stages": 28,
+  "source_manifest": {
+    "cmake/GarnetMetal.cmake": "560fb9162732bedea41a5ebd64e2539b80d16590688e21d18641e1ff0d38ad59",
+    "src/backends/metal/metal_context.mm": "39069ed2ebb423b1af2b731bc2dbbd1acfebdd2c1de62a0972cb8688ec93a030",
+    "src/backends/metal/metal_context.h": "62a894d013062daf89a978770bbacee3321fad72ecbd1564c0ca39d0779587ba",
+    "src/backends/metal/decoder_session.cpp": "d825b49411d811325b2e1bd8c15e8e3ff86a71fa7d2b6ee64881d0ba58b5ffe1",
+    "src/backends/metal/decoder_session.h": "1cce2dd7477462b627a198ba973ffcb0c4bce6c8c92564c654027c4b3a431b32",
+    "src/entry/metal_main.cpp": "0e70bf7546a6999b89dd185df3027a56ae272b4c6bd82b3915688ed8dfec11df",
+    "test2026/metal/frame_worker_garnet.py": "b8ea914a1367eef63e84d1ccf0f9acd7ba511723efad1f689fc8bbd60ff93949",
+    "test2026/metal/run_matched_garnet.py": "9919899bab7ea790c9f189ed03bd6685332436ce5682d21082d13829545766df",
+    "src/backends/metal/coalesced_body_block_shader.h": "d9220433e36f81c46f35a72fa1f88f55ac3bc9f1bc3f07b62e39f12972c319fa",
+    "test2026/metal/coalesced_bf16_body_test.cpp": "ff54b6d9f497f896d2ef2cd6ecd13997b9a886191f4e128f49ab389c44bbe318",
+    "test2026/metal/run_guarded_coalesced_body_native_checks.py": "de49abcdaaaa344873a9b08a103a89750f81fa39e6095d3be7ffbcdc6d732ea0",
+    "test2026/metal/launch_coalesced_body_native_checks.py": "e959f91f34c66490f206110a3dc134b62f9b025f42e3da6c68a6fb7d033270e3"
+  }
+}

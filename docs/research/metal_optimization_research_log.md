@@ -165,6 +165,53 @@ Next: terminal graph capture; archive and independently audit both experiments;
 repeat the native block cohort without source changes; promote only if repeated
 whole-model benefit and memory/init costs justify it; then rerun matched vLLM.
 
+### 2026-10-15 — initial native block and combined-graph audits
+
+The native initial archive passes independent verification of 2,845 files and
+72 complete matching outputs. Actual encoded counters confirm the candidate
+route. Decode improves 9.1–16.1% across six profiles against the retained
+wide-prefill control, with mixed TTFT. Extra peak individual RSS is about
+1.04–1.65 GiB, and initialization adds about 0.84–1.36 s. This comparison
+includes both interleaved and compact-block changes, so it does not isolate
+the incremental block benefit. Full figures and separate first/init clocks:
+[native report](../../results/20261015/coalesced-body-native/README.md).
+
+The combined-graph job exited 0 in 71.6171 s. Its independent audit checks
+29 files, 48 numerical records, 12 first-graph records and 512 timed submissions.
+Eight admitted profiles reduce component wall latency about 5.5–22.8%; four
+text/coder batch-2 policy profiles fail the original native-comparison bound
+and have no timed windows. They pass the independent FP64 envelope, which
+does not waive the failed comparison gate. First graph calls span
+7.22–109.81 ms. Peak RSS and isolated compile time are unmeasured here.
+[Graph report](../../results/20261015/combined-graph-prefill/README.md).
+No full-model graph TTFT improvement is established.
+
+Native confirmation PID19668 subsequently exited 0 in 178.8188 s. Its combined
+archive is being retrieved for independent audit. Successful exit is not yet
+an audited repeat result. A new comparator driver is prepared to require two
+72-output native audits and a 144-output identity join before freezing the
+candidate and running fresh GPU dtype checks and sequential matched profiles.
+The overall goal remains unmet.
+
+### 2026-10-15 — native repeat audited; fresh comparator launched
+
+Both native audits and the identity join pass: 3,159 combined archived files,
+144 matching complete output requests, identical assets/libraries/sources/cases,
+and repeated positive decode gains across all six profiles. Text improves
+about 14.8–18.0%, coder 9.1–11.9%, and VL 9.1–14.3% across both trials.
+Coder and VL B1 TTFT regress in both trials; memory/init overhead remains.
+See the [repeated native report](../../results/20261015/coalesced-body-native/README.md)
+and its `verification.json`, `confirmation-verification.json`, and
+`combined-verification.json`. The joined request count does not double-count
+primitive/reference validations as new independent tests.
+
+The fresh precision-matched comparator launched as PID23200. Its launcher
+requires both native audits and their identity join; it freezes the candidate
+library and source identities. Three GPU dtype audits precede six sequential
+matched profiles, and actual encoded block counters are checked. Results are
+pending in [the comparator record](../../results/20261015/coalesced-body-vllm/README.md).
+No ratio is inferred from older comparator timings. The full goal remains unmet.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

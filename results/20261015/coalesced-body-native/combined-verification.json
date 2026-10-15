@@ -1,0 +1,118 @@
+{
+  "successful_trials": 2,
+  "full_output_requests": 144,
+  "identical_assets_libraries_sources_and_cases": true,
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "decode_ratios": [
+        1.1614603169269364,
+        1.1694403170821963
+      ],
+      "ttft_fractions": [
+        0.9634357612913695,
+        0.9350641199033407
+      ],
+      "decode_faster_both": true,
+      "ttft_lower_both": true,
+      "rss_increase_bytes": [
+        1475256320,
+        1455013888
+      ]
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "decode_ratios": [
+        1.14830006773118,
+        1.179871229078239
+      ],
+      "ttft_fractions": [
+        0.9694115804495228,
+        0.9508482799773084
+      ],
+      "decode_faster_both": true,
+      "ttft_lower_both": true,
+      "rss_increase_bytes": [
+        1451786240,
+        1446838272
+      ]
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "decode_ratios": [
+        1.1069284210876666,
+        1.118766899288177
+      ],
+      "ttft_fractions": [
+        1.0506661686717076,
+        1.0362570584866455
+      ],
+      "decode_faster_both": true,
+      "ttft_lower_both": false,
+      "rss_increase_bytes": [
+        1117708288,
+        1121304576
+      ]
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "decode_ratios": [
+        1.090711174367892,
+        1.09835957233868
+      ],
+      "ttft_fractions": [
+        1.0367969341146301,
+        1.0183421982983276
+      ],
+      "decode_faster_both": true,
+      "ttft_lower_both": false,
+      "rss_increase_bytes": [
+        1117970432,
+        1113899008
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "decode_ratios": [
+        1.1317765612430886,
+        1.1432711739386334
+      ],
+      "ttft_fractions": [
+        1.0392163463447635,
+        1.0562701742881393
+      ],
+      "decode_faster_both": true,
+      "ttft_lower_both": false,
+      "rss_increase_bytes": [
+        1760976896,
+        1747484672
+      ]
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "decode_ratios": [
+        1.091452331093454,
+        1.095117958334939
+      ],
+      "ttft_fractions": [
+        0.9812908558643391,
+        0.9829680977064996
+      ],
+      "decode_faster_both": true,
+      "ttft_lower_both": true,
+      "rss_increase_bytes": [
+        1771151360,
+        1746837504
+      ]
+    }
+  ],
+  "selection": "Evaluate repeated decode gains together with TTFT, initialization and extra process memory. No broad promotion or fresh vLLM ratio is established by this join.",
+  "scope": "Native-only repeated results. No new vLLM ratio. Existing comparator cohorts remain independently reported.",
+  "full_goal_met": false
+}

@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T18:48:54.108935+00:00
+Generated UTC: 2026-10-15T18:57:17.039845+00:00
 
-Source commit: `caad60a3a8930644ff1b3d755876aed383649bc3`. Reports indexed: **136**.
+Source commit: `7100ce4ca0d8a1793cf2ebba6623e2a8f417e110`. Reports indexed: **137**.
 
 Each row links to its original report. Read that report's scope, exclusions and status before citing it. The JSON snapshot retains complete report text, documented command blocks and hashes; the CSV supports analysis. Neither report presence nor a verification filename certifies a successful experiment.
 
@@ -85,8 +85,9 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/coalesced-activation-decode](../../../results/20261015/coalesced-activation-decode/README.md) | Coalesced mixed-input matrix decode: rejected |
 | [results/20261015/coalesced-activation-prefill](../../../results/20261015/coalesced-activation-prefill/README.md) | Coalesced lossless activation MMA for prefill: rejected |
 | [results/20261015/coalesced-body-block](../../../results/20261015/coalesced-body-block/README.md) | Exact coalesced BF16 block storage: repeated component signal |
-| [results/20261015/coalesced-body-native](../../../results/20261015/coalesced-body-native/README.md) | Native exact BF16 block storage: validation running |
-| [results/20261015/combined-graph-prefill](../../../results/20261015/combined-graph-prefill/README.md) | Combined projection graphs: queued prefill investigation |
+| [results/20261015/coalesced-body-native](../../../results/20261015/coalesced-body-native/README.md) | Native lossless BF16 blocks: repeated full-model decode gains |
+| [results/20261015/coalesced-body-vllm](../../../results/20261015/coalesced-body-vllm/README.md) | Fresh lossless-body comparison against vLLM-Metal: running |
+| [results/20261015/combined-graph-prefill](../../../results/20261015/combined-graph-prefill/README.md) | Combined projection graphs: component gains with rejected batch-2 profiles |
 | [results/20261015/combined-prefill-reset](../../../results/20261015/combined-prefill-reset/README.md) | Combined bounded reset and ordered prefill: initial latency tradeoff |
 | [results/20261015/concurrent-bf16-groups](../../../results/20261015/concurrent-bf16-groups/README.md) | Independent native projections in one compute pass: mixed results |
 | [results/20261015/counter-trace](../../../results/20261015/counter-trace/README.md) | Compute-pass GPU timestamps: validated diagnostic, substantial overhead |

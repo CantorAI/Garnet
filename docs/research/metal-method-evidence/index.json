@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-15T18:48:54.108935+00:00",
-  "source_commit": "caad60a3a8930644ff1b3d755876aed383649bc3",
+  "generated_at_utc": "2026-10-15T18:57:17.039845+00:00",
+  "source_commit": "7100ce4ca0d8a1793cf2ebba6623e2a8f417e110",
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
   "limitations": [
     "Inventory presence does not establish success or independent replication.",
@@ -10,7 +10,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 136,
+  "report_count": 137,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -1991,46 +1991,99 @@
     },
     {
       "experiment_id": "results/20261015/coalesced-body-native",
-      "title": "Native exact BF16 block storage: validation running",
+      "title": "Native lossless BF16 blocks: repeated full-model decode gains",
       "report_path": "results/20261015/coalesced-body-native/README.md",
-      "report_sha256": "c60d50f6192709e6b66fb7a8070d439086ec8672b2bdc549ef7b7d0f4bb16416",
+      "report_sha256": "a8a799c62ad0940b5cf8bfc129a7125c1e1ba91b21655bbca477e4b319bccc70",
       "classification": "historical_report_requires_scope_and_status_review",
-      "report_text": "# Native exact BF16 block storage: validation running\n\nThis OFF-default integration follows two successful private component trials\nwith144 exact-bit/FP64 checks,378 safety profiles and2304 timed submissions.\nThe selected common64-thread policy reduces component wall time in all six\nmodel/batch groups in both runs. These are not complete-model speed results.\n\n`GARNET_METAL_COALESCED_BF16_BODY` requires the existing interleaved body\nfallback. Only decoder matrices with256<N<=8192, K divisible by128 and at\nleast1048576 values are candidates. Four outputs by128 K terms share a block.\nCompact blocks preserve all original BF16 bits in byte/nibble planes; wide\nexponent blocks read the original raw four-output buffer. Every compact value\nis recovered and checked on the CPU before publication. Original BF16 masters\nand exact-half/MPS prefill routes remain. This preserves model precision and\nFP32 decode arithmetic; it does not reduce learned-value precision.\n\nThe native MSL payload is byte-identical to the twice-tested private kernel.\nThe native policy fixes64 threads for all eligible model/batch shapes. The\nactual encoded route has a context counter, published through the session\nonly after submission and reset at begin/abort/session reset/clear/failure.\nFrontend collection checks the backend marker before reading the new API,\npreserving compatibility with the unchanged legacy control library.\n\nActual Mac configure/build succeeded. All seven CTests passed in6.06s,\nincluding the new80-case original-bit/FP64 suite, large/tail/fallback shapes,\nownership, uninitialized input, abort/recovery and unchanged prefill routing.\nSeparate CPU compiler checks also pass with the new flag off and both body\nflags off. `primitive-ctest.log` and `disabled-compile.json` retain these\npreliminary results. Full vision-grid and51 trained-head checks also passed.\nComplete trained-model validation and serving measurements are still pending.\n\nA separate CPU-only audit checks byte/nibble reconstruction across every\ncheckpoint matrix matching the decoder-layer name and shape admission:\n168 text,72 coder and138 VL matrices. All compact values recover exactly.\nCompact block fractions are96.44%,95.99% and96.31%, respectively. The added\none-copy buffers estimate to591.06,451.21 and705.66MiB. `checkpoint-coverage/`\npreserves the executed source and report. These are checkpoint counts and\none-copy storage estimates, not proof of graph usage/sharing, actual GPU\nallocations, process RSS or performance. The upcoming native run measures\nthe real initialization and memory costs.\n\nValidation PID88930 is running the full28 original trained/reference/recovery\nstages. Queue PID88983 requires that exact handle to finish successfully and\nall28 stage records to pass before six complete native ABBA profiles. No other\ninference or GPU component should be started during either job. Do not modify\nthe pinned native sources or drivers until both jobs are terminal and archived.\nInit, first-after-init, warm latency, complete outputs and peak process memory\nmust all remain separate in the resulting evidence.\n\nNative comparison control SHA256:\n`9ee337d9db7d14bcff29a90970c4b5ac9021aee9f89a38a7f6f364051927d77b`.\nActual newly built candidate SHA256:\n`c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1`.\nBoth policies use the same latency bundle and VL B2 `[80]` chunk plan. Only\nthe candidate enables the new block storage and existing interleaved decode.\nNo new vLLM ratio or whole-model gain is established here.\n\nEight replaced files are preserved remotely under\n`logs/coalesced-body-native-original-source-20261015`; the12-file manifest is\n`coalesced-body-native-staging/manifest.json`. Original identities come from\ncommit `eaf421d160c04ab0e5259345123279c07678d278`. The original Mac checkout,\nGPT-OSS checkout and Pi checkout are preserved. Never rerun the old private\ncontext generator against this now-integrated source; its original source\nand generated code remain in the frozen component evidence.\n\n```text\npython -X utf8 test2026/metal/prepare_coalesced_body_native_sources.py\npython3 install_coalesced_body_native_sources.py ROOT\npython3 launch_coalesced_body_native_checks.py ROOT ROOT/logs/coalesced-body-native-checks-20261015 checks\npython3 queue_coalesced_body_native_profiles.py ROOT ROOT/logs/coalesced-body-native-20261015\n# Only after both exact jobs finish successfully:\npython3 archive_coalesced_body_native.py ROOT ARCHIVE\npython -X utf8 verify_coalesced_body_native.py RESULTS VERIFICATION_JSON\n```\n\nExtra compact buffers and packing work can increase initialization and peak\nmemory. Whole-model memory and performance effects remain unproven. The full\nthree-model2x decode / half-TTFT goal remains active and unmet.\n",
+      "report_text": "# Native lossless BF16 blocks: repeated full-model decode gains\n\nValidation PID88930 exited0 in1419.8316s. Benchmark PID88983 exited0 in1591.2531s including dependency wait. Independent verification checks2845 archived files, all28 validation stages,51 trained-head queries, trained vision-grid and recovery cases, four wide trained references with12 carried steps, and72 complete matching generated outputs. Actual coalesced decode counters are positive and stable only for the candidate; first-prefill counters remain zero. All seven CTests passed, including80 new primitive cases. Original numerical bounds are unchanged.\n\nThe candidate combines the prior four-output interleaved route with exact coalesced BF16 block storage at a fixed64-thread policy. Its control is the retained wide-prefill library, not the interleaved-only candidate. Thus this table does not isolate the incremental block gain from the prior interleaved gain. Original BF16 values are reconstructed before FP32 arithmetic. Extra raw/interleaved/compact buffers remain resident.\n\n| Model / batch | Decode tokens/s control -> candidate | TTFT ms control -> candidate | Peak individual RSS GiB control -> candidate | Init s control -> candidate |\n| --- | ---: | ---: | ---: | ---: |\n| Qwen3-0.6B / 1 | 63.6223 -> 73.8948 | 37.4769 -> 36.1065 | 2.280 -> 3.654 | 2.329 -> 3.512 |\n| Qwen3-0.6B / 2 | 61.2447 -> 70.3273 | 58.7154 -> 56.9194 | 2.373 -> 3.725 | 2.358 -> 3.533 |\n| Qwen2.5-Coder-0.5B-Instruct / 1 | 79.0375 -> 87.4888 | 26.5685 -> 27.9146 | 1.931 -> 2.972 | 1.976 -> 2.812 |\n| Qwen2.5-Coder-0.5B-Instruct / 2 | 76.8016 -> 83.7684 | 42.2032 -> 43.7561 | 1.931 -> 2.972 | 1.966 -> 2.812 |\n| Qwen3.5-0.8B / 1 | 53.2812 -> 60.3025 | 173.8367 -> 180.6539 | 3.363 -> 5.003 | 4.189 -> 5.547 |\n| Qwen3.5-0.8B / 2 | 50.6380 -> 55.2689 | 301.6679 -> 296.0239 | 3.404 -> 5.054 | 4.216 -> 5.491 |\n\nDecode gains range9.1–16.1% in this first native cohort. TTFT changes are mixed, including coder and VL B1 regressions. Added peak individual process RSS is about1.04–1.65GiB; initialization adds about0.84–1.36s. These are process measurements, not unique Metal allocations. Initialization and first-after-init requests remain separate from warm means. OS/driver caches are not flushed; no hardware-cold result is claimed.\n\nInitial archive SHA256: `3641ad8f1324f6033f69db7aa1940b2a0eb8ba797bf2e8745c404811ed4846fe`.\nControl library SHA256: `9ee337d9db7d14bcff29a90970c4b5ac9021aee9f89a38a7f6f364051927d77b`.\nCandidate library SHA256: `c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1`.\n\nCPU full-checkpoint coverage:378 admitted matrices (168text/72coder/138VL), with exact byte-plane reconstruction. Compact block fractions96.44%/95.99%/96.31%. One-copy extra buffer estimates591.06/451.21/705.66MiB are distinct from actual process RSS. `checkpoint-coverage/` preserves the executed source and report.\n\nConfirmation PID19668 exited0 in178.8188s. Independent audits check3159 combined archived files,72 initial outputs and72 confirmation outputs. The identity join verifies identical source/library/asset/case records,144 complete matching outputs and repeated decode gains for all six profiles. The original numerical gates are reused, not counted as independent repeated validation.\n\n| Model / batch | Repeat decode tokens/s control -> candidate | Repeat TTFT ms control -> candidate |\n| --- | ---: | ---: |\n| Qwen3-0.6B / 1 | 63.2732 -> 73.9942 | 38.1031 -> 35.6289 |\n| Qwen3-0.6B / 2 | 60.4640 -> 71.3397 | 59.2019 -> 56.2920 |\n| Qwen2.5-Coder-0.5B-Instruct / 1 | 78.8289 -> 88.1912 | 26.0745 -> 27.0199 |\n| Qwen2.5-Coder-0.5B-Instruct / 2 | 76.9586 -> 84.5282 | 41.3720 -> 42.1309 |\n| Qwen3.5-0.8B / 1 | 53.8944 -> 61.6159 | 173.3776 -> 183.1336 |\n| Qwen3.5-0.8B / 2 | 50.4445 -> 55.2427 | 300.4442 -> 295.3271 |\n\nAcross the two trials, text decode gains16.1–16.9% B1 and14.8–18.0% B2; coder gains10.7–11.9% B1 and9.1–9.8% B2; VL gains13.2–14.3% B1 and9.1–9.5% B2. Text TTFT and VL B2 TTFT improve in both trials; coder and VL B1 TTFT regress in both. Extra initialization and process memory remain real tradeoffs. No broad default promotion follows.\n\nCombined archive SHA256: `6a63f6aa003faed06fff7fd318e987a5a9473d2eeaf8585298e74eb411c5be70`.\nA fresh matched comparator cohort launched as PID23200 under `logs/coalesced-body-vllm-20261015`. Its results are pending; do not combine these native-only means with older vLLM means. Preserve the selected source/library records until that cohort is terminal and archived.\n\nFull workloads remain unchanged, including both VL B2 chunk plans `[80]`; no prefix/vision reuse or speculation is enabled. Original Mac, GPT-OSS and Pi checkouts are preserved. No new vLLM ratio is inferred; the overall2x decode / half-TTFT goal remains unmet.\n\n```text\npython3 launch_coalesced_body_native_checks.py ROOT ROOT/logs/coalesced-body-native-checks-20261015 checks\npython3 queue_coalesced_body_native_profiles.py ROOT ROOT/logs/coalesced-body-native-20261015\npython3 archive_coalesced_body_native.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_coalesced_body_native.py RESULTS RESULTS/verification.json\npython3 launch_confirm_coalesced_body_native.py ROOT ROOT/logs/coalesced-body-native-confirm-20261015 checks\n```\n",
       "commands_as_documented": [
-        "python -X utf8 test2026/metal/prepare_coalesced_body_native_sources.py\npython3 install_coalesced_body_native_sources.py ROOT\npython3 launch_coalesced_body_native_checks.py ROOT ROOT/logs/coalesced-body-native-checks-20261015 checks\npython3 queue_coalesced_body_native_profiles.py ROOT ROOT/logs/coalesced-body-native-20261015\n# Only after both exact jobs finish successfully:\npython3 archive_coalesced_body_native.py ROOT ARCHIVE\npython -X utf8 verify_coalesced_body_native.py RESULTS VERIFICATION_JSON\n"
+        "python3 launch_coalesced_body_native_checks.py ROOT ROOT/logs/coalesced-body-native-checks-20261015 checks\npython3 queue_coalesced_body_native_profiles.py ROOT ROOT/logs/coalesced-body-native-20261015\npython3 archive_coalesced_body_native.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_coalesced_body_native.py RESULTS RESULTS/verification.json\npython3 launch_confirm_coalesced_body_native.py ROOT ROOT/logs/coalesced-body-native-confirm-20261015 checks\n"
       ],
       "archive_hashes_as_documented": [
+        "3641ad8f1324f6033f69db7aa1940b2a0eb8ba797bf2e8745c404811ed4846fe",
+        "6a63f6aa003faed06fff7fd318e987a5a9473d2eeaf8585298e74eb411c5be70",
         "9ee337d9db7d14bcff29a90970c4b5ac9021aee9f89a38a7f6f364051927d77b",
         "c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1"
       ],
       "adjacent_files": [
         ".gitattributes",
         "README.md",
+        "combined-verification.json",
+        "confirmation-verification.json",
         "disabled-compile.json",
-        "primitive-ctest.log"
+        "manifest.json",
+        "primitive-ctest.log",
+        "verification.json"
       ],
-      "verification_records": [],
+      "verification_records": [
+        {
+          "path": "results/20261015/coalesced-body-native/combined-verification.json",
+          "sha256": "929e8147ef7866ce0d591ed7283c6dde6473dbab1f0bc440c465457af6aa12b2"
+        },
+        {
+          "path": "results/20261015/coalesced-body-native/confirmation-verification.json",
+          "sha256": "6440b149afb459aa956a330609594105f6ae4f6faecbff678b0015d9dc4e4692"
+        },
+        {
+          "path": "results/20261015/coalesced-body-native/verification.json",
+          "sha256": "9a093c603e966244064ca72bff01d7d353c817599a4a072918510ba7f9ea4cc7"
+        }
+      ],
       "evidence_directories": [
-        "checkpoint-coverage"
+        "checkpoint-coverage",
+        "coalesced-body-native-staging",
+        "logs",
+        "models",
+        "source"
       ]
     },
     {
-      "experiment_id": "results/20261015/combined-graph-prefill",
-      "title": "Combined projection graphs: queued prefill investigation",
-      "report_path": "results/20261015/combined-graph-prefill/README.md",
-      "report_sha256": "5ff59b3da9bb13df98a272529fd77ad647f99ff5917c67bac530c04015c43ac8",
+      "experiment_id": "results/20261015/coalesced-body-vllm",
+      "title": "Fresh lossless-body comparison against vLLM-Metal: running",
+      "report_path": "results/20261015/coalesced-body-vllm/README.md",
+      "report_sha256": "156e8a80eaeca79e4892f8924a86ee4bcbab5260de671da3017fe32b9ccdbc60",
       "classification": "historical_report_requires_scope_and_status_review",
-      "report_text": "# Combined projection graphs: queued prefill investigation\n\nThis private experiment targets the remaining TTFT gap. The earlier\nsingle-projection MPSGraph study synchronized every matrix separately and\nshowed no broad gain. This version compares one native command submission\nfor the full independent first-layer projection set against one synchronous\nmulti-result graph call. Policy1 supplies FP32 weight placeholders; policy2\nembeds the original learned values as FP32 constants, allowing graph compile\nand weight preparation to occur before warm windows.\n\nAll29 original first-layer matrices are included, including special key and\nnon-common-alpha routes. Native controls preserve their existing flags and\nkernels. Learned BF16 values expand exactly to FP32 for graph storage. Graph\nactivation, weight, product and output tensor dtypes are asserted FP32. There\nis no input deduplication, prefix reuse, speculative work or vision caching.\nThis is an independent projection set, not a complete dependency layer,\nfused MLP or full model. Both policies must pass four original FP64/reference\ninput patterns before timing; original bounds are unchanged. Failed policies\nmust have no timed windows. Each admitted profile has two ABBA rounds and\neight wall samples per position. First graph execution is recorded separately.\n\nActual Mac Objective-C++ syntax checking passed. GPU execution is pending.\nOwned queue PID6026 waits on exact live native validation PID88930 and native\nbenchmark PID88983, requires both successful terminal results, then a verified\nquiet interval. Output is `ROOT/logs/combined-graph-prefill-20261015`.\nIt must never overlap inference with either native job. Do not edit its queued\nsource, driver or dependencies until terminal execution and archival.\n\nThe native control is the current newly built library's retained prefill\nimplementation; its coalesced decode flag is inactive at these prefill rows.\nLogical rows remain24/44 text,26/52 coder and80/160 VL. Wall clocks include\nencoding and synchronization; a native command GPU span must not be reported\nas graph GPU time. Initial compilation, weight copies and larger constant\nstorage remain outside warm timing and require separate reporting.\n\nNo correctness, full-model TTFT, decode speed or comparator improvement is\nestablished yet. The full2x decode / half-TTFT goal remains active and unmet.\n\n```text\npython3 launch_combined_graph_prefill.py ROOT ROOT/logs/combined-graph-prefill-20261015 component\n# Only after the exact job is terminal:\npython3 archive_combined_graph_prefill.py ROOT ARCHIVE\npython -X utf8 verify_combined_graph_prefill.py RESULTS VERIFICATION_JSON\n```\n",
+      "report_text": "# Fresh lossless-body comparison against vLLM-Metal: running\n\nOwned PID23200 is running three actual GPU dtype audits followed by six\nsequential matched profiles. Launch requires two audited native trials with144\ncomplete matching outputs, frozen original sources/library identities and\nrepeated decode gains across all six profiles. Selection is recorded at\n`ROOT/work/coalesced-body-next-comparator-selection.json` and fixes the same\ncandidate library for all model/batch profiles.\n\nGarnet candidate SHA256:\n`c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1`.\nThe comparison retains identical learned values, FP32 arithmetic, prompts,\noutput limits, stop rules and image preprocessing. Comparator weights expand\nlosslessly to FP32. Garnet retains exact BF16 representations and additional\nbuffers. This is not a stock BF16 vLLM comparison. No prefix/vision reuse or\nspeculation is enabled. Runtimes run sequentially with resource guards.\n\nEach full profile uses G/V/V/G fresh workers, three requests per worker.\nInitialization, first-after-init and four warm requests per policy remain\nseparate. OS/driver caches are not flushed. Extra candidate memory/init costs\nmust be reported. Actual encoded body/block counters are mandatory.\n\nNo fresh comparator speed ratio or target completion is established yet.\nDo not change pinned sources, selected library or drivers until terminal and\narchived. The overall2x decode / half-TTFT objective remains active and unmet.\n\n```text\npython3 launch_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-20261015\n# Only after successful terminal execution:\npython3 archive_coalesced_body_vllm.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_coalesced_body_vllm.py RESULTS RESULTS/verification.json\n```\n",
       "commands_as_documented": [
-        "python3 launch_combined_graph_prefill.py ROOT ROOT/logs/combined-graph-prefill-20261015 component\n# Only after the exact job is terminal:\npython3 archive_combined_graph_prefill.py ROOT ARCHIVE\npython -X utf8 verify_combined_graph_prefill.py RESULTS VERIFICATION_JSON\n"
+        "python3 launch_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-20261015\n# Only after successful terminal execution:\npython3 archive_coalesced_body_vllm.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_coalesced_body_vllm.py RESULTS RESULTS/verification.json\n"
       ],
-      "archive_hashes_as_documented": [],
+      "archive_hashes_as_documented": [
+        "c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1"
+      ],
       "adjacent_files": [
         ".gitattributes",
         "README.md"
       ],
       "verification_records": [],
       "evidence_directories": []
+    },
+    {
+      "experiment_id": "results/20261015/combined-graph-prefill",
+      "title": "Combined projection graphs: component gains with rejected batch-2 profiles",
+      "report_path": "results/20261015/combined-graph-prefill/README.md",
+      "report_sha256": "fcc8e85e5b034af059092241906bc37eff4b7a898abcaf4c7cf828c630784690",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Combined projection graphs: component gains with rejected batch-2 profiles\n\nOwned PID6026 exited0 in71.6171s after its exact native dependencies were terminal. Independent audit verifies29 archived files,48 original-bound numerical checks,12 first-graph records and512 timed submissions. Four of12 policy/model/batch profiles fail the original native-comparison envelope and have no timed windows. A successful process exit does not mean every numerical profile passed.\n\nEach graph computes all independent first-layer projections in one synchronous multi-result call. Policy1 supplies original FP32 values as weight placeholders; policy2 embeds them as constants. All29 matrices are included, preserving special native control routes. Graph inputs, weights, products and outputs are asserted FP32. BF16 learned values expand losslessly; inputs remain independent even when synthetic bytes coincide. This is not a complete dependency layer, full model, fused MLP or a TTFT result.\n\n| Model / batch | Weight policy | Native wall ms | Graph wall ms | Candidate/control |\n| --- | --- | ---: | ---: | ---: |\n| Qwen3-0.6B / 1 | 1 | 1.8507 | 1.5448 | 0.8347 |\n| Qwen3-0.6B / 1 | 2 | 1.7045 | 1.4035 | 0.8234 |\n| Qwen2.5-Coder-0.5B-Instruct / 1 | 1 | 1.5810 | 1.4508 | 0.9176 |\n| Qwen2.5-Coder-0.5B-Instruct / 1 | 2 | 1.5112 | 1.4273 | 0.9445 |\n| Qwen3.5-0.8B / 1 | 1 | 5.9589 | 4.8627 | 0.8160 |\n| Qwen3.5-0.8B / 1 | 2 | 6.3558 | 4.9077 | 0.7722 |\n| Qwen3.5-0.8B / 2 | 1 | 9.3518 | 7.6942 | 0.8228 |\n| Qwen3.5-0.8B / 2 | 2 | 8.9481 | 7.8400 | 0.8762 |\n\nAll admitted groups improve component wall latency about5.5–22.8% in this initial trial. Text B2 policies1/2 fail pattern1 with worst comparison ratio1.14625; coder B2 policies1/2 fail pattern1 with ratio1.04393. These graph results remain inside the independent FP64 envelope, but that does not excuse failure of the separate unchanged native-comparison bound. No tolerance is relaxed, and rejected profiles must not be integrated or timed as valid candidates.\n\nEvery admitted profile uses two ABBA rounds with eight samples per position, after common warmup. Timings include encoding/execution/synchronization, not weight preparation, graph creation or initial graph execution. First-graph time is recorded separately and spans7.22–109.81ms; no native GPU span substitutes for graph GPU time. Static constant copies and FP32 storage can increase memory/init costs; this harness does not measure peak RSS or isolate compile time from the first graph call. No full-model gain or fresh vLLM ratio follows from this private study.\n\nArchive SHA256: `f4114845d10c54cba9d6759a2649216055e5c3a3c8a4a23bf8e5ee732abfc11e`.\n\nNext investigate per-projection error locations before selecting a fallback policy or integration; repeat any selected policy without changing numerical bounds. Production prefill remains unchanged. The full2x decode / half-TTFT goal remains unmet.\n\n```text\npython3 launch_combined_graph_prefill.py ROOT ROOT/logs/combined-graph-prefill-20261015 component\npython3 archive_combined_graph_prefill.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_combined_graph_prefill.py RESULTS RESULTS/verification.json\n```\n",
+      "commands_as_documented": [
+        "python3 launch_combined_graph_prefill.py ROOT ROOT/logs/combined-graph-prefill-20261015 component\npython3 archive_combined_graph_prefill.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_combined_graph_prefill.py RESULTS RESULTS/verification.json\n"
+      ],
+      "archive_hashes_as_documented": [
+        "f4114845d10c54cba9d6759a2649216055e5c3a3c8a4a23bf8e5ee732abfc11e"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "verification.json"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261015/combined-graph-prefill/verification.json",
+          "sha256": "617be4f490e856b6fb1f02f07cc1b7d93e6da68935b6328646b0005d6546089b"
+        }
+      ],
+      "evidence_directories": [
+        "evidence"
+      ]
     },
     {
       "experiment_id": "results/20261015/combined-prefill-reset",
