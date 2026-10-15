@@ -1,0 +1,14 @@
+{
+  "name": "Qwen3-0.6B-b2-candidate-0",
+  "command": [
+    "/usr/bin/time",
+    "-l",
+    "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+    "/Users/zsdx/garnet-metal-investigation/mlp-command-buffer-investigation-20261015/source/test2026/metal/run_matched_garnet.py",
+    "/Users/zsdx/garnet-metal-investigation/mlp-command-buffer-investigation-20261015/build-mlp-command-buffer",
+    "/Users/zsdx/garnet-metal-investigation/mlp-command-buffer-investigation-20261015/source",
+    "/Users/zsdx/garnet-metal-investigation/mlp-command-buffer-investigation-20261015/models/Qwen3-0.6B",
+    "/Users/zsdx/garnet-metal-investigation/mlp-command-buffer-investigation-20261015/logs/mlp-command-buffer-native-retry-20261015/native/Qwen3-0.6B-b2-attempt0/Qwen3-0.6B-b2-candidate-case.json"
+  ],
+  "exit_code": 0
+}

@@ -35,7 +35,8 @@ def main():
     # historical report links which may reference remote-only files.
     paths += [ROOT / 'results/20261015' / name / 'README.md' for name in
               ('dependent-mlp-graph', 'stage-rounded-mlp-graph', 'mlp-prefill-native',
-               'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native','eight-fma-body')]
+               'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native','eight-fma-body',
+               'two-body','two-matrix-probe')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -74,22 +75,27 @@ def main():
             for cell, value in zip(cells[2:], [r['wall_ms']['control'], r['wall_ms']['candidate'], r['wall_fraction']]):
                 assert cell.strip() == f'{value:.6f}'
                 component_numbers += 1
-    # Rejected full-native integration: preserve its slower timings and memory.
-    p=ROOT/'results/20261015/mlp-prefill-native'
-    native=json.loads((p/'comparison/verification.json').read_text())['profiles']
-    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
-    assert len(rows)==len(native)==6
+    # Rejected full-native integrations: preserve slower timings and memory.
     native_numbers=0
-    for cells,r in zip(rows,native):
-        assert int(cells[1])==r['batch']
-        means=r['means'];first=r['first_request_after_initialization'];rss=r['peak_individual_rss_bytes']
-        formatted=[
-            ' / '.join(f"{means[k]['ttft_ms']:.3f}" for k in ('control','candidate')),
-            f"{r['decode_ratio']:.3f}",
-            ' / '.join(f"{first[k]['ttft_ms']:.3f}" for k in ('control','candidate')),
-            f"{(rss['candidate']-rss['control'])/2**30:.3f}"]
-        assert [c.strip() for c in cells[2:]]==formatted
-        native_numbers+=6
+    for name in ('mlp-prefill-native','mlp-command-buffer-native'):
+        p=ROOT/'results/20261015'/name
+        native=json.loads((p/'comparison/verification.json').read_text())['profiles']
+        rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+        assert len(rows)==len(native)==6
+        for cells,r in zip(rows,native):
+            label=r['model']
+            if name=='mlp-prefill-native':
+                label={'Qwen2.5-Coder-0.5B-Instruct':'Qwen2.5-Coder-0.5B','Qwen3.5-0.8B':'Qwen3.5-0.8B VL'}.get(label,label)
+            assert cells[0].strip()==label and int(cells[1])==r['batch']
+            means=r['means'];first=r['first_request_after_initialization'];rss=r['peak_individual_rss_bytes']
+            formatted=[
+                ' / '.join(f"{means[k]['ttft_ms']:.3f}" for k in ('control','candidate')),
+                f"{r['decode_ratio']:.3f}",
+                ' / '.join(f"{first[k]['ttft_ms']:.3f}" for k in ('control','candidate')),
+                f"{(rss['candidate']-rss['control'])/2**30:.3f}"]
+            assert [c.strip() for c in cells[2:]]==formatted
+            native_numbers+=6
+    p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
           if line.startswith(('| Text |','| Coder |'))]

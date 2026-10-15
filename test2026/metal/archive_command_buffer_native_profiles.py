@@ -5,7 +5,8 @@ import hashlib,io,json,subprocess,sys,tarfile
 p=Path(__file__).with_name('archive_command_buffer_native_checks.py')
 source=p.read_text();source=source[:source.index('proof=dict(')]
 exec(compile(source,str(p),'exec'))
-native_trial='mlp-command-buffer-native-20261015'
+native_trial=sys.argv[3] if len(sys.argv)>3 else 'mlp-command-buffer-native-20261015'
+assert native_trial in ('mlp-command-buffer-native-20261015','mlp-command-buffer-native-retry-20261015')
 native=root/'logs'/native_trial;native_status=json.loads((native/'exit.json').read_text())
 assert isinstance(native_status['exit_code'],int)
 tree(native)

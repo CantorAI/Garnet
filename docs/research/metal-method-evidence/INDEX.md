@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T21:28:17.467136+00:00
+Generated UTC: 2026-10-15T22:19:57.403329+00:00
 
-Base HEAD at generation: `9278dfdd912fe7d6f1fd1d78edc59524ef16ab3c`. Reports indexed: **149**.
+Base HEAD at generation: `2ddff36d3ad88b1f97305b94a5ba2759835f433b`. Reports indexed: **151**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -103,7 +103,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/deferred-state-zero](../../../results/20261015/deferred-state-zero/README.md) | Deferred request-state zero: repeated full-model latency tradeoff |
 | [results/20261015/dependent-mlp-graph](../../../results/20261015/dependent-mlp-graph/README.md) | Complete dependent MLP graph: audited stress experiment |
 | [results/20261015/direct-mps-body](../../../results/20261015/direct-mps-body/README.md) | Direct original-row mixed-storage MPS component |
-| [results/20261015/eight-fma-body](../../../results/20261015/eight-fma-body/README.md) | Explicit-FMA eight-output decode: prepared locally, not executed |
+| [results/20261015/eight-fma-body](../../../results/20261015/eight-fma-body/README.md) | Explicit-FMA eight-output decode: correct, rejected after repetition |
 | [results/20261015/fastencode-streamed-mps-body](../../../results/20261015/fastencode-streamed-mps-body/README.md) | MPS argument-validation option: wall penalty persists |
 | [results/20261015/fused-head-argmax](../../../results/20261015/fused-head-argmax/README.md) | Fused vocabulary projection and partial argmax: component gain repeats |
 | [results/20261015/fused-projection-groups](../../../results/20261015/fused-projection-groups/README.md) | Single-dispatch independent projections |
@@ -114,7 +114,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/interleaved-screen-index](../../../results/20261015/interleaved-screen-index/README.md) | Lossless four-column screening index: repeated component gain |
 | [results/20261015/joint-state-zero](../../../results/20261015/joint-state-zero/README.md) | Reset and dependent GPU read in one command buffer: repeated component signal |
 | [results/20261015/mixed-accumulator](../../../results/20261015/mixed-accumulator/README.md) | Apple M4 mixed-input FP32 accumulator capability |
-| [results/20261015/mlp-command-buffer-native](../../../results/20261015/mlp-command-buffer-native/README.md) | Command-buffer MLP: full original validation running; no timing result yet |
+| [results/20261015/mlp-command-buffer-native](../../../results/20261015/mlp-command-buffer-native/README.md) | Command-buffer MLP: full validation passed; native integration rejected |
 | [results/20261015/mlp-command-buffer-primitive](../../../results/20261015/mlp-command-buffer-primitive/README.md) | MLP graph command-buffer encoding: 64-case private safety probe passed |
 | [results/20261015/mlp-prefill-native](../../../results/20261015/mlp-prefill-native/README.md) | Native dependent MLP graph: correct outputs, rejected for latency and memory |
 | [results/20261015/mps-screen-index](../../../results/20261015/mps-screen-index/README.md) | MPS-derived screening dot products: rejected |
@@ -142,6 +142,8 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/streamed-direct-mps-body](../../../results/20261015/streamed-direct-mps-body/README.md) | Streamed direct-row native MPS: rejected for integration |
 | [results/20261015/striped-frame](../../../results/20261015/striped-frame/README.md) | Exact-coordinate parallel Pillow resize |
 | [results/20261015/threaded-striped-frame](../../../results/20261015/threaded-striped-frame/README.md) | Combined threaded WebP decode and exact striped resize |
+| [results/20261015/two-body](../../../results/20261015/two-body/README.md) | Two-output SIMD decode: repeated component signals, no model gain established |
+| [results/20261015/two-matrix-probe](../../../results/20261015/two-matrix-probe/README.md) | Per-matrix two-output probe: three dispatch candidates selected |
 | [results/20261015/wide-batch-prefill](../../../results/20261015/wide-batch-prefill/README.md) | Exact 160-row VL batch-2 prefill investigation |
 | [results/20261015/wide-batch-vllm](../../../results/20261015/wide-batch-vllm/README.md) | Fresh matched comparison for the validated latency bundle |
 | [results/20261015/wide-body-decode](../../../results/20261015/wide-body-decode/README.md) | Eight-output BF16 body layout: no broad promotion |

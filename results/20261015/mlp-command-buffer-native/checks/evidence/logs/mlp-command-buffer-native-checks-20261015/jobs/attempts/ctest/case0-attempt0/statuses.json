@@ -1,0 +1,14 @@
+[
+  {
+    "name": "ctest",
+    "command": [
+      "/opt/homebrew/bin/ctest",
+      "--test-dir",
+      "/Users/zsdx/garnet-metal-investigation/mlp-command-buffer-investigation-20261015/build-mlp-command-buffer",
+      "--output-on-failure"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 6.979021332692355
+  }
+]

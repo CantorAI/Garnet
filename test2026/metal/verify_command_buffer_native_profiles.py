@@ -8,7 +8,8 @@ def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 for name,info in proof['files'].items():
     path=(base/name).resolve();assert path.is_relative_to(base)
     assert path.stat().st_size==info['bytes'] and digest(path)==info['sha256']
-native_trial='mlp-command-buffer-native-20261015'
+native_trial=sys.argv[3] if len(sys.argv)>3 else 'mlp-command-buffer-native-20261015'
+assert native_trial in ('mlp-command-buffer-native-20261015','mlp-command-buffer-native-retry-20261015')
 assert proof['jobs'][native_trial]['exit_code']==0
 saved=sys.argv[:]
 try:

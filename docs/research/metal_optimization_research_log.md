@@ -581,6 +581,78 @@ not been dispatched. No source consumed by the current native job is changed.
 The full target remains unmet; this candidate has no compatibility or speed
 result, and the current command-buffer validation remains the active run.
 
+### 2026-10-15 — command-buffer full validation passed; frontend-path failure repaired
+
+Validation PID5961 exited0 in1432.475943s. Independent Mac audit verified
+1,614 files and all28 fresh original stages:8 CTests,64 original plus64
+dependent-graph primitive cases,51/78 trained-head queries/rows,4 vision grid
+profiles, both6-case recovery suites and4 wide profiles/12 carried steps.
+No compile or stage reuse. Worst original wide-bound ratio0.543284. Archive
+1835c361... is frozen; local re-verification waits for transfer after active
+GPU benchmarking, to avoid unnecessary competing work.
+
+Controller13152 exited0 after dispatching native PID31600. That worker exited1
+in125.648896s after four complete text/coder profiles: the first VL control
+command could not find ALT/comparators/vllm/venv/bin/python and exited127
+before VL inference. The1,240-file source copy had omitted the comparators
+link. Preserve the4,842-file failed cohort archivecc2e35df... before repair;
+partial timings do not establish a complete native cohort or any target pass.
+
+The repair checks frozen failure, library and copied-source identities, then
+links the existing isolated frontend environment. CPU-only imports confirm
+Python3.12.15/Pillow12.3.0/NumPy2.3.5; no packages or inference source change.
+Fresh PID34111 reruns all six profiles with the original output checks and
+timing design. No old profile is reused. Its sources remain frozen through
+terminal capture and archival. Explicit-FMA remains locally prepared only.
+[Full identities, commands, scope and failure record](../../results/20261015/mlp-command-buffer-native/README.md).
+The full matched target remains active and unmet.
+
+### 2026-10-15 — command-buffer retry rejected after full independent audits
+
+Fresh native PID34111 passed all72 complete outputs after a six-profile ABBA
+retry. Both Mac and Windows audits verified the5,004-file b750c7b4... archive,
+all source closures and unchanged28-stage validation. No old partial profile
+was reused. Zero of six profiles improved both decode and warm TTFT; five
+TTFT profiles regressed. Additional RSS ~0.84–1.10GiB and ~1.9–2.1s lazy
+first-request graph cost reject promotion. Retain c186. Phase timestamps
+overlap; similar encode times and longer GPU spans do not isolate a cause.
+[Full times, source proofs and failure repair](../../results/20261015/mlp-command-buffer-native/README.md).
+
+### 2026-10-15 — explicit-FMA correct but repeated eight-output timing rejected
+
+PID38096 and38768 passed72 exact/numerical plus189 safety records each,
+2,304 timed samples total, identical code/flags/assets/versions/binary. Zero
+of18 policies improved both GPU/wall direction in both cohorts; the apparent
+initial coder gain reversed. Restored bits do not establish the cause of old
+compiler differences. Auditor version skew was repaired by using the stronger
+regeneration assertion after jobs were terminal/archived, without relaxing a
+gate. [Full method and both audits](../../results/20261015/eight-fma-body/README.md).
+
+### 2026-10-15 — two-output component signals, per-shape selection and native trial
+
+PID39399 and39933 passed the same exact/numerical/safety gates. Five of18
+policies improved both wall and GPU directions across both cohorts, but text
+B1 mostly regressed. A stale descriptive 'eight-route' label was corrected;
+the underlying assertion already checked Two counters. No model claim.
+[Aggregate method and repeated observations](../../results/20261015/two-body/README.md).
+
+Per-matrix PID40855 and41602 each passed480 exact/numerical checks plus189
+safety profiles before7,680 timings. Both archives and all source identities
+were independently verified. Across observed duplicate shapes, require GPU
+fraction<=0.98 and wall fraction<1 in every cohort; choose minimum worst GPU
+fraction, retaining four-output elsewhere. Three shapes qualify. Selection
+used both datasets and therefore requires fresh model confirmation. Repeated
+single-matrix cache effects do not establish end-to-end gains.
+[Selection policy, all observations and archive identities](../../results/20261015/two-matrix-probe/README.md).
+
+The isolated shape-selected source tree changes decode dispatch only for
+those three geometries; it adds actual session counters and extends all80
+coalesced primitive cases to104. Graph prefill stays disabled. Fresh28-stage
+validation PID42435 is running. Existing serving, GPT-OSS, Pi and original
+Mac source trees remain untouched. Retained matched results are still
+4/6 decode,2/6 TTFT and0/6 both consistently across repeated cohorts. No new
+component observation is counted as a full-model target improvement.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

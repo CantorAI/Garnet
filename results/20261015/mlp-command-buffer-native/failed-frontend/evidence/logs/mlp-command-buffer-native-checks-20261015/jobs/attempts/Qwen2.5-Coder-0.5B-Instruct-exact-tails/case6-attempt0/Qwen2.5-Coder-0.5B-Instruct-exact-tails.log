@@ -1,0 +1,5 @@
+dense reference full_attention batch 2 chunk 22 max_abs_error 0.00011444091796875 hidden_l2_worst_ratio 0.04066230130185651 value_l2_worst_ratio 0.014992416371476204 worst_ratio 0.07805718195950216 ms 3.795875
+dense reference full_attention batch 2 chunk 22 max_abs_error 0.0001201629638671875 hidden_l2_worst_ratio 0.03798032208597129 value_l2_worst_ratio 0.014595396538026608 worst_ratio 0.09291665513197342 ms 3.778791
+dense reference full_attention batch 2 chunk 22 max_abs_error 0.000156402587890625 hidden_l2_worst_ratio 0.03806216268526349 value_l2_worst_ratio 0.01470461866817417 worst_ratio 0.12261052354197276 ms 4.811958
+pretrained dense PASS full_attention 2 22
+Original dense-tail fixture passed case_index=6

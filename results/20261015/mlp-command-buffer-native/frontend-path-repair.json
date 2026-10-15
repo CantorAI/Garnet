@@ -1,0 +1,19 @@
+{
+  "scope": "Frontend executable path repair only; no source/library/model changes or package installations.",
+  "original_failure_archive_sha256": "cc2e35df829edd4e9d2539b4a095e63f29ca32e7d5b7570e7a4af2838ae11f89",
+  "linked_existing_investigation_frontend": true,
+  "copied_source_hashes_unchanged": true,
+  "interpreter_sha256": "83deb939c9034c3e85a377eeb04e7d9992f8881652a22289cd0eeeb83b98a565",
+  "command": [
+    "/Users/zsdx/garnet-metal-investigation/mlp-command-buffer-investigation-20261015/comparators/vllm/venv/bin/python",
+    "-c",
+    "import sys,PIL,numpy; print(sys.version.split()[0]); print(PIL.__version__); print(numpy.__version__)"
+  ],
+  "exit_code": 0,
+  "versions": [
+    "3.12.15",
+    "12.3.0",
+    "2.3.5"
+  ],
+  "full_goal_met": false
+}

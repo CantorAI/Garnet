@@ -1,0 +1,1541 @@
+{
+  "verified_files": 52,
+  "numeric_checks": 72,
+  "control_profiles": 189,
+  "rejected_profiles": [],
+  "timed_executions": 1152,
+  "profiles": [
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0030315302795809506,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0030315302795809506,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005256910339316787,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005256910339316787,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.27527083875611424,
+          "wall_ms": 0.5459649062499999
+        },
+        "candidate": {
+          "gpu_ms": 0.27993488765787333,
+          "wall_ms": 0.54126953125
+        }
+      },
+      "gpu_fraction": 1.0169434907193033,
+      "wall_fraction": 0.9913998593201705
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0030315302795809506,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0030315302795809506,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005256910339316787,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005256910339316787,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2701653720578179,
+          "wall_ms": 0.5302785625
+        },
+        "candidate": {
+          "gpu_ms": 0.28154034225735813,
+          "wall_ms": 0.55170434375
+        }
+      },
+      "gpu_fraction": 1.0421037311810113,
+      "wall_fraction": 1.0404047660327584
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0030315302795809506,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0030315302795809506,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005256910339316787,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005256910339316787,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2647994551807642,
+          "wall_ms": 0.5301445
+        },
+        "candidate": {
+          "gpu_ms": 0.28517452301457524,
+          "wall_ms": 0.55111715625
+        }
+      },
+      "gpu_fraction": 1.0769452785312648,
+      "wall_fraction": 1.0395602637582773
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003222255887638415,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003222255887638415,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005404793441550091,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.005404793441550091,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.37189842259977013,
+          "wall_ms": 0.7995338125
+        },
+        "candidate": {
+          "gpu_ms": 0.42386581480968744,
+          "wall_ms": 0.81391409375
+        }
+      },
+      "gpu_fraction": 1.1397354467024552,
+      "wall_fraction": 1.0179858325253754
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003222255887638415,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003222255887638415,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005404793441550091,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.005404793441550091,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2839049557223916,
+          "wall_ms": 0.55947525
+        },
+        "candidate": {
+          "gpu_ms": 0.30925782630220056,
+          "wall_ms": 0.5994921875
+        }
+      },
+      "gpu_fraction": 1.089300556643328,
+      "wall_fraction": 1.0715258405085837
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003222255887638415,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003222255887638415,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005404793441550091,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.005404793441550091,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.26958080707117915,
+          "wall_ms": 0.53667959375
+        },
+        "candidate": {
+          "gpu_ms": 0.29830465791746974,
+          "wall_ms": 0.57808990625
+        }
+      },
+      "gpu_fraction": 1.1065500588055828,
+      "wall_fraction": 1.077160214366731
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032508250699947922,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032508250699947922,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005559934361166332,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005559934361166332,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.26427868579048663,
+          "wall_ms": 0.51989571875
+        },
+        "candidate": {
+          "gpu_ms": 0.27608206437435,
+          "wall_ms": 0.5275026875
+        }
+      },
+      "gpu_fraction": 1.0446626202508846,
+      "wall_fraction": 1.0146317203155464
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032508250699947922,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032508250699947922,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005559934361166332,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005559934361166332,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2686705702217296,
+          "wall_ms": 0.511563875
+        },
+        "candidate": {
+          "gpu_ms": 0.28215495694894344,
+          "wall_ms": 0.531293
+        }
+      },
+      "gpu_fraction": 1.0501892958208463,
+      "wall_fraction": 1.0385662982946167
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032508250699947922,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032508250699947922,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005559934361166332,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 12672,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005559934361166332,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.3203450614819303,
+          "wall_ms": 0.59277865625
+        },
+        "candidate": {
+          "gpu_ms": 0.41936068737413734,
+          "wall_ms": 0.7482134375
+        }
+      },
+      "gpu_fraction": 1.3090905332960538,
+      "wall_fraction": 1.262213862815679
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.004095065682927495,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.004095065682927495,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.007203048445676425,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.007203048445676425,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.26943495322484523,
+          "wall_ms": 0.5338164375
+        },
+        "candidate": {
+          "gpu_ms": 0.27913802477996796,
+          "wall_ms": 0.534381375
+        }
+      },
+      "gpu_fraction": 1.036012668137476,
+      "wall_fraction": 1.001058299183603
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.004095065682927495,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.004095065682927495,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.007203048445676425,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.007203048445676425,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.26043751859106123,
+          "wall_ms": 0.5136821875
+        },
+        "candidate": {
+          "gpu_ms": 0.2786042168736458,
+          "wall_ms": 0.5471485
+        }
+      },
+      "gpu_fraction": 1.069754536062486,
+      "wall_fraction": 1.0651498403378061
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.004095065682927495,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.004095065682927495,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.007203048445676425,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 25344,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.007203048445676425,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.26818233891390264,
+          "wall_ms": 0.540489625
+        },
+        "candidate": {
+          "gpu_ms": 0.27735676849260926,
+          "wall_ms": 0.52585940625
+        }
+      },
+      "gpu_fraction": 1.0342096709867683,
+      "wall_fraction": 0.9729315456332767
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0029308974009585715,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0029308974009585715,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0034296093586201346,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0034296093586201346,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.00525733472734936,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.00525733472734936,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.8079661201918498,
+          "wall_ms": 1.13647790625
+        },
+        "candidate": {
+          "gpu_ms": 0.9443502931389958,
+          "wall_ms": 1.30246609375
+        }
+      },
+      "gpu_fraction": 1.1687993710859583,
+      "wall_fraction": 1.1460549180825752
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0029308974009585715,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0029308974009585715,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0034296093586201346,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0034296093586201346,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.00525733472734936,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.00525733472734936,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.7437955937348306,
+          "wall_ms": 1.07701171875
+        },
+        "candidate": {
+          "gpu_ms": 0.9156927117146552,
+          "wall_ms": 1.25495440625
+        }
+      },
+      "gpu_fraction": 1.2311080079362602,
+      "wall_fraction": 1.1652188963241028
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0029308974009585715,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0029308974009585715,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0034296093586201346,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0034296093586201346,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.00525733472734936,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 31776,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.00525733472734936,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.6729713204549626,
+          "wall_ms": 0.980848875
+        },
+        "candidate": {
+          "gpu_ms": 0.7049921114230528,
+          "wall_ms": 1.00886975
+        }
+      },
+      "gpu_fraction": 1.047581211850815,
+      "wall_fraction": 1.028567984033218
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003008811205846745,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003008811205846745,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.003628347661836938,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.003628347661836938,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0063668998371010635,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.0063668998371010635,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.6605052622035146,
+          "wall_ms": 0.966417875
+        },
+        "candidate": {
+          "gpu_ms": 0.6893984827911481,
+          "wall_ms": 1.0104309375
+        }
+      },
+      "gpu_fraction": 1.0437441186936842,
+      "wall_fraction": 1.0455424756087008
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003008811205846745,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003008811205846745,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.003628347661836938,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.003628347661836938,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0063668998371010635,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.0063668998371010635,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.6604804075323045,
+          "wall_ms": 0.97507290625
+        },
+        "candidate": {
+          "gpu_ms": 0.7150065066525713,
+          "wall_ms": 1.01866796875
+        }
+      },
+      "gpu_fraction": 1.0825552105686038,
+      "wall_fraction": 1.044709541430764
+    },
+    {
+      "trial": "eight-fma-body-confirm-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003008811205846745,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003008811205846745,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.003628347661836938,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.003628347661836938,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0063668998371010635,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 63552,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.0063668998371010635,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.7292421942111105,
+          "wall_ms": 1.002958375
+        },
+        "candidate": {
+          "gpu_ms": 0.7878450414864346,
+          "wall_ms": 1.0681525
+        }
+      },
+      "gpu_fraction": 1.0803612952466641,
+      "wall_fraction": 1.0650018252252993
+    }
+  ],
+  "scope": "Private lexical eight-output explicit FP32 FMA versus original compact four-output control; original exact bits and bounds mandatory. Control always current compact64-thread kernel; candidate64/128/256 threads. Exact native output bits, original FP64 envelope and ownership/recovery tests; actual eight-route counters asserted by frozen harness. Component only; no complete-model or vLLM claim.",
+  "full_goal_met": false
+}
