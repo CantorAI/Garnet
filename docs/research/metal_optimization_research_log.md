@@ -756,6 +756,22 @@ claim, no new vLLM ratio, no favorable-repeat search. The full goal remains
 active and unmet, and existing native prefill/defaults remain selected.
 [Exact timing table, rejected records and cast coverage](../../results/20261015/mlp-bf16-feed-primitive/README.md#actual-trained-component-reject-promotion).
 
+### 2026-10-15 — same-pipeline four-output geometry probe prepared
+
+After the selected two-output model rejection and BF16 graph rejection,
+test scheduling in the actual existing four-output pipeline. Control64 versus
+candidate64/128/256 preserves shader/pipeline/weight bytes/FP32 arithmetic;
+candidate64 is a null GPU-work comparison. Keep original20 selected matrices,
+all29 packing assets, four patterns, exact bits, original bounds and safety.
+Local generation and expanded-runner syntax pass; no Mac execution yet.
+
+Before timing, declare selection requiring>=5% GPU gain and wall gain in two
+cohorts for all duplicate geometry observations; null GPU/wall fractions must
+stay within5%. No statistical-confidence or model gain follows from this rule.
+Fresh full-model and matched confirmation remain required. The frozen auditor
+retains all original assertions while eliminating live wrapper dependencies.
+[Protocol, source identity and limitations](../../results/20261015/four-threadgroup-probe/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

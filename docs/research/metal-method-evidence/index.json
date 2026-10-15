@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-15T22:52:51.087463+00:00",
-  "source_commit": "d57944029be51a86f00f4cceb44cf45f14b07d37",
+  "generated_at_utc": "2026-10-15T22:56:40.247773+00:00",
+  "source_commit": "0ad532a8d35d000ddcb7c110b78647b65cb4cf34",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 153,
+  "report_count": 154,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -2571,6 +2571,25 @@
       "evidence_directories": [
         "evidence"
       ]
+    },
+    {
+      "experiment_id": "results/20261015/four-threadgroup-probe",
+      "title": "Original four-output threadgroup tuning: prepared, not executed",
+      "report_path": "results/20261015/four-threadgroup-probe/README.md",
+      "report_sha256": "e6fdc6ae2aad0e8d7daa3ec8c2c295dab0db0b146ffeb7c53740b292705708d9",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Original four-output threadgroup tuning: prepared, not executed\n\nHypothesis: the existing four-output compact kernel may prefer different\nthreadgroup sizes for individual projection shapes. Unlike the rejected\ntwo-output candidate, this changes no shader, pipeline, payload, arithmetic,\nlane reduction or weight representation. A private context hook changes only\nthreads/group and corresponding outputs/group. Control always uses64 threads;\ncandidates use64/128/256. Candidate64 is an explicit null GPU-work comparison.\nCPU hook/counter overhead remains inside measured wall time.\n\nThe original20 selected matrices are measured individually at physical rows1/2,\nwith all29 learned assets still checked by the unchanged CPU packing admission\nand runtime roundtrip proof. Four patterns, original exact output bits, original\nFP64/native bounds and189 ownership/fallback/abort safety profiles are retained.\nExpected counts are480 numerical records and7,680 timed submissions per cohort.\nFailed numerical policies receive no timing windows. These are expected counts,\nnot an execution result. All weights remain resident; repeated single-projection\ncache behavior differs from full inference.\n\nPredeclared selection rule: require GPU time fraction<=0.95 and wall fraction<1\nin BOTH initial and confirmation cohorts for every observed duplicate matrix\nsharing a geometry. Its64-thread null GPU/wall fractions must stay within5%\nof1 in both cohorts. Pick the qualifying thread count with minimum worst GPU\nfraction; keep original64 elsewhere. This is a conservative selection heuristic,\nnot a confidence interval. Do not rerun rejected settings seeking a favorable\nsample. Any selected table still needs fresh full-model validation/confirmation\nand repeated matched vLLM measurements before a target claim.\n\nPrivate route counters assert actual tuning selection, including the64-thread\nnull. There is no additional compiled Metal shader; a retained header copy is\narchived solely to verify original source identity. Local context/header/harness\ngeneration and expanded runner syntax checks pass. The separate frozen auditor\nmaterializes every original packing/numerical/safety/raw-window assertion from\nthe prior verifier stack and regenerates the new private sources from snapshots.\nIts SHA256 is\n`f2007893419f58f0d0cff50afc19f6be89873747acc100dea5b830c2fd2478de`.\nNo Mac compilation, GPU execution or speed is claimed yet.\n\n```text\npython -X utf8 test2026/metal/freeze_four_threadgroup_verifier.py\npython3 launch_four_threadgroup_probe.py ROOT ROOT/logs/four-threadgroup-probe-20261015 component\n# Only after exact terminal capture:\npython3 archive_four_threadgroup_probe.py ROOT ARCHIVE [TRIAL]\npython -X utf8 test2026/metal/verify_four_threadgroup_probe_frozen.py AUDIT AUDIT_RESULT\n```\n\nROOT is /Users/zsdx/garnet-metal-investigation. The launcher requires the last\nBF16 component to be terminal, archived and audited, then its own quiet guard.\nSources remain frozen until terminal archival. Existing source/build defaults\nand the protected GPT-OSS/Pi checkouts remain unchanged. Full goal remains unmet.\n",
+      "commands_as_documented": [
+        "python -X utf8 test2026/metal/freeze_four_threadgroup_verifier.py\npython3 launch_four_threadgroup_probe.py ROOT ROOT/logs/four-threadgroup-probe-20261015 component\n# Only after exact terminal capture:\npython3 archive_four_threadgroup_probe.py ROOT ARCHIVE [TRIAL]\npython -X utf8 test2026/metal/verify_four_threadgroup_probe_frozen.py AUDIT AUDIT_RESULT\n"
+      ],
+      "archive_hashes_as_documented": [
+        "f2007893419f58f0d0cff50afc19f6be89873747acc100dea5b830c2fd2478de"
+      ],
+      "adjacent_files": [
+        "README.md"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261015/fused-head-argmax",
