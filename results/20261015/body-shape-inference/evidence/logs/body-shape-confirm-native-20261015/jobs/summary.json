@@ -1,0 +1,156 @@
+{
+  "scope": "Joined exact-half prefill profiles; discard contention and retain only clean ABBA.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 50.981219043023884,
+          "decode_tps": 59.326744201938055,
+          "initialization_s": 1.643807478947565,
+          "peak_individual_rss_bytes": 2443837440
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 48.698364989832044,
+          "decode_tps": 60.913133942671365,
+          "initialization_s": 1.6327242085244507,
+          "peak_individual_rss_bytes": 2443804672
+        }
+      },
+      "decode_ratio": 1.0267398752800847,
+      "ttft_fraction": 0.955221666016552,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/body-shape-confirm-native-20261015/jobs/Qwen3-0.6B-b1-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 79.46040644310415,
+          "decode_tps": 57.849733309644535,
+          "initialization_s": 1.677609250182286,
+          "peak_individual_rss_bytes": 2494251008
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 82.71895826328546,
+          "decode_tps": 59.28368758655874,
+          "initialization_s": 1.66447687568143,
+          "peak_individual_rss_bytes": 2497568768
+        }
+      },
+      "decode_ratio": 1.0247875693607587,
+      "ttft_fraction": 1.0410084967601383,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/body-shape-confirm-native-20261015/jobs/Qwen3-0.6B-b2-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 32.75093738920987,
+          "decode_tps": 71.90801530030383,
+          "initialization_s": 1.3782992288470268,
+          "peak_individual_rss_bytes": 2070315008
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 32.031885464675725,
+          "decode_tps": 73.17478724812655,
+          "initialization_s": 1.3768723541870713,
+          "peak_individual_rss_bytes": 2070282240
+        }
+      },
+      "decode_ratio": 1.01761656113762,
+      "ttft_fraction": 0.9780448444577637,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/body-shape-confirm-native-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 50.719239516183734,
+          "decode_tps": 70.52103390831618,
+          "initialization_s": 1.3854961460456252,
+          "peak_individual_rss_bytes": 2070921216
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 51.701926975511014,
+          "decode_tps": 70.59729590084322,
+          "initialization_s": 1.3864440622273833,
+          "peak_individual_rss_bytes": 2070323200
+        }
+      },
+      "decode_ratio": 1.0010814077488737,
+      "ttft_fraction": 1.0193750432518556,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/body-shape-confirm-native-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 195.02535415813327,
+          "decode_tps": 47.89622930609808,
+          "initialization_s": 2.9290156452916563,
+          "peak_individual_rss_bytes": 3610353664
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 195.14610432088375,
+          "decode_tps": 48.54133473509687,
+          "initialization_s": 2.942546583013609,
+          "peak_individual_rss_bytes": 3610566656
+        }
+      },
+      "decode_ratio": 1.0134688145255863,
+      "ttft_fraction": 1.000619151101003,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/body-shape-confirm-native-20261015/jobs/Qwen3.5-0.8B-b1-attempt0",
+      "reused_clean_profile": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "requests": 4,
+          "ttft_ms": 359.7874474944547,
+          "decode_tps": 44.33958981301272,
+          "initialization_s": 2.9433652702718973,
+          "peak_individual_rss_bytes": 3636371456
+        },
+        "candidate": {
+          "requests": 4,
+          "ttft_ms": 363.9335521729663,
+          "decode_tps": 45.189217544989894,
+          "initialization_s": 2.978639042004943,
+          "peak_individual_rss_bytes": 3650093056
+        }
+      },
+      "decode_ratio": 1.019161831121131,
+      "ttft_fraction": 1.0115237613412722,
+      "exact_complete_outputs": true,
+      "evidence": "/Users/zsdx/garnet-metal-investigation/logs/body-shape-confirm-native-20261015/jobs/Qwen3.5-0.8B-b2-attempt0",
+      "reused_clean_profile": false
+    }
+  ],
+  "guarded_interval_seconds": 0.5
+}

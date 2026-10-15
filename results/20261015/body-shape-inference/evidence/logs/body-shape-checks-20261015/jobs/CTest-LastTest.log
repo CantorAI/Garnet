@@ -1,0 +1,25 @@
+Start testing: Oct 15 09:00 CST
+----------------------------------------------------------
+1/1 Testing: metal_mps_matmul_reference
+1/1 Test: metal_mps_matmul_reference
+Command: "/Users/zsdx/garnet-metal-investigation/build-body-shape/garnet_metal_matmul_test"
+Directory: /Users/zsdx/garnet-metal-investigation/build-body-shape
+"metal_mps_matmul_reference" start time: Oct 15 09:00 CST
+Output:
+----------------------------------------------------------
+Batched vision attention independent references PASS cases=48
+Split key exact dyadic checks=144
+Exact scaled half codec checks=8421120
+Chunk delta sequential reference PASS 48 cases
+Chunk convolution sequential reference PASS 48 cases
+Gated token direct-write reference PASS 6 layouts
+Metal/MPS matmul reference PASS device=Apple M4
+<end of output>
+Test time =   2.83 sec
+----------------------------------------------------------
+Test Passed.
+"metal_mps_matmul_reference" end time: Oct 15 09:00 CST
+"metal_mps_matmul_reference" time elapsed: 00:00:02
+----------------------------------------------------------
+
+End testing: Oct 15 09:00 CST

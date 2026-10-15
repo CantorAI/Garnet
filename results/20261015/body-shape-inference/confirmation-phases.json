@@ -1,0 +1,405 @@
+{
+  "scope": "Native control/candidate only. Eager pipeline compilation is included in init. Init and first request after init are separate; caches unflushed. GPU/encode/wait clocks overlap. Image vision_seconds includes reset; do not add nested clocks. No fresh vLLM ratio.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "control",
+      "initialization_s": 1.643807478947565,
+      "first_after_init_ttft_ms": 155.16362502239645,
+      "warm_ttft_ms": 50.981219043023884,
+      "reset_ms": 7.748052245005965,
+      "prefill_inference_ms": 41.252646,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.28884375,
+        "encode_ms": 6.3728855,
+        "gpu_ms": 33.70730206370354,
+        "wait_ms": 34.588875
+      },
+      "warm_decode_tps_per_row": 59.326744201938055,
+      "pipeline_counts": [
+        0
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        0
+      ],
+      "fallback_misses": 0,
+      "decode_observed_clocks": {
+        "prepare_ms": 0.15972467857142858,
+        "encode_ms": 0.5290328571428572,
+        "gpu_ms": 15.54156098115657,
+        "wait_ms": 15.997471607142858
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "candidate",
+      "initialization_s": 1.6327242085244507,
+      "first_after_init_ttft_ms": 157.93243749067187,
+      "warm_ttft_ms": 48.698364989832044,
+      "reset_ms": 6.917552324011922,
+      "prefill_inference_ms": 40.5595625,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.314,
+        "encode_ms": 6.3853437500000005,
+        "gpu_ms": 33.00356259569526,
+        "wait_ms": 33.85816675
+      },
+      "warm_decode_tps_per_row": 60.913133942671365,
+      "pipeline_counts": [
+        5
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        196
+      ],
+      "fallback_misses": 0,
+      "decode_observed_clocks": {
+        "prepare_ms": 0.15887367857142856,
+        "encode_ms": 0.5461740357142857,
+        "gpu_ms": 15.10102383326739,
+        "wait_ms": 15.55016807142857
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "initialization_s": 1.677609250182286,
+      "first_after_init_ttft_ms": 190.22187497466803,
+      "warm_ttft_ms": 79.46040644310415,
+      "reset_ms": 19.437687238678336,
+      "prefill_inference_ms": 57.88774975,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.2735625,
+        "encode_ms": 5.766427,
+        "gpu_ms": 50.87037500925362,
+        "wait_ms": 51.845093500000004
+      },
+      "warm_decode_tps_per_row": 57.849733309644535,
+      "pipeline_counts": [
+        0
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        0
+      ],
+      "fallback_misses": 0,
+      "decode_observed_clocks": {
+        "prepare_ms": 0.14792260714285715,
+        "encode_ms": 0.4800296785714286,
+        "gpu_ms": 16.033129400706716,
+        "wait_ms": 16.512440464285714
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "initialization_s": 1.66447687568143,
+      "first_after_init_ttft_ms": 193.38360452093184,
+      "warm_ttft_ms": 82.71895826328546,
+      "reset_ms": 21.58786461222917,
+      "prefill_inference_ms": 58.66989575,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.285375,
+        "encode_ms": 5.83348975,
+        "gpu_ms": 51.62414570804685,
+        "wait_ms": 52.54852075
+      },
+      "warm_decode_tps_per_row": 59.28368758655874,
+      "pipeline_counts": [
+        5
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        196
+      ],
+      "fallback_misses": 0,
+      "decode_observed_clocks": {
+        "prepare_ms": 0.14827842857142856,
+        "encode_ms": 0.5030996071428572,
+        "gpu_ms": 15.566830290481448,
+        "wait_ms": 16.04429325
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "initialization_s": 1.3782992288470268,
+      "first_after_init_ttft_ms": 127.14618793688715,
+      "warm_ttft_ms": 32.75093738920987,
+      "reset_ms": 0.7405832875519991,
+      "prefill_inference_ms": 30.79913575,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.2600835,
+        "encode_ms": 5.46595825,
+        "gpu_ms": 24.05811462085694,
+        "wait_ms": 25.0711355
+      },
+      "warm_decode_tps_per_row": 71.90801530030383,
+      "pipeline_counts": [
+        0
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        0
+      ],
+      "fallback_misses": 0,
+      "decode_observed_clocks": {
+        "prepare_ms": 0.131549421875,
+        "encode_ms": 0.50935875,
+        "gpu_ms": 12.692000025708694,
+        "wait_ms": 13.1251549375
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "initialization_s": 1.3768723541870713,
+      "first_after_init_ttft_ms": 127.41674995049834,
+      "warm_ttft_ms": 32.031885464675725,
+      "reset_ms": 0.7254689699038863,
+      "prefill_inference_ms": 29.8855105,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.21731275,
+        "encode_ms": 5.41781225,
+        "gpu_ms": 23.326395777985454,
+        "wait_ms": 24.248489749999997
+      },
+      "warm_decode_tps_per_row": 73.17478724812655,
+      "pipeline_counts": [
+        4
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        168
+      ],
+      "fallback_misses": 0,
+      "decode_observed_clocks": {
+        "prepare_ms": 0.12494859375,
+        "encode_ms": 0.50128965625,
+        "gpu_ms": 12.489062508393545,
+        "wait_ms": 12.900934234375
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "control",
+      "initialization_s": 1.3854961460456252,
+      "first_after_init_ttft_ms": 144.48649948462844,
+      "warm_ttft_ms": 50.719239516183734,
+      "reset_ms": 1.8085831543430686,
+      "prefill_inference_ms": 47.526416749999996,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.28219774999999997,
+        "encode_ms": 5.7476565,
+        "gpu_ms": 40.417958167381585,
+        "wait_ms": 41.49410425
+      },
+      "warm_decode_tps_per_row": 70.52103390831618,
+      "pipeline_counts": [
+        0
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        0
+      ],
+      "fallback_misses": 0,
+      "decode_observed_clocks": {
+        "prepare_ms": 0.13530532812499999,
+        "encode_ms": 0.508597046875,
+        "gpu_ms": 12.929149073897861,
+        "wait_ms": 13.381419875
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "candidate",
+      "initialization_s": 1.3864440622273833,
+      "first_after_init_ttft_ms": 143.5706876218319,
+      "warm_ttft_ms": 51.701926975511014,
+      "reset_ms": 1.6053541330620646,
+      "prefill_inference_ms": 48.5482605,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.25934375,
+        "encode_ms": 5.54225025,
+        "gpu_ms": 41.82111460249871,
+        "wait_ms": 42.74427075
+      },
+      "warm_decode_tps_per_row": 70.59729590084322,
+      "pipeline_counts": [
+        4
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        168
+      ],
+      "fallback_misses": 0,
+      "decode_observed_clocks": {
+        "prepare_ms": 0.13643421875,
+        "encode_ms": 0.518974,
+        "gpu_ms": 12.919192711706273,
+        "wait_ms": 13.355348359375
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "control",
+      "initialization_s": 2.9290156452916563,
+      "first_after_init_ttft_ms": 335.8337499666959,
+      "warm_ttft_ms": 195.02535415813327,
+      "reset_ms": 4.043948254548013,
+      "prefill_inference_ms": 85.98355225,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.27792725,
+        "encode_ms": 6.460729,
+        "gpu_ms": 78.43366684392095,
+        "wait_ms": 79.2427605
+      },
+      "warm_decode_tps_per_row": 47.89622930609808,
+      "pipeline_counts": [
+        0
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        0
+      ],
+      "fallback_misses": 0,
+      "image_observed_clocks": {
+        "common_preprocessing_seconds": 45.88440619409084,
+        "worker_ttft_seconds": 146.3971984339878,
+        "vision_seconds": 58.17209405358881,
+        "assembly_seconds": 0.30729162972420454,
+        "prefill_wall_seconds": 87.91781275067478
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "candidate",
+      "initialization_s": 2.942546583013609,
+      "first_after_init_ttft_ms": 334.50460410676897,
+      "warm_ttft_ms": 195.14610432088375,
+      "reset_ms": 4.400208359584212,
+      "prefill_inference_ms": 87.026302,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.23004175000000002,
+        "encode_ms": 6.301052,
+        "gpu_ms": 79.48705193120986,
+        "wait_ms": 80.49348950000001
+      },
+      "warm_decode_tps_per_row": 48.54133473509687,
+      "pipeline_counts": [
+        8
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        186
+      ],
+      "fallback_misses": 0,
+      "image_observed_clocks": {
+        "common_preprocessing_seconds": 44.87134364899248,
+        "worker_ttft_seconds": 147.54461450502276,
+        "vision_seconds": 58.00340627320111,
+        "assembly_seconds": 0.30833331402391195,
+        "prefill_wall_seconds": 89.23287491779774
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "initialization_s": 2.9433652702718973,
+      "first_after_init_ttft_ms": 559.7437701653689,
+      "warm_ttft_ms": 359.7874474944547,
+      "reset_ms": 9.238447644747794,
+      "prefill_inference_ms": 184.80823974999998,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.61328125,
+        "encode_ms": 18.306375250000002,
+        "gpu_ms": 162.79026051051915,
+        "wait_ms": 165.88576025
+      },
+      "warm_decode_tps_per_row": 44.33958981301272,
+      "pipeline_counts": [
+        0
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        0
+      ],
+      "fallback_misses": 0,
+      "image_observed_clocks": {
+        "common_preprocessing_seconds": 48.627864103764296,
+        "worker_ttft_seconds": 308.8089788798243,
+        "vision_seconds": 120.59381243307143,
+        "assembly_seconds": 0.3943436313420534,
+        "prefill_wall_seconds": 187.8208228154108
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "initialization_s": 2.978639042004943,
+      "first_after_init_ttft_ms": 571.1098122410476,
+      "warm_ttft_ms": 363.9335521729663,
+      "reset_ms": 10.10656263679266,
+      "prefill_inference_ms": 186.21696825,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.60387475,
+        "encode_ms": 18.3209995,
+        "gpu_ms": 164.2178959446028,
+        "wait_ms": 167.28832275
+      },
+      "warm_decode_tps_per_row": 45.189217544989894,
+      "pipeline_counts": [
+        8
+      ],
+      "prefill_dispatch_counts": [
+        0
+      ],
+      "decode_dispatch_counts": [
+        186
+      ],
+      "fallback_misses": 0,
+      "image_observed_clocks": {
+        "common_preprocessing_seconds": 47.91422886773944,
+        "worker_ttft_seconds": 313.344250083901,
+        "vision_seconds": 123.97929164581001,
+        "assembly_seconds": 0.39927090983837843,
+        "prefill_wall_seconds": 188.9656875282526
+      }
+    }
+  ]
+}
