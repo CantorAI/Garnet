@@ -67,6 +67,12 @@ RSS is not unique Metal memory. Caches were not flushed, so first use after
 initialization is not a hardware-cold observation. No fresh vLLM comparison
 was executed in this native-only study.
 
+The next head study preserves index values and changes their layout. Its
+[two component trials](../interleaved-screen-index/README.md) preserve masked
+score/flag bits and reduce head wall time by 10.6–17.4%; full native integration
+is still pending. A separate [MPS-filter route](../mps-screen-index/README.md)
+passes the numerical gates but is rejected for a 53–63% wall penalty.
+
 Candidate library SHA-256:
 `d27e746573098a1668c06a781d53396b65c6ffca87e1f4cf19e86cc5d326c876`.
 Control library SHA-256:

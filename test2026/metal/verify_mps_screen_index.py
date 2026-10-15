@@ -10,5 +10,7 @@ source=source.replace(needle,"    for marker in ('MPSDataTypeFloat16','MPSDataTy
 needle="        controls=[v for v in records if v['kind']=='control_check']";assert source.count(needle)==1
 source=source.replace(needle,"        converted=[v for v in records if v['kind']=='index_roundtrip'];assert len(converted)==1 and converted[0]['all_values_exact'] and converted[0]['elements']==assets['rows']*assets['inner'] and converted[0]['storage']=='f16-exact-int8'\n        roundtrips.append(dict(trial=trial,model=model,**converted[0]))\n"+needle)
 source=source.replace('control_seed_rows=8192,candidate_seed_rows=1024','control_seed_rows=1024,candidate_seed_rows=1024,mps_filter=True')
+source=source.replace('complete_gpu_index_roundtrips=roundtrips','complete_cpu_index_roundtrips=roundtrips,cpu_index_roundtrip_checks=len(roundtrips)')
+source=source.replace("('profiles','unsafe_input_fallback_checks')","('profiles','unsafe_input_fallback_checks','complete_cpu_index_roundtrips')")
 source=source.replace('Same-process exact-seed component only; timing control is screened8192, candidate screened1024; not the full raw head.','Same-process screen component only; both seeds1024; timing control is original INT8 index, candidate MPS FP32-input/exact-FP16-integer-index/FP32-output plus original refinement.')
 exec(compile(source,__file__,'exec'))
