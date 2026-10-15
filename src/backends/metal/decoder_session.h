@@ -38,6 +38,7 @@ class MetalDecoderSession {
     size_t joinedGlobalMlpBlocks_=0;
     size_t prefillPartialSubmissions_=0;
     size_t fusedHeadArgmaxDispatches_=0;
+    size_t bodyShapeDispatches_=0,bodyShapeMisses_=0;
     size_t deferredZeroBytes_=0,deferredZeroStates_=0;
     size_t dirtyPrefixResetBytes_=0,dirtyPrefixResetStates_=0,dirtyPrefixResetFallbackStates_=0;
     bool poisoned_=false;
@@ -58,6 +59,9 @@ public:
     size_t LastConstantHeadDispatches() const {return constantHeadDispatches_;}
     size_t LastSingleCoderHeadDispatches() const {return singleCoderHeadDispatches_;}
     size_t LastFusedHeadArgmaxDispatches() const {return fusedHeadArgmaxDispatches_;}
+    size_t LastBodyShapeDispatches() const {return bodyShapeDispatches_;}
+    size_t LastBodyShapeMisses() const {return bodyShapeMisses_;}
+    size_t BodyShapePipelineCount() const {return gpu_?gpu_->BodyShapePipelineCount():0;}
     size_t LastDeferredZeroBytes() const {return deferredZeroBytes_;}
     size_t LastDeferredZeroStates() const {return deferredZeroStates_;}
     size_t ReusedZeroSourceBytes() const {return reusedSourceBytes_;}
@@ -88,6 +92,9 @@ public:
         APISET().AddProp("constant_head_dispatches",&MetalDecoderSession::LastConstantHeadDispatches);
         APISET().AddProp("single_coder_head_dispatches",&MetalDecoderSession::LastSingleCoderHeadDispatches);
         APISET().AddProp("fused_head_argmax_dispatches",&MetalDecoderSession::LastFusedHeadArgmaxDispatches);
+        APISET().AddProp("body_shape_dispatches",&MetalDecoderSession::LastBodyShapeDispatches);
+        APISET().AddProp("body_shape_misses",&MetalDecoderSession::LastBodyShapeMisses);
+        APISET().AddProp("body_shape_pipeline_count",&MetalDecoderSession::BodyShapePipelineCount);
         APISET().AddProp("deferred_zero_bytes",&MetalDecoderSession::LastDeferredZeroBytes);
         APISET().AddProp("deferred_zero_states",&MetalDecoderSession::LastDeferredZeroStates);
         APISET().AddProp("reused_zero_source_bytes",&MetalDecoderSession::ReusedZeroSourceBytes);

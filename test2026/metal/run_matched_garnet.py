@@ -35,6 +35,7 @@ try:
     fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
     deferred_state_zero_enabled='deferred_state_zero' in garnet.backend_info()
     reused_zero_source_enabled='reused_zero_source' in garnet.backend_info()
+    body_shape_enabled='body_shape' in garnet.backend_info()
     initialization=time.monotonic()-started
     for request in range(repeats):
         begin=time.monotonic();decoder.reset();reset_seconds=time.monotonic()-begin
@@ -43,6 +44,8 @@ try:
         prediction=decoder.prefill_sequence(hidden,positions);ttft=time.monotonic()-begin
         single_head_counts=[decoder.session.single_coder_head_dispatches if single_coder_head_enabled else 0]
         fused_head_counts=[decoder.session.fused_head_argmax_dispatches if fused_head_argmax_enabled else 0]
+        body_shape_counts=[decoder.session.body_shape_dispatches if body_shape_enabled else 0]
+        body_shape_misses=[decoder.session.body_shape_misses if body_shape_enabled else 0]
         output=[[] for row in range(batch)];active=[1]*batch;durations=[];native_ms=[];phases=[]
         for token in range(limit):
             for row in range(batch):
@@ -53,6 +56,8 @@ try:
             durations.append(time.monotonic()-step);native_ms.append(decoder.last_session_ms)
             single_head_counts.append(decoder.session.single_coder_head_dispatches if single_coder_head_enabled else 0)
             fused_head_counts.append(decoder.session.fused_head_argmax_dispatches if fused_head_argmax_enabled else 0)
+            body_shape_counts.append(decoder.session.body_shape_dispatches if body_shape_enabled else 0)
+            body_shape_misses.append(decoder.session.body_shape_misses if body_shape_enabled else 0)
             phases.append(dict(prepare_ms=decoder.session.prepare_ms,encode_ms=decoder.session.encode_ms,
                 gpu_ms=decoder.session.gpu_ms,wait_ms=decoder.session.wait_ms))
         total=time.monotonic()-begin
@@ -85,6 +90,8 @@ try:
             single_coder_head_enabled=single_coder_head_enabled,single_coder_head_counts=single_head_counts,
             fused_head_argmax_enabled=fused_head_argmax_enabled,fused_head_argmax_counts=fused_head_counts,
             fused_head_decode_only_enabled=fused_head_decode_only_enabled,
+            body_shape_enabled=body_shape_enabled,body_shape_counts=body_shape_counts,body_shape_misses=body_shape_misses,
+            body_shape_pipeline_count=decoder.session.body_shape_pipeline_count if body_shape_enabled else 0,
             deferred_state_zero_enabled=deferred_state_zero_enabled,
             reused_zero_source_enabled=reused_zero_source_enabled,
             reused_zero_source_bytes=decoder.session.reused_zero_source_bytes if reused_zero_source_enabled else 0,

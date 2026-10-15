@@ -34,6 +34,9 @@ public:
 #ifdef GARNET_METAL_REUSED_ZERO_SOURCE
         info+="; reused_zero_source";
 #endif
+#ifdef GARNET_METAL_BODY_SHAPE
+        info+="; body_shape";
+#endif
 #ifdef GARNET_METAL_PREFILL_STREAM
         info+="; prefill_stream";
 #endif

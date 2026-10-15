@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "metal_context.h"
 #include "exact_half_codec.h"
+#ifdef GARNET_METAL_BODY_SHAPE
+#include "body_shape_shader.h"
+#include <shared_mutex>
+#endif
 #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
 #include "fused_head_argmax_shader.h"
 #endif
@@ -47,6 +51,10 @@ bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&im
 bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->globalHalf;}
 struct MetalPipelines {
     id<MTLLibrary> library;
+#ifdef GARNET_METAL_BODY_SHAPE
+    std::shared_mutex bodyShapeMutex;
+    std::map<std::array<size_t,5>,id<MTLComputePipelineState>> bodyShape;
+#endif
     id<MTLComputePipelineState> argmax;
 #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
     id<MTLComputePipelineState> fusedHead,fusedHeadReduce;
@@ -100,6 +108,7 @@ struct MetalContext::Impl {
     std::unordered_map<const MetalMatrix::Impl*,std::shared_ptr<MetalMatrix::Impl>> zeroQueued;
 #endif
     size_t fusedHeadArgmaxDispatches=0;
+    size_t bodyShapeDispatches=0,bodyShapeMisses=0;
 #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
     std::map<std::array<size_t,2>,MetalMatrix> fusedHeadScratch;
 #endif
@@ -1203,6 +1212,9 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         singleSource=[singleSource stringByReplacingOccurrencesOfString:@"p.rows==2" withString:@"false"];
         source=[source stringByAppendingString:singleSource];
 #endif
+#ifdef GARNET_METAL_BODY_SHAPE
+        source=[source stringByAppendingString:[NSString stringWithUTF8String:kBodyShapeShader]];
+#endif
         auto library=[impl_->device newLibraryWithSource:source options:compileOptions error:&error];
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
@@ -1648,6 +1660,49 @@ size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualN
 size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->packedPrefillNormDispatches;}
 size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->globalHalfAlphaDispatches;}
 size_t MetalContext::LastVisionGlobalAlphaDispatches() const {return impl_->visionGlobalAlphaDispatches;}
+bool MetalContext::PrepareBF16BodyShape(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
+#ifdef GARNET_METAL_BODY_SHAPE
+    @autoreleasepool {
+        if(impl_->command)throw std::logic_error("Body shape preparation requires a closed command batch");
+        if(!input.impl_||!output.impl_||!weight.impl_)return false;
+        auto a=input.impl_->matrix,o=output.impl_->matrix;auto w=weight.impl_;
+        if(a.device!=impl_->device||o.device!=impl_->device||w->buffer.device!=impl_->device||a.rows>2||o.rows!=a.rows||
+            a.columns!=w->columns||o.columns!=w->rows||o.columns>=100000)return false;
+        const std::array<size_t,5> key{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4};
+        for(auto value:key)if(value>UINT32_MAX)return false;
+        std::unique_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);
+        auto& cache=impl_->kernels->bodyShape;
+        auto found=cache.find(key);if(found!=cache.end())return found->second!=nil;
+        if(cache.size()>=128)return false;
+        bool small=false;
+#ifdef GARNET_METAL_SMALL_OUTPUT_DECODE
+        small=o.columns<=256;
+#endif
+        uint32_t dimensions[5];for(size_t i=0;i<5;++i)dimensions[i]=uint32_t(key[i]);
+        auto constants=[MTLFunctionConstantValues new];
+        for(NSUInteger i=0;i<5;++i)[constants setConstantValue:&dimensions[i] type:MTLDataTypeUInt atIndex:i];
+        bool noTail=o.columns%(small?4:16)==0;
+        [constants setConstantValue:&noTail type:MTLDataTypeBool atIndex:5];
+        NSError* error=nil;
+        auto function=[impl_->kernels->library newFunctionWithName:small?@"specialized_bf16_decode_small":@"specialized_bf16_decode" constantValues:constants error:&error];
+        id<MTLComputePipelineState> pipeline=nil;
+        if(function)pipeline=[impl_->device newComputePipelineStateWithFunction:function error:&error];
+        if(pipeline&&(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<(small?64:128)))pipeline=nil;
+        cache.emplace(key,pipeline);return pipeline!=nil;
+    }
+#else
+    (void)input;(void)weight;(void)output;return false;
+#endif
+}
+size_t MetalContext::BodyShapePipelineCount() const {
+#ifdef GARNET_METAL_BODY_SHAPE
+    std::shared_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);return impl_->kernels->bodyShape.size();
+#else
+    return 0;
+#endif
+}
+size_t MetalContext::LastBodyShapeDispatches() const {return impl_->bodyShapeDispatches;}
+size_t MetalContext::LastBodyShapeMisses() const {return impl_->bodyShapeMisses;}
 void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
     @autoreleasepool {
         if(!impl_->command||!input.impl_||!weight.impl_||!output.impl_)throw std::invalid_argument("Missing BF16 projection batch/input");
@@ -1753,6 +1808,16 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
             (a.columns==1024&&(o.columns==151936||o.columns==248320)));
         if(constantHead){pipeline=impl_->kernels->constantHead;threads=128;decodeColumns=16;}
 #endif
+#ifdef GARNET_METAL_BODY_SHAPE
+        if(a.rows<=2&&o.columns<100000) {
+            const std::array<size_t,5> key{a.rows,a.columns,o.columns,a.rowBytes/4,o.rowBytes/4};
+            std::shared_lock<std::shared_mutex> lock(impl_->kernels->bodyShapeMutex);
+            auto found=impl_->kernels->bodyShape.find(key);
+            if(found!=impl_->kernels->bodyShape.end()&&found->second) {
+                pipeline=found->second;++impl_->bodyShapeDispatches;
+            } else ++impl_->bodyShapeMisses;
+        }
+#endif
 #ifdef GARNET_METAL_SINGLE_CODER_HEAD
         const bool singleCoderHead=a.rows==1&&a.columns==896&&o.columns==151936;
         if(singleCoderHead){pipeline=impl_->kernels->singleCoderHead;threads=128;decodeColumns=16;}
@@ -1853,6 +1918,7 @@ void MetalContext::Begin() {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     if(impl_->submitted.count)throw std::logic_error("Undrained Metal partial batches");
     impl_->partialSubmissions=0;
+    impl_->bodyShapeDispatches=impl_->bodyShapeMisses=0;
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
     impl_->deferredZeroBytes=impl_->deferredZeroStates=0;
@@ -2493,6 +2559,7 @@ void MetalContext::Abort() {
     // for reset/reuse; the uncommitted continuation is discarded.
     for(id<MTLCommandBuffer> prior in impl_->submitted)[prior waitUntilCompleted];
     impl_->submitted=nil;impl_->partialSubmissions=0;
+    impl_->bodyShapeDispatches=impl_->bodyShapeMisses=0;
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
     impl_->deferredZeroBytes=impl_->deferredZeroStates=0;

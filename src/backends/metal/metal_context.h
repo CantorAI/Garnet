@@ -55,6 +55,12 @@ public:
     MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false,bool visionPrefill=false);
     // Preserve BF16 checkpoint values; use SIMD matvec for decode and FP32 tiled GEMM for up to 128 prompt rows.
     void EncodeBF16MatVec(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
+    // Compile bounded body-only shape pipelines during graph initialization.
+    // Unsupported profiles retain the original dispatch path.
+    bool PrepareBF16BodyShape(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
+    size_t BodyShapePipelineCount() const;
+    size_t LastBodyShapeDispatches() const;
+    size_t LastBodyShapeMisses() const;
     // Try the bounded exact-half prefill pair; false leaves both outputs untouched.
     bool EncodeJoinedBF16Prefill(const MetalMatrix&,const MetalBF16Weight&,
         const MetalBF16Weight&,const MetalMatrix&,const MetalMatrix&);

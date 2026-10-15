@@ -62,7 +62,10 @@ try:
         fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
         deferred_state_zero_enabled='deferred_state_zero' in garnet.backend_info()
         reused_zero_source_enabled='reused_zero_source' in garnet.backend_info()
+        body_shape_enabled='body_shape' in garnet.backend_info()
         fused_head_counts=[decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0]
+        body_shape_counts=[decoder.session.body_shape_dispatches if body_shape_enabled else 0]
+        body_shape_misses=[decoder.session.body_shape_misses if body_shape_enabled else 0]
         first=time.monotonic()
         emit('frame_first',dict(request=last,worker_ttft_seconds=first-start))
         output=[[] for row in range(batch)];active=[1]*batch;steps=0
@@ -73,6 +76,8 @@ try:
             if not any(active) or token==workload['max_tokens']-1:break
             prediction=decoder.step(prediction,active=active,positions=[[current]*3 for row in range(batch)])
             fused_head_counts.append(decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0)
+            body_shape_counts.append(decoder.session.body_shape_dispatches if body_shape_enabled else 0)
+            body_shape_misses.append(decoder.session.body_shape_misses if body_shape_enabled else 0)
             current+=1;steps+=1
         end=time.monotonic()
         decoded=[tokenizer.decode(ids) for ids in output]
@@ -100,6 +105,8 @@ try:
             single_coder_head_enabled='single_coder_head' in garnet.backend_info(),
             fused_head_argmax_enabled=fused_head_enabled,fused_head_argmax_counts=fused_head_counts,
             fused_head_decode_only_enabled=fused_head_decode_only_enabled,
+            body_shape_enabled=body_shape_enabled,body_shape_counts=body_shape_counts,body_shape_misses=body_shape_misses,
+            body_shape_pipeline_count=decoder.session.body_shape_pipeline_count if body_shape_enabled else 0,
             deferred_state_zero_enabled=deferred_state_zero_enabled,
             reused_zero_source_enabled=reused_zero_source_enabled,
             reused_zero_source_bytes=decoder.session.reused_zero_source_bytes if reused_zero_source_enabled else 0,
