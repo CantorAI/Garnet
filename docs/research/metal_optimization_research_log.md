@@ -536,6 +536,33 @@ The latest completed matched vLLM cohorts still meet decode in4/6 profiles,
 TTFT in2/6 and both targets consistently in0/6. None of these component or
 rejected native trials changes that result. Full goal active and unmet.
 
+### 2026-10-15 — fresh command-buffer candidate and full native audit protocol
+
+Fresh build612af105... is running the original28-stage suite in its confined
+source tree. At this observation configure/build/8 CTests, vision full-grid
+and trained-head checks have passed; text exact tails are progressing.
+No complete-suite or timing claim is made. Controller13152 waits on exact
+PID5961, then archives terminal evidence and independently audits every
+original numerical assertion plus generated-source provenance. Only successful
+audit admits the72-complete-output native ABBA. Audit replacements are limited
+to the old build/resume provenance, new root path, explicit native Flush count
+and graph-test marker; two-graph64-case coverage is additionally required.
+All actual sources and external drivers are snapshotted before benchmarking.
+[Source/library identities, gate scope and exact command templates](../../results/20261015/mlp-command-buffer-native/README.md).
+
+Derived phase analysis of the already audited rejected synchronous cohort
+shows control text/coder prepare+encode around0.62–0.69ms per decode step,
+with GPU spans10.51–12.67ms and full wall windows11.71–13.97ms. GPU span
+overlaps wait; these clocks cannot be summed into disjoint contributions.
+This supports GPU kernel work for the remaining decode gap without proving
+a particular bottleneck or achievable speedup. VL control B1/B2 stage means
+are27.17/28.38ms common preprocessing,58.27/110.07ms vision and85.16/154.12ms
+language prefill. These describe the same warm requests, not a new cohort.
+[Reproducible phase summary and interpretation](../../results/20261015/mlp-prefill-native/README.md).
+
+The matched vLLM target remains unchanged:4/6 decode,2/6 TTFT,0/6 both across
+the two completed cohorts. The new candidate has no admitted timing result.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

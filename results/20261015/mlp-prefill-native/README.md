@@ -189,3 +189,27 @@ Only after this successful audit, the separate compact-eight decode probe
 PID3818 was dispatched through its quiet-resource guard. It exited0 in
 19.352752s; independent component archival/audit is pending at this snapshot.
 The full2x decode/half-TTFT target remains unmet, and c186 is retained.
+
+## Derived phase clocks for the next method — 2026-10-15
+
+[Phase analysis](phase-analysis.json) reads only the existing audited native
+cohort. Equal-weight means of the four warm requests show control decode
+preparation/encoding/GPU-span/wall-window-per-step in milliseconds:
+
+| Model | Batch | Prepare | Encode | GPU span | Wall per step |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Text | 1 | 0.152 | 0.542 | 12.464 | 13.731 |
+| Text | 2 | 0.158 | 0.530 | 12.671 | 13.967 |
+| Coder | 1 | 0.125 | 0.491 | 10.511 | 11.707 |
+| Coder | 2 | 0.132 | 0.502 | 10.597 | 11.833 |
+
+GPU spans are separate observations that overlap wait time; they must not be
+added to prepare/encode/wait. This supports prioritizing decode GPU kernels;
+it does not isolate a specific bottleneck or predict an optimization gain.
+VL workers do not expose per-step decode phase counters. Their control stage
+means are27.175/28.378ms common preprocessing,58.267/110.066ms vision and
+85.158/154.115ms language prefill for B1/B2 respectively. Reset is separately
+reported and already contained within other timed stages. These are the same
+requests, not another runtime execution, replication or matched vLLM cohort.
+The next [command-buffer native experiment](../mlp-command-buffer-native/README.md)
+tests scheduling with full model gates; its result is pending.

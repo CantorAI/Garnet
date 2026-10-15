@@ -35,7 +35,7 @@ def main():
     # historical report links which may reference remote-only files.
     paths += [ROOT / 'results/20261015' / name / 'README.md' for name in
               ('dependent-mlp-graph', 'stage-rounded-mlp-graph', 'mlp-prefill-native',
-               'coalesced-eight-body','mlp-command-buffer-primitive')]
+               'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -90,10 +90,21 @@ def main():
             f"{(rss['candidate']-rss['control'])/2**30:.3f}"]
         assert [c.strip() for c in cells[2:]]==formatted
         native_numbers+=6
+    phase=json.loads((p/'phase-analysis.json').read_text())
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
+          if line.startswith(('| Text |','| Coder |'))]
+    phase_profiles=[v for v in phase['profiles'] if v['model']!='Qwen3.5-0.8B']
+    assert len(rows)==len(phase_profiles)==4
+    phase_numbers=0
+    for cells,r in zip(rows,phase_profiles):
+        values=r['policies']['control']['decode_per_step_ms_equal_request_means']
+        assert int(cells[1])==r['batch']
+        assert [cell.strip() for cell in cells[2:]]==[f'{values[key]:.3f}' for key in ('prepare_ms','encode_ms','gpu_ms','wall_window_per_step_ms')]
+        phase_numbers+=4
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
-                  component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,status='passed',
+                  component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,phase_table_values_checked=phase_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

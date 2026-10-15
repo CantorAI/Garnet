@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T21:11:51.879032+00:00
+Generated UTC: 2026-10-15T21:22:18.074743+00:00
 
-Base HEAD at generation: `1ccfea27ac26141088186e4c5c056ec85d47e6ac`. Reports indexed: **147**.
+Base HEAD at generation: `56ebc091c6000836b38d6f0b74d0f513da696dc5`. Reports indexed: **148**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -113,6 +113,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/interleaved-screen-index](../../../results/20261015/interleaved-screen-index/README.md) | Lossless four-column screening index: repeated component gain |
 | [results/20261015/joint-state-zero](../../../results/20261015/joint-state-zero/README.md) | Reset and dependent GPU read in one command buffer: repeated component signal |
 | [results/20261015/mixed-accumulator](../../../results/20261015/mixed-accumulator/README.md) | Apple M4 mixed-input FP32 accumulator capability |
+| [results/20261015/mlp-command-buffer-native](../../../results/20261015/mlp-command-buffer-native/README.md) | Command-buffer MLP: full original validation running; no timing result yet |
 | [results/20261015/mlp-command-buffer-primitive](../../../results/20261015/mlp-command-buffer-primitive/README.md) | MLP graph command-buffer encoding: 64-case private safety probe passed |
 | [results/20261015/mlp-prefill-native](../../../results/20261015/mlp-prefill-native/README.md) | Native dependent MLP graph: correct outputs, rejected for latency and memory |
 | [results/20261015/mps-screen-index](../../../results/20261015/mps-screen-index/README.md) | MPS-derived screening dot products: rejected |
