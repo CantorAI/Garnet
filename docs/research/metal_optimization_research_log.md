@@ -381,6 +381,51 @@ fresh vLLM cohorts:144 complete matching outputs, six GPU dtype audits,
 4/6 repeated decode targets,2/6 repeated TTFT targets,0/6 repeated joint targets.
 The graph prototype does not inherit those numbers. The overall goal is unmet.
 
+### 2026-10-15 — guard diagnosis archived; retry output isolation repaired
+
+Original native graph checks PID54555 were deliberately interrupted while
+waiting on an obsolete WorldSense supervisor fingerprint. Exit1,969.807181s;
+archive audit verifies1,291 files and nine completed stages, including8 CTests.
+Diagnostics pin the changed supervisor source, show that its sole Garnet
+literal forwards the budget setting, and find no loaded inference/GPU libraries
+in the supervisor/child. Only that exact fingerprint was added to the existing
+guard; unknown workers and inference/GPU library loads still reject. Foreign
+processes were untouched. Full-suite validation did not complete in this trial.
+
+Fresh guard-fixed PID71863 built a separate candidate and passed8 CTests,
+then failed after82.209367s. Vision attempt0 was rejected on unknown PID73159;
+its provenance remains unproven. Attempt1 hit FileExistsError on the partial
+vision output directory. The second archived failure verifies1,143 files.
+This is a harness retry failure, not an admitted numerical or timing result.
+[Both failed archives, hashes, commands and diagnostics](../../results/20261015/mlp-prefill-native/README.md).
+
+Resumed PID73896 reuses only the second trial's exact configure/build/CTest
+evidence and library23bff0f7..., whose source identities are unchanged. Every
+remaining original check reruns. The repaired retry preserves rejected outputs
+inside the rejected attempt and records a relocation map before retrying the
+unchanged command. No tolerance or guard is relaxed. Vision full-grid and
+trained heads have passed; exact-tail cases are progressing at this observation.
+Full-suite audit, complete outputs, memory/init/first/warm measurements and
+matched confirmation remain pending. Native numerical sources are unchanged
+by these three helper repairs; the current manifest contains18 files.
+
+Dependent controller PID82980 waits on exact PID73896, then archives and runs
+the separate frozen-evidence audit. Only a successful audit with unchanged
+source/library identities admits dispatch of the six-profile native ABBA.
+Any failure stops the sequence. A controller exit0 records dispatch only,
+never a benchmark pass or performance gain. The controller and downstream
+commands/logs are preserved in `ROOT/logs/mlp-prefill-native-finalize-20261015`.
+
+A separate compact eight-output decode experiment is prepared locally. It
+shares each activation vector across two original compact four-output blocks,
+retaining the current weight payload and reduction order. Control remains
+compact four-output64-thread; candidate policies64/128/256 threads. This is
+distinct from the earlier rejected raw eight-output layout. Only generation/
+Python syntax checks have run; no Mac compile or GPU execution is claimed.
+[Prepared protocol and required exact-bit/FP64 gates](../../results/20261015/coalesced-eight-body/README.md).
+It must run sequentially after owned-job terminal capture/archival. No component
+or full-model gain is established for this kernel. The full goal remains unmet.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

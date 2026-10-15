@@ -53,6 +53,9 @@ def main():
     document = dict(
         schema_version=1, generated_at_utc=datetime.now(timezone.utc).isoformat(),
         source_commit=commit,
+        source_commit_role="Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
+        worktree_has_uncommitted_changes=bool(subprocess.check_output(
+            ["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=normal"], text=True).strip()),
         scope="All experiment README reports currently present under repository-root results and test2026/metal/results.",
         limitations=["Inventory presence does not establish success or independent replication.",
                      "Reports retain their original historical status; live-state changes belong in the research journal.",
@@ -72,7 +75,9 @@ def main():
     (OUTPUT / "index.csv").write_bytes(buf.getvalue().encode("utf-8"))
     lines = ["# Metal experiment evidence index", "",
              f"Generated UTC: {document['generated_at_utc']}", "",
-             f"Source commit: `{commit}`. Reports indexed: **{len(records)}**.", "",
+             f"Base HEAD at generation: `{commit}`. Reports indexed: **{len(records)}**.", "",
+             "Report hashes describe the working-tree snapshot and may include changes after that base. "
+             "For a paper, cite the commit containing this index together with the frozen experiment artifact.", "",
              "Each row links to its original report. Read that report's scope, exclusions and status before citing it. "
              "The JSON snapshot retains complete report text, documented command blocks and hashes; the CSV supports analysis. "
              "Neither report presence nor a verification filename certifies a successful experiment.", "",

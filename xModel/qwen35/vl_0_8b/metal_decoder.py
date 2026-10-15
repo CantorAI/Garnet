@@ -174,6 +174,7 @@ class MetalDecoder(CPUDecoder):
         if self.joined_prefill_enabled:self.prefill_profile['joined_prefill_pairs']=0
         if self.packed_prefill_norm_enabled:self.prefill_profile['packed_prefill_norm_dispatches']=0
         if self.global_half_alpha_enabled:self.prefill_profile['global_half_alpha_dispatches']=0
+        if 'mlp_prefill_graph' in garnet.backend_info():self.prefill_profile['mlp_prefill_graph_dispatches']=0
         if 'qwen35_wide_batch_prefill' in garnet.backend_info():self.prefill_profile['wide_batch_prefill_dispatches']=0
         if 'prefill_stream' in garnet.backend_info():self.prefill_profile['prefill_partial_submissions']=0
         if 'deferred_state_zero' in garnet.backend_info():

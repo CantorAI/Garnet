@@ -97,6 +97,11 @@ public:
     bool EncodeJoinedGlobalMlp(const MetalMatrix&,const MetalBF16Weight&,const MetalBF16Weight&,
         const MetalMatrix& gate,const MetalMatrix& up,const MetalMatrix& activated);
     size_t LastJoinedGlobalMlpBlocks() const;
+    // Optional prefill-only graph. May flush prior producers on the same queue.
+    // False leaves the command unchanged; output stays pending until final submit.
+    bool EncodeMlpPrefillGraph(const MetalMatrix&,const MetalBF16Weight&,
+        const MetalBF16Weight&,const MetalBF16Weight&,const MetalMatrix&);
+    size_t LastMlpGraphDispatches() const;
     // Output is batch x [token index, nonfinite flag]; lowest index wins ties.
     void EncodeArgmax(const MetalMatrix&,const MetalMatrix&);
     // Greedy-only BF16 projection. False encodes nothing; generic logits remain separate.

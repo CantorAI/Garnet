@@ -1,0 +1,117 @@
+{
+  "processes": [
+    {
+      "pid": 68650,
+      "ancestor_chain": [
+        {
+          "pid": 68650,
+          "parent": 1,
+          "known_scripts": [
+            {
+              "path": "/Users/zsdx/cantorai-release-tests/current/bin/WorldSense/Backend/package_runtime.py",
+              "sha256": "115a1d9dd0ae7181af4876e57bda55b9948d31c1febf1a12d40b150bce0c622e",
+              "marker_counts": {
+                "garnet": 1,
+                "metal": 0,
+                "mlx": 0,
+                "vllm": 0,
+                "torch": 0,
+                "qwen": 0
+              },
+              "inference_markers_after_exact_budget_literal_removed": false,
+              "imported_modules": [
+                "_winapi",
+                "cantorproxy",
+                "contextlib",
+                "hashlib",
+                "http.server",
+                "json",
+                "launch",
+                "os",
+                "pathlib",
+                "plistlib",
+                "routers.system",
+                "secrets",
+                "signal",
+                "socket",
+                "subprocess",
+                "sys",
+                "threading",
+                "time",
+                "urllib.request",
+                "yaml"
+              ]
+            }
+          ]
+        }
+      ],
+      "lsof_exit_code": 0,
+      "inference_or_gpu_library_names": [],
+      "scope": "Diagnostic only; does not exempt, stop or modify this process"
+    },
+    {
+      "pid": 68783,
+      "ancestor_chain": [
+        {
+          "pid": 68783,
+          "parent": 68650,
+          "known_scripts": [],
+          "inline_payload_sha256": "751439d940f63c48dafa52f3a707c43c1584af6df675247dc0a5ae913dd6e42a",
+          "inline_mentions": {
+            "worldsense": true,
+            "garnet": false,
+            "metal": false,
+            "mlx": false,
+            "vllm": false,
+            "torch": false,
+            "qwen": false
+          }
+        },
+        {
+          "pid": 68650,
+          "parent": 1,
+          "known_scripts": [
+            {
+              "path": "/Users/zsdx/cantorai-release-tests/current/bin/WorldSense/Backend/package_runtime.py",
+              "sha256": "115a1d9dd0ae7181af4876e57bda55b9948d31c1febf1a12d40b150bce0c622e",
+              "marker_counts": {
+                "garnet": 1,
+                "metal": 0,
+                "mlx": 0,
+                "vllm": 0,
+                "torch": 0,
+                "qwen": 0
+              },
+              "inference_markers_after_exact_budget_literal_removed": false,
+              "imported_modules": [
+                "_winapi",
+                "cantorproxy",
+                "contextlib",
+                "hashlib",
+                "http.server",
+                "json",
+                "launch",
+                "os",
+                "pathlib",
+                "plistlib",
+                "routers.system",
+                "secrets",
+                "signal",
+                "socket",
+                "subprocess",
+                "sys",
+                "threading",
+                "time",
+                "urllib.request",
+                "yaml"
+              ]
+            }
+          ]
+        }
+      ],
+      "lsof_exit_code": 0,
+      "inference_or_gpu_library_names": [],
+      "scope": "Diagnostic only; does not exempt, stop or modify this process"
+    }
+  ]
+}

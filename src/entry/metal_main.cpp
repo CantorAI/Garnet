@@ -25,6 +25,9 @@ public:
 #ifdef GARNET_METAL_COALESCED_BF16_BODY
         info+="; coalesced_bf16_body";
 #endif
+#ifdef GARNET_METAL_MLP_PREFILL_GRAPH
+        info+="; mlp_prefill_graph";
+#endif
 #ifdef GARNET_METAL_RESIDENT_KV_INPLACE
         info+="; resident_kv_inplace";
 #endif

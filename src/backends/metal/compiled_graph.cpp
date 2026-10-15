@@ -194,7 +194,7 @@ size_t MetalCompiledGraph::LowerVision(size_t input,const X::Value& attrs) {
 }
 void MetalCompiledGraph::Clear() {
     visionParallelDispatches_=0;
-    visionPrefetchDispatches_=0;
+    visionPrefetchDispatches_=0;mlpGraphDispatches_=0;
     resetKVPrefix_[0]=resetKVPrefix_[1]=false;
     visionGlobalAlphaDispatches_=0;++generation_;ready_=false;bf16Projections_=false;outputParts_.clear();outputStorageGroups_.clear();residentOps_.clear();controlSources_.clear();ops_.clear();inputs_.clear();inputShapes_.clear();tensors_.clear();weights_.clear();sharedWeights_.clear();weightRecords_.clear();bindings_.clear();slots_.clear();gpu_.reset();
 }
@@ -942,6 +942,20 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput,const MetalM
             }
         }
 #endif
+#ifdef GARNET_METAL_MLP_PREFILL_GRAPH
+        if(!profileOps&&slots_[op.a].rows>2&&i+3<ops_.size()&&
+            (packedOutput||(residentOps_[i+1]&&residentOps_[i+2]&&residentOps_[i+3]))) {
+            const auto& up=ops_[i+1];const auto& silu=ops_[i+2];const auto& down=ops_[i+3];
+            auto projection=[&](const Op& value){return (value.kind==Kind::BF16MatVec||
+                (value.kind==Kind::MatMul&&value.transpose))&&slots_[value.b].bf16.Valid();};
+            if(projection(op)&&projection(up)&&projection(down)&&op.a==up.a&&op.out!=up.out&&
+                silu.kind==Kind::Silu&&silu.a==op.out&&silu.b==up.out&&down.a==silu.out&&
+                gpu.EncodeMlpPrefillGraph(a,slots_[op.b].bf16,slots_[up.b].bf16,
+                    slots_[down.b].bf16,slots_[down.out].matrix)) {
+                i+=3;continue;
+            }
+        }
+#endif
 #ifdef GARNET_METAL_JOINED_GLOBAL_MLP
         if(!profileOps&&slots_[op.a].rows>2&&i+2<ops_.size()&&
             (packedOutput||(residentOps_[i+1]&&residentOps_[i+2]))) {
@@ -1042,7 +1056,7 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput,const MetalM
 X::Value MetalCompiledGraph::Run(X::Value inputs) {
     std::lock_guard<std::mutex> lock(mutex_);
     visionParallelDispatches_=0;
-    visionPrefetchDispatches_=0;
+    visionPrefetchDispatches_=0;mlpGraphDispatches_=0;
     visionGlobalAlphaDispatches_=0;
     auto start=std::chrono::steady_clock::now();
     PrepareInputs(inputs);
@@ -1053,6 +1067,7 @@ X::Value MetalCompiledGraph::Run(X::Value inputs) {
         visionGlobalAlphaDispatches_=gpu_->LastVisionGlobalAlphaDispatches();
         visionParallelDispatches_=gpu_->LastVisionParallelDispatches();
         visionPrefetchDispatches_=gpu_->LastVisionPrefetchDispatches();
+        mlpGraphDispatches_=gpu_->LastMlpGraphDispatches();
     }catch(...){gpu_->Abort();throw;}
     auto result=gpu_->Download(slots_[output_].matrix);auto& output=slots_[output_];
     inferenceMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();

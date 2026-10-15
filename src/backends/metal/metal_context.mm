@@ -27,6 +27,11 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 #import <MetalPerformanceShaders/MetalPerformanceShaders.h>
+#ifdef GARNET_METAL_MLP_PREFILL_GRAPH
+#import <MetalPerformanceShadersGraph/MetalPerformanceShadersGraph.h>
+#include <condition_variable>
+#include <chrono>
+#endif
 #include <cstring>
 #include <algorithm>
 #include <cmath>
@@ -59,6 +64,9 @@ struct MetalBF16Weight::Impl {
     id<MTLBuffer> screenIndex,screenMetadata;
 #endif
     id<MTLBuffer> buffer;
+#ifdef GARNET_METAL_MLP_PREFILL_GRAPH
+    std::mutex graphMutex;id<MTLBuffer> graphFloat;
+#endif
 #ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
     id<MTLBuffer> interleavedBody;
 #ifdef GARNET_METAL_COALESCED_BF16_BODY
@@ -212,6 +220,15 @@ struct MetalContext::Impl {
     size_t visionGlobalAlphaDispatches=0;
     size_t visionParallelDispatches=0;
     size_t joinedGlobalMlpBlocks=0;
+    size_t mlpGraphDispatches=0;
+#ifdef GARNET_METAL_MLP_PREFILL_GRAPH
+    struct MlpGraph {
+        MPSGraph* graph=nil;NSMutableDictionary* feeds=nil;NSMutableDictionary* results=nil;
+        MetalMatrix inputOwner,outputOwner;
+        MetalBF16Weight gateOwner,upOwner,downOwner;
+    };
+    std::map<std::vector<uintptr_t>,MlpGraph> mlpGraphs;
+#endif
 #ifdef GARNET_METAL_JOINED_GLOBAL_MLP
     struct JoinedGlobalWeight {
         MetalBF16Weight firstOwner,secondOwner;
@@ -1826,6 +1843,7 @@ size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->global
 size_t MetalContext::LastWideBatchPrefillDispatches() const {return impl_->wideBatchPrefillDispatches;}
 size_t MetalContext::LastInterleavedBodyDispatches() const {return impl_->interleavedBodyDispatches;}
 size_t MetalContext::LastCoalescedBlockDispatches() const {return impl_->coalescedBlockDispatches;}
+size_t MetalContext::LastMlpGraphDispatches() const {return impl_->mlpGraphDispatches;}
 size_t MetalContext::LastVisionGlobalAlphaDispatches() const {return impl_->visionGlobalAlphaDispatches;}
 size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
 size_t MetalContext::LastVisionPrefetchDispatches() const {return impl_->visionPrefetchDispatches;}
@@ -2121,7 +2139,7 @@ void MetalContext::Begin() {
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
     impl_->deferredZeroBytes=impl_->deferredZeroStates=0;
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->coalescedBlockDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->coalescedBlockDispatches=0;impl_->mlpGraphDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
 #ifdef GARNET_METAL_DEFERRED_STATE_ZERO
@@ -2142,6 +2160,7 @@ void MetalContext::Begin() {
 #endif
     }
 }
+#include "mlp_prefill_graph_impl.h"
 void MetalContext::EncodeMatMul(const MetalMatrix& left,const MetalMatrix& right,
     const MetalMatrix& output,bool transposeRight) {
     @autoreleasepool {
@@ -2793,7 +2812,7 @@ void MetalContext::Abort() {
     for(const auto& entry:impl_->zeroQueued){entry.second->pending=false;entry.second->ready=false;}
     impl_->zeroQueued.clear();
 #endif
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->coalescedBlockDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->coalescedBlockDispatches=0;impl_->mlpGraphDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }
