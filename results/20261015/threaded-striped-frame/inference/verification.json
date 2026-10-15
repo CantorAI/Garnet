@@ -1,7 +1,7 @@
 {
-  "verified_files": 360,
-  "actual_fp32_gpu_audits": 1,
-  "complete_matched_requests": 48,
+  "verified_files": 694,
+  "actual_fp32_gpu_audits": 2,
+  "complete_matched_requests": 96,
   "profiles": [
     {
       "trial": "threaded-striped-inference-20261015",
@@ -171,6 +171,178 @@
           "combined": {
             "ttft_ms": 477.95285447500646,
             "frontend_setup_s": 0.003970625111833215
+          }
+        }
+      }
+    },
+    {
+      "trial": "threaded-striped-inference-confirm-20261015",
+      "batch": 1,
+      "policies": {
+        "selected": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 204.45049973204732,
+              "decode_tps": 48.20601408618854,
+              "preprocessing_ms": 44.84117729589343,
+              "initialization_s": 4.115973395295441,
+              "peak_child_rss_bytes": 3625066496
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 273.0356561951339,
+              "decode_tps": 26.042410106751902,
+              "preprocessing_ms": 47.52592707518488,
+              "initialization_s": 33.049684478668496,
+              "peak_child_rss_bytes": 5911289856
+            }
+          },
+          "decode_ratio": 1.8510580967193346,
+          "ttft_fraction": 0.748805128902029,
+          "decode_target_met": false,
+          "ttft_target_met": false
+        },
+        "combined": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 186.78728165104985,
+              "decode_tps": 48.307035338681295,
+              "preprocessing_ms": 27.338739833794534,
+              "initialization_s": 4.116264478769153,
+              "peak_child_rss_bytes": 3626639360
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 263.76940647605807,
+              "decode_tps": 26.31123803381125,
+              "preprocessing_ms": 31.367697985842824,
+              "initialization_s": 33.30914158350788,
+              "peak_child_rss_bytes": 5866799104
+            }
+          },
+          "decode_ratio": 1.835984885112755,
+          "ttft_fraction": 0.7081461195462948,
+          "decode_target_met": false,
+          "ttft_target_met": false
+        }
+      },
+      "frontend_effects": {
+        "garnet": {
+          "ttft_fraction": 0.9136063834319462,
+          "decode_ratio": 1.0020956151303475
+        },
+        "vllm-metal": {
+          "ttft_fraction": 0.9660621259208232,
+          "decode_ratio": 1.01032269770568
+        }
+      },
+      "first_after_init": {
+        "garnet": {
+          "selected": {
+            "ttft_ms": 355.6995829567313,
+            "frontend_setup_s": 0.0035278955474495888
+          },
+          "combined": {
+            "ttft_ms": 303.6346670705825,
+            "frontend_setup_s": 0.0038860836066305637
+          }
+        },
+        "vllm-metal": {
+          "selected": {
+            "ttft_ms": 305.41920848190784,
+            "frontend_setup_s": 0.002729062456637621
+          },
+          "combined": {
+            "ttft_ms": 245.7952294498682,
+            "frontend_setup_s": 0.004089021123945713
+          }
+        }
+      }
+    },
+    {
+      "trial": "threaded-striped-inference-confirm-20261015",
+      "batch": 2,
+      "policies": {
+        "selected": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 365.03552075009793,
+              "decode_tps": 44.67010019789659,
+              "preprocessing_ms": 51.22382310219109,
+              "initialization_s": 4.113225332926959,
+              "peak_child_rss_bytes": 3629817856
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 433.50953119806945,
+              "decode_tps": 17.299633528611714,
+              "preprocessing_ms": 47.5202810484916,
+              "initialization_s": 33.26608199975453,
+              "peak_child_rss_bytes": 5832605696
+            }
+          },
+          "decode_ratio": 2.582141414962178,
+          "ttft_fraction": 0.8420472780408468,
+          "decode_target_met": true,
+          "ttft_target_met": false
+        },
+        "combined": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 347.39887493196875,
+              "decode_tps": 44.694697227105664,
+              "preprocessing_ms": 30.487926793284714,
+              "initialization_s": 4.135584936942905,
+              "peak_child_rss_bytes": 3629449216
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 425.98088551312685,
+              "decode_tps": 16.964203079100145,
+              "preprocessing_ms": 30.464562703855336,
+              "initialization_s": 33.2011457500048,
+              "peak_child_rss_bytes": 5749506048
+            }
+          },
+          "decode_ratio": 2.634647617616027,
+          "ttft_fraction": 0.8155269091792698,
+          "decode_target_met": true,
+          "ttft_target_met": false
+        }
+      },
+      "frontend_effects": {
+        "garnet": {
+          "ttft_fraction": 0.9516851242808144,
+          "decode_ratio": 1.0005506374308566
+        },
+        "vllm-metal": {
+          "ttft_fraction": 0.9826332637620768,
+          "decode_ratio": 0.9806105459426754
+        }
+      },
+      "first_after_init": {
+        "garnet": {
+          "selected": {
+            "ttft_ms": 561.7997080553323,
+            "frontend_setup_s": 0.0026192087680101395
+          },
+          "combined": {
+            "ttft_ms": 515.7798125874251,
+            "frontend_setup_s": 0.003971979022026062
+          }
+        },
+        "vllm-metal": {
+          "selected": {
+            "ttft_ms": 511.16679213009775,
+            "frontend_setup_s": 0.0026472711469978094
+          },
+          "combined": {
+            "ttft_ms": 478.52306230925024,
+            "frontend_setup_s": 0.004026396432891488
           }
         }
       }

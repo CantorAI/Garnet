@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "metal_context.h"
 #include "exact_half_codec.h"
+#ifdef GARNET_METAL_PARALLEL_VISION_CONTEXT
+#include "parallel_vision_context_shader.h"
+#endif
 #ifdef GARNET_METAL_BODY_SHAPE
 #include "body_shape_shader.h"
 #include <shared_mutex>
@@ -94,6 +97,7 @@ struct MetalPipelines {
     id<MTLComputePipelineState> normRope,kvUpdate,kvUpdateVector,scores,scoresSerial,attentionContext;
     id<MTLComputePipelineState> vision,visionNorm,visionScores,layout,kvChunk,kvChunkVector,attentionChunk;
     id<MTLComputePipelineState> visionPackQK,visionSoftmax,visionFusedContext;
+    id<MTLComputePipelineState> visionParallelContext;
 };
 static std::mutex pipelineMutex;
 static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
@@ -128,6 +132,7 @@ struct MetalContext::Impl {
     size_t packedPrefillNormDispatches=0;
     size_t globalHalfAlphaDispatches=0;
     size_t visionGlobalAlphaDispatches=0;
+    size_t visionParallelDispatches=0;
     size_t joinedGlobalMlpBlocks=0;
 #ifdef GARNET_METAL_JOINED_GLOBAL_MLP
     struct JoinedGlobalWeight {
@@ -1117,6 +1122,9 @@ kernel void vision_softmax_context(device const float* a [[buffer(0)]],device co
 }
 )METAL"]];
 #endif
+#ifdef GARNET_METAL_PARALLEL_VISION_CONTEXT
+        source=[source stringByAppendingString:[NSString stringWithUTF8String:kParallelVisionContextShader]];
+#endif
 #ifdef GARNET_METAL_JOINED_PREFILL
         source=[source stringByAppendingString:@"\nkernel void joined_split_rescale(device const float* input [[buffer(0)]],device const int* scales [[buffer(1)]],device float* first [[buffer(2)]],device float* second [[buffer(3)]],constant HalfRescaleParams& p [[buffer(4)]],uint id [[thread_position_in_grid]]) {if(id>=p.rows*p.columns*2)return;ulong row=id/(p.columns*2),col=id%(p.columns*2);float v=ldexp(input[row*p.iStride+col],-scales[col]);if(col<p.columns)first[row*p.oStride+col]=v;else second[row*p.oStride+col-p.columns]=v;}\n"];
 #endif
@@ -1313,6 +1321,9 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
 #ifdef GARNET_METAL_FUSED_VISION_CONTEXT
         impl_->kernels->visionFusedContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_softmax_context"] error:&error];
         if(!impl_->kernels->visionFusedContext)throw std::runtime_error("Cannot create fused vision context pipeline");
+#ifdef GARNET_METAL_PARALLEL_VISION_CONTEXT
+        impl_->kernels->visionParallelContext=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_parallel_context"] error:&error];
+#endif
 #endif
         impl_->kernels->vision=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"vision_op"] error:&error];
         impl_->kernels->kvChunk=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"kv_chunk"] error:&error];
@@ -1660,6 +1671,7 @@ size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualN
 size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->packedPrefillNormDispatches;}
 size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->globalHalfAlphaDispatches;}
 size_t MetalContext::LastVisionGlobalAlphaDispatches() const {return impl_->visionGlobalAlphaDispatches;}
+size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
 bool MetalContext::PrepareBF16BodyShape(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
 #ifdef GARNET_METAL_BODY_SHAPE
     @autoreleasepool {
@@ -1922,7 +1934,7 @@ void MetalContext::Begin() {
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
     impl_->deferredZeroBytes=impl_->deferredZeroStates=0;
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
 #ifdef GARNET_METAL_DEFERRED_STATE_ZERO
@@ -2216,6 +2228,15 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
         [item.product encodeToCommandBuffer:impl_->command leftMatrix:item.queryView rightMatrix:item.keyView resultMatrix:item.scoreView];
         mpsScores=item.scores;mpsFields[5]=item.scores.impl_->matrix.rowBytes/4;
         parameters=mpsFields.data();pipeline=fusedVisionContext?impl_->kernels->visionFusedContext:impl_->kernels->visionSoftmax;
+#ifdef GARNET_METAL_PARALLEL_VISION_CONTEXT
+        auto candidate=impl_->kernels->visionParallelContext;
+        const size_t scratchBytes=(tokens*sizeof(float)+15)&~size_t(15);
+        if(fusedVisionContext&&tokens==216&&hidden==768&&heads==12&&(rows==216||rows==432)&&
+            candidate&&candidate.threadExecutionWidth==32&&candidate.maxTotalThreadsPerThreadgroup>=128&&
+            candidate.staticThreadgroupMemoryLength+scratchBytes<=impl_->device.maxThreadgroupMemoryLength) {
+            pipeline=candidate;++impl_->visionParallelDispatches;
+        }
+#endif
     }
 #endif
     auto encoder=[impl_->command computeCommandEncoder];
@@ -2567,7 +2588,7 @@ void MetalContext::Abort() {
     for(const auto& entry:impl_->zeroQueued){entry.second->pending=false;entry.second->ready=false;}
     impl_->zeroQueued.clear();
 #endif
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

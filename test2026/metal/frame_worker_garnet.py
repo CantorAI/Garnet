@@ -120,6 +120,8 @@ try:
             residual_norm_dispatches=decoder.session.residual_norm_dispatches if 'residual_norm' in garnet.backend_info() else 0,
             constant_head_dispatches=decoder.session.constant_head_dispatches if 'constant_bf16_head' in garnet.backend_info() else 0,
             vision_reencoded=True,attention_prefix_enabled='attention_prefix' in garnet.backend_info(),
+            parallel_vision_context_enabled='parallel_vision_context' in garnet.backend_info(),
+            vision_parallel_dispatches=vision.graph.vision_parallel_dispatches if 'parallel_vision_context' in garnet.backend_info() else 0,
             weights='BF16 checkpoint; FP32 native vision/activations/KV'))
 finally:
     if vision is not None:vision.close()

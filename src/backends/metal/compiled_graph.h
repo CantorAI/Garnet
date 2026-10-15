@@ -33,6 +33,7 @@ class MetalCompiledGraph {
     uint64_t generation_=0;
     double compileMs_=0,inferenceMs_=0;
     size_t visionGlobalAlphaDispatches_=0;
+    size_t visionParallelDispatches_=0;
     bool resetKVPrefix_[2]={false,false};
     bool ready_=false,bf16Projections_=false;
     std::mutex mutex_;
@@ -61,6 +62,7 @@ public:
     double LastInferenceMs() const {return inferenceMs_;}
     size_t OperationCount() const {return ops_.size();}
     size_t LastVisionGlobalAlphaDispatches() const {return visionGlobalAlphaDispatches_;}
+    size_t LastVisionParallelDispatches() const {return visionParallelDispatches_;}
     BEGIN_PACKAGE(MetalCompiledGraph)
         APISET().AddFunc<3>("build",&MetalCompiledGraph::Build);
         APISET().AddFunc<3>("build_bf16",&MetalCompiledGraph::BuildBF16);
@@ -72,6 +74,7 @@ public:
         APISET().AddProp("last_inference_ms",&MetalCompiledGraph::LastInferenceMs);
         APISET().AddProp("operation_count",&MetalCompiledGraph::OperationCount);
         APISET().AddProp("vision_global_alpha_dispatches",&MetalCompiledGraph::LastVisionGlobalAlphaDispatches);
+        APISET().AddProp("vision_parallel_dispatches",&MetalCompiledGraph::LastVisionParallelDispatches);
     END_PACKAGE
 };
 }

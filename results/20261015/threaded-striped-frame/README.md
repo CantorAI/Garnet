@@ -80,6 +80,41 @@ job had already terminated exit 0. Confirmation repeats the actual dtype audit
 and both factorial comparisons; the selected frontend remains unchanged until
 that evidence is audited.
 
+## Completed confirmation
+
+PID 52244 terminated exit 0 after 467.5469 seconds. The combined audit verifies
+694 archived files, two actual GPU FP32 audits and 96 complete matching requests.
+
+| Batch / frontend | Garnet TTFT ms | vLLM TTFT ms | Garnet decode | vLLM decode | Decode ratio | TTFT fraction |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 selected | 204.4505 | 273.0357 | 48.2060 | 26.0424 | 1.85106 | 0.74881 |
+| 1 combined | 186.7873 | 263.7694 | 48.3070 | 26.3112 | 1.83598 | 0.70815 |
+| 2 selected | 365.0355 | 433.5095 | 44.6701 | 17.2996 | 2.58214 | 0.84205 |
+| 2 combined | 347.3989 | 425.9809 | 44.6947 | 16.9642 | 2.63465 | 0.81553 |
+
+Native TTFT reductions repeat: 5.74%/8.64% at B1 and 4.20%/4.83% at B2 in
+initial/confirmation. Native decode is essentially flat (+0.24%/+0.21% at B1,
+−0.10%/+0.06% at B2). Comparator warm TTFT is lower in both runs too. No
+decode gain is established by these CPU changes. The full B1 decode and both
+half-TTFT targets remain unmet, even though preparation itself is much faster.
+
+Confirmation first-request TTFT AFTER initialization is native
+355.6996→303.6347 ms / 561.7997→515.7798 ms at B1/B2, and comparator
+305.4192→245.7952 ms / 511.1668→478.5231 ms. Initialization, frontend setup and
+all first-request observations remain separate in the verified JSON. No
+hardware-cold or shared-memory RSS attribution is claimed.
+
+The new parallel-vision native GPU study explicitly applies this combined
+frontend equally to control and candidate. General defaults and unsupported
+image paths remain unchanged. Later native and comparator measurements must
+use the same common frontend; this VL-only study cannot replace or be mixed
+with the older full-three-model comparison.
+
+Combined inference archive SHA-256:
+`e3b095dd07e2ef417189ac50d91369e0cd75330daa7a8449b0a5c0ec2f93d4b1`.
+Both terminal trials were archived before installing the subsequent optional
+vision source changes; their actual worker source identities remain preserved.
+
 The additional matched-FP32 comparison preserves learned values and FP32
 arithmetic/activation/KV precision, while native compact weight storage differs
 from comparator FP32 storage. It does not establish stock BF16 speedups. The

@@ -67,6 +67,9 @@ public:
 #ifdef GARNET_METAL_VISION_GLOBAL_ALPHA
         info+="; vision_global_alpha";
 #endif
+#ifdef GARNET_METAL_PARALLEL_VISION_CONTEXT
+        info+="; parallel_vision_context";
+#endif
 #ifdef GARNET_METAL_JOINED_GLOBAL_MLP
         info+="; joined_global_mlp";
 #endif
