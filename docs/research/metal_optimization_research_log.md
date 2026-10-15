@@ -702,6 +702,23 @@ controller53701's audited primitive completion, then preserves/audits its own
 actual component handle. This is sequential and does not change live inputs.
 [Protocol, scope and reproduction templates](../../results/20261015/mlp-bf16-feed-primitive/README.md#trained-component-follow-up-prepared).
 
+### 2026-10-15 — selected-shape validation passed; actual native cohort started
+
+Exact PID42435 exited0 in1423.387570s. All28 original stages were freshly
+executed, including seven CTests and104 coalesced cases. Mac frozen-evidence
+audit passed1,615 files,51/78 trained-head queries/rows, four full/small vision
+profiles, both six-case recovery suites and four wide profiles/12 carried
+steps. Worst unchanged wide bound ratio0.543284; no compile/stage reuse.
+Archive5b9ee0dc... and candidate libraryc22fb8f2... are frozen. Local transfer
+and re-audit wait until the current performance work completes.
+
+Controller47970 exited0 with native_benchmark_dispatched after successful
+audit. Actual native PID68805 is running; text B1 completed its original
+complete-output and actual-route predicates. The whole six-profile cohort
+is incomplete and no new speed/TTFT/vLLM ratio is claimed. Controllers53701
+and60730 continue to wait in sequence; BF16 GPU work has not started.
+[Identities, protocol and scope](../../results/20261015/shape-selected-two-native/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
