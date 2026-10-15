@@ -1,0 +1,245 @@
+{
+  "scope": "Actual reset copies complete before prefill. Retained source allocation is included in initialization. Encode/GPU/wait clocks overlap and must not be added. Init and first request after init are separate; caches unflushed. No new vLLM measurement.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 50.29611452482641,
+      "reset_call_ms": 6.757229566574097,
+      "prefill_inference_ms": 42.19567725,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.30707275,
+        "encode_ms": 6.574094,
+        "gpu_ms": 34.336343756876886,
+        "wait_ms": 35.31272925
+      },
+      "source_bytes": 0,
+      "copied_bytes": 0,
+      "copied_states": 0,
+      "decode_tps_per_row": 59.025869306739494,
+      "initialization_s": 1.64835274964571,
+      "first_request_after_init_ttft_ms": 156.93639614619315
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 47.34428075607866,
+      "reset_call_ms": 3.958510234951973,
+      "prefill_inference_ms": 41.84532275,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.290406,
+        "encode_ms": 6.3545,
+        "gpu_ms": 34.24365620594472,
+        "wait_ms": 35.198573
+      },
+      "source_bytes": 1048576,
+      "copied_bytes": 58720256,
+      "copied_states": 56,
+      "decode_tps_per_row": 59.168454556859494,
+      "initialization_s": 1.6450767293572426,
+      "first_request_after_init_ttft_ms": 150.9136245585978
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 80.22207289468497,
+      "reset_call_ms": 21.60261443350464,
+      "prefill_inference_ms": 57.07990625,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.3038335,
+        "encode_ms": 5.768822999999999,
+        "gpu_ms": 50.044375006109476,
+        "wait_ms": 51.00465625
+      },
+      "source_bytes": 0,
+      "copied_bytes": 0,
+      "copied_states": 0,
+      "decode_tps_per_row": 57.60578171847536,
+      "initialization_s": 1.6783526251092553,
+      "first_request_after_init_ttft_ms": 188.68545815348625
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 68.64004186354578,
+      "reset_call_ms": 7.056000060401857,
+      "prefill_inference_ms": 59.78891675,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.321031,
+        "encode_ms": 6.07378125,
+        "gpu_ms": 52.433062344789505,
+        "wait_ms": 53.39142725
+      },
+      "source_bytes": 2097152,
+      "copied_bytes": 117440512,
+      "copied_states": 56,
+      "decode_tps_per_row": 56.69913095130055,
+      "initialization_s": 1.6727717081084847,
+      "first_request_after_init_ttft_ms": 166.7688749730587
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 32.65285422094166,
+      "reset_call_ms": 0.8153540547937155,
+      "prefill_inference_ms": 30.064510249999998,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.23438525,
+        "encode_ms": 5.29688525,
+        "gpu_ms": 23.643302149139345,
+        "wait_ms": 24.530969
+      },
+      "source_bytes": 0,
+      "copied_bytes": 0,
+      "copied_states": 0,
+      "decode_tps_per_row": 72.6085307778406,
+      "initialization_s": 1.38315952103585,
+      "first_request_after_init_ttft_ms": 123.76950006000698
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 32.76724985335022,
+      "reset_call_ms": 0.628218986093998,
+      "prefill_inference_ms": 30.947979,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.23852099999999998,
+        "encode_ms": 5.43007275,
+        "gpu_ms": 24.238156154751778,
+        "wait_ms": 25.277427
+      },
+      "source_bytes": 131072,
+      "copied_bytes": 6291456,
+      "copied_states": 48,
+      "decode_tps_per_row": 71.8103095529356,
+      "initialization_s": 1.3809246870223433,
+      "first_request_after_init_ttft_ms": 127.6002291124314
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 51.681572454981506,
+      "reset_call_ms": 1.794010167941451,
+      "prefill_inference_ms": 48.4490415,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.3097915,
+        "encode_ms": 5.60691675,
+        "gpu_ms": 41.608166648074985,
+        "wait_ms": 42.530604000000004
+      },
+      "source_bytes": 0,
+      "copied_bytes": 0,
+      "copied_states": 0,
+      "decode_tps_per_row": 70.57675873595409,
+      "initialization_s": 1.3886387494858354,
+      "first_request_after_init_ttft_ms": 142.05291657708585
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 50.91868748422712,
+      "reset_call_ms": 0.8055103244259953,
+      "prefill_inference_ms": 48.58620825,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.29655175,
+        "encode_ms": 5.7435525,
+        "gpu_ms": 41.42909380607307,
+        "wait_ms": 42.54374975
+      },
+      "source_bytes": 262144,
+      "copied_bytes": 12582912,
+      "copied_states": 48,
+      "decode_tps_per_row": 70.78824339511442,
+      "initialization_s": 1.382380833150819,
+      "first_request_after_init_ttft_ms": 147.3349374718964
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "control",
+      "ttft_ms": 194.82526031788439,
+      "reset_call_ms": 4.6730623580515385,
+      "prefill_inference_ms": 84.45129175,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.2558435,
+        "encode_ms": 6.2392605,
+        "gpu_ms": 77.01848959550261,
+        "wait_ms": 77.9534585
+      },
+      "source_bytes": 0,
+      "copied_bytes": 0,
+      "copied_states": 0,
+      "decode_tps_per_row": 48.071088200493946,
+      "initialization_s": 2.934045562520623,
+      "first_request_after_init_ttft_ms": 357.09066642448306
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "candidate",
+      "ttft_ms": 192.21406255383044,
+      "reset_call_ms": 2.4169792886823416,
+      "prefill_inference_ms": 84.5205,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.2444685,
+        "encode_ms": 6.431344,
+        "gpu_ms": 76.78307278547436,
+        "wait_ms": 77.84289575
+      },
+      "source_bytes": 1048576,
+      "copied_bytes": 26935296,
+      "copied_states": 48,
+      "decode_tps_per_row": 47.840438682607854,
+      "initialization_s": 2.92307558353059,
+      "first_request_after_init_ttft_ms": 331.0913748573512
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "ttft_ms": 359.74856256507337,
+      "reset_call_ms": 10.477426927536726,
+      "prefill_inference_ms": 182.838448,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.658948,
+        "encode_ms": 18.6842815,
+        "gpu_ms": 160.18724988680333,
+        "wait_ms": 163.4919165
+      },
+      "source_bytes": 0,
+      "copied_bytes": 0,
+      "copied_states": 0,
+      "decode_tps_per_row": 44.32799918737566,
+      "initialization_s": 2.9507999375928193,
+      "first_request_after_init_ttft_ms": 556.9094165693969
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "ttft_ms": 356.6087916260585,
+      "reset_call_ms": 4.469187464565039,
+      "prefill_inference_ms": 182.99605225,
+      "prefill_observed_clocks": {
+        "prepare_ms": 0.5838432499999999,
+        "encode_ms": 18.627906,
+        "gpu_ms": 160.5731457239017,
+        "wait_ms": 163.78094850000002
+      },
+      "source_bytes": 2097152,
+      "copied_bytes": 53870592,
+      "copied_states": 48,
+      "decode_tps_per_row": 44.29865424890768,
+      "initialization_s": 2.955342770786956,
+      "first_request_after_init_ttft_ms": 551.5742290299386
+    }
+  ]
+}

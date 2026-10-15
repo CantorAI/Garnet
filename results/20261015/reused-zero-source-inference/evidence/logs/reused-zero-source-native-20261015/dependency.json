@@ -1,0 +1,16 @@
+{
+  "pid": 55933,
+  "status": {
+    "exit_code": 0,
+    "wall_seconds": 1198.6444121659733
+  },
+  "completed_original_stages": 19,
+  "source_manifest": {
+    "cmake/GarnetMetal.cmake": "ed48438a1a1777496bfb0c2cd37b7a2271787fda8fb596ad2eb0e7f7d19d4649",
+    "src/backends/metal/decoder_session.cpp": "272358ac10411d0b90cad31e4ac326b714e81c7a6913b742fc7887d73232197b",
+    "src/backends/metal/decoder_session.h": "394354086b8b0b9b60402fe5d9e4ad8545f2c1679d3be28235e22fb238f429a5",
+    "src/entry/metal_main.cpp": "3b0ecbe7d8712b18f1a2a0bc95c2dcefcd646ba4a98665643ea45d2de29e4b6d",
+    "test2026/metal/run_matched_garnet.py": "df318f170bfae005cb27f15435a9932febad30d4ab2e873cacdd6c42eb0b17bd",
+    "test2026/metal/frame_worker_garnet.py": "ca3e2ed1930d560f6dc46171a71254e5e7902ab9147c046f0eeca379ddb5faee"
+  }
+}
