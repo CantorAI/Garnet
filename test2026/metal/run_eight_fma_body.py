@@ -9,7 +9,7 @@ old='from make_coalesced_eight_body import context as generate_context,header as
 assert source.count(old)==1
 source=source.replace(old,'from make_eight_fma_body import context as generate_context,header as generate_header,harness as generate_harness,shader as generate_shader')
 old="s/'make_coalesced_eight_body.py'";assert source.count(old)==1
-source=source.replace(old,"s/'make_eight_fma_body.py',"+old)
+source=source.replace(old,"s/'make_eight_fma_body.py',s/'run_coalesced_eight_body.py',"+old)
 old="(out/'coalesced_eight_body_shader.h').write_bytes((s/'coalesced_eight_body_shader.h').read_bytes())"
 assert source.count(old)==1
 source=source.replace(old,"(out/'coalesced_eight_fma_shader.h').write_bytes(generate_shader((s/'coalesced_eight_body_shader.h').read_text()).encode())")
