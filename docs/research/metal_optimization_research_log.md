@@ -689,6 +689,19 @@ and the prior slower cast-half component. A new primitive pass would still
 need trained numerical and performance evidence before any integration.
 [Exact method, dependencies and limitations](../../results/20261015/mlp-bf16-feed-primitive/README.md).
 
+### 2026-10-15 — trained BF16-feed MLP timing protocol prepared
+
+The follow-up preserves complete gate/up–SiLU–down dependencies, the existing
+FP32 stage-rounded CPU reference and unchanged tolerance coefficients. Before
+timing it requires exact GPU BF16-to-FP32 roundtrips of every learned value in
+12 tensors/four fixture MLP blocks. Four patterns and all failed native or
+candidate profiles remain; failed profiles have no timing windows. Local
+generation and expanded-driver/auditor syntax checks pass. No Mac compile,
+execution, memory saving or speed is claimed yet. Queue60730 waits on exact
+controller53701's audited primitive completion, then preserves/audits its own
+actual component handle. This is sequential and does not change live inputs.
+[Protocol, scope and reproduction templates](../../results/20261015/mlp-bf16-feed-primitive/README.md#trained-component-follow-up-prepared).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

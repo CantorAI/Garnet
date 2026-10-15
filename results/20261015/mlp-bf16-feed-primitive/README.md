@@ -57,3 +57,35 @@ runtime metadata must supplement these templates. Current inference inputs
 remain frozen, and competing runtimes/probes remain sequential. A primitive
 pass would justify trained numerical/performance testing, not promotion or
 a vLLM/model-speed claim. The full three-model2x/half-TTFT goal remains unmet.
+
+## Trained component follow-up prepared
+
+`make_bf16_feed_mlp_component.py` keeps the prior complete dependent MLP
+harness and its existing FP32 stage-rounded CPU reference, with unchanged
+native/reference tolerance coefficients and all four input patterns. Weight
+placeholders/constants use original BF16 bits and explicit FP32 casts. Before
+any timing, a separate GPU cast roundtrip must reproduce every original FP32
+learned-value bit for the12 MLP tensors in the four fixture blocks: text/coder
+layer0 and VL layers0/3. This is complete per-fixture tensor coverage, not
+coverage of all model layers. Activations and arithmetic retain FP32 assertions.
+
+Expected coverage is48 aggregate numerical records and12 first graph calls;
+only profiles passing every original native/reference/candidate predicate may
+enter two ABBA timing rounds. Prior stress/reference failures remain recorded;
+no failing profile may be removed or its coefficients widened. Wall clocks
+include one synchronous graph call per MLP, with setup/first costs separate.
+These component times cannot establish model TTFT, memory savings or a vLLM
+ratio, even if a storage policy improves them.
+
+Local source generation and expanded driver/auditor syntax checks passed.
+No Mac compilation or execution is claimed. Exact queue PID60730 observes
+controller53701 and requires its audited completion before launch, then waits
+for the actual returned component handle and freezes/audits the outcome.
+
+```text
+python3 queue_bf16_feed_mlp_component.py ROOT ROOT/logs/queue-bf16-feed-mlp-component-20261015
+# Only after the primitive's terminal archive and audit:
+python3 launch_bf16_feed_mlp_component.py ROOT ROOT/logs/bf16-feed-mlp-component-20261015 component
+python3 archive_bf16_feed_mlp_component.py ROOT ARCHIVE
+python -X utf8 test2026/metal/verify_bf16_feed_mlp_component.py AUDIT AUDIT_RESULT
+```
