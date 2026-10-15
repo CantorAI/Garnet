@@ -1,0 +1,181 @@
+{
+  "verified_files": 360,
+  "actual_fp32_gpu_audits": 1,
+  "complete_matched_requests": 48,
+  "profiles": [
+    {
+      "trial": "threaded-striped-inference-20261015",
+      "batch": 1,
+      "policies": {
+        "selected": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 202.1689999382943,
+              "decode_tps": 48.31240219237331,
+              "preprocessing_ms": 45.10855197440833,
+              "initialization_s": 4.105271895648912,
+              "peak_child_rss_bytes": 3611525120
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 266.79261424578726,
+              "decode_tps": 26.096138107735776,
+              "preprocessing_ms": 53.434833185747266,
+              "initialization_s": 33.33839618740603,
+              "peak_child_rss_bytes": 5764259840
+            }
+          },
+          "decode_ratio": 1.8513238239665772,
+          "ttft_fraction": 0.7577758496419343,
+          "decode_target_met": false,
+          "ttft_target_met": false
+        },
+        "combined": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 190.55777112953365,
+              "decode_tps": 48.42994371967174,
+              "preprocessing_ms": 27.05681265797466,
+              "initialization_s": 4.104045750340447,
+              "peak_child_rss_bytes": 3612278784
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 263.94906255882233,
+              "decode_tps": 25.811146346245316,
+              "preprocessing_ms": 29.45510426070541,
+              "initialization_s": 33.16178891644813,
+              "peak_child_rss_bytes": 5620711424
+            }
+          },
+          "decode_ratio": 1.8763189774683031,
+          "ttft_fraction": 0.7219490354775059,
+          "decode_target_met": false,
+          "ttft_target_met": false
+        }
+      },
+      "frontend_effects": {
+        "garnet": {
+          "ttft_fraction": 0.9425667198615781,
+          "decode_ratio": 1.0024329472757407
+        },
+        "vllm-metal": {
+          "ttft_fraction": 0.9893417151183006,
+          "decode_ratio": 0.9890791595172476
+        }
+      },
+      "first_after_init": {
+        "garnet": {
+          "selected": {
+            "ttft_ms": 353.25289564207196,
+            "frontend_setup_s": 0.0036857500672340393
+          },
+          "combined": {
+            "ttft_ms": 307.7480832580477,
+            "frontend_setup_s": 0.003911604639142752
+          }
+        },
+        "vllm-metal": {
+          "selected": {
+            "ttft_ms": 307.7653751242906,
+            "frontend_setup_s": 0.002612561918795109
+          },
+          "combined": {
+            "ttft_ms": 243.4623541776091,
+            "frontend_setup_s": 0.004026415757834911
+          }
+        }
+      }
+    },
+    {
+      "trial": "threaded-striped-inference-20261015",
+      "batch": 2,
+      "policies": {
+        "selected": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 359.7302393754944,
+              "decode_tps": 44.6683441350945,
+              "preprocessing_ms": 49.73107285331935,
+              "initialization_s": 4.13678020844236,
+              "peak_child_rss_bytes": 3647193088
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 433.59161424450576,
+              "decode_tps": 17.134951460546077,
+              "preprocessing_ms": 48.71156229637563,
+              "initialization_s": 33.232480854028836,
+              "peak_child_rss_bytes": 5793669120
+            }
+          },
+          "decode_ratio": 2.6068555979248136,
+          "ttft_fraction": 0.8296522062639331,
+          "decode_target_met": true,
+          "ttft_target_met": false
+        },
+        "combined": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 344.6227603126317,
+              "decode_tps": 44.622959783998546,
+              "preprocessing_ms": 29.391041724011302,
+              "initialization_s": 4.129607395967469,
+              "peak_child_rss_bytes": 3643809792
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 428.18852060008794,
+              "decode_tps": 17.013556712791328,
+              "preprocessing_ms": 29.18219764251262,
+              "initialization_s": 33.338013749802485,
+              "peak_child_rss_bytes": 5730918400
+            }
+          },
+          "decode_ratio": 2.622788434969015,
+          "ttft_fraction": 0.8048388588971457,
+          "decode_target_met": true,
+          "ttft_target_met": false
+        }
+      },
+      "frontend_effects": {
+        "garnet": {
+          "ttft_fraction": 0.9580033107889683,
+          "decode_ratio": 0.9989839705954021
+        },
+        "vllm-metal": {
+          "ttft_fraction": 0.9875387496738556,
+          "decode_ratio": 0.9929153725334872
+        }
+      },
+      "first_after_init": {
+        "garnet": {
+          "selected": {
+            "ttft_ms": 566.6305420454592,
+            "frontend_setup_s": 0.002752833068370819
+          },
+          "combined": {
+            "ttft_ms": 531.4282497856766,
+            "frontend_setup_s": 0.0038375835865736008
+          }
+        },
+        "vllm-metal": {
+          "selected": {
+            "ttft_ms": 527.8547499328852,
+            "frontend_setup_s": 0.002857750514522195
+          },
+          "combined": {
+            "ttft_ms": 477.95285447500646,
+            "frontend_setup_s": 0.003970625111833215
+          }
+        }
+      }
+    }
+  ],
+  "scope": "VL-only frontend comparison on selected GPU kernels. Same learned values/FP32 arithmetic; compact native weight storage versus F32 comparator storage differ. Fresh pixels and encoder identities, no prefix/speculation. Init/setup/first use separate; caches unflushed.",
+  "full_goal_met": false
+}

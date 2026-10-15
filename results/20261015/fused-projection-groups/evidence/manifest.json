@@ -1,0 +1,136 @@
+{
+  "jobs": {
+    "fused-projection-groups-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 243.81449229177088
+    }
+  },
+  "omitted_binaries": {
+    "logs/fused-projection-groups-20261015/jobs/fused_projection_group_gpu": {
+      "bytes": 73672,
+      "sha256": "09012f22aa163bfd7a9bd45445e812943052a193dffbaf218524763c709a0314"
+    }
+  },
+  "files": {
+    "evidence/logs/fused-projection-groups-20261015/command.json": {
+      "bytes": 297,
+      "sha256": "bd5eda4cf81c73ae96e1216cc6504c91de81c59d88c6aa0e01c6f9f070c0c847"
+    },
+    "evidence/logs/fused-projection-groups-20261015/dependency.json": {
+      "bytes": 78,
+      "sha256": "b81674d7955c00025b549879df0afc3d9ab7215544ae99ea6f4a478591c7f03d"
+    },
+    "evidence/logs/fused-projection-groups-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "e704594aa51a95fa5f1dcb7ea2fe5ad436f31326690e6cc0c7234b8243f85a25"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs.executed.py": {
+      "bytes": 5465,
+      "sha256": "fa048fd90d22a8050304a848f5cf476f5c4870775b29afaf29282f8d4459ee10"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/groups.json": {
+      "bytes": 2064,
+      "sha256": "c771591a3cf52ab22a1e8615b5a4bcc3155231bd1f812c8fbee4b55ef60596c0"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 234,
+      "sha256": "ac2df3130f262ecd138eb314b298e8bdd4578bbd53b806f3f0bd2c0679db7ab3"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 42576,
+      "sha256": "d00064e85e3ac72251ce3a0b5c729d96050b04830b52fabcf189eed900184489"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen3-0.6B-assets/groups.json": {
+      "bytes": 2072,
+      "sha256": "4ad9f8f2441c704888ca9a49f349aaf36e146915fb973a232224425918122a17"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 386,
+      "sha256": "acddc13db04591a136b17ffff5693c42eab2be4a06128c007d70022ec615e023"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 42743,
+      "sha256": "53d995425d6764993aaaba3eab02d6f1935b5510edade9fcf7419aa934ed6e5d"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen3.5-0.8B-assets/groups.json": {
+      "bytes": 1278,
+      "sha256": "f3120150712e1b2ff706fe21c4b4bc78a32c71d39e9c577be584bd4b72e15ad2"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 158,
+      "sha256": "2a7caa59eaea8a34c14156a7823693cbadc127a5161b7006a3295b3f618712f1"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 28443,
+      "sha256": "16f6b84a0765931f2d78926f05e6c9ca75500cfc2ec3b578583ddbba1c74558c"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/background_service_checks.json": {
+      "bytes": 16558,
+      "sha256": "d29679a328a6debb09f602d84001c59c46fcec8a08407bd5144b595f202a6b02"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/compile-monitor.json": {
+      "bytes": 234,
+      "sha256": "993c8a2eda3a41a7602a8a604bd9c90446b57a3028857a2f54f43dafa3732782"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/compile.log": {
+      "bytes": 565,
+      "sha256": "52404cbe97639c69fe8656199f4df16eb91aa8991e0ddb33b74c75fbea551bb6"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/fused-projections.metal": {
+      "bytes": 8082,
+      "sha256": "30e084f028f773b53f740f6a628bff9b8e00025d533c14bc4542da705e0e7c43"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/fused_projection_group_gpu.mm": {
+      "bytes": 8478,
+      "sha256": "a5b86998c61abbf08e66e246af5496bbaf0e24131fb1bbe16c549583891cdfce"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/metadata.json": {
+      "bytes": 8241,
+      "sha256": "9ee8e749e5680fbdecd4f37a0ab4cc2717cb352f4cd2d981428d384a5eac3694"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 183779,
+      "sha256": "f91190fa92fd2c7afd5ac030fc8bfe963d919cbbb3a5815aa45029b654161957"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/source-snapshot/test2026/metal/concurrent_bf16_group_gpu.mm": {
+      "bytes": 7790,
+      "sha256": "aa90d6eea6ccee69efec3bded272bc524f9756adf3b88056bf875fbf209ea913"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/source-snapshot/test2026/metal/make_fused_projection_group.py": {
+      "bytes": 3905,
+      "sha256": "4129ed2946a2be9bd1925161bf791082591b0f0042adbb42e0e75d22347f4082"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/source-snapshot/test2026/metal/run_concurrent_bf16_groups.py": {
+      "bytes": 5407,
+      "sha256": "bb7d95651fa236dbc329f57ff96cd61e68f9a4f8adb8a38348d3b3486455d599"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/source-snapshot/test2026/metal/run_fused_projection_groups.py": {
+      "bytes": 1776,
+      "sha256": "3c3688b8a88b7e89d4de739baae90d002d20b8625d59ee08f2c47859adaf8cb7"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/statuses.json": {
+      "bytes": 1804,
+      "sha256": "41cff0507d04b8191066dc63f857812399e971cfaa21983e7a610fc430e15530"
+    },
+    "evidence/logs/fused-projection-groups-20261015/jobs/summary.json": {
+      "bytes": 13894,
+      "sha256": "6759951e8d52245594e3acb79e86b039c01b689053632fa57ed89c5b2b32c33c"
+    },
+    "evidence/logs/fused-projection-groups-20261015/output.log": {
+      "bytes": 172,
+      "sha256": "0a2e0ceb94fa6ccbfedc577d5132460d95f7c78dee0354567b2c62bc7a787a86"
+    },
+    "evidence/logs/fused-projection-groups-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "5923c3024057b26d7b23126ace6528f13161468919473de148d6dab0b4901179"
+    }
+  }
+}

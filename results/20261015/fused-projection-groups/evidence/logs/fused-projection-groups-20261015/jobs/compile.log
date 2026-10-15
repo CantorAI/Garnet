@@ -1,0 +1,4 @@
+/Users/zsdx/garnet-metal-investigation/logs/fused-projection-groups-20261015/jobs/fused_projection_group_gpu.mm:24:54: warning: 'auto' deduced as 'id' in declaration of 'manifest' [-Wauto-var-id]
+   24 |  auto folder=[NSString stringWithUTF8String:argv[2]];auto manifest=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:[folder stringByAppendingPathComponent:@"groups.json"]] options:0 error:nil];need(manifest!=nil,"Group manifest unavailable");
+      |                                                      ^~~~~~~~~~~~~
+1 warning generated.

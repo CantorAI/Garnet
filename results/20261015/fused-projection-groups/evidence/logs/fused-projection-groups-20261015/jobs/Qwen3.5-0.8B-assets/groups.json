@@ -1,0 +1,43 @@
+{
+  "groups": [
+    {
+      "name": "mlp-gate-up",
+      "cases": [
+        {
+          "name": "matrix-7",
+          "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+          "columns": 3584,
+          "inner": 1024,
+          "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+        },
+        {
+          "name": "matrix-8",
+          "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+          "columns": 3584,
+          "inner": 1024,
+          "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+        }
+      ]
+    },
+    {
+      "name": "irregular-readonly-pair",
+      "cases": [
+        {
+          "name": "synthetic-37",
+          "tensor": "synthetic finite BF16 tail fixture",
+          "columns": 19,
+          "inner": 37,
+          "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+        },
+        {
+          "name": "synthetic-37",
+          "tensor": "synthetic finite BF16 tail fixture",
+          "columns": 19,
+          "inner": 37,
+          "sha256": "d464e34b8ed78b8aae2bc9729853af3635319364cfb4973e30b853f8d2c379a9"
+        }
+      ]
+    }
+  ],
+  "checkpoint_sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+}
