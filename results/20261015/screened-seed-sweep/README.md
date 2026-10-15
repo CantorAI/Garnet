@@ -12,8 +12,7 @@ Each width uses the same byte-verified immutable trained head/query assets.
 The derived INT8 index only filters rows; it is not a replacement model.
 The audit reconstructs exact shader/harness bytes, checks 143 archived files,
 source and asset hashes, guard traces, ABBA ordering and 13,056 raw timed
-executions. Four warm requests per position are not claimed: these are
-component GPU executions, with eight samples per window and two ABBA rounds.
+component executions, with eight samples per window and two ABBA rounds.
 
 The table averages the eight ordinary captured steps per model/batch,
 excluding the separate mixed-row check. Each fraction is screened component
