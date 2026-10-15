@@ -5,8 +5,9 @@ Status: native validation PID 91274 exited 0 in 1219.3464 s. The original
 PID 3415 exited 0 in 760.4973 s including its dependency wait, six trained
 B1/B2 session/recovery cases and all six full native inference profiles.
 Independent audit covers 1396 files and 72 complete matching requests.
-No fresh vLLM ratio or whole-model repeat claim is established yet.
-The full goal remains unmet.
+Confirmation PID 17037 exited 0 in 152.4481 s. Independent audits now cover
+1696 files and 144 complete matching requests across both trials.
+No fresh vLLM ratio is established yet. The full goal remains unmet.
 
 `GARNET_METAL_SCREENED_HEAD` defaults OFF. An eight-bit derived row index
 screens vocabulary candidates; retained scores use unchanged original BF16
@@ -54,9 +55,28 @@ commands, guards, complete outputs and immutable-asset hashes are preserved.
 Initial archive SHA-256:
 `d5782545e86492ac0ad7e3aa349561702b24928560d9790b75acadb2a611c7e4`.
 
-Confirmation PID 17037 is running fresh sequential workers across all six
-profiles after the independent initial audit. The option remains OFF while
-confirmation and a fresh matched comparator study remain outstanding.
+## Fresh-worker confirmation
+
+| Model / batch | Screened TPS | Screened TTFT ms | Decode gain | TTFT change |
+| --- | ---: | ---: | ---: | ---: |
+| Text / 1 | 64.7219 | 44.7997 | +10.14% | -8.82% |
+| Text / 2 | 62.5544 | 77.0444 | +8.16% | -6.21% |
+| Coder / 1 | 78.9069 | 31.4460 | +9.59% | -6.95% |
+| Coder / 2 | 76.8147 | 48.4098 | +8.62% | -4.98% |
+| VL / 1 | 52.5571 | 178.8665 | +9.99% | -2.42% |
+| VL / 2 | 48.1895 | 347.8380 | +8.85% | -0.29% |
+
+All decode gains repeat. Five warm TTFT improvements repeat; VL B2 remains
+essentially flat. This still does not demonstrate the agreed vLLM targets.
+Peak individual RSS and observed first-request/init values are independently
+recomputed from the raw worker logs in the two verification JSON files.
+Combined native archive SHA-256:
+`d0e224b893277ee368eb8b3f1181879460f932fe7e176fdc363939f18055f5ca`.
+
+Fresh matched comparator PID 20154 at `logs/screened-head-vllm-20261015` is
+running actual GPU FP32 dtype audits before all six sequential comparisons.
+It uses a separate pinned selection file and the same combined CPU frontend
+for both runtimes. The option remains OFF; no general promotion is implied.
 
 ```text
 python3 launch_screened_head_checks.py ROOT ROOT/logs/screened-head-checks-20261015 checks

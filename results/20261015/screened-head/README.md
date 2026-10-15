@@ -173,11 +173,12 @@ every rejected row and predictions. Queued PID 3415 verified that terminal
 status and the pinned source manifest, then began trained session/recovery
 checks before six-profile ABBA. It subsequently exited 0 with six recovery
 cases and 72 complete matching requests. Initial whole-model decode gains
-are 7.5–10.4%; fresh-process confirmation is running as PID 17037.
+are 7.5–10.4%; fresh-process confirmation PID 17037 also exited 0, with
+8.2–10.1% decode gains and another 72 complete matching requests.
 Those inference observations are recorded separately in
 [the native study](../screened-head-inference/README.md).
-Repeated native measurements and a fresh matched comparator study remain
-necessary. The component timings alone do not establish serving performance.
+A fresh matched comparator study is running as PID 20154. The component
+timings alone do not establish serving performance.
 
 ```text
 python3 launch_screened_head_after_rejection.py ROOT ROOT/logs/screened-head-after-vision-20261015 checks
