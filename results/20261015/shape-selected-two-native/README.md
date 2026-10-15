@@ -55,3 +55,8 @@ above. Templates supplement actual job command records. Sources/drivers stay
 frozen until the owned jobs are terminal and archived. Selection used both
 component cohorts, so fresh full-model confirmation and fresh repeated matched
 vLLM measurements remain necessary. Full goal is active and unmet.
+
+Follow-on controller53701 waits for exact controller47970 and then the actual
+native worker handle. It freezes/audits the completed native comparison before
+admitting a [separate BF16-storage graph primitive](../mlp-bf16-feed-primitive/README.md).
+It does not overlap inference and does not change any consumed runtime source.

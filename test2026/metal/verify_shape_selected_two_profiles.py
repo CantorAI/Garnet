@@ -54,3 +54,7 @@ replace('source_closure_files=len(identities),actual_graph_routes=True,checks=ch
         'source_closure_files=len(identities),external_tool_files=len(external),actual_selected_two_routes=True,checks=checks_audit,')
 replace("scope='Native complete-model comparison only; lazy graph compilation, first-after-init, warm, initialization and RSS distinct; caches unflushed; no fresh vLLM ratio'", "scope='Native complete-model selected-shape comparison only; first-after-init, warm, initialization and RSS distinct; caches unflushed; no fresh vLLM ratio'")
 exec(compile(source,__file__,'exec'))
+archive_record=json.loads((base/'archive-verification.json').read_text())
+assert archive_record['verified_files']==len(proof['files'])
+result['archive_sha256']=archive_record['archive_sha256']
+Path(sys.argv[2]).write_bytes((json.dumps(result,indent=2)+'\n').encode())

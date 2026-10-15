@@ -36,7 +36,7 @@ def main():
     paths += [ROOT / 'results/20261015' / name / 'README.md' for name in
               ('dependent-mlp-graph', 'stage-rounded-mlp-graph', 'mlp-prefill-native',
                'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native','eight-fma-body',
-               'two-body','two-matrix-probe','shape-selected-two-native')]
+               'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):

@@ -671,6 +671,24 @@ still required for the original goal. No component improvement is promoted
 into the retained matched chart. Runtime sources remain frozen until terminal
 archival, and competing inference runtimes remain sequential.
 
+### 2026-10-15 — BF16-storage graph probe prepared; runtime result pending
+
+Hypothesis: remove the explicit retained FP32 MLP weight expansion while
+feeding original BF16 values and casting exactly to FP32 inside the graph.
+All arithmetic/activation/product/result tensor dtype assertions stay FP32;
+native ordering, owners, completion checks and abort barriers are unchanged.
+Installed MPSCoreTypes.h exposes BFloat16 from macOS14, but this is header
+availability evidence only. Local transformation and expanded-script syntax
+checks pass. No Mac compile, execution, memory saving or performance claim yet.
+
+Controller53701 observes exact controller47970, then the actual native handle,
+archives and audits72 complete native outputs, and only then admits the new
+64+64-case primitive behind a quiet guard. Success or failure is archived before
+interpretation. This retains the original rejection of the FP32-cache graph
+and the prior slower cast-half component. A new primitive pass would still
+need trained numerical and performance evidence before any integration.
+[Exact method, dependencies and limitations](../../results/20261015/mlp-bf16-feed-primitive/README.md).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
