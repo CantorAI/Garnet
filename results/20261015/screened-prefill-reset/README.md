@@ -102,6 +102,12 @@ showed lower GPU intervals but higher wall intervals. The
 CPU-validation option test, retained the wall penalty. These routes are not
 integrated and do not replace the measured native latency gains above.
 
+Original-order vision prefetch was subsequently integrated as a separate
+OFF-by-default option. Its [27-stage validation and two native trials](../serial-vision-native/README.md)
+pass 144 complete outputs and reduce VL TTFT by 2.9–3.8%, with essentially
+unchanged decode and mixed text/coder observations. This is additional native
+evidence, not a new vLLM comparison.
+
 ```text
 python3 launch_screened_prefill_reset_checks.py ROOT ROOT/logs/screened-prefill-reset-checks-20261015 checks
 python3 queue_screened_prefill_reset_profiles.py ROOT ROOT/logs/screened-prefill-reset-native-20261015

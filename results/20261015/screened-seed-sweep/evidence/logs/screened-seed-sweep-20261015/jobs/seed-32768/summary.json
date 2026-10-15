@@ -1,0 +1,1332 @@
+{
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step0",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.26764708734125,
+          "wall_ms": 3.5785573125
+        },
+        "candidate": {
+          "gpu_ms": 2.5264609867009375,
+          "wall_ms": 2.8376615625
+        }
+      },
+      "gpu_fraction": 0.7731743726207028,
+      "wall_fraction": 0.79296244679049
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step1",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.2698424474809373,
+          "wall_ms": 3.58332553125
+        },
+        "candidate": {
+          "gpu_ms": 2.63281118532125,
+          "wall_ms": 2.96512890625
+        }
+      },
+      "gpu_fraction": 0.805179829795637,
+      "wall_fraction": 0.8274796359949051
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step2",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.318179704365,
+          "wall_ms": 3.62925259375
+        },
+        "candidate": {
+          "gpu_ms": 2.8034075221515624,
+          "wall_ms": 3.172630125
+        }
+      },
+      "gpu_fraction": 0.8448630791345433,
+      "wall_fraction": 0.8741827809019528
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step3",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.3451783674525,
+          "wall_ms": 3.6392253125
+        },
+        "candidate": {
+          "gpu_ms": 2.9542656702687498,
+          "wall_ms": 3.321132875
+        }
+      },
+      "gpu_fraction": 0.8831414489023354,
+      "wall_fraction": 0.9125933652946915
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step4",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.3417864324290627,
+          "wall_ms": 3.64886475
+        },
+        "candidate": {
+          "gpu_ms": 2.7416211378290622,
+          "wall_ms": 3.0662305
+        }
+      },
+      "gpu_fraction": 0.8204058497646856,
+      "wall_fraction": 0.8403245146315714
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step5",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.2422238873550002,
+          "wall_ms": 3.559186125
+        },
+        "candidate": {
+          "gpu_ms": 2.68225514446375,
+          "wall_ms": 3.04046225
+        }
+      },
+      "gpu_fraction": 0.8272886875347552,
+      "wall_fraction": 0.8542577272493722
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step6",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.2438633061240623,
+          "wall_ms": 3.55708853125
+        },
+        "candidate": {
+          "gpu_ms": 2.5362904270884377,
+          "wall_ms": 2.875792875
+        }
+      },
+      "gpu_fraction": 0.7818733983951162,
+      "wall_fraction": 0.8084681755135892
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step7",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119166,
+        "retained_rows": 32770,
+        "counted_weight_byte_fraction": 0.607848041
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.253997390856875,
+          "wall_ms": 3.5650091875
+        },
+        "candidate": {
+          "gpu_ms": 2.825226605636875,
+          "wall_ms": 3.1892969375
+        }
+      },
+      "gpu_fraction": 0.8682325971050974,
+      "wall_fraction": 0.8946111411669398
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step0",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.363755240570625,
+          "wall_ms": 3.677170625
+        },
+        "candidate": {
+          "gpu_ms": 2.979412762215625,
+          "wall_ms": 3.37287490625
+        }
+      },
+      "gpu_fraction": 0.8857400580995303,
+      "wall_fraction": 0.9172473214375251
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step1",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.3768086141221874,
+          "wall_ms": 3.66640503125
+        },
+        "candidate": {
+          "gpu_ms": 3.00526173668875,
+          "wall_ms": 3.39328646875
+        }
+      },
+      "gpu_fraction": 0.8899709992803302,
+      "wall_fraction": 0.9255078039190654
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step2",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.4096041636071877,
+          "wall_ms": 3.69417575
+        },
+        "candidate": {
+          "gpu_ms": 2.920335900853125,
+          "wall_ms": 3.29183984375
+        }
+      },
+      "gpu_fraction": 0.856502913746902,
+      "wall_fraction": 0.8910891269182307
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step3",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.3344687835778126,
+          "wall_ms": 3.64892840625
+        },
+        "candidate": {
+          "gpu_ms": 2.8056641313015627,
+          "wall_ms": 3.2038815625
+        }
+      },
+      "gpu_fraction": 0.8414126247393283,
+      "wall_fraction": 0.8780335500724789
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step4",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.3133515098596877,
+          "wall_ms": 3.63376953125
+        },
+        "candidate": {
+          "gpu_ms": 2.755630237515625,
+          "wall_ms": 3.13794803125
+        }
+      },
+      "gpu_fraction": 0.8316745836702123,
+      "wall_fraction": 0.863551748195368
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step5",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.31565883243375,
+          "wall_ms": 3.6365989375
+        },
+        "candidate": {
+          "gpu_ms": 2.936839839094375,
+          "wall_ms": 3.35629171875
+        }
+      },
+      "gpu_fraction": 0.8857485005291345,
+      "wall_fraction": 0.9229205024894225
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step6",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.3471900824221876,
+          "wall_ms": 3.65680075
+        },
+        "candidate": {
+          "gpu_ms": 3.0568359943559376,
+          "wall_ms": 3.40975775
+        }
+      },
+      "gpu_fraction": 0.9132543772787066,
+      "wall_fraction": 0.9324428600601222
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step7",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238332,
+        "retained_rows": 65540,
+        "counted_weight_byte_fraction": 0.607848041
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.3771445014284374,
+          "wall_ms": 3.6758984375
+        },
+        "candidate": {
+          "gpu_ms": 2.951848946394375,
+          "wall_ms": 3.3086628125
+        }
+      },
+      "gpu_fraction": 0.8740665213306169,
+      "wall_fraction": 0.9000963624964136
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "check": {
+        "kind": "check",
+        "query": "b2-mixed-first-last",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238334,
+        "retained_rows": 65538,
+        "counted_weight_byte_fraction": 0.607848041
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.3306770201303126,
+          "wall_ms": 3.64200653125
+        },
+        "candidate": {
+          "gpu_ms": 2.712893212446875,
+          "wall_ms": 3.03140621875
+        }
+      },
+      "gpu_fraction": 0.8145170474502308,
+      "wall_fraction": 0.8323450803119699
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b1-step0",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119167,
+        "retained_rows": 32769,
+        "counted_weight_byte_fraction": 0.60784146
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.9378085309878124,
+          "wall_ms": 3.24607684375
+        },
+        "candidate": {
+          "gpu_ms": 2.3267499782378125,
+          "wall_ms": 2.672903625
+        }
+      },
+      "gpu_fraction": 0.7920019135676835,
+      "wall_fraction": 0.823425862559727
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b1-step1",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.9040482186246876,
+          "wall_ms": 3.22605725
+        },
+        "candidate": {
+          "gpu_ms": 2.275720093166875,
+          "wall_ms": 2.597797
+        }
+      },
+      "gpu_fraction": 0.7836371581476773,
+      "wall_fraction": 0.8052544634786006
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b1-step2",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.935595126473125,
+          "wall_ms": 3.24865484375
+        },
+        "candidate": {
+          "gpu_ms": 2.5295859086328125,
+          "wall_ms": 2.8951509375
+        }
+      },
+      "gpu_fraction": 0.8616944093622001,
+      "wall_fraction": 0.8911845292121148
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b1-step3",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.9532656335509375,
+          "wall_ms": 3.249365875
+        },
+        "candidate": {
+          "gpu_ms": 2.60448298649875,
+          "wall_ms": 2.96092465625
+        }
+      },
+      "gpu_fraction": 0.8818993310016549,
+      "wall_fraction": 0.9112315356761725
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b1-step4",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.9297825531096877,
+          "wall_ms": 3.25780078125
+        },
+        "candidate": {
+          "gpu_ms": 2.3002330999584375,
+          "wall_ms": 2.62663934375
+        }
+      },
+      "gpu_fraction": 0.7851207583706024,
+      "wall_fraction": 0.8062614997416058
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b1-step5",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.900105420848125,
+          "wall_ms": 3.23168625
+        },
+        "candidate": {
+          "gpu_ms": 2.269876218633125,
+          "wall_ms": 2.602056125
+        }
+      },
+      "gpu_fraction": 0.782687485191248,
+      "wall_fraction": 0.8051697855879418
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b1-step6",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.883953144190625,
+          "wall_ms": 3.22083203125
+        },
+        "candidate": {
+          "gpu_ms": 2.5039453757934376,
+          "wall_ms": 2.87809771875
+        }
+      },
+      "gpu_fraction": 0.8682337231578581,
+      "wall_fraction": 0.8935882687533427
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b1-step7",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 119168,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.0118997237875,
+          "wall_ms": 3.298708375
+        },
+        "candidate": {
+          "gpu_ms": 2.6259778678640626,
+          "wall_ms": 2.97051696875
+        }
+      },
+      "gpu_fraction": 0.8718676279706498,
+      "wall_fraction": 0.9005091178300962
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-step0",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238334,
+        "retained_rows": 65538,
+        "counted_weight_byte_fraction": 0.60784146
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.997996110935625,
+          "wall_ms": 3.31289840625
+        },
+        "candidate": {
+          "gpu_ms": 2.592812466900625,
+          "wall_ms": 2.9351315
+        }
+      },
+      "gpu_fraction": 0.8648485091234663,
+      "wall_fraction": 0.8859708750689975
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-step1",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.971486930619375,
+          "wall_ms": 3.29438675
+        },
+        "candidate": {
+          "gpu_ms": 2.51632418076,
+          "wall_ms": 2.92012378125
+        }
+      },
+      "gpu_fraction": 0.8468232368215393,
+      "wall_fraction": 0.8863937366339881
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-step2",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.95377598376875,
+          "wall_ms": 3.2849375
+        },
+        "candidate": {
+          "gpu_ms": 2.457727881846875,
+          "wall_ms": 2.847996125
+        }
+      },
+      "gpu_fraction": 0.8320630594033869,
+      "wall_fraction": 0.8669863962404155
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-step3",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.9681874875675,
+          "wall_ms": 3.29000659375
+        },
+        "candidate": {
+          "gpu_ms": 2.674348972505625,
+          "wall_ms": 3.06433721875
+        }
+      },
+      "gpu_fraction": 0.9010040584388143,
+      "wall_fraction": 0.9314076222738574
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-step4",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 3.0510311626131252,
+          "wall_ms": 3.358121125
+        },
+        "candidate": {
+          "gpu_ms": 2.721283846766875,
+          "wall_ms": 3.077803375
+        }
+      },
+      "gpu_fraction": 0.8919226653968914,
+      "wall_fraction": 0.9165254201484468
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-step5",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.98515098984375,
+          "wall_ms": 3.29455478125
+        },
+        "candidate": {
+          "gpu_ms": 2.524910116335,
+          "wall_ms": 2.88349740625
+        }
+      },
+      "gpu_fraction": 0.8458232514621178,
+      "wall_fraction": 0.8752312824362753
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-step6",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.97947003855375,
+          "wall_ms": 3.30102471875
+        },
+        "candidate": {
+          "gpu_ms": 2.542359434300625,
+          "wall_ms": 2.93588809375
+        }
+      },
+      "gpu_fraction": 0.8532924988011289,
+      "wall_fraction": 0.8893868855552629
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-step7",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238336,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.607834878
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.97029162175,
+          "wall_ms": 3.3078476875000002
+        },
+        "candidate": {
+          "gpu_ms": 2.518016961403125,
+          "wall_ms": 2.91983984375
+        }
+      },
+      "gpu_fraction": 0.8477339204557937,
+      "wall_fraction": 0.8827008132157234
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "check": {
+        "kind": "check",
+        "query": "b2-mixed-first-last",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 238335,
+        "retained_rows": 65537,
+        "counted_weight_byte_fraction": 0.60784146
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 2.97876173863125,
+          "wall_ms": 3.293597625
+        },
+        "candidate": {
+          "gpu_ms": 2.709464795770625,
+          "wall_ms": 3.12736590625
+        }
+      },
+      "gpu_fraction": 0.909594332648986,
+      "wall_fraction": 0.9495288320928396
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step0",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 215552,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.425580733571563,
+          "wall_ms": 5.744451875
+        },
+        "candidate": {
+          "gpu_ms": 4.63492059498125,
+          "wall_ms": 5.01302859375
+        }
+      },
+      "gpu_fraction": 0.8542717955152729,
+      "wall_fraction": 0.8726730944629942
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step1",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 215552,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.442460940685312,
+          "wall_ms": 5.77322928125
+        },
+        "candidate": {
+          "gpu_ms": 4.5444896095425,
+          "wall_ms": 4.92054428125
+        }
+      },
+      "gpu_fraction": 0.8350063802148775,
+      "wall_fraction": 0.852303631388882
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step2",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 215551,
+        "retained_rows": 32769,
+        "counted_weight_byte_fraction": 0.565983409
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.416760439401875,
+          "wall_ms": 5.7481783125
+        },
+        "candidate": {
+          "gpu_ms": 4.530019519734375,
+          "wall_ms": 4.9181497812499995
+        }
+      },
+      "gpu_fraction": 0.8362968180727935,
+      "wall_fraction": 0.8556014643030437
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step3",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 215552,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.4348319681596875,
+          "wall_ms": 5.76787109375
+        },
+        "candidate": {
+          "gpu_ms": 4.583063797326562,
+          "wall_ms": 4.94697659375
+        }
+      },
+      "gpu_fraction": 0.8432760799555048,
+      "wall_fraction": 0.8576780779845249
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step4",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 215552,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.461269582155937,
+          "wall_ms": 5.77450384375
+        },
+        "candidate": {
+          "gpu_ms": 4.577824205625625,
+          "wall_ms": 4.9840768125
+        }
+      },
+      "gpu_fraction": 0.838234431895311,
+      "wall_fraction": 0.8631177582286115
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step5",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 215552,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.365480508770937,
+          "wall_ms": 5.6794934375
+        },
+        "candidate": {
+          "gpu_ms": 4.480221337870312,
+          "wall_ms": 4.8766510625
+        }
+      },
+      "gpu_fraction": 0.8350084080161145,
+      "wall_fraction": 0.8586419046284882
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step6",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 215552,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.417688807938437,
+          "wall_ms": 5.75246228125
+        },
+        "candidate": {
+          "gpu_ms": 4.376567711005937,
+          "wall_ms": 4.76128403125
+        }
+      },
+      "gpu_fraction": 0.8078292914486036,
+      "wall_fraction": 0.8276949588647075
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b1-step7",
+        "batch": 1,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 215552,
+        "retained_rows": 32768,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.401105445343125,
+          "wall_ms": 5.74462628125
+        },
+        "candidate": {
+          "gpu_ms": 4.333175791543438,
+          "wall_ms": 4.700834625
+        }
+      },
+      "gpu_fraction": 0.8022757258478512,
+      "wall_fraction": 0.8183012079207218
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step0",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431104,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.561057289014688,
+          "wall_ms": 5.90517578125
+        },
+        "candidate": {
+          "gpu_ms": 4.437489653356875,
+          "wall_ms": 4.84429146875
+        }
+      },
+      "gpu_fraction": 0.7979579102921115,
+      "wall_fraction": 0.8203467006234599
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step1",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431104,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.540419253520312,
+          "wall_ms": 5.8775313125
+        },
+        "candidate": {
+          "gpu_ms": 4.495065120863438,
+          "wall_ms": 4.868924375
+        }
+      },
+      "gpu_fraction": 0.8113221969632226,
+      "wall_fraction": 0.8283961609264501
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step2",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431102,
+        "retained_rows": 65538,
+        "counted_weight_byte_fraction": 0.565983409
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.5776158551453126,
+          "wall_ms": 5.89775515625
+        },
+        "candidate": {
+          "gpu_ms": 4.579842454404062,
+          "wall_ms": 4.94680725
+        }
+      },
+      "gpu_fraction": 0.8211111294405814,
+      "wall_fraction": 0.8387610402506696
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step3",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431104,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.560057266847813,
+          "wall_ms": 5.87346890625
+        },
+        "candidate": {
+          "gpu_ms": 4.757364629767812,
+          "wall_ms": 5.1638945
+        }
+      },
+      "gpu_fraction": 0.8556323076263791,
+      "wall_fraction": 0.8791898931319893
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step4",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431104,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.638579445077188,
+          "wall_ms": 5.94450121875
+        },
+        "candidate": {
+          "gpu_ms": 4.80367711861625,
+          "wall_ms": 5.24923178125
+        }
+      },
+      "gpu_fraction": 0.85193037810439,
+      "wall_fraction": 0.8830399032795219
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step5",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431104,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.590117158135312,
+          "wall_ms": 5.90158471875
+        },
+        "candidate": {
+          "gpu_ms": 4.65467709000125,
+          "wall_ms": 5.0324596249999995
+        }
+      },
+      "gpu_fraction": 0.8326618133981837,
+      "wall_fraction": 0.8527302182092393
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step6",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431104,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.56051824241875,
+          "wall_ms": 5.8842929999999996
+        },
+        "candidate": {
+          "gpu_ms": 4.615131590980625,
+          "wall_ms": 4.9995403125
+        }
+      },
+      "gpu_fraction": 0.8299822767910039,
+      "wall_fraction": 0.8496416328180803
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-step7",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431104,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.55445831560125,
+          "wall_ms": 5.8740169375
+        },
+        "candidate": {
+          "gpu_ms": 4.7491250152225,
+          "wall_ms": 5.152266875
+        }
+      },
+      "gpu_fraction": 0.8550113702146712,
+      "wall_fraction": 0.877128365447448
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "check": {
+        "kind": "check",
+        "query": "b2-mixed-first-last",
+        "batch": 2,
+        "raw_native_bits_exact": true,
+        "retained_bits_exact": true,
+        "greedy_exact": true,
+        "pruned_rows": 431104,
+        "retained_rows": 65536,
+        "counted_weight_byte_fraction": 0.565979381
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 5.56439452339,
+          "wall_ms": 5.89126946875
+        },
+        "candidate": {
+          "gpu_ms": 4.736246104585312,
+          "wall_ms": 5.15460025
+        }
+      },
+      "gpu_fraction": 0.8511700751405107,
+      "wall_fraction": 0.8749557760585164
+    }
+  ],
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "full_goal_met": false
+}
