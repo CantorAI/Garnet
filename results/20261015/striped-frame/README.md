@@ -4,8 +4,9 @@ Two actual CPU trials preserve complete resized RGB and FP32 patch bytes and
 reduce fresh preparation by about 7.5–7.9 ms. Their independent audit covers
 36 archived files, 1920 compatibility comparisons and 384 timed preparations of
 the frozen image. The first actual image-plus-text study passed 48 complete
-matching requests and shows lower native warm TTFT at both batches. A full
-confirmation is running. The full goal remains unmet.
+matching requests and shows lower native warm TTFT at both batches. Confirmation
+also passed: the combined independent audit covers 687 archived files, two actual
+GPU precision audits and 96 complete matching requests. The full goal remains unmet.
 
 | Batch | Initial selected → strips ms | Repeat selected → strips ms |
 | --- | ---: | ---: |
@@ -63,7 +64,7 @@ Combined CPU archive SHA-256:
 Raw timing arrays, compatibility records, executed sources and independent
 verification are under `cpu/`.
 
-## Actual inference study in progress
+## Actual inference study
 
 Owned PID 21826 at `logs/striped-frame-inference-20261015` performs a fresh actual
 FP32 GPU dtype audit, then B1/B2 sequential factorial ABBA comparisons. Both
@@ -117,6 +118,32 @@ The independent initial audit was uploaded before confirmation PID 30402 at
 `logs/striped-frame-inference-confirm-20261015`. Confirmation repeats the actual
 GPU dtype audit and both B1/B2 factorial comparisons with the same source,
 selected GPU library, canonical image bytes, stops and caps.
+
+Confirmation PID 30402 terminated exit 0 after 467.3233 seconds. Its warm means:
+
+| Batch / frontend | Garnet TTFT ms | vLLM TTFT ms | Garnet decode | vLLM decode | Decode ratio | TTFT fraction |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 selected | 201.0927 | 265.5660 | 48.4578 | 26.2653 | 1.84494 | 0.75722 |
+| 1 strips | 198.2176 | 269.8489 | 48.2821 | 26.3806 | 1.83021 | 0.73455 |
+| 2 selected | 361.3753 | 427.6725 | 44.7077 | 17.1059 | 2.61359 | 0.84498 |
+| 2 strips | 356.5498 | 438.1709 | 44.5479 | 16.8981 | 2.63626 | 0.81372 |
+
+Native TTFT falls 1.43%/1.34% at B1/B2 in confirmation, while decode is 0.36%
+lower at both batches. Comparator TTFT rises 1.61%/2.45%, despite preparation
+falling about 7.0/8.9 ms. Thus CPU preparation savings repeat, but a consistent
+endpoint benefit on both runtimes is not established. The selected frontend
+remains unchanged; the optional strips are being tested together with threaded
+WebP decoding in a separate study. No results from the two methods are added
+together to claim an inference gain.
+
+Confirmation native initialization is 4.1129→4.1164 s at B1 and
+4.1230→4.1421 s at B2. First-request TTFT after initialization is
+353.8181→335.8964 ms and 569.7545→548.0206 ms. Comparator initialization and
+first-request measurements are recorded separately in the verified JSON;
+frontend setup remains about 2 ms and driver/OS caches remain unflushed.
+
+Combined inference archive SHA-256:
+`d1a909f579d0e2ab276de6887200e41f96c63470d456129c62d076a54a6450ed`.
 
 ```text
 python3 launch_striped_frame_probe.py ROOT ROOT/logs/striped-frame-probe-20261015

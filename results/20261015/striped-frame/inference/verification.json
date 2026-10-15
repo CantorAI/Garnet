@@ -1,7 +1,7 @@
 {
-  "verified_files": 353,
-  "actual_fp32_gpu_audits": 1,
-  "complete_matched_requests": 48,
+  "verified_files": 687,
+  "actual_fp32_gpu_audits": 2,
+  "complete_matched_requests": 96,
   "profiles": [
     {
       "trial": "striped-frame-inference-20261015",
@@ -171,6 +171,178 @@
           "striped": {
             "ttft_ms": 509.4054373912513,
             "frontend_setup_s": 0.001995750004425645
+          }
+        }
+      }
+    },
+    {
+      "trial": "striped-frame-inference-confirm-20261015",
+      "batch": 1,
+      "policies": {
+        "selected": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 201.0926875518635,
+              "decode_tps": 48.45783445830985,
+              "preprocessing_ms": 45.39898957591504,
+              "initialization_s": 4.112937104189768,
+              "peak_child_rss_bytes": 3621584896
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 265.56597906164825,
+              "decode_tps": 26.265299779855138,
+              "preprocessing_ms": 47.301843645982444,
+              "initialization_s": 33.27051029144786,
+              "peak_child_rss_bytes": 5914378240
+            }
+          },
+          "decode_ratio": 1.8449374217870476,
+          "ttft_fraction": 0.7572230760220308,
+          "decode_target_met": false,
+          "ttft_target_met": false
+        },
+        "striped": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 198.21762526407838,
+              "decode_tps": 48.28205853890832,
+              "preprocessing_ms": 39.23096903599799,
+              "initialization_s": 4.116419958183542,
+              "peak_child_rss_bytes": 3601432576
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 269.84888571314514,
+              "decode_tps": 26.380560456971985,
+              "preprocessing_ms": 40.268385666422546,
+              "initialization_s": 33.143683687318116,
+              "peak_child_rss_bytes": 5842436096
+            }
+          },
+          "decode_ratio": 1.830213524752773,
+          "ttft_fraction": 0.7345504679044247,
+          "decode_target_met": false,
+          "ttft_target_met": false
+        }
+      },
+      "frontend_effects": {
+        "garnet": {
+          "ttft_fraction": 0.9857028004211063,
+          "decode_ratio": 0.9963726006049084
+        },
+        "vllm-metal": {
+          "ttft_fraction": 1.016127467330831,
+          "decode_ratio": 1.0043883252078947
+        }
+      },
+      "first_after_init": {
+        "garnet": {
+          "selected": {
+            "ttft_ms": 353.81810390390456,
+            "frontend_setup_s": 2.705492079257965e-07
+          },
+          "striped": {
+            "ttft_ms": 335.8963541686535,
+            "frontend_setup_s": 0.0020357915200293064
+          }
+        },
+        "vllm-metal": {
+          "selected": {
+            "ttft_ms": 304.5621251221746,
+            "frontend_setup_s": 2.5029294192790985e-07
+          },
+          "striped": {
+            "ttft_ms": 292.21197962760925,
+            "frontend_setup_s": 0.0020667912904173136
+          }
+        }
+      }
+    },
+    {
+      "trial": "striped-frame-inference-confirm-20261015",
+      "batch": 2,
+      "policies": {
+        "selected": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 361.37532303109765,
+              "decode_tps": 44.707671461890506,
+              "preprocessing_ms": 49.160646041855216,
+              "initialization_s": 4.122953562764451,
+              "peak_child_rss_bytes": 3641753600
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 427.67246870789677,
+              "decode_tps": 17.105867735104805,
+              "preprocessing_ms": 48.154250252991915,
+              "initialization_s": 33.260749853914604,
+              "peak_child_rss_bytes": 5886115840
+            }
+          },
+          "decode_ratio": 2.6135868787375833,
+          "ttft_fraction": 0.8449814974597288,
+          "decode_target_met": true,
+          "ttft_target_met": false
+        },
+        "striped": {
+          "means": {
+            "garnet": {
+              "requests": 4,
+              "ttft_ms": 356.5497603267431,
+              "decode_tps": 44.54788178660542,
+              "preprocessing_ms": 40.74888548348099,
+              "initialization_s": 4.142113541718572,
+              "peak_child_rss_bytes": 3636125696
+            },
+            "vllm-metal": {
+              "requests": 4,
+              "ttft_ms": 438.1708748405799,
+              "decode_tps": 16.89811536291326,
+              "preprocessing_ms": 39.2673434689641,
+              "initialization_s": 33.11191120836884,
+              "peak_child_rss_bytes": 5682429952
+            }
+          },
+          "decode_ratio": 2.636263324629434,
+          "ttft_fraction": 0.8137230948005545,
+          "decode_target_met": true,
+          "ttft_target_met": false
+        }
+      },
+      "frontend_effects": {
+        "garnet": {
+          "ttft_fraction": 0.986646673425625,
+          "decode_ratio": 0.9964259002971941
+        },
+        "vllm-metal": {
+          "ttft_fraction": 1.0245477717197962,
+          "decode_ratio": 0.9878549059650921
+        }
+      },
+      "first_after_init": {
+        "garnet": {
+          "selected": {
+            "ttft_ms": 569.7545208968222,
+            "frontend_setup_s": 2.9173679649829865e-07
+          },
+          "striped": {
+            "ttft_ms": 548.0205835774541,
+            "frontend_setup_s": 0.002064437372609973
+          }
+        },
+        "vllm-metal": {
+          "selected": {
+            "ttft_ms": 523.5207914374769,
+            "frontend_setup_s": 3.7532299757003784e-07
+          },
+          "striped": {
+            "ttft_ms": 507.6789373997599,
+            "frontend_setup_s": 0.002011687494814396
           }
         }
       }
