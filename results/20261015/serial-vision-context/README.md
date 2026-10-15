@@ -21,8 +21,11 @@ An optional native integration is OFF by default and admits only this trained
 shape at batch 1 or 2; other shapes retain the original route. The actual
 trained full-grid gate subsequently passed bit-identical embedding values at
 both batches, including two fresh encodes and small-grid fallback/close counts.
-Full original-model validation and six-profile native ABBA are still pending
-at the time of this record. No new vLLM comparison or serving gain is claimed.
+Full original-model validation subsequently passed all 27 stages. Two
+six-profile native trials show repeated 2.9–3.8% VL TTFT reductions, unchanged
+decode and mixed text/coder changes. See [the native evidence](../serial-vision-native/README.md).
+These component ratios are not whole-model gains, and no fresh vLLM result
+is claimed.
 
 Actual component jobs: PID 62873 exited 0 in 58.6223 s; PID 64132 exited 0 in
 18.3778 s. The combined archive SHA-256 is
