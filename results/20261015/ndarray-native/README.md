@@ -79,3 +79,46 @@ work must archive/audit failures before repair, verify all30 stages before
 promotion, then execute complete-model ABBA with matched full outputs, separate
 init/first/warm measurements and RSS. Only a repeated gain warrants fresh
 matched vLLM cohorts. No comparator or other inference runs concurrently.
+
+## Complete-model comparison prepared and conditionally queued
+
+Controller90454 is waiting on exact validation PID84121. It will preserve the
+terminal validation archive, extract and independently audit all30 stages,
+and launch native ABBA only after success. Failure is archived and prevents
+benchmark admission. No restart follows from an observation timeout.
+The expanded comparison and all original-gate verifier transformations pass
+CPU-only syntax/needle checks locally; expanded comparison also passes on Mac.
+These checks do not establish actual trained inference or performance.
+
+Measure all six original model/batch profiles, even though only VL B1 should
+execute row80 NDArray. Run control/candidate/candidate/control as four separate
+sequential workers per profile, with three fresh requests per worker:72 complete
+outputs in the full cohort. Require exact complete token IDs, prompt IDs,
+finished flags, image/preprocessing identities, actual original latency bundle
+and unchanged limits/chunk plans. Prefix/speculative/image/input reuse stays off.
+Independent checkpoint-header BF16 layer shapes and physical chunk plans derive
+the expected NDArray count; measured counters must match, including zero decode
+dispatches and zero calls in unaffected workloads. Do not infer routing from
+the backend label alone.
+
+Control is retainedc186; candidate is the freshly validated guardrepair build.
+Init, first-after-init, warm and peak process RSS remain distinct. OS/driver
+caches are unflushed; no hardware-cold claim. Added exact-F32 weight storage,
+lazy allocation and any first-use regression must be reported. Full source and
+external-driver closures are snapshotted and rehashed at completion; preserve
+every consumed runtime/driver until terminal archival.
+
+Before native timing, declare an advancement screen: VL B1 warm TTFT must be
+at least3% lower in both native cohorts, with no model/batch showing a repeated
+decode regression of2% or more. These pragmatic thresholds are not confidence
+intervals. Report all unaffected-profile variation and every accuracy/output
+failure. Only an admitted first cohort warrants an unchanged confirmation;
+do not search repeats for a favorable mean. Promotion is distinct from the
+full goal: >=2x decode AND <=0.5x TTFT still need two fresh matched vLLM cohorts
+for all six workloads. No new target pass follows from this queue.
+
+```text
+python3 source/test2026/metal/finalize_ndarray_native_checks.py CANDIDATE CANDIDATE/logs/ndarray-native-finalizer-20261015
+python3 source/test2026/metal/archive_ndarray_native_profiles.py CANDIDATE NATIVE_ARCHIVE
+python3 source/test2026/metal/verify_ndarray_native_profiles.py NATIVE_EXTRACTED NATIVE_VERIFICATION.json
+```

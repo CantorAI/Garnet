@@ -874,6 +874,30 @@ still live, terminal audit pending. No complete-model speed or memory claim.
 No fresh vLLM inference and no target pass is added. Goal active/unmet.
 [Failure provenance, precise repair and pending validation](../../results/20261015/ndarray-native/README.md#archived-harness-failure-and-scoped-repair).
 
+### 2026-10-15 — native NDArray full-model comparison queued behind exact validation
+
+Validation PID84121 remains live and advances through original trained text
+tail cases. Controller90454 observes that exact live PID, then will archive,
+extract and independently audit all30 stages before dispatching any native
+timing. Terminal failure is preserved and stops benchmark admission. No
+runtime/consumed driver edits, no competing inference and no timeout restart.
+
+Prepare all six native ABBA profiles and original72 complete-output predicates.
+Candidate adds independently derived NDArray prefill counts from checkpoint
+headers/physical chunk plans, zero decode counts, distinct first/init/warm/RSS,
+both source closures and unchanged input/stop/image policies. Expanded comparison
+passes local/Mac syntax; auditor transformations preserve original bounds and
+pass local expansion/AST. These are preparation checks, not full-model results.
+
+Before timing, require VL B1 warm TTFT>=3% improvement in both native cohorts,
+with no repeated>=2% decode regression in any workload, to advance this candidate.
+No statistical-confidence claim; report unaffected-route variation, first-use
+costs and extra FP32 storage. Only an admitted initial cohort warrants a fixed
+confirmation. Fresh repeated vLLM comparison/all six joint target passes remain
+required for full goal completion. Methods/results already retained are not
+redefined as the goal. No new accepted speed/TTFT gain or target pass yet.
+[Protocol, exact queue and admission rule](../../results/20261015/ndarray-native/README.md#complete-model-comparison-prepared-and-conditionally-queued).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
