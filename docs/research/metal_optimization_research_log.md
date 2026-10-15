@@ -111,7 +111,7 @@ Their individual reports, failures, gates and decisions are retained in the
 complete index; the table above is a selected methodological narrative, not
 an exhaustive count or an assertion that those variants succeeded.
 
-## Latest audited matched comparator result
+## Earlier matched comparator cohort: wide-prefill control
 
 Source: [two-cohort budget summary](../../results/20261015/wide-batch-vllm/remaining-budgets.json)
 and [comparison report](../../results/20261015/wide-batch-vllm/README.md).
@@ -211,6 +211,74 @@ library and source identities. Three GPU dtype audits precede six sequential
 matched profiles, and actual encoded block counters are checked. Results are
 pending in [the comparator record](../../results/20261015/coalesced-body-vllm/README.md).
 No ratio is inferred from older comparator timings. The full goal remains unmet.
+
+### 2026-10-15 — exact graph error diagnosis queued; current phase clocks
+
+Per-projection numerical diagnosis is queued as PID26997 behind the exact
+matched-comparator PID23200. It preserves combined-graph mathematics and all
+original patterns/bounds, removes timed windows, and reports each projection's
+error location. Expected coverage is 464 per-projection and 48 aggregate checks;
+execution and diagnosis are pending. See [the diagnostic record](../../results/20261015/combined-graph-error-diagnostic/README.md).
+No failed profile has been excused or silently removed.
+
+The [phase summary](../../results/20261015/coalesced-body-native/phase-means.json)
+recomputes 24 warm means from the two audited native trials, preserving source
+file hashes. At repeat VL B1/B2, candidate prefill GPU spans average
+85.44/147.05 ms, vision wall clocks 60.27/109.62 ms, and common preprocessing
+27.56/29.04 ms. These are overlapping scoped clocks, not additive stages or
+new comparator measurements. Large GPU prefill spans justify pursuing graph
+execution after resolving its numerical failures. They do not predict a gain.
+
+### 2026-10-15 — fresh matched cohort audited; graph error isolated
+
+The fresh lossless-body cohort exited0 in558.0408s. Independent audit verifies
+1,457 files, three real GPU dtype audits and72 complete matching outputs.
+**5/6 profiles meet2x decode;2/6 meet half-TTFT;1/6 meets both**, text B1.
+These initial results do not establish repeated completion. Exact means and
+remaining gaps are in [the fresh comparator report](../../results/20261015/coalesced-body-vllm/README.md)
+and [initial budgets](../../results/20261015/coalesced-body-vllm/initial-budgets.json).
+The earlier comparator table remains a historical control cohort.
+Confirmation PID34285 is running with the same frozen policy. No current
+target is inferred from older vLLM measurements.
+
+Diagnostic audit:34 files,48 aggregate and464 per-projection checks,12 first
+calls, zero timed windows. Four failed checks are exclusively text/coder B2
+special key projections under pattern1 in both policies. All other tested
+records pass. Worst comparison ratios1.1462492/1.0439333 are not excused.
+[Diagnostic evidence](../../results/20261015/combined-graph-error-diagnostic/README.md).
+This is fixture-level route diagnosis, not a general library-defect claim.
+
+Hybrid study PID35785 waits behind exact confirmation PID34285. It retains
+every special key on the original native route and graphs all other matrices,
+including both workloads inside candidate wall time. All inputs/bounds remain;
+fallback outputs must match original bits. Execution is pending.
+[Protocol](../../results/20261015/hybrid-combined-graph-prefill/README.md).
+The full goal remains active and unmet.
+
+### 2026-10-15 — comparison exclusion and next decode hypothesis
+
+The confirmation guard rejected text B1 attempt0 on detecting inference-worker
+PID36306; attempt1 completed cleanly. The trace identifies a detected worker,
+not its provenance. Do not assume external contention or a guard ownership
+race without more evidence. Preserve the rejected attempt and exclude its
+timings from the accepted cohort. The live confirmation remains pending audit.
+
+Coder B1 is the only initial fresh profile below2x decode. The existing body
+route requires at least1,048,576 weight values. An unexecuted hypothesis is to
+test a524,288-value cutoff in a private context, preserving every other shape,
+precision and fallback rule. Checkpoint-verified metadata identifies two added
+coder896x896 projections and two sampled VL512x1024 projections; text adds none.
+[Shape-only hypothesis](../../results/20261015/coalesced-body-native/small-body-admission-hypothesis.json).
+These counts do not establish compact coverage, graph usage, allocation,
+correctness or speed. Production code is unchanged. Test original bits/FP64,
+all workloads, memory/init costs and repeated timing before integration.
+
+Terminology for the paper: historical component reports use "first-layer"
+as shorthand for early projection fixtures. The VL fixture includes first
+occurrences of both linear-attention and full-attention types (layers0 and3).
+Always identify the exact checkpoint tensor list; these component sets do not
+represent every layer or a complete dependency graph. Full-checkpoint CPU
+coverage and full trained-model validation are separate evidence scopes.
 
 ## Continuing this record
 

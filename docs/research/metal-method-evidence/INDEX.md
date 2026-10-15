@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T18:57:17.039845+00:00
+Generated UTC: 2026-10-15T19:14:36.338861+00:00
 
-Source commit: `7100ce4ca0d8a1793cf2ebba6623e2a8f417e110`. Reports indexed: **137**.
+Source commit: `0a558298c9224356fce3ddb7c2c0f7438f7eecc5`. Reports indexed: **139**.
 
 Each row links to its original report. Read that report's scope, exclusions and status before citing it. The JSON snapshot retains complete report text, documented command blocks and hashes; the CSV supports analysis. Neither report presence nor a verification filename certifies a successful experiment.
 
@@ -86,7 +86,8 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/coalesced-activation-prefill](../../../results/20261015/coalesced-activation-prefill/README.md) | Coalesced lossless activation MMA for prefill: rejected |
 | [results/20261015/coalesced-body-block](../../../results/20261015/coalesced-body-block/README.md) | Exact coalesced BF16 block storage: repeated component signal |
 | [results/20261015/coalesced-body-native](../../../results/20261015/coalesced-body-native/README.md) | Native lossless BF16 blocks: repeated full-model decode gains |
-| [results/20261015/coalesced-body-vllm](../../../results/20261015/coalesced-body-vllm/README.md) | Fresh lossless-body comparison against vLLM-Metal: running |
+| [results/20261015/coalesced-body-vllm](../../../results/20261015/coalesced-body-vllm/README.md) | Fresh lossless-body comparison against vLLM-Metal: initial cohort audited |
+| [results/20261015/combined-graph-error-diagnostic](../../../results/20261015/combined-graph-error-diagnostic/README.md) | Combined-graph numerical diagnosis: failures isolated to special native keys |
 | [results/20261015/combined-graph-prefill](../../../results/20261015/combined-graph-prefill/README.md) | Combined projection graphs: component gains with rejected batch-2 profiles |
 | [results/20261015/combined-prefill-reset](../../../results/20261015/combined-prefill-reset/README.md) | Combined bounded reset and ordered prefill: initial latency tradeoff |
 | [results/20261015/concurrent-bf16-groups](../../../results/20261015/concurrent-bf16-groups/README.md) | Independent native projections in one compute pass: mixed results |
@@ -99,6 +100,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/fastencode-streamed-mps-body](../../../results/20261015/fastencode-streamed-mps-body/README.md) | MPS argument-validation option: wall penalty persists |
 | [results/20261015/fused-head-argmax](../../../results/20261015/fused-head-argmax/README.md) | Fused vocabulary projection and partial argmax: component gain repeats |
 | [results/20261015/fused-projection-groups](../../../results/20261015/fused-projection-groups/README.md) | Single-dispatch independent projections |
+| [results/20261015/hybrid-combined-graph-prefill](../../../results/20261015/hybrid-combined-graph-prefill/README.md) | Hybrid native special-key / combined graph prefill: queued |
 | [results/20261015/interleaved-bf16-body](../../../results/20261015/interleaved-bf16-body/README.md) | Isolated interleaved BF16 decoder body component |
 | [results/20261015/interleaved-body-native](../../../results/20261015/interleaved-body-native/README.md) | Native large-matrix BF16 body layout |
 | [results/20261015/interleaved-head-native](../../../results/20261015/interleaved-head-native/README.md) | Native interleaved screening index: profile-dependent tradeoffs |

@@ -1,0 +1,479 @@
+{
+  "scope": "Existing independently audited native trials only; descriptive phase means. These clocks may overlap and are not additive. No current vLLM ratio or predicted optimization gain.",
+  "init_and_first_after_init_excluded": true,
+  "phase_records": [
+    {
+      "trial": "initial",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 37.476854282431304,
+        "reset_ms": 1.0378753067925572,
+        "prefill_inference_ms": 34.20897925,
+        "native_prefill_prepare_ms": 0.260063,
+        "native_prefill_encode_ms": 6.29582275,
+        "native_prefill_gpu_ms": 32.11457305587828,
+        "native_prefill_wait_ms": 27.650343749999998
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen3-0.6B-b1-attempt0/summary.json",
+      "source_sha256": "0ee76f20516e5415869bca425a96d7dfc5703a6e040d845c889e45e5e5031f52"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 36.106541636399925,
+        "reset_ms": 0.7897707400843501,
+        "prefill_inference_ms": 33.8628435,
+        "native_prefill_prepare_ms": 0.27124975,
+        "native_prefill_encode_ms": 5.993,
+        "native_prefill_gpu_ms": 31.575979199260473,
+        "native_prefill_wait_ms": 27.5977085
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen3-0.6B-b1-attempt0/summary.json",
+      "source_sha256": "0ee76f20516e5415869bca425a96d7dfc5703a6e040d845c889e45e5e5031f52"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 58.715375256724656,
+        "reset_ms": 1.7400103388354182,
+        "prefill_inference_ms": 55.1381875,
+        "native_prefill_prepare_ms": 0.29766625,
+        "native_prefill_encode_ms": 5.92241675,
+        "native_prefill_gpu_ms": 52.957135369069874,
+        "native_prefill_wait_ms": 48.91579175
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen3-0.6B-b2-attempt0/summary.json",
+      "source_sha256": "7b290f71b6f017f3964e667e94c2f570f1cae4dcef349eef8380f892e99fc931"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 56.91936472430825,
+        "reset_ms": 1.7367916880175471,
+        "prefill_inference_ms": 53.73026025,
+        "native_prefill_prepare_ms": 0.26783325,
+        "native_prefill_encode_ms": 5.68840625,
+        "native_prefill_gpu_ms": 51.63048952817917,
+        "native_prefill_wait_ms": 47.77106225
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen3-0.6B-b2-attempt0/summary.json",
+      "source_sha256": "7b290f71b6f017f3964e667e94c2f570f1cae4dcef349eef8380f892e99fc931"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 26.568520697765052,
+        "reset_ms": 0.21990598179399967,
+        "prefill_inference_ms": 24.996906250000002,
+        "native_prefill_prepare_ms": 0.2108335,
+        "native_prefill_encode_ms": 5.0836457500000005,
+        "native_prefill_gpu_ms": 23.112447932362556,
+        "native_prefill_wait_ms": 19.701552
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/summary.json",
+      "source_sha256": "9ca9deb08896b0ad2d487e586090023108cbd30f1e204a9c8020f40fd8cdea9b"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 27.91464584879577,
+        "reset_ms": 0.18538546282798052,
+        "prefill_inference_ms": 25.46014575,
+        "native_prefill_prepare_ms": 0.22621875,
+        "native_prefill_encode_ms": 5.23506225,
+        "native_prefill_gpu_ms": 23.413176997564733,
+        "native_prefill_wait_ms": 19.997156750000002
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/summary.json",
+      "source_sha256": "9ca9deb08896b0ad2d487e586090023108cbd30f1e204a9c8020f40fd8cdea9b"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 42.20318759325892,
+        "reset_ms": 0.3342295531183481,
+        "prefill_inference_ms": 40.34702075,
+        "native_prefill_prepare_ms": 0.21725,
+        "native_prefill_encode_ms": 5.0026875,
+        "native_prefill_gpu_ms": 38.359624915756285,
+        "native_prefill_wait_ms": 35.1258335
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/summary.json",
+      "source_sha256": "a166e7983387df79c90e3b4cf3647ca835d80ecbe81e804aa706f81123ece6b3"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 43.75613550655544,
+        "reset_ms": 0.43106265366077423,
+        "prefill_inference_ms": 41.678968749999996,
+        "native_prefill_prepare_ms": 0.28477074999999996,
+        "native_prefill_encode_ms": 5.43032325,
+        "native_prefill_gpu_ms": 39.36492698267102,
+        "native_prefill_wait_ms": 35.96176025
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/summary.json",
+      "source_sha256": "a166e7983387df79c90e3b4cf3647ca835d80ecbe81e804aa706f81123ece6b3"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 173.83667710237205,
+        "worker_ttft_ms": 144.59260425064713,
+        "vision_ms": 59.89238515030593,
+        "assembly_ms": 0.3157607279717922,
+        "prefill_wall_ms": 84.38445837236941,
+        "reset_ms": 3.2492290483787656,
+        "common_preprocessing_ms": 26.755989529192448,
+        "prefill_inference_ms": 81.49437524999999,
+        "native_prefill_prepare_ms": 0.260177,
+        "native_prefill_encode_ms": 6.117271000000001,
+        "native_prefill_gpu_ms": 79.51991655863822,
+        "native_prefill_wait_ms": 75.1148125
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen3.5-0.8B-b1-attempt0/summary.json",
+      "source_sha256": "98da31aeb29728161a3e97289794387c242721ff34f600e92485aab4598d613e"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 180.6539164390415,
+        "worker_ttft_ms": 150.16218728851527,
+        "vision_ms": 61.18681246880442,
+        "assembly_ms": 0.3178439801558852,
+        "prefill_wall_ms": 88.65753083955497,
+        "reset_ms": 3.262510523200035,
+        "common_preprocessing_ms": 27.694072923623025,
+        "prefill_inference_ms": 85.8288645,
+        "native_prefill_prepare_ms": 0.255073,
+        "native_prefill_encode_ms": 6.1481455,
+        "native_prefill_gpu_ms": 83.82584399078041,
+        "native_prefill_wait_ms": 79.42342725
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen3.5-0.8B-b1-attempt0/summary.json",
+      "source_sha256": "98da31aeb29728161a3e97289794387c242721ff34f600e92485aab4598d613e"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 301.6678746789694,
+        "worker_ttft_ms": 270.31150995753706,
+        "vision_ms": 112.03187459614128,
+        "assembly_ms": 0.3923648037016392,
+        "prefill_wall_ms": 157.88727055769414,
+        "reset_ms": 6.82755175512284,
+        "common_preprocessing_ms": 28.47855188883841,
+        "prefill_inference_ms": 153.65974,
+        "native_prefill_prepare_ms": 0.3039065,
+        "native_prefill_encode_ms": 6.19893725,
+        "native_prefill_gpu_ms": 151.32656251080334,
+        "native_prefill_wait_ms": 147.15383350000002
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen3.5-0.8B-b2-attempt0/summary.json",
+      "source_sha256": "54c8eea00b0686fad14d5ef8a3d3b7425dc96aa085972c0b27fe8592d1675b7d"
+    },
+    {
+      "trial": "initial",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 296.02392693050206,
+        "worker_ttft_ms": 264.05695849098265,
+        "vision_ms": 110.56784342508763,
+        "assembly_ms": 0.36107341293245554,
+        "prefill_wall_ms": 153.12804165296257,
+        "reset_ms": 7.593885529786348,
+        "common_preprocessing_ms": 29.405500157736242,
+        "prefill_inference_ms": 149.16403125,
+        "native_prefill_prepare_ms": 0.29985375000000003,
+        "native_prefill_encode_ms": 6.2491667500000005,
+        "native_prefill_gpu_ms": 146.875093691051,
+        "native_prefill_wait_ms": 142.6134795
+      },
+      "source": "logs/coalesced-body-native-20261015/native/Qwen3.5-0.8B-b2-attempt0/summary.json",
+      "source_sha256": "54c8eea00b0686fad14d5ef8a3d3b7425dc96aa085972c0b27fe8592d1675b7d"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 38.10313541907817,
+        "reset_ms": 0.7266249740496278,
+        "prefill_inference_ms": 34.4038545,
+        "native_prefill_prepare_ms": 0.274865,
+        "native_prefill_encode_ms": 6.46080175,
+        "native_prefill_gpu_ms": 32.17089595273137,
+        "native_prefill_wait_ms": 27.66611475
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen3-0.6B-b1-attempt0/summary.json",
+      "source_sha256": "4031858399f0f2937d8cf1f921d61c3a2f1618c1d218cf2b9029875930cec538"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 35.62887478619814,
+        "reset_ms": 0.9755725041031837,
+        "prefill_inference_ms": 33.079219,
+        "native_prefill_prepare_ms": 0.23545825,
+        "native_prefill_encode_ms": 5.81398975,
+        "native_prefill_gpu_ms": 31.25180210918188,
+        "native_prefill_wait_ms": 27.02898975
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen3-0.6B-b1-attempt0/summary.json",
+      "source_sha256": "4031858399f0f2937d8cf1f921d61c3a2f1618c1d218cf2b9029875930cec538"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 59.201895841397345,
+        "reset_ms": 1.5153957065194845,
+        "prefill_inference_ms": 56.01952075,
+        "native_prefill_prepare_ms": 0.28273975,
+        "native_prefill_encode_ms": 5.86495825,
+        "native_prefill_gpu_ms": 53.868875140324235,
+        "native_prefill_wait_ms": 49.86965625
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen3-0.6B-b2-attempt0/summary.json",
+      "source_sha256": "41d58c3bf65d9c7c8b40e3ade5170361d69fa73e7a31c87178b10f942ab1681e"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 56.29202083218843,
+        "reset_ms": 1.6507399268448353,
+        "prefill_inference_ms": 53.14921875,
+        "native_prefill_prepare_ms": 0.25017675,
+        "native_prefill_encode_ms": 5.6983855000000005,
+        "native_prefill_gpu_ms": 51.07895832043141,
+        "native_prefill_wait_ms": 47.199406249999996
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen3-0.6B-b2-attempt0/summary.json",
+      "source_sha256": "41d58c3bf65d9c7c8b40e3ade5170361d69fa73e7a31c87178b10f942ab1681e"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 26.07452089432627,
+        "reset_ms": 0.17220841255038977,
+        "prefill_inference_ms": 24.573,
+        "native_prefill_prepare_ms": 0.2184375,
+        "native_prefill_encode_ms": 5.002802,
+        "native_prefill_gpu_ms": 22.5005520042032,
+        "native_prefill_wait_ms": 19.350979000000002
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/summary.json",
+      "source_sha256": "36eda6ea0a6f7817b524bb4732cce9b3c3f827a16336d95db63f85fbb9d23c94"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 27.01990632340312,
+        "reset_ms": 0.25408342480659485,
+        "prefill_inference_ms": 24.95175025,
+        "native_prefill_prepare_ms": 0.25031275000000003,
+        "native_prefill_encode_ms": 5.18986425,
+        "native_prefill_gpu_ms": 22.842614562250674,
+        "native_prefill_wait_ms": 19.50984425
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b1-attempt0/summary.json",
+      "source_sha256": "36eda6ea0a6f7817b524bb4732cce9b3c3f827a16336d95db63f85fbb9d23c94"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 41.37201071716845,
+        "reset_ms": 0.3748127492144704,
+        "prefill_inference_ms": 39.308844,
+        "native_prefill_prepare_ms": 0.24020875,
+        "native_prefill_encode_ms": 5.08853125,
+        "native_prefill_gpu_ms": 37.24773961585015,
+        "native_prefill_wait_ms": 33.9777915
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/summary.json",
+      "source_sha256": "ba3b4fbae4244645d6c2ce2ffe6901b624ebbfc966a0868b5a8138a3eaada7ef"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 42.13086434174329,
+        "reset_ms": 0.3305518766865134,
+        "prefill_inference_ms": 40.01245825,
+        "native_prefill_prepare_ms": 0.264552,
+        "native_prefill_encode_ms": 5.405323,
+        "native_prefill_gpu_ms": 37.90507290977985,
+        "native_prefill_wait_ms": 34.34031275
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-attempt0/summary.json",
+      "source_sha256": "ba3b4fbae4244645d6c2ce2ffe6901b624ebbfc966a0868b5a8138a3eaada7ef"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 173.37763553950936,
+        "worker_ttft_ms": 144.39495792612433,
+        "vision_ms": 57.605176931247115,
+        "assembly_ms": 0.3046562196686864,
+        "prefill_wall_ms": 86.48512477520853,
+        "reset_ms": 2.7609897078946233,
+        "common_preprocessing_ms": 26.7386770574376,
+        "prefill_inference_ms": 83.58180175,
+        "native_prefill_prepare_ms": 0.25339575000000003,
+        "native_prefill_encode_ms": 6.07894775,
+        "native_prefill_gpu_ms": 81.43425011076033,
+        "native_prefill_wait_ms": 77.24818775
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen3.5-0.8B-b1-attempt0/summary.json",
+      "source_sha256": "862646d5f91e0fbc4a56bf9b2784ecdf9aedfa307ab89e28ef8c5885730eb60f"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 183.13362530898303,
+        "worker_ttft_ms": 152.78251003473997,
+        "vision_ms": 60.269322828389704,
+        "assembly_ms": 0.3216040786355734,
+        "prefill_wall_ms": 92.1915831277147,
+        "reset_ms": 3.2191042555496097,
+        "common_preprocessing_ms": 27.5628020754084,
+        "prefill_inference_ms": 87.40512475,
+        "native_prefill_prepare_ms": 0.253656,
+        "native_prefill_encode_ms": 6.30101075,
+        "native_prefill_gpu_ms": 85.44414583593607,
+        "native_prefill_wait_ms": 80.84829125
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen3.5-0.8B-b1-attempt0/summary.json",
+      "source_sha256": "862646d5f91e0fbc4a56bf9b2784ecdf9aedfa307ab89e28ef8c5885730eb60f"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "control",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 300.4441879456863,
+        "worker_ttft_ms": 269.6690937737003,
+        "vision_ms": 111.3304269965738,
+        "assembly_ms": 0.3776147495955229,
+        "prefill_wall_ms": 157.96105202753097,
+        "reset_ms": 8.393791620619595,
+        "common_preprocessing_ms": 27.933906414546072,
+        "prefill_inference_ms": 154.6790835,
+        "native_prefill_prepare_ms": 0.36608324999999997,
+        "native_prefill_encode_ms": 6.4718335,
+        "native_prefill_gpu_ms": 152.13791676796973,
+        "native_prefill_wait_ms": 147.83736475
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen3.5-0.8B-b2-attempt0/summary.json",
+      "source_sha256": "83e363707ece7566b63d1390ef69258376cf8bbde6ba6b5d6173047c331448bf"
+    },
+    {
+      "trial": "repeat",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": "candidate",
+      "warm_requests": 4,
+      "means_ms": {
+        "ttft_ms": 295.3270518919453,
+        "worker_ttft_ms": 263.47484381403774,
+        "vision_ms": 109.62215636391193,
+        "assembly_ms": 0.37396897096186876,
+        "prefill_wall_ms": 153.47871847916394,
+        "reset_ms": 6.861572968773544,
+        "common_preprocessing_ms": 29.039385146461427,
+        "prefill_inference_ms": 149.4205105,
+        "native_prefill_prepare_ms": 0.35631275,
+        "native_prefill_encode_ms": 6.1965935000000005,
+        "native_prefill_gpu_ms": 147.0451250206679,
+        "native_prefill_wait_ms": 142.86599999999999
+      },
+      "source": "logs/coalesced-body-native-confirm-20261015/jobs/Qwen3.5-0.8B-b2-attempt0/summary.json",
+      "source_sha256": "83e363707ece7566b63d1390ef69258376cf8bbde6ba6b5d6173047c331448bf"
+    }
+  ],
+  "full_goal_met": false
+}

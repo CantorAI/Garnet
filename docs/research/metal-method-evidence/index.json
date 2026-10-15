@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-15T18:57:17.039845+00:00",
-  "source_commit": "7100ce4ca0d8a1793cf2ebba6623e2a8f417e110",
+  "generated_at_utc": "2026-10-15T19:14:36.338861+00:00",
+  "source_commit": "0a558298c9224356fce3ddb7c2c0f7438f7eecc5",
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
   "limitations": [
     "Inventory presence does not establish success or independent replication.",
@@ -10,7 +10,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 137,
+  "report_count": 139,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -2012,7 +2012,9 @@
         "confirmation-verification.json",
         "disabled-compile.json",
         "manifest.json",
+        "phase-means.json",
         "primitive-ctest.log",
+        "small-body-admission-hypothesis.json",
         "verification.json"
       ],
       "verification_records": [
@@ -2039,23 +2041,61 @@
     },
     {
       "experiment_id": "results/20261015/coalesced-body-vllm",
-      "title": "Fresh lossless-body comparison against vLLM-Metal: running",
+      "title": "Fresh lossless-body comparison against vLLM-Metal: initial cohort audited",
       "report_path": "results/20261015/coalesced-body-vllm/README.md",
-      "report_sha256": "156e8a80eaeca79e4892f8924a86ee4bcbab5260de671da3017fe32b9ccdbc60",
+      "report_sha256": "743a8e2067b8e6143a556e8837795f8ff7a5ea4eaf93c408d937f604d394c5c0",
       "classification": "historical_report_requires_scope_and_status_review",
-      "report_text": "# Fresh lossless-body comparison against vLLM-Metal: running\n\nOwned PID23200 is running three actual GPU dtype audits followed by six\nsequential matched profiles. Launch requires two audited native trials with144\ncomplete matching outputs, frozen original sources/library identities and\nrepeated decode gains across all six profiles. Selection is recorded at\n`ROOT/work/coalesced-body-next-comparator-selection.json` and fixes the same\ncandidate library for all model/batch profiles.\n\nGarnet candidate SHA256:\n`c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1`.\nThe comparison retains identical learned values, FP32 arithmetic, prompts,\noutput limits, stop rules and image preprocessing. Comparator weights expand\nlosslessly to FP32. Garnet retains exact BF16 representations and additional\nbuffers. This is not a stock BF16 vLLM comparison. No prefix/vision reuse or\nspeculation is enabled. Runtimes run sequentially with resource guards.\n\nEach full profile uses G/V/V/G fresh workers, three requests per worker.\nInitialization, first-after-init and four warm requests per policy remain\nseparate. OS/driver caches are not flushed. Extra candidate memory/init costs\nmust be reported. Actual encoded body/block counters are mandatory.\n\nNo fresh comparator speed ratio or target completion is established yet.\nDo not change pinned sources, selected library or drivers until terminal and\narchived. The overall2x decode / half-TTFT objective remains active and unmet.\n\n```text\npython3 launch_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-20261015\n# Only after successful terminal execution:\npython3 archive_coalesced_body_vllm.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_coalesced_body_vllm.py RESULTS RESULTS/verification.json\n```\n",
+      "report_text": "# Fresh lossless-body comparison against vLLM-Metal: initial cohort audited\n\nOwned PID23200 exited0 in558.0408s. Independent audit verifies1457 archived files, three actual GPU dtype audits and72 complete matching outputs across six profiles. In this initial cohort,5/6 meet2x decode,2/6 meet half-TTFT, and1/6 meets both (text B1). Confirmation is required; the full goal remains unmet.\n\n| Model / batch | Garnet / vLLM row tokens/s | Garnet / vLLM TTFT ms | Decode ratio | TTFT fraction |\n| --- | ---: | ---: | ---: | ---: |\n| Qwen3-0.6B / 1 | 74.9458 / 36.7522 | 35.6273 / 86.9596 | 2.0392 | 0.4097 |\n| Qwen3-0.6B / 2 | 68.7498 / 23.6131 | 58.1542 / 102.3022 | 2.9115 | 0.5685 |\n| Qwen2.5-Coder-0.5B-Instruct / 1 | 87.5102 / 46.9730 | 26.9278 / 57.8273 | 1.8630 | 0.4657 |\n| Qwen2.5-Coder-0.5B-Instruct / 2 | 85.1040 / 28.3518 | 43.3857 / 86.5175 | 3.0017 | 0.5015 |\n| Qwen3.5-0.8B / 1 | 61.2275 / 26.3286 | 171.4488 / 259.6041 | 2.3255 | 0.6604 |\n| Qwen3.5-0.8B / 2 | 55.0251 / 17.0360 | 299.1174 / 428.5932 | 3.2299 | 0.6979 |\n\nDecode is per batch row. Complete recorded normalized sequences match on both B2 rows, so aggregate throughput is twice the listed rate for these particular profiles. Do not generalize to unequal lengths or asynchronous arrivals. `initial-budgets.json` preserves exact means and gaps. Text/coder B2 and both VL profiles still miss half-TTFT; coder B1 still misses2x decode. A near-threshold value is not rounded into a pass.\n\nBoth runtimes use identical learned values and FP32 arithmetic. Comparator weights expand losslessly to FP32; Garnet retains exact BF16 representations and added buffers. This is not a stock BF16 vLLM or equal-storage comparison. Actual GPU audits confirm comparator parameter/activation/KV dtypes. Prompts, caps, stops and preprocessing match; images are freshly encoded. Prefix/vision reuse and speculation are disabled.\n\nEach profile runs sequential G/V/V/G fresh workers, three requests per worker and four warm requests per policy. Initialization and first-after-init remain separate. OS/driver caches are not flushed. Peak process RSS/init costs are preserved in raw records and means; extra buffers are real costs. Guards exclude competing inference. No stale comparator timing is used.\n\nCandidate library SHA256: `c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1`.\nInitial archive SHA256: `0455d0a2c77c94609a2bab5c73396f2a0cc2ab76f6a6ad99819cb66b7fe5a95a`.\n\nConfirmation launched as PID34285 at `ROOT/logs/coalesced-body-vllm-confirm-20261015` after independent initial audit and terminal diagnostic archival. Sources/library/selection remain frozen. The following hybrid graph study waits for exact PID34285 and a quiet interval. No repeated matched result is established yet.\n\n```text\npython3 launch_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-20261015\npython3 archive_coalesced_body_vllm.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_coalesced_body_vllm.py RESULTS RESULTS/verification.json\npython3 launch_confirm_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-confirm-20261015\n```\n",
       "commands_as_documented": [
-        "python3 launch_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-20261015\n# Only after successful terminal execution:\npython3 archive_coalesced_body_vllm.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_coalesced_body_vllm.py RESULTS RESULTS/verification.json\n"
+        "python3 launch_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-20261015\npython3 archive_coalesced_body_vllm.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_coalesced_body_vllm.py RESULTS RESULTS/verification.json\npython3 launch_confirm_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-confirm-20261015\n"
       ],
       "archive_hashes_as_documented": [
+        "0455d0a2c77c94609a2bab5c73396f2a0cc2ab76f6a6ad99819cb66b7fe5a95a",
         "c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1"
       ],
       "adjacent_files": [
         ".gitattributes",
-        "README.md"
+        "README.md",
+        "initial-budgets.json",
+        "verification.json"
       ],
-      "verification_records": [],
-      "evidence_directories": []
+      "verification_records": [
+        {
+          "path": "results/20261015/coalesced-body-vllm/verification.json",
+          "sha256": "8a54ee6f321dcea602921579b208b5e3d07758deffbdd5bc8b61ca4b749da27d"
+        }
+      ],
+      "evidence_directories": [
+        "evidence"
+      ]
+    },
+    {
+      "experiment_id": "results/20261015/combined-graph-error-diagnostic",
+      "title": "Combined-graph numerical diagnosis: failures isolated to special native keys",
+      "report_path": "results/20261015/combined-graph-error-diagnostic/README.md",
+      "report_sha256": "f0ca39155c4ce6dce22b6eaf664c02072acaad39d8901bbe6d4ad34c28dc0858",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Combined-graph numerical diagnosis: failures isolated to special native keys\n\nPID26997 waited for exact comparator PID23200, then exited0 after69.6834s of diagnostic work. Independent audit verifies34 files,48 aggregate and464 per-projection checks,12 first calls and zero timed windows.\n\nExactly four checks fail: text/coder batch2 pattern1, policies1/2, all original `model.layers.0.self_attn.k_proj.weight` matrices. All other tested projections/patterns pass. Both policies produce the same failing values. The graph remains inside the independent FP64 envelope; this does not excuse failure of the separate original native comparison bound. No tolerance changes.\n\n| Model / physical rows | Worst index | Native value | Graph value | Original comparison bound |\n| --- | ---: | ---: | ---: | ---: |\n| Qwen3-0.6B / 44 | 36107 | -0.20107841491699219 | -0.20109567046165466 | 1.505392074584961e-05 |\n| Qwen2.5-Coder-0.5B-Instruct / 52 | 4958 | 0.082279682159423828 | 0.0822891965508461 | 9.1139841079711923e-06 |\n\nText worst comparison ratio1.1462492; coder1.0439333. This fixture-level diagnosis does not prove a general library defect. Generated code preserves inputs/graph math and adds error coordinates, removing timing. The verifier reconciles individual maxima with aggregate gates and recomputes worst-coordinate errors. Source/binary/library/asset hashes and guards remain in evidence.\n\nArchive SHA256: `441f84a2d734024f4b476dae111bb16e0df1ea628a51e871d9752a89c7463b56`.\n\nNext test a fixed hybrid policy retaining all special keys on the original native route and graphing all remaining projections. Include both submissions in candidate timing and omit no matrix. It requires fresh original numerical gates, repeated component timing and trained-model validation. No hybrid gain is established yet.\n\n```text\npython3 launch_combined_graph_error_diagnostic.py ROOT ROOT/logs/combined-graph-error-diagnostic-20261015 component\npython3 archive_combined_graph_error_diagnostic.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_combined_graph_error_diagnostic.py RESULTS RESULTS/verification.json\n```\n",
+      "commands_as_documented": [
+        "python3 launch_combined_graph_error_diagnostic.py ROOT ROOT/logs/combined-graph-error-diagnostic-20261015 component\npython3 archive_combined_graph_error_diagnostic.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_combined_graph_error_diagnostic.py RESULTS RESULTS/verification.json\n"
+      ],
+      "archive_hashes_as_documented": [
+        "441f84a2d734024f4b476dae111bb16e0df1ea628a51e871d9752a89c7463b56"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "verification.json"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261015/combined-graph-error-diagnostic/verification.json",
+          "sha256": "3b9a972f6d382755bcb44848d89fb33bdadd83d4de73123eb08d07a0f87deaa7"
+        }
+      ],
+      "evidence_directories": [
+        "evidence"
+      ]
     },
     {
       "experiment_id": "results/20261015/combined-graph-prefill",
@@ -2451,6 +2491,24 @@
       "evidence_directories": [
         "evidence"
       ]
+    },
+    {
+      "experiment_id": "results/20261015/hybrid-combined-graph-prefill",
+      "title": "Hybrid native special-key / combined graph prefill: queued",
+      "report_path": "results/20261015/hybrid-combined-graph-prefill/README.md",
+      "report_sha256": "921ecc8a169e4ca5618ab890ec7d2deaa1da77942d8fe021e1328bc029baf8c2",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Hybrid native special-key / combined graph prefill: queued\n\nOwned PID35785 waits for exact matched confirmation PID34285 at\n`ROOT/logs/coalesced-body-vllm-confirm-20261015`, requiring successful terminal\nexecution and five quiet seconds before any compile/GPU work. No competing\ninference or GPU component may overlap either job.\n\nThe diagnostic isolated observed graph failures to text/coder special keys.\nThis fixed policy retains those original native routes at both batches and\ngraphs every other projection. All29 original matrices, four input patterns,\nFP32 values, row shapes and bounds remain. Keys are not omitted: their native\nsubmission runs inside every candidate wall interval. Fallback outputs must\nmatch the original native control bit-for-bit.\n\nPolicy1 uses FP32 placeholders; policy2 original FP32 constants. Candidate\ncalls include native key execution/synchronization then the synchronous graph\ncall. VL has no such key and needs no extra native submission. First call and\nsetup remain separate; added storage/fallback costs are real. No memory saving\nis claimed. No original source, workload or tolerance is changed.\n\nExpected coverage:48 checks,12 first calls, up to12 admitted timing profiles\nwith768 submissions. These are expected counts, not executed results yet.\nFailed policies must have no timed windows. This private independent\nprojection set is not a complete dependency layer or a model TTFT result.\nIntegration requires repeat benefit and full trained-model validation.\nThe full2x decode / half-TTFT goal remains unmet.\n\n```text\npython3 launch_hybrid_combined_graph_prefill.py ROOT ROOT/logs/hybrid-combined-graph-prefill-20261015 component\n# Only after exact job termination:\npython3 archive_hybrid_combined_graph_prefill.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_hybrid_combined_graph_prefill.py RESULTS RESULTS/verification.json\n```\n",
+      "commands_as_documented": [
+        "python3 launch_hybrid_combined_graph_prefill.py ROOT ROOT/logs/hybrid-combined-graph-prefill-20261015 component\n# Only after exact job termination:\npython3 archive_hybrid_combined_graph_prefill.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_hybrid_combined_graph_prefill.py RESULTS RESULTS/verification.json\n"
+      ],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261015/interleaved-bf16-body",
