@@ -59,11 +59,13 @@ try:
         assembled=time.monotonic()
         prediction=decoder.prefill_sequence(hidden,[positions for row in range(batch)])
         fused_head_enabled='fused_head_argmax' in garnet.backend_info()
+        screened_head_enabled='screened_head' in garnet.backend_info()
         fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
         deferred_state_zero_enabled='deferred_state_zero' in garnet.backend_info()
         reused_zero_source_enabled='reused_zero_source' in garnet.backend_info()
         body_shape_enabled='body_shape' in garnet.backend_info()
         fused_head_counts=[decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0]
+        screened_head_counts=[decoder.session.screened_head_dispatches if screened_head_enabled else 0]
         body_shape_counts=[decoder.session.body_shape_dispatches if body_shape_enabled else 0]
         body_shape_misses=[decoder.session.body_shape_misses if body_shape_enabled else 0]
         first=time.monotonic()
@@ -76,6 +78,7 @@ try:
             if not any(active) or token==workload['max_tokens']-1:break
             prediction=decoder.step(prediction,active=active,positions=[[current]*3 for row in range(batch)])
             fused_head_counts.append(decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0)
+            screened_head_counts.append(decoder.session.screened_head_dispatches if screened_head_enabled else 0)
             body_shape_counts.append(decoder.session.body_shape_dispatches if body_shape_enabled else 0)
             body_shape_misses.append(decoder.session.body_shape_misses if body_shape_enabled else 0)
             current+=1;steps+=1
@@ -104,6 +107,7 @@ try:
             joined_global_mlp_enabled='joined_global_mlp' in garnet.backend_info(),
             single_coder_head_enabled='single_coder_head' in garnet.backend_info(),
             fused_head_argmax_enabled=fused_head_enabled,fused_head_argmax_counts=fused_head_counts,
+            screened_head_enabled=screened_head_enabled,screened_head_counts=screened_head_counts,
             fused_head_decode_only_enabled=fused_head_decode_only_enabled,
             body_shape_enabled=body_shape_enabled,body_shape_counts=body_shape_counts,body_shape_misses=body_shape_misses,
             body_shape_pipeline_count=decoder.session.body_shape_pipeline_count if body_shape_enabled else 0,

@@ -1,7 +1,7 @@
 """Independently audit captured native logits, every rejection, source and raw timings."""
 import hashlib,json,math,runpy,statistics,sys
 from pathlib import Path
-root=Path(sys.argv[1]).resolve();proof=json.loads((root/'evidence/manifest.json').read_text());profiles=[];skipped=[];roundtrips=[]
+root=Path(sys.argv[1]).resolve();proof=json.loads((root/'evidence/manifest.json').read_text());profiles=[];skipped=[];roundtrips=[];fallback_checks=[]
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 for name,v in proof['files'].items():
     p=root/name;assert p.resolve().is_relative_to(root) and p.stat().st_size==v['bytes'] and digest(p)==v['sha256']
@@ -13,12 +13,17 @@ for trial,status in proof['jobs'].items():
     for name,sha in meta['source_sha256'].items():assert digest(snap/name)==sha
     native=(snap/'src/backends/metal/metal_context.mm').read_text();raw=native[native.index('struct BF16Params'):native.index('// BF16 weights are expanded')];argmax=native[native.index('struct ArgmaxParams'):native.index('struct Params { ulong rows')]
     bits=next(b for b in (4,6,8) if 'Derived INT'+str(b) in meta['precision'])
+    strict=meta.get('strict_screen_math',False)
     screen=(snap/'test2026/metal/screened_head.metal').read_text()
     if bits!=8:screen=runpy.run_path(str(snap/'test2026/metal'/('make_screened_head_int'+str(bits)+'.py')))['generate_shader'](screen)
+    if strict:
+        assert bits==8
+        screen=runpy.run_path(str(snap/'test2026/metal/make_guarded_screened_head.py'))['generate_shader'](screen)
     expected='#include <metal_stdlib>\nusing namespace metal;\n'+raw+argmax+screen
     assert (out/'screened-head.metal').read_bytes()==expected.encode() and digest(out/'screened-head.metal')==meta['shader_sha256']
-    module='make_screened_head_int'+str(bits)+'.py' if bits!=8 else 'make_screened_head_harness.py'
-    generate=runpy.run_path(str(snap/'test2026/metal'/module))['generate_harness' if bits!=8 else 'generate'];harness=generate((snap/'test2026/metal/pruned_head_gpu.mm').read_text())
+    module='make_guarded_screened_head.py' if strict else 'make_screened_head_int'+str(bits)+'.py' if bits!=8 else 'make_screened_head_harness.py'
+    generate=runpy.run_path(str(snap/'test2026/metal'/module))['generate_harness' if strict or bits!=8 else 'generate'];harness=generate((snap/'test2026/metal/pruned_head_gpu.mm').read_text())
+    if strict:assert 'strictOptions.fastMathEnabled=NO' in harness and 'pipeline(device,library,@"bf16_decode")' in harness and 'Fallback greedy/error flag mismatch' in harness
     assert (out/'screened_head_gpu.mm').read_bytes()==harness.encode() and digest(out/'screened_head_gpu.mm')==meta['harness_sha256']
     for marker in ('Raw kernel differs from actual native full logits','Retained logit bits changed','Pruned logit can beat the seed','Pruned greedy prediction differs or is invalid'):assert marker in harness
     assert proof['omitted']['logs/'+trial+'/jobs/screened_head_gpu']['sha256']==meta['binary_sha256']
@@ -40,6 +45,10 @@ for trial,status in proof['jobs'].items():
             assert len(q['predictions'])==q['batch']
             for suffix,field in (('.input.bin','input_sha256'),('.reference.bin','reference_sha256')):assert proof['omitted']['logs/'+trial+'/jobs/'+model+'-assets/'+q['name']+suffix]['sha256']==q[field]
         records=[json.loads(v) for v in (out/(model+'-gpu.log')).read_text().splitlines() if v.startswith('{')];checks=[v for v in records if v['kind']=='check'];samples=[v for v in records if v['kind']=='samples'];assert len(checks)==17 and len(samples)==136
+        if strict:
+            fallbacks=[v for v in records if v['kind']=='fallback_check'];assert len(fallbacks)==11 and {(v['batch'],v['pattern']) for v in fallbacks}=={(b,p) for b in (1,2) for p in range(6 if b==2 else 5)}
+            assert all(v['all_values_checked'] and v['greedy_and_error_flags_match'] for v in fallbacks)
+            fallback_checks.extend(dict(trial=trial,model=model,**v) for v in fallbacks)
         if bits==6:
             decoded=[v for v in records if v['kind']=='index_roundtrip'];assert len(decoded)==1 and decoded[0]['all_values_exact'] and decoded[0]['bits']==6 and decoded[0]['elements']==assets['rows']*assets['inner']
             roundtrips.append(dict(trial=trial,model=model,**decoded[0]))
@@ -54,7 +63,7 @@ for trial,status in proof['jobs'].items():
             means={policy:{k:statistics.mean(x for v in windows if v['candidate']==candidate for x in v[k]) for k in ('gpu_ms','wall_ms')} for policy,candidate in (('control',False),('candidate',True))}
             p=next(v for v in summary['profiles'] if v['model']==model and v['check']['query']==c['query']);assert p['check']==c and p['means']==means
             for metric in ('gpu','wall'):assert abs(p[metric+'_fraction']-means['candidate'][metric+'_ms']/means['control'][metric+'_ms'])<1e-12
-            profiles.append(dict(trial=trial,screen_index_bits=bits,**p));count+=1
+            profiles.append(dict(trial=trial,screen_index_bits=bits,strict_screen_math=strict,**p));count+=1
     assert count==len(summary['profiles'])==51
-result=dict(verified_files=len(proof['files']),successful_trials=len({p['trial'] for p in profiles}),query_checks=len(profiles),row_state_checks=sum(p['check']['batch'] for p in profiles),timed_executions=len(profiles)*64,complete_gpu_index_roundtrips=roundtrips,skipped_dependency_jobs=skipped,profiles=profiles,scope='Captured-query greedy component only; derived integer screening index plus original BF16/FP32 refinement. Every sampled rejected logit is below actual seed, retained bits and greedy result match. Not certified for all future inputs; no full-model or vLLM speed claim.',full_goal_met=False)
+result=dict(verified_files=len(proof['files']),successful_trials=len({p['trial'] for p in profiles}),query_checks=len(profiles),row_state_checks=sum(p['check']['batch'] for p in profiles),timed_executions=len(profiles)*64,complete_gpu_index_roundtrips=roundtrips,unsafe_input_fallback_checks=fallback_checks,skipped_dependency_jobs=skipped,profiles=profiles,scope='Captured-query greedy component only; derived integer screening index plus original BF16/FP32 refinement. Every sampled rejected logit is below actual seed, retained bits and greedy result match. Not certified for all future inputs; no full-model or vLLM speed claim.',full_goal_met=False)
 Path(sys.argv[2]).write_bytes((json.dumps(result,indent=2)+'\n').encode());print(json.dumps({k:v for k,v in result.items() if k!='profiles'}))

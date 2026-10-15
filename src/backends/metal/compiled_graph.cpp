@@ -658,6 +658,9 @@ bool MetalCompiledGraph::BuildInternal(X::Value graph,X::Value symbols,const std
                 const auto name=node.name=="qwen35_tied_head"?"model.language_model.embed_tokens.weight":node.attributes.Get("weight_name").ToString();
                 const bool bf16=node.attributes.Get("bf16_weight").ToInt64()!=0;
                 auto weight=bf16?BF16Weight(name):Weight(name);
+#ifdef GARNET_METAL_SCREENED_HEAD
+                if(bf16&&slots_[weight].bf16.Valid())gpu_->PrepareScreenedHead(slots_[weight].bf16);
+#endif
                 if(bf16&&index_.Find(name)->dataType=="BF16") {
                     if(slots_[a].columns!=slots_[weight].columns||slots_[a].rows>2)throw std::runtime_error("BF16 vocabulary profile requires batch 1/2");
                     out=Allocate(slots_[a].rows,slots_[weight].rows);ops_.push_back({Kind::BF16MatVec,a,weight,out});
@@ -883,7 +886,7 @@ bool MetalCompiledGraph::SwapOutputStorage(size_t part,MetalMatrix& replacement)
     replacement=finished;return true;
 }
 void MetalCompiledGraph::EncodeGreedy(MetalContext& gpu,const MetalMatrix& prediction) {
-#ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
+#if defined(GARNET_METAL_FUSED_HEAD_ARGMAX)||defined(GARNET_METAL_SCREENED_HEAD)
     Encode(gpu,true,&prediction);
 #else
     Encode(gpu);gpu.EncodeArgmax(slots_[output_].matrix,prediction);
@@ -900,6 +903,12 @@ void MetalCompiledGraph::Encode(MetalContext& gpu,bool packedOutput,const MetalM
         if(!packedOutput&&!residentOps_[i])continue;
         const auto& op=ops_[i];
         auto a=slots_[op.a].matrix,b=slots_[op.b].matrix,out=slots_[op.out].matrix;
+#ifdef GARNET_METAL_SCREENED_HEAD
+        if(greedyOutput&&!profileOps&&i+1==ops_.size()&&op.out==output_&&op.kind==Kind::BF16MatVec&&
+            slots_[op.b].bf16.Valid()&&gpu.EncodeScreenedArgmax(a,slots_[op.b].bf16,*greedyOutput)){
+            greedyEncoded=true;continue;
+        }
+#endif
 #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
         if(greedyOutput&&!profileOps&&i+1==ops_.size()&&op.out==output_&&
             (op.kind==Kind::BF16MatVec||(op.kind==Kind::MatMul&&op.transpose))&&

@@ -64,6 +64,9 @@ public:
 #ifdef GARNET_METAL_GLOBAL_HALF_ALPHA
         info+="; global_half_alpha";
 #endif
+#ifdef GARNET_METAL_SCREENED_HEAD
+        info+="; screened_head";
+#endif
 #ifdef GARNET_METAL_VISION_GLOBAL_ALPHA
         info+="; vision_global_alpha";
 #endif

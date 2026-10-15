@@ -4,8 +4,9 @@ Two actual eight-bit screening trials preserve the sampled original GPU
 logits/predictions and reduce head-component time across all three models at
 B1/B2. The four-bit variant also passes sampled correctness but regresses
 several timings, so retain the eight-bit candidate for further investigation.
-There is no serving integration, complete-generation speedup or fresh vLLM
-comparison here. The full optimization goal remains active and unmet.
+An optional native integration is now under validation. No complete-generation
+speedup or fresh vLLM comparison has been established for it. The full
+optimization goal remains active and unmet.
 
 ## Method and precision
 
@@ -128,11 +129,51 @@ sources and input/index/reference identities remain preserved by trial.
 All-width archive SHA-256:
 `6a2ce969d7ed032e0b28b74989285c50923bc82a852b7052ba7f4a0f878fe419`.
 
-Before any serving integration, the eight-bit candidate still needs bounded
-query/nonfinite fallback semantics, numerical/lifecycle tests of that route,
-full generated-output validation and native repeat measurements. Only a fresh
-matched comparator study can establish updated model TPS/TTFT ratios. The
-full three-model goal remains active and unmet.
+## Bounded strict-math eight-bit trial
+
+Owned PID 89166 exited 0 after 40.9025 s. Screening now uses a separate
+`fastMathEnabled=NO` Metal library; the original full/seed projection retains
+its original math policy. Nonfinite inputs, absolute input values above 1e6,
+and norms outside [1e-10, 1e10] force full original-row refinement. Metadata
+must be finite and bounded. This limits screening admission; it does not
+establish a universal numerical proof for all possible admitted queries.
+
+All 51 captured queries pass retained-bit, every-rejection and greedy checks.
+Another 33 cases check zero, tiny, large, NaN, infinity and mixed safe/unsafe
+batch rows against the original full projection and its error flags.
+
+| Model / batch | GPU fraction | Wall fraction |
+| --- | ---: | ---: |
+| Text / 1 | 0.74387 | 0.78045 |
+| Text / 2 | 0.77047 | 0.81050 |
+| Coder / 1 | 0.73468 | 0.77126 |
+| Coder / 2 | 0.76899 | 0.80989 |
+| VL / 1 | 0.77382 | 0.79698 |
+| VL / 2 | 0.77270 | 0.79872 |
+
+These are head-component intervals, not whole-model TPS or TTFT. Combined
+component audit: 187 archived files, five successful trials, 255 query checks,
+390 row states, 16,320 timed submissions and the 33 fallback checks.
+Archive SHA-256:
+`533e97172600b595df9f63f3ad02e6e6412d4f6ed944b2758f6dc5c6094261c0`.
+
+## Optional native integration: validation in progress
+
+`GARNET_METAL_SCREENED_HEAD` defaults OFF. Initialization builds the derived
+index from the unchanged original head; unsupported shapes or metadata use
+the existing head. Greedy B1/B2 session prediction uses the seed, screening,
+original retained-row refinement and original argmax. Public full-logit graph
+execution continues to compute all logits. The index increases resident
+memory and initialization work; inference measurements must report these.
+
+Owned validation PID 91274 has passed CTests and all 51 trained-head queries
+through the native context, including original full-logit bits, retained bits,
+every rejected row and predictions. The original 19 model-validation stages
+are still running. Queued PID 3415 waits for all 20 stages and their pinned
+source manifest before trained session/recovery checks and six-profile ABBA.
+Full generated-output validation, repeated native measurements and a fresh
+matched comparator study remain necessary. No current serving speed claim
+follows from the component timings.
 
 ```text
 python3 launch_screened_head_after_rejection.py ROOT ROOT/logs/screened-head-after-vision-20261015 checks

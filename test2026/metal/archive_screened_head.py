@@ -2,7 +2,8 @@
 import hashlib,io,json,sys,tarfile
 from pathlib import Path
 root=Path(sys.argv[1]).resolve();target=Path(sys.argv[2]).resolve();files={};omitted={};jobs={}
-for folder in sorted((root/'logs').glob('screened-head-*20261015')):
+component_trials=('screened-head-after-vision-20261015','screened-head-confirm-20261015','screened-head-int4-20261015','screened-head-int6-20261015','screened-head-guarded-20261015')
+for folder in [root/'logs'/name for name in component_trials if (root/'logs'/name).exists()]:
     jobs[folder.name]=json.loads((folder/'exit.json').read_text())
     for p in folder.rglob('*'):
         if not p.is_file():continue

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "metal_context.h"
 #include "exact_half_codec.h"
+#ifdef GARNET_METAL_SCREENED_HEAD
+#include "screened_head_index.h"
+#include "screened_head_shader.h"
+#endif
 #ifdef GARNET_METAL_PARALLEL_VISION_CONTEXT
 #include "parallel_vision_context_shader.h"
 #endif
@@ -40,6 +44,11 @@ bool MetalMatrix::CompatibleLayout(const MetalMatrix& other) const {
         impl_->matrix.rowBytes==other.impl_->matrix.rowBytes;
 }
 struct MetalBF16Weight::Impl {
+#ifdef GARNET_METAL_SCREENED_HEAD
+    std::mutex screenMutex;
+    bool screenAttempted=false;
+    id<MTLBuffer> screenIndex,screenMetadata;
+#endif
     id<MTLBuffer> buffer;
     MPSMatrix* exactHalf;
     id<MTLBuffer> halfScales;
@@ -54,6 +63,10 @@ bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&im
 bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->globalHalf;}
 struct MetalPipelines {
     id<MTLLibrary> library;
+#ifdef GARNET_METAL_SCREENED_HEAD
+    id<MTLLibrary> screenLibrary;
+    id<MTLComputePipelineState> screenPrepare,screenProjection;
+#endif
 #ifdef GARNET_METAL_BODY_SHAPE
     std::shared_mutex bodyShapeMutex;
     std::map<std::array<size_t,5>,id<MTLComputePipelineState>> bodyShape;
@@ -102,6 +115,13 @@ struct MetalPipelines {
 static std::mutex pipelineMutex;
 static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
 struct MetalContext::Impl {
+    size_t screenedHeadDispatches=0;
+#ifdef GARNET_METAL_SCREENED_HEAD
+    struct ScreenScratch {MetalMatrix seed,scores;id<MTLBuffer> stats,visits;};
+    std::map<std::array<size_t,3>,ScreenScratch> screenScratch;
+    std::array<size_t,3> screenDiagnosticKey{};
+    bool screenDiagnosticReady=false;
+#endif
     id<MTLDevice> device;
     id<MTLCommandQueue> queue;
     id<MTLCommandBuffer> command;
@@ -1227,6 +1247,15 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
+#ifdef GARNET_METAL_SCREENED_HEAD
+        auto screenOptions=[MTLCompileOptions new];screenOptions.fastMathEnabled=NO;
+        auto screenLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:kScreenedHeadShader] options:screenOptions error:&error];
+        if(screenLibrary){
+            impl_->kernels->screenLibrary=screenLibrary;
+            impl_->kernels->screenPrepare=[impl_->device newComputePipelineStateWithFunction:[screenLibrary newFunctionWithName:@"prepare_head_bounds"] error:&error];
+            impl_->kernels->screenProjection=[impl_->device newComputePipelineStateWithFunction:[screenLibrary newFunctionWithName:@"screened_head"] error:&error];
+        }
+#endif
 #ifdef GARNET_METAL_FUSED_HEAD_ARGMAX
         auto greedyLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:kFusedHeadArgmaxShader] options:compileOptions error:&error];
         if(greedyLibrary) {
@@ -1449,6 +1478,7 @@ void MetalContext::EncodeArgmax(const MetalMatrix& input,const MetalMatrix& outp
         [encoder endEncoding];output.impl_->ready=false;output.impl_->pending=true;if(impl_->pendingOutputs.insert(output.impl_.get()).second)impl_->outputs.push_back(output.impl_);
     }
 }
+#include "screened_head_native_impl.h"
 size_t MetalContext::LastFusedHeadArgmaxDispatches() const {return impl_->fusedHeadArgmaxDispatches;}
 bool MetalContext::EncodeBF16Argmax(const MetalMatrix& input,const MetalBF16Weight& weight,
     const MetalMatrix& output,const MetalMatrix* debugLogits) {
@@ -1929,6 +1959,10 @@ void MetalContext::Begin() {
     @autoreleasepool {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     if(impl_->submitted.count)throw std::logic_error("Undrained Metal partial batches");
+    impl_->screenedHeadDispatches=0;
+#ifdef GARNET_METAL_SCREENED_HEAD
+    impl_->screenDiagnosticReady=false;
+#endif
     impl_->partialSubmissions=0;
     impl_->bodyShapeDispatches=impl_->bodyShapeMisses=0;
     impl_->joinedPrefillPairs=0;
@@ -2576,6 +2610,10 @@ void MetalContext::SubmitAndWait() {
 }
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
+    impl_->screenedHeadDispatches=0;
+#ifdef GARNET_METAL_SCREENED_HEAD
+    impl_->screenDiagnosticReady=false;
+#endif
     // Flushed work may already be executing. Drain it before exposing buffers
     // for reset/reuse; the uncommitted continuation is discarded.
     for(id<MTLCommandBuffer> prior in impl_->submitted)[prior waitUntilCompleted];

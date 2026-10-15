@@ -36,6 +36,12 @@ public:
     bool GlobalHalfReady() const;
 };
 // C++ interface keeps Objective-C ownership out of model-facing headers.
+struct MetalScreenedDiagnostics {
+    size_t rows=0,columns=0;
+    std::vector<float> maskedLogits;
+    std::vector<uint32_t> kept;
+    std::vector<float> querySafe;
+};
 class MetalContext {
     struct Impl;
     std::unique_ptr<Impl> impl_;
@@ -53,6 +59,11 @@ public:
     MetalMatrix Upload(const std::vector<float>& values, size_t rows, size_t columns);
     MetalMatrix Allocate(size_t rows, size_t columns);
     MetalBF16Weight UploadBF16(const void* data,size_t bytes,size_t rows,size_t columns,bool floatPrefill=false,bool visionPrefill=false);
+    bool PrepareScreenedHead(const MetalBF16Weight&);
+    bool EncodeScreenedArgmax(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
+    size_t LastScreenedHeadDispatches() const;
+    // Diagnostics contain private masked logits, never public complete-logit results.
+    MetalScreenedDiagnostics ScreenedDiagnostics() const;
     // Preserve BF16 checkpoint values; use SIMD matvec for decode and FP32 tiled GEMM for up to 128 prompt rows.
     void EncodeBF16MatVec(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
     // Compile bounded body-only shape pipelines during graph initialization.
