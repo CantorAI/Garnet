@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-15T19:38:06.360319+00:00",
-  "source_commit": "210e1ad28cb52fcea3e116bc6eaa234077dee80c",
+  "generated_at_utc": "2026-10-15T20:07:15.892259+00:00",
+  "source_commit": "92230f3ffa6af7e95fba4faf24b2bdffb2074c6f",
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
   "limitations": [
     "Inventory presence does not establish success or independent replication.",
@@ -10,7 +10,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 142,
+  "report_count": 145,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -2434,6 +2434,34 @@
       ]
     },
     {
+      "experiment_id": "results/20261015/dependent-mlp-graph",
+      "title": "Complete dependent MLP graph: audited stress experiment",
+      "report_path": "results/20261015/dependent-mlp-graph/README.md",
+      "report_sha256": "5c921d4b456fde9d22ae6fd858509afc7e71b51a420ca0a16561a3f76cc7041b",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Complete dependent MLP graph: audited stress experiment\n\nOwned PID52062 waits for exact core graph PID50246 to be terminal, then a\nfive-second quiet interval. It compiled successfully and is running the three\nmodels sequentially. No competing inference or GPU component may overlap.\n\nThe workload preserves a real MLP dependency chain: two gate/up projections,\n(gate / (1 + exp(-gate))) * up, then the down projection. It uses checkpoint\nMLPs at text/coder layer0 and VL layers0/3 (four blocks,12 trained matrices).\nVL blocks use separate graph objects and sequential calls; no operations are\nfused across actual attention/layer boundaries. Each block uses one native\nsubmission or one synchronous graph call. Set wall time includes every block.\n\nNative execution uses the current retained c186 library and its existing\nBF16-storage/FP32-arithmetic MLP operations. Graph tensors and learned values\nare FP32, with lossless expansion of original BF16 weights. Policy1 supplies\nweight placeholders; policy2 embeds constants. Gate/up share the actual MLP\ninput, and graph intermediates follow the original dependency chain.\nOnly final outputs are graph targets, allowing legitimate internal fusion.\n\nFour original input patterns are tested at physical rows24/44,26/52,80/160.\nCPU FP64 computes the complete gate/up, nonlinear activation and down result.\nBoth native and graph final outputs must meet the existing trained-reference\nenvelope5e-6+5e-5*abs(reference); graph/native differences must meet the same\nunchanged native-comparison envelope. This compound reference differs from\nthe earlier isolated-matmul gamma bound; it is not a widened tolerance.\nAny failed native or graph profile has no timing windows. No failed input is\nremoved or adjusted to obtain a performance result.\n\nExpected coverage is48 aggregate checks,12 first graph-set calls and up to12\nadmitted timing profiles with768 submissions. These are expected counts,\nnot audited results yet. Every admitted profile uses two ABBA rounds and\neight samples/position after common warming. First/setup costs are separate.\n\nThis remains an isolated MLP test. It does not include a full transformer\nlayer, attention, norm/residual operations, pending-input native/graph command\ninteroperability, complete generated outputs, model TTFT or a vLLM result.\nIntegration still requires ownership/abort/recovery, trained-model validation,\nfull-model repeats and a fresh matched comparator. The full goal is unmet.\n\n```text\npython3 launch_dependent_mlp_graph.py ROOT ROOT/logs/dependent-mlp-graph-20261015 component\n# Only after the exact job is terminal:\npython3 archive_dependent_mlp_graph.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_dependent_mlp_graph.py RESULTS RESULTS/verification.json\n```\n\n## Audited outcome and reference correction — 2026-10-15\n\nThe launch-time protocol above is preserved as history. PID52062 is terminal\nexit 0 (38.668088 s). Independent verification covers 30 archived files,\n48 numerical records, 12 first graph calls and 256 admitted timed submissions.\nEight text/coder model/batch/policy profiles fail the compound CPU reference\non pattern 1 in BOTH the unchanged native control and graph candidate. These\nprofiles have no timing windows. All 48 graph/native comparisons pass the\nunchanged comparison envelope. Process exit 0 does not mean all gates passed.\n\nReference-design correction: the initial whole-chain FP64 computation does\nnot reproduce the existing trained reference's FP32 rounding after each\nprojection and activation. Its bounds had been described as the existing\ntrained-reference test too broadly. Preserve this experiment as a stress\ntest; it cannot establish equivalence to that existing reference. The\n[stage-rounded follow-up](../stage-rounded-mlp-graph/README.md) changes only\nCPU reference rounding. It is a distinct experiment, not a replicate, and\ndoes not erase these failures or relax tolerance coefficients.\n\nOnly VL profiles were admitted to timing in this experiment:\n\n| Model / batch | Weight policy | Native wall ms | Graph wall ms | Graph/native wall |\n| --- | --- | ---: | ---: | ---: |\n| Qwen3.5-0.8B / 1 | placeholder | 3.780941 | 3.574172 | 0.945313 |\n| Qwen3.5-0.8B / 1 | constant | 4.028665 | 3.421134 | 0.849198 |\n| Qwen3.5-0.8B / 2 | placeholder | 5.647932 | 5.210079 | 0.922476 |\n| Qwen3.5-0.8B / 2 | constant | 4.791042 | 4.255926 | 0.888309 |\n\nThese are component wall means, not model TTFT, decode throughput or an\nindependent repeat. The first-call/setup records remain separate. Peak RSS\nand isolated graph compilation time were not measured in this component\nstudy. No production or whole-model claim follows.\n\nArchive SHA-256:\n`b1254e4b96986cf214deff72813ebd5eb6d665dda2a85457b6a4fd7c9120b6f2`.\nRaw files and identities: [evidence manifest](evidence/manifest.json).\nAudit: [verification.json](verification.json). The full goal remains unmet.\n",
+      "commands_as_documented": [
+        "python3 launch_dependent_mlp_graph.py ROOT ROOT/logs/dependent-mlp-graph-20261015 component\n# Only after the exact job is terminal:\npython3 archive_dependent_mlp_graph.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_dependent_mlp_graph.py RESULTS RESULTS/verification.json\n"
+      ],
+      "archive_hashes_as_documented": [
+        "b1254e4b96986cf214deff72813ebd5eb6d665dda2a85457b6a4fd7c9120b6f2"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "verification.json"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261015/dependent-mlp-graph/verification.json",
+          "sha256": "68c5c98a2c9fb1192dac0fb01d283950b17cb7852331662175081df353103400"
+        }
+      ],
+      "evidence_directories": [
+        "evidence"
+      ]
+    },
+    {
       "experiment_id": "results/20261015/direct-mps-body",
       "title": "Direct original-row mixed-storage MPS component",
       "report_path": "results/20261015/direct-mps-body/README.md",
@@ -2788,6 +2816,24 @@
       "evidence_directories": [
         "evidence"
       ]
+    },
+    {
+      "experiment_id": "results/20261015/mlp-prefill-native",
+      "title": "Native dependent MLP graph prototype: validation in progress",
+      "report_path": "results/20261015/mlp-prefill-native/README.md",
+      "report_sha256": "4a6c7b85d357afb991709aa203105100a0ff1eb56fee1a8ebf219ab81fd9ebb6",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Native dependent MLP graph prototype: validation in progress\n\nStatus snapshot 2026-10-15: owned PID54555, remote log folder\n`ROOT/logs/mlp-prefill-native-checks-20261015`. The observed driver reports\nconfigure, build, CTest, vision-full-grid and screened-real-heads completed;\ntext exact-tail checks are progressing. No terminal record has been observed.\nThis is not a final archive, an independent validation audit, a performance\nmeasurement or a claim that the entire suite passed. Read later dated journal\nentries for subsequent state. No source consumed by this job may change\nuntil terminal status and archival.\n\nHypothesis: replace the consecutive native gate/up projections, SiLU product\nand down projection with one complete FP32 MPSGraph, targeting only the final\noutput, to reduce prefill submissions and intermediate handling. New option\n`GARNET_METAL_MLP_PREFILL_GRAPH` defaults OFF. Decode is unchanged. The route\nadmits supported prefill shapes, uses FP32 placeholders and losslessly expands\nthe original BF16 weight bits; it adds real weight-storage/cache costs.\nThe [17-file manifest](source-manifest.json) identifies the exact staged\nprototype. Eleven original files were backed up on the Mac before replacement.\n\nIntegration flushes prior native producers, then runs the graph synchronously\non the same Metal queue with explicit completion/error handling. Output remains\nlogically pending until native completion. This preserves simple ordering and\nabort safety but introduces a CPU wait per MLP, which may erase component\ngains. Graph creation is lazy: first-request compilation and extra FP32 weight\nmemory must be reported separately. The graph cache is capped at 256 entries.\n\nThe validation driver retains the original 28 numerical/recovery stages and\nadds a primitive CTest covering pending inputs, foreign writers, uninitialized\nreads, alias rejection, abort invalidation/recovery and row fallbacks. Expected\ntest coverage is not an executed passing count. No tolerance coefficients\nare changed. Previous synthetic-reference failures remain in the linked\n[component report](../stage-rounded-mlp-graph/README.md).\n\nHost encode time now contains synchronous graph GPU work; it must not be\ndescribed as pure CPU encoding. The native first-start/last-end GPU span can\ncontain intercommand gaps. New MLP dispatch and partial-submission counters\nmust be reconciled against independently expected model/chunk counts.\n\n```text\npython3 launch_mlp_prefill_native_checks.py ROOT ROOT/logs/mlp-prefill-native-checks-20261015 checks\n# Only after terminal status:\npython3 archive_mlp_prefill_native_checks.py ROOT ARCHIVE\n```\n\nNext requirements: archive terminal success OR failure, independently audit\nunchanged original model gates, compare all generated outputs against the\nretained c186 native control, then run repeated native timing with init/first/\nwarm/RSS separated. A newly selected implementation needs a fresh matched\nvLLM cohort. No graph integration speedup is established; full goal unmet.\n",
+      "commands_as_documented": [
+        "python3 launch_mlp_prefill_native_checks.py ROOT ROOT/logs/mlp-prefill-native-checks-20261015 checks\n# Only after terminal status:\npython3 archive_mlp_prefill_native_checks.py ROOT ARCHIVE\n"
+      ],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "README.md",
+        "source-manifest.json"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261015/mps-screen-index",
@@ -3465,6 +3511,34 @@
         {
           "path": "results/20261015/sparse-counter-trace/verification.json",
           "sha256": "95f6cb946a2ddee130e870e3e3e11f9356918ebfe3ad1a9c78050cfbf6e541b8"
+        }
+      ],
+      "evidence_directories": [
+        "evidence"
+      ]
+    },
+    {
+      "experiment_id": "results/20261015/stage-rounded-mlp-graph",
+      "title": "Dependent MLP with existing reference rounding: audited, six profiles excluded",
+      "report_path": "results/20261015/stage-rounded-mlp-graph/README.md",
+      "report_sha256": "b333481efc83dd0b4caadacdfd66ae5bc6d55aea0d30e7f05c6d31c6935dbbb8",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Dependent MLP with existing reference rounding: audited, six profiles excluded\n\nHypothesis: evaluate the same complete gate/up-SiLU-down workload using\nthe original trained reference's stage boundaries, correcting the previous\nwhole-chain FP64 reference mismatch. Four trained blocks remain: text/coder\nlayer 0 and VL layers 0/3. VL blocks are sequential separate graph calls.\nInputs, actual BF16 checkpoint bits expanded losslessly to FP32, FP32 graph\narithmetic, native library, placeholder/constant policies and all tolerance\ncoefficients are unchanged. This is a reference correction, not a speed\noptimization or a repeat of an identical experiment.\n\nThe generated harness makes only three reference substitutions: gate/up dot\nproducts accumulate wider then cast to FP32; activation executes in FP32;\nthe wider down dot casts to FP32. The verifier reconstructs these changes\nand checks the frozen `reference_dense.py` semantics. Historical JSON names\n`fp64_worst` and `control_fp64_worst` remain, but here mean error against this\nstage-rounded reference, normalized by the unchanged 5e-6+5e-5*abs(reference)\nbound. Values over 1 fail. Native comparison uses its separate unchanged bound.\n\nPID52956 is terminal exit 0 (38.223373 s). Audit: 36 files, 48 numerical\nrecords, 12 first graph calls and 384 admitted timed submissions. Six profiles\nstill fail the reference on high-amplitude alternating pattern 1 in BOTH\nunchanged native and graph: text B1/B2 and coder B2, each weight policy.\nWorst native/graph normalized reference errors are 2.420709/2.529337,\n2.887737/3.140284 and 1.308438/1.286163 respectively. These profiles have no\ntiming windows. They remain numerical limitations; changing reference\nrounding did not make all tests pass.\n\nAll 48 graph/native comparisons pass, worst ratio 0.473572. That relative\nagreement is not a waiver of independent reference failures. Only coder B1\nand VL profiles pass every component gate and are timed below:\n\n| Model / batch | Weight policy | Native wall ms | Graph wall ms | Graph/native wall |\n| --- | --- | ---: | ---: | ---: |\n| Qwen2.5-Coder-0.5B-Instruct / 1 | placeholder | 1.311486 | 1.206151 | 0.919683 |\n| Qwen2.5-Coder-0.5B-Instruct / 1 | constant | 1.324608 | 1.285091 | 0.970167 |\n| Qwen3.5-0.8B / 1 | placeholder | 3.198436 | 2.836174 | 0.886738 |\n| Qwen3.5-0.8B / 1 | constant | 3.677749 | 3.514564 | 0.955629 |\n| Qwen3.5-0.8B / 2 | placeholder | 6.073017 | 5.066973 | 0.834342 |\n| Qwen3.5-0.8B / 2 | constant | 4.885328 | 4.766169 | 0.975609 |\n\nEach admitted profile uses two ABBA rounds, eight samples per position;\nall sequential block work is inside wall time. First graph calls and setup\nare separate. Memory and isolated compilation costs are unmeasured here.\nThe 2.4–16.6% lower admitted component wall means do not imply end-to-end\nTTFT gains, decode gains, statistical significance or repeatability. Comparison\nto the earlier reference study's wall means is not a controlled speed claim.\n\nDecision: prepare an OFF-default native integration for the original full\ntrained-model checks, ownership/abort/recovery and complete-output comparison.\nKeep all reference failures visible. The original model validation tolerances\nmust pass unchanged before any serving benchmark is admitted.\n\n```text\npython3 launch_stage_rounded_mlp_graph.py ROOT ROOT/logs/stage-rounded-mlp-graph-20261015 component\n# After terminal status only:\npython3 archive_stage_rounded_mlp_graph.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_stage_rounded_mlp_graph.py RESULTS RESULTS/verification.json\n```\n\nThese are invocation templates; frozen executed commands and source identities\nare under [evidence](evidence/manifest.json). `ROOT` denotes the isolated Mac\ninvestigation root. Archive SHA-256:\n`2d7fd927af4d211044b793d44dc05331497fe29720aa5a5c24f950c120d7e02a`.\nAudit: [verification.json](verification.json). Full-model speed, RSS, first\nrequest cost, complete outputs and a fresh vLLM cohort remain unmeasured for\nthis graph integration. The full goal remains unmet.\n",
+      "commands_as_documented": [
+        "python3 launch_stage_rounded_mlp_graph.py ROOT ROOT/logs/stage-rounded-mlp-graph-20261015 component\n# After terminal status only:\npython3 archive_stage_rounded_mlp_graph.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_stage_rounded_mlp_graph.py RESULTS RESULTS/verification.json\n"
+      ],
+      "archive_hashes_as_documented": [
+        "2d7fd927af4d211044b793d44dc05331497fe29720aa5a5c24f950c120d7e02a"
+      ],
+      "adjacent_files": [
+        ".gitattributes",
+        "README.md",
+        "verification.json"
+      ],
+      "verification_records": [
+        {
+          "path": "results/20261015/stage-rounded-mlp-graph/verification.json",
+          "sha256": "4cd6f0d669aae7fc3a4a19840966e97573fa4b263b25a2918b602b8b0f297e3e"
         }
       ],
       "evidence_directories": [

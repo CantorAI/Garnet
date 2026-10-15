@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T19:38:06.360319+00:00
+Generated UTC: 2026-10-15T20:07:15.892259+00:00
 
-Source commit: `210e1ad28cb52fcea3e116bc6eaa234077dee80c`. Reports indexed: **142**.
+Source commit: `92230f3ffa6af7e95fba4faf24b2bdffb2074c6f`. Reports indexed: **145**.
 
 Each row links to its original report. Read that report's scope, exclusions and status before citing it. The JSON snapshot retains complete report text, documented command blocks and hashes; the CSV supports analysis. Neither report presence nor a verification filename certifies a successful experiment.
 
@@ -98,6 +98,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/decode-only-head](../../../results/20261015/decode-only-head/README.md) | Decode-only fused head: repeated full runs verified |
 | [results/20261015/decode-splitk](../../../results/20261015/decode-splitk/README.md) | FP32 split-K decode: no broad gain, rejected for general dispatch |
 | [results/20261015/deferred-state-zero](../../../results/20261015/deferred-state-zero/README.md) | Deferred request-state zero: repeated full-model latency tradeoff |
+| [results/20261015/dependent-mlp-graph](../../../results/20261015/dependent-mlp-graph/README.md) | Complete dependent MLP graph: audited stress experiment |
 | [results/20261015/direct-mps-body](../../../results/20261015/direct-mps-body/README.md) | Direct original-row mixed-storage MPS component |
 | [results/20261015/fastencode-streamed-mps-body](../../../results/20261015/fastencode-streamed-mps-body/README.md) | MPS argument-validation option: wall penalty persists |
 | [results/20261015/fused-head-argmax](../../../results/20261015/fused-head-argmax/README.md) | Fused vocabulary projection and partial argmax: component gain repeats |
@@ -109,6 +110,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/interleaved-screen-index](../../../results/20261015/interleaved-screen-index/README.md) | Lossless four-column screening index: repeated component gain |
 | [results/20261015/joint-state-zero](../../../results/20261015/joint-state-zero/README.md) | Reset and dependent GPU read in one command buffer: repeated component signal |
 | [results/20261015/mixed-accumulator](../../../results/20261015/mixed-accumulator/README.md) | Apple M4 mixed-input FP32 accumulator capability |
+| [results/20261015/mlp-prefill-native](../../../results/20261015/mlp-prefill-native/README.md) | Native dependent MLP graph prototype: validation in progress |
 | [results/20261015/mps-screen-index](../../../results/20261015/mps-screen-index/README.md) | MPS-derived screening dot products: rejected |
 | [results/20261015/mpsgraph-prefill](../../../results/20261015/mpsgraph-prefill/README.md) | MPSGraph FP32 prefill: actual component results, no broad promotion |
 | [results/20261015/packed-body-prefill](../../../results/20261015/packed-body-prefill/README.md) | Packed BF16 prefill tiles: rejected |
@@ -130,6 +132,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/small-body-threshold](../../../results/20261015/small-body-threshold/README.md) | Smaller lossless body admission: rejected after confirmation |
 | [results/20261015/small-seed-native](../../../results/20261015/small-seed-native/README.md) | Native exact seed 1024 versus 8192: small mixed gains |
 | [results/20261015/sparse-counter-trace](../../../results/20261015/sparse-counter-trace/README.md) | Sparse GPU counters: much lower diagnostic overhead |
+| [results/20261015/stage-rounded-mlp-graph](../../../results/20261015/stage-rounded-mlp-graph/README.md) | Dependent MLP with existing reference rounding: audited, six profiles excluded |
 | [results/20261015/streamed-direct-mps-body](../../../results/20261015/streamed-direct-mps-body/README.md) | Streamed direct-row native MPS: rejected for integration |
 | [results/20261015/striped-frame](../../../results/20261015/striped-frame/README.md) | Exact-coordinate parallel Pillow resize |
 | [results/20261015/threaded-striped-frame](../../../results/20261015/threaded-striped-frame/README.md) | Combined threaded WebP decode and exact striped resize |

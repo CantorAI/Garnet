@@ -336,6 +336,51 @@ Apple's MPSCommandBuffer may commit-and-continue and replace its root buffer.
 The macOS SDK API was inspected, but no native graph integration or dependent
 MLP performance is claimed here. The overall2x/half-TTFT goal remains unmet.
 
+### 2026-10-15 — complete dependent MLP experiment launched
+
+Owned PID52062 tests complete gate/up-SiLU-down MLP chains using four trained
+blocks (text/coder layer0, VL layers0/3). VL blocks have separate graphs and
+sequential calls; no artificial fusion across layers. Native and graph each
+use one execution boundary per MLP, and all work is included in set wall time.
+Original FP32 values and all four input patterns remain. CPU FP64 evaluates
+the complete nonlinear chain; the existing5e-6+5e-5 reference/comparison
+bounds gate every final value. Failed native or graph profiles are not timed.
+The compile and text/coder stages have completed; VL and audit are pending.
+[Protocol and exact scope](../../results/20261015/dependent-mlp-graph/README.md).
+No dependent-MLP speed result or native integration is claimed yet. The full
+2x decode/half-TTFT goal remains active and unmet.
+
+### 2026-10-15 — dependent MLP results, reference correction and native prototype
+
+The initial dependent-MLP experiment is terminal and audited:30 files,
+48 numerical records,12 first calls,256 timed submissions. All48 graph/native
+comparisons pass, but8 text/coder profiles fail the whole-chain FP64 reference
+in both implementations and are excluded from timing. The initial description
+overstated equivalence to the existing trained reference: that reference rounds
+each projection/activation to FP32. Preserve the first study as a stress test.
+[Original study and correction](../../results/20261015/dependent-mlp-graph/README.md).
+
+The separate stage-rounded correction changes only CPU reference arithmetic,
+with no tolerance/input/native/graph changes. Audit:36 files,48 checks,12 first
+calls,384 timed submissions. Six text/coder profiles still fail the independent
+reference in BOTH native and graph; none is timed. All48 graph/native comparisons
+pass. Only coder B1 and VL profiles pass every component gate; their graph wall
+means are2.4–16.6% lower. These are not full-model or replicated gains.
+[Corrected study, exact means and remaining failures](../../results/20261015/stage-rounded-mlp-graph/README.md).
+
+Native prototype PID54555 is in validation with a frozen17-file source manifest.
+The build and CTest phases completed according to the observed driver; full
+trained-model/recovery validation and independent audit remain pending. An
+OFF-default complete-MLP MPSGraph uses the same queue after native Flush and
+waits for completion. Synchronous per-MLP waits, lazy compilation and extraFP32
+storage may outweigh gains. No full inference/performance result is claimed.
+[Prototype, counters, ownership design and pending gates](../../results/20261015/mlp-prefill-native/README.md).
+
+Latest fully audited matched evidence remains the c186 native library's two
+fresh vLLM cohorts:144 complete matching outputs, six GPU dtype audits,
+4/6 repeated decode targets,2/6 repeated TTFT targets,0/6 repeated joint targets.
+The graph prototype does not inherit those numbers. The overall goal is unmet.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
@@ -357,3 +402,16 @@ Candidate selection across many trials creates selection bias: use fresh
 confirmation and a fresh comparator cohort after choosing the implementation.
 External algorithm provenance, related work, formal statistical analysis and
 publication figures still need their own review before submission.
+
+Documentation checks can be repeated without launching inference:
+
+```text
+python -X utf8 docs/research/build_metal_method_index.py
+python -X utf8 docs/research/verify_metal_research_log.py
+```
+
+The second command checks report hashes, curated local citations, verifier-file
+identities and the displayed matched/component table values. It does not
+replace the separate numerical or benchmark audits. The index captures the
+base commit plus exact report bytes; uncommitted reports must not be represented
+as if they were already present in that base commit.

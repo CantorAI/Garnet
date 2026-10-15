@@ -1,0 +1,477 @@
+{
+  "files": {
+    "evidence/logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json": {
+      "bytes": 6673,
+      "sha256": "44477f82cfd804bd244f1a08cf6dd7e76b9e7d9328ea842bb16dcd0938051184"
+    },
+    "evidence/logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/manifest.json": {
+      "bytes": 6659,
+      "sha256": "fee9ac3e307db5fc090931e77b7a91087fac9485a75f7c5a36534736a5957666"
+    },
+    "evidence/logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/manifest.json": {
+      "bytes": 14145,
+      "sha256": "1bed07c21c74c15406d0a5f84393a5deb808e6d15dcbf69e7758a828f8b328fe"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/background_service_checks.json": {
+      "bytes": 7097,
+      "sha256": "3627f18df05eb0d9e299644b19aa49c1cfd4f2f2c37971e8b4ce56dd18f781ff"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/exit.json": {
+      "bytes": 50,
+      "sha256": "1c2003e5be29d63fc142e03b143e44a1aa5ac56c70afb0b8a3134e3f28255ef3"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 464,
+      "sha256": "d302b1a5ff8ab3cee0d8e0850c948899070ee04d798492e199ebfaf94ca5f0a8"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 8815,
+      "sha256": "8e92eebd7d33debab5d66a6ab1f6bced7aea8990c8755adc67bc90facdbc4558"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 388,
+      "sha256": "d86bc443acf5f72901345b2936feca1681fc7b6125ec767f8357b7e6a2ae12ad"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 5383,
+      "sha256": "e3a3210a1dbc0dcd7248628f6959c0738c311aa5d13913c325e7ada52c9deb73"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 2072,
+      "sha256": "2f66e9bd5e3f4f7982c900f6a1eaff00dd0d4fc00f56b41341ed227fda447b43"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 13122,
+      "sha256": "69994005e06be453a5eae4dbd00a4359423978ae3e192fb5aeb7c5ccbaaba69b"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/background_service_checks.json": {
+      "bytes": 40991,
+      "sha256": "96ebe36f8d91e031a98196c780279e62e65513a54403cb55c8f584f1acc65584"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/compile-monitor.json": {
+      "bytes": 232,
+      "sha256": "c8be6e09a0292318a5b63fd8bc21784ae93f4928a4d82768dcae525df937aa1f"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/harness-monitor.json": {
+      "bytes": 81,
+      "sha256": "6b19bb62885934218d57fa1430ace55cdafa63b2e85a27408d7a2d4255d02685"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/harness.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/metadata.json": {
+      "bytes": 32838,
+      "sha256": "92f897c34e1829ae994a64521fd7b87ff66d79003d2915e125fc6bfc0f664687"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/src/backends/metal/exact_half_codec.h": {
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/src/backends/metal/metal_context.h": {
+      "bytes": 11411,
+      "sha256": "62a894d013062daf89a978770bbacee3321fad72ecbd1564c0ca39d0779587ba"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/dependent_mlp_graph_gpu.mm": {
+      "bytes": 11694,
+      "sha256": "a3f45cf1344f246cd77446eac26b661501da358eb80e8e8c53f9a14dd4abf6db"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/make_stage_rounded_mlp_graph.py": {
+      "bytes": 872,
+      "sha256": "ab5f09ad2697a3a6425bf88a5aad25f2fdb770e9d7a2cdcbfc36899f8be0f0f4"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/reference_dense.py": {
+      "bytes": 3742,
+      "sha256": "1b67d7dd7199a0901ff984d9a91da7c01b187fe7c05a9fe08de036a5f0056511"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/run_combined_graph_prefill.py": {
+      "bytes": 3448,
+      "sha256": "04492ccb57bc02dd7db5a875f47825d3a120a950a0932c53a4454bac2f47c1c2"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/run_dependent_mlp_graph.py": {
+      "bytes": 1595,
+      "sha256": "0fa8958fbe70bb7418fe34bd91397ddb0f18603a15fee0e032a22c3fafffe261"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/run_mpsgraph_prefill.py": {
+      "bytes": 5593,
+      "sha256": "3c4a8baec579d813e45bb4dfb3d5a61a9e3011b27036732d2727e608293b333d"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/source-snapshot/test2026/metal/run_stage_rounded_mlp_graph.py": {
+      "bytes": 1602,
+      "sha256": "76f21b7a0ffe2cb33228d797762e1e5e704300a6c761b2005906a4cee161ecbf"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/stage_rounded_mlp_graph_gpu.mm": {
+      "bytes": 11813,
+      "sha256": "318992ddc3fc1fd906f11f1178545e90c3fe18e32887d46e86c8a810c39dc743"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/statuses.json": {
+      "bytes": 2156,
+      "sha256": "b783afbdf62cfd7d063781775f1d3fac9c9ec2291455a138e9b6051f5d7060d2"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/jobs/summary.json": {
+      "bytes": 39368,
+      "sha256": "4a3aeebcf0e7065a89bf212afe456fd546e8046641cc0d9578bcaac845439c02"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/output.log": {
+      "bytes": 241,
+      "sha256": "24ccc5a294ccf6fcb48a615e50471373dc56140675805f757598fd205466d2f5"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "708663f6578f759dee2ae953e099e521b7a57c7c45d3a8be72011d6cbc0c08a1"
+    },
+    "evidence/logs/stage-rounded-mlp-graph-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "evidence/source/test2026/metal/archive_stage_rounded_mlp_graph.py": {
+      "bytes": 612,
+      "sha256": "192ed0ec4f565ea643acd5fe9e020fe098da9a179182d7d8a1c91f3b9b66c81c"
+    },
+    "evidence/source/test2026/metal/launch_stage_rounded_mlp_graph.py": {
+      "bytes": 513,
+      "sha256": "ad047a260522f04e07635d51360f460f513f5b4bf844678fdf468a8b007d5268"
+    }
+  },
+  "omitted": {
+    "logs/stage-rounded-mlp-graph-20261015/jobs/stage_rounded_mlp_graph_gpu": {
+      "bytes": 283624,
+      "sha256": "d83c27f66a99c03d559fdc6175839e57eed80ff77cf3eeded6f4e15d38e55e41"
+    },
+    "models/Qwen3-0.6B/model.safetensors": {
+      "bytes": 1503300328,
+      "sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-0/raw.bin": {
+      "bytes": 6291456,
+      "sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-1/raw.bin": {
+      "bytes": 6291456,
+      "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-2/raw.bin": {
+      "bytes": 6291456,
+      "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-3/raw.bin": {
+      "bytes": 2097152,
+      "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-4/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-5/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-6/raw.bin": {
+      "bytes": 2097152,
+      "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+    },
+    "models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors": {
+      "bytes": 988097824,
+      "sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-0/raw.bin": {
+      "bytes": 8716288,
+      "sha256": "7738979cfc99fcfc9fc081652c7afc2c421f3cad05b97d8b1d2790d27ac64057"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-1/raw.bin": {
+      "bytes": 8716288,
+      "sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-2/raw.bin": {
+      "bytes": 8716288,
+      "sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-3/raw.bin": {
+      "bytes": 229376,
+      "sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-4/raw.bin": {
+      "bytes": 1605632,
+      "sha256": "133d4e063b9bb208b7f2ed4f024363c281891cee52d295ed62cbfae32c1e6f4e"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-5/raw.bin": {
+      "bytes": 1605632,
+      "sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-6/raw.bin": {
+      "bytes": 229376,
+      "sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d"
+    },
+    "models/Qwen3.5-0.8B/model.safetensors": {
+      "bytes": 1746942600,
+      "sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-0/raw.bin": {
+      "bytes": 32768,
+      "sha256": "e5197a79fc1daa00d06a0c04fd11a97ac3c10a6bd6460e957fd8383700d5d87b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-1/raw.bin": {
+      "bytes": 32768,
+      "sha256": "02bab6a0eb77ad51435f77665d173876993d725ca3cd953f90c2b0754735db5e"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-2/raw.bin": {
+      "bytes": 12582912,
+      "sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-3/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-4/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "cbee28fc3b42e07e491fffd593b2ee9ec58ae952dc9133e178f8a80ea916d308"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-5/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-6/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-7/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-8/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "d3428ec277dd5195c9a42720be5b4068fcc51943670c62f57e61b5adebcae1da"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-9/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "50d2f4c60e786596e464958bb515ec5573c3ddb53604930e3e2244f107f71f11"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-10/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "f141786356fc0b59f4e1aa8cc3afb084d283e384c98cd47dbd1812b6c9ac1f0f"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-11/raw.bin": {
+      "bytes": 1048576,
+      "sha256": "4c8cfc4b114917fd3067510ca34886f9bb2bac638a07c537a544e0b9494237fe"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-12/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "4c92f1c5a423b022da52875dc21b31e0957110aefefc8826e0be5bcc875cc9cf"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-13/raw.bin": {
+      "bytes": 8388608,
+      "sha256": "b0dde4ab3eee4dc2abdf2e2fe8cd6b474d52c4559e38bb8fc9c8589c1b0a7176"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-14/raw.bin": {
+      "bytes": 1048576,
+      "sha256": "459514e89bd3142fca159b73b936cc0e444e6e9cb0dff082be0ecb8462d6a1b7"
+    },
+    "build-coalesced-bf16-body/libgarnet_metal.a": {
+      "bytes": 280056,
+      "sha256": "5bdb40918c993548d4d37606f632d0c6f9a6564a7aa0427f04fcbfd4eeecfeb0"
+    }
+  },
+  "jobs": {
+    "stage-rounded-mlp-graph-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 38.2233731248416
+    }
+  },
+  "global_half_cases": {
+    "stage-rounded-mlp-graph-20261015": {
+      "Qwen3-0.6B": [
+        {
+          "name": "matrix-0",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+        },
+        {
+          "name": "matrix-1",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+        },
+        {
+          "name": "matrix-2",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+        },
+        {
+          "name": "matrix-3",
+          "global_half_ready": false,
+          "common_scale": 17,
+          "raw_sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+        },
+        {
+          "name": "matrix-4",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+        },
+        {
+          "name": "matrix-5",
+          "global_half_ready": true,
+          "common_scale": 16,
+          "raw_sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+        },
+        {
+          "name": "matrix-6",
+          "global_half_ready": true,
+          "common_scale": 18,
+          "raw_sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+        }
+      ],
+      "Qwen2.5-Coder-0.5B-Instruct": [
+        {
+          "name": "matrix-0",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "7738979cfc99fcfc9fc081652c7afc2c421f3cad05b97d8b1d2790d27ac64057"
+        },
+        {
+          "name": "matrix-1",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b"
+        },
+        {
+          "name": "matrix-2",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416"
+        },
+        {
+          "name": "matrix-3",
+          "global_half_ready": false,
+          "common_scale": 15,
+          "raw_sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896"
+        },
+        {
+          "name": "matrix-4",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "133d4e063b9bb208b7f2ed4f024363c281891cee52d295ed62cbfae32c1e6f4e"
+        },
+        {
+          "name": "matrix-5",
+          "global_half_ready": true,
+          "common_scale": 15,
+          "raw_sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c"
+        },
+        {
+          "name": "matrix-6",
+          "global_half_ready": true,
+          "common_scale": 19,
+          "raw_sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d"
+        }
+      ],
+      "Qwen3.5-0.8B": [
+        {
+          "name": "matrix-0",
+          "global_half_ready": true,
+          "common_scale": 18,
+          "raw_sha256": "e5197a79fc1daa00d06a0c04fd11a97ac3c10a6bd6460e957fd8383700d5d87b"
+        },
+        {
+          "name": "matrix-1",
+          "global_half_ready": true,
+          "common_scale": 18,
+          "raw_sha256": "02bab6a0eb77ad51435f77665d173876993d725ca3cd953f90c2b0754735db5e"
+        },
+        {
+          "name": "matrix-2",
+          "global_half_ready": false,
+          "common_scale": 17,
+          "raw_sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+        },
+        {
+          "name": "matrix-3",
+          "global_half_ready": false,
+          "common_scale": 17,
+          "raw_sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d"
+        },
+        {
+          "name": "matrix-4",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "cbee28fc3b42e07e491fffd593b2ee9ec58ae952dc9133e178f8a80ea916d308"
+        },
+        {
+          "name": "matrix-5",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac"
+        },
+        {
+          "name": "matrix-6",
+          "global_half_ready": true,
+          "common_scale": 18,
+          "raw_sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+        },
+        {
+          "name": "matrix-7",
+          "global_half_ready": true,
+          "common_scale": 19,
+          "raw_sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+        },
+        {
+          "name": "matrix-8",
+          "global_half_ready": true,
+          "common_scale": 18,
+          "raw_sha256": "d3428ec277dd5195c9a42720be5b4068fcc51943670c62f57e61b5adebcae1da"
+        },
+        {
+          "name": "matrix-9",
+          "global_half_ready": true,
+          "common_scale": 18,
+          "raw_sha256": "50d2f4c60e786596e464958bb515ec5573c3ddb53604930e3e2244f107f71f11"
+        },
+        {
+          "name": "matrix-10",
+          "global_half_ready": true,
+          "common_scale": 19,
+          "raw_sha256": "f141786356fc0b59f4e1aa8cc3afb084d283e384c98cd47dbd1812b6c9ac1f0f"
+        },
+        {
+          "name": "matrix-11",
+          "global_half_ready": true,
+          "common_scale": 19,
+          "raw_sha256": "4c8cfc4b114917fd3067510ca34886f9bb2bac638a07c537a544e0b9494237fe"
+        },
+        {
+          "name": "matrix-12",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "4c92f1c5a423b022da52875dc21b31e0957110aefefc8826e0be5bcc875cc9cf"
+        },
+        {
+          "name": "matrix-13",
+          "global_half_ready": true,
+          "common_scale": 17,
+          "raw_sha256": "b0dde4ab3eee4dc2abdf2e2fe8cd6b474d52c4559e38bb8fc9c8589c1b0a7176"
+        },
+        {
+          "name": "matrix-14",
+          "global_half_ready": true,
+          "common_scale": 18,
+          "raw_sha256": "459514e89bd3142fca159b73b936cc0e444e6e9cb0dff082be0ecb8462d6a1b7"
+        }
+      ]
+    }
+  },
+  "full_goal_met": false
+}
