@@ -1,0 +1,112 @@
+{
+  "files": {
+    "evidence/logs/padded-mps-body-20261015/background_service_checks.json": {
+      "bytes": 7099,
+      "sha256": "9961ba3cf22c3a8a63d562f5af1128f6954f09c521ed99c498f72354b26b4287"
+    },
+    "evidence/logs/padded-mps-body-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "b1aeb23ff670f51668ce593adfd1cb6c0d5322d6e2cb6803801d0e7a321a4c51"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 691,
+      "sha256": "d0ae57903808753e7c6b3acf4e2aca4672994bda5e5cad5cd196755675c1cf3e"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 198481,
+      "sha256": "cfae9341a49fae5d03d78262ea3a558551ec7920a2ee5838f2cd6163c53c69a2"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 769,
+      "sha256": "4519f22256be102e5b809f42cc5ceb23f86ace1c30c303d33b030c8ddbec5523"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 199159,
+      "sha256": "cb475b0c9c98453c21b3443cc2956ef2fe5921dad3b0e1e1f79a6cbff5aecb23"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 1225,
+      "sha256": "c22d60a24d412209b4880cefa100cbf6a166e4c7df1dacff3688504dd503ba0f"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 369044,
+      "sha256": "165f0bc12dde91dcccec6472e298ff24208b1060e00289832e3bcd2aeadaaf4e"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/background_service_checks.json": {
+      "bytes": 35477,
+      "sha256": "7702688c780db1959bbe048e4b4a4514b084fc0f0e342a4dc9c83c93bfac0da2"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/compile-monitor.json": {
+      "bytes": 158,
+      "sha256": "bb4165b2e20bda8b6fe13e889a5f04cf34714c8f87047f417745b14f70f3fadf"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/metadata.json": {
+      "bytes": 31986,
+      "sha256": "dd3e93f9c75c3fcc942b5339b341aa408c7d345eb02edb44d5c132680a000376"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/source-snapshot/src/backends/metal/exact_half_codec.h": {
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/source-snapshot/src/backends/metal/metal_context.h": {
+      "bytes": 10956,
+      "sha256": "29ed0b8ec3f90f9792fd3981dbf69389a08663f715a438bec6d77f998c1f14a5"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 186768,
+      "sha256": "2a6fd38324b6b99f6ba2cd57e37dd877d8e888a75f648978bd487cf5f30482a8"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/source-snapshot/test2026/metal/padded_mps_body_gpu.mm": {
+      "bytes": 6358,
+      "sha256": "ee23713db43737c9468e01abb69fc74a714ace6c14fb5e734299a32af714d68c"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/source-snapshot/test2026/metal/run_padded_mps_body.py": {
+      "bytes": 5134,
+      "sha256": "abc2a8717eea509e25adea78e872c38831838c9ba1d5504a8f744086cde8488a"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/statuses.json": {
+      "bytes": 1568,
+      "sha256": "73cb4df87d7b4f153dc780c872ae9357c13e5139196d95732f66848f0650e7f4"
+    },
+    "evidence/logs/padded-mps-body-20261015/jobs/summary.json": {
+      "bytes": 379923,
+      "sha256": "b158b1d84229f830df7f620522bfb5fa8779fcb00f1989bff992eb52ee15d2ff"
+    },
+    "evidence/logs/padded-mps-body-20261015/output.log": {
+      "bytes": 223,
+      "sha256": "defce8d1ee25fc637d3af901b813d3388b188aae6025471d399c4215dc9a5f6b"
+    },
+    "evidence/logs/padded-mps-body-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "15a3c2e1392ca1626c342297d0ca7a2a9170e70f407fb2776dbfccfd14859977"
+    },
+    "evidence/logs/padded-mps-body-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  "omitted": {
+    "logs/padded-mps-body-20261015/jobs/padded_mps_body_gpu": {
+      "bytes": 262816,
+      "sha256": "3bf795f2ba7f14b59c6e431b0812eeb8ff9151e793a376cc7fd8f86bba32d431"
+    }
+  },
+  "jobs": {
+    "padded-mps-body-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 34.262982208281755
+    }
+  }
+}

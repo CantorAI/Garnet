@@ -1,0 +1,800 @@
+{
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 1,
+      "check": {
+        "policy": 1,
+        "forced_mps_projections": 7,
+        "values": 12288,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.0030315302795809506,
+        "comparison_worst": 0.023836331169113642,
+        "fp64_worst": 0.0025277007724108943,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.3841471625491977,
+          "wall_ms": 0.69425784375
+        },
+        "candidate": {
+          "gpu_ms": 0.3266132407588884,
+          "wall_ms": 0.8174908750000001
+        }
+      },
+      "gpu_fraction": 0.8502294760983926,
+      "wall_fraction": 1.1775032610137508
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 2,
+      "check": {
+        "policy": 2,
+        "forced_mps_projections": 3,
+        "values": 12288,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.0030315302795809506,
+        "comparison_worst": 0.023836331169113642,
+        "fp64_worst": 0.002964625333886089,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.34412500099278986,
+          "wall_ms": 0.63972525
+        },
+        "candidate": {
+          "gpu_ms": 0.32576164812780917,
+          "wall_ms": 0.69696090625
+        }
+      },
+      "gpu_fraction": 0.9466375508550585,
+      "wall_fraction": 1.089469121704982
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 3,
+      "check": {
+        "policy": 3,
+        "forced_mps_projections": 7,
+        "values": 12288,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.0030315302795809506,
+        "comparison_worst": 0.023836331169113642,
+        "fp64_worst": 0.0025277007724108943,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.3545963409123942,
+          "wall_ms": 0.66096090625
+        },
+        "candidate": {
+          "gpu_ms": 0.3159192856401205,
+          "wall_ms": 0.789974
+        }
+      },
+      "gpu_fraction": 0.8909265245863629,
+      "wall_fraction": 1.195190203429675
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": 1,
+      "check": {
+        "policy": 1,
+        "forced_mps_projections": 7,
+        "values": 24576,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003222255887638415,
+        "comparison_worst": 0.023836331169113642,
+        "fp64_worst": 0.0025277007724108943,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.4208020254736766,
+          "wall_ms": 0.759423125
+        },
+        "candidate": {
+          "gpu_ms": 0.466895813588053,
+          "wall_ms": 0.977499875
+        }
+      },
+      "gpu_fraction": 1.1095379426049359,
+      "wall_fraction": 1.287161060574762
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": 2,
+      "check": {
+        "policy": 2,
+        "forced_mps_projections": 3,
+        "values": 24576,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003222255887638415,
+        "comparison_worst": 0.023836331169113642,
+        "fp64_worst": 0.002964625333886089,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.4272083315299824,
+          "wall_ms": 0.751987
+        },
+        "candidate": {
+          "gpu_ms": 0.42508986371103674,
+          "wall_ms": 0.8252083125
+        }
+      },
+      "gpu_fraction": 0.9950411364606148,
+      "wall_fraction": 1.0973704498880965
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": 3,
+      "check": {
+        "policy": 3,
+        "forced_mps_projections": 7,
+        "values": 24576,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003222255887638415,
+        "comparison_worst": 0.023836331169113642,
+        "fp64_worst": 0.0025277007724108943,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.41028122359421104,
+          "wall_ms": 0.7341888125
+        },
+        "candidate": {
+          "gpu_ms": 0.4189687460893765,
+          "wall_ms": 0.93776565625
+        }
+      },
+      "gpu_fraction": 1.0211745553916887,
+      "wall_fraction": 1.277281320940858
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 1,
+      "check": {
+        "policy": 1,
+        "forced_mps_projections": 7,
+        "values": 12672,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003359675746152098,
+        "comparison_worst": 0.024367072401435496,
+        "fp64_worst": 0.002499562632996979,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.3255910996813327,
+          "wall_ms": 0.61979421875
+        },
+        "candidate": {
+          "gpu_ms": 0.32195310632232577,
+          "wall_ms": 0.80079934375
+        }
+      },
+      "gpu_fraction": 0.9888264962937636,
+      "wall_fraction": 1.2920406798324948
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 2,
+      "check": {
+        "policy": 2,
+        "forced_mps_projections": 3,
+        "values": 12672,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003359675746152098,
+        "comparison_worst": 0.024367072401435496,
+        "fp64_worst": 0.002787186341485857,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.32738018489908427,
+          "wall_ms": 0.6117630625
+        },
+        "candidate": {
+          "gpu_ms": 0.30973438697401434,
+          "wall_ms": 0.66119009375
+        }
+      },
+      "gpu_fraction": 0.9460999817978926,
+      "wall_fraction": 1.080794402734964
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 3,
+      "check": {
+        "policy": 3,
+        "forced_mps_projections": 3,
+        "values": 12672,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003359675746152098,
+        "comparison_worst": 0.024367072401435496,
+        "fp64_worst": 0.002787186341485857,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.32355338043998927,
+          "wall_ms": 0.6013124375
+        },
+        "candidate": {
+          "gpu_ms": 0.3123242349829525,
+          "wall_ms": 0.66498434375
+        }
+      },
+      "gpu_fraction": 0.9652943033951101,
+      "wall_fraction": 1.1058882242893904
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 1,
+      "check": {
+        "policy": 1,
+        "forced_mps_projections": 7,
+        "values": 25344,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003359675746152098,
+        "comparison_worst": 0.02493397980826368,
+        "fp64_worst": 0.002655125994829243,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.3609583800425753,
+          "wall_ms": 0.67355075
+        },
+        "candidate": {
+          "gpu_ms": 0.377299526007846,
+          "wall_ms": 0.8832071875
+        }
+      },
+      "gpu_fraction": 1.045271551704502,
+      "wall_fraction": 1.3112704387902472
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 2,
+      "check": {
+        "policy": 2,
+        "forced_mps_projections": 3,
+        "values": 25344,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003359675746152098,
+        "comparison_worst": 0.02493397980826368,
+        "fp64_worst": 0.002992543338017978,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.357554730726406,
+          "wall_ms": 0.68129428125
+        },
+        "candidate": {
+          "gpu_ms": 0.3738672094186768,
+          "wall_ms": 0.7902850625
+        }
+      },
+      "gpu_fraction": 1.045622326571181,
+      "wall_fraction": 1.1599760694453942
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 3,
+      "check": {
+        "policy": 3,
+        "forced_mps_projections": 3,
+        "values": 25344,
+        "finite": true,
+        "passed": true,
+        "projections": 7,
+        "raw_fp64_worst": 0.003359675746152098,
+        "comparison_worst": 0.02493397980826368,
+        "fp64_worst": 0.002992543338017978,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.39680470945313573,
+          "wall_ms": 0.7186145625
+        },
+        "candidate": {
+          "gpu_ms": 0.381257850676775,
+          "wall_ms": 0.76705334375
+        }
+      },
+      "gpu_fraction": 0.9608198733382298,
+      "wall_fraction": 1.0674057885516341
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": 1,
+      "check": {
+        "policy": 1,
+        "forced_mps_projections": 13,
+        "values": 31776,
+        "finite": true,
+        "passed": true,
+        "projections": 15,
+        "raw_fp64_worst": 0.0029308974009585715,
+        "comparison_worst": 0.010127017423128395,
+        "fp64_worst": 0.0029308974009585715,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.8492851193295792,
+          "wall_ms": 1.1433073125
+        },
+        "candidate": {
+          "gpu_ms": 0.7878138276282698,
+          "wall_ms": 1.435796875
+        }
+      },
+      "gpu_fraction": 0.9276199590664741,
+      "wall_fraction": 1.2558275970967343
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": 2,
+      "check": {
+        "policy": 2,
+        "forced_mps_projections": 6,
+        "values": 31776,
+        "finite": true,
+        "passed": true,
+        "projections": 15,
+        "raw_fp64_worst": 0.0029308974009585715,
+        "comparison_worst": 0.007825327769552507,
+        "fp64_worst": 0.0029308974009585715,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.8750650886213407,
+          "wall_ms": 1.1818970625
+        },
+        "candidate": {
+          "gpu_ms": 0.8272474515251815,
+          "wall_ms": 1.31365890625
+        }
+      },
+      "gpu_fraction": 0.945355336742441,
+      "wall_fraction": 1.1114833498877572
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": 3,
+      "check": {
+        "policy": 3,
+        "forced_mps_projections": 9,
+        "values": 31776,
+        "finite": true,
+        "passed": true,
+        "projections": 15,
+        "raw_fp64_worst": 0.0029308974009585715,
+        "comparison_worst": 0.010127017423128395,
+        "fp64_worst": 0.0029308974009585715,
+        "kind": "check",
+        "batch": 1
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.896013094461523,
+          "wall_ms": 1.165664125
+        },
+        "candidate": {
+          "gpu_ms": 0.845808579470031,
+          "wall_ms": 1.37002325
+        }
+      },
+      "gpu_fraction": 0.9439689940896864,
+      "wall_fraction": 1.1753156167519525
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": 1,
+      "check": {
+        "policy": 1,
+        "forced_mps_projections": 13,
+        "values": 63552,
+        "finite": true,
+        "passed": true,
+        "projections": 15,
+        "raw_fp64_worst": 0.003008811205846745,
+        "comparison_worst": 0.010382889162343652,
+        "fp64_worst": 0.0029308974009585715,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.863593741087243,
+          "wall_ms": 1.16676034375
+        },
+        "candidate": {
+          "gpu_ms": 0.8183697500498965,
+          "wall_ms": 1.46267834375
+        }
+      },
+      "gpu_fraction": 0.9476327943502572,
+      "wall_fraction": 1.2536236353807768
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": 2,
+      "check": {
+        "policy": 2,
+        "forced_mps_projections": 6,
+        "values": 63552,
+        "finite": true,
+        "passed": true,
+        "projections": 15,
+        "raw_fp64_worst": 0.003008811205846745,
+        "comparison_worst": 0.010382889162343652,
+        "fp64_worst": 0.003008811205846745,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.8733151626074687,
+          "wall_ms": 1.165479125
+        },
+        "candidate": {
+          "gpu_ms": 0.845947943162173,
+          "wall_ms": 1.2994061875
+        }
+      },
+      "gpu_fraction": 0.9686628371782932,
+      "wall_fraction": 1.1149115926894013
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": 3,
+      "check": {
+        "policy": 3,
+        "forced_mps_projections": 9,
+        "values": 63552,
+        "finite": true,
+        "passed": true,
+        "projections": 15,
+        "raw_fp64_worst": 0.003008811205846745,
+        "comparison_worst": 0.010382889162343652,
+        "fp64_worst": 0.0029308974009585715,
+        "kind": "check",
+        "batch": 2
+      },
+      "means": {
+        "control": {
+          "gpu_ms": 0.9044479375006631,
+          "wall_ms": 1.19262759375
+        },
+        "candidate": {
+          "gpu_ms": 1.084524774341844,
+          "wall_ms": 1.6226288125
+        }
+      },
+      "gpu_fraction": 1.1991013848058545,
+      "wall_fraction": 1.3605494464520476
+    }
+  ],
+  "checks": [
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "forced_mps_projections": 7,
+      "values": 12288,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.0030315302795809506,
+      "comparison_worst": 0.023836331169113642,
+      "fp64_worst": 0.0025277007724108943,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 2,
+      "forced_mps_projections": 3,
+      "values": 12288,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.0030315302795809506,
+      "comparison_worst": 0.023836331169113642,
+      "fp64_worst": 0.002964625333886089,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 3,
+      "forced_mps_projections": 7,
+      "values": 12288,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.0030315302795809506,
+      "comparison_worst": 0.023836331169113642,
+      "fp64_worst": 0.0025277007724108943,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 1,
+      "forced_mps_projections": 7,
+      "values": 24576,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003222255887638415,
+      "comparison_worst": 0.023836331169113642,
+      "fp64_worst": 0.0025277007724108943,
+      "kind": "check",
+      "batch": 2
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 2,
+      "forced_mps_projections": 3,
+      "values": 24576,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003222255887638415,
+      "comparison_worst": 0.023836331169113642,
+      "fp64_worst": 0.002964625333886089,
+      "kind": "check",
+      "batch": 2
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "policy": 3,
+      "forced_mps_projections": 7,
+      "values": 24576,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003222255887638415,
+      "comparison_worst": 0.023836331169113642,
+      "fp64_worst": 0.0025277007724108943,
+      "kind": "check",
+      "batch": 2
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "forced_mps_projections": 7,
+      "values": 12672,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003359675746152098,
+      "comparison_worst": 0.024367072401435496,
+      "fp64_worst": 0.002499562632996979,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 2,
+      "forced_mps_projections": 3,
+      "values": 12672,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003359675746152098,
+      "comparison_worst": 0.024367072401435496,
+      "fp64_worst": 0.002787186341485857,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 3,
+      "forced_mps_projections": 3,
+      "values": 12672,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003359675746152098,
+      "comparison_worst": 0.024367072401435496,
+      "fp64_worst": 0.002787186341485857,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 1,
+      "forced_mps_projections": 7,
+      "values": 25344,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003359675746152098,
+      "comparison_worst": 0.02493397980826368,
+      "fp64_worst": 0.002655125994829243,
+      "kind": "check",
+      "batch": 2
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 2,
+      "forced_mps_projections": 3,
+      "values": 25344,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003359675746152098,
+      "comparison_worst": 0.02493397980826368,
+      "fp64_worst": 0.002992543338017978,
+      "kind": "check",
+      "batch": 2
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "policy": 3,
+      "forced_mps_projections": 3,
+      "values": 25344,
+      "finite": true,
+      "passed": true,
+      "projections": 7,
+      "raw_fp64_worst": 0.003359675746152098,
+      "comparison_worst": 0.02493397980826368,
+      "fp64_worst": 0.002992543338017978,
+      "kind": "check",
+      "batch": 2
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "forced_mps_projections": 13,
+      "values": 31776,
+      "finite": true,
+      "passed": true,
+      "projections": 15,
+      "raw_fp64_worst": 0.0029308974009585715,
+      "comparison_worst": 0.010127017423128395,
+      "fp64_worst": 0.0029308974009585715,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 2,
+      "forced_mps_projections": 6,
+      "values": 31776,
+      "finite": true,
+      "passed": true,
+      "projections": 15,
+      "raw_fp64_worst": 0.0029308974009585715,
+      "comparison_worst": 0.007825327769552507,
+      "fp64_worst": 0.0029308974009585715,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 3,
+      "forced_mps_projections": 9,
+      "values": 31776,
+      "finite": true,
+      "passed": true,
+      "projections": 15,
+      "raw_fp64_worst": 0.0029308974009585715,
+      "comparison_worst": 0.010127017423128395,
+      "fp64_worst": 0.0029308974009585715,
+      "kind": "check",
+      "batch": 1
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 1,
+      "forced_mps_projections": 13,
+      "values": 63552,
+      "finite": true,
+      "passed": true,
+      "projections": 15,
+      "raw_fp64_worst": 0.003008811205846745,
+      "comparison_worst": 0.010382889162343652,
+      "fp64_worst": 0.0029308974009585715,
+      "kind": "check",
+      "batch": 2
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 2,
+      "forced_mps_projections": 6,
+      "values": 63552,
+      "finite": true,
+      "passed": true,
+      "projections": 15,
+      "raw_fp64_worst": 0.003008811205846745,
+      "comparison_worst": 0.010382889162343652,
+      "fp64_worst": 0.003008811205846745,
+      "kind": "check",
+      "batch": 2
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "policy": 3,
+      "forced_mps_projections": 9,
+      "values": 63552,
+      "finite": true,
+      "passed": true,
+      "projections": 15,
+      "raw_fp64_worst": 0.003008811205846745,
+      "comparison_worst": 0.010382889162343652,
+      "fp64_worst": 0.0029308974009585715,
+      "kind": "check",
+      "batch": 2
+    }
+  ],
+  "full_goal_met": false
+}

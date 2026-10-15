@@ -94,10 +94,13 @@ Combined archive SHA-256:
 The next investigation should address B1 body projection GPU time and the
 remaining GPU prefill/vision work. Earlier FP32 MPS GEMV and broad lossless
 packing experiments are already rejected and should not be repeated unchanged.
-A distinct candidate is padded-row MPS body projection using the existing
-lossless scaled-half storage with FP32 inputs/output, compared through
-Garnet's native context. It still requires real execution, unchanged numerical
-bounds and full-model validation before any speed claim or integration.
+Padded-row MPS body projection was subsequently tested through Garnet's native
+context and [rejected](../padded-mps-body/README.md): all sampled numerical
+checks passed but measured component sums slowed. Direct original-row MPS
+showed lower GPU intervals but higher wall intervals. The
+[streamed follow-up](../streamed-direct-mps-body/README.md), including the
+CPU-validation option test, retained the wall penalty. These routes are not
+integrated and do not replace the measured native latency gains above.
 
 ```text
 python3 launch_screened_prefill_reset_checks.py ROOT ROOT/logs/screened-prefill-reset-checks-20261015 checks

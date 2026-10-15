@@ -1,0 +1,3431 @@
+{
+  "verified_files": 24,
+  "numeric_checks": 648,
+  "failed_numeric_checks": 0,
+  "admitted_profiles": 162,
+  "timed_executions": 10368,
+  "skipped": [
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "kind": "skipped",
+      "reason": "No admitted lossless common-scale half representation",
+      "matrix": "matrix-2"
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "kind": "skipped",
+      "reason": "No admitted lossless common-scale half representation",
+      "matrix": "matrix-3"
+    }
+  ],
+  "aggregates": [
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "physical_rows": 4,
+      "matrices": 7,
+      "gpu_sum_fraction": 1.1143710771985362,
+      "wall_sum_fraction": 1.1626105447930766
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "physical_rows": 8,
+      "matrices": 7,
+      "gpu_sum_fraction": 2.2325943074615697,
+      "wall_sum_fraction": 1.415279507162364
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "physical_rows": 16,
+      "matrices": 7,
+      "gpu_sum_fraction": 1.4010215075216472,
+      "wall_sum_fraction": 1.2729924468478915
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "physical_rows": 4,
+      "matrices": 7,
+      "gpu_sum_fraction": 1.2303204407529942,
+      "wall_sum_fraction": 1.1580702460773387
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "physical_rows": 8,
+      "matrices": 7,
+      "gpu_sum_fraction": 2.4065633954399877,
+      "wall_sum_fraction": 1.4313334528593553
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "physical_rows": 16,
+      "matrices": 7,
+      "gpu_sum_fraction": 1.4656488742145266,
+      "wall_sum_fraction": 1.290656783413169
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "physical_rows": 4,
+      "matrices": 7,
+      "gpu_sum_fraction": 1.2577233104257697,
+      "wall_sum_fraction": 1.1516759281169586
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "physical_rows": 8,
+      "matrices": 7,
+      "gpu_sum_fraction": 2.178572455835753,
+      "wall_sum_fraction": 1.4106046666407637
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "physical_rows": 16,
+      "matrices": 7,
+      "gpu_sum_fraction": 1.1851468133983263,
+      "wall_sum_fraction": 1.1559892023346665
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 4,
+      "matrices": 7,
+      "gpu_sum_fraction": 1.117504204791459,
+      "wall_sum_fraction": 1.1187699431804259
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 8,
+      "matrices": 7,
+      "gpu_sum_fraction": 2.0928613440787616,
+      "wall_sum_fraction": 1.428460535496432
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 16,
+      "matrices": 7,
+      "gpu_sum_fraction": 1.1726331234412237,
+      "wall_sum_fraction": 1.1989709402780244
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 4,
+      "matrices": 13,
+      "gpu_sum_fraction": 1.2496162660705759,
+      "wall_sum_fraction": 1.1828624809301167
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 8,
+      "matrices": 13,
+      "gpu_sum_fraction": 2.0587082838758732,
+      "wall_sum_fraction": 1.3498867817556368
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 16,
+      "matrices": 13,
+      "gpu_sum_fraction": 1.2302361532837587,
+      "wall_sum_fraction": 1.1810881497784764
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 4,
+      "matrices": 13,
+      "gpu_sum_fraction": 1.139607215651666,
+      "wall_sum_fraction": 1.126344167746416
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 8,
+      "matrices": 13,
+      "gpu_sum_fraction": 2.0921006382084717,
+      "wall_sum_fraction": 1.4135150145751765
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 16,
+      "matrices": 13,
+      "gpu_sum_fraction": 1.3086139644282768,
+      "wall_sum_fraction": 1.227800299223795
+    }
+  ],
+  "profiles": [
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08047919254750013,
+          "wall_ms": 0.35287109375
+        },
+        "candidate": {
+          "gpu_ms": 0.12400001287460327,
+          "wall_ms": 0.432496125
+        }
+      },
+      "gpu_fraction": 1.5407710856618801,
+      "wall_fraction": 1.2256490618254277
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07028647814877331,
+          "wall_ms": 0.3260299375
+        },
+        "candidate": {
+          "gpu_ms": 0.1627096498850733,
+          "wall_ms": 0.45135925
+        }
+      },
+      "gpu_fraction": 2.314949534683906,
+      "wall_fraction": 1.3844104423692687
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07242837455123663,
+          "wall_ms": 0.32770971875
+        },
+        "candidate": {
+          "gpu_ms": 0.10778519208543003,
+          "wall_ms": 0.431998625
+        }
+      },
+      "gpu_fraction": 1.4881625157717933,
+      "wall_fraction": 1.3182356222079545
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.20249873341526836,
+          "wall_ms": 0.56685159375
+        },
+        "candidate": {
+          "gpu_ms": 0.20020575902890414,
+          "wall_ms": 0.61227334375
+        }
+      },
+      "gpu_fraction": 0.9886765988720434,
+      "wall_fraction": 1.0801298796736425
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1749596412992105,
+          "wall_ms": 0.616127625
+        },
+        "candidate": {
+          "gpu_ms": 0.3310703032184392,
+          "wall_ms": 0.8535079375
+        }
+      },
+      "gpu_fraction": 1.8922667008230383,
+      "wall_fraction": 1.3852778269761887
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.16938148473855108,
+          "wall_ms": 0.53895321875
+        },
+        "candidate": {
+          "gpu_ms": 0.2021366381086409,
+          "wall_ms": 0.640161375
+        }
+      },
+      "gpu_fraction": 1.193380955543335,
+      "wall_fraction": 1.187786532724924
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07127088611014187,
+          "wall_ms": 0.32878775
+        },
+        "candidate": {
+          "gpu_ms": 0.08600785804446787,
+          "wall_ms": 0.3840483125
+        }
+      },
+      "gpu_fraction": 1.2067740803945037,
+      "wall_fraction": 1.1680736660657218
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.06827212928328663,
+          "wall_ms": 0.32226046875000003
+        },
+        "candidate": {
+          "gpu_ms": 0.15349220484495163,
+          "wall_ms": 0.44325384375
+        }
+      },
+      "gpu_fraction": 2.248241067860283,
+      "wall_fraction": 1.3754521163247702
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.06825124728493392,
+          "wall_ms": 0.33231246875
+        },
+        "candidate": {
+          "gpu_ms": 0.08000778325367719,
+          "wall_ms": 0.3679688125
+        }
+      },
+      "gpu_fraction": 1.1722537892921183,
+      "wall_fraction": 1.1072976403326726
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.16381769091822207,
+          "wall_ms": 0.5159818125
+        },
+        "candidate": {
+          "gpu_ms": 0.17373563605360687,
+          "wall_ms": 0.54889321875
+        }
+      },
+      "gpu_fraction": 1.0605425768108028,
+      "wall_fraction": 1.0637840432602457
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.14156507677398622,
+          "wall_ms": 0.48645440625
+        },
+        "candidate": {
+          "gpu_ms": 0.2860351378330961,
+          "wall_ms": 0.75870190625
+        }
+      },
+      "gpu_fraction": 2.020520486770629,
+      "wall_fraction": 1.5596567663940242
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07508331327699125,
+          "wall_ms": 0.34537640625
+        },
+        "candidate": {
+          "gpu_ms": 0.08359372441191226,
+          "wall_ms": 0.38649221875
+        }
+      },
+      "gpu_fraction": 1.1133462385114132,
+      "wall_fraction": 1.1190463846283651
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1432890276191756,
+          "wall_ms": 0.48066553125
+        },
+        "candidate": {
+          "gpu_ms": 0.14704550267197192,
+          "wall_ms": 0.523622375
+        }
+      },
+      "gpu_fraction": 1.0262160691241482,
+      "wall_fraction": 1.0893695115567952
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1681367284618318,
+          "wall_ms": 0.52014584375
+        },
+        "candidate": {
+          "gpu_ms": 0.30613016861025244,
+          "wall_ms": 0.72966275
+        }
+      },
+      "gpu_fraction": 1.8207215723228853,
+      "wall_fraction": 1.40280415342644
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.16311058425344527,
+          "wall_ms": 0.5211991875
+        },
+        "candidate": {
+          "gpu_ms": 0.1674009981798008,
+          "wall_ms": 0.5785676875
+        }
+      },
+      "gpu_fraction": 1.0263037125763035,
+      "wall_fraction": 1.1100702022871054
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07062246731948107,
+          "wall_ms": 0.319196625
+        },
+        "candidate": {
+          "gpu_ms": 0.08676567813381553,
+          "wall_ms": 0.38203128125
+        }
+      },
+      "gpu_fraction": 1.2285846335742703,
+      "wall_fraction": 1.1968525082306243
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07095704495441169,
+          "wall_ms": 0.33215628125
+        },
+        "candidate": {
+          "gpu_ms": 0.15893750241957605,
+          "wall_ms": 0.452556
+        }
+      },
+      "gpu_fraction": 2.239911520014536,
+      "wall_fraction": 1.3624791266836835
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07565107080154121,
+          "wall_ms": 0.33711196875
+        },
+        "candidate": {
+          "gpu_ms": 0.07736985571682453,
+          "wall_ms": 0.36582678125
+        }
+      },
+      "gpu_fraction": 1.0227199020063085,
+      "wall_fraction": 1.0851788579517767
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.06065495836082846,
+          "wall_ms": 0.42891528125
+        },
+        "candidate": {
+          "gpu_ms": 0.06543884228449315,
+          "wall_ms": 0.4339805
+        }
+      },
+      "gpu_fraction": 1.0788704510389073,
+      "wall_fraction": 1.011809368822762
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.05208855145610869,
+          "wall_ms": 0.44226828125
+        },
+        "candidate": {
+          "gpu_ms": 0.13038150791544467,
+          "wall_ms": 0.5962746875
+        }
+      },
+      "gpu_fraction": 2.5030741740880984,
+      "wall_fraction": 1.3482194242253271
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.049894515541382134,
+          "wall_ms": 0.41481765625
+        },
+        "candidate": {
+          "gpu_ms": 0.05734767182730138,
+          "wall_ms": 0.45195965625
+        }
+      },
+      "gpu_fraction": 1.1493782674317712,
+      "wall_fraction": 1.0895381366737569
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.020833336748182774,
+          "wall_ms": 0.2689076875
+        },
+        "candidate": {
+          "gpu_ms": 0.03258076321799308,
+          "wall_ms": 0.30904296875
+        }
+      },
+      "gpu_fraction": 1.5638763781243539,
+      "wall_fraction": 1.1492530080606194
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.02581372973509133,
+          "wall_ms": 0.28714968750000003
+        },
+        "candidate": {
+          "gpu_ms": 0.06750909960828722,
+          "wall_ms": 0.3562486875
+        }
+      },
+      "gpu_fraction": 2.615240040904084,
+      "wall_fraction": 1.2406375594610388
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.021162748453207314,
+          "wall_ms": 0.26852740625
+        },
+        "candidate": {
+          "gpu_ms": 0.03063671465497464,
+          "wall_ms": 0.31364709375
+        }
+      },
+      "gpu_fraction": 1.44767182404096,
+      "wall_fraction": 1.1680263781269067
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.11146230099257082,
+          "wall_ms": 0.49962240625
+        },
+        "candidate": {
+          "gpu_ms": 0.1561106473673135,
+          "wall_ms": 0.6358464375
+        }
+      },
+      "gpu_fraction": 1.4005690352446483,
+      "wall_fraction": 1.2726539673679818
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1127512805396691,
+          "wall_ms": 0.47632690625
+        },
+        "candidate": {
+          "gpu_ms": 0.23464325931854546,
+          "wall_ms": 0.73995434375
+        }
+      },
+      "gpu_fraction": 2.081069573626628,
+      "wall_fraction": 1.5534590510023283
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.06311980541795492,
+          "wall_ms": 0.33739081249999997
+        },
+        "candidate": {
+          "gpu_ms": 0.08370443538296968,
+          "wall_ms": 0.42738146875
+        }
+      },
+      "gpu_fraction": 1.326119984507419,
+      "wall_fraction": 1.2667252720463456
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.05512370262295008,
+          "wall_ms": 0.30472525
+        },
+        "candidate": {
+          "gpu_ms": 0.07847008237149566,
+          "wall_ms": 0.3468541875
+        }
+      },
+      "gpu_fraction": 1.4235270607316861,
+      "wall_fraction": 1.138252204239721
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09766669245436788,
+          "wall_ms": 0.39833203125
+        },
+        "candidate": {
+          "gpu_ms": 0.23277351283468306,
+          "wall_ms": 0.6574622812500001
+        }
+      },
+      "gpu_fraction": 2.383345918501747,
+      "wall_fraction": 1.6505383189667855
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.12785285071004182,
+          "wall_ms": 0.47408596875
+        },
+        "candidate": {
+          "gpu_ms": 0.13969278370495886,
+          "wall_ms": 0.53989059375
+        }
+      },
+      "gpu_fraction": 1.0926059366620529,
+      "wall_fraction": 1.1388031482422987
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.042466213926672935,
+          "wall_ms": 0.29800253125
+        },
+        "candidate": {
+          "gpu_ms": 0.05723434151150286,
+          "wall_ms": 0.33576828125
+        }
+      },
+      "gpu_fraction": 1.3477618139052914,
+      "wall_fraction": 1.1267296282403643
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.04193616041447967,
+          "wall_ms": 0.2885404375
+        },
+        "candidate": {
+          "gpu_ms": 0.1133619953179732,
+          "wall_ms": 0.4039934375
+        }
+      },
+      "gpu_fraction": 2.7032039699760326,
+      "wall_fraction": 1.40012762509241
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.04761325544677675,
+          "wall_ms": 0.30750515625
+        },
+        "candidate": {
+          "gpu_ms": 0.05555206735152751,
+          "wall_ms": 0.34688284375
+        }
+      },
+      "gpu_fraction": 1.1667353309547372,
+      "wall_fraction": 1.128055373055228
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.11420052032917738,
+          "wall_ms": 0.5055637187500001
+        },
+        "candidate": {
+          "gpu_ms": 0.12342187983449548,
+          "wall_ms": 0.52928384375
+        }
+      },
+      "gpu_fraction": 1.0807470883559724,
+      "wall_fraction": 1.0469181709847528
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.10459373879712075,
+          "wall_ms": 0.46494025
+        },
+        "candidate": {
+          "gpu_ms": 0.21873830701224506,
+          "wall_ms": 0.7262565625
+        }
+      },
+      "gpu_fraction": 2.0913135865286274,
+      "wall_fraction": 1.5620427839921367
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.10633983765728772,
+          "wall_ms": 0.50483459375
+        },
+        "candidate": {
+          "gpu_ms": 0.1339049485977739,
+          "wall_ms": 0.66352475
+        }
+      },
+      "gpu_fraction": 1.2592171621450383,
+      "wall_fraction": 1.3143408914813497
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.022035135771147907,
+          "wall_ms": 0.2675599375
+        },
+        "candidate": {
+          "gpu_ms": 0.032841096981428564,
+          "wall_ms": 0.31357815625
+        }
+      },
+      "gpu_fraction": 1.4903968517602524,
+      "wall_fraction": 1.1719921867973975
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.02229557139798999,
+          "wall_ms": 0.26809503125
+        },
+        "candidate": {
+          "gpu_ms": 0.06648822454735637,
+          "wall_ms": 0.3646705625
+        }
+      },
+      "gpu_fraction": 2.982126959677314,
+      "wall_fraction": 1.3602287248656348
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.026944049750454724,
+          "wall_ms": 0.2835690625
+        },
+        "candidate": {
+          "gpu_ms": 0.030537761631421745,
+          "wall_ms": 0.31354034375
+        }
+      },
+      "gpu_fraction": 1.1333768276948186,
+      "wall_fraction": 1.105693057577464
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.052101589972153306,
+          "wall_ms": 0.39457034375
+        },
+        "candidate": {
+          "gpu_ms": 0.06382686842698604,
+          "wall_ms": 0.4889764375
+        }
+      },
+      "gpu_fraction": 1.225046461367101,
+      "wall_fraction": 1.2392630243133929
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.06172782741487026,
+          "wall_ms": 0.4752604375
+        },
+        "candidate": {
+          "gpu_ms": 0.12239711941219866,
+          "wall_ms": 0.56695684375
+        }
+      },
+      "gpu_fraction": 1.9828515685409194,
+      "wall_fraction": 1.1929392792136206
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3-0.6B",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.05160416185390204,
+          "wall_ms": 0.40946621875
+        },
+        "candidate": {
+          "gpu_ms": 0.06799479888286442,
+          "wall_ms": 0.541522125
+        }
+      },
+      "gpu_fraction": 1.317622386259588,
+      "wall_fraction": 1.3225074504390968
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.13670440239366144,
+          "wall_ms": 0.46278259375
+        },
+        "candidate": {
+          "gpu_ms": 0.18712888413574547,
+          "wall_ms": 0.56231246875
+        }
+      },
+      "gpu_fraction": 1.3688577753105489,
+      "wall_fraction": 1.2150683200798322
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09133854473475367,
+          "wall_ms": 0.34047259375
+        },
+        "candidate": {
+          "gpu_ms": 0.23142053396441042,
+          "wall_ms": 0.5217265
+        }
+      },
+      "gpu_fraction": 2.5336568984808507,
+      "wall_fraction": 1.532359753992681
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09239587234333158,
+          "wall_ms": 0.34558725
+        },
+        "candidate": {
+          "gpu_ms": 0.20733985002152622,
+          "wall_ms": 0.50332796875
+        }
+      },
+      "gpu_fraction": 2.2440380155844744,
+      "wall_fraction": 1.456442530070192
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.18762631225399673,
+          "wall_ms": 0.5425625
+        },
+        "candidate": {
+          "gpu_ms": 0.23975914518814534,
+          "wall_ms": 0.64562896875
+        }
+      },
+      "gpu_fraction": 1.277854594634757,
+      "wall_fraction": 1.1899623891256768
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1818632590584457,
+          "wall_ms": 0.5717656249999999
+        },
+        "candidate": {
+          "gpu_ms": 0.4234375519445166,
+          "wall_ms": 0.8903306875
+        }
+      },
+      "gpu_fraction": 2.32832928507256,
+      "wall_fraction": 1.5571602219003635
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-0",
+      "tensor": "model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.17362370272167027,
+          "wall_ms": 0.51378121875
+        },
+        "candidate": {
+          "gpu_ms": 0.28478389140218496,
+          "wall_ms": 0.74547265625
+        }
+      },
+      "gpu_fraction": 1.6402362519517941,
+      "wall_fraction": 1.4509534974121705
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09189586853608489,
+          "wall_ms": 0.346151
+        },
+        "candidate": {
+          "gpu_ms": 0.08965628512669355,
+          "wall_ms": 0.37713934375
+        }
+      },
+      "gpu_fraction": 0.9756291175537242,
+      "wall_fraction": 1.0895226180193038
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09247136767953634,
+          "wall_ms": 0.34491409375
+        },
+        "candidate": {
+          "gpu_ms": 0.20210808725096285,
+          "wall_ms": 0.524746125
+        }
+      },
+      "gpu_fraction": 2.1856288310926413,
+      "wall_fraction": 1.5213820905223592
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.0935781717998907,
+          "wall_ms": 0.340696625
+        },
+        "candidate": {
+          "gpu_ms": 0.10597395885270089,
+          "wall_ms": 0.39091528125
+        }
+      },
+      "gpu_fraction": 1.1324645140462626,
+      "wall_fraction": 1.1473999228786023
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1494687021477148,
+          "wall_ms": 0.448414125
+        },
+        "candidate": {
+          "gpu_ms": 0.18702998931985348,
+          "wall_ms": 0.54012890625
+        }
+      },
+      "gpu_fraction": 1.2512986774650532,
+      "wall_fraction": 1.2045314278402803
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09872524242382497,
+          "wall_ms": 0.357304625
+        },
+        "candidate": {
+          "gpu_ms": 0.24453646619804204,
+          "wall_ms": 0.5348111875
+        }
+      },
+      "gpu_fraction": 2.476939637668887,
+      "wall_fraction": 1.4967933524510073
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-1",
+      "tensor": "model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09259115904569626,
+          "wall_ms": 0.3568333125
+        },
+        "candidate": {
+          "gpu_ms": 0.10915628809016198,
+          "wall_ms": 0.395410125
+        }
+      },
+      "gpu_fraction": 1.1789061635602853,
+      "wall_fraction": 1.1081087755785133
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.18494667892809957,
+          "wall_ms": 0.52458453125
+        },
+        "candidate": {
+          "gpu_ms": 0.1944700488820672,
+          "wall_ms": 0.57207809375
+        }
+      },
+      "gpu_fraction": 1.0514925167035303,
+      "wall_fraction": 1.0905355756236854
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.19469660765025765,
+          "wall_ms": 0.5313658125
+        },
+        "candidate": {
+          "gpu_ms": 0.39004560676403344,
+          "wall_ms": 0.8370377812500001
+        }
+      },
+      "gpu_fraction": 2.003350810635027,
+      "wall_fraction": 1.5752571233588726
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.20763667998835444,
+          "wall_ms": 0.6039009375
+        },
+        "candidate": {
+          "gpu_ms": 0.19829810480587184,
+          "wall_ms": 0.6280508124999999
+        }
+      },
+      "gpu_fraction": 0.9550244437398712,
+      "wall_fraction": 1.0399897955117845
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08930597687140107,
+          "wall_ms": 0.34049603125
+        },
+        "candidate": {
+          "gpu_ms": 0.10321098670829087,
+          "wall_ms": 0.3888320625
+        }
+      },
+      "gpu_fraction": 1.1557007752897968,
+      "wall_fraction": 1.141957693523043
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09031507943291217,
+          "wall_ms": 0.3421419375
+        },
+        "candidate": {
+          "gpu_ms": 0.20143878646194935,
+          "wall_ms": 0.488229125
+        }
+      },
+      "gpu_fraction": 2.2304003686514173,
+      "wall_fraction": 1.426978313642127
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-2",
+      "tensor": "model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09016797412186861,
+          "wall_ms": 0.34155990625
+        },
+        "candidate": {
+          "gpu_ms": 0.10805728379637003,
+          "wall_ms": 0.39874875
+        }
+      },
+      "gpu_fraction": 1.1983998182139781,
+      "wall_fraction": 1.167434299821307
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.011056064977310598,
+          "wall_ms": 0.3162239375
+        },
+        "candidate": {
+          "gpu_ms": 0.013023411156609654,
+          "wall_ms": 0.36871615625
+        }
+      },
+      "gpu_fraction": 1.1779427113838847,
+      "wall_fraction": 1.1659969803835613
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.011518292012624443,
+          "wall_ms": 0.321108
+        },
+        "candidate": {
+          "gpu_ms": 0.016640566173009574,
+          "wall_ms": 0.396490875
+        }
+      },
+      "gpu_fraction": 1.4447077878187968,
+      "wall_fraction": 1.2347586326095894
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.01132940815296024,
+          "wall_ms": 0.28760809375
+        },
+        "candidate": {
+          "gpu_ms": 0.0554439757252112,
+          "wall_ms": 0.53422796875
+        }
+      },
+      "gpu_fraction": 4.893810424750594,
+      "wall_fraction": 1.8574858648253878
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.010930991265922785,
+          "wall_ms": 0.22945965625
+        },
+        "candidate": {
+          "gpu_ms": 0.005968788173049688,
+          "wall_ms": 0.2353515625
+        }
+      },
+      "gpu_fraction": 0.5460427172471818,
+      "wall_fraction": 1.0256773079254538
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.006307294825091958,
+          "wall_ms": 0.2157721875
+        },
+        "candidate": {
+          "gpu_ms": 0.013218814274296165,
+          "wall_ms": 0.26125396875
+        }
+      },
+      "gpu_fraction": 2.095797745446827,
+      "wall_fraction": 1.210786115564593
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-3",
+      "tensor": "model.layers.0.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.006009169737808406,
+          "wall_ms": 0.209983125
+        },
+        "candidate": {
+          "gpu_ms": 0.020320352632552385,
+          "wall_ms": 0.30017459375
+        }
+      },
+      "gpu_fraction": 3.38155743957457,
+      "wall_fraction": 1.429517699338935
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.038098980439826846,
+          "wall_ms": 0.38742446875000003
+        },
+        "candidate": {
+          "gpu_ms": 0.04178647941444069,
+          "wall_ms": 0.50608075
+        }
+      },
+      "gpu_fraction": 1.0967873400296853,
+      "wall_fraction": 1.3062694559092687
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.037815101677551866,
+          "wall_ms": 0.39189196875
+        },
+        "candidate": {
+          "gpu_ms": 0.10380466119386256,
+          "wall_ms": 0.55308075
+        }
+      },
+      "gpu_fraction": 2.7450583652796046,
+      "wall_fraction": 1.411309223213062
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.04570571763906628,
+          "wall_ms": 0.3758398125
+        },
+        "candidate": {
+          "gpu_ms": 0.048540357965976,
+          "wall_ms": 0.43410028125
+        }
+      },
+      "gpu_fraction": 1.0620193812357266,
+      "wall_fraction": 1.15501409593216
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.022515596356242895,
+          "wall_ms": 0.27097784375
+        },
+        "candidate": {
+          "gpu_ms": 0.02986978506669402,
+          "wall_ms": 0.3041758125
+        }
+      },
+      "gpu_fraction": 1.3266264234840945,
+      "wall_fraction": 1.1225117459441736
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.017434940673410892,
+          "wall_ms": 0.25442965625
+        },
+        "candidate": {
+          "gpu_ms": 0.046697925426997244,
+          "wall_ms": 0.31118225
+        }
+      },
+      "gpu_fraction": 2.6784103428704973,
+      "wall_fraction": 1.2230580923091585
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-4",
+      "tensor": "model.layers.0.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.01806116779334843,
+          "wall_ms": 0.25253771875000003
+        },
+        "candidate": {
+          "gpu_ms": 0.028214897611178458,
+          "wall_ms": 0.289369875
+        }
+      },
+      "gpu_fraction": 1.5621856755890082,
+      "wall_fraction": 1.1458481387743191
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.04788671503774822,
+          "wall_ms": 0.4241289375
+        },
+        "candidate": {
+          "gpu_ms": 0.04389582318253815,
+          "wall_ms": 0.47819275
+        }
+      },
+      "gpu_fraction": 0.9166597280255261,
+      "wall_fraction": 1.1274702283194247
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.038386715459637344,
+          "wall_ms": 0.46527871875
+        },
+        "candidate": {
+          "gpu_ms": 0.09704433614388108,
+          "wall_ms": 0.5797890625
+        }
+      },
+      "gpu_fraction": 2.5280708438293122,
+      "wall_fraction": 1.2461112858495635
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.022209729650057852,
+          "wall_ms": 0.29996084375
+        },
+        "candidate": {
+          "gpu_ms": 0.03408076008781791,
+          "wall_ms": 0.35170325
+        }
+      },
+      "gpu_fraction": 1.5344968455178443,
+      "wall_fraction": 1.17249720197855
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.018319027731195092,
+          "wall_ms": 0.25481906249999997
+        },
+        "candidate": {
+          "gpu_ms": 0.02398960350546986,
+          "wall_ms": 0.288111875
+        }
+      },
+      "gpu_fraction": 1.3095456733557131,
+      "wall_fraction": 1.1306527548346195
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.022139312932267785,
+          "wall_ms": 0.262130125
+        },
+        "candidate": {
+          "gpu_ms": 0.07045055099297315,
+          "wall_ms": 0.35337371875
+        }
+      },
+      "gpu_fraction": 3.182147124823025,
+      "wall_fraction": 1.348085111354523
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-5",
+      "tensor": "model.layers.0.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.048869740567170084,
+          "wall_ms": 0.38899621875
+        },
+        "candidate": {
+          "gpu_ms": 0.057910176110453904,
+          "wall_ms": 0.4503540625
+        }
+      },
+      "gpu_fraction": 1.1849904550006358,
+      "wall_fraction": 1.157733779385227
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.010147123248316348,
+          "wall_ms": 0.294434875
+        },
+        "candidate": {
+          "gpu_ms": 0.010332019883207977,
+          "wall_ms": 0.33932159375
+        }
+      },
+      "gpu_fraction": 1.0182215816608227,
+      "wall_fraction": 1.152450414544133
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.007415394065901637,
+          "wall_ms": 0.25275259375
+        },
+        "candidate": {
+          "gpu_ms": 0.016386693459935486,
+          "wall_ms": 0.33448303125
+        }
+      },
+      "gpu_fraction": 2.2098209905373425,
+      "wall_fraction": 1.3233614195106556
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.005976544343866408,
+          "wall_ms": 0.20746090625
+        },
+        "candidate": {
+          "gpu_ms": 0.021177096641622484,
+          "wall_ms": 0.29057818750000003
+        }
+      },
+      "gpu_fraction": 3.543368110931204,
+      "wall_fraction": 1.4006406929980335
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.0057956058299168944,
+          "wall_ms": 0.19120046875
+        },
+        "candidate": {
+          "gpu_ms": 0.005600304575636983,
+          "wall_ms": 0.23577340625
+        }
+      },
+      "gpu_fraction": 0.9663018397021124,
+      "wall_fraction": 1.2331214865287825
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.008425791747868061,
+          "wall_ms": 0.233242125
+        },
+        "candidate": {
+          "gpu_ms": 0.023516942746937275,
+          "wall_ms": 0.36240609375
+        }
+      },
+      "gpu_fraction": 2.791066222695055,
+      "wall_fraction": 1.5537763332845642
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "matrix": "matrix-6",
+      "tensor": "model.layers.0.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.009178431355394423,
+          "wall_ms": 0.23777734375
+        },
+        "candidate": {
+          "gpu_ms": 0.03424611350055784,
+          "wall_ms": 0.3908763125
+        }
+      },
+      "gpu_fraction": 3.731151018570339,
+      "wall_fraction": 1.643875342938345
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-0",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.011873693438246846,
+          "wall_ms": 0.34501965625
+        },
+        "candidate": {
+          "gpu_ms": 0.027764297556132078,
+          "wall_ms": 0.450935
+        }
+      },
+      "gpu_fraction": 2.3383033847496306,
+      "wall_fraction": 1.3069835061027772
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-0",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.011712225386872888,
+          "wall_ms": 0.343563875
+        },
+        "candidate": {
+          "gpu_ms": 0.011268217349424958,
+          "wall_ms": 0.3292720625
+        }
+      },
+      "gpu_fraction": 0.9620902072166767,
+      "wall_fraction": 0.9584012943735717
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-0",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.018805978470481932,
+          "wall_ms": 0.31917578125
+        },
+        "candidate": {
+          "gpu_ms": 0.04188147431705147,
+          "wall_ms": 0.40470175
+        }
+      },
+      "gpu_fraction": 2.2270297917648416,
+      "wall_fraction": 1.2679588295047057
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-0",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.005020847311243415,
+          "wall_ms": 0.19405340625
+        },
+        "candidate": {
+          "gpu_ms": 0.004459609044715762,
+          "wall_ms": 0.22891671875
+        }
+      },
+      "gpu_fraction": 0.8882184157899313,
+      "wall_fraction": 1.1796583382570744
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-0",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.009957002475857735,
+          "wall_ms": 0.21804303125
+        },
+        "candidate": {
+          "gpu_ms": 0.005175708793103695,
+          "wall_ms": 0.28636053125
+        }
+      },
+      "gpu_fraction": 0.519805916052847,
+      "wall_fraction": 1.3133211807245044
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-0",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.0063333718571811914,
+          "wall_ms": 0.2036535625
+        },
+        "candidate": {
+          "gpu_ms": 0.030843730201013386,
+          "wall_ms": 0.2991470625
+        }
+      },
+      "gpu_fraction": 4.870033040305496,
+      "wall_fraction": 1.4689016918130269
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-1",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.011052106856368482,
+          "wall_ms": 0.31193484375
+        },
+        "candidate": {
+          "gpu_ms": 0.010276053217239678,
+          "wall_ms": 0.35827990625
+        }
+      },
+      "gpu_fraction": 0.92978228954766,
+      "wall_fraction": 1.1485728940789417
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-1",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.01214453368447721,
+          "wall_ms": 0.3017995625
+        },
+        "candidate": {
+          "gpu_ms": 0.020300780306570232,
+          "wall_ms": 0.40995703125
+        }
+      },
+      "gpu_fraction": 1.6715981719840012,
+      "wall_fraction": 1.3583751674590316
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-1",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.01350915408693254,
+          "wall_ms": 0.27157946875
+        },
+        "candidate": {
+          "gpu_ms": 0.037142017390578985,
+          "wall_ms": 0.377505125
+        }
+      },
+      "gpu_fraction": 2.749396235439095,
+      "wall_fraction": 1.3900355823565915
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-1",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.010097632184624672,
+          "wall_ms": 0.21313528125
+        },
+        "candidate": {
+          "gpu_ms": 0.004501285729929805,
+          "wall_ms": 0.2242305625
+        }
+      },
+      "gpu_fraction": 0.44577636099518086,
+      "wall_fraction": 1.0520574593982197
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-1",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.005194044206291437,
+          "wall_ms": 0.1902683125
+        },
+        "candidate": {
+          "gpu_ms": 0.004911446012556553,
+          "wall_ms": 0.22305853125
+        }
+      },
+      "gpu_fraction": 0.9455918774444432,
+      "wall_fraction": 1.172336729743162
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-1",
+      "tensor": "model.language_model.layers.0.linear_attn.in_proj_b.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.006470043445006013,
+          "wall_ms": 0.21612496875
+        },
+        "candidate": {
+          "gpu_ms": 0.03236328484490514,
+          "wall_ms": 0.33893228125
+        }
+      },
+      "gpu_fraction": 5.0020197113027365,
+      "wall_fraction": 1.5682236217790084
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-4",
+      "tensor": "model.language_model.layers.0.linear_attn.out_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.05705073999706656,
+          "wall_ms": 0.34570040625
+        },
+        "candidate": {
+          "gpu_ms": 0.09980855975300074,
+          "wall_ms": 0.42765228125
+        }
+      },
+      "gpu_fraction": 1.749470028927455,
+      "wall_fraction": 1.2370603954128272
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-4",
+      "tensor": "model.language_model.layers.0.linear_attn.out_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.04466927202884108,
+          "wall_ms": 0.3005051875
+        },
+        "candidate": {
+          "gpu_ms": 0.12797003728337586,
+          "wall_ms": 0.41804290625
+        }
+      },
+      "gpu_fraction": 2.8648337318045156,
+      "wall_fraction": 1.3911337429075163
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-4",
+      "tensor": "model.language_model.layers.0.linear_attn.out_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.05173569661565125,
+          "wall_ms": 0.30863146875
+        },
+        "candidate": {
+          "gpu_ms": 0.06884898175485432,
+          "wall_ms": 0.35771615625000003
+        }
+      },
+      "gpu_fraction": 1.3307829266577595,
+      "wall_fraction": 1.1590398014136398
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-4",
+      "tensor": "model.language_model.layers.0.linear_attn.out_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.11410679144319147,
+          "wall_ms": 0.451036375
+        },
+        "candidate": {
+          "gpu_ms": 0.15542186156380922,
+          "wall_ms": 0.58352215625
+        }
+      },
+      "gpu_fraction": 1.3620737170686867,
+      "wall_fraction": 1.293736356075494
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-4",
+      "tensor": "model.language_model.layers.0.linear_attn.out_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.11695960711222142,
+          "wall_ms": 0.4623425625
+        },
+        "candidate": {
+          "gpu_ms": 0.2350807626498863,
+          "wall_ms": 0.634671875
+        }
+      },
+      "gpu_fraction": 2.009931192948767,
+      "wall_fraction": 1.3727307984974886
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-4",
+      "tensor": "model.language_model.layers.0.linear_attn.out_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.11049090244341642,
+          "wall_ms": 0.51790634375
+        },
+        "candidate": {
+          "gpu_ms": 0.13231378397904336,
+          "wall_ms": 0.6428229375
+        }
+      },
+      "gpu_fraction": 1.1975084016243118,
+      "wall_fraction": 1.2411953343639652
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-5",
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08029302989598364,
+          "wall_ms": 0.3383736875
+        },
+        "candidate": {
+          "gpu_ms": 0.11939185787923634,
+          "wall_ms": 0.4242785625
+        }
+      },
+      "gpu_fraction": 1.4869517071893246,
+      "wall_fraction": 1.2538757538586685
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-5",
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08119268750306219,
+          "wall_ms": 0.34301171875
+        },
+        "candidate": {
+          "gpu_ms": 0.19569401047192514,
+          "wall_ms": 0.49936071875
+        }
+      },
+      "gpu_fraction": 2.410241814751415,
+      "wall_fraction": 1.455812415301044
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-5",
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08007165160961449,
+          "wall_ms": 0.3457214375
+        },
+        "candidate": {
+          "gpu_ms": 0.15497655840590596,
+          "wall_ms": 0.4660195625
+        }
+      },
+      "gpu_fraction": 1.9354734826938098,
+      "wall_fraction": 1.3479625847616117
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-5",
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.21609634859487414,
+          "wall_ms": 0.61231115625
+        },
+        "candidate": {
+          "gpu_ms": 0.230283840210177,
+          "wall_ms": 0.659227875
+        }
+      },
+      "gpu_fraction": 1.0656535462424717,
+      "wall_fraction": 1.0766223484107882
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-5",
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.17993224901147187,
+          "wall_ms": 0.5788151875
+        },
+        "candidate": {
+          "gpu_ms": 0.37843227619305253,
+          "wall_ms": 0.8838086875
+        }
+      },
+      "gpu_fraction": 2.1031931644945145,
+      "wall_fraction": 1.5269272586251892
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-5",
+      "tensor": "model.language_model.layers.0.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.13301047147251666,
+          "wall_ms": 0.4453710625
+        },
+        "candidate": {
+          "gpu_ms": 0.22690750483889133,
+          "wall_ms": 0.6343945
+        }
+      },
+      "gpu_fraction": 1.7059371516157371,
+      "wall_fraction": 1.424417869537718
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-6",
+      "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.11325262312311679,
+          "wall_ms": 0.3901106875
+        },
+        "candidate": {
+          "gpu_ms": 0.13661588309332728,
+          "wall_ms": 0.4653931875
+        }
+      },
+      "gpu_fraction": 1.2062933230677786,
+      "wall_fraction": 1.1929772816080566
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-6",
+      "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1934179017553106,
+          "wall_ms": 0.54090509375
+        },
+        "candidate": {
+          "gpu_ms": 0.35345961805433035,
+          "wall_ms": 0.73240496875
+        }
+      },
+      "gpu_fraction": 1.8274400396581987,
+      "wall_fraction": 1.3540359985748427
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-6",
+      "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.18024213204625994,
+          "wall_ms": 0.5340430625
+        },
+        "candidate": {
+          "gpu_ms": 0.1901028590509668,
+          "wall_ms": 0.64824478125
+        }
+      },
+      "gpu_fraction": 1.0547082243910433,
+      "wall_fraction": 1.2138436518871547
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-6",
+      "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08479294774588197,
+          "wall_ms": 0.354872375
+        },
+        "candidate": {
+          "gpu_ms": 0.09431375656276941,
+          "wall_ms": 0.38450121875
+        }
+      },
+      "gpu_fraction": 1.1122830267137378,
+      "wall_fraction": 1.0834915474894318
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-6",
+      "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07942183583509177,
+          "wall_ms": 0.33195040625
+        },
+        "candidate": {
+          "gpu_ms": 0.17623050371184945,
+          "wall_ms": 0.4663840625
+        }
+      },
+      "gpu_fraction": 2.218917528899322,
+      "wall_fraction": 1.404981146939024
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-6",
+      "tensor": "model.language_model.layers.0.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07938667840790004,
+          "wall_ms": 0.33128765625
+        },
+        "candidate": {
+          "gpu_ms": 0.09767193114385009,
+          "wall_ms": 0.395358
+        }
+      },
+      "gpu_fraction": 1.230331500229772,
+      "wall_fraction": 1.1933979203307548
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-7",
+      "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1875833113444969,
+          "wall_ms": 0.631178375
+        },
+        "candidate": {
+          "gpu_ms": 0.1943775569088757,
+          "wall_ms": 0.71242578125
+        }
+      },
+      "gpu_fraction": 1.0362198828652789,
+      "wall_fraction": 1.128723368017797
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-7",
+      "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.19091145077254623,
+          "wall_ms": 0.59248828125
+        },
+        "candidate": {
+          "gpu_ms": 0.35500782541930676,
+          "wall_ms": 0.8113749375
+        }
+      },
+      "gpu_fraction": 1.8595418136666226,
+      "wall_fraction": 1.3694362625843075
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-7",
+      "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.18956763960886747,
+          "wall_ms": 0.61604971875
+        },
+        "candidate": {
+          "gpu_ms": 0.19377343414817005,
+          "wall_ms": 0.66589321875
+        }
+      },
+      "gpu_fraction": 1.0221862473362033,
+      "wall_fraction": 1.0809082424404564
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-7",
+      "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.0829570199130103,
+          "wall_ms": 0.3256198125
+        },
+        "candidate": {
+          "gpu_ms": 0.09325392602477223,
+          "wall_ms": 0.36340359375
+        }
+      },
+      "gpu_fraction": 1.1241233848872512,
+      "wall_fraction": 1.1160364934796465
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-7",
+      "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.10093883611261845,
+          "wall_ms": 0.37923703125
+        },
+        "candidate": {
+          "gpu_ms": 0.2898034581448883,
+          "wall_ms": 0.66987240625
+        }
+      },
+      "gpu_fraction": 2.871079847022921,
+      "wall_fraction": 1.7663686587832395
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-7",
+      "tensor": "model.language_model.layers.0.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.19466143567115068,
+          "wall_ms": 0.52816409375
+        },
+        "candidate": {
+          "gpu_ms": 0.19424087076913565,
+          "wall_ms": 0.5918359375
+        }
+      },
+      "gpu_fraction": 0.997839505803679,
+      "wall_fraction": 1.120553147219694
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-8",
+      "tensor": "model.language_model.layers.3.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08467581938020885,
+          "wall_ms": 0.32580859375
+        },
+        "candidate": {
+          "gpu_ms": 0.11563804582692683,
+          "wall_ms": 0.4019986875
+        }
+      },
+      "gpu_fraction": 1.3656560594671343,
+      "wall_fraction": 1.2338492452671839
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-8",
+      "tensor": "model.language_model.layers.3.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08420312951784581,
+          "wall_ms": 0.3596549375
+        },
+        "candidate": {
+          "gpu_ms": 0.19664198043756187,
+          "wall_ms": 0.4977878125
+        }
+      },
+      "gpu_fraction": 2.3353286459012907,
+      "wall_fraction": 1.3840705648591296
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-8",
+      "tensor": "model.language_model.layers.3.mlp.down_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.0843853922560811,
+          "wall_ms": 0.35174475
+        },
+        "candidate": {
+          "gpu_ms": 0.14857290079817176,
+          "wall_ms": 0.4440586875
+        }
+      },
+      "gpu_fraction": 1.7606471549874805,
+      "wall_fraction": 1.262445814756297
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-8",
+      "tensor": "model.language_model.layers.3.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.201164060854353,
+          "wall_ms": 0.59191528125
+        },
+        "candidate": {
+          "gpu_ms": 0.2315938036190346,
+          "wall_ms": 0.7170535
+        }
+      },
+      "gpu_fraction": 1.1512682863700656,
+      "wall_fraction": 1.2114123806463224
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-8",
+      "tensor": "model.language_model.layers.3.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.20676034910138696,
+          "wall_ms": 0.641347625
+        },
+        "candidate": {
+          "gpu_ms": 0.37835154216736555,
+          "wall_ms": 0.87617978125
+        }
+      },
+      "gpu_fraction": 1.8299037693239586,
+      "wall_fraction": 1.3661542463028533
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-8",
+      "tensor": "model.language_model.layers.3.mlp.down_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.20279694581404328,
+          "wall_ms": 0.67570821875
+        },
+        "candidate": {
+          "gpu_ms": 0.31173042953014374,
+          "wall_ms": 0.78429678125
+        }
+      },
+      "gpu_fraction": 1.53715544521064,
+      "wall_fraction": 1.160703332424873
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-9",
+      "tensor": "model.language_model.layers.3.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07859502511564642,
+          "wall_ms": 0.33611325
+        },
+        "candidate": {
+          "gpu_ms": 0.09469660290051252,
+          "wall_ms": 0.38805584375
+        }
+      },
+      "gpu_fraction": 1.2048676460268812,
+      "wall_fraction": 1.1545389649173308
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-9",
+      "tensor": "model.language_model.layers.3.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08056122169364244,
+          "wall_ms": 0.32741265625
+        },
+        "candidate": {
+          "gpu_ms": 0.18284114776179194,
+          "wall_ms": 0.46784115625
+        }
+      },
+      "gpu_fraction": 2.2695925399083294,
+      "wall_fraction": 1.428903700939325
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-9",
+      "tensor": "model.language_model.layers.3.mlp.gate_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.14019662921782583,
+          "wall_ms": 0.4676615
+        },
+        "candidate": {
+          "gpu_ms": 0.13871872215531766,
+          "wall_ms": 0.4743555
+        }
+      },
+      "gpu_fraction": 0.9894583267033338,
+      "wall_fraction": 1.0143137718200022
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-9",
+      "tensor": "model.language_model.layers.3.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09201954526361078,
+          "wall_ms": 0.38424746875
+        },
+        "candidate": {
+          "gpu_ms": 0.1129309821408242,
+          "wall_ms": 0.41432546875
+        }
+      },
+      "gpu_fraction": 1.2272499480116739,
+      "wall_fraction": 1.0782776789599866
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-9",
+      "tensor": "model.language_model.layers.3.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07988412107806653,
+          "wall_ms": 0.3393710625
+        },
+        "candidate": {
+          "gpu_ms": 0.17690494132693857,
+          "wall_ms": 0.4688215625
+        }
+      },
+      "gpu_fraction": 2.2145194681939198,
+      "wall_fraction": 1.3814423629592756
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-9",
+      "tensor": "model.language_model.layers.3.mlp.gate_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07947268022689968,
+          "wall_ms": 0.33403778125
+        },
+        "candidate": {
+          "gpu_ms": 0.09095830318983644,
+          "wall_ms": 0.3893138125
+        }
+      },
+      "gpu_fraction": 1.1445229093840117,
+      "wall_fraction": 1.165478381047653
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-10",
+      "tensor": "model.language_model.layers.3.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1978984655579552,
+          "wall_ms": 0.58315621875
+        },
+        "candidate": {
+          "gpu_ms": 0.19125650578644127,
+          "wall_ms": 0.6055794375
+        }
+      },
+      "gpu_fraction": 0.9664375377909697,
+      "wall_fraction": 1.0384514784015582
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-10",
+      "tensor": "model.language_model.layers.3.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1929166610352695,
+          "wall_ms": 0.59747909375
+        },
+        "candidate": {
+          "gpu_ms": 0.3715624479809776,
+          "wall_ms": 0.98535684375
+        }
+      },
+      "gpu_fraction": 1.9260257045038098,
+      "wall_fraction": 1.6491904973034883
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-10",
+      "tensor": "model.language_model.layers.3.mlp.up_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1874609588412568,
+          "wall_ms": 0.61644925
+        },
+        "candidate": {
+          "gpu_ms": 0.18524870392866433,
+          "wall_ms": 0.70208465625
+        }
+      },
+      "gpu_fraction": 0.9881988499031107,
+      "wall_fraction": 1.1389172040520774
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-10",
+      "tensor": "model.language_model.layers.3.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.07915239257272333,
+          "wall_ms": 0.33116924999999997
+        },
+        "candidate": {
+          "gpu_ms": 0.10080724314320832,
+          "wall_ms": 0.3940885
+        }
+      },
+      "gpu_fraction": 1.2735842830093738,
+      "wall_fraction": 1.1899912205012997
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-10",
+      "tensor": "model.language_model.layers.3.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08049995813053101,
+          "wall_ms": 0.340201875
+        },
+        "candidate": {
+          "gpu_ms": 0.18250657012686133,
+          "wall_ms": 0.47800653125
+        }
+      },
+      "gpu_fraction": 2.2671635410160857,
+      "wall_fraction": 1.4050673037883756
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-10",
+      "tensor": "model.language_model.layers.3.mlp.up_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08296096348203719,
+          "wall_ms": 0.34892828125
+        },
+        "candidate": {
+          "gpu_ms": 0.0903567997738719,
+          "wall_ms": 0.3794830625
+        }
+      },
+      "gpu_fraction": 1.0891483895728389,
+      "wall_fraction": 1.0875675114110572
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-11",
+      "tensor": "model.language_model.layers.3.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.024651046260260046,
+          "wall_ms": 0.42512103125
+        },
+        "candidate": {
+          "gpu_ms": 0.03511203976813704,
+          "wall_ms": 0.42904284375
+        }
+      },
+      "gpu_fraction": 1.4243630634348028,
+      "wall_fraction": 1.0092251669800212
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-11",
+      "tensor": "model.language_model.layers.3.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.04483590601012111,
+          "wall_ms": 0.4820755
+        },
+        "candidate": {
+          "gpu_ms": 0.07409762474708259,
+          "wall_ms": 0.4806068125
+        }
+      },
+      "gpu_fraction": 1.652640290805232,
+      "wall_fraction": 0.9969534077131071
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-11",
+      "tensor": "model.language_model.layers.3.self_attn.k_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.028916634619235992,
+          "wall_ms": 0.36909496875000003
+        },
+        "candidate": {
+          "gpu_ms": 0.04231641651131213,
+          "wall_ms": 0.43554153125
+        }
+      },
+      "gpu_fraction": 1.4633935472962092,
+      "wall_fraction": 1.1800256522732673
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-11",
+      "tensor": "model.language_model.layers.3.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.017931030015461147,
+          "wall_ms": 0.25567834375
+        },
+        "candidate": {
+          "gpu_ms": 0.016390637028962374,
+          "wall_ms": 0.29004690625
+        }
+      },
+      "gpu_fraction": 0.9140934466580805,
+      "wall_fraction": 1.1344210932999679
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-11",
+      "tensor": "model.language_model.layers.3.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.014796838513575494,
+          "wall_ms": 0.227741
+        },
+        "candidate": {
+          "gpu_ms": 0.03745435969904065,
+          "wall_ms": 0.30130078125
+        }
+      },
+      "gpu_fraction": 2.5312406879805986,
+      "wall_fraction": 1.3229975333822193
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-11",
+      "tensor": "model.language_model.layers.3.self_attn.k_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.018265724065713584,
+          "wall_ms": 0.27053259375
+        },
+        "candidate": {
+          "gpu_ms": 0.038736980059184134,
+          "wall_ms": 0.38231778125
+        }
+      },
+      "gpu_fraction": 2.120747029782244,
+      "wall_fraction": 1.4132041391038488
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-12",
+      "tensor": "model.language_model.layers.3.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08046746370382607,
+          "wall_ms": 0.40151828125
+        },
+        "candidate": {
+          "gpu_ms": 0.13076039613224566,
+          "wall_ms": 0.546573
+        }
+      },
+      "gpu_fraction": 1.625009539427403,
+      "wall_fraction": 1.3612655401353533
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-12",
+      "tensor": "model.language_model.layers.3.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.05726820381823927,
+          "wall_ms": 0.32492190625
+        },
+        "candidate": {
+          "gpu_ms": 0.1379687455482781,
+          "wall_ms": 0.43704434375
+        }
+      },
+      "gpu_fraction": 2.4091683752850064,
+      "wall_fraction": 1.3450750329333943
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-12",
+      "tensor": "model.language_model.layers.3.self_attn.o_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.05290369153954089,
+          "wall_ms": 0.31672521875
+        },
+        "candidate": {
+          "gpu_ms": 0.06131906411610544,
+          "wall_ms": 0.34775525
+        }
+      },
+      "gpu_fraction": 1.1590696666276075,
+      "wall_fraction": 1.0979714573170534
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-12",
+      "tensor": "model.language_model.layers.3.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.12087372306268662,
+          "wall_ms": 0.45802875
+        },
+        "candidate": {
+          "gpu_ms": 0.1428749819751829,
+          "wall_ms": 0.52234
+        }
+      },
+      "gpu_fraction": 1.1820185426164638,
+      "wall_fraction": 1.1404087625503858
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-12",
+      "tensor": "model.language_model.layers.3.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.13694404333364218,
+          "wall_ms": 0.57065890625
+        },
+        "candidate": {
+          "gpu_ms": 0.2371471782680601,
+          "wall_ms": 0.71203515625
+        }
+      },
+      "gpu_fraction": 1.7317086051730564,
+      "wall_fraction": 1.2477421248518366
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-12",
+      "tensor": "model.language_model.layers.3.self_attn.o_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.12770963076036423,
+          "wall_ms": 0.49981653125000003
+        },
+        "candidate": {
+          "gpu_ms": 0.12875649554189295,
+          "wall_ms": 0.53224353125
+        }
+      },
+      "gpu_fraction": 1.0081972265936079,
+      "wall_fraction": 1.0648778060999757
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-13",
+      "tensor": "model.language_model.layers.3.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09302474791184068,
+          "wall_ms": 0.3413568125
+        },
+        "candidate": {
+          "gpu_ms": 0.11517317034304142,
+          "wall_ms": 0.421873625
+        }
+      },
+      "gpu_fraction": 1.2380917221317358,
+      "wall_fraction": 1.2358728742230682
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-13",
+      "tensor": "model.language_model.layers.3.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.08949478797148913,
+          "wall_ms": 0.34311065625
+        },
+        "candidate": {
+          "gpu_ms": 0.20161588327027857,
+          "wall_ms": 0.50541934375
+        }
+      },
+      "gpu_fraction": 2.2528226262126965,
+      "wall_fraction": 1.4730505583065814
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-13",
+      "tensor": "model.language_model.layers.3.self_attn.q_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.09045054321177304,
+          "wall_ms": 0.34512759375
+        },
+        "candidate": {
+          "gpu_ms": 0.10207032028120011,
+          "wall_ms": 0.4088398125
+        }
+      },
+      "gpu_fraction": 1.128465531071732,
+      "wall_fraction": 1.1846048241397678
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-13",
+      "tensor": "model.language_model.layers.3.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.1954531471710652,
+          "wall_ms": 0.6129336875
+        },
+        "candidate": {
+          "gpu_ms": 0.21814323554281145,
+          "wall_ms": 0.6687330625
+        }
+      },
+      "gpu_fraction": 1.116089654733916,
+      "wall_fraction": 1.0910365609493442
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-13",
+      "tensor": "model.language_model.layers.3.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.19310283823870122,
+          "wall_ms": 0.57850390625
+        },
+        "candidate": {
+          "gpu_ms": 0.39969789213500917,
+          "wall_ms": 0.8630495
+        }
+      },
+      "gpu_fraction": 2.0698706232423603,
+      "wall_fraction": 1.4918646022539281
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-13",
+      "tensor": "model.language_model.layers.3.self_attn.q_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.139443960506469,
+          "wall_ms": 0.454242125
+        },
+        "candidate": {
+          "gpu_ms": 0.1571314933244139,
+          "wall_ms": 0.53801290625
+        }
+      },
+      "gpu_fraction": 1.1268433050359634,
+      "wall_fraction": 1.1844187860163784
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-14",
+      "tensor": "model.language_model.layers.3.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.013417928130365908,
+          "wall_ms": 0.230026
+        },
+        "candidate": {
+          "gpu_ms": 0.021027313778176904,
+          "wall_ms": 0.2886328125
+        }
+      },
+      "gpu_fraction": 1.5671058582129616,
+      "wall_fraction": 1.254783426656117
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-14",
+      "tensor": "model.language_model.layers.3.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.01796618744265288,
+          "wall_ms": 0.2391886875
+        },
+        "candidate": {
+          "gpu_ms": 0.038815109292045236,
+          "wall_ms": 0.30471225
+        }
+      },
+      "gpu_fraction": 2.1604533190996147,
+      "wall_fraction": 1.2739408923760243
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-14",
+      "tensor": "model.language_model.layers.3.self_attn.v_proj.weight",
+      "batch": 1,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.019512983271852136,
+          "wall_ms": 0.24837625
+        },
+        "candidate": {
+          "gpu_ms": 0.03474090772215277,
+          "wall_ms": 0.30309378124999997
+        }
+      },
+      "gpu_fraction": 1.7803996056444744,
+      "wall_fraction": 1.220300979864218
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-14",
+      "tensor": "model.language_model.layers.3.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 4,
+      "means": {
+        "control": {
+          "gpu_ms": 0.04220700066071004,
+          "wall_ms": 0.3997474375
+        },
+        "candidate": {
+          "gpu_ms": 0.03306382859591395,
+          "wall_ms": 0.3894218125
+        }
+      },
+      "gpu_fraction": 0.7833730916277272,
+      "wall_fraction": 0.9741696280417057
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-14",
+      "tensor": "model.language_model.layers.3.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 8,
+      "means": {
+        "control": {
+          "gpu_ms": 0.019307321053929627,
+          "wall_ms": 0.28967715625
+        },
+        "candidate": {
+          "gpu_ms": 0.05840491212438792,
+          "wall_ms": 0.4134493125
+        }
+      },
+      "gpu_fraction": 3.0250137738555263,
+      "wall_fraction": 1.4272762058709971
+    },
+    {
+      "trial": "padded-mps-body-20261015",
+      "model": "Qwen3.5-0.8B",
+      "matrix": "matrix-14",
+      "tensor": "model.language_model.layers.3.self_attn.v_proj.weight",
+      "batch": 2,
+      "physical_rows": 16,
+      "means": {
+        "control": {
+          "gpu_ms": 0.0151835847645998,
+          "wall_ms": 0.268052125
+        },
+        "candidate": {
+          "gpu_ms": 0.0333346106344834,
+          "wall_ms": 0.34604168750000003
+        }
+      },
+      "gpu_fraction": 2.195437451121709,
+      "wall_fraction": 1.2909492416820052
+    }
+  ],
+  "scope": "Resident individual native-context body components; input padding outside timing. Sum fractions are sums of individual measured means, not full-model performance. No serving or fresh vLLM result.",
+  "full_goal_met": false
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/padded_mps_body_gpu.mm",
+      "/Users/zsdx/garnet-metal-investigation/build-screened-head/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/padded-mps-body-20261015/jobs/padded_mps_body_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3-0.6B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/padded-mps-body-20261015/jobs/padded_mps_body_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen2.5-Coder-0.5B-Instruct-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/padded-mps-body-20261015/jobs/padded_mps_body_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "Qwen3.5-0.8B-gpu",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/padded-mps-body-20261015/jobs/padded_mps_body_gpu",
+      "/Users/zsdx/garnet-metal-investigation/logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets"
+    ],
+    "exit_code": 0
+  }
+]
