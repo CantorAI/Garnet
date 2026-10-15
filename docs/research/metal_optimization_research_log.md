@@ -653,6 +653,24 @@ Mac source trees remain untouched. Retained matched results are still
 4/6 decode,2/6 TTFT and0/6 both consistently across repeated cohorts. No new
 component observation is counted as a full-model target improvement.
 
+### 2026-10-15 — isolated shape dispatch built; fresh model gates running
+
+Private native tree preparation freezes1,275 copied files and nine changed/added
+paths. Fresh build and seven CTests passed, including all80 original coalesced
+cases plus24 added selected-route cases. Exact validation PID42435 continues
+through the original28 trained/native stages; no full pass is claimed yet.
+Controller47970 observes that exact handle, archives any terminal result and
+requires the frozen original28 numerical audit before native ABBA admission.
+The prepared six-profile comparison requires72 complete outputs and derives
+selected-route counts independently from original checkpoint tensor shapes.
+[Implementation identities, commands, gate design and current scope](../../results/20261015/shape-selected-two-native/README.md).
+
+The new table changes decode only. It cannot by itself resolve the remaining
+TTFT gaps; full-model selection/rejection and further prefill/vision work are
+still required for the original goal. No component improvement is promoted
+into the retained matched chart. Runtime sources remain frozen until terminal
+archival, and competing inference runtimes remain sequential.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

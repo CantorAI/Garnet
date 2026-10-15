@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-15T22:19:57.403329+00:00",
-  "source_commit": "2ddff36d3ad88b1f97305b94a5ba2759835f433b",
+  "generated_at_utc": "2026-10-15T22:24:54.722887+00:00",
+  "source_commit": "b0c364f34fe6b0ab47c7ce170b5e956c3fbdd33a",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 151,
+  "report_count": 152,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -3525,6 +3525,24 @@
       "evidence_directories": [
         "evidence"
       ]
+    },
+    {
+      "experiment_id": "results/20261015/shape-selected-two-native",
+      "title": "Shape-selected two-output native integration: validation running",
+      "report_path": "results/20261015/shape-selected-two-native/README.md",
+      "report_sha256": "7320b784b091811e70bfa8cb8c16056bd8bcfef61df1bc03765b6e87c0cb3484",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Shape-selected two-output native integration: validation running\n\nThis private candidate uses the [three selected geometries](../two-matrix-probe/README.md)\nand retains the current four-output compact kernel for every other shape.\nOriginal BF16 learned bits, compact payload, FP32 arithmetic, input lane order,\noriginal fallback and all prefill paths are unchanged. The rejected MLP graph\nroute remains disabled. This is a decode experiment; it does not address the\nremaining first-token-latency gap by itself.\n\nThe [preparation record](preparation.json) freezes1,275 copied source files.\nEight existing copies change: context/header, session/header, backend marker,\ntwo benchmark workers and the coalesced primitive. One generated shader is\nadded. The current retained Mac source/build and protected GPT-OSS/Pi checkouts\nare not modified. New private tree:\n`/Users/zsdx/garnet-metal-investigation/shape-selected-two-investigation-20261015`.\n\nThe primitive keeps all80 original cases and adds24 cases for selected shapes.\nIt verifies actual dispatch counts, raw original output bits, unchanged FP64\nenvelope, ownership, abort/recovery and decode-only routing. It also checks\nthat abort clears the added counters. The fresh build and seven CTests have\ncompleted; all28 trained/native stages are still running under exact PID42435.\nNo complete validation or full-model performance result is claimed yet.\n\nController PID47970 polls that exact handle. After a terminal record it freezes\nsuccess or failure, requires an independent frozen-evidence audit of all28\noriginal stages, then dispatches native ABBA only after success. A missing\nhandle without terminal evidence is an error; observation timeouts do not\nrestart validation. Controller success means a benchmark was dispatched,\nnot that it passed or that the performance goal was achieved.\n\nThe prepared benchmark uses all six original model/batch profiles and72\ncomplete generated outputs, sequential control/candidate/candidate/control\nworkers, one first-after-init and two warm requests per worker. It independently\nderives expected selected-route counts from original checkpoint tensor headers.\nBoth source closures, learned assets, commands, monitors, first/warm/init/RSS\nand all complete tokens must remain auditable. The retained c186 native library\nis the performance control; the original73c10e5d trained reference has a\ndifferent validation role. No fresh vLLM ratio follows from native comparison.\n\n```text\npython3 prepare_shape_selected_two_body.py ROOT ALT\npython3 ALT/source/test2026/metal/launch_shape_selected_two_checks.py ALT ALT/logs/shape-selected-two-checks-20261015 checks\npython3 ROOT/source/test2026/metal/finalize_shape_selected_two_checks.py ALT ALT/logs/shape-selected-two-finalize-20261015\n# Controller steps, only after terminal capture:\npython3 archive_shape_selected_two_checks.py ALT ARCHIVE\npython3 verify_shape_selected_two_checks.py AUDIT AUDIT_RESULT ARCHIVE\npython3 launch_shape_selected_two_profiles.py ALT ALT/logs/shape-selected-two-native-20261015 profiles\n# After native terminal capture:\npython3 archive_shape_selected_two_profiles.py ALT NATIVE_ARCHIVE [TRIAL]\npython -X utf8 test2026/metal/verify_shape_selected_two_profiles.py NATIVE_AUDIT NATIVE_AUDIT_RESULT [TRIAL]\n```\n\nROOT is `/Users/zsdx/garnet-metal-investigation`; ALT is the private tree\nabove. Templates supplement actual job command records. Sources/drivers stay\nfrozen until the owned jobs are terminal and archived. Selection used both\ncomponent cohorts, so fresh full-model confirmation and fresh repeated matched\nvLLM measurements remain necessary. Full goal is active and unmet.\n",
+      "commands_as_documented": [
+        "python3 prepare_shape_selected_two_body.py ROOT ALT\npython3 ALT/source/test2026/metal/launch_shape_selected_two_checks.py ALT ALT/logs/shape-selected-two-checks-20261015 checks\npython3 ROOT/source/test2026/metal/finalize_shape_selected_two_checks.py ALT ALT/logs/shape-selected-two-finalize-20261015\n# Controller steps, only after terminal capture:\npython3 archive_shape_selected_two_checks.py ALT ARCHIVE\npython3 verify_shape_selected_two_checks.py AUDIT AUDIT_RESULT ARCHIVE\npython3 launch_shape_selected_two_profiles.py ALT ALT/logs/shape-selected-two-native-20261015 profiles\n# After native terminal capture:\npython3 archive_shape_selected_two_profiles.py ALT NATIVE_ARCHIVE [TRIAL]\npython -X utf8 test2026/metal/verify_shape_selected_two_profiles.py NATIVE_AUDIT NATIVE_AUDIT_RESULT [TRIAL]\n"
+      ],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "README.md",
+        "preparation.json"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261015/shape-specialized-bf16",
