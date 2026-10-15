@@ -1,0 +1,200 @@
+{
+  "verified_files": 3065,
+  "original_validation_stages": 19,
+  "additional_trained_head_queries": 51,
+  "trained_recovery_cases": 6,
+  "prefix_recovery_cases": 6,
+  "all_actual_submission_and_clear_counts_checked": true,
+  "full_output_requests": 72,
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "decode_tps": 62.984406353685756,
+          "ttft_ms": 37.13876008987427
+        },
+        "candidate": {
+          "decode_tps": 66.81171693914904,
+          "ttft_ms": 34.93529174011201
+        }
+      },
+      "decode_ratio": 1.0607660023652714,
+      "ttft_fraction": 0.9406693076335894,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 127.78827105648816,
+          "initialization_s": 2.356707521015778
+        },
+        "candidate": {
+          "ttft_ms": 126.19241653010249,
+          "initialization_s": 2.838712562341243
+        }
+      },
+      "peak_individual_rss_bytes": {
+        "control": 2446139392,
+        "candidate": 3288195072
+      }
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "decode_tps": 61.537232365911464,
+          "ttft_ms": 57.69490613602102
+        },
+        "candidate": {
+          "decode_tps": 64.46163398861927,
+          "ttft_ms": 55.54203153587878
+        }
+      },
+      "decode_ratio": 1.0475224755854924,
+      "ttft_fraction": 0.9626851875784902,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 154.00389581918716,
+          "initialization_s": 2.3771151453256607
+        },
+        "candidate": {
+          "ttft_ms": 154.64908350259066,
+          "initialization_s": 2.8631972500588745
+        }
+      },
+      "peak_individual_rss_bytes": {
+        "control": 2554298368,
+        "candidate": 3376005120
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "means": {
+        "control": {
+          "decode_tps": 80.09469423336353,
+          "ttft_ms": 26.081698248162866
+        },
+        "candidate": {
+          "decode_tps": 79.2433454181815,
+          "ttft_ms": 29.07228097319603
+        }
+      },
+      "decode_ratio": 0.9893707214525155,
+      "ttft_fraction": 1.1146621165760866,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 104.62941671721637,
+          "initialization_s": 1.9767543743364513
+        },
+        "candidate": {
+          "ttft_ms": 108.24185400269926,
+          "initialization_s": 2.3400910212658346
+        }
+      },
+      "peak_individual_rss_bytes": {
+        "control": 2074460160,
+        "candidate": 2709897216
+      }
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "means": {
+        "control": {
+          "decode_tps": 76.3158785743976,
+          "ttft_ms": 41.968822944909334
+        },
+        "candidate": {
+          "decode_tps": 76.8756493206472,
+          "ttft_ms": 43.74150023795664
+        }
+      },
+      "decode_ratio": 1.00733491845611,
+      "ttft_fraction": 1.0422379559077515,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 117.8486873395741,
+          "initialization_s": 1.9831315835472196
+        },
+        "candidate": {
+          "ttft_ms": 120.34710450097919,
+          "initialization_s": 2.344665771117434
+        }
+      },
+      "peak_individual_rss_bytes": {
+        "control": 2073862144,
+        "candidate": 2709618688
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "means": {
+        "control": {
+          "decode_tps": 53.6844511750745,
+          "ttft_ms": 174.3181146448478
+        },
+        "candidate": {
+          "decode_tps": 55.7744425469199,
+          "ttft_ms": 185.25960412807763
+        }
+      },
+      "decode_ratio": 1.0389310373133847,
+      "ttft_fraction": 1.062767369332337,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 274.4662710465491,
+          "initialization_s": 4.149267457891256
+        },
+        "candidate": {
+          "ttft_ms": 265.12620807625353,
+          "initialization_s": 4.710889395093545
+        }
+      },
+      "peak_individual_rss_bytes": {
+        "control": 3619340288,
+        "candidate": 4610301952
+      }
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "means": {
+        "control": {
+          "decode_tps": 50.38683322880557,
+          "ttft_ms": 299.50252070557326
+        },
+        "candidate": {
+          "decode_tps": 51.15061024100993,
+          "ttft_ms": 300.00112543348223
+        }
+      },
+      "decode_ratio": 1.0151582658258371,
+      "ttft_fraction": 1.001664776398991,
+      "first_request_after_initialization": {
+        "control": {
+          "ttft_ms": 388.13937408849597,
+          "initialization_s": 4.1966293749865144
+        },
+        "candidate": {
+          "ttft_ms": 389.84075002372265,
+          "initialization_s": 4.716476250207052
+        }
+      },
+      "peak_individual_rss_bytes": {
+        "control": 3646767104,
+        "candidate": 4632100864
+      }
+    }
+  ],
+  "scope": "Native comparison only; init and first request after init separate, caches unflushed; no fresh vLLM ratio",
+  "actual_interleaved": true,
+  "actual_candidate_seed_rows": 1024,
+  "trained_full_grid_profiles": 4,
+  "full_goal_met": false,
+  "wide_reference_profiles": 4,
+  "wide_carried_steps": 12,
+  "worst_wide_original_bound_ratio": 0.5432836183473805,
+  "source_closure_files": 1004
+}

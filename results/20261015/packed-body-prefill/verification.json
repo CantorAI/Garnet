@@ -1,0 +1,1352 @@
+{
+  "verified_files": 42,
+  "numeric_checks": 72,
+  "rejected_profiles": [
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.029888104310258554,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.16059094531355242,
+          "policy": 1,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 24,
+          "fp64_worst": 0.029888104310258554,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.043674803970606586,
+          "batch": 1,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.4132270679157302,
+          "policy": 1,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 24,
+          "fp64_worst": 0.043674803970606586,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 24,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05274404679439391,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6239030218050098,
+          "policy": 1,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 24,
+          "fp64_worst": 0.05274404679439391,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.029888104310258554,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.16059094531355242,
+          "policy": 2,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 24,
+          "fp64_worst": 0.029888104310258554,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.043674803970606586,
+          "batch": 1,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.4132270679157302,
+          "policy": 2,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 24,
+          "fp64_worst": 0.043674803970606586,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 24,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05274404679439391,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6239030218050098,
+          "policy": 2,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 24,
+          "fp64_worst": 0.05274404679439391,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.029888104310258554,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.16059094531355242,
+          "policy": 3,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 24,
+          "fp64_worst": 0.029888104310258554,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.043674803970606586,
+          "batch": 1,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.4132270679157302,
+          "policy": 3,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 24,
+          "fp64_worst": 0.043674803970606586,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 24,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05274404679439391,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6239030218050098,
+          "policy": 3,
+          "values": 294912,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 24,
+          "fp64_worst": 0.05274404679439391,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.031281302267642905,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.1849907136539824,
+          "policy": 1,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 26,
+          "fp64_worst": 0.031281302267642905,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.038739357525525916,
+          "batch": 1,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.9050775470279544,
+          "policy": 1,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 26,
+          "fp64_worst": 0.038739357525525916,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 26,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07555161613985067,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6232456291755216,
+          "policy": 1,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 26,
+          "fp64_worst": 0.07555161613985067,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.031281302267642905,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.1849907136539824,
+          "policy": 2,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 26,
+          "fp64_worst": 0.031281302267642905,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.038739357525525916,
+          "batch": 1,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.9050775470279544,
+          "policy": 2,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 26,
+          "fp64_worst": 0.038739357525525916,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 26,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07555161613985067,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6232456291755216,
+          "policy": 2,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 26,
+          "fp64_worst": 0.07555161613985067,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.031281302267642905,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.1849907136539824,
+          "policy": 3,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 26,
+          "fp64_worst": 0.031281302267642905,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.038739357525525916,
+          "batch": 1,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.9050775470279544,
+          "policy": 3,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 26,
+          "fp64_worst": 0.038739357525525916,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 26,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07555161613985067,
+          "batch": 1,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6232456291755216,
+          "policy": 3,
+          "values": 329472,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 26,
+          "fp64_worst": 0.07555161613985067,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.038775524392539576,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.16817538623731462,
+          "policy": 1,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 52,
+          "fp64_worst": 0.038775524392539576,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.038739357525525916,
+          "batch": 2,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.7289919615343199,
+          "policy": 1,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 52,
+          "fp64_worst": 0.038739357525525916,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 52,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07555161613985067,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6952351051342235,
+          "policy": 1,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 52,
+          "fp64_worst": 0.07555161613985067,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.038775524392539576,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.16817538623731462,
+          "policy": 2,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 52,
+          "fp64_worst": 0.038775524392539576,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.038739357525525916,
+          "batch": 2,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.7289919615343199,
+          "policy": 2,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 52,
+          "fp64_worst": 0.038739357525525916,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 52,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07555161613985067,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6952351051342235,
+          "policy": 2,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 52,
+          "fp64_worst": 0.07555161613985067,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.038775524392539576,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.16817538623731462,
+          "policy": 3,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 0,
+          "rows": 52,
+          "fp64_worst": 0.038775524392539576,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.038739357525525916,
+          "batch": 2,
+          "passed": false,
+          "projections": 7,
+          "comparison_worst": 1.7289919615343199,
+          "policy": 3,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 1,
+          "rows": 52,
+          "fp64_worst": 0.038739357525525916,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 2,
+          "rows": 52,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07555161613985067,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0.6952351051342235,
+          "policy": 3,
+          "values": 658944,
+          "selected_projections": 3,
+          "pattern": 3,
+          "rows": 52,
+          "fp64_worst": 0.07555161613985067,
+          "kind": "check",
+          "finite": true
+        }
+      ]
+    }
+  ],
+  "timed_executions": 576,
+  "profiles": [
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 44,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0370363934957495,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 44,
+          "fp64_worst": 0.0370363934957495,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.043674803970606586,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 44,
+          "fp64_worst": 0.043674803970606586,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 44,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05393648106715225,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 44,
+          "fp64_worst": 0.05393648106715225,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 1.0693372605601326,
+          "wall_ms": 1.5568345625
+        },
+        "candidate": {
+          "gpu_ms": 2.8371822845656425,
+          "wall_ms": 3.1543177187499998
+        }
+      },
+      "gpu_fraction": 2.6532155842764613,
+      "wall_fraction": 2.0261097708960967
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 44,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0370363934957495,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 44,
+          "fp64_worst": 0.0370363934957495,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.043674803970606586,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 44,
+          "fp64_worst": 0.043674803970606586,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 44,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05393648106715225,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 44,
+          "fp64_worst": 0.05393648106715225,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 1.305210913415067,
+          "wall_ms": 1.846308625
+        },
+        "candidate": {
+          "gpu_ms": 2.8898906311951578,
+          "wall_ms": 3.2630715
+        }
+      },
+      "gpu_fraction": 2.2141177349136605,
+      "wall_fraction": 1.7673488905464003
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 44,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0370363934957495,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 44,
+          "fp64_worst": 0.0370363934957495,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.043674803970606586,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 44,
+          "fp64_worst": 0.043674803970606586,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 44,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05393648106715225,
+          "batch": 2,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 540672,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 44,
+          "fp64_worst": 0.05393648106715225,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.9595664450898767,
+          "wall_ms": 1.46368225
+        },
+        "candidate": {
+          "gpu_ms": 4.518763089436106,
+          "wall_ms": 4.863447875
+        }
+      },
+      "gpu_fraction": 4.709171639503153,
+      "wall_fraction": 3.3227484141452153
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 80,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0405316221942213,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 80,
+          "fp64_worst": 0.0405316221942213,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0417729383485338,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 80,
+          "fp64_worst": 0.0417729383485338,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 80,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0650216929549932,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 80,
+          "fp64_worst": 0.0650216929549932,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 4.182507822406478,
+          "wall_ms": 4.91880071875
+        },
+        "candidate": {
+          "gpu_ms": 10.57096995646134,
+          "wall_ms": 11.15125125
+        }
+      },
+      "gpu_fraction": 2.5274238340525446,
+      "wall_fraction": 2.2670670937109714
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 80,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0405316221942213,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 80,
+          "fp64_worst": 0.0405316221942213,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0417729383485338,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 80,
+          "fp64_worst": 0.0417729383485338,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 80,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0650216929549932,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 80,
+          "fp64_worst": 0.0650216929549932,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 4.413125017890707,
+          "wall_ms": 5.15202471875
+        },
+        "candidate": {
+          "gpu_ms": 8.336285158293322,
+          "wall_ms": 8.92223165625
+        }
+      },
+      "gpu_fraction": 1.8889755274319704,
+      "wall_fraction": 1.731791313768141
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 80,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0405316221942213,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 80,
+          "fp64_worst": 0.0405316221942213,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0417729383485338,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 80,
+          "fp64_worst": 0.0417729383485338,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 80,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0650216929549932,
+          "batch": 1,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 2542080,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 80,
+          "fp64_worst": 0.0650216929549932,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 4.047317692311481,
+          "wall_ms": 4.78728521875
+        },
+        "candidate": {
+          "gpu_ms": 17.243766953470185,
+          "wall_ms": 17.7350885625
+        }
+      },
+      "gpu_fraction": 4.260541984689624,
+      "wall_fraction": 3.7046233412286176
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 160,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0405316221942213,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 160,
+          "fp64_worst": 0.0405316221942213,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05014012218734144,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 160,
+          "fp64_worst": 0.05014012218734144,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 160,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07589246907368029,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 160,
+          "fp64_worst": 0.07589246907368029,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 7.076989582856186,
+          "wall_ms": 7.86563540625
+        },
+        "candidate": {
+          "gpu_ms": 20.026548154419288,
+          "wall_ms": 20.6076405625
+        }
+      },
+      "gpu_fraction": 2.829811732792861,
+      "wall_fraction": 2.6199587824939425
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 160,
+      "policy": 2,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0405316221942213,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 160,
+          "fp64_worst": 0.0405316221942213,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05014012218734144,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 160,
+          "fp64_worst": 0.05014012218734144,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 160,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07589246907368029,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 2,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 160,
+          "fp64_worst": 0.07589246907368029,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 7.180833374150097,
+          "wall_ms": 8.05652075
+        },
+        "candidate": {
+          "gpu_ms": 13.33187242562417,
+          "wall_ms": 13.94494665625
+        }
+      },
+      "gpu_fraction": 1.8565912521542238,
+      "wall_fraction": 1.7308894358957616
+    },
+    {
+      "trial": "packed-body-prefill-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 160,
+      "policy": 3,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0405316221942213,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 0,
+          "rows": 160,
+          "fp64_worst": 0.0405316221942213,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.05014012218734144,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 1,
+          "rows": 160,
+          "fp64_worst": 0.05014012218734144,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 2,
+          "rows": 160,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.07589246907368029,
+          "batch": 2,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 3,
+          "values": 5084160,
+          "selected_projections": 11,
+          "pattern": 3,
+          "rows": 160,
+          "fp64_worst": 0.07589246907368029,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 7.274878880707547,
+          "wall_ms": 8.19200515625
+        },
+        "candidate": {
+          "gpu_ms": 31.308329474995844,
+          "wall_ms": 31.76712490625
+        }
+      },
+      "gpu_fraction": 4.30362209301151,
+      "wall_fraction": 3.8778204237351614
+    }
+  ],
+  "scope": "Private independent first-layer projections; original FP32 activation and accumulation, original BF16 values, unchanged numerical bounds. No synthetic ownership suite, complete-model or vLLM speed claim.",
+  "full_goal_met": false
+}

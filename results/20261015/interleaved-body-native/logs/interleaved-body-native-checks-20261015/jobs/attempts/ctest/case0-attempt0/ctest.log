@@ -1,0 +1,17 @@
+Test project /Users/zsdx/garnet-metal-investigation/build-interleaved-bf16-body
+    Start 1: metal_wide_batch_prefill_reference
+1/6 Test #1: metal_wide_batch_prefill_reference ......   Passed    1.31 sec
+    Start 2: metal_interleaved_bf16_body_reference
+2/6 Test #2: metal_interleaved_bf16_body_reference ...   Passed    1.48 sec
+    Start 3: metal_prefill_stream_reference
+3/6 Test #3: metal_prefill_stream_reference ..........   Passed    0.37 sec
+    Start 4: metal_dirty_prefix_reset_reference
+4/6 Test #4: metal_dirty_prefix_reset_reference ......   Passed    0.50 sec
+    Start 5: metal_mps_matmul_reference
+5/6 Test #5: metal_mps_matmul_reference ..............   Passed    1.79 sec
+    Start 6: metal_screened_head_reference
+6/6 Test #6: metal_screened_head_reference ...........   Passed    0.56 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Total Test time (real) =   6.00 sec
