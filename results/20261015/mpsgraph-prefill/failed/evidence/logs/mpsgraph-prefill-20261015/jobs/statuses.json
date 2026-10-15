@@ -1,0 +1,26 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/mpsgraph_prefill_gpu.mm",
+      "/Users/zsdx/garnet-metal-investigation/build-interleaved-bf16-body/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-framework",
+      "MetalPerformanceShadersGraph",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/mpsgraph-prefill-20261015/jobs/mpsgraph_prefill_gpu"
+    ],
+    "exit_code": 1
+  }
+]
