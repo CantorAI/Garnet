@@ -794,6 +794,86 @@ inspection found MPSNDArrayMatrixMultiplication and its alpha/beta API, but no
 mixed-storage execution, precision compatibility or latency claim exists.
 No new serving defaults or matched target passes are claimed. Full goal active.
 
+### 2026-10-15 — NDArray coefficient/API gates, native failure and descriptor repair
+
+Inspection found an already tested physical-half-transpose method in the
+20261013 report; do not rerun it unchanged. Test the distinct installed-SDK
+MPSNDArray product API. Actual PID76186 compiles but exits1: two-source alpha2^-8
+fails both storage modes on the first numerical record. Native controls pass.
+Preserve24-file archive1274759a... before diagnosis; inverse scaling is only
+diagnostic and never admits the failed output. No universal API-bug inference.
+
+PID76652 exits0 in13.493525500s: mixed/F32 unit-alpha and explicit-third-zero
+alpha paths pass64 original numerical/guard/immutability checks, independently
+reconstructed in FP64 on Mac and Windows. Preserve34-file archive4bc6ecef...
+before using the coefficient path. This is synthetic API compatibility only.
+
+First actual trained-context PID77664 compiles, then exits1 in12.306445375s
+on `NDArray transposed view failed`, before any emitted numerical result.
+Archive52 files9d037622... before source repair. Separate PID77981 exits0 in
+13.520210875s:32 alias-view observations establish physical K,N array lengths
+versus logical N,K descriptor shape;64 original numerical gates pass. Preserve
+35-file archive528ed48d..., independently audit Mac/Windows, then change only
+the native logical-shape assertion to query the descriptor. Original arithmetic
+and bounds remain intact. Local archive reads during active transfers failed
+file locking; wait for terminal transfer and re-audit the same bytes. No GPU
+rerun follows from observation/transfer errors.
+
+Repaired trained PID78431 is running with actual native MetalContext, all29
+original first-layer assets, four patterns, original envelopes, two ABBA rounds,
+mixed three-source alpha and exact-F32-cache policies plus unchanged native null.
+Declare before repaired timing: repeat only a passing candidate with >=5% GPU
+AND wall gain plus model/batch null within5%; confirmation/full validation/full
+model/fresh vLLM required for promotion. No synthetic ownership suite, memory
+saving or model-level speed claim. Retainc186 serving library and matched chart.
+[API failures and compatibility proof](../../results/20261015/ndarray-matrix-api/README.md),
+[native protocol and archived failure](../../results/20261015/ndarray-prefill/README.md).
+
+### 2026-10-15 — NDArray trained confirmation selects a confined VL candidate
+
+PID78431 exits0 in79.905263500s, archive2675b4e3...; PID79830 exits0 in
+77.154079084s, archived658c582.... Each59-file cohort is audited on Mac and
+Windows:72 numerical records,768 actual timed executions. Six candidate groups
+fail original native-comparison bounds on pattern1 (text B1/coder B1/B2, both
+policies), retain failures and have no timing. All FP64 envelopes pass, which
+does not waive comparison rejection. Source/flags/SDK/assets/versions match.
+
+Only VL B1 exact-F32 NDArray qualifies in both cohorts: GPU fractions
+0.878001/0.880955 and wall0.823963/0.833840; own native-null remains within5%.
+Other signals fail numerical, gain or calibration criteria. No fresh matched
+vLLM ratio or complete-model TTFT improvement follows from these components.
+[Full table and selection](../../results/20261015/ndarray-prefill/README.md#repaired-trained-execution-and-confirmation).
+
+Prepare1,333-file separate native source copy, eight changed files; retainc186
+parent source/library. Candidate removes global policy state, restricts F32
+NDArray to physicalrow80 nonvision/nonfloat-key, bounds strong-owner view cache
+at256 with original native fallback and adds actual session/worker counters.
+CPU-only transform/expanded30-stage syntax passes. Actual PID81353 starts
+fresh original28 plus new cache/update/abort/shape-fallback primitive. Build,
+all stages, memory and model timing are unverified at this entry. Preserve
+live consumed sources until terminal/archive. Full goal active and unmet.
+[Candidate scope and live validation](../../results/20261015/ndarray-native/README.md).
+
+### 2026-10-15 — native NDArray self-guard failure preserved; fresh repair running
+
+PID81353 builds library8e4e9b4e... and primitive but guard mistakes its own
+exact `_gpu` executable for a foreign probe. Thirteen interrupted primitive
+attempts, zero accepted numerical tests. Interrupt only verified Python group
+81353/81446 between attempts; terminal1 in120.330340375s. Preserve1,374-file
+archive2f827d30... before repair. Mac/Windows audits regenerate eight native
+changes, verify1,251 text source identities and three accepted setup stages.
+Do not call this an accuracy/performance failure or a validated native build.
+
+Leave private source/old driver frozen. New external driver excludes only the
+expected primitive path AND verified current owned process group. Original
+unknown/foreign rejection and every numerical predicate stay intact. Fresh
+guardrepair build and all30 stages, no build/stage reuse. Local/Mac expanded
+runner syntax passes, actual PID84121 starts. It has completed build, cache
+primitive, seven CTests, full vision grid and trained heads; whole suite is
+still live, terminal audit pending. No complete-model speed or memory claim.
+No fresh vLLM inference and no target pass is added. Goal active/unmet.
+[Failure provenance, precise repair and pending validation](../../results/20261015/ndarray-native/README.md#archived-harness-failure-and-scoped-repair).
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

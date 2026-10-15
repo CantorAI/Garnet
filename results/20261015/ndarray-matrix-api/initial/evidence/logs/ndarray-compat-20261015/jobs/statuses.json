@@ -1,0 +1,39 @@
+[
+  {
+    "name": "compile",
+    "command": [
+      "xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/ndarray_compat_gpu.mm",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-compat-20261015/jobs/ndarray_compat_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "mixed",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-compat-20261015/jobs/ndarray_compat_gpu",
+      "mixed"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "f32",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-compat-20261015/jobs/ndarray_compat_gpu",
+      "f32"
+    ],
+    "exit_code": 1
+  }
+]

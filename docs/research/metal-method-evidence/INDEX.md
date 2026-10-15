@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T23:07:33.780207+00:00
+Generated UTC: 2026-10-15T23:43:33.325907+00:00
 
-Base HEAD at generation: `91a835164bf7bed90d8233004d741ac9a67c1546`. Reports indexed: **154**.
+Base HEAD at generation: `e632e3bc60203cee9b13f62e92de9824bb1d788b`. Reports indexed: **157**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -121,6 +121,9 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/mlp-prefill-native](../../../results/20261015/mlp-prefill-native/README.md) | Native dependent MLP graph: correct outputs, rejected for latency and memory |
 | [results/20261015/mps-screen-index](../../../results/20261015/mps-screen-index/README.md) | MPS-derived screening dot products: rejected |
 | [results/20261015/mpsgraph-prefill](../../../results/20261015/mpsgraph-prefill/README.md) | MPSGraph FP32 prefill: actual component results, no broad promotion |
+| [results/20261015/ndarray-matrix-api](../../../results/20261015/ndarray-matrix-api/README.md) | MPS NDArray API compatibility: failures, coefficient path and deferred views |
+| [results/20261015/ndarray-native](../../../results/20261015/ndarray-native/README.md) | Native row80 NDArray candidate: validation in progress |
+| [results/20261015/ndarray-prefill](../../../results/20261015/ndarray-prefill/README.md) | Native MPS NDArray prefill investigation |
 | [results/20261015/packed-body-prefill](../../../results/20261015/packed-body-prefill/README.md) | Packed BF16 prefill tiles: rejected |
 | [results/20261015/padded-mps-body](../../../results/20261015/padded-mps-body/README.md) | Padded-row native MPS body projection: rejected |
 | [results/20261015/parallel-vision-context](../../../results/20261015/parallel-vision-context/README.md) | Parallel FP32 vision value contraction |

@@ -1,0 +1,65 @@
+Quiet interval verified; starting exclusive checks probe
+Starting configure
+Completed configure
+Completed all clean cases for configure
+Starting build
+Completed build
+Completed all clean cases for build
+Starting ndarray-cache-compile
+Completed ndarray-cache-compile
+Completed all clean cases for ndarray-cache-compile
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 0
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 1
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 2
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 3
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 4
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 5
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 6
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 7
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 8
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 9
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 10
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 11
+Starting ndarray-cache
+Discarded interrupted validation case ndarray-cache 0 12
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/source/test2026/metal/run_ndarray_native_checks.py", line 15, in <module>
+    if '--generate-only' not in sys.argv[3:]:exec(compile(source,str(destination),'exec'))
+                                             ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/logs/ndarray-native-checks-20261015/jobs.complete30.executed.py", line 100, in <module>
+    run('ndarray-cache',[str(output/'ndarray_prefill_cache_gpu')])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/logs/ndarray-native-checks-20261015/jobs.complete30.executed.py", line 73, in run
+    time.sleep(.5)
+    ~~~~~~~~~~^^^^
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/source/test2026/metal/launch_ndarray_native_checks.py", line 11, in <module>
+    exec(compile(source,__file__,'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/source/test2026/metal/launch_ndarray_native_checks.py", line 29, in <module>
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 398, in call
+    return p.wait(timeout=timeout)
+           ~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1279, in wait
+    return self._wait(timeout=timeout)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2084, in _wait
+    (pid, sts) = self._try_wait(0)
+                 ~~~~~~~~~~~~~~^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2042, in _try_wait
+    (pid, sts) = os.waitpid(self.pid, wait_flags)
+                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

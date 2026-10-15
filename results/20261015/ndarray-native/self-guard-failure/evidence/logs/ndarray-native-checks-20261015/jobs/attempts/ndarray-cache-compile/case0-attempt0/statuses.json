@@ -1,0 +1,26 @@
+[
+  {
+    "name": "ndarray-cache-compile",
+    "command": [
+      "/usr/bin/xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/source/test2026/metal/ndarray_prefill_cache_gpu.mm",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/build-ndarray-prefill-shape80/libgarnet_metal.a",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/ndarray-native-investigation-20261015/logs/ndarray-native-checks-20261015/jobs/ndarray_prefill_cache_gpu"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 1.3821089593693614
+  }
+]

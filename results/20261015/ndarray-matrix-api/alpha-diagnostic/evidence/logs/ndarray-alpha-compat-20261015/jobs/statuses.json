@@ -1,0 +1,68 @@
+[
+  {
+    "name": "harness",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/make_ndarray_alpha_probe.py",
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-alpha-compat-20261015/jobs/ndarray_alpha_gpu.mm"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "compile",
+    "command": [
+      "xcrun",
+      "clang++",
+      "-std=c++17",
+      "-fobjc-arc",
+      "-O3",
+      "-I/Users/zsdx/garnet-metal-investigation/source/src/backends/metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-alpha-compat-20261015/jobs/ndarray_alpha_gpu.mm",
+      "-framework",
+      "Foundation",
+      "-framework",
+      "Metal",
+      "-framework",
+      "MetalPerformanceShaders",
+      "-o",
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-alpha-compat-20261015/jobs/ndarray_alpha_gpu"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "mixed-unit",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-alpha-compat-20261015/jobs/ndarray_alpha_gpu",
+      "mixed",
+      "unit"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "mixed-three",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-alpha-compat-20261015/jobs/ndarray_alpha_gpu",
+      "mixed",
+      "three"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "f32-unit",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-alpha-compat-20261015/jobs/ndarray_alpha_gpu",
+      "f32",
+      "unit"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "f32-three",
+    "command": [
+      "/Users/zsdx/garnet-metal-investigation/logs/ndarray-alpha-compat-20261015/jobs/ndarray_alpha_gpu",
+      "f32",
+      "three"
+    ],
+    "exit_code": 0
+  }
+]

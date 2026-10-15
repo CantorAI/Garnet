@@ -36,7 +36,8 @@ def main():
     paths += [ROOT / 'results/20261015' / name / 'README.md' for name in
               ('dependent-mlp-graph', 'stage-rounded-mlp-graph', 'mlp-prefill-native',
                'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native','eight-fma-body',
-               'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe')]
+               'two-body','two-matrix-probe','shape-selected-two-native','mlp-bf16-feed-primitive','four-threadgroup-probe',
+               'ndarray-matrix-api','ndarray-prefill','ndarray-native')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -134,6 +135,18 @@ def main():
             f"{g['minimum']:.6f} / {g['maximum']:.6f}",str(g['outside_five_percent']),
             f"{w['minimum']:.6f} / {w['maximum']:.6f}",str(w['outside_five_percent'])]
         null_numbers+=6
+    p=ROOT/'results/20261015/ndarray-prefill'
+    cohorts=[json.loads((p/n/'verification.json').read_text()) for n in ('repaired','confirmation')]
+    decision=json.loads((p/'decision-analysis.json').read_text())
+    assert decision['confirmation_complete'] and decision['qualified']==[dict(model='Qwen3.5-0.8B',batch=1,policy=2)]
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==len(cohorts[0]['profiles'])==len(cohorts[1]['profiles'])==12
+    ndarray_numbers=0
+    for cells,a,b in zip(rows,cohorts[0]['profiles'],cohorts[1]['profiles']):
+        assert (a['model'],a['batch'],a['policy'])==(b['model'],b['batch'],b['policy'])
+        assert cells[0].strip()==a['model'] and int(cells[1])==a['batch'] and cells[2].strip()=={1:'mixed',2:'F32',3:'null'}[a['policy']]
+        assert [c.strip() for c in cells[3:]]==[f'{v:.6f}' for v in (a['gpu_fraction'],a['wall_fraction'],b['gpu_fraction'],b['wall_fraction'])]
+        ndarray_numbers+=4
     p=ROOT/'results/20261015/mlp-prefill-native'
     phase=json.loads((p/'phase-analysis.json').read_text())
     rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines()
@@ -151,7 +164,7 @@ def main():
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
                   component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,
                   selected_native_table_values_checked=selected_native_numbers,bf16_component_table_values_checked=bf16_numbers,
-                  phase_table_values_checked=phase_numbers,null_calibration_table_values_checked=null_numbers,status='passed',
+                  phase_table_values_checked=phase_numbers,null_calibration_table_values_checked=null_numbers,ndarray_component_table_values_checked=ndarray_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

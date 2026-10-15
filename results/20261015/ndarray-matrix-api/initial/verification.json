@@ -1,0 +1,43 @@
+{
+  "verified_files": 24,
+  "numerical_records": 2,
+  "modes": [
+    {
+      "mode": "mixed",
+      "exit_code": 1,
+      "compatible": false,
+      "numerical_records": 1,
+      "checks": [
+        {
+          "shape": 0,
+          "pattern": 0,
+          "native_fp64_worst": 0.00806527671584896,
+          "candidate_fp64_worst": 20329482.753762126,
+          "comparison_worst": 816246.6764924063,
+          "passed": false,
+          "diagnostic_inverse_scale_comparison": 0.00034480394216829664
+        }
+      ]
+    },
+    {
+      "mode": "f32",
+      "exit_code": 1,
+      "compatible": false,
+      "numerical_records": 1,
+      "checks": [
+        {
+          "shape": 0,
+          "pattern": 0,
+          "native_fp64_worst": 0.00806527671584896,
+          "candidate_fp64_worst": 20329482.753762126,
+          "comparison_worst": 816246.6764924063,
+          "passed": false,
+          "diagnostic_inverse_scale_comparison": 0.00034480394216829664
+        }
+      ]
+    }
+  ],
+  "all_compatible": false,
+  "scope": "Synthetic API compatibility only. Failed gates remain failed; inverse-scale comparisons are diagnostics, never admissions. Native bounds unchanged; statistic reconciliation tolerance is not an output tolerance. No model or speed claim.",
+  "full_goal_met": false
+}

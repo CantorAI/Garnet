@@ -1,0 +1,331 @@
+{
+  "cohorts": [
+    "repaired",
+    "confirmation"
+  ],
+  "observations": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 1,
+      "cohorts": {
+        "repaired": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9964945914577634,
+          "null_wall_fraction": 1.0002298240910874
+        },
+        "confirmation": {
+          "admitted": false,
+          "calibrated": false,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9891430484936363,
+          "null_wall_fraction": 0.9421356063480989
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 2,
+      "cohorts": {
+        "repaired": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9964945914577634,
+          "null_wall_fraction": 1.0002298240910874
+        },
+        "confirmation": {
+          "admitted": false,
+          "calibrated": false,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9891430484936363,
+          "null_wall_fraction": 0.9421356063480989
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": 1,
+      "cohorts": {
+        "repaired": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": 1.0004561935570988,
+          "wall_fraction": 0.9676420296408003,
+          "null_gpu_fraction": 1.017166086977163,
+          "null_wall_fraction": 1.0365123329320767
+        },
+        "confirmation": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": 0.9986238035620629,
+          "wall_fraction": 1.0285648732114152,
+          "null_gpu_fraction": 1.011081252160606,
+          "null_wall_fraction": 1.0104259843286088
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": 2,
+      "cohorts": {
+        "repaired": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": 0.9973658462959873,
+          "wall_fraction": 0.8867519947232069,
+          "null_gpu_fraction": 1.017166086977163,
+          "null_wall_fraction": 1.0365123329320767
+        },
+        "confirmation": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": 0.9981337116453188,
+          "wall_fraction": 0.8970252895967713,
+          "null_gpu_fraction": 1.011081252160606,
+          "null_wall_fraction": 1.0104259843286088
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 1,
+      "cohorts": {
+        "repaired": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9965922699931521,
+          "null_wall_fraction": 1.0043390924585491
+        },
+        "confirmation": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.980929304096232,
+          "null_wall_fraction": 0.9629746924031299
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 2,
+      "cohorts": {
+        "repaired": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9965922699931521,
+          "null_wall_fraction": 1.0043390924585491
+        },
+        "confirmation": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.980929304096232,
+          "null_wall_fraction": 0.9629746924031299
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 1,
+      "cohorts": {
+        "repaired": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9731284484779177,
+          "null_wall_fraction": 0.9757361796449568
+        },
+        "confirmation": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9508809277765958,
+          "null_wall_fraction": 0.955611615712292
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 2,
+      "cohorts": {
+        "repaired": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9731284484779177,
+          "null_wall_fraction": 0.9757361796449568
+        },
+        "confirmation": {
+          "admitted": false,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": null,
+          "wall_fraction": null,
+          "null_gpu_fraction": 0.9508809277765958,
+          "null_wall_fraction": 0.955611615712292
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": 1,
+      "cohorts": {
+        "repaired": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": 0.950317979777869,
+          "wall_fraction": 0.947972816307818,
+          "null_gpu_fraction": 1.0229397720943942,
+          "null_wall_fraction": 1.0266985943562388
+        },
+        "confirmation": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": 0.9818242942043176,
+          "wall_fraction": 0.981563019304267,
+          "null_gpu_fraction": 0.9654321617109926,
+          "null_wall_fraction": 0.977348458322551
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": 2,
+      "cohorts": {
+        "repaired": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": true,
+          "gpu_fraction": 0.8780010925791975,
+          "wall_fraction": 0.8239629192916255,
+          "null_gpu_fraction": 1.0229397720943942,
+          "null_wall_fraction": 1.0266985943562388
+        },
+        "confirmation": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": true,
+          "gpu_fraction": 0.8809545130183438,
+          "wall_fraction": 0.8338398667356057,
+          "null_gpu_fraction": 0.9654321617109926,
+          "null_wall_fraction": 0.977348458322551
+        }
+      },
+      "qualifies_in_all_available": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": 1,
+      "cohorts": {
+        "repaired": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": 1.0542501178174661,
+          "wall_fraction": 1.0435811661873189,
+          "null_gpu_fraction": 1.0167350015719407,
+          "null_wall_fraction": 1.0141298431113541
+        },
+        "confirmation": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": true,
+          "gpu_fraction": 0.9496360075028234,
+          "wall_fraction": 0.9467828288554708,
+          "null_gpu_fraction": 0.9780395136999617,
+          "null_wall_fraction": 0.9814689496270039
+        }
+      },
+      "qualifies_in_all_available": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": 2,
+      "cohorts": {
+        "repaired": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": false,
+          "gpu_fraction": 0.9631923837892294,
+          "wall_fraction": 0.9129201684470809,
+          "null_gpu_fraction": 1.0167350015719407,
+          "null_wall_fraction": 1.0141298431113541
+        },
+        "confirmation": {
+          "admitted": true,
+          "calibrated": true,
+          "qualifies": true,
+          "gpu_fraction": 0.9267667759945313,
+          "wall_fraction": 0.8882836942585451,
+          "null_gpu_fraction": 0.9780395136999617,
+          "null_wall_fraction": 0.9814689496270039
+        }
+      },
+      "qualifies_in_all_available": false
+    }
+  ],
+  "qualified": [
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": 2
+    }
+  ],
+  "confirmation_complete": true,
+  "rule": "Original numeric gates; candidate GPU and wall fraction <=0.95, own native-null GPU/wall within5%, in both frozen cohorts before integration.",
+  "scope": "Trained projection sets only, not full-model or matched vLLM result. No statistical confidence interval.",
+  "full_goal_met": false
+}
