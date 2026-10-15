@@ -1,0 +1,27 @@
+{
+  "pid": 91274,
+  "status": {
+    "exit_code": 0,
+    "wall_seconds": 1219.346420165617
+  },
+  "completed_original_stages": 20,
+  "source_manifest": {
+    "cmake/GarnetMetal.cmake": "7a0e827ca4acc6c3c6af6dbb84a3a2c0770cad5a7979024da0005b5c9208b38c",
+    "src/backends/metal/metal_context.mm": "2a6fd38324b6b99f6ba2cd57e37dd877d8e888a75f648978bd487cf5f30482a8",
+    "src/backends/metal/metal_context.h": "29ed0b8ec3f90f9792fd3981dbf69389a08663f715a438bec6d77f998c1f14a5",
+    "src/backends/metal/compiled_graph.cpp": "2f8a4f5c7d5019a125b059b36990b620847125b5ad29a89e25b5e04c24824c26",
+    "src/backends/metal/decoder_session.cpp": "b374d372d170d330caf4a265d6c96d6012ea13dcffdf7397bed5a7f9d9a7a2bb",
+    "src/backends/metal/decoder_session.h": "3532fe329932bdcad34abfaaf5c2e904b0980c90238726a23a27fa6469fdb394",
+    "src/entry/metal_main.cpp": "ccfcadcffe6b859e63c01e06cd72737c48131f2a5dda9b558a93679995609b81",
+    "test2026/metal/run_matched_garnet.py": "3964716123ea2a0beadcef2ee0180153268932c068f55a4a4f3c04eb2255adf3",
+    "test2026/metal/frame_worker_garnet.py": "7cc062513ecfe0b85fd690e65a17c1eae9a0cb05b61d437ab6ac89766087884d",
+    "src/backends/metal/screened_head_index.h": "7b99289aba1a885a8cf0c13de7471c19c878f5c2828aa996803383bced69cb19",
+    "src/backends/metal/screened_head_shader.h": "0ef7f784ebef0f5a8ed11dcc3b0801108f1487f4c2cf8400481036b49ed56850",
+    "src/backends/metal/screened_head_native_impl.h": "606aa133c225729a795dc6935670d5bac50b26d71078591835c2a36d2d905f9f",
+    "test2026/metal/screened_head_test.cpp": "a2a9ea330b7048e0dd67501c0950dbe0dc84da14b9c2f68a9e4eb5f42be1b9f4",
+    "test2026/metal/screened_head_real_test.mm": "6d0cee41e1bca7711bdd7d9e9dc00b1a765c1610fe62792a7d84b45afe91242f",
+    "test2026/metal/test_screened_head_real.py": "821ede10f7ce0612a1abd22b92fb03314dc71e8e15c47fbf74278a2d0f0cbeb5",
+    "test2026/metal/run_guarded_screened_head_checks.py": "15e6dee2f3fc1727877fe7d656a6f4a5ebf30800b439e1077a17e6d80122f17e",
+    "test2026/metal/launch_screened_head_checks.py": "8400ece3d0fd758b34c303b1934dd4e266194d883630ee2da76c4315fcdc21c5"
+  }
+}

@@ -166,14 +166,18 @@ original retained-row refinement and original argmax. Public full-logit graph
 execution continues to compute all logits. The index increases resident
 memory and initialization work; inference measurements must report these.
 
-Owned validation PID 91274 has passed CTests and all 51 trained-head queries
+Owned validation PID 91274 exited 0 after 1219.3464 s. All 20 stages passed:
+the original 19 model-validation stages plus all 51 trained-head queries
 through the native context, including original full-logit bits, retained bits,
-every rejected row and predictions. The original 19 model-validation stages
-are still running. Queued PID 3415 waits for all 20 stages and their pinned
-source manifest before trained session/recovery checks and six-profile ABBA.
-Full generated-output validation, repeated native measurements and a fresh
-matched comparator study remain necessary. No current serving speed claim
-follows from the component timings.
+every rejected row and predictions. Queued PID 3415 verified that terminal
+status and the pinned source manifest, then began trained session/recovery
+checks before six-profile ABBA. It subsequently exited 0 with six recovery
+cases and 72 complete matching requests. Initial whole-model decode gains
+are 7.5–10.4%; fresh-process confirmation is running as PID 17037.
+Those inference observations are recorded separately in
+[the native study](../screened-head-inference/README.md).
+Repeated native measurements and a fresh matched comparator study remain
+necessary. The component timings alone do not establish serving performance.
 
 ```text
 python3 launch_screened_head_after_rejection.py ROOT ROOT/logs/screened-head-after-vision-20261015 checks
