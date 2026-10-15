@@ -1,0 +1,50 @@
+{
+  "common_frontend": "combined threaded decode and exact-coordinate strip resize on both builds",
+  "scope": "Full native ABBA; only VL B2 replaces [32,32,16] with a single chunk80.",
+  "library_sha256": {
+    "control": "837d6f3a55598b3169be7569a00a2ab5935fd60e4643546131790a2e654e4471",
+    "candidate": "9ee337d9db7d14bcff29a90970c4b5ac9021aee9f89a38a7f6f364051927d77b"
+  },
+  "source_sha256": {
+    "compare_wide_batch_prefill.py": "b9474ed49237ca028cd0234310a1a1be035a3df52f48eea3287eac3b80620cb5",
+    "run_matched_garnet.py": "952391b620559b38fced6d01a3fb0e6303cf8e166f88e7a78386da354d5fb896",
+    "run_threaded_striped_frame_process.py": "3cad4eab6c29e190eeda96a6e7a78ef52e24494c7c5931b61d7530e0650342ff",
+    "frame_worker_garnet.py": "56a8f04ec2af4ffe3d25388f75cbb4d566dd4c48393514cf29b8b8489347bd94",
+    "compare_parallel_vision.py": "f8aca690ddeecac00bff849bc38e8548ddc4b4b00e2c5d19e5b509065b113456",
+    "compare_vision_global_alpha.py": "c38705239b1bb9238ef5d5ed22de66a91cfaf8adc7c2d49450b739238a26c156",
+    "run_screened_head_profiles.py": "45bd0bc92d8267856106a9352f356d89bfe242371bb372ebae08e8d25decb470",
+    "run_screened_head_session_reference.py": "e4923445b271e6d7ea0c894c612d2f8a00b243ea9967891438d72b9def33cd33",
+    "frame_threaded_striped.py": "36bb745eb06c211708d72096bedd41a37204dafc29b8a7228c3fde7233e9f722",
+    "frame_webp_threaded.py": "1a58a8eabdc4db083e68cc53a5f1f1310222aa8726fc2000bab89f69a8294a43",
+    "frame_preprocessing_striped.py": "70c506c27338502a0f09c0ff16c6a1349365648302e50a8e9f193b67a8c1cba9",
+    "run_webp_thread_frame_process.py": "625de16554c095a5ec4219d899606a9b1db5af50c7c2c29ad7ad57a527027717",
+    "run_matched_frame_process.py": "a30bdcd1da7e411b91ce7797235268b47bd4ab4099720e7267f95f8011464ec7",
+    "frame_preprocessing.py": "e8bfb8adc169b3ab322378a5685e7a835b3def0c585835f3ae3ba5b662492a95",
+    "compare_screened_head.py": "75fe5a975206e7bb993ec4f8b9897307ce3bdf57ada9e5ce2e0e4e9236e71999",
+    "compare_dirty_prefix_reset.py": "7ea69979182c68a07065f01fd9d9990cc0250d50d5a5c72edb17776f145bb263",
+    "run_screened_prefill_reset_profiles.py": "c21c369e060c712f03f6ec3fb3d8aafc27fc6b9a1730b0bb01d43c7093ef6996",
+    "compare_screened_prefill_reset.py": "a95f9598fe0f61a9c37d72455aea304f196c0552982d76a7a75f6887306da7bb",
+    "run_serial_vision_profiles.py": "17cbe05a1f371816d32e3caa11f649ca227637a554b44a00e2b3ba1e45ea1248"
+  },
+  "assets": {
+    "Qwen3-0.6B": {
+      "model.safetensors": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+      "tokenizer.json": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+    }
+  },
+  "threaded_decoder_sha256": "3c86ac196227b3729477cd24704ea4cea4e796fe5f9933c7a5a20361a32804a3",
+  "wide_batch_prefill": {
+    "candidate_vl_b2_plan": [
+      80
+    ],
+    "control_vl_b2_plan": [
+      32,
+      32,
+      16
+    ],
+    "logical_inputs_unchanged": true,
+    "physical_total_slots": 80,
+    "no_fresh_vllm_ratio": true
+  }
+}

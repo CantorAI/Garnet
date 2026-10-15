@@ -1,0 +1,40 @@
+{
+  "candidate_sha256": "9ee337d9db7d14bcff29a90970c4b5ac9021aee9f89a38a7f6f364051927d77b",
+  "control_sha256": "73c10e5dc62eb97607e9ded9a1df8bb6702d87375620bd5dc160d8b871f78ce2",
+  "options": [
+    "METAL",
+    "METAL_XMODEL",
+    "METAL_EXACT_HALF_PREFILL",
+    "METAL_MPS_VISION_SCORES",
+    "METAL_PARALLEL_DELTA_SPLIT",
+    "METAL_FLOAT_DENSE_KEY_PREFILL",
+    "METAL_LINEAR_CHUNK_DIRECT_WRITE",
+    "METAL_LINEAR_CHUNK_CONV",
+    "METAL_LINEAR_CHUNK_DELTA",
+    "METAL_SMALL_OUTPUT_DECODE",
+    "METAL_QWEN35_EXTENDED_PREFILL",
+    "METAL_RESIDENT_KV_INPLACE",
+    "METAL_ATTENTION_PREFIX",
+    "METAL_GLOBAL_HALF_ALPHA",
+    "METAL_SCREENED_HEAD",
+    "METAL_PREFILL_STREAM",
+    "METAL_DIRTY_PREFIX_RESET",
+    "METAL_SERIAL_VISION_PREFETCH",
+    "METAL_SMALL_SCREEN_SEED",
+    "METAL_INTERLEAVED_SCREEN_INDEX",
+    "METAL_QWEN35_WIDE_BATCH_PREFILL"
+  ],
+  "source_sha256": {
+    "src/backends/metal/metal_context.mm": "7bdc6ee92cf7a66bc0a25e67201251808db98605cb98fc4f16c519183d78c5f9",
+    "cmake/GarnetMetal.cmake": "eaff2ea09cd3f6a06d7d2cf69cfaac59e79d062bc75a4ad7c7db59761f254c4b",
+    "src/entry/metal_main.cpp": "299d5c44d10a9889f427594548d6f5c91d6dbe19002090b4322ca4e01aab6d15",
+    "src/backends/metal/compiled_graph.cpp": "25224a1821d685aacd6c6cfffafe65731648ee7d210263ed52cb5f8b285539cf",
+    "src/backends/metal/metal_context.h": "80e135d5a1543cde5e21b610115f2f9bb8ca782a1db6d63a8ce7c6fdffe68f9b",
+    "src/backends/metal/decoder_session.cpp": "9ad22676233a86279d390ef8ed43dfe695761c9b0813f16bf1ad21dac3b8e6d5",
+    "src/backends/metal/decoder_session.h": "4ea0b09920b1dddcb6e6a68d1f47557cbcce990cbea2d2ae6910d9e812fed904",
+    "xModel/qwen/metal_dense/decoder.py": "92ee08c4ee3ca54e61b6597d79e63f342c99f62f9fd678e98fc1ff79741f6378",
+    "xModel/qwen35/vl_0_8b/metal_decoder.py": "3a6f615c0ccdda9ac3b73e4372b60a8da06e95a0cfdddae186d91617a7c95a8d",
+    "test2026/metal/run_dense_reference.py": "d6651780c283093effe1d8a27304f907976948d1647ed38608b043203bde4a94",
+    "test2026/metal/run_joined_prefill_checks.py": "fac8cdcf920e7773496ddbffc871a8ab6e75302c9254989409329eac1630b0ac"
+  }
+}
