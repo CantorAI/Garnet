@@ -72,9 +72,12 @@ Peak individual RSS and observed first-request/init values are independently
 recomputed from the raw worker logs in the two verification JSON files.
 Combined native archive SHA-256:
 `d0e224b893277ee368eb8b3f1181879460f932fe7e176fdc363939f18055f5ca`.
+Validated candidate dylib SHA-256:
+`2b44d93ab1e1980845be89ea59cbaedbebcb66ad385ba24df3d52af2b6bacc23`.
 
 Fresh matched comparator PID 20154 at `logs/screened-head-vllm-20261015` is
-running actual GPU FP32 dtype audits before all six sequential comparisons.
+running all six sequential comparisons after three actual GPU FP32 dtype
+audits passed. Text B1/B2 and coder B1 have completed with exact outputs.
 It uses a separate pinned selection file and the same combined CPU frontend
 for both runtimes. The option remains OFF; no general promotion is implied.
 
