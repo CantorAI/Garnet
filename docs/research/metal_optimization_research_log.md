@@ -426,6 +426,29 @@ Python syntax checks have run; no Mac compile or GPU execution is claimed.
 It must run sequentially after owned-job terminal capture/archival. No component
 or full-model gain is established for this kernel. The full goal remains unmet.
 
+### 2026-10-15 — comparison audit bookkeeping; decode probe queued in sequence
+
+Resumed validation has passed all trained-layer/head and vision checks at this
+observation; extended prefill/recovery remain. No full-suite or model speed
+result is established yet. Controller82980 still gates the native benchmark
+on terminal success, archival and the separate frozen-evidence audit.
+
+Static review found an audit bookkeeping mismatch: the original validation
+archive has fewer files than the combined validation-plus-native-comparison
+archive. The frozen auditor incorrectly required equal counts. A new auditor,
+`verify_mlp_prefill_native_comparison.py`, checks every combined file, records
+the original count separately and preserves every numerical/coverage/source/
+library equality. This was discovered before executing that audit; it is not
+an observed numerical failure or a relaxed accuracy gate.
+
+Controller88447 waits on exact controller82980 and its recorded native worker.
+It archives/audits the complete native comparison before dispatching the
+compact-eight decode probe. Any failed dependency/audit stops dispatch.
+The probe remains unexecuted, with only generation/Python syntax checked.
+[Native sequence and audit scope](../../results/20261015/mlp-prefill-native/README.md),
+[queued decode protocol](../../results/20261015/coalesced-eight-body/README.md).
+The full2x decode/half-TTFT goal remains active and unmet.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

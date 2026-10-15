@@ -1,4 +1,4 @@
-# Compact eight-output decode: prepared, not executed
+# Compact eight-output decode: queued, not executed
 
 Hypothesis: share each activation float4 across two adjacent original
 four-output compact BF16 blocks, reducing activation loads and scheduling
@@ -16,7 +16,8 @@ dispatch counters are asserted in the generated harness. Decode only; no
 native source or serving default changes. The source factory generates a
 private context/header and harness, leaving the live MLP validation untouched.
 
-Current status: source generation and Python AST checks pass locally. Neither
+Current status: source generation and Python AST checks pass locally. The
+source files have been transferred to the isolated investigation. Neither
 the Objective-C++ probe nor the Metal shader has compiled or executed on the
 Mac. No GPU correctness, latency, memory or speed claim is made.
 
@@ -49,3 +50,16 @@ A clean launcher/resource guard is required before executing this invocation
 template. Selection requires repeated component evidence, unchanged original
 model gates, full generated-output comparison and fresh repeated matched vLLM
 measurements. The full 2x decode/half-TTFT goal remains unmet.
+
+Controller PID88447 at `ROOT/logs/mlp-prefill-native-and-eight-finalize-20261015`
+waits for exact upstream controller82980, then the actual native comparison PID
+recorded by that controller. It archives the terminal native comparison and
+requires the separate 72-complete-output audit before launching this probe.
+Any upstream or audit failure stops dispatch. Native and component GPU work
+cannot overlap through this sequence. Controller exit0 means probe dispatched,
+not a successful probe or performance result. The probe's own quiet guard and
+original numerical/timing admission checks remain mandatory.
+
+```text
+python3 finalize_mlp_profiles_and_launch_eight.py ROOT ROOT/logs/mlp-prefill-native-and-eight-finalize-20261015
+```

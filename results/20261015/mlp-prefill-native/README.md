@@ -104,3 +104,13 @@ Any failure stops dispatch. Controller exit0 means benchmark dispatched only,
 not a passing benchmark or performance goal. Raw archive/audit/launch commands
 and logs are saved under the controller folder. Sources remain frozen through
 the dependent comparison and its terminal archive.
+
+A second controller PID88447 waits for that dispatch and exact native job,
+then archives and audits the full comparison before admitting the independent
+compact-eight decode probe. The native comparison audit uses
+`verify_mlp_prefill_native_comparison.py`. Static review found that the earlier
+auditor compared the original-check archive's file count with the larger
+combined archive's count. The original auditor remains frozen. Its replacement
+separates these two bookkeeping counts, checks every combined-archive file,
+and preserves equality of every numerical/coverage/source/library field. No
+executed numerical failure is waived, and no tolerance is changed.

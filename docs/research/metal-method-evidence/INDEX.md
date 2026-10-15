@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T20:33:27.880696+00:00
+Generated UTC: 2026-10-15T20:42:57.570161+00:00
 
-Base HEAD at generation: `2f23ff6729cc1f1f37f489a13e9ea7f69161d859`. Reports indexed: **146**.
+Base HEAD at generation: `86cfeffb31e9343377dc5c04d57f2589714294d7`. Reports indexed: **146**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -90,7 +90,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/coalesced-body-block](../../../results/20261015/coalesced-body-block/README.md) | Exact coalesced BF16 block storage: repeated component signal |
 | [results/20261015/coalesced-body-native](../../../results/20261015/coalesced-body-native/README.md) | Native lossless BF16 blocks: repeated full-model decode gains |
 | [results/20261015/coalesced-body-vllm](../../../results/20261015/coalesced-body-vllm/README.md) | Fresh lossless-body comparison against vLLM-Metal: initial cohort audited |
-| [results/20261015/coalesced-eight-body](../../../results/20261015/coalesced-eight-body/README.md) | Compact eight-output decode: prepared, not executed |
+| [results/20261015/coalesced-eight-body](../../../results/20261015/coalesced-eight-body/README.md) | Compact eight-output decode: queued, not executed |
 | [results/20261015/combined-graph-error-diagnostic](../../../results/20261015/combined-graph-error-diagnostic/README.md) | Combined-graph numerical diagnosis: failures isolated to special native keys |
 | [results/20261015/combined-graph-prefill](../../../results/20261015/combined-graph-prefill/README.md) | Combined projection graphs: component gains with rejected batch-2 profiles |
 | [results/20261015/combined-prefill-reset](../../../results/20261015/combined-prefill-reset/README.md) | Combined bounded reset and ordered prefill: initial latency tradeoff |
