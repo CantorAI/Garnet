@@ -1,0 +1,9 @@
+Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b2 garnet-0
+Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b2 coalesced_block_counts
+Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b2 vllm-metal-0
+Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b2 vllm-metal-0
+Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b2 vllm-metal-1
+Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b2 vllm-metal-1
+Starting sequential runtime Qwen2.5-Coder-0.5B-Instruct-b2 garnet-1
+Completed exact runtime Qwen2.5-Coder-0.5B-Instruct-b2 coalesced_block_counts
+{"model": "Qwen2.5-Coder-0.5B-Instruct", "batch": 2, "means": {"garnet": {"requests": 4, "ttft_ms": 43.48400002345443, "decode_tps": 83.78785217793006, "initialization_s": 2.812779958592728, "peak_child_rss_bytes": 3192135680}, "vllm-metal": {"requests": 4, "ttft_ms": 81.5715832868591, "decode_tps": 28.439653142619065, "initialization_s": 15.963222187478095, "peak_child_rss_bytes": 3827130368}}, "decode_ratio": 2.94616294220436, "ttft_fraction": 0.5330777983128783, "decode_target_met": true, "ttft_target_met": false, "exact_complete_outputs": true, "counts_as_default_bf16_speedup": false, "scope": "Fresh matched-FP32 native/vLLM comparison with the validated latency bundle."}

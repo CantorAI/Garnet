@@ -1,0 +1,540 @@
+{
+  "files": {
+    "evidence/logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/manifest.json": {
+      "bytes": 6673,
+      "sha256": "44477f82cfd804bd244f1a08cf6dd7e76b9e7d9328ea842bb16dcd0938051184"
+    },
+    "evidence/logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/manifest.json": {
+      "bytes": 6659,
+      "sha256": "fee9ac3e307db5fc090931e77b7a91087fac9485a75f7c5a36534736a5957666"
+    },
+    "evidence/logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/manifest.json": {
+      "bytes": 14145,
+      "sha256": "1bed07c21c74c15406d0a5f84393a5deb808e6d15dcbf69e7758a828f8b328fe"
+    },
+    "evidence/logs/small-body-threshold-20261015/background_service_checks.json": {
+      "bytes": 7102,
+      "sha256": "bfd080b1e0aa85b0884b552222d8c5584d5719b2a62303d0bd3204b771543754"
+    },
+    "evidence/logs/small-body-threshold-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "2093340e17e983ad967283e3c7551aca49ef7d65750c97f09e81ca9e76341952"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 157,
+      "sha256": "d3ef5db84ea77e69bff3fb0ffe2b00ecca2146f7424872cfb062257b5f530fd6"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 9576,
+      "sha256": "60696e75cecf2993bb9cedd2fc390c548d53d6b82b3a80adedd8cee8c357e7e6"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 312,
+      "sha256": "1f33a69bbd95dd64105cf75890245b3af8c9a645f4d32a5969b79f7de7c431e3"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 9679,
+      "sha256": "b3486c57bfae08bf1e2c4546954caba21166524164be385b3a67069489656865"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 235,
+      "sha256": "25d06cf1a36074cd80817211317593a9c7f3a083f0c7b47b9aa2982097f3091f"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 10029,
+      "sha256": "7f8f245ed07df5318d1971bf35f66647499d2574aa499d1915e1ff3b1db485f1"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/admission/report.json": {
+      "bytes": 13524,
+      "sha256": "3eb1d3c69200b3949cb5b31ab55d74661bd770d52c662c610cd1cb9fab62430d"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/admission/source.py": {
+      "bytes": 424,
+      "sha256": "96b872a57fb503a96e6b4c6e0838b2928ecf7fd9531b92b2140b66dbc5d95a63"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/background_service_checks.json": {
+      "bytes": 25225,
+      "sha256": "fcb43756d66b7d397298d437cf725dba9308589cd85f3df97a31fb70718b5588"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/compile-monitor.json": {
+      "bytes": 465,
+      "sha256": "3748bf3d46c69e95e87da194c941fdb3caef0f2864589d52e6932f643f4d3e47"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/compile.log": {
+      "bytes": 1704,
+      "sha256": "67a86c42b417c4adc9faf205cf937537cf24644443d5870d0e54d26933d08db7"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/cpu-admission-monitor.json": {
+      "bytes": 541,
+      "sha256": "c219a11b9fca3678c21160a161fd9d0d392e816c7c40636d6ad51cb7f7925f41"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/cpu-admission.log": {
+      "bytes": 189,
+      "sha256": "ac821b4fc96c3805fc270ee793865df1dceb4efd8bad8cec9d6275bdbbce54ab"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/metadata.json": {
+      "bytes": 35339,
+      "sha256": "0a474f326a10669ba3077e0269582a774a1e66896c5015251620366156326d74"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/metal_context.h": {
+      "bytes": 11411,
+      "sha256": "62a894d013062daf89a978770bbacee3321fad72ecbd1564c0ca39d0779587ba"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/metal_context_small_body_threshold.mm": {
+      "bytes": 196743,
+      "sha256": "8c7d4ce35ab7f83d18d2dbe64c3038949cdffcab756755bf2a4b2ed3b8841e98"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/small_body_threshold_gpu.mm": {
+      "bytes": 9391,
+      "sha256": "6a8c812290ea4f06faffd584683c7a14c6332e0a309210220faff9a8a4fcdcf9"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/src/backends/metal/coalesced_body_block_shader.h": {
+      "bytes": 2406,
+      "sha256": "d9220433e36f81c46f35a72fa1f88f55ac3bc9f1bc3f07b62e39f12972c319fa"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/src/backends/metal/exact_half_codec.h": {
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/src/backends/metal/interleaved_bf16_body_shader.h": {
+      "bytes": 2198,
+      "sha256": "65ca4710cd576e1fddce73adb3bd0922721a8702bf1949bb9fd68329a71a5ecd"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/src/backends/metal/metal_context.h": {
+      "bytes": 11411,
+      "sha256": "62a894d013062daf89a978770bbacee3321fad72ecbd1564c0ca39d0779587ba"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 196622,
+      "sha256": "39069ed2ebb423b1af2b731bc2dbbd1acfebdd2c1de62a0972cb8688ec93a030"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/src/backends/metal/screened_head_index.h": {
+      "bytes": 2066,
+      "sha256": "3eb62e8c510ca49ac718ec510b36c7dec017b91d03ec9c4816de48e167e3726a"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/src/backends/metal/screened_head_native_impl.h": {
+      "bytes": 9090,
+      "sha256": "6ba7906bb0560d6113c3b2deeb9c1d2f92ddedc03527a109cf5800ce8990c1e2"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/src/backends/metal/screened_head_shader.h": {
+      "bytes": 6054,
+      "sha256": "5f827261980ca1af04734eb74aa2fdba6d78b9fe05bee925038b7bd66b5df689"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/audit_coalesced_body_block.py": {
+      "bytes": 3000,
+      "sha256": "d776bc9fc76f241dec5fca757a5ec803c7ff74fb95a5c25c474cf26c5ebc1039"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/audit_small_body_threshold.py": {
+      "bytes": 424,
+      "sha256": "96b872a57fb503a96e6b4c6e0838b2928ecf7fd9531b92b2140b66dbc5d95a63"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/coalesced_body_block_gpu.mm": {
+      "bytes": 9327,
+      "sha256": "9c652d20b00c3140edcdacd3c97216450263d57789bbd7f78007d50d3117445d"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/make_direct_mps_body.py": {
+      "bytes": 1095,
+      "sha256": "54e5aea4dbc2d3fca204c3853062d54bfdf926b06e1b8c2c7a2b23e6b9d18e3d"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/make_prefill_tile_shader.py": {
+      "bytes": 2672,
+      "sha256": "ab757e38a43f47c05c2a6e280b3ff2ad37aaf2fdb05383aa8e72f5bedd355a51"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/make_small_body_threshold.py": {
+      "bytes": 1814,
+      "sha256": "35353c4f7b725617cbbdc4455c09c52761a70e2211c42345b5ee3a4c7fa4a8ab"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/padded_mps_body_gpu.mm": {
+      "bytes": 6358,
+      "sha256": "ee23713db43737c9468e01abb69fc74a714ace6c14fb5e734299a32af714d68c"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/run_direct_mps_body.py": {
+      "bytes": 2205,
+      "sha256": "917facda59bc83da20101be47ca0d9acbfb5835f85be0d263fc1a66477a61391"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/run_packed_body_prefill.py": {
+      "bytes": 4803,
+      "sha256": "5d83ce56a285c8ec038b55fd3d2a90a707e312f4aeb9f60558528ead9cb230be"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/run_padded_mps_body.py": {
+      "bytes": 5134,
+      "sha256": "abc2a8717eea509e25adea78e872c38831838c9ba1d5504a8f744086cde8488a"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/run_small_body_threshold.py": {
+      "bytes": 2676,
+      "sha256": "e14379b414c994e6c689e948dd5c24ed68a2075c429b45c58b76a9dd024e608e"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/run_streamed_direct_mps_body.py": {
+      "bytes": 2472,
+      "sha256": "478bfe687aba49d413406ccd4f23e85ae3d5214a99f85a582de5452b43d5ecc0"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/source-snapshot/test2026/metal/streamed_direct_mps_body_gpu.mm": {
+      "bytes": 5624,
+      "sha256": "324bd6d50a9ea9150103340507f77b52b30bd5664d4fad0360eb5fbe50ca462e"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/statuses.json": {
+      "bytes": 3102,
+      "sha256": "faf8e8f1bf639277d57409ec24e4ce1ffccbb1b14c9ca31060a5b16598fe4e6d"
+    },
+    "evidence/logs/small-body-threshold-20261015/jobs/summary.json": {
+      "bytes": 23381,
+      "sha256": "501d115908c1d71c1ddfbdcbed1e64defc10091de7802de6f17698d8bcf888b9"
+    },
+    "evidence/logs/small-body-threshold-20261015/output.log": {
+      "bytes": 217,
+      "sha256": "0b01aace42323d16bf24a08ea93c8678b260b6d830a0142cb7aa1ba5919b3c6f"
+    },
+    "evidence/logs/small-body-threshold-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "20cc33deb609c3b325c1a0b6aee599b93476218c9576ec231ba09c8dfc021987"
+    },
+    "evidence/logs/small-body-threshold-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/background_service_checks.json": {
+      "bytes": 7101,
+      "sha256": "0bcb6023a30163da99422716dbf80964508c1a10b8e7c9455aa2ff2de77d7e74"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "3a64b0a1d58c7759d8dc25471c3eb27d60eb89aad9df4f0a95e107452916a8dc"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu-monitor.json": {
+      "bytes": 154,
+      "sha256": "34c9dab2a0453428cd5f02354ea79d4edc1c423ffa9cc45a987f5c0f381ca20e"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-gpu.log": {
+      "bytes": 9597,
+      "sha256": "ec4d5ed7072b887cc99d3884847ccc1f6d434749c7ff966b44882ed3762962e9"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/Qwen3-0.6B-gpu-monitor.json": {
+      "bytes": 232,
+      "sha256": "7d507a42b0d2e152fe3a1ac87d4fa66eb62aa687adf00c342076cc7599bb9345"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/Qwen3-0.6B-gpu.log": {
+      "bytes": 9580,
+      "sha256": "4d2a9ba97b52823642b67afc174d8948845007dc9829125678e164931a504ed3"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/Qwen3.5-0.8B-gpu-monitor.json": {
+      "bytes": 235,
+      "sha256": "7b4ae5198f674fa0efbe613dd640393b0122c3f9c92934e1f228cfd628f35fb3"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/Qwen3.5-0.8B-gpu.log": {
+      "bytes": 9954,
+      "sha256": "551b79a2efaee50badc6c6d356d3825db7b9438b673e9802ff2c65bdb0d1da52"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/admission/report.json": {
+      "bytes": 13524,
+      "sha256": "3eb1d3c69200b3949cb5b31ab55d74661bd770d52c662c610cd1cb9fab62430d"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/admission/source.py": {
+      "bytes": 424,
+      "sha256": "96b872a57fb503a96e6b4c6e0838b2928ecf7fd9531b92b2140b66dbc5d95a63"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/background_service_checks.json": {
+      "bytes": 24440,
+      "sha256": "7851710097d955b0cdfb5a212fc639888f22ea230b03494363557e97c73e84fa"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/compile-monitor.json": {
+      "bytes": 464,
+      "sha256": "c9ea6379681591e94665e64f6ace6c3e070701650072e4fb7f6d11223f1fa18b"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/compile.log": {
+      "bytes": 1720,
+      "sha256": "ad74fdd38560eccde4dbdad528aaf4e6baa17066e8e56fa964fa6d0a81b6c202"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/cpu-admission-monitor.json": {
+      "bytes": 539,
+      "sha256": "caa70ce62ef09ccd05d1f15c26cbeb1e4e78b3614f66647de441aa58475059df"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/cpu-admission.log": {
+      "bytes": 189,
+      "sha256": "ac821b4fc96c3805fc270ee793865df1dceb4efd8bad8cec9d6275bdbbce54ab"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/metadata.json": {
+      "bytes": 35339,
+      "sha256": "0a474f326a10669ba3077e0269582a774a1e66896c5015251620366156326d74"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/metal_context.h": {
+      "bytes": 11411,
+      "sha256": "62a894d013062daf89a978770bbacee3321fad72ecbd1564c0ca39d0779587ba"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/metal_context_small_body_threshold.mm": {
+      "bytes": 196743,
+      "sha256": "8c7d4ce35ab7f83d18d2dbe64c3038949cdffcab756755bf2a4b2ed3b8841e98"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/small_body_threshold_gpu.mm": {
+      "bytes": 9391,
+      "sha256": "6a8c812290ea4f06faffd584683c7a14c6332e0a309210220faff9a8a4fcdcf9"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/src/backends/metal/coalesced_body_block_shader.h": {
+      "bytes": 2406,
+      "sha256": "d9220433e36f81c46f35a72fa1f88f55ac3bc9f1bc3f07b62e39f12972c319fa"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/src/backends/metal/exact_half_codec.h": {
+      "bytes": 1427,
+      "sha256": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/src/backends/metal/interleaved_bf16_body_shader.h": {
+      "bytes": 2198,
+      "sha256": "65ca4710cd576e1fddce73adb3bd0922721a8702bf1949bb9fd68329a71a5ecd"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/src/backends/metal/metal_context.h": {
+      "bytes": 11411,
+      "sha256": "62a894d013062daf89a978770bbacee3321fad72ecbd1564c0ca39d0779587ba"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 196622,
+      "sha256": "39069ed2ebb423b1af2b731bc2dbbd1acfebdd2c1de62a0972cb8688ec93a030"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/src/backends/metal/screened_head_index.h": {
+      "bytes": 2066,
+      "sha256": "3eb62e8c510ca49ac718ec510b36c7dec017b91d03ec9c4816de48e167e3726a"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/src/backends/metal/screened_head_native_impl.h": {
+      "bytes": 9090,
+      "sha256": "6ba7906bb0560d6113c3b2deeb9c1d2f92ddedc03527a109cf5800ce8990c1e2"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/src/backends/metal/screened_head_shader.h": {
+      "bytes": 6054,
+      "sha256": "5f827261980ca1af04734eb74aa2fdba6d78b9fe05bee925038b7bd66b5df689"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/audit_coalesced_body_block.py": {
+      "bytes": 3000,
+      "sha256": "d776bc9fc76f241dec5fca757a5ec803c7ff74fb95a5c25c474cf26c5ebc1039"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/audit_small_body_threshold.py": {
+      "bytes": 424,
+      "sha256": "96b872a57fb503a96e6b4c6e0838b2928ecf7fd9531b92b2140b66dbc5d95a63"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/coalesced_body_block_gpu.mm": {
+      "bytes": 9327,
+      "sha256": "9c652d20b00c3140edcdacd3c97216450263d57789bbd7f78007d50d3117445d"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/make_direct_mps_body.py": {
+      "bytes": 1095,
+      "sha256": "54e5aea4dbc2d3fca204c3853062d54bfdf926b06e1b8c2c7a2b23e6b9d18e3d"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/make_prefill_tile_shader.py": {
+      "bytes": 2672,
+      "sha256": "ab757e38a43f47c05c2a6e280b3ff2ad37aaf2fdb05383aa8e72f5bedd355a51"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/make_small_body_threshold.py": {
+      "bytes": 1814,
+      "sha256": "35353c4f7b725617cbbdc4455c09c52761a70e2211c42345b5ee3a4c7fa4a8ab"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/padded_mps_body_gpu.mm": {
+      "bytes": 6358,
+      "sha256": "ee23713db43737c9468e01abb69fc74a714ace6c14fb5e734299a32af714d68c"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/run_direct_mps_body.py": {
+      "bytes": 2205,
+      "sha256": "917facda59bc83da20101be47ca0d9acbfb5835f85be0d263fc1a66477a61391"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/run_packed_body_prefill.py": {
+      "bytes": 4803,
+      "sha256": "5d83ce56a285c8ec038b55fd3d2a90a707e312f4aeb9f60558528ead9cb230be"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/run_padded_mps_body.py": {
+      "bytes": 5134,
+      "sha256": "abc2a8717eea509e25adea78e872c38831838c9ba1d5504a8f744086cde8488a"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/run_small_body_threshold.py": {
+      "bytes": 2676,
+      "sha256": "e14379b414c994e6c689e948dd5c24ed68a2075c429b45c58b76a9dd024e608e"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/run_streamed_direct_mps_body.py": {
+      "bytes": 2472,
+      "sha256": "478bfe687aba49d413406ccd4f23e85ae3d5214a99f85a582de5452b43d5ecc0"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/source-snapshot/test2026/metal/streamed_direct_mps_body_gpu.mm": {
+      "bytes": 5624,
+      "sha256": "324bd6d50a9ea9150103340507f77b52b30bd5664d4fad0360eb5fbe50ca462e"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/statuses.json": {
+      "bytes": 3158,
+      "sha256": "df8b3935acf2963d20d7957a30267ec20601345cb24f3d800e5796a4027fd6d7"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/jobs/summary.json": {
+      "bytes": 23374,
+      "sha256": "6eb917dbbbc26e437d50c3736496adfacde9f1627a9aa454ad8145dbd13a542e"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/output.log": {
+      "bytes": 214,
+      "sha256": "b20fa8641f6611340f021f40f53ee3be16047da73fa3e3af20199f17c4852b20"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "ed910bd8128c9088470af2bcd4fb3263d250b0bdad65d821ced41f408358131e"
+    },
+    "evidence/logs/small-body-threshold-confirm-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  "omitted": {
+    "logs/small-body-threshold-20261015/jobs/small_body_threshold_gpu": {
+      "bytes": 281912,
+      "sha256": "e76d93b20cdeca769de246a620acba86d08f062cc376391ee36f3ebf989f2cb0"
+    },
+    "logs/small-body-threshold-confirm-20261015/jobs/small_body_threshold_gpu": {
+      "bytes": 281912,
+      "sha256": "e76d93b20cdeca769de246a620acba86d08f062cc376391ee36f3ebf989f2cb0"
+    },
+    "models/Qwen3-0.6B/model.safetensors": {
+      "bytes": 1503300328,
+      "sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-0/raw.bin": {
+      "bytes": 6291456,
+      "sha256": "01cc5c354c8ac9cf4917157d74beceb0b3ce3f38d9bdec271ae691bded0b2e3b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-1/raw.bin": {
+      "bytes": 6291456,
+      "sha256": "0657de1748789e5b4f7361ffa48b1343ef921907952c85f816e9df6248c3432b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-2/raw.bin": {
+      "bytes": 6291456,
+      "sha256": "0df928e6dee73989a12582615e517343a6bcbbc6772a0850672c34427a11de8d"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-3/raw.bin": {
+      "bytes": 2097152,
+      "sha256": "68dd761a149b0ff707ad0c1ac6d61dfed75d6fedfbbdbfedde4889f5ca0706f4"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-4/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "803995a9d5abb24c72d3ddabd50f4e656fc5eff26efaf3b626f175fc706ab499"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-5/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "7592f6e783c400f502653f77d9b483cb03e96c3061af16f538da0d695d21bc53"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3-0.6B-assets/matrix-6/raw.bin": {
+      "bytes": 2097152,
+      "sha256": "89e87de8f53f9777cd9a2096a7b715688a17193bd5da8ec3776c4b3e675a40e2"
+    },
+    "models/Qwen2.5-Coder-0.5B-Instruct/model.safetensors": {
+      "bytes": 988097824,
+      "sha256": "f9523886352217ded3aeeef552b381af79d568c6d49a4b9e423288cea56b0a44"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-0/raw.bin": {
+      "bytes": 8716288,
+      "sha256": "7738979cfc99fcfc9fc081652c7afc2c421f3cad05b97d8b1d2790d27ac64057"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-1/raw.bin": {
+      "bytes": 8716288,
+      "sha256": "859d77f1db17fa0137616936051f6e3c96e26d15c29fb9832d8a1a28a550068b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-2/raw.bin": {
+      "bytes": 8716288,
+      "sha256": "719bc614153ec1da11dfcc0d078ba092fb11d34c4b278b4a1ac1da758aba9416"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-3/raw.bin": {
+      "bytes": 229376,
+      "sha256": "e769b3b39e4a60c2729b53ee5475bd7c881b784102a59c5be90b5f60ea9e4896"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-4/raw.bin": {
+      "bytes": 1605632,
+      "sha256": "133d4e063b9bb208b7f2ed4f024363c281891cee52d295ed62cbfae32c1e6f4e"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-5/raw.bin": {
+      "bytes": 1605632,
+      "sha256": "738153fa0b1bd122289fdb5ba8ed50c4b12cb7bde5dee4df6067ad480467833c"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen2.5-Coder-0.5B-Instruct-assets/matrix-6/raw.bin": {
+      "bytes": 229376,
+      "sha256": "d6a823d525b086ce78cf33633417dab6f36e5b7e464c62deffc5f0bbe496168d"
+    },
+    "models/Qwen3.5-0.8B/model.safetensors": {
+      "bytes": 1746942600,
+      "sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-0/raw.bin": {
+      "bytes": 32768,
+      "sha256": "e5197a79fc1daa00d06a0c04fd11a97ac3c10a6bd6460e957fd8383700d5d87b"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-1/raw.bin": {
+      "bytes": 32768,
+      "sha256": "02bab6a0eb77ad51435f77665d173876993d725ca3cd953f90c2b0754735db5e"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-2/raw.bin": {
+      "bytes": 12582912,
+      "sha256": "8904cdb2c2e3aa5fc158d074e3b84fb5165a6637f2bd38f67fb93b29406fe0dc"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-3/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "5a44325d73004f42dcd55558d357ceeccb54fafb9b7048071634ab1027e1c17d"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-4/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "cbee28fc3b42e07e491fffd593b2ee9ec58ae952dc9133e178f8a80ea916d308"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-5/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "57c93b2a4452740b0b82386debc7c66df7774f98425a0253dd9d3e7006e989ac"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-6/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "ac1e1d4df4f3adca7e0bc15ee7310ce093f9108baa712cfb86f57b03e6d6e140"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-7/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "0317b5f7a4e522c75c5013a70f14c510262b79596ac298ef52b5e04740d76367"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-8/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "d3428ec277dd5195c9a42720be5b4068fcc51943670c62f57e61b5adebcae1da"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-9/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "50d2f4c60e786596e464958bb515ec5573c3ddb53604930e3e2244f107f71f11"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-10/raw.bin": {
+      "bytes": 7340032,
+      "sha256": "f141786356fc0b59f4e1aa8cc3afb084d283e384c98cd47dbd1812b6c9ac1f0f"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-11/raw.bin": {
+      "bytes": 1048576,
+      "sha256": "4c8cfc4b114917fd3067510ca34886f9bb2bac638a07c537a544e0b9494237fe"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-12/raw.bin": {
+      "bytes": 4194304,
+      "sha256": "4c92f1c5a423b022da52875dc21b31e0957110aefefc8826e0be5bcc875cc9cf"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-13/raw.bin": {
+      "bytes": 8388608,
+      "sha256": "b0dde4ab3eee4dc2abdf2e2fe8cd6b474d52c4559e38bb8fc9c8589c1b0a7176"
+    },
+    "logs/decoder-codec-gpu-20261013/jobs/Qwen3.5-0.8B-assets/matrix-14/raw.bin": {
+      "bytes": 1048576,
+      "sha256": "459514e89bd3142fca159b73b936cc0e444e6e9cb0dff082be0ecb8462d6a1b7"
+    }
+  },
+  "jobs": {
+    "small-body-threshold-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 24.804420708678663
+    },
+    "small-body-threshold-confirm-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 24.162666082847863
+    }
+  }
+}

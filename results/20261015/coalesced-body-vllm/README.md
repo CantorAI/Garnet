@@ -20,7 +20,21 @@ Each profile runs sequential G/V/V/G fresh workers, three requests per worker an
 Candidate library SHA256: `c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1`.
 Initial archive SHA256: `0455d0a2c77c94609a2bab5c73396f2a0cc2ab76f6a6ad99819cb66b7fe5a95a`.
 
-Confirmation launched as PID34285 at `ROOT/logs/coalesced-body-vllm-confirm-20261015` after independent initial audit and terminal diagnostic archival. Sources/library/selection remain frozen. The following hybrid graph study waits for exact PID34285 and a quiet interval. No repeated matched result is established yet.
+Confirmation PID34285 exited0 in612.8577s. Independent audit verifies1493 confirmation files,72 matching outputs and three fresh GPU dtype audits. The join verifies identical selection, versions, sources, assets and case files across144 complete matching outputs and six GPU dtype audits. In both cohorts,4/6 profiles meet2x decode,2/6 meet half-TTFT and0/6 meet both. Text B1 falls from2.0392x initially to1.9848x on repeat; it is not rounded into a pass.
+
+| Model / batch | Repeat Garnet / vLLM row tokens/s | Repeat Garnet / vLLM TTFT ms | Repeat decode ratio | Repeat TTFT fraction |
+| --- | ---: | ---: | ---: | ---: |
+| Qwen3-0.6B / 1 | 74.5058 / 37.5380 | 35.4438 / 78.2122 | 1.9848 | 0.4532 |
+| Qwen3-0.6B / 2 | 69.9298 / 25.4279 | 57.4169 / 97.6511 | 2.7501 | 0.5880 |
+| Qwen2.5-Coder-0.5B-Instruct / 1 | 87.2412 / 46.9444 | 27.5541 / 58.1109 | 1.8584 | 0.4742 |
+| Qwen2.5-Coder-0.5B-Instruct / 2 | 83.7879 / 28.4397 | 43.4840 / 81.5716 | 2.9462 | 0.5331 |
+| Qwen3.5-0.8B / 1 | 60.4676 / 26.2507 | 177.3791 / 254.3347 | 2.3035 | 0.6974 |
+| Qwen3.5-0.8B / 2 | 55.1111 / 17.0851 | 299.1103 / 429.1466 | 3.2257 | 0.6970 |
+
+The repeat guard rejected text B1 attempt0 on detecting inference-worker PID36306. Its timings are excluded; the clean attempt1 is used. The detected worker provenance is unproven. The complete rejected trace is retained in the confirmation archive, alongside all accepted guarded workers. No tolerance or guard was relaxed.
+
+Confirmation archive SHA256: `1eaad9bce510ea94d0ca18d3e55e587243ed1d18399d6e5ab761dbeef906d347`.
+`remaining-budgets.json` preserves both cohorts and each remaining gap. The overall goal remains active and unmet.
 
 ```text
 python3 launch_coalesced_body_vllm.py ROOT ROOT/logs/coalesced-body-vllm-20261015

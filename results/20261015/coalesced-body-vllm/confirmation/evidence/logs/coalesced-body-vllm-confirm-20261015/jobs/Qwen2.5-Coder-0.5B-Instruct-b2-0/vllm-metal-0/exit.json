@@ -1,0 +1,13 @@
+{
+  "name": "vllm-metal-0",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+    "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+    "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+    "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen2.5-Coder-0.5B-Instruct",
+    "/Users/zsdx/garnet-metal-investigation/logs/coalesced-body-vllm-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/case.json",
+    "/Users/zsdx/garnet-metal-investigation/logs/coalesced-body-vllm-confirm-20261015/jobs/Qwen2.5-Coder-0.5B-Instruct-b2-0/garnet-0/output.log"
+  ],
+  "exit_code": 0
+}

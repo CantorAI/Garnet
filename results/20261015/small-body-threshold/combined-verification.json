@@ -1,0 +1,1030 @@
+{
+  "verified_files": 97,
+  "numeric_checks": 48,
+  "safety_profiles": 180,
+  "timed_executions": 768,
+  "profiles": [
+    {
+      "trial": "small-body-threshold-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0030315302795809506,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0030315302795809506,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005256910339316787,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005256910339316787,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2617877325974405,
+          "wall_ms": 0.52710421875
+        },
+        "candidate": {
+          "gpu_ms": 0.27521610900294036,
+          "wall_ms": 0.561710875
+        }
+      },
+      "gpu_fraction": 1.0512949032113323,
+      "wall_fraction": 1.065654295714172
+    },
+    {
+      "trial": "small-body-threshold-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003222255887638415,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003222255887638415,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005404793441550091,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.005404793441550091,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.358449193299748,
+          "wall_ms": 0.71342953125
+        },
+        "candidate": {
+          "gpu_ms": 0.3834701201412827,
+          "wall_ms": 0.73902215625
+        }
+      },
+      "gpu_fraction": 1.0698032728465685,
+      "wall_fraction": 1.0358726740049002
+    },
+    {
+      "trial": "small-body-threshold-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 5,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032508250699947922,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 5,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032508250699947922,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 5,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005559934361166332,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 5,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005559934361166332,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2622174652060494,
+          "wall_ms": 0.53021490625
+        },
+        "candidate": {
+          "gpu_ms": 0.25666279543656856,
+          "wall_ms": 0.5161640625
+        }
+      },
+      "gpu_fraction": 0.9788165530274042,
+      "wall_fraction": 0.9734997194828489
+    },
+    {
+      "trial": "small-body-threshold-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 5,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.004095065682927495,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 5,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.004095065682927495,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 5,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.007203048445676425,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 5,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.007203048445676425,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2587617200333625,
+          "wall_ms": 0.52873703125
+        },
+        "candidate": {
+          "gpu_ms": 0.25269269826821983,
+          "wall_ms": 0.5180831875
+        }
+      },
+      "gpu_fraction": 0.9765459057685959,
+      "wall_fraction": 0.9798503923116317
+    },
+    {
+      "trial": "small-body-threshold-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0029308974009585715,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 13,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0029308974009585715,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0034296093586201346,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 13,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0034296093586201346,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 13,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.00525733472734936,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 13,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.00525733472734936,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.8220703020924702,
+          "wall_ms": 1.15563546875
+        },
+        "candidate": {
+          "gpu_ms": 0.812390586361289,
+          "wall_ms": 1.1690365
+        }
+      },
+      "gpu_fraction": 0.988225197155836,
+      "wall_fraction": 1.0115962443282356
+    },
+    {
+      "trial": "small-body-threshold-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003008811205846745,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 13,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003008811205846745,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.003628347661836938,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 13,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.003628347661836938,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 13,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0063668998371010635,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 13,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.0063668998371010635,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.7945495162857696,
+          "wall_ms": 1.13027609375
+        },
+        "candidate": {
+          "gpu_ms": 0.7959218346513808,
+          "wall_ms": 1.1271301875
+        }
+      },
+      "gpu_fraction": 1.0017271653150406,
+      "wall_fraction": 0.9972166922158261
+    },
+    {
+      "trial": "small-body-threshold-confirm-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0030315302795809506,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0030315302795809506,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005256910339316787,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12288,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005256910339316787,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.35344013303983957,
+          "wall_ms": 0.7187721875
+        },
+        "candidate": {
+          "gpu_ms": 0.3717330837389454,
+          "wall_ms": 0.74756909375
+        }
+      },
+      "gpu_fraction": 1.051756857778921,
+      "wall_fraction": 1.04006402411056
+    },
+    {
+      "trial": "small-body-threshold-confirm-20261015",
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003222255887638415,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003222255887638415,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032560975395586546,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.0032560975395586546,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005404793441550091,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 24576,
+          "selected_projections": 6,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.005404793441550091,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2694908616831526,
+          "wall_ms": 0.53570053125
+        },
+        "candidate": {
+          "gpu_ms": 0.26881379017140716,
+          "wall_ms": 0.53099596875
+        }
+      },
+      "gpu_fraction": 0.9974875900892644,
+      "wall_fraction": 0.9912179245202122
+    },
+    {
+      "trial": "small-body-threshold-confirm-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 5,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0032508250699947922,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 5,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0032508250699947922,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 5,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.005559934361166332,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 12672,
+          "selected_projections": 5,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.005559934361166332,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.2556809631641954,
+          "wall_ms": 0.5180859375
+        },
+        "candidate": {
+          "gpu_ms": 0.25201043172273785,
+          "wall_ms": 0.529297
+        }
+      },
+      "gpu_fraction": 0.9856440956884991,
+      "wall_fraction": 1.0216393877704895
+    },
+    {
+      "trial": "small-body-threshold-confirm-20261015",
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003359675746152098,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 5,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003359675746152098,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.004095065682927495,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 5,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.004095065682927495,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 5,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.007203048445676425,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 7,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 25344,
+          "selected_projections": 5,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.007203048445676425,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.25907943199854344,
+          "wall_ms": 0.50895696875
+        },
+        "candidate": {
+          "gpu_ms": 0.2570338547229767,
+          "wall_ms": 0.51575128125
+        }
+      },
+      "gpu_fraction": 0.9921044397087521,
+      "wall_fraction": 1.0133494831924337
+    },
+    {
+      "trial": "small-body-threshold-confirm-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "physical_rows": 1,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.0029308974009585715,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 13,
+          "pattern": 0,
+          "rows": 1,
+          "fp64_worst": 0.0029308974009585715,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0034296093586201346,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 13,
+          "pattern": 1,
+          "rows": 1,
+          "fp64_worst": 0.0034296093586201346,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 13,
+          "pattern": 2,
+          "rows": 1,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.00525733472734936,
+          "batch": 1,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 31776,
+          "selected_projections": 13,
+          "pattern": 3,
+          "rows": 1,
+          "fp64_worst": 0.00525733472734936,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.8038138039410114,
+          "wall_ms": 1.138108125
+        },
+        "candidate": {
+          "gpu_ms": 0.8131380163831636,
+          "wall_ms": 1.141263
+        }
+      },
+      "gpu_fraction": 1.0115999655597312,
+      "wall_fraction": 1.00277203451122
+    },
+    {
+      "trial": "small-body-threshold-confirm-20261015",
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "physical_rows": 2,
+      "policy": 1,
+      "checks": [
+        {
+          "control_fp64_worst": 0.003008811205846745,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 13,
+          "pattern": 0,
+          "rows": 2,
+          "fp64_worst": 0.003008811205846745,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.003628347661836938,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 13,
+          "pattern": 1,
+          "rows": 2,
+          "fp64_worst": 0.003628347661836938,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 13,
+          "pattern": 2,
+          "rows": 2,
+          "fp64_worst": 0,
+          "kind": "check",
+          "finite": true
+        },
+        {
+          "control_fp64_worst": 0.0063668998371010635,
+          "batch": 2,
+          "bitwise_equal": true,
+          "passed": true,
+          "projections": 15,
+          "comparison_worst": 0,
+          "policy": 1,
+          "values": 63552,
+          "selected_projections": 13,
+          "pattern": 3,
+          "rows": 2,
+          "fp64_worst": 0.0063668998371010635,
+          "kind": "check",
+          "finite": true
+        }
+      ],
+      "means": {
+        "control": {
+          "gpu_ms": 0.8271015976788476,
+          "wall_ms": 1.16836721875
+        },
+        "candidate": {
+          "gpu_ms": 0.8147356857080013,
+          "wall_ms": 1.164218875
+        }
+      },
+      "gpu_fraction": 0.9850491015788754,
+      "wall_fraction": 0.9964494521213645
+    }
+  ],
+  "scope": "Private smaller body admission only; control retains current coalesced large weights. Fixed64-thread original arithmetic, original bits/FP64/ownership/recovery checks; extra allocation/packing excluded. No full-model or vLLM claim.",
+  "full_goal_met": false
+}

@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T19:14:36.338861+00:00
+Generated UTC: 2026-10-15T19:38:06.360319+00:00
 
-Source commit: `0a558298c9224356fce3ddb7c2c0f7438f7eecc5`. Reports indexed: **139**.
+Source commit: `210e1ad28cb52fcea3e116bc6eaa234077dee80c`. Reports indexed: **142**.
 
 Each row links to its original report. Read that report's scope, exclusions and status before citing it. The JSON snapshot retains complete report text, documented command blocks and hashes; the CSV supports analysis. Neither report presence nor a verification filename certifies a successful experiment.
 
@@ -81,6 +81,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261014/single-row-bf16](../../../results/20261014/single-row-bf16/README.md) | Single-row BF16 specialization: coder-head component signal only |
 | [results/20261014/vision-global-alpha](../../../results/20261014/vision-global-alpha/README.md) | Vision FP32 products versus exact common half alpha |
 | [results/20261015/aligned-row-prefill](../../../results/20261015/aligned-row-prefill/README.md) | Physical MPS prefill row alignment: no broad promotion |
+| [results/20261015/async-key-graph-prefill](../../../results/20261015/async-key-graph-prefill/README.md) | Asynchronous native keys plus combined graphs: repeated component signal |
 | [results/20261015/body-shape-inference](../../../results/20261015/body-shape-inference/README.md) | Body-only fixed-shape serving experiment |
 | [results/20261015/coalesced-activation-decode](../../../results/20261015/coalesced-activation-decode/README.md) | Coalesced mixed-input matrix decode: rejected |
 | [results/20261015/coalesced-activation-prefill](../../../results/20261015/coalesced-activation-prefill/README.md) | Coalesced lossless activation MMA for prefill: rejected |
@@ -91,6 +92,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/combined-graph-prefill](../../../results/20261015/combined-graph-prefill/README.md) | Combined projection graphs: component gains with rejected batch-2 profiles |
 | [results/20261015/combined-prefill-reset](../../../results/20261015/combined-prefill-reset/README.md) | Combined bounded reset and ordered prefill: initial latency tradeoff |
 | [results/20261015/concurrent-bf16-groups](../../../results/20261015/concurrent-bf16-groups/README.md) | Independent native projections in one compute pass: mixed results |
+| [results/20261015/core-graph-prefill](../../../results/20261015/core-graph-prefill/README.md) | Core-only graph compilation: original key failures remain |
 | [results/20261015/counter-trace](../../../results/20261015/counter-trace/README.md) | Compute-pass GPU timestamps: validated diagnostic, substantial overhead |
 | [results/20261015/decode-eight-lane](../../../results/20261015/decode-eight-lane/README.md) | Eight-lane FP32 decode: numerically valid, slower, rejected |
 | [results/20261015/decode-only-head](../../../results/20261015/decode-only-head/README.md) | Decode-only fused head: repeated full runs verified |
@@ -100,7 +102,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/fastencode-streamed-mps-body](../../../results/20261015/fastencode-streamed-mps-body/README.md) | MPS argument-validation option: wall penalty persists |
 | [results/20261015/fused-head-argmax](../../../results/20261015/fused-head-argmax/README.md) | Fused vocabulary projection and partial argmax: component gain repeats |
 | [results/20261015/fused-projection-groups](../../../results/20261015/fused-projection-groups/README.md) | Single-dispatch independent projections |
-| [results/20261015/hybrid-combined-graph-prefill](../../../results/20261015/hybrid-combined-graph-prefill/README.md) | Hybrid native special-key / combined graph prefill: queued |
+| [results/20261015/hybrid-combined-graph-prefill](../../../results/20261015/hybrid-combined-graph-prefill/README.md) | Hybrid native-key / combined graph prefill: numerically valid, mixed performance |
 | [results/20261015/interleaved-bf16-body](../../../results/20261015/interleaved-bf16-body/README.md) | Isolated interleaved BF16 decoder body component |
 | [results/20261015/interleaved-body-native](../../../results/20261015/interleaved-body-native/README.md) | Native large-matrix BF16 body layout |
 | [results/20261015/interleaved-head-native](../../../results/20261015/interleaved-head-native/README.md) | Native interleaved screening index: profile-dependent tradeoffs |
@@ -125,6 +127,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/serial-vision-context](../../../results/20261015/serial-vision-context/README.md) | Original-order vision context prefetch |
 | [results/20261015/serial-vision-native](../../../results/20261015/serial-vision-native/README.md) | Repeated native inference with original-order vision prefetch |
 | [results/20261015/shape-specialized-bf16](../../../results/20261015/shape-specialized-bf16/README.md) | Full-shape BF16 decode specialization: head regressions, mixed body gains |
+| [results/20261015/small-body-threshold](../../../results/20261015/small-body-threshold/README.md) | Smaller lossless body admission: rejected after confirmation |
 | [results/20261015/small-seed-native](../../../results/20261015/small-seed-native/README.md) | Native exact seed 1024 versus 8192: small mixed gains |
 | [results/20261015/sparse-counter-trace](../../../results/20261015/sparse-counter-trace/README.md) | Sparse GPU counters: much lower diagnostic overhead |
 | [results/20261015/streamed-direct-mps-body](../../../results/20261015/streamed-direct-mps-body/README.md) | Streamed direct-row native MPS: rejected for integration |

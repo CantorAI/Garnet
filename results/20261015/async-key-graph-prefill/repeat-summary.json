@@ -1,0 +1,130 @@
+{
+  "successful_trials": 2,
+  "identical_sources_assets_versions_hardware_and_config": true,
+  "numeric_checks": 96,
+  "timed_executions": 1536,
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 1,
+      "wall_fractions": [
+        0.839400680906122,
+        0.9874621264940103
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "policy": 2,
+      "wall_fractions": [
+        0.8434677036376986,
+        0.9828715094219796
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": 1,
+      "wall_fractions": [
+        0.9217100481785866,
+        0.8555062364957768
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "policy": 2,
+      "wall_fractions": [
+        0.8579523012826822,
+        0.8547043679733368
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 1,
+      "wall_fractions": [
+        0.8907801707838554,
+        0.9167744441729313
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "policy": 2,
+      "wall_fractions": [
+        0.9692848529864041,
+        1.0147700254109637
+      ],
+      "wall_faster_both": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 1,
+      "wall_fractions": [
+        0.8899987448033867,
+        0.8880564526334211
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "policy": 2,
+      "wall_fractions": [
+        0.9045051471369151,
+        0.8858606287237556
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": 1,
+      "wall_fractions": [
+        0.7808798550662356,
+        0.6971513124983545
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "policy": 2,
+      "wall_fractions": [
+        0.7557735414183748,
+        0.7635863734302357
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": 1,
+      "wall_fractions": [
+        0.8672863922803334,
+        0.8930059900324339
+      ],
+      "wall_faster_both": true
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "policy": 2,
+      "wall_fractions": [
+        0.9367629736585025,
+        0.9422436067995563
+      ],
+      "wall_faster_both": true
+    }
+  ],
+  "scope": "Private component repeats only. No full-model performance, vLLM ratio, statistical significance or hardware-cold claim.",
+  "full_goal_met": false
+}

@@ -280,6 +280,62 @@ Always identify the exact checkpoint tensor list; these component sets do not
 represent every layer or a complete dependency graph. Full-checkpoint CPU
 coverage and full trained-model validation are separate evidence scopes.
 
+### 2026-10-15 — matched confirmation audited; hybrid and smaller-body evidence
+
+The matched identity join passes across144 complete outputs and six actual GPU
+dtype audits. Selection, versions, sources, assets and cases match exactly.
+Across both cohorts,4/6 profiles meet2x decode,2/6 meet half-TTFT, and0/6 meet
+both. Text B1 repeat decode is1.984810x, not a pass after rounding. Both-cohort
+means and remaining gaps: [matched report](../../results/20261015/coalesced-body-vllm/README.md),
+[budgets](../../results/20261015/coalesced-body-vllm/remaining-budgets.json).
+The initial marginal text result is superseded by the repeat requirement.
+
+Hybrid native-key graphs pass all48 original numerical checks and key bit
+comparisons. Text/coder component wall time regresses10.6–38.8%; VL improves
+11.1–28.5%. No broad integration or whole-model claim follows. Asynchronous
+key study PID47481 tests removal of the intermediate CPU wait, keeping all
+work inside the timing and original math/bounds. Its result is pending.
+[Hybrid evidence](../../results/20261015/hybrid-combined-graph-prefill/README.md),
+[asynchronous-key protocol](../../results/20261015/async-key-graph-prefill/README.md).
+
+Smaller-body study PID46404 passes24 exact-bit/FP64 and90 safety profiles,
+with384 timed submissions. Initial coder gains2.0–2.7% are smaller than the
+3.6–6.6% variation of mathematically unchanged text controls. VL is mixed;
+no gain is established yet. Confirmation PID47024 exited0; audit is pending.
+[Smaller-body evidence](../../results/20261015/small-body-threshold/README.md).
+The full goal remains active and unmet.
+
+### 2026-10-15 — repeated components: reject smaller layout, retain graph candidate
+
+Smaller-body confirmation reverses the initial coder wall signal (1.3–2.2%
+slower). Combined audit:97 files,48 original-bit/FP64 checks,180 safety
+profiles,768 timed submissions. The source/config/asset identity join passes.
+Reject native admission expansion; unchanged text no-op timing variation
+reinforces caution about the small initial signal.
+[Decision and both trials](../../results/20261015/small-body-threshold/README.md).
+
+Asynchronous-key graphs pass96 numerical checks across both trials,24 first
+calls and1,536 timed submissions;67 combined files and identical sources,
+versions, assets and configuration are audited. Placeholder policy1 is faster
+in all six groups both times, but text B1 falls to1.25% gain on repeat.
+Constant policy2 coder B1 reverses. Retain a fixed placeholder candidate for
+further dependent-subgraph work, not a serving promotion or a significance
+claim. [Repeated graph evidence](../../results/20261015/async-key-graph-prefill/README.md).
+
+Explicit core-only graph compilation does not repair the four text/coder B2
+key failures. Audit:34 files,48 numeric records,12 first calls and512 admitted
+timed submissions. No bound relaxation or broad integration.
+[Core compiler study](../../results/20261015/core-graph-prefill/README.md).
+
+Source/API inspection identifies the next integration requirement: the current
+Metal scheduler has real gate/up/SiLU/down and attention dependencies, while
+the component fixture is independent. Test a complete dependent MLP subgraph
+before changing the scheduler. A native graph path must preserve pending-output
+ownership, abort/recovery, command ordering and complete GPU-span accounting;
+Apple's MPSCommandBuffer may commit-and-continue and replace its root buffer.
+The macOS SDK API was inspected, but no native graph integration or dependent
+MLP performance is claimed here. The overall2x/half-TTFT goal remains unmet.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,
