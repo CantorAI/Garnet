@@ -34,7 +34,9 @@ the sampled answers. The larger seed is slower and is rejected. Separate
 workers and raw-head normalization are not a direct same-process 8192-versus-
 1024 benchmark. That direct ABBA comparison is the next gate before native
 integration. No new whole-model TPS, TTFT or vLLM ratio follows from this study.
-The native backend still uses its original 8192-row seed.
+The subsequent [same-process ABBA and repeat](../screened-seed-abba/README.md)
+confirm a small component reduction. A separate OFF-by-default native option
+is now under full-model validation; its serving impact remains unmeasured.
 
 Archive SHA-256:
 `caf5353e24cca3bb133efd504e4788bd43f91ad844807859170c77c6b3a4ba2c`.

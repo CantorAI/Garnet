@@ -25,6 +25,7 @@ bool MetalContext::PrepareScreenedHead(const MetalBF16Weight& weight) {
 #endif
 }
 size_t MetalContext::LastScreenedHeadDispatches() const {return impl_->screenedHeadDispatches;}
+size_t MetalContext::LastScreenedHeadSeedRows() const {return impl_->screenedHeadSeedRows;}
 bool MetalContext::EncodeScreenedArgmax(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
 #ifndef GARNET_METAL_SCREENED_HEAD
     (void)input;(void)weight;(void)output;return false;
@@ -46,23 +47,23 @@ bool MetalContext::EncodeScreenedArgmax(const MetalMatrix& input,const MetalBF16
         if(output.impl_->pending&&!impl_->pendingOutputs.count(output.impl_.get()))throw std::logic_error("Screened prediction belongs to another batch");
         const std::array<size_t,3> key{a.rows,w->rows,w->columns};auto found=impl_->screenScratch.find(key);
         if(found==impl_->screenScratch.end()){
-            Impl::ScreenScratch item;item.seed=Allocate(a.rows,8192);item.scores=Allocate(a.rows,w->rows);
+            Impl::ScreenScratch item;item.seed=Allocate(a.rows,kScreenedHeadSeedRows);item.scores=Allocate(a.rows,w->rows);
             item.stats=[impl_->device newBufferWithLength:a.rows*(w->columns/128+2)*4 options:MTLResourceStorageModeShared];
             item.visits=[impl_->device newBufferWithLength:w->rows*8 options:MTLResourceStorageModeShared];
             if(!item.stats||!item.visits)throw std::runtime_error("Screened head scratch allocation failed");
             found=impl_->screenScratch.emplace(key,std::move(item)).first;
         }
         auto& scratch=found->second;auto seed=scratch.seed.impl_->matrix,scores=scratch.scores.impl_->matrix;
-        if(seed.rowBytes/4!=8192)return false;
+        if(seed.rowBytes/4!=kScreenedHeadSeedRows)return false;
         for(const auto& target:{scratch.seed.impl_,scratch.scores.impl_,output.impl_}){
             target->ready=false;target->pending=true;if(impl_->pendingOutputs.insert(target.get()).second)impl_->outputs.push_back(target);
         }
         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
-        Params sp{a.rows,a.columns,8192,a.rowBytes/4,seed.rowBytes/4},p{a.rows,a.columns,w->rows,a.rowBytes/4,scores.rowBytes/4};
+        Params sp{a.rows,a.columns,kScreenedHeadSeedRows,a.rowBytes/4,seed.rowBytes/4},p{a.rows,a.columns,w->rows,a.rowBytes/4,scores.rowBytes/4};
         auto encoder=[impl_->command computeCommandEncoder];if(!encoder)throw std::runtime_error("Screen seed encoder unavailable");
         [encoder setComputePipelineState:seedPipeline];[encoder setBuffer:a.data offset:0 atIndex:0];[encoder setBuffer:w->buffer offset:0 atIndex:1];
         [encoder setBuffer:seed.data offset:0 atIndex:2];[encoder setBytes:&sp length:sizeof(sp) atIndex:3];
-        [encoder dispatchThreadgroups:MTLSizeMake(8192/16,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
+        [encoder dispatchThreadgroups:MTLSizeMake(kScreenedHeadSeedRows/16,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
         encoder=[impl_->command computeCommandEncoder];if(!encoder)throw std::runtime_error("Screen guard encoder unavailable");
         [encoder setComputePipelineState:prep];[encoder setBuffer:a.data offset:0 atIndex:0];[encoder setBuffer:seed.data offset:0 atIndex:1];
         [encoder setBuffer:scratch.stats offset:0 atIndex:2];[encoder setBytes:&p length:sizeof(p) atIndex:3];
@@ -74,7 +75,7 @@ bool MetalContext::EncodeScreenedArgmax(const MetalMatrix& input,const MetalBF16
         [encoder setBuffer:scratch.visits offset:0 atIndex:6];[encoder setBuffer:seed.data offset:0 atIndex:7];[encoder setBuffer:w->screenIndex offset:0 atIndex:8];
         [encoder dispatchThreadgroups:MTLSizeMake((w->rows+15)/16,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
         EncodeArgmax(scratch.scores,output);
-        impl_->screenDiagnosticKey=key;impl_->screenDiagnosticReady=true;++impl_->screenedHeadDispatches;return true;
+        impl_->screenDiagnosticKey=key;impl_->screenDiagnosticReady=true;++impl_->screenedHeadDispatches;impl_->screenedHeadSeedRows=sp.columns;return true;
     }
 #endif
 }

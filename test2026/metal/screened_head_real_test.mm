@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #import <Foundation/Foundation.h>
 #include "metal_context.h"
+#include "screened_head_index.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -23,15 +24,15 @@ int main(int argc,char** argv){@autoreleasepool{try{
         gpu.Begin();gpu.EncodeBF16MatVec(a,weight,raw);gpu.EncodeArgmax(raw,control);gpu.SubmitAndWait();auto actualRaw=gpu.Download(raw),expected=gpu.Download(control);
         need(std::memcmp(actualRaw.data(),reference.data(),reference.size()*4)==0,"Integrated raw head differs from captured original GPU bits");
         gpu.Begin();need(gpu.EncodeScreenedArgmax(a,weight,prediction),"Integrated trained head did not screen");gpu.SubmitAndWait();auto selected=gpu.Download(prediction);auto d=gpu.ScreenedDiagnostics();
-        need(gpu.LastScreenedHeadDispatches()==1,"Integrated actual route count differs");size_t rejected=0,retained=0;
+        need(gpu.LastScreenedHeadDispatches()==1,"Integrated actual route count differs");need(gpu.LastScreenedHeadSeedRows()==Garnet::kScreenedHeadSeedRows,"Actual seed rows differ");size_t rejected=0,retained=0;
         for(size_t row=0;row<batch;++row){need(d.querySafe[row]==1,"Captured query unexpectedly outside admitted range");
             need(selected[row*2]==[q[@"predictions"][row] floatValue]&&selected[row*2+1]==0&&selected[row*2]==expected[row*2],"Integrated trained greedy prediction differs");
-            float threshold=-std::numeric_limits<float>::infinity();for(size_t col=0;col<8192;++col)threshold=std::max(threshold,reference[row*n+col]);
+            float threshold=-std::numeric_limits<float>::infinity();for(size_t col=0;col<Garnet::kScreenedHeadSeedRows;++col)threshold=std::max(threshold,reference[row*n+col]);
             for(size_t col=0;col<n;++col){size_t i=row*n+col;if(d.kept[i]){need(std::memcmp(&d.maskedLogits[i],&reference[i],4)==0,"Integrated retained bits differ");++retained;}
                 else {need(reference[i]<threshold,"Integrated rejected logit can beat seed");++rejected;}
             }
         }
-        printf("{\"kind\":\"integrated_head_check\",\"query\":\"%s\",\"batch\":%zu,\"values\":%zu,\"raw_bits_exact\":true,\"retained_bits_exact\":true,\"every_rejection_checked\":true,\"greedy_exact\":true,\"dispatches\":1,\"retained\":%zu,\"rejected\":%zu}\n",name.UTF8String,batch,batch*n,retained,rejected);fflush(stdout);++checks;
+        printf("{\"kind\":\"integrated_head_check\",\"query\":\"%s\",\"batch\":%zu,\"values\":%zu,\"raw_bits_exact\":true,\"retained_bits_exact\":true,\"every_rejection_checked\":true,\"greedy_exact\":true,\"dispatches\":1,\"seed_rows\":%zu,\"retained\":%zu,\"rejected\":%zu}\n",name.UTF8String,batch,batch*n,gpu.LastScreenedHeadSeedRows(),retained,rejected);fflush(stdout);++checks;
     }}
     need(checks==17,"Wrong trained query coverage");return 0;
 }catch(const std::exception& e){fprintf(stderr,"integrated_screened_head_failed: %s\n",e.what());return 1;}}}

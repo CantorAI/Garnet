@@ -2,6 +2,9 @@
 static constexpr const char* kScreenedHeadShader=R"SCREENED(
 #include <metal_stdlib>
 using namespace metal;
+#ifndef GARNET_SCREENED_HEAD_SEED_ROWS
+#define GARNET_SCREENED_HEAD_SEED_ROWS 8192
+#endif
 struct BF16Params {ulong rows,inner,columns,aStride,oStride;};
 // Private greedy component only: derived INT8 screening index, original BF16 refinement.
 // Screening is not a public complete-logit operation or a quantized model replacement.
@@ -9,7 +12,7 @@ kernel void prepare_head_bounds(device const float* input [[buffer(0)]],device c
     device float* stats [[buffer(2)]],constant BF16Params& p [[buffer(3)]],
     uint row [[threadgroup_position_in_grid]],uint tid [[thread_index_in_threadgroup]],
     uint lane [[thread_index_in_simdgroup]],uint simd [[simdgroup_index_in_threadgroup]]) {
-    ulong stride=p.inner/128+2,seedRows=min(ulong(8192),p.columns);
+    ulong stride=p.inner/128+2,seedRows=min(ulong(GARNET_SCREENED_HEAD_SEED_ROWS),p.columns);
     threadgroup float partial[4];threadgroup uint invalid[4];float best=-INFINITY;
     for(ulong j=tid;j<seedRows;j+=128)best=max(best,seed[row*seedRows+j]);
     best=simd_max(best);if(lane==0)partial[simd]=best;
@@ -33,7 +36,7 @@ kernel void screened_head(device const float* a [[buffer(0)]],device const ushor
     device const char* approximate [[buffer(8)]],uint group [[threadgroup_position_in_grid]],
     uint simd [[simdgroup_index_in_threadgroup]],uint lane [[thread_index_in_simdgroup]]) {
     ulong column=ulong(group)*16+simd*4;if(column>=p.columns)return;
-    ulong blocks=p.inner/128,stride=blocks+2,seedRows=min(ulong(8192),p.columns);
+    ulong blocks=p.inner/128,stride=blocks+2,seedRows=min(ulong(GARNET_SCREENED_HEAD_SEED_ROWS),p.columns);
     if(column<seedRows){if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){
         out[column+j]=seed[column+j];if(p.rows==2)out[p.oStride+column+j]=seed[seedRows+column+j];
         visits[column+j]=0;visits[p.columns+column+j]=p.rows==2?3:1;

@@ -67,6 +67,9 @@ public:
 #ifdef GARNET_METAL_SCREENED_HEAD
         info+="; screened_head";
 #endif
+#ifdef GARNET_METAL_SMALL_SCREEN_SEED
+        info+="; screen_seed_1024";
+#endif
 #ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
         info+="; serial_vision_prefetch";
 #endif

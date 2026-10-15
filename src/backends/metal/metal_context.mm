@@ -123,6 +123,7 @@ static std::mutex pipelineMutex;
 static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
 struct MetalContext::Impl {
     size_t screenedHeadDispatches=0;
+    size_t screenedHeadSeedRows=0;
     size_t visionPrefetchDispatches=0;
 #ifdef GARNET_METAL_SCREENED_HEAD
     struct ScreenScratch {MetalMatrix seed,scores;id<MTLBuffer> stats,visits;};
@@ -1265,6 +1266,7 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
 #endif
 #ifdef GARNET_METAL_SCREENED_HEAD
         auto screenOptions=[MTLCompileOptions new];screenOptions.fastMathEnabled=NO;
+        screenOptions.preprocessorMacros=@{@"GARNET_SCREENED_HEAD_SEED_ROWS":@(kScreenedHeadSeedRows)};
         auto screenLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:kScreenedHeadShader] options:screenOptions error:&error];
         if(screenLibrary){
             impl_->kernels->screenLibrary=screenLibrary;
@@ -1977,6 +1979,7 @@ void MetalContext::Begin() {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     if(impl_->submitted.count)throw std::logic_error("Undrained Metal partial batches");
     impl_->screenedHeadDispatches=0;
+    impl_->screenedHeadSeedRows=0;
     impl_->visionPrefetchDispatches=0;
 #ifdef GARNET_METAL_SCREENED_HEAD
     impl_->screenDiagnosticReady=false;
@@ -2640,6 +2643,7 @@ void MetalContext::SubmitAndWait() {
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     impl_->screenedHeadDispatches=0;
+    impl_->screenedHeadSeedRows=0;
     impl_->visionPrefetchDispatches=0;
 #ifdef GARNET_METAL_SCREENED_HEAD
     impl_->screenDiagnosticReady=false;

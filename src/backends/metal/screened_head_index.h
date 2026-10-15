@@ -8,6 +8,11 @@
 #include <cstring>
 #include <limits>
 namespace Garnet {
+#ifdef GARNET_METAL_SMALL_SCREEN_SEED
+inline constexpr size_t kScreenedHeadSeedRows=1024;
+#else
+inline constexpr size_t kScreenedHeadSeedRows=8192;
+#endif
 // Static admission is deliberately bounded. Original BF16 bytes remain authoritative.
 inline bool EncodeScreenedHeadRow(const uint16_t* source,size_t count,int8_t* encoded,float* metadata) {
     if(!source||!encoded||!metadata||(count!=896&&count!=1024)||std::fegetround()!=FE_TONEAREST)return false;
