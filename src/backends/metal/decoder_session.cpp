@@ -19,7 +19,7 @@ X::Value TensorValue(X3PackageHost* host,MetalContext& gpu,const MetalMatrix& ma
 }
 }
 void MetalDecoderSession::Clear() {
-    screenedHeadDispatches_=0;screenedHeadSeedRows_=0;
+    screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
     reusedSourceBytes_=reusedCopyBytes_=reusedCopyStates_=0;
 #ifdef GARNET_METAL_REUSED_ZERO_SOURCE
     std::vector<float>().swap(resetZeroSource_);
@@ -33,7 +33,7 @@ void MetalDecoderSession::Clear() {
 }
 void MetalDecoderSession::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 void MetalDecoderSession::ResetUnlocked() {
-    screenedHeadDispatches_=0;screenedHeadSeedRows_=0;
+    screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
     reusedCopyBytes_=reusedCopyStates_=0;
     prefillPartialSubmissions_=0;fusedHeadArgmaxDispatches_=0;bodyShapeDispatches_=bodyShapeMisses_=0;deferredZeroBytes_=deferredZeroStates_=0;
     joinedPrefillPairs_=0;
@@ -187,7 +187,7 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         hidden_=gpu_->Allocate(slot.rows,slot.columns);
     }
     prefillPartialSubmissions_=0;fusedHeadArgmaxDispatches_=0;bodyShapeDispatches_=bodyShapeMisses_=0;deferredZeroBytes_=deferredZeroStates_=0;
-    screenedHeadDispatches_=0;screenedHeadSeedRows_=0;
+    screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;
     const auto prepared=std::chrono::steady_clock::now();
     prepareMs_=std::chrono::duration<double,std::milli>(prepared-start).count();
     kvInplaceUpdates_=0;constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;poisoned_=true;gpu_->Begin();
@@ -247,11 +247,11 @@ X::Value MetalDecoderSession::Run(X::Value graphs,X::Value hidden,X::Value posit
         encodeMs_=std::chrono::duration<double,std::milli>(encoded-prepared).count();
         gpu_->SubmitAndWait();gpuMs_=gpu_->LastGPUMs();joinedPrefillPairs_=gpu_->LastJoinedPrefillPairs();constantHeadDispatches_=gpu_->LastConstantHeadDispatches();singleCoderHeadDispatches_=gpu_->LastSingleCoderHeadDispatches();residualNormDispatches_=gpu_->LastResidualNormDispatches();packedPrefillNormDispatches_=gpu_->LastPackedPrefillNormDispatches();globalHalfAlphaDispatches_=gpu_->LastGlobalHalfAlphaDispatches();joinedGlobalMlpBlocks_=gpu_->LastJoinedGlobalMlpBlocks();
         prefillPartialSubmissions_=gpu_->LastPartialSubmissions();
-        screenedHeadDispatches_=gpu_->LastScreenedHeadDispatches();screenedHeadSeedRows_=gpu_->LastScreenedHeadSeedRows();
+        screenedHeadDispatches_=gpu_->LastScreenedHeadDispatches();screenedHeadSeedRows_=gpu_->LastScreenedHeadSeedRows();interleavedScreenDispatches_=gpu_->LastInterleavedScreenDispatches();
         fusedHeadArgmaxDispatches_=gpu_->LastFusedHeadArgmaxDispatches();bodyShapeDispatches_=gpu_->LastBodyShapeDispatches();bodyShapeMisses_=gpu_->LastBodyShapeMisses();
         deferredZeroBytes_=gpu_->LastDeferredZeroBytes();deferredZeroStates_=gpu_->LastDeferredZeroStates();
         waitMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-encoded).count();
-    }catch(...){screenedHeadDispatches_=0;screenedHeadSeedRows_=0;prefillPartialSubmissions_=0;fusedHeadArgmaxDispatches_=0;bodyShapeDispatches_=bodyShapeMisses_=0;deferredZeroBytes_=deferredZeroStates_=0;kvInplaceUpdates_=0;joinedPrefillPairs_=0;constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;gpu_->Abort();throw;}
+    }catch(...){screenedHeadDispatches_=0;screenedHeadSeedRows_=0;interleavedScreenDispatches_=0;prefillPartialSubmissions_=0;fusedHeadArgmaxDispatches_=0;bodyShapeDispatches_=bodyShapeMisses_=0;deferredZeroBytes_=deferredZeroStates_=0;kvInplaceUpdates_=0;joinedPrefillPairs_=0;constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;gpu_->Abort();throw;}
     hiddenShape_=inputShape[0];
     auto result=X::Value::List(Host());
     if(predictionToken>=0) {

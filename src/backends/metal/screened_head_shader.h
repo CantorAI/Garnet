@@ -5,6 +5,9 @@ using namespace metal;
 #ifndef GARNET_SCREENED_HEAD_SEED_ROWS
 #define GARNET_SCREENED_HEAD_SEED_ROWS 8192
 #endif
+#ifndef GARNET_SCREENED_HEAD_INTERLEAVED
+#define GARNET_SCREENED_HEAD_INTERLEAVED 0
+#endif
 struct BF16Params {ulong rows,inner,columns,aStride,oStride;};
 // Private greedy component only: derived INT8 screening index, original BF16 refinement.
 // Screening is not a public complete-logit operation or a quantized model replacement.
@@ -45,11 +48,16 @@ kernel void screened_head(device const float* a [[buffer(0)]],device const ushor
     float4 sum0=0,sum1=0;
     for(ulong k=ulong(lane)*4;k<p.inner;k+=128){
         float4 x=*(device const float4*)(a+k),y=p.rows==2?*(device const float4*)(a+p.aStride+k):float4(0);
+#if GARNET_SCREENED_HEAD_INTERLEAVED
+        uint4 packed=*(device const uint4*)(approximate+column*p.inner+k*4);
+        for(uint j=0;j<4;++j){float4 w=float4(as_type<char4>(packed[j]));sum0=fma(x[j],w,sum0);if(p.rows==2)sum1=fma(y[j],w,sum1);}
+#else
         char4 b0=*(device const char4*)(approximate+column*p.inner+k),b1=char4(0),b2=char4(0),b3=char4(0);
         if(valid.y)b1=*(device const char4*)(approximate+(column+1)*p.inner+k);
         if(valid.z)b2=*(device const char4*)(approximate+(column+2)*p.inner+k);
         if(valid.w)b3=*(device const char4*)(approximate+(column+3)*p.inner+k);
         for(uint j=0;j<4;++j){float4 w=float4(b0[j],b1[j],b2[j],b3[j]);sum0=fma(x[j],w,sum0);if(p.rows==2)sum1=fma(y[j],w,sum1);}
+#endif
     }
     sum0=float4(simd_sum(sum0.x),simd_sum(sum0.y),simd_sum(sum0.z),simd_sum(sum0.w));
     if(p.rows==2)sum1=float4(simd_sum(sum1.x),simd_sum(sum1.y),simd_sum(sum1.z),simd_sum(sum1.w));

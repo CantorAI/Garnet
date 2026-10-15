@@ -27,9 +27,9 @@ int main(){try{
             auto input=gpu.Upload(values,batch,k),full=gpu.Allocate(batch,n),control=gpu.Allocate(batch,2),candidate=gpu.Allocate(batch,2);
             gpu.Begin();gpu.EncodeBF16MatVec(input,weight,full);gpu.EncodeArgmax(full,control);gpu.SubmitAndWait();auto reference=gpu.Download(full),expected=gpu.Download(control);
             if(pattern==0)need(expected[0]==8192,"Outside-seed lowest tie fixture did not exercise intended winner");
-            gpu.Begin();need(gpu.LastScreenedHeadDispatches()==0&&gpu.LastScreenedHeadSeedRows()==0,"Begin retained screen count");need(gpu.EncodeScreenedArgmax(input,weight,candidate),"Prepared head did not screen");
+            gpu.Begin();need(gpu.LastScreenedHeadDispatches()==0&&gpu.LastScreenedHeadSeedRows()==0&&gpu.LastInterleavedScreenDispatches()==0,"Begin retained screen count");need(gpu.EncodeScreenedArgmax(input,weight,candidate),"Prepared head did not screen");
             bool rejected=false;try{gpu.ScreenedDiagnostics();}catch(const std::logic_error&){rejected=true;}need(rejected,"Pending diagnostics became readable");
-            gpu.SubmitAndWait();auto actual=gpu.Download(candidate);auto diagnostics=gpu.ScreenedDiagnostics();need(gpu.LastScreenedHeadDispatches()==1,"Actual head count missing");need(gpu.LastScreenedHeadSeedRows()==Garnet::kScreenedHeadSeedRows,"Actual seed rows differ");
+            gpu.SubmitAndWait();auto actual=gpu.Download(candidate);auto diagnostics=gpu.ScreenedDiagnostics();need(gpu.LastScreenedHeadDispatches()==1,"Actual head count missing");need(gpu.LastScreenedHeadSeedRows()==Garnet::kScreenedHeadSeedRows,"Actual seed rows differ");need(gpu.LastInterleavedScreenDispatches()==size_t(Garnet::kScreenedHeadInterleaved),"Actual index layout count differs");
             need(diagnostics.rows==batch&&diagnostics.columns==n,"Diagnostic shape mismatch");
             for(size_t row=0;row<batch;++row){bool unsafe=(pattern>=1&&pattern<=5)||(pattern==6&&row==0);
                 need(diagnostics.querySafe[row]==(unsafe?0.f:1.f),"Query admission/fallback mismatch");
@@ -42,7 +42,7 @@ int main(){try{
                     }else need(reference[i]<threshold,"Rejected row can beat exact seed");
                 }
             }
-            gpu.Begin();need(gpu.EncodeScreenedArgmax(input,weight,candidate),"Abort preparation failed");gpu.Abort();need(gpu.LastScreenedHeadDispatches()==0&&gpu.LastScreenedHeadSeedRows()==0,"Abort retained screen count");
+            gpu.Begin();need(gpu.EncodeScreenedArgmax(input,weight,candidate),"Abort preparation failed");gpu.Abort();need(gpu.LastScreenedHeadDispatches()==0&&gpu.LastScreenedHeadSeedRows()==0&&gpu.LastInterleavedScreenDispatches()==0,"Abort retained screen count");
             rejected=false;try{gpu.Download(candidate);}catch(const std::logic_error&){rejected=true;}need(rejected,"Aborted prediction readable");
             rejected=false;try{gpu.ScreenedDiagnostics();}catch(const std::logic_error&){rejected=true;}need(rejected,"Aborted diagnostics readable");
             gpu.Begin();need(gpu.EncodeScreenedArgmax(input,weight,candidate),"Scratch failed to recover");gpu.SubmitAndWait();need(gpu.Download(candidate)==actual,"Recovery changed prediction/error flags");++checked;

@@ -63,6 +63,7 @@ public:
     bool EncodeScreenedArgmax(const MetalMatrix&,const MetalBF16Weight&,const MetalMatrix&);
     size_t LastScreenedHeadDispatches() const;
     size_t LastScreenedHeadSeedRows() const;
+    size_t LastInterleavedScreenDispatches() const;
     // Diagnostics contain private masked logits, never public complete-logit results.
     MetalScreenedDiagnostics ScreenedDiagnostics() const;
     // Preserve BF16 checkpoint values; use SIMD matvec for decode and FP32 tiled GEMM for up to 128 prompt rows.

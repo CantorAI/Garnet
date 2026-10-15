@@ -20,12 +20,25 @@ bool MetalContext::PrepareScreenedHead(const MetalBF16Weight& weight) {
         if(!index||!metadata)return false;
         auto original=static_cast<const uint16_t*>(w->buffer.contents);auto encoded=static_cast<int8_t*>(index.contents);auto info=static_cast<float*>(metadata.contents);
         for(size_t row=0;row<w->rows;++row)if(!EncodeScreenedHeadRow(original+row*w->columns,w->columns,encoded+row*w->columns,info+row*4))return false;
+#ifdef GARNET_METAL_INTERLEAVED_SCREEN_INDEX
+        const size_t paddedRows=(w->rows+3)/4*4,packedBytes=Elements(paddedRows,w->columns);
+        if(packedBytes>impl_->device.maxBufferLength)return false;
+        auto packed=[impl_->device newBufferWithLength:packedBytes options:MTLResourceStorageModeShared];if(!packed)return false;
+        auto destination=static_cast<int8_t*>(packed.contents);
+        for(size_t group=0;group<paddedRows/4;++group)for(size_t k=0;k<w->columns;++k)for(size_t c=0;c<4;++c){
+            const size_t row=group*4+c;destination[(group*w->columns+k)*4+c]=row<w->rows?encoded[row*w->columns+k]:0;
+        }
+        for(size_t row=0;row<w->rows;++row)for(size_t k=0;k<w->columns;++k)
+            if(destination[((row/4)*w->columns+k)*4+row%4]!=encoded[row*w->columns+k])return false;
+        index=packed;
+#endif
         w->screenIndex=index;w->screenMetadata=metadata;return true;
     }
 #endif
 }
 size_t MetalContext::LastScreenedHeadDispatches() const {return impl_->screenedHeadDispatches;}
 size_t MetalContext::LastScreenedHeadSeedRows() const {return impl_->screenedHeadSeedRows;}
+size_t MetalContext::LastInterleavedScreenDispatches() const {return impl_->interleavedScreenDispatches;}
 bool MetalContext::EncodeScreenedArgmax(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
 #ifndef GARNET_METAL_SCREENED_HEAD
     (void)input;(void)weight;(void)output;return false;
@@ -75,7 +88,8 @@ bool MetalContext::EncodeScreenedArgmax(const MetalMatrix& input,const MetalBF16
         [encoder setBuffer:scratch.visits offset:0 atIndex:6];[encoder setBuffer:seed.data offset:0 atIndex:7];[encoder setBuffer:w->screenIndex offset:0 atIndex:8];
         [encoder dispatchThreadgroups:MTLSizeMake((w->rows+15)/16,1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];[encoder endEncoding];
         EncodeArgmax(scratch.scores,output);
-        impl_->screenDiagnosticKey=key;impl_->screenDiagnosticReady=true;++impl_->screenedHeadDispatches;impl_->screenedHeadSeedRows=sp.columns;return true;
+        impl_->screenDiagnosticKey=key;impl_->screenDiagnosticReady=true;++impl_->screenedHeadDispatches;impl_->screenedHeadSeedRows=sp.columns;
+        if(kScreenedHeadInterleaved)++impl_->interleavedScreenDispatches;return true;
     }
 #endif
 }

@@ -8,6 +8,11 @@
 #include <cstring>
 #include <limits>
 namespace Garnet {
+#ifdef GARNET_METAL_INTERLEAVED_SCREEN_INDEX
+inline constexpr bool kScreenedHeadInterleaved=true;
+#else
+inline constexpr bool kScreenedHeadInterleaved=false;
+#endif
 #ifdef GARNET_METAL_SMALL_SCREEN_SEED
 inline constexpr size_t kScreenedHeadSeedRows=1024;
 #else

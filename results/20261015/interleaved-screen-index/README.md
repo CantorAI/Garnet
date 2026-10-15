@@ -44,20 +44,35 @@ mixed-row fixture. Candidate/control below 1 means faster.
 
 Wall reductions repeat at 10.6–10.8% for text/coder B1, 14.2–16.1% for
 text/coder B2, 15.2–15.4% for VL B1 and 17.2–17.4% for VL B2. These are
-component improvements, not decoder tokens/s or TTFT gains. No native
-integration or new vLLM comparison has been executed for this layout yet.
-The full goal remains unmet.
+component improvements, not decoder tokens/s or TTFT gains. A separate native
+integration is now under validation, as recorded below. No serving result
+or new vLLM comparison is claimed yet. The full goal remains unmet.
 
-The next native experiment should add an OFF-by-default layout option,
-retain the original shape/admission and fallback rules, verify every packed
-index value before publication and pad the final four-column group. The
-Metal macro-selected body must match this audited component. Actual layout
-dispatch counters should reset/publish through context and session paths;
-workers should check every prediction against the selected policy. Synthetic
-nonmultiple-of-four heads, outside-seed ties, trained heads, generic logits,
-poison/reset/close/rebuild and private-session checks must pass before full
-sequential native ABBA and a fresh repeat. The 1024-versus-8192 tradeoffs
-remain separate in [the small-seed native record](../small-seed-native/README.md).
+The OFF-by-default `GARNET_METAL_INTERLEAVED_SCREEN_INDEX` native option
+requires SCREENED_HEAD and retains original shape/admission and fallback
+rules. Native preparation checks every permuted byte before publication and
+pads the final four-column group with zeros. After macro selection, the Metal
+functions match the audited component bytes. Context/session counters observe
+actual layout dispatches and reset through run/reset/close/abort paths.
+Workers check every prediction's route. Legacy control libraries report
+their frozen row-major configuration without accessing the new property.
+
+Installation pins 18 files and preserves 14 verified originals from base
+`b0b0e134cd3e0668e553e84964d4d7e93212f703`. All preceding native/component jobs
+were terminal and archived before the source change. Validation PID 33362
+has passed build, CTest, bit-identical trained full-grid vision and all 51
+trained heads. CTest includes nonmultiple-of-four vocabulary size, outside-seed
+ties, bounded/nonfinite/mixed fallback, ownership and Begin/Abort recovery.
+Actual trained checks record seed width 1024 and interleaved dispatch count 1.
+Remaining original-model and trained session recovery stages are running.
+
+Queue PID 33417 waits for that exact owned job and all 27 passing stages before
+six-profile native ABBA against `build-small-screen-seed` (d27e7465...). Both
+policies retain the same 1024 seed, prefill/reset bundle and serial vision
+prefetch; only index layout and observation counters differ. The source stays
+fixed until terminal results are archived. A fresh native repeat follows the
+first independent audit if the candidate warrants it. The 1024-versus-8192
+tradeoffs remain separate in [the small-seed native record](../small-seed-native/README.md).
 
 Both Objective-C++ harnesses compiled on the M4. Xcode's offline Metal tool
 is a stub without its optional Metal Toolchain, so it could not compile a
@@ -74,4 +89,6 @@ python3 launch_interleaved_screen_index.py ROOT ROOT/logs/interleaved-screen-ind
 python3 launch_interleaved_screen_index.py ROOT ROOT/logs/interleaved-screen-index-confirm-20261015 checks
 python3 archive_interleaved_screen_index.py ROOT ARCHIVE interleaved-screen-index-20261015 interleaved-screen-index-confirm-20261015
 python -X utf8 verify_interleaved_screen_index.py RESULTS VERIFICATION_JSON
+python3 launch_interleaved_head_checks.py ROOT ROOT/logs/interleaved-head-checks-20261015 checks
+python3 queue_interleaved_head_profiles.py ROOT ROOT/logs/interleaved-head-native-20261015
 ```
