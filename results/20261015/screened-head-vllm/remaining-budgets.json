@@ -1,0 +1,163 @@
+{
+  "scope": "Additional matched-FP32 selected-library study; BF16 versus lossless FP32 weight-storage widths differ; no stock BF16 claim",
+  "initialization_and_first_use": "Separate observations; no sum presented as an observed cold end-to-end TTFT; OS/driver caches not flushed",
+  "profiles": [
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 1,
+      "garnet_warm_tps_per_row": 64.52628601300154,
+      "vllm_warm_tps_per_row": 38.498228355951014,
+      "garnet_warm_tps_aggregate": 64.52628601300154,
+      "vllm_warm_tps_aggregate": 38.498228355951014,
+      "decode_ratio": 1.6760845568372014,
+      "garnet_warm_ttft_ms": 46.0189376026392,
+      "vllm_warm_ttft_ms": 69.56488557625562,
+      "ttft_fraction": 0.6615253834090501,
+      "decode_target_tps_per_row": 76.99645671190203,
+      "ttft_target_ms": 34.78244278812781,
+      "additional_decode_factor_required": 1.1932572207299805,
+      "additional_ttft_reduction_percent_required": 24.417110432960044,
+      "initialization_seconds": {
+        "garnet": 2.1680112294852734,
+        "vllm-metal": 16.794984416337684
+      },
+      "first_request_ttft_ms": {
+        "garnet": 157.08199981600046,
+        "vllm-metal": 67.2775418497622
+      },
+      "decode_target_met": false,
+      "ttft_target_met": false
+    },
+    {
+      "model": "Qwen3-0.6B",
+      "batch": 2,
+      "garnet_warm_tps_per_row": 62.767417219902065,
+      "vllm_warm_tps_per_row": 27.755762309485668,
+      "garnet_warm_tps_aggregate": 125.53483443980413,
+      "vllm_warm_tps_aggregate": 55.511524618971336,
+      "decode_ratio": 2.261419323311145,
+      "garnet_warm_ttft_ms": 80.21301054395735,
+      "vllm_warm_ttft_ms": 92.1821981901303,
+      "ttft_fraction": 0.8701572767717483,
+      "decode_target_tps_per_row": 55.511524618971336,
+      "ttft_target_ms": 46.09109909506515,
+      "additional_decode_factor_required": 1,
+      "additional_ttft_reduction_percent_required": 42.53912328872526,
+      "initialization_seconds": {
+        "garnet": 2.18438039557077,
+        "vllm-metal": 16.285153749631718
+      },
+      "first_request_ttft_ms": {
+        "garnet": 177.43595875799656,
+        "vllm-metal": 106.50485451333225
+      },
+      "decode_target_met": true,
+      "ttft_target_met": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 1,
+      "garnet_warm_tps_per_row": 79.0111293629101,
+      "vllm_warm_tps_per_row": 46.87024254136342,
+      "garnet_warm_tps_aggregate": 79.0111293629101,
+      "vllm_warm_tps_aggregate": 46.87024254136342,
+      "decode_ratio": 1.6857418498140275,
+      "garnet_warm_ttft_ms": 31.804031343199313,
+      "vllm_warm_ttft_ms": 57.093552430160344,
+      "ttft_fraction": 0.5570511903617064,
+      "decode_target_tps_per_row": 93.74048508272683,
+      "ttft_target_ms": 28.546776215080172,
+      "additional_decode_factor_required": 1.1864212780982104,
+      "additional_ttft_reduction_percent_required": 10.241642303046095,
+      "initialization_seconds": {
+        "garnet": 1.8120005829259753,
+        "vllm-metal": 15.88295947946608
+      },
+      "first_request_ttft_ms": {
+        "garnet": 126.92366656847298,
+        "vllm-metal": 60.836582677438855
+      },
+      "decode_target_met": false,
+      "ttft_target_met": false
+    },
+    {
+      "model": "Qwen2.5-Coder-0.5B-Instruct",
+      "batch": 2,
+      "garnet_warm_tps_per_row": 76.17885267228341,
+      "vllm_warm_tps_per_row": 28.307561070101702,
+      "garnet_warm_tps_aggregate": 152.35770534456682,
+      "vllm_warm_tps_aggregate": 56.615122140203404,
+      "decode_ratio": 2.691113250047639,
+      "garnet_warm_ttft_ms": 49.08122925553471,
+      "vllm_warm_ttft_ms": 84.49863491114229,
+      "ttft_fraction": 0.5808523333796802,
+      "decode_target_tps_per_row": 56.615122140203404,
+      "ttft_target_ms": 42.249317455571145,
+      "additional_decode_factor_required": 1,
+      "additional_ttft_reduction_percent_required": 13.91960206292746,
+      "initialization_seconds": {
+        "garnet": 1.808497479185462,
+        "vllm-metal": 15.847193375229836
+      },
+      "first_request_ttft_ms": {
+        "garnet": 146.87160402536392,
+        "vllm-metal": 97.64493675902486
+      },
+      "decode_target_met": true,
+      "ttft_target_met": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 1,
+      "garnet_warm_tps_per_row": 52.826417852282034,
+      "vllm_warm_tps_per_row": 26.26706469457109,
+      "garnet_warm_tps_aggregate": 52.826417852282034,
+      "vllm_warm_tps_aggregate": 26.26706469457109,
+      "decode_ratio": 2.011127564748423,
+      "garnet_warm_ttft_ms": 183.26942692510784,
+      "vllm_warm_ttft_ms": 256.3495521899313,
+      "ttft_fraction": 0.714920019791266,
+      "decode_target_tps_per_row": 52.53412938914218,
+      "ttft_target_ms": 128.17477609496564,
+      "additional_decode_factor_required": 1,
+      "additional_ttft_reduction_percent_required": 30.062106786996367,
+      "initialization_seconds": {
+        "garnet": 4.830971353920177,
+        "vllm-metal": 33.41821074998006
+      },
+      "first_request_ttft_ms": {
+        "garnet": 308.4133539814502,
+        "vllm-metal": 260.6346670072526
+      },
+      "decode_target_met": true,
+      "ttft_target_met": false
+    },
+    {
+      "model": "Qwen3.5-0.8B",
+      "batch": 2,
+      "garnet_warm_tps_per_row": 48.64381843744651,
+      "vllm_warm_tps_per_row": 17.098318475784986,
+      "garnet_warm_tps_aggregate": 97.28763687489302,
+      "vllm_warm_tps_aggregate": 34.19663695156997,
+      "decode_ratio": 2.844947502079632,
+      "garnet_warm_ttft_ms": 342.64499961864203,
+      "vllm_warm_ttft_ms": 428.8551250938326,
+      "ttft_fraction": 0.7989761100410587,
+      "decode_target_tps_per_row": 34.19663695156997,
+      "ttft_target_ms": 214.4275625469163,
+      "additional_decode_factor_required": 1,
+      "additional_ttft_reduction_percent_required": 37.41990608776709,
+      "initialization_seconds": {
+        "garnet": 4.880881979363039,
+        "vllm-metal": 33.12592745805159
+      },
+      "first_request_ttft_ms": {
+        "garnet": 525.3022704273462,
+        "vllm-metal": 452.1149997599423
+      },
+      "decode_target_met": true,
+      "ttft_target_met": false
+    }
+  ],
+  "all_targets_met": false
+}

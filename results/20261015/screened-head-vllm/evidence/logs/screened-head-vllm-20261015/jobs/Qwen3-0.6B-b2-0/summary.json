@@ -1,0 +1,3815 @@
+{
+  "model": "Qwen3-0.6B",
+  "batch": 2,
+  "means": {
+    "garnet": {
+      "requests": 4,
+      "ttft_ms": 80.21301054395735,
+      "decode_tps": 62.767417219902065,
+      "initialization_s": 2.18438039557077,
+      "peak_child_rss_bytes": 2654584832
+    },
+    "vllm-metal": {
+      "requests": 4,
+      "ttft_ms": 92.1821981901303,
+      "decode_tps": 27.755762309485668,
+      "initialization_s": 16.285153749631718,
+      "peak_child_rss_bytes": 3752747008
+    }
+  },
+  "decode_ratio": 2.261419323311145,
+  "ttft_fraction": 0.8701572767717483,
+  "decode_target_met": true,
+  "ttft_target_met": false,
+  "exact_complete_outputs": true,
+  "counts_as_default_bf16_speedup": false,
+  "records": [
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.16988429101184,
+      "ttft_seconds": 0.173891625367105,
+      "total_seconds": 0.28932129219174385,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.014843833167105913,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.023039416875690222,
+        0.014959000051021576,
+        0.015313874930143356,
+        0.015315208118408918,
+        0.015492791775614023,
+        0.015254083089530468,
+        0.015798167325556278
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 60.778375369303966,
+      "decode_window_seconds": 0.11542966682463884,
+      "decode_wall_steps_per_second": 60.642988865543764,
+      "native_decode_ms": [
+        22.84475,
+        14.838167,
+        15.208334,
+        15.216958,
+        15.397083,
+        15.155333,
+        15.70075
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.196833,
+          "encode_ms": 0.582583,
+          "gpu_ms": 14.005541801452637,
+          "wait_ms": 22.063334
+        },
+        {
+          "prepare_ms": 0.152667,
+          "encode_ms": 0.546208,
+          "gpu_ms": 13.655333314090967,
+          "wait_ms": 14.137708
+        },
+        {
+          "prepare_ms": 0.137917,
+          "encode_ms": 0.50725,
+          "gpu_ms": 14.172750059515238,
+          "wait_ms": 14.562292
+        },
+        {
+          "prepare_ms": 0.139,
+          "encode_ms": 0.474416,
+          "gpu_ms": 14.210333582013845,
+          "wait_ms": 14.602792
+        },
+        {
+          "prepare_ms": 0.134875,
+          "encode_ms": 0.4745,
+          "gpu_ms": 14.327666722238064,
+          "wait_ms": 14.787041
+        },
+        {
+          "prepare_ms": 0.134333,
+          "encode_ms": 0.481625,
+          "gpu_ms": 14.123874716460705,
+          "wait_ms": 14.53875
+        },
+        {
+          "prepare_ms": 0.134292,
+          "encode_ms": 0.468542,
+          "gpu_ms": 14.602374751120806,
+          "wait_ms": 15.097208
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.22375,
+        "encode_ms": 20.17825,
+        "gpu_ms": 52.917541936039925,
+        "wait_ms": 73.663833,
+        "global_half_alpha_dispatches": 168
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 94.069958,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "garnet",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 3.095574874896556,
+        "peak_rss_bytes": 2644672512,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.16988429101184,
+      "ttft_seconds": 0.07817837502807379,
+      "total_seconds": 0.18726570811122656,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.02222758298739791,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.016033208929002285,
+        0.015326791908591986,
+        0.015295791905373335,
+        0.015187624841928482,
+        0.015586915891617537,
+        0.01566537469625473,
+        0.015648915898054838
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 64.37099819703309,
+      "decode_window_seconds": 0.10908733308315277,
+      "decode_wall_steps_per_second": 64.1687701235137,
+      "native_decode_ms": [
+        15.870542,
+        15.158125,
+        15.159625,
+        15.043458,
+        15.449208,
+        15.543583,
+        15.522375
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.167292,
+          "encode_ms": 0.507458,
+          "gpu_ms": 14.789625070989132,
+          "wait_ms": 15.1925
+        },
+        {
+          "prepare_ms": 0.164625,
+          "encode_ms": 0.548834,
+          "gpu_ms": 14.033624902367592,
+          "wait_ms": 14.440083
+        },
+        {
+          "prepare_ms": 0.151125,
+          "encode_ms": 0.51375,
+          "gpu_ms": 14.098291750997305,
+          "wait_ms": 14.491125
+        },
+        {
+          "prepare_ms": 0.159875,
+          "encode_ms": 0.541375,
+          "gpu_ms": 13.931749854236841,
+          "wait_ms": 14.339792
+        },
+        {
+          "prepare_ms": 0.170833,
+          "encode_ms": 0.530875,
+          "gpu_ms": 14.27049981430173,
+          "wait_ms": 14.745333
+        },
+        {
+          "prepare_ms": 0.151041,
+          "encode_ms": 0.507125,
+          "gpu_ms": 14.479999896138906,
+          "wait_ms": 14.883334
+        },
+        {
+          "prepare_ms": 0.155042,
+          "encode_ms": 0.50325,
+          "gpu_ms": 14.467166736721992,
+          "wait_ms": 14.861125
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.282625,
+        "encode_ms": 5.729291,
+        "gpu_ms": 47.54750011488795,
+        "wait_ms": 48.518875,
+        "global_half_alpha_dispatches": 168
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 54.532083,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "garnet",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 3.095574874896556,
+        "peak_rss_bytes": 2644672512,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.16988429101184,
+      "ttft_seconds": 0.08132199989631772,
+      "total_seconds": 0.1938758329488337,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.022530416026711464,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.016837915871292353,
+        0.015990708023309708,
+        0.01580508379265666,
+        0.015926166903227568,
+        0.015726166777312756,
+        0.01600408274680376,
+        0.016015749890357256
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 62.32977626522759,
+      "decode_window_seconds": 0.11255383305251598,
+      "decode_wall_steps_per_second": 62.19246213262148,
+      "native_decode_ms": [
+        16.663666,
+        15.87275,
+        15.700625,
+        15.829042,
+        15.631458,
+        15.910541,
+        15.92
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.201333,
+          "encode_ms": 0.571542,
+          "gpu_ms": 15.381000004708767,
+          "wait_ms": 15.888541
+        },
+        {
+          "prepare_ms": 0.15,
+          "encode_ms": 0.521459,
+          "gpu_ms": 14.76099994033575,
+          "wait_ms": 15.200125
+        },
+        {
+          "prepare_ms": 0.139334,
+          "encode_ms": 0.4895,
+          "gpu_ms": 14.684291556477547,
+          "wait_ms": 15.071041
+        },
+        {
+          "prepare_ms": 0.138959,
+          "encode_ms": 0.478416,
+          "gpu_ms": 14.841083437204361,
+          "wait_ms": 15.211042
+        },
+        {
+          "prepare_ms": 0.137917,
+          "encode_ms": 0.474,
+          "gpu_ms": 14.63312515988946,
+          "wait_ms": 15.018958
+        },
+        {
+          "prepare_ms": 0.138166,
+          "encode_ms": 0.480625,
+          "gpu_ms": 14.863083139061928,
+          "wait_ms": 15.291167
+        },
+        {
+          "prepare_ms": 0.138833,
+          "encode_ms": 0.474958,
+          "gpu_ms": 14.838583301752806,
+          "wait_ms": 15.305417
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.336167,
+        "encode_ms": 5.8165,
+        "gpu_ms": 50.04483321681619,
+        "wait_ms": 51.074042,
+        "global_half_alpha_dispatches": 168
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 57.229792,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "garnet",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 3.095574874896556,
+        "peak_rss_bytes": 2644672512,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 16.2938945828937,
+      "ttft_seconds": 0.104417625349015,
+      "ttft_per_row_seconds": {
+        "0-0": 0.09488329105079174,
+        "0-1": 0.104417625349015
+      },
+      "total_seconds": 0.30242745811119676,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.",
+        "The capital of France is Paris."
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.0286446250975132,
+        0.02837912505492568,
+        0.02861862489953637,
+        0.02916370937600732,
+        0.029477791395038366,
+        0.028746250085532665,
+        0.024919374845921993
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 35.362554456160865,
+      "events": [
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.09488329105079174,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.104417625349015,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.104417625349015,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.1330695003271103,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.1330695003271103,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.16145270830020308,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.16145270830020308,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.1900742081925273,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.1900742081925273,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.21924037532880902,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.21924037532880902,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.2487252913415432,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.2487252913415432,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.2774775833822787,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.2774775833822787,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.30240387516096234,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.19798624981194735,
+      "decode_wall_steps_per_second": 35.35599066424455,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "vllm-metal",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 19.96235670801252,
+        "peak_rss_bytes": 3751149568,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 16.2938945828937,
+      "ttft_seconds": 0.07597420876845717,
+      "ttft_per_row_seconds": {
+        "1-0": 0.07597420876845717,
+        "1-1": 0.07597420876845717
+      },
+      "total_seconds": 0.3039899589493871,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.",
+        "The capital of France is Paris."
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.029814875219017267,
+        0.03035320807248354,
+        0.030953458044677973,
+        0.03169133374467492,
+        0.03290004190057516,
+        0.03515883395448327,
+        0.03709045797586441
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 30.70684405724926,
+      "events": [
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.07597420876845717,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.07597420876845717,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.10579529218375683,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.10579529218375683,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.13615291705355048,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.13615291705355048,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.1671126252040267,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.1671126252040267,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.19880745885893703,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.19880745885893703,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.23171058390289545,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.23171058390289545,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.2668717089109123,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.2668717089109123,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.3039646251127124,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.3039646251127124,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.2279904163442552,
+      "decode_wall_steps_per_second": 30.703044944794158,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "vllm-metal",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 19.96235670801252,
+        "peak_rss_bytes": 3751149568,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 16.2938945828937,
+      "ttft_seconds": 0.11318475008010864,
+      "ttft_per_row_seconds": {
+        "2-0": 0.11318475008010864,
+        "2-1": 0.11318475008010864
+      },
+      "total_seconds": 0.3978451252914965,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.",
+        "The capital of France is Paris."
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.038588291965425014,
+        0.039985166396945715,
+        0.03989991685375571,
+        0.04206904163584113,
+        0.03780362522229552,
+        0.043746375013142824,
+        0.04246987495571375
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 24.599183362422774,
+      "events": [
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.11318475008010864,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.11318475008010864,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.15178379230201244,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.15178379230201244,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.19178120838478208,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.19178120838478208,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.23169379215687513,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.23169379215687513,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.2737811249680817,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.2737811249680817,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.3115987083874643,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.3115987083874643,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.35534912534058094,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.35534912534058094,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.3978269579820335,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.3978269579820335,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.28464220790192485,
+      "decode_wall_steps_per_second": 24.592276920546833,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "vllm-metal",
+      "repeat": 0,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 19.96235670801252,
+        "peak_rss_bytes": 3751149568,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 16.276412916369736,
+      "ttft_seconds": 0.1085920836776495,
+      "ttft_per_row_seconds": {
+        "0-0": 0.09896079171448946,
+        "0-1": 0.1085920836776495
+      },
+      "total_seconds": 0.30646866699680686,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.",
+        "The capital of France is Paris."
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.028246417175978422,
+        0.028427958022803068,
+        0.0284638749435544,
+        0.02830658294260502,
+        0.029441042337566614,
+        0.02883500000461936,
+        0.026091708801686764
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 35.38703074574348,
+      "events": [
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.09896079171448946,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.1085920836776495,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.1085920836776495,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.13684629183262587,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.13684629183262587,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.16527887480333447,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.16527887480333447,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.1937494999729097,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.1937494999729097,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.2220599167048931,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.2220599167048931,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.2515035420656204,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.2515035420656204,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-0",
+          "elapsed_seconds": 0.28034695889800787,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.28034695889800787,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "0-1",
+          "elapsed_seconds": 0.3064460838213563,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.1978540001437068,
+      "decode_wall_steps_per_second": 35.379623332940994,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "vllm-metal",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 19.93759279185906,
+        "peak_rss_bytes": 3754344448,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 16.276412916369736,
+      "ttft_seconds": 0.07513175019994378,
+      "ttft_per_row_seconds": {
+        "1-0": 0.07513175019994378,
+        "1-1": 0.07513175019994378
+      },
+      "total_seconds": 0.2995686670765281,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.",
+        "The capital of France is Paris."
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.029227000195533037,
+        0.029988749884068966,
+        0.030579958111047745,
+        0.03221224993467331,
+        0.03274583397433162,
+        0.03496212512254715,
+        0.03467016667127609
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 31.196230526145673,
+      "events": [
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.07513175019994378,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.07513175019994378,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.10436733299866319,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.10436733299866319,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.13436158280819654,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.13436158280819654,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.1649458329193294,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.1649458329193294,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.19716120790690184,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.19716120790690184,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.22991016693413258,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.22991016693413258,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.26487891701981425,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.26487891701981425,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-0",
+          "elapsed_seconds": 0.29955187486484647,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "1-1",
+          "elapsed_seconds": 0.29955187486484647,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.2244201246649027,
+      "decode_wall_steps_per_second": 31.19149858085226,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "vllm-metal",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 19.93759279185906,
+        "peak_rss_bytes": 3754344448,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "vllm-metal",
+      "model": "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 16.276412916369736,
+      "ttft_seconds": 0.10443808371201158,
+      "ttft_per_row_seconds": {
+        "2-0": 0.10443808371201158,
+        "2-1": 0.10443808371201158
+      },
+      "total_seconds": 0.38974695885553956,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.",
+        "The capital of France is Paris."
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "stop_reasons": [
+        null,
+        null
+      ],
+      "decode_step_seconds": [
+        0.042115415912121534,
+        0.04104845831170678,
+        0.04221545811742544,
+        0.04102337500080466,
+        0.041311874985694885,
+        0.038928667083382607,
+        0.038556916173547506
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 24.54416527300899,
+      "events": [
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.10443808371201158,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.10443808371201158,
+          "token_ids": [
+            785
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.14656312484294176,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.14656312484294176,
+          "token_ids": [
+            785,
+            6722
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.18762191710993648,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.18762191710993648,
+          "token_ids": [
+            785,
+            6722,
+            315
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.22985249990597367,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.22985249990597367,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.27089279191568494,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.27089279191568494,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.31222008401528,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.31222008401528,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.35116358380764723,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.35116358380764723,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13
+          ],
+          "finished": false,
+          "finish_reason": null,
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-0",
+          "elapsed_seconds": 0.38973050005733967,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        },
+        {
+          "request_id": "2-1",
+          "elapsed_seconds": 0.38973050005733967,
+          "token_ids": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095,
+            13,
+            151645
+          ],
+          "finished": true,
+          "finish_reason": "stop",
+          "stop_reason": null
+        }
+      ],
+      "decode_window_seconds": 0.2852924163453281,
+      "decode_wall_steps_per_second": 24.536228791749412,
+      "prefix_caching": false,
+      "speculative_decoding": false,
+      "configured_model_dtype": "torch.float32",
+      "weights": "Exact F32 checkpoint expansion; vLLM-Metal FP32 model/KV",
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "vllm-metal",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_vllm.py",
+          "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/garnet-0/output.log"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 19.93759279185906,
+        "peak_rss_bytes": 3754344448,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 0,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.1988765001296997,
+      "ttft_seconds": 0.1809802921488881,
+      "total_seconds": 0.29519937513396144,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.01790308440104127,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.0227785836905241,
+        0.014963374938815832,
+        0.015110875014215708,
+        0.015059832949191332,
+        0.015264665707945824,
+        0.015242416877299547,
+        0.015532958786934614
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 61.428992123245564,
+      "decode_window_seconds": 0.11421908298507333,
+      "decode_wall_steps_per_second": 61.28573104473963,
+      "native_decode_ms": [
+        22.584291,
+        14.834125,
+        14.99775,
+        14.958958,
+        15.167458,
+        15.143416,
+        15.438458
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.1955,
+          "encode_ms": 0.599625,
+          "gpu_ms": 13.781500048935413,
+          "wait_ms": 21.786416
+        },
+        {
+          "prepare_ms": 0.152917,
+          "encode_ms": 0.525083,
+          "gpu_ms": 13.738749548792839,
+          "wait_ms": 14.154792
+        },
+        {
+          "prepare_ms": 0.138167,
+          "encode_ms": 0.510125,
+          "gpu_ms": 13.912666589021683,
+          "wait_ms": 14.348542
+        },
+        {
+          "prepare_ms": 0.133583,
+          "encode_ms": 0.479459,
+          "gpu_ms": 13.95900035277009,
+          "wait_ms": 14.345166
+        },
+        {
+          "prepare_ms": 0.131042,
+          "encode_ms": 0.47325,
+          "gpu_ms": 14.140958432108164,
+          "wait_ms": 14.5625
+        },
+        {
+          "prepare_ms": 0.131333,
+          "encode_ms": 0.464583,
+          "gpu_ms": 14.152500312775373,
+          "wait_ms": 14.546834
+        },
+        {
+          "prepare_ms": 0.131125,
+          "encode_ms": 0.466708,
+          "gpu_ms": 14.48716688901186,
+          "wait_ms": 14.839959
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.251041,
+        "encode_ms": 21.316959,
+        "gpu_ms": 55.77149987220764,
+        "wait_ms": 76.17525,
+        "global_half_alpha_dispatches": 168
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 97.746541,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "garnet",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 3.1415457078255713,
+        "peak_rss_bytes": 2664497152,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 1,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.1988765001296997,
+      "ttft_seconds": 0.07863250002264977,
+      "total_seconds": 0.1907485001720488,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.023752457927912474,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.016461833380162716,
+        0.015547709073871374,
+        0.01588391698896885,
+        0.016158999875187874,
+        0.015950041357427835,
+        0.015965790953487158,
+        0.015811666380614042
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 62.62303300732421,
+      "decode_window_seconds": 0.11211600014939904,
+      "decode_wall_steps_per_second": 62.4353347485838,
+      "native_decode_ms": [
+        16.254291,
+        15.413541,
+        15.747625,
+        16.02625,
+        15.82025,
+        15.842584,
+        15.688666
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.215291,
+          "encode_ms": 0.578625,
+          "gpu_ms": 14.644083566963673,
+          "wait_ms": 15.458125
+        },
+        {
+          "prepare_ms": 0.152291,
+          "encode_ms": 0.518667,
+          "gpu_ms": 14.370666816830635,
+          "wait_ms": 14.738875
+        },
+        {
+          "prepare_ms": 0.16275,
+          "encode_ms": 0.542209,
+          "gpu_ms": 14.56220867112279,
+          "wait_ms": 15.039958
+        },
+        {
+          "prepare_ms": 0.159083,
+          "encode_ms": 0.517625,
+          "gpu_ms": 14.992500189691782,
+          "wait_ms": 15.347375
+        },
+        {
+          "prepare_ms": 0.169416,
+          "encode_ms": 0.522917,
+          "gpu_ms": 14.65533347800374,
+          "wait_ms": 15.126167
+        },
+        {
+          "prepare_ms": 0.154125,
+          "encode_ms": 0.506292,
+          "gpu_ms": 14.705125242471695,
+          "wait_ms": 15.179542
+        },
+        {
+          "prepare_ms": 0.159166,
+          "encode_ms": 0.5185,
+          "gpu_ms": 14.550833031535149,
+          "wait_ms": 15.009459
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.323,
+        "encode_ms": 5.699125,
+        "gpu_ms": 46.16300016641617,
+        "wait_ms": 46.698375,
+        "global_half_alpha_dispatches": 168
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 52.725625,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "garnet",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 3.1415457078255713,
+        "peak_rss_bytes": 2664497152,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    },
+    {
+      "runtime": "garnet",
+      "model": "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+      "request": 2,
+      "clock": "time.monotonic",
+      "initialization_seconds": 2.1988765001296997,
+      "ttft_seconds": 0.08271916722878814,
+      "total_seconds": 0.19512725016102195,
+      "token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "text": [
+        "The capital of France is Paris.<|im_end|>",
+        "The capital of France is Paris.<|im_end|>"
+      ],
+      "finished": [
+        true,
+        true
+      ],
+      "reset_seconds": 0.01950487494468689,
+      "prefill_stream_enabled": false,
+      "decode_partial_submissions": 0,
+      "dirty_prefix_reset_enabled": false,
+      "dirty_prefix_reset_bytes": 0,
+      "dirty_prefix_reset_states": 0,
+      "dirty_prefix_reset_fallback_states": 0,
+      "prompt_token_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6722,
+        315,
+        9625,
+        30,
+        21806,
+        26753,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198,
+        151667,
+        271,
+        151668,
+        271
+      ],
+      "decode_step_seconds": [
+        0.01620145794004202,
+        0.0162662910297513,
+        0.016055375337600708,
+        0.015932833775877953,
+        0.01596637489274144,
+        0.01575562497600913,
+        0.016000458039343357
+      ],
+      "decode_steps_after_first": 7,
+      "decode_steps_per_second": 62.40059585561248,
+      "decode_window_seconds": 0.11240808293223381,
+      "decode_wall_steps_per_second": 62.27310187488929,
+      "native_decode_ms": [
+        16.053042,
+        16.166958,
+        15.960166,
+        15.838209,
+        15.870541,
+        15.662125,
+        15.905333
+      ],
+      "decode_phases": [
+        {
+          "prepare_ms": 0.185084,
+          "encode_ms": 0.523375,
+          "gpu_ms": 14.913833234459162,
+          "wait_ms": 15.343791
+        },
+        {
+          "prepare_ms": 0.13975,
+          "encode_ms": 0.475583,
+          "gpu_ms": 15.015083365142345,
+          "wait_ms": 15.550917
+        },
+        {
+          "prepare_ms": 0.139041,
+          "encode_ms": 0.472375,
+          "gpu_ms": 14.895375352352858,
+          "wait_ms": 15.348084
+        },
+        {
+          "prepare_ms": 0.135,
+          "encode_ms": 0.463959,
+          "gpu_ms": 14.837916474789381,
+          "wait_ms": 15.238541
+        },
+        {
+          "prepare_ms": 0.136375,
+          "encode_ms": 0.461791,
+          "gpu_ms": 14.795000199228525,
+          "wait_ms": 15.27175
+        },
+        {
+          "prepare_ms": 0.134959,
+          "encode_ms": 0.463166,
+          "gpu_ms": 14.676458667963743,
+          "wait_ms": 15.063417
+        },
+        {
+          "prepare_ms": 0.134291,
+          "encode_ms": 0.462167,
+          "gpu_ms": 14.81612492352724,
+          "wait_ms": 15.308292
+        }
+      ],
+      "prefill_profile": {
+        "prepare_ms": 0.320167,
+        "encode_ms": 6.166333,
+        "gpu_ms": 54.15474995970726,
+        "wait_ms": 55.420625,
+        "global_half_alpha_dispatches": 168
+      },
+      "prefill_chunk_plan": [
+        22
+      ],
+      "prefill_inference_ms": 61.908209,
+      "attention_prefix_enabled": true,
+      "direct_state_zero_enabled": false,
+      "constant_head_enabled": false,
+      "residual_norm_enabled": false,
+      "packed_prefill_norm_enabled": false,
+      "global_half_alpha_enabled": true,
+      "joined_global_mlp_enabled": false,
+      "single_coder_head_enabled": false,
+      "single_coder_head_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fused_head_argmax_enabled": false,
+      "fused_head_argmax_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screened_head_enabled": true,
+      "screened_head_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "fused_head_decode_only_enabled": false,
+      "body_shape_enabled": false,
+      "body_shape_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_misses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "body_shape_pipeline_count": 0,
+      "deferred_state_zero_enabled": false,
+      "reused_zero_source_enabled": false,
+      "reused_zero_source_bytes": 0,
+      "reused_zero_copy_bytes": 0,
+      "reused_zero_copy_states": 0,
+      "decode_deferred_zero_bytes": 0,
+      "decode_deferred_zero_states": 0,
+      "vision_global_alpha_enabled": false,
+      "vision_global_alpha_dispatches": 0,
+      "residual_norm_dispatches": 0,
+      "constant_head_dispatches": 0,
+      "weights": "checkpoint BF16 decode projections/head; exact FP32 expansion for MPS prefill if selected; FP32 accumulation/activations/KV",
+      "case": {
+        "prompt": "What is the capital of France? Answer briefly.",
+        "batch": 2,
+        "max_tokens": 64,
+        "capacity": 256,
+        "chunk": 32,
+        "requests": 3,
+        "prefill_projection": "shared",
+        "prefill_finer_chunks": true,
+        "comparator_dtype": "float32",
+        "comparator_gpu_memory_utilization": 0.3,
+        "prefill_exact_tail": true
+      },
+      "normalized_token_ids": [
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ],
+        [
+          785,
+          6722,
+          315,
+          9625,
+          374,
+          12095,
+          13,
+          151645
+        ]
+      ],
+      "model_name": "Qwen3-0.6B",
+      "backend": "garnet",
+      "repeat": 1,
+      "process": {
+        "command": [
+          "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+          "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_matched_garnet.py",
+          "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+          "/Users/zsdx/garnet-metal-investigation/source",
+          "/Users/zsdx/garnet-metal-investigation/models/Qwen3-0.6B",
+          "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3-0.6B-b2-0/case.json"
+        ],
+        "exit_code": 0,
+        "wall_seconds": 3.1415457078255713,
+        "peak_rss_bytes": 2664497152,
+        "memory_scope": "RUSAGE_CHILDREN high-water individual child RSS, macOS bytes; not aggregate vLLM worker RSS or unique GPU allocation"
+      }
+    }
+  ],
+  "scope": "Current retained prefill policy, equivalent-FP32 native/vLLM ABBA with monitors.\n\nThis additional precision study does not establish default BF16 speedups.\n"
+}

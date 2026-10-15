@@ -75,11 +75,13 @@ Combined native archive SHA-256:
 Validated candidate dylib SHA-256:
 `2b44d93ab1e1980845be89ea59cbaedbebcb66ad385ba24df3d52af2b6bacc23`.
 
-Fresh matched comparator PID 20154 at `logs/screened-head-vllm-20261015` is
-running all six sequential comparisons after three actual GPU FP32 dtype
-audits passed. Text B1/B2 and coder B1 have completed with exact outputs.
-It uses a separate pinned selection file and the same combined CPU frontend
-for both runtimes. The option remains OFF; no general promotion is implied.
+Fresh matched comparator PID 20154 exited 0 after all six sequential
+comparisons and three actual GPU FP32 dtype audits. Its separate pinned
+selection and common combined CPU frontend apply equally to both runtimes.
+An independent audit checks 507 files and 72 complete matching outputs.
+[The fresh comparison](../screened-head-vllm/README.md) records four initial
+decode-threshold passes and every remaining target. The option remains OFF;
+no general promotion or full-goal completion is implied.
 
 ```text
 python3 launch_screened_head_checks.py ROOT ROOT/logs/screened-head-checks-20261015 checks

@@ -1,0 +1,74 @@
+[
+  {
+    "name": "garnet-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_threaded_striped_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3.5-0.8B-b1-0/case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3.5-0.8B-b1-0/garnet-0/protocol",
+      "combined"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "vllm-metal-0",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_threaded_striped_frame_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3.5-0.8B-b1-0/case.json",
+      "vllm-metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-0/protocol",
+      "combined"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "vllm-metal-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_threaded_striped_frame_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models-exact-f32/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3.5-0.8B-b1-0/case.json",
+      "vllm-metal",
+      "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3.5-0.8B-b1-0/vllm-metal-1/protocol",
+      "combined"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "garnet-1",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/benchmark_matched_process.py",
+      "/Users/zsdx/garnet-metal-investigation/comparators/vllm/venv/bin/python",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_threaded_striped_frame_process.py",
+      "/Users/zsdx/CantorAI/out/build/macos-arm64-release/bin/xlang3",
+      "/Users/zsdx/garnet-metal-investigation/build-screened-head",
+      "/Users/zsdx/garnet-metal-investigation/source",
+      "/Users/zsdx/garnet-metal-investigation/models/Qwen3.5-0.8B",
+      "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3.5-0.8B-b1-0/case.json",
+      "garnet",
+      "/Users/zsdx/garnet-metal-investigation/logs/screened-head-vllm-20261015/jobs/Qwen3.5-0.8B-b1-0/garnet-1/protocol",
+      "combined"
+    ],
+    "exit_code": 0
+  }
+]
