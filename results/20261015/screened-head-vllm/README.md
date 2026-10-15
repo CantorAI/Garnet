@@ -77,9 +77,11 @@ establishes Metal GPU execution independently of the vLLM package suffix.
 
 The next candidate combines screening, ordered prefill streaming and partial
 cache reset without changing source weights or agreed workloads. Validation
-PID 29706 has passed CTests and the 51 trained-head checks; all original gates
-and both recovery suites remain required. Performance queue PID 32026 waits
-for its exact terminal status, all 26 stages and the unchanged source manifest.
+PID 29706 subsequently passed all 26 stages. Native jobs 32026 and 56025 also
+passed, with independent audits of 144 complete outputs. Latency improvements
+repeat with a text decode cost; the measurements are recorded in
+[the combined native study](../screened-prefill-reset/README.md). They do not
+replace this cohort or establish new vLLM target ratios.
 The selected build, original Mac checkout, GPT-OSS and Pi worktrees remain
 preserved. No combined-candidate speed claim is made before actual inference.
 
