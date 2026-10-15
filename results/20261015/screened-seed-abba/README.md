@@ -61,13 +61,13 @@ found an absent generator script and stopped before extraction. It was
 reclassified as a new file; the existing partial backup was verified and
 reused without deleting any files. All installed hashes then matched.
 
-Validation PID 99758 is running the 27 original/additional stages. At this
-record, build, CTest, bit-identical trained full-grid vision and all 51 actual
-trained head checks passed. Remaining original-model and recovery checks are
-pending. Queue PID 294 waits for that exact owned process and all 27 passing
-stages before six-profile native ABBA against the measured serial-vision
-bundle. The build/driver source stays fixed while these jobs run. No whole-model
-TPS, TTFT or new vLLM ratio is claimed for the smaller seed. The full goal
+Validation PID 99758 subsequently passed all 27 stages. Native PID 294 and
+fresh confirmation PID 26793 both completed all six profiles. Independent
+audits verify 144 complete outputs and actual seed widths. The
+[native measurements](../small-seed-native/README.md) show small, mixed gains:
+text B2 decode improves 1.9–2.4%, while text B1 TTFT and VL B2 TTFT regress
+twice. The optional policy remains OFF by default. These component ratios
+are not whole-model gains; no new vLLM ratio is claimed and the full goal
 remains unmet.
 
 Initial archive SHA-256:
