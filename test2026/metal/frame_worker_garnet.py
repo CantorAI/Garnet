@@ -126,6 +126,8 @@ try:
             vision_reencoded=True,attention_prefix_enabled='attention_prefix' in garnet.backend_info(),
             parallel_vision_context_enabled='parallel_vision_context' in garnet.backend_info(),
             vision_parallel_dispatches=vision.graph.vision_parallel_dispatches if 'parallel_vision_context' in garnet.backend_info() else 0,
+            serial_vision_prefetch_enabled='serial_vision_prefetch' in garnet.backend_info(),
+            vision_prefetch_dispatches=vision.graph.vision_prefetch_dispatches if 'serial_vision_prefetch' in garnet.backend_info() else 0,
             weights='BF16 checkpoint; FP32 native vision/activations/KV'))
 finally:
     if vision is not None:vision.close()

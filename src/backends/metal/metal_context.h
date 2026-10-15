@@ -83,6 +83,7 @@ public:
     size_t LastGlobalHalfAlphaDispatches() const;
     size_t LastVisionGlobalAlphaDispatches() const;
     size_t LastVisionParallelDispatches() const;
+    size_t LastVisionPrefetchDispatches() const;
     // False preserves all three independent outputs. Decode never takes this route.
     bool EncodeJoinedGlobalMlp(const MetalMatrix&,const MetalBF16Weight&,const MetalBF16Weight&,
         const MetalMatrix& gate,const MetalMatrix& up,const MetalMatrix& activated);

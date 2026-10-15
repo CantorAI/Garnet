@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "metal_context.h"
 #include "exact_half_codec.h"
+#ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
+#include "serial_vision_prefetch_shader.h"
+#endif
 #ifdef GARNET_METAL_SCREENED_HEAD
 #include "screened_head_index.h"
 #include "screened_head_shader.h"
@@ -63,6 +66,10 @@ bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&im
 bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->globalHalf;}
 struct MetalPipelines {
     id<MTLLibrary> library;
+#ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
+    id<MTLLibrary> visionPrefetchLibrary;
+    id<MTLComputePipelineState> visionPrefetch;
+#endif
 #ifdef GARNET_METAL_SCREENED_HEAD
     id<MTLLibrary> screenLibrary;
     id<MTLComputePipelineState> screenPrepare,screenProjection;
@@ -116,6 +123,7 @@ static std::mutex pipelineMutex;
 static std::map<uint64_t,std::weak_ptr<MetalPipelines>> pipelineCache;
 struct MetalContext::Impl {
     size_t screenedHeadDispatches=0;
+    size_t visionPrefetchDispatches=0;
 #ifdef GARNET_METAL_SCREENED_HEAD
     struct ScreenScratch {MetalMatrix seed,scores;id<MTLBuffer> stats,visits;};
     std::map<std::array<size_t,3>,ScreenScratch> screenScratch;
@@ -1247,6 +1255,14 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
         impl_->kernels->argmax=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"argmax_rows"] error:&error];
+#ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
+        auto prefetchOptions=[MTLCompileOptions new];prefetchOptions.fastMathEnabled=NO;
+        auto prefetchLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:kSerialVisionPrefetchShader] options:prefetchOptions error:&error];
+        if(prefetchLibrary){
+            impl_->kernels->visionPrefetchLibrary=prefetchLibrary;
+            impl_->kernels->visionPrefetch=[impl_->device newComputePipelineStateWithFunction:[prefetchLibrary newFunctionWithName:@"vision_prefetch8"] error:&error];
+        }
+#endif
 #ifdef GARNET_METAL_SCREENED_HEAD
         auto screenOptions=[MTLCompileOptions new];screenOptions.fastMathEnabled=NO;
         auto screenLibrary=[impl_->device newLibraryWithSource:[NSString stringWithUTF8String:kScreenedHeadShader] options:screenOptions error:&error];
@@ -1702,6 +1718,7 @@ size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->pack
 size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->globalHalfAlphaDispatches;}
 size_t MetalContext::LastVisionGlobalAlphaDispatches() const {return impl_->visionGlobalAlphaDispatches;}
 size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
+size_t MetalContext::LastVisionPrefetchDispatches() const {return impl_->visionPrefetchDispatches;}
 bool MetalContext::PrepareBF16BodyShape(const MetalMatrix& input,const MetalBF16Weight& weight,const MetalMatrix& output) {
 #ifdef GARNET_METAL_BODY_SHAPE
     @autoreleasepool {
@@ -1960,6 +1977,7 @@ void MetalContext::Begin() {
     if(impl_->command)throw std::logic_error("Metal command batch already open");
     if(impl_->submitted.count)throw std::logic_error("Undrained Metal partial batches");
     impl_->screenedHeadDispatches=0;
+    impl_->visionPrefetchDispatches=0;
 #ifdef GARNET_METAL_SCREENED_HEAD
     impl_->screenDiagnosticReady=false;
 #endif
@@ -2220,6 +2238,15 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
     const bool visionScores=operation==10&&(visionFields[12]==7||fusedVisionContext)&&visionFields[8]<=4096;
     if(visionNorm)pipeline=impl_->kernels->visionNorm;
     if(visionScores)pipeline=impl_->kernels->visionScores;
+    bool serialVisionPrefetch=false;
+#ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
+    auto prefetch=impl_->kernels->visionPrefetch;
+    if(operation==10&&visionFields[12]==8&&visionFields[8]==216&&visionFields[9]==768&&visionFields[10]==12&&
+        (visionFields[0]==216||visionFields[0]==432)&&prefetch&&prefetch.threadExecutionWidth==32&&
+        prefetch.maxTotalThreadsPerThreadgroup>=128&&prefetch.staticThreadgroupMemoryLength<=impl_->device.maxThreadgroupMemoryLength){
+        pipeline=prefetch;serialVisionPrefetch=true;++impl_->visionPrefetchDispatches;
+    }
+#endif
 #ifdef GARNET_METAL_MPS_VISION_SCORES
     // Bounded FP32 scratch isolates heads and batches before batched MPS Q*K^T.
     // Softmax retains the existing SIMD max/sum/exp implementation.
@@ -2283,7 +2310,9 @@ void MetalContext::EncodeStateKernel(unsigned operation,const std::vector<MetalM
     [encoder setBuffer:c.data offset:0 atIndex:inputs.size()];
     if(secondOutput)[encoder setBuffer:secondOutput->impl_->matrix.data offset:0 atIndex:inputs.size()+1];
     [encoder setBytes:parameters length:parameterBytes atIndex:inputs.size()+1+(secondOutput?1:0)];
-    if(visionNorm||visionScores) {
+    if(serialVisionPrefetch) {
+        [encoder dispatchThreads:MTLSizeMake(threads,1,1) threadsPerThreadgroup:MTLSizeMake(std::min(threads,size_t(128)),1,1)];
+    } else if(visionNorm||visionScores) {
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<128)throw std::runtime_error("Parallel vision requires 32-lane SIMD groups");
         if(visionScores)[encoder setThreadgroupMemoryLength:((visionFields[8]*sizeof(float)+15)&~size_t(15)) atIndex:0];
         [encoder dispatchThreadgroups:MTLSizeMake(visionFields[0]*(visionScores?visionFields[10]:1),1,1) threadsPerThreadgroup:MTLSizeMake(128,1,1)];
@@ -2611,6 +2640,7 @@ void MetalContext::SubmitAndWait() {
 double MetalContext::LastGPUMs() const {return impl_->gpuMs;}
 void MetalContext::Abort() {
     impl_->screenedHeadDispatches=0;
+    impl_->visionPrefetchDispatches=0;
 #ifdef GARNET_METAL_SCREENED_HEAD
     impl_->screenDiagnosticReady=false;
 #endif

@@ -1,0 +1,228 @@
+{
+  "files": {
+    "evidence/logs/serial-vision-context-20261015/background_service_checks.json": {
+      "bytes": 7098,
+      "sha256": "5e3e85ce0266ef85550c258107a908ad0f94594572d0a2bd45fb4c06ada68ab3"
+    },
+    "evidence/logs/serial-vision-context-20261015/exit.json": {
+      "bytes": 51,
+      "sha256": "ff83e13e77bf7214b5bdf83e370350852631c59b22d5959e4bee1e019005e83d"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/background_service_checks.json": {
+      "bytes": 71747,
+      "sha256": "939d58114ada42efa1a2c73bef4540efbcdf8810d311f89fe9e458ae9f4d0843"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/compile-monitor.json": {
+      "bytes": 235,
+      "sha256": "386c3cd525391f1a913eb099cdecbd093fe45b9a581828427b5847222061f234"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/compile.log": {
+      "bytes": 840,
+      "sha256": "6a8fd6e1a7ec77234a58eae5ef13eafb9ad57faf6ebf8ff54c213e641e20757e"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/metadata.json": {
+      "bytes": 1779,
+      "sha256": "1efa820cc49fb74cff883d2988a9d22db67e36aae26100851292869466fd1933"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/serial-vision.metal": {
+      "bytes": 8329,
+      "sha256": "8f1d3d3ea044ef85407e671cb4d720ab2cf05c252f11b6ad4729e635649cb534"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/serial_vision_context_gpu.mm": {
+      "bytes": 8703,
+      "sha256": "93a71dbe81845075715d54dded1eb7cbd20fe6b9d05cdcd8b7b8db66ec1d92b3"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 186768,
+      "sha256": "2a6fd38324b6b99f6ba2cd57e37dd877d8e888a75f648978bd487cf5f30482a8"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/source-snapshot/test2026/metal/make_serial_vision_context.py": {
+      "bytes": 6023,
+      "sha256": "7a5929654da778e4fae6828916da05d21decb8ca87b88b7978b0a4a943a06128"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/source-snapshot/test2026/metal/run_serial_vision_context.py": {
+      "bytes": 3613,
+      "sha256": "2a105e1ff6c370072089ae13b618cac4b9db3614775992b4046d30df169525a4"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/source-snapshot/test2026/metal/vision_fused_context_gpu.mm": {
+      "bytes": 7085,
+      "sha256": "b2354d709cf825e4731a11240c46ac444c19ee473fa95180c34b7482c2a8afe3"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/statuses.json": {
+      "bytes": 2099,
+      "sha256": "f75c6211069bda3962da722f98cc28de1d3c0d64ed0034c7fde13dafaa389f13"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/summary.json": {
+      "bytes": 112847,
+      "sha256": "9d0c17defd0f5118c446a0ea953a9036bf85979eaaae0b84048b1279db861e9d"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-0-monitor.json": {
+      "bytes": 1220,
+      "sha256": "2b3a1389ff6f718cfbc92ba17e6434301e5e0b63769fb48664cc82dc86338e0f"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-0.log": {
+      "bytes": 150210,
+      "sha256": "eda7f6c4f213e394fc9937997b056fc1da956e2058d639fcd4876b9d33c6f849"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-1-monitor.json": {
+      "bytes": 1144,
+      "sha256": "1476732ae2eb78453b0f049605b6b848a33f8bfe579fd516d8aac4688eba6c98"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-1.log": {
+      "bytes": 150208,
+      "sha256": "898bbce144746c1466d0d5c61d565dc5cefedc32e1b5a09aee481f1b3e2fd43a"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-2-monitor.json": {
+      "bytes": 1148,
+      "sha256": "7e7aab71ae398a16721aec85410f4b971c00b72b0f827d60a8d4fb6304596124"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-2.log": {
+      "bytes": 150215,
+      "sha256": "b938cba430e9e26b5a3c8b25a99352a78a4494ac5c49e08e60e1f44b896c117c"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-3-monitor.json": {
+      "bytes": 1148,
+      "sha256": "bbd745a5a56ce1036b08baa7100550c4218f1abe0effb1cc31946bc48e381eef"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-3.log": {
+      "bytes": 150353,
+      "sha256": "80276ee70601ecdde93da72cae4dc3455a57d3cf87890d6880204672c5874b34"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-4-monitor.json": {
+      "bytes": 1147,
+      "sha256": "1ca5b45eb41d81b110a3ba5e96711b6badd7352c9b41fc42af63f00cd759ed56"
+    },
+    "evidence/logs/serial-vision-context-20261015/jobs/variant-4.log": {
+      "bytes": 150332,
+      "sha256": "0c7c3bcd575818a54e3dafd717d6bfba95b4bb435927e4322a553af901cf83f9"
+    },
+    "evidence/logs/serial-vision-context-20261015/output.log": {
+      "bytes": 349,
+      "sha256": "7367a95346507d1ebea365b6e946f74f287b5d9c3cca600e1558df35883a2ecd"
+    },
+    "evidence/logs/serial-vision-context-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "66af293363ac4d0ecb01919ffb17c7315cb93382b05333f4ed9e8d48092fd0d3"
+    },
+    "evidence/logs/serial-vision-context-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/background_service_checks.json": {
+      "bytes": 7096,
+      "sha256": "57d1acc3ecedfbdb9f0d006175145a1f56d84a8e54313c418008c9b5f6c4446c"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/exit.json": {
+      "bytes": 52,
+      "sha256": "db91b5e7224da987a549b26eb6005ec44fc1ac43dfaa2ed29e8b05ae33e06e4b"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/background_service_checks.json": {
+      "bytes": 18139,
+      "sha256": "a8151b10e051fe99d7f1929400f0c4eaeb8d9b79c95bc804dd3af7b62827aaf0"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/compile-monitor.json": {
+      "bytes": 235,
+      "sha256": "11a44fa6d73328eba72a4d725ccaa4df932d5818f80ce06d444fba7a7025c7cc"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/compile.log": {
+      "bytes": 848,
+      "sha256": "6868423ba0e2178a4b1dfeac375834ed91a41e2dd1efb82e15a4c01ea82d1b28"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/metadata.json": {
+      "bytes": 1942,
+      "sha256": "59c33ef6cd0bb4bdf661bf9288243dad8881a9ee6bfb6450bae88aa49815aa38"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/serial-vision.metal": {
+      "bytes": 8329,
+      "sha256": "8f1d3d3ea044ef85407e671cb4d720ab2cf05c252f11b6ad4729e635649cb534"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/serial_vision_context_gpu.mm": {
+      "bytes": 8703,
+      "sha256": "93a71dbe81845075715d54dded1eb7cbd20fe6b9d05cdcd8b7b8db66ec1d92b3"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/source-snapshot/src/backends/metal/metal_context.mm": {
+      "bytes": 186768,
+      "sha256": "2a6fd38324b6b99f6ba2cd57e37dd877d8e888a75f648978bd487cf5f30482a8"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/source-snapshot/test2026/metal/compare_vllm_metal.py": {
+      "bytes": 12830,
+      "sha256": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/source-snapshot/test2026/metal/make_serial_vision_context.py": {
+      "bytes": 6023,
+      "sha256": "7a5929654da778e4fae6828916da05d21decb8ca87b88b7978b0a4a943a06128"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/source-snapshot/test2026/metal/run_constant_bf16_probe.py": {
+      "bytes": 5484,
+      "sha256": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/source-snapshot/test2026/metal/run_serial_vision_context.py": {
+      "bytes": 3613,
+      "sha256": "2a105e1ff6c370072089ae13b618cac4b9db3614775992b4046d30df169525a4"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/source-snapshot/test2026/metal/run_serial_vision_context_confirm.py": {
+      "bytes": 582,
+      "sha256": "8e3640e4c0cf2266bc00368342af386833094c9df4973aea52da8d92c892b848"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/source-snapshot/test2026/metal/vision_fused_context_gpu.mm": {
+      "bytes": 7085,
+      "sha256": "b2354d709cf825e4731a11240c46ac444c19ee473fa95180c34b7482c2a8afe3"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/statuses.json": {
+      "bytes": 887,
+      "sha256": "1b124aa265b78f6014229dcded2a9d867436772464c6a6083b28f7ff574107c5"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/summary.json": {
+      "bytes": 22797,
+      "sha256": "152c37050f81e8fc6c8254e0307d3549c735d367c41bbd95d37682be123a673a"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/variant-4-monitor.json": {
+      "bytes": 1223,
+      "sha256": "3463ba47e8f9eb80540b033b60f5daef569ea391e13b68fe2d7504518070e98a"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/jobs/variant-4.log": {
+      "bytes": 150201,
+      "sha256": "6a1fa39f51685f4b02991f5c359b9a0916dfaadf75aeb43015d9c7c0307f2138"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/output.log": {
+      "bytes": 121,
+      "sha256": "59ae59e4e7fefc0fd3962995bcabe043c72acca321259bd7fe0abdcd6345ce6f"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/pid.json": {
+      "bytes": 14,
+      "sha256": "01e3c627ced6b432640a2d49ab409642f79e76552cbe4a287f91c09bb24291d6"
+    },
+    "evidence/logs/serial-vision-context-confirm-20261015/quiet-waits.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  },
+  "omitted": {
+    "logs/serial-vision-context-20261015/jobs/serial_vision_context_gpu": {
+      "bytes": 72520,
+      "sha256": "b578598aad503a5675bd494a9c9cdafd0786815528f2b5c2acf95162eb483ffe"
+    },
+    "logs/serial-vision-context-confirm-20261015/jobs/serial_vision_context_gpu": {
+      "bytes": 72520,
+      "sha256": "b578598aad503a5675bd494a9c9cdafd0786815528f2b5c2acf95162eb483ffe"
+    }
+  },
+  "jobs": {
+    "serial-vision-context-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 58.62226004106924
+    },
+    "serial-vision-context-confirm-20261015": {
+      "exit_code": 0,
+      "wall_seconds": 18.377781957853585
+    }
+  }
+}
