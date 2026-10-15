@@ -19,6 +19,10 @@ class MetalDecoderSession {
     std::unique_ptr<MetalContext> gpu_;
     std::vector<X::Value> owners_;
     std::vector<State> states_;
+#ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+    std::vector<float> resetZeroSource_;
+#endif
+    size_t reusedSourceBytes_=0,reusedCopyBytes_=0,reusedCopyStates_=0;
     MetalCompiledGraph* head_=nullptr;
     uint64_t headGeneration_=0;
     MetalMatrix hidden_;
@@ -56,6 +60,9 @@ public:
     size_t LastFusedHeadArgmaxDispatches() const {return fusedHeadArgmaxDispatches_;}
     size_t LastDeferredZeroBytes() const {return deferredZeroBytes_;}
     size_t LastDeferredZeroStates() const {return deferredZeroStates_;}
+    size_t ReusedZeroSourceBytes() const {return reusedSourceBytes_;}
+    size_t LastReusedZeroCopyBytes() const {return reusedCopyBytes_;}
+    size_t LastReusedZeroCopyStates() const {return reusedCopyStates_;}
     size_t LastResidualNormDispatches() const {return residualNormDispatches_;}
     size_t LastPackedPrefillNormDispatches() const {return packedPrefillNormDispatches_;}
     size_t LastGlobalHalfAlphaDispatches() const {return globalHalfAlphaDispatches_;}
@@ -83,6 +90,9 @@ public:
         APISET().AddProp("fused_head_argmax_dispatches",&MetalDecoderSession::LastFusedHeadArgmaxDispatches);
         APISET().AddProp("deferred_zero_bytes",&MetalDecoderSession::LastDeferredZeroBytes);
         APISET().AddProp("deferred_zero_states",&MetalDecoderSession::LastDeferredZeroStates);
+        APISET().AddProp("reused_zero_source_bytes",&MetalDecoderSession::ReusedZeroSourceBytes);
+        APISET().AddProp("reused_zero_copy_bytes",&MetalDecoderSession::LastReusedZeroCopyBytes);
+        APISET().AddProp("reused_zero_copy_states",&MetalDecoderSession::LastReusedZeroCopyStates);
         APISET().AddProp("residual_norm_dispatches",&MetalDecoderSession::LastResidualNormDispatches);
         APISET().AddProp("packed_prefill_norm_dispatches",&MetalDecoderSession::LastPackedPrefillNormDispatches);
         APISET().AddProp("global_half_alpha_dispatches",&MetalDecoderSession::LastGlobalHalfAlphaDispatches);

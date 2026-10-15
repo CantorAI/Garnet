@@ -61,6 +61,7 @@ try:
         fused_head_enabled='fused_head_argmax' in garnet.backend_info()
         fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
         deferred_state_zero_enabled='deferred_state_zero' in garnet.backend_info()
+        reused_zero_source_enabled='reused_zero_source' in garnet.backend_info()
         fused_head_counts=[decoder.session.fused_head_argmax_dispatches if fused_head_enabled else 0]
         first=time.monotonic()
         emit('frame_first',dict(request=last,worker_ttft_seconds=first-start))
@@ -100,6 +101,10 @@ try:
             fused_head_argmax_enabled=fused_head_enabled,fused_head_argmax_counts=fused_head_counts,
             fused_head_decode_only_enabled=fused_head_decode_only_enabled,
             deferred_state_zero_enabled=deferred_state_zero_enabled,
+            reused_zero_source_enabled=reused_zero_source_enabled,
+            reused_zero_source_bytes=decoder.session.reused_zero_source_bytes if reused_zero_source_enabled else 0,
+            reused_zero_copy_bytes=decoder.session.reused_zero_copy_bytes if reused_zero_source_enabled else 0,
+            reused_zero_copy_states=decoder.session.reused_zero_copy_states if reused_zero_source_enabled else 0,
             decode_deferred_zero_bytes=decoder.session.deferred_zero_bytes if deferred_state_zero_enabled else 0,
             decode_deferred_zero_states=decoder.session.deferred_zero_states if deferred_state_zero_enabled else 0,
             vision_global_alpha_enabled='vision_global_alpha' in garnet.backend_info(),

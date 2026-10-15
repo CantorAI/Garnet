@@ -19,6 +19,10 @@ X::Value TensorValue(X3PackageHost* host,MetalContext& gpu,const MetalMatrix& ma
 }
 }
 void MetalDecoderSession::Clear() {
+    reusedSourceBytes_=reusedCopyBytes_=reusedCopyStates_=0;
+#ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+    std::vector<float>().swap(resetZeroSource_);
+#endif
     prefillPartialSubmissions_=0;fusedHeadArgmaxDispatches_=0;deferredZeroBytes_=deferredZeroStates_=0;
     dirtyPrefixResetBytes_=dirtyPrefixResetStates_=dirtyPrefixResetFallbackStates_=0;
     joinedPrefillPairs_=0;
@@ -28,6 +32,7 @@ void MetalDecoderSession::Clear() {
 }
 void MetalDecoderSession::Close() {std::lock_guard<std::mutex> lock(mutex_);Clear();}
 void MetalDecoderSession::ResetUnlocked() {
+    reusedCopyBytes_=reusedCopyStates_=0;
     prefillPartialSubmissions_=0;fusedHeadArgmaxDispatches_=0;deferredZeroBytes_=deferredZeroStates_=0;
     joinedPrefillPairs_=0;
     constantHeadDispatches_=0;singleCoderHeadDispatches_=0;residualNormDispatches_=0;packedPrefillNormDispatches_=0;globalHalfAlphaDispatches_=0;joinedGlobalMlpBlocks_=0;
@@ -36,7 +41,16 @@ void MetalDecoderSession::ResetUnlocked() {
 #ifdef GARNET_METAL_DIRTY_PREFIX_RESET
     const bool forceFull=poisoned_;poisoned_=true;
 #endif
+#ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+    poisoned_=true;
+#endif
     for(auto& state:states_)for(size_t i=0;i<2;++i) {
+#ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+        const size_t count=state.rows*state.columns[i];
+        if(count>resetZeroSource_.size())throw std::logic_error("Retained reset source does not cover private state");
+        gpu_->Update(state.matrix[i],resetZeroSource_.data(),count);
+        reusedCopyBytes_+=count*sizeof(float);++reusedCopyStates_;
+#else
 #ifdef GARNET_METAL_DEFERRED_STATE_ZERO
         gpu_->DeferZero(state.matrix[i]);
 #else
@@ -56,6 +70,7 @@ void MetalDecoderSession::ResetUnlocked() {
         gpu_->Zero(state.matrix[i]);
 #else
         gpu_->Update(state.matrix[i],std::vector<float>(state.rows*state.columns[i],0));
+#endif
 #endif
 #endif
 #endif
@@ -99,6 +114,11 @@ bool MetalDecoderSession::Build(X::Value graphs,X::Value head) {
                 throw std::invalid_argument("Metal session vocabulary head dimensions mismatch");
             headGeneration_=head_->generation_;owners_.push_back(head);prediction_=gpu_->Allocate(batch,2);
         }
+#ifdef GARNET_METAL_REUSED_ZERO_SOURCE
+        size_t maximum=0;
+        for(const auto& state:states_)for(size_t k=0;k<2;++k)maximum=std::max(maximum,state.rows*state.columns[k]);
+        resetZeroSource_.assign(maximum,0.0f);reusedSourceBytes_=maximum*sizeof(float);
+#endif
         ResetUnlocked();return true;
     }catch(...){Clear();throw;}
 }
