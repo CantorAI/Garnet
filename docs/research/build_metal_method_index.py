@@ -61,15 +61,15 @@ def main():
                      "Unreported experiments and unavailable remote-only artifacts are outside this inventory."],
         report_count=len(records), reports=records,
     )
-    (OUTPUT / "index.json").write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (OUTPUT / "index.json").write_bytes((json.dumps(document, indent=2, ensure_ascii=False) + "\n").encode("utf-8"))
     buf = io.StringIO(newline="")
     fields = ["experiment_id", "title", "report_path", "report_sha256", "classification", "verification_paths"]
-    writer = csv.DictWriter(buf, fieldnames=fields)
+    writer = csv.DictWriter(buf, fieldnames=fields, lineterminator="\n")
     writer.writeheader()
     for r in records:
         writer.writerow({**{k: r[k] for k in fields[:-1]},
                          "verification_paths": ";".join(v["path"] for v in r["verification_records"])})
-    (OUTPUT / "index.csv").write_text(buf.getvalue(), encoding="utf-8")
+    (OUTPUT / "index.csv").write_bytes(buf.getvalue().encode("utf-8"))
     lines = ["# Metal experiment evidence index", "",
              f"Generated UTC: {document['generated_at_utc']}", "",
              f"Source commit: `{commit}`. Reports indexed: **{len(records)}**.", "",
@@ -81,7 +81,7 @@ def main():
         target = "../../../" + r["report_path"]
         title = r["title"].replace("|", "\\|").replace("\n", " ")
         lines.append(f"| [{r['experiment_id']}]({target}) | {title} |")
-    (OUTPUT / "INDEX.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (OUTPUT / "INDEX.md").write_bytes(("\n".join(lines) + "\n").encode("utf-8"))
     print(json.dumps(dict(reports=len(records), output=str(OUTPUT), source_commit=commit)))
 
 
