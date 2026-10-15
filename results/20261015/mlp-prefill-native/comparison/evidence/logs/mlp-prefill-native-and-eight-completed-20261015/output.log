@@ -1,0 +1,10 @@
+Starting archive-native
+Completed archive-native
+Starting audit-native
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_completed_mlp_profiles_and_launch_eight.py", line 5, in <module>
+    exec(compile(source,__file__,'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_completed_mlp_profiles_and_launch_eight.py", line 54, in <module>
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/finalize_completed_mlp_profiles_and_launch_eight.py", line 34, in run
+AssertionError: audit-native

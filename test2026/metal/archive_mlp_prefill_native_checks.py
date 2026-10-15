@@ -2,7 +2,7 @@
 from pathlib import Path
 import hashlib,io,json,sys,tarfile
 
-root=Path(sys.argv[1]).resolve();target=Path(sys.argv[2]).resolve();trial=sys.argv[3] if len(sys.argv)>3 else 'mlp-prefill-native-checks-resume-20261015'
+root=Path(sys.argv[1]).resolve();target=Path(sys.argv[2]).resolve();trial=sys.argv[3] if len(sys.argv)>3 else 'mlp-prefill-native-checks-completed-20261015'
 folder=root/'logs'/trial;status=json.loads((folder/'exit.json').read_text());assert isinstance(status['exit_code'],int)
 files={};omitted={}
 def digest(p):
@@ -25,6 +25,11 @@ for fixture in (folder/'jobs/full-grid').glob('*-fixture.json'):
     p=Path(json.loads(fixture.read_text())['patch_file']).resolve()
     assert p.is_relative_to(root)
     add(p)
+for name in ('statuses.json','background_service_checks.json'):
+    p=root/'logs/mlp-prefill-native-checks-resume-20261015/jobs'/name
+    add(p)
+p=root/'mlp-prefill-native-checks-resume-20261015.tar.gz'
+omitted[p.relative_to(root).as_posix()]=dict(bytes=p.stat().st_size,sha256=digest(p))
 manifest=json.loads((root/'mlp-prefill-native-staging/manifest.json').read_text())
 for name,sha in manifest.items():
     p=root/'source'/name;assert digest(p)==sha;add(p)
@@ -44,6 +49,7 @@ for build in ('build-coalesced-bf16-body','build-mlp-prefill-graph-guardfix'):
 for name in ('archive_mlp_prefill_native_checks.py','verify_mlp_prefill_native_checks.py',
              'resume_mlp_prefill_native_checks.py','launch_resume_mlp_prefill_native_checks.py',
              'finalize_mlp_checks_and_launch_profiles.py',
+             'complete_mlp_wide_validation.py','launch_complete_mlp_wide_validation.py',
              'install_mlp_guard_repair.py','inspect_metal_guard_processes.py','stop_owned_mlp_guard_wait.py',
              'verify_coalesced_body_native.py','verify_interleaved_body_native.py',
              'verify_wide_batch_prefill.py','verify_interleaved_head.py',

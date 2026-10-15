@@ -1,0 +1,15 @@
+[
+  {
+    "name": "screened-real-heads",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/test_screened_head_real.py",
+      "/Users/zsdx/garnet-metal-investigation",
+      "/Users/zsdx/garnet-metal-investigation/logs/mlp-prefill-native-checks-resume-20261015/jobs/trained-heads",
+      "/Users/zsdx/garnet-metal-investigation/build-mlp-prefill-graph-guardfix"
+    ],
+    "exit_code": 0,
+    "interruption": null,
+    "wall_seconds": 8.410230707842857
+  }
+]

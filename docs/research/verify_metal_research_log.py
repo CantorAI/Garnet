@@ -34,7 +34,8 @@ def main():
     # Validate this curated journal/index and newly added reports, not arbitrary
     # historical report links which may reference remote-only files.
     paths += [ROOT / 'results/20261015' / name / 'README.md' for name in
-              ('dependent-mlp-graph', 'stage-rounded-mlp-graph', 'mlp-prefill-native')]
+              ('dependent-mlp-graph', 'stage-rounded-mlp-graph', 'mlp-prefill-native',
+               'coalesced-eight-body','mlp-command-buffer-primitive')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
@@ -73,10 +74,26 @@ def main():
             for cell, value in zip(cells[2:], [r['wall_ms']['control'], r['wall_ms']['candidate'], r['wall_fraction']]):
                 assert cell.strip() == f'{value:.6f}'
                 component_numbers += 1
+    # Rejected full-native integration: preserve its slower timings and memory.
+    p=ROOT/'results/20261015/mlp-prefill-native'
+    native=json.loads((p/'comparison/verification.json').read_text())['profiles']
+    rows=[line.split('|')[1:-1] for line in (p/'README.md').read_text().splitlines() if line.startswith('| Qwen')]
+    assert len(rows)==len(native)==6
+    native_numbers=0
+    for cells,r in zip(rows,native):
+        assert int(cells[1])==r['batch']
+        means=r['means'];first=r['first_request_after_initialization'];rss=r['peak_individual_rss_bytes']
+        formatted=[
+            ' / '.join(f"{means[k]['ttft_ms']:.3f}" for k in ('control','candidate')),
+            f"{r['decode_ratio']:.3f}",
+            ' / '.join(f"{first[k]['ttft_ms']:.3f}" for k in ('control','candidate')),
+            f"{(rss['candidate']-rss['control'])/2**30:.3f}"]
+        assert [c.strip() for c in cells[2:]]==formatted
+        native_numbers+=6
     record = dict(checked_at_utc=datetime.now(timezone.utc).isoformat(),
                   reports_verified=len(expected), local_links_checked=links,
                   verification_hashes_checked=verified, matched_table_values_checked=numbers,
-                  component_table_values_checked=component_numbers, status='passed',
+                  component_table_values_checked=component_numbers,native_table_values_checked=native_numbers,status='passed',
                   scope='Documentation consistency only; experiment numerical/performance audits are separate records')
     (OUT / 'documentation-check.json').write_bytes((json.dumps(record, indent=2)+'\n').encode())
     print(json.dumps(record))

@@ -1,0 +1,8 @@
+Quiet interval verified; starting exclusive component probe
+Traceback (most recent call last):
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_coalesced_eight_body.py", line 19, in <module>
+    exec(compile(source,__file__,'exec'))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_coalesced_eight_body.py", line 41, in <module>
+  File "/Users/zsdx/garnet-metal-investigation/source/test2026/metal/run_coalesced_eight_body.py", line 32, in run
+AssertionError: Qwen3-0.6B-gpu

@@ -1,0 +1,25 @@
+coalesced_body_block_failed: program_source:834:63: warning: unused variable 'batchBase' [-Wunused-variable]
+    ulong row=id/p.heads,head=id%p.heads,dim=p.hidden/p.heads,batchBase=(row/p.tokens)*p.tokens;
+                                                              ^
+program_source:1027:31: error: use of undeclared identifier 'sum110'
+        for(uint j=0;j<4;++j){sum110+=x[j]*weights[j];if(p.rows==2)sum11+=y[j]*weights[j];}
+                              ^
+program_source:1042:28: error: use of undeclared identifier 'sum110'
+    sum110=float4(simd_sum(sum110.x),simd_sum(sum110.y),simd_sum(sum110.z),simd_sum(sum110.w));
+                           ^
+program_source:1042:47: error: use of undeclared identifier 'sum110'
+    sum110=float4(simd_sum(sum110.x),simd_sum(sum110.y),simd_sum(sum110.z),simd_sum(sum110.w));
+                                              ^
+program_source:1042:66: error: use of undeclared identifier 'sum110'
+    sum110=float4(simd_sum(sum110.x),simd_sum(sum110.y),simd_sum(sum110.z),simd_sum(sum110.w));
+                                                                 ^
+program_source:1042:85: error: use of undeclared identifier 'sum110'
+    sum110=float4(simd_sum(sum110.x),simd_sum(sum110.y),simd_sum(sum110.z),simd_sum(sum110.w));
+                                                                                    ^
+program_source:1042:5: error: use of undeclared identifier 'sum110'
+    sum110=float4(simd_sum(sum110.x),simd_sum(sum110.y),simd_sum(sum110.z),simd_sum(sum110.w));
+    ^
+program_source:1044:72: error: use of undeclared identifier 'sum110'
+    if(lane==0)for(uint j=0;j<4&&column+j<p.columns;++j){out[column+j]=sum110[j];if(p.rows==2)out[p.oStride+column+j]=sum11[j];}
+                                                                       ^
+

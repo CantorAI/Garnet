@@ -1,11 +1,13 @@
-# Native dependent MLP graph prototype: validation in progress
+# Native dependent MLP graph: correct outputs, rejected for latency and memory
 
-Latest observation: resumed validation PID73896 at
-`ROOT/logs/mlp-prefill-native-checks-resume-20261015` is live. Vision full-grid
-and trained-head stages have passed; exact-tail cases are progressing. It
-reuses the exact second attempt's configure/build/CTest evidence and pinned
-library, then reruns all remaining original checks. No complete-suite or
-performance result is established. The earlier snapshot below is historical.
+Latest audited result, 2026-10-15: all 28 required validation stages are
+accounted for, and native ABBA PID99045 completed six profiles with 72 exact
+complete outputs. Warm TTFT regresses in all six profiles, first-after-init
+TTFT increases substantially, and peak process RSS rises by 0.85–1.11 GiB.
+Reject this synchronous graph integration for promotion; the option stays OFF.
+This is one native cohort, not a new matched vLLM comparison or replication.
+The snapshots and controller descriptions below are historical; see the final
+dated correction for coverage reuse, failed audits and archive repair.
 
 Status snapshot 2026-10-15: owned PID54555, remote log folder
 `ROOT/logs/mlp-prefill-native-checks-20261015`. The observed driver reports
@@ -65,7 +67,7 @@ vLLM cohort. No graph integration speedup is established; full goal unmet.
 | --- | --- | --- |
 | PID54555, original checks | Stopped deliberately with SIGINT after the guard blocked on a changed WorldSense supervisor fingerprint; exit 1, 969.807181 s. Nine stages completed, including 8 CTests and both sets of 8 exact-tail cases. Full suite incomplete. | [1,291-file verification](failed-guard/verification.json), [manifest](failed-guard/evidence/manifest.json) |
 | PID71863, fresh guard-fixed build | Exit 1, 82.209367 s. Configure/build/8 CTests passed. Vision attempt 0 was guard-rejected on PID73159; attempt 1 failed with FileExistsError because the partial output directory remained. PID73159 provenance is unproven. | [1,143-file verification](failed-retry/verification.json), [manifest](failed-retry/evidence/manifest.json) |
-| PID73896, resumed checks | Reuses the exact second build/CTest with unchanged library/source identities; all remaining stages rerun. Rejected outputs now move into their own attempt folder before retry. Live, not yet audited. | Remote log folder above; final archive pending |
+| PID73896, resumed checks | Exit 0, 1292.240134 s, but only 27 required stages were present. The strict 28-stage audit correctly blocked benchmark dispatch. | [1,465-file archive verification](incomplete-27/archive-verification.json), [raw manifest](incomplete-27/evidence/manifest.json) |
 
 The verified WorldSense supervisor SHA256 is
 `115a1d9dd0ae7181af4876e57bda55b9948d31c1febf1a12d40b150bce0c622e`.
@@ -114,3 +116,76 @@ combined archive's count. The original auditor remains frozen. Its replacement
 separates these two bookkeeping counts, checks every combined-archive file,
 and preserves equality of every numerical/coverage/source/library field. No
 executed numerical failure is waived, and no tolerance is changed.
+
+## Completed validation and rejected native comparison — 2026-10-15
+
+The resumed generated driver omitted `wide-batch-trained-reference`, which
+the original outer wrapper had appended. Controllers82980 and88447 exited1;
+no native benchmark was dispatched by that failed sequence. Preserve the
+[15-file controller/source archive](failed-coverage-audit/archive-verification.json).
+Original27 archive SHA256:
+`61d83b39924e0093104b01850979d1725b9e00afe2ec5875d1f8d4d91cd82153`.
+Controller failure archive SHA256:
+`f9584ee67250735eb50950afdfd44e3b9e3298e1e3d9e499676e387b5dea1e78`.
+
+Completion PID97189 exited0 in101.555720s. It copied the27 frozen stages,
+checked the unchanged18 source/library identities, and ran the missing wide
+reference freshly: four trained profiles, twelve carried steps, worst
+original-bound ratio0.543284. This is **27 reused stages plus1 fresh stage**,
+not28 newly executed stages or a replication. Configure/build/CTest were
+already reused from PID71863. The [complete strict audit](checks/verification.json)
+checks all28 stages,8 CTests,64 primitive cases,51 head queries/78 rows,
+4 vision-grid profiles and both sets of6 recovery cases. Completed archive:
+`be33c99ce73243473e34d873d559b0efc8ef6d3ca8d8ae8d152ca94b852aca32`.
+
+Controller99015 admitted native PID99045 only after the strict audit. The
+native job exited0 in211.133414s. Four fresh worker positions per profile
+use control/candidate/candidate/control, each with one first-after-init and
+two warm requests. All72 complete outputs match the original expected tokens,
+prompts and stops. Actual graph counts match independently derived layer/chunk
+counts; decode graph counts are zero. Both builds use the same compact decode
+policy; candidate changes prefill only. Candidate SHA remains23bff0f7...;
+control SHA remainsc1869309....
+
+| Model | Batch | Warm TTFT control/candidate ms | Decode candidate/control | First-after-init TTFT control/candidate ms | Extra peak RSS GiB |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Qwen3-0.6B | 1 | 35.865 / 56.815 | 0.982 | 136.481 / 1924.310 | 0.980 |
+| Qwen3-0.6B | 2 | 56.495 / 78.575 | 0.976 | 146.984 / 1917.044 | 1.001 |
+| Qwen2.5-Coder-0.5B | 1 | 28.072 / 45.035 | 0.983 | 104.172 / 2176.963 | 1.090 |
+| Qwen2.5-Coder-0.5B | 2 | 43.784 / 58.622 | 0.957 | 118.319 / 2184.813 | 1.106 |
+| Qwen3.5-0.8B VL | 1 | 174.099 / 184.942 | 0.974 | 277.396 / 2055.927 | 0.851 |
+| Qwen3.5-0.8B VL | 2 | 296.096 / 327.985 | 0.991 | 390.321 / 2192.920 | 0.898 |
+
+Initialization means range2.82–5.59s for control and2.83–5.59s for candidate;
+lazy graph compilation is charged to the first request. Caches were not
+flushed; these are not hardware-cold measurements. RSS is the mean process
+peak per policy, not instantaneous allocation or system-wide memory. The
+same decode implementation nevertheless measured0.9–4.3% slower; this cohort
+does not isolate the cause. Synchronous per-MLP waits and expanded weight
+storage are known costs, but their individual latency contributions are not
+separately measured. No fresh vLLM ratio is derived from these numbers.
+
+Controller99421 archived the native result, then the audit stopped: the
+suffix whitelist omitted13 `.metal` files from both source and snapshot,
+although all26 hashes were recorded. The original2,978-file archive remains:
+`4c54a571ab781c9635943839c7fb341db27bd18632d1b7d52f329467fb63f852`.
+The [original archive proof](comparison-original/archive-verification.json)
+checks bytes only; it is not a successful complete-source audit.
+`complete_mlp_native_source_archive.py` adds only the exact frozen source
+bytes and terminal controller diagnostics, preserving all original records.
+Corrected3,012-file archive:
+`9d494b2795485f03def18f463673b28da754fb6b5b99cce8db6c0ac96f7c5242`.
+
+The next audit reached the final asset check but incorrectly looked for
+tokenizer JSON in `omitted`; tokenizer bytes are in `files`. The repaired
+comparison auditor verifies those actual bytes against the recorded asset
+hash, preserves checkpoint hash assertions and every numerical/output gate,
+and verifies the pinned original manifest plus each added source hash.
+It then passed all72 outputs and1,131 source-closure identities. Neither
+bookkeeping correction changes a numerical bound or an inference result.
+The complete-source evidence and audit are recorded in `comparison/`.
+
+Only after this successful audit, the separate compact-eight decode probe
+PID3818 was dispatched through its quiet-resource guard. It exited0 in
+19.352752s; independent component archival/audit is pending at this snapshot.
+The full2x decode/half-TTFT target remains unmet, and c186 is retained.

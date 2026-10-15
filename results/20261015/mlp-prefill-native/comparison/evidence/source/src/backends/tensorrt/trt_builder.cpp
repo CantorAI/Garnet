@@ -1,0 +1,7519 @@
+// SPDX-FileCopyrightText: 2024-2026 CantorAI Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+#include "trt_builder.h"
+#include "trt_context_pool.h"
+#include "operator_execution_group.h"
+#include "trt_sync_allocator.h"
+#include "weight_quantization.h"
+#include "paged_kv_plugin.h"
+#include "gpt_oss_weight_shard.h"
+#include "gpt_oss_marlin_pack.h"
+#include "cuda_lib.h"
+#include "garnet_tensor.h"
+#include "tensor_helper.h"
+#include "graph_capture.h"
+#include <iostream>
+#include <algorithm>
+#include <chrono>
+#include <fstream>
+#include <filesystem>
+#include <future>
+#include <cmath>
+#include <cstdlib>
+#include <limits>
+#include <cstring>
+#include <mutex>
+#include <memory>
+#include <unordered_map>
+#include <unordered_set>
+#include <set>
+#include <vector>
+
+#include <NvInfer.h>
+#include <NvInferPlugin.h>
+#include <cuda_runtime.h>
+
+using namespace nvinfer1;
+
+class Logger : public ILogger
+{
+    void log(Severity severity, const char* msg) noexcept override
+    {
+        if (severity <= Severity::kWARNING)
+            std::cout << "[TRT] " << msg << std::endl;
+    }
+} gLogger;
+#include "xlang3/xlang3.h"
+
+namespace Garnet {
+
+
+    namespace {
+        constexpr uint32_t ExplicitBatchNetworkFlag()
+        {
+#if NV_TENSORRT_MAJOR >= 11
+            // TensorRT 11 always creates explicit-batch networks.
+            return 0U;
+#else
+            return 1U << static_cast<uint32_t>(
+                NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+#endif
+        }
+
+        void AppendTensorDependencies(
+            const X::Value& value,
+            std::vector<unsigned long long>& tensorIds)
+        {
+            if (value.IsList() || x3_value_object_kind(value.raw()) == X3_OBJECT_KIND_TUPLE) {
+                X::Value list(value);
+                for (long long index = 0; index < list.Size(); ++index) {
+                    AppendTensorDependencies(list.Get(index), tensorIds);
+                }
+                return;
+            }
+            if (value.IsDict()) {
+                for (uint64_t i = 0; i < value.Size(); ++i) {
+                    X::Value key, child;
+                    if (!value.DictEntry(i, key, child))
+                        throw std::runtime_error("invalid tensor dependency dictionary");
+                    AppendTensorDependencies(child, tensorIds);
+                }
+                return;
+            }
+            if (!IsTensor(value)) {
+                return;
+            }
+            const unsigned long long tensorId = TensorId(value);
+            if (std::find(tensorIds.begin(), tensorIds.end(), tensorId) ==
+                tensorIds.end()) {
+                tensorIds.push_back(tensorId);
+            }
+        }
+
+        void AppendTensorKeywordDependencies(
+            X::KWARGS& keywordArguments,
+            std::vector<unsigned long long>& tensorIds)
+        {
+            for (auto& item : keywordArguments) {
+                AppendTensorDependencies(item.second, tensorIds);
+            }
+        }
+
+        class TensorRTFileStreamReader final : public nvinfer1::IStreamReaderV2 {
+        public:
+            explicit TensorRTFileStreamReader(const std::string& path)
+                : stream(path, std::ios::binary) {}
+
+            bool IsOpen() const { return stream.is_open(); }
+
+            int64_t read(void* destination, int64_t byteCount, cudaStream_t cudaStream) noexcept override {
+                if (!stream.is_open() || !destination || byteCount < 0) return -1;
+                cudaPointerAttributes attributes{};
+                const cudaError_t attributeStatus = cudaPointerGetAttributes(&attributes, destination);
+                const bool isDevice = attributeStatus == cudaSuccess &&
+                    attributes.type == cudaMemoryTypeDevice;
+                if (attributeStatus != cudaSuccess) cudaGetLastError();
+                if (!isDevice) {
+                    stream.read(static_cast<char*>(destination), byteCount);
+                    return static_cast<int64_t>(stream.gcount());
+                }
+
+                constexpr std::streamsize kChunkBytes = 8 * 1024 * 1024;
+                std::vector<char> staging(static_cast<size_t>(std::min<int64_t>(byteCount, kChunkBytes)));
+                int64_t copied = 0;
+                while (copied < byteCount) {
+                    const std::streamsize requested = static_cast<std::streamsize>(
+                        std::min<int64_t>(byteCount - copied, static_cast<int64_t>(staging.size())));
+                    stream.read(staging.data(), requested);
+                    const std::streamsize received = stream.gcount();
+                    if (received <= 0) break;
+                    if (cudaMemcpyAsync(
+                            static_cast<char*>(destination) + copied,
+                            staging.data(),
+                            static_cast<size_t>(received),
+                            cudaMemcpyHostToDevice,
+                            cudaStream) != cudaSuccess ||
+                        cudaStreamSynchronize(cudaStream) != cudaSuccess) {
+                        return -1;
+                    }
+                    copied += received;
+                    if (received != requested) break;
+                }
+                return copied;
+            }
+
+            bool seek(int64_t offset, nvinfer1::SeekPosition where) noexcept override {
+                if (!stream.is_open()) return false;
+                std::ios_base::seekdir direction;
+                if (where == nvinfer1::SeekPosition::kSET) direction = std::ios::beg;
+                else if (where == nvinfer1::SeekPosition::kCUR) direction = std::ios::cur;
+                else direction = std::ios::end;
+                stream.clear();
+                stream.seekg(offset, direction);
+                return stream.good();
+            }
+
+        private:
+            std::ifstream stream;
+        };
+
+        struct CachedTRTExecution {
+            int device = -1;
+            // Destroyed after the destructor body has released every TRT user.
+            std::unique_ptr<TRTSyncAllocator> allocator;
+            nvinfer1::IRuntime* runtime = nullptr;
+            nvinfer1::ICudaEngine* engine = nullptr;
+            std::unique_ptr<TRTContextPool> contexts;
+            ~CachedTRTExecution() {
+                int previous = -1;
+                cudaGetDevice(&previous);
+                if (previous != device) cudaSetDevice(device);
+                contexts.reset();
+                delete engine;
+                delete runtime;
+                if (previous >= 0 && previous != device) cudaSetDevice(previous);
+            }
+        };
+
+        std::mutex g_trtExecutionCacheMutex;
+        // Models own engines; the process cache only discovers shared instances.
+        std::unordered_map<std::string, std::weak_ptr<CachedTRTExecution>> g_trtExecutionCache;
+        std::unordered_map<std::string, std::shared_ptr<std::mutex>>
+            g_trtEngineLoadMutexes;
+        std::mutex g_trtProfileLogMutex;
+        std::mutex g_trtLayerProfileMutex;
+        std::unordered_set<std::string> g_profiledTRTEngines;
+
+        bool EnqueueTRTWithOptionalCudaGraph(
+            const std::string& enginePath,
+            nvinfer1::IExecutionContext* context,
+            TRTContextPool::Slot& state,
+            const std::vector<void*>& bindingSignature,
+            bool enableCudaGraph,
+            cudaStream_t stream)
+        {
+            const char* enabled = std::getenv("GARNET_DECODE_CUDA_GRAPH");
+            const bool useCudaGraph =
+                enableCudaGraph &&
+                !(enabled && enabled[0] == '0' && enabled[1] == '\0') &&
+                context->getProfiler() == nullptr;
+            const auto resource=CurrentOperatorExecutionOwner();
+            const bool same=(!resource && !state.operatorOwner) ||
+                (resource && state.operatorOwner && resource->Identity()==state.operatorOwner->Identity() &&
+                 resource->Services()==state.operatorOwner->Services() &&
+                 state.operatorPhase==CurrentOperatorExecutionPhase() && state.operatorRank==CurrentOperatorExecutionRank());
+            if(!same)state.ResetGraph();
+            state.operatorOwner=resource;state.operatorPhase=CurrentOperatorExecutionPhase();state.operatorRank=CurrentOperatorExecutionRank();
+            if (!useCudaGraph) return context->enqueueV3(stream);
+
+            if (state.bindings != bindingSignature) {
+                state.ResetGraph();
+                state.bindings = bindingSignature;
+            }
+            state.operatorOwner=resource;state.operatorPhase=CurrentOperatorExecutionPhase();state.operatorRank=CurrentOperatorExecutionRank();
+            if (state.executable) {
+                if(resource && std::getenv("GARNET_TRT_LOG_OPERATOR_GRAPH"))
+                    std::fprintf(stderr,"OPERATOR_GROUP_GRAPH_REPLAY phase=%d rank=%d\n",state.operatorPhase,state.operatorRank);
+                return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
+            }
+            if (!state.warmed) {
+                state.warmed = true;
+                return context->enqueueV3(stream);
+            }
+
+            cudaError_t status = cudaStreamBeginCapture(stream, cudaStreamCaptureModeThreadLocal);
+            if (status != cudaSuccess) return context->enqueueV3(stream);
+            const bool enqueued = context->enqueueV3(stream);
+            status = cudaStreamEndCapture(stream, &state.graph);
+            if (!enqueued || status != cudaSuccess || !state.graph) {
+                if (state.graph) cudaGraphDestroy(state.graph);
+                state.graph = nullptr;
+                return context->enqueueV3(stream);
+            }
+            status = cudaGraphInstantiate(&state.executable, state.graph, 0);
+            if (status != cudaSuccess || !state.executable) {
+                cudaGraphDestroy(state.graph);
+                state.graph = nullptr;
+                state.executable = nullptr;
+                return context->enqueueV3(stream);
+            }
+            if(resource && std::getenv("GARNET_TRT_LOG_OPERATOR_GRAPH"))
+                std::fprintf(stderr,"OPERATOR_GROUP_GRAPH_CAPTURE phase=%d rank=%d\n",state.operatorPhase,state.operatorRank);
+            return cudaGraphLaunch(state.executable, stream) == cudaSuccess;
+        }
+
+        class OneShotTRTLayerProfiler final : public nvinfer1::IProfiler {
+        public:
+            void reportLayerTime(const char* layerName, float milliseconds) noexcept override {
+                samples.emplace_back(layerName ? layerName : "", milliseconds);
+            }
+
+            void Write(const std::string& path, const std::string& enginePath) const {
+                std::ofstream output(path, std::ios::app);
+                output << "engine\tlayer\tmilliseconds\n";
+                for (const auto& sample : samples) {
+                    output << enginePath << '\t' << sample.first << '\t' << sample.second << '\n';
+                }
+            }
+
+        private:
+            std::vector<std::pair<std::string, float>> samples;
+        };
+
+        void WriteTRTProfileLog(const std::string& message) {
+            const char* profileLogPath = std::getenv("GARNET_PARTITION_PROFILE_LOG");
+            if (!profileLogPath || !*profileLogPath) return;
+            std::lock_guard<std::mutex> lock(g_trtProfileLogMutex);
+            std::ofstream profileLog(profileLogPath, std::ios::app);
+            profileLog << message << '\n';
+        }
+
+        std::shared_ptr<CachedTRTExecution> GetCachedTRTEngine(
+            const std::string& enginePath,
+            const Garnet::SafeTensorsIndex* weightIndex = nullptr) {
+            int device = -1;
+            if (cudaGetDevice(&device) != cudaSuccess) return nullptr;
+            const char* allocatorPolicy = std::getenv("GARNET_TRT_SYNC_ALLOCATOR");
+            const bool syncAllocator = allocatorPolicy && std::strcmp(allocatorPolicy, "1") == 0;
+            std::shared_ptr<std::mutex> engineLoadMutex;
+            {
+                std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+                auto found = g_trtExecutionCache.find(enginePath);
+                if (found != g_trtExecutionCache.end()) {
+                    if (auto owner = found->second.lock()) {
+                        if (owner->device != device || bool(owner->allocator) != syncAllocator) return nullptr;
+                        return owner;
+                    }
+                }
+                auto& mutexSlot = g_trtEngineLoadMutexes[enginePath];
+                if (!mutexSlot) mutexSlot = std::make_shared<std::mutex>();
+                engineLoadMutex = mutexSlot;
+            }
+
+            std::lock_guard<std::mutex> engineLock(*engineLoadMutex);
+            {
+                std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+                auto found = g_trtExecutionCache.find(enginePath);
+                if (found != g_trtExecutionCache.end()) {
+                    if (auto owner = found->second.lock()) {
+                        if (owner->device != device || bool(owner->allocator) != syncAllocator) return nullptr;
+                        return owner;
+                    }
+                }
+            }
+
+            TensorRTFileStreamReader engineStream(enginePath);
+            if (!engineStream.IsOpen()) {
+                std::cout << "[TRTBuilder] Failed to open engine for read: " << enginePath << std::endl;
+                return nullptr;
+            }
+
+            auto owner = std::make_shared<CachedTRTExecution>();
+            auto& cached = *owner;
+            cached.device = device;
+            cached.runtime = createInferRuntime(gLogger);
+            if (!cached.runtime) {
+                std::cout << "[TRTBuilder] createInferRuntime failed for cached engine: " << enginePath << std::endl;
+                return nullptr;
+            }
+            if (syncAllocator) {
+                cached.allocator = std::make_unique<TRTSyncAllocator>(device);
+                cached.runtime->setGpuAllocator(cached.allocator.get());
+            }
+            cached.engine = cached.runtime->deserializeCudaEngine(engineStream);
+            if (!cached.engine) {
+                std::cout << "[TRTBuilder] deserializeCudaEngine failed for cached engine: " << enginePath << std::endl;
+                return nullptr;
+            }
+            if (weightIndex && weightIndex->TensorCount() > 0) {
+                std::unique_ptr<nvinfer1::IRefitter> refitter(
+                    nvinfer1::createInferRefitter(*cached.engine, gLogger));
+                if (!refitter) {
+                    std::cout << "[TRTBuilder] createInferRefitter failed: " << enginePath << std::endl;
+                    return nullptr;
+                }
+                const int32_t weightCount = refitter->getAllWeights(0, nullptr);
+                if (weightCount > 0) {
+                    std::vector<const char*> weightNames(static_cast<size_t>(weightCount));
+                    refitter->getAllWeights(weightCount, weightNames.data());
+                    std::unordered_map<
+                        std::string,
+                        std::unique_ptr<Garnet::SafeTensorsMappedFile>> mappedWeights;
+                    std::string mappingError;
+                    std::deque<std::vector<unsigned char>> expertShardStorage;
+                    for (const char* weightName : weightNames) {
+                        const Garnet::SafeTensorMetadata* metadata = weightIndex->Find(weightName);
+                        std::string originalName;
+                        int expertRank = -1;
+                        int intermediateRank=-1,intermediateMode=0;
+                        Garnet::GptOssMarlinPackSpec marlinPack;
+                        const bool marlinPacked=!metadata&&Garnet::ParseGptOssMarlinPackName(weightName,originalName,marlinPack);
+                        if(marlinPacked)metadata=weightIndex->Find(originalName);
+                        if (!metadata && Garnet::ParseGptOssExpertShardName(weightName, originalName, expertRank))
+                            metadata = weightIndex->Find(originalName);
+                        if (!metadata && Garnet::ParseGptOssIntermediateShardName(
+                                weightName,originalName,intermediateRank,intermediateMode))
+                            metadata=weightIndex->Find(originalName);
+                        if (!metadata) {
+                            std::cout << "[TRTBuilder] refit weight absent: " << weightName << std::endl;
+                            return nullptr;
+                        }
+                        DataType dataType;
+                        size_t elementBytes = 0;
+                        if (metadata->dataType == "BF16") {
+                            dataType = DataType::kBF16;
+                            elementBytes = 2;
+                        }
+                        else if (metadata->dataType == "F16") {
+                            dataType = DataType::kHALF;
+                            elementBytes = 2;
+                        }
+                        else if (metadata->dataType == "F32") {
+                            dataType = DataType::kFLOAT;
+                            elementBytes = 4;
+                        }
+                        else if (metadata->dataType == "U8") {
+                            dataType = DataType::kINT8; elementBytes = 1;
+                        }
+                        else {
+                            std::cout << "[TRTBuilder] unsupported refit dtype: " << metadata->dataType << std::endl;
+                            return nullptr;
+                        }
+                        const std::string sourcePath = metadata->filePath.string();
+                        auto& mappedFile = mappedWeights[sourcePath];
+                        if (!mappedFile) {
+                            mappedFile = std::make_unique<Garnet::SafeTensorsMappedFile>();
+                            if (!mappedFile->Open(metadata->filePath, mappingError)) {
+                                std::cout << "[TRTBuilder] refit mapping failed: "
+                                    << mappingError << std::endl;
+                                return nullptr;
+                            }
+                        }
+                        const void* data = mappedFile->DataAt(
+                            metadata->dataOffset,
+                            metadata->dataSize);
+                        size_t refitBytes = metadata->dataSize;
+                        if(marlinPacked) {
+                            if(metadata->dataType!="U8")return nullptr;
+                            expertShardStorage.emplace_back();auto& packed=expertShardStorage.back();
+                            std::vector<int64_t> packedShape;bool tiledCodes=false;
+                            if(!Garnet::GptOssMarlinFastHostPackingRequested(tiledCodes,mappingError)||
+                               !Garnet::PackGptOssMarlinWeight(data,metadata->dataSize,metadata->shape,
+                                    marlinPack,packed,packedShape,mappingError,tiledCodes)) {
+                                std::cout<<"[TRTBuilder] Marlin prepacked refit failed: "<<weightName
+                                    <<" "<<mappingError<<std::endl;return nullptr;
+                            }
+                            data=packed.data();refitBytes=packed.size();
+                        }
+                        else if (expertRank >= 0) {
+                            expertShardStorage.emplace_back();
+                            auto& shard = expertShardStorage.back();
+                            if (metadata->shape.empty() || !Garnet::GatherGptOssExpertShard(
+                                    data, metadata->dataSize, metadata->shape[0], expertRank,
+                                    shard, mappingError)) {
+                                std::cout << "[TRTBuilder] expert shard refit failed: " << weightName
+                                    << " " << mappingError << std::endl;
+                                return nullptr;
+                            }
+                            data = shard.data(); refitBytes = shard.size();
+                        }
+                        else if(intermediateRank>=0) {
+                            expertShardStorage.emplace_back();auto& shard=expertShardStorage.back();
+                            if(!Garnet::GatherGptOssIntermediateShard(data,metadata->dataSize,
+                                    metadata->shape,elementBytes,intermediateRank,intermediateMode,shard,mappingError)) {
+                                std::cout<<"[TRTBuilder] intermediate shard refit failed: "<<weightName
+                                    <<" "<<mappingError<<std::endl;return nullptr;
+                            }
+                            data=shard.data();refitBytes=shard.size();
+                        }
+                        const int64_t elementCount = static_cast<int64_t>(refitBytes / elementBytes);
+                        if (!data || !refitter->setNamedWeights(
+                                weightName,
+                                Weights{dataType, data, elementCount})) {
+                            std::cout << "[TRTBuilder] setNamedWeights failed: " << weightName << std::endl;
+                            return nullptr;
+                        }
+                    }
+                    if (!refitter->refitCudaEngine()) {
+                        std::cout << "[TRTBuilder] refitCudaEngine failed: " << enginePath << std::endl;
+                        return nullptr;
+                    }
+                }
+            }
+#if NV_TENSORRT_MAJOR >= 11
+            const char* memoryProfile = std::getenv("GARNET_TRT_LOG_ENGINE_MEMORY");
+            if (memoryProfile && std::strcmp(memoryProfile, "1") == 0) {
+                // Immutable engine statistics, outside enqueue/timed execution.
+                // Context bytes are an upper bound, not process peak usage;
+                // external tensors, graphs and private plugin buffers are extra.
+                std::cout << "[TRTEngineMemory] device=" << device
+                    << " total_weights_bytes=" << cached.engine->getEngineStat(EngineStat::kTOTAL_WEIGHTS_SIZE)
+                    << " context_device_memory_upper_bound_bytes=" << cached.engine->getDeviceMemorySizeV2()
+                    << " engine=" << enginePath << std::endl;
+            }
+#endif
+            cached.contexts = std::make_unique<TRTContextPool>(cached.engine);
+
+            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+            g_trtExecutionCache[enginePath] = owner;
+            return owner;
+        }
+
+        struct CachedExecutionUse {
+            std::shared_ptr<CachedTRTExecution> owner;
+            TRTContextPool::Lease slot;
+            explicit CachedExecutionUse(const std::string& path,
+                const SafeTensorsIndex* weights = nullptr, bool enabled = true)
+                : owner(enabled ? GetCachedTRTEngine(path, weights) : nullptr),
+                  slot(owner ? owner->contexts->Acquire(CurrentExecutionStream()) : TRTContextPool::Lease{}) {}
+            nvinfer1::IExecutionContext* Context() const { return slot ? slot->context : nullptr; }
+            nvinfer1::ICudaEngine* Engine() const { return owner ? owner->engine : nullptr; }
+        };
+
+        void InvalidateCachedTRTExecution(const std::string& enginePath) {
+            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+            auto found = g_trtExecutionCache.find(enginePath);
+            if (found == g_trtExecutionCache.end()) {
+                return;
+            }
+            g_trtExecutionCache.erase(found);
+        }
+
+        bool ShouldSyncTRTOutputToCPU() {
+            const char* value = std::getenv("GARNET_TRT_SYNC_CPU_OUTPUTS");
+            if (!value) {
+                return true;
+            }
+            return !(value[0] == '0' && value[1] == '\0');
+        }
+
+        // GPU-resident model execution is ordered on CUDA's per-thread stream.
+        // The stream is synchronized only at a CPU observation boundary.
+        cudaError_t CreateExecutionStream(cudaStream_t* stream) {
+            if (!stream) return cudaErrorInvalidValue;
+            *stream = CurrentExecutionStream();
+            return cudaSuccess;
+        }
+
+        cudaError_t DestroyExecutionStream(cudaStream_t) {
+            return cudaSuccess;
+        }
+
+        cudaError_t AllocateExecutionMemory(void** ptr, size_t bytes) {
+            cudaError_t err = cudaMallocAsync(ptr, bytes, CurrentExecutionStream());
+            if (err == cudaErrorNotSupported) {
+                cudaGetLastError();
+                return cudaMalloc(ptr, bytes);
+            }
+            return err;
+        }
+
+        cudaError_t FreeExecutionMemory(void* ptr) {
+            if (!ptr) return cudaSuccess;
+            cudaError_t err = cudaFreeAsync(ptr, CurrentExecutionStream());
+            if (err == cudaErrorNotSupported) {
+                cudaGetLastError();
+                return cudaFree(ptr);
+            }
+            return err;
+        }
+
+#define cudaStreamCreate CreateExecutionStream
+#define cudaStreamDestroy DestroyExecutionStream
+#define cudaMalloc AllocateExecutionMemory
+#define cudaFree FreeExecutionMemory
+
+        struct TensorDeviceBinding {
+            void* ptr = nullptr;
+            bool owned = false;
+        };
+
+        struct ExecutionInputs {
+            std::vector<std::pair<X::Tensor, X3TensorAccess>> tensors;
+            std::vector<CUDAUse> uses;
+            int device = -1;
+            ExecutionInputs() {
+                if (cudaGetDevice(&device) != cudaSuccess)
+                    throw std::runtime_error("cannot query execution device");
+            }
+            bool Retain(const X::Tensor& tensor, X3TensorAccess access = X3_TENSOR_READ) {
+                const auto info = tensor.Info();
+                if (info.device_type != TensorHelper::CudaDevice || info.device_id != device)
+                    return false;
+                tensors.emplace_back(tensor, access);
+                return true;
+            }
+            void Acquire() {
+                if (!tensors.empty()) {
+                    uses.push_back(TensorHelper::AcquireGPU(tensors));
+                    tensors.clear();
+                }
+            }
+            X::Value Finish(const X::Tensor& output, cudaStream_t stream, bool outputAcquired = false) {
+                try {
+                if (!outputAcquired) {
+                    // Fixture outputs are private allocations until this point;
+                    // publish their producer fence before exposing the tensor.
+                    uses.push_back(TensorHelper::AcquireGPU(output, X3_TENSOR_WRITE, stream));
+                }
+                for (auto& use : uses) use.Finish();
+                uses.clear();
+                return output;
+                } catch (...) {
+                    cudaStreamSynchronize(stream);
+                    uses.clear();
+                    tensors.clear();
+                    throw;
+                }
+            }
+        };
+
+        bool BindTensorInput(X::Tensor& tensor, size_t bytes, cudaStream_t stream,
+            TensorDeviceBinding& binding, ExecutionInputs& execution) {
+            if (!IsContiguousTensor(tensor) || tensor.Info().byte_size < bytes)
+                return false;
+            void* gpuPtr = TensorHelper::GetGPUMemory(tensor);
+            if (gpuPtr) {
+                if (!execution.Retain(tensor)) return false;
+                binding.ptr = gpuPtr;
+                binding.owned = false;
+                return true;
+            }
+
+            if (TensorHelper::EnsureGPUMemory(tensor) != TensorOpStatus::Success) {
+                return false;
+            }
+            gpuPtr = TensorHelper::GetGPUMemory(tensor);
+            if (!gpuPtr || static_cast<size_t>(tensor.Info().byte_size) < bytes) {
+                return false;
+            }
+            binding.ptr = gpuPtr;
+            binding.owned = false;
+            if (!execution.Retain(tensor)) return false;
+            return true;
+        }
+
+        void FreeOwnedBinding(TensorDeviceBinding& binding) {
+            if (binding.owned && binding.ptr) {
+                cudaFree(binding.ptr);
+            }
+            binding.ptr = nullptr;
+            binding.owned = false;
+        }
+
+        X::Tensor WrapDeviceOutput(X3PackageHost* host, X3TensorDType dtype,
+            const std::vector<int64_t>& shape, void* data, size_t bytes) {
+            X3TensorInfo info{};
+            info.size = sizeof(info);
+            info.dtype = dtype;
+            info.rank = static_cast<uint32_t>(shape.size());
+            info.shape = shape.data();
+            info.data = data;
+            info.byte_size = bytes;
+            info.device_type = TensorHelper::CudaDevice;
+            if (cudaGetDevice(&info.device_id) != cudaSuccess)
+                throw std::runtime_error("cannot query CUDA output device");
+            return TensorHelper::WrapGPU(host, info, data, info.device_id);
+        }
+
+        X::Value MakeGPUBackedTensor2D(
+            X3PackageHost* host,
+            ExecutionInputs& execution,
+            int rows,
+            int cols,
+            void*& gpuOutput,
+            size_t outputBytes,
+            cudaStream_t stream) {
+            if (ShouldSyncTRTOutputToCPU()) {
+                cudaError_t syncErr = cudaStreamSynchronize(stream);
+                if (syncErr != cudaSuccess) {
+                    std::cout << "[TRTBuilder] MakeGPUBackedTensor2D stream sync failed before tensor wrap: "
+                        << cudaGetErrorString(syncErr) << std::endl;
+                    return X::Value();
+                }
+            }
+            cudaError_t lastErr = cudaGetLastError();
+            if (lastErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] MakeGPUBackedTensor2D CUDA error before tensor wrap: "
+                    << cudaGetErrorString(lastErr) << std::endl;
+                return X::Value();
+            }
+            try {
+                if (ShouldSyncTRTOutputToCPU()) {
+                    auto output = X::Tensor::Create(host, X3_TENSOR_FLOAT32, {rows, cols});
+                    if (output.Info().byte_size != outputBytes ||
+                        cudaMemcpy(output.Info().data, gpuOutput, outputBytes,
+                            cudaMemcpyDeviceToHost) != cudaSuccess)
+                        return X::Value();
+                    cudaFree(gpuOutput);
+                    gpuOutput = nullptr;
+                    return output;
+                }
+                auto output = WrapDeviceOutput(host, X3_TENSOR_FLOAT32, {rows, cols},
+                    gpuOutput, outputBytes);
+                gpuOutput = nullptr;
+                return execution.Finish(output, stream);
+            } catch (const std::exception& error) {
+                std::cout << "[TRTBuilder] tensor output: " << error.what() << std::endl;
+                return X::Value();
+            }
+        }
+    }
+
+    TRTBuilder::TRTBuilder(X3PackageHost* host) : host_(host) {
+        if (!host || !host->runtime)
+            throw std::invalid_argument("TRTBuilder requires an XLang3 host");
+    }
+
+    TRTBuilder::~TRTBuilder() {
+    }
+
+    std::shared_ptr<void> TRTBuilder::RetainCachedExecution(
+        const std::string& enginePath,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage) {
+        try {
+            if (!EnsurePagedKVDecodePluginRegistered()) {
+                errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+                return {};
+            }
+            CachedExecutionUse execution(enginePath, weightIndex);
+            if (!execution.Context()) {
+                errorMessage = "failed to prepare captured engine " + enginePath;
+                return {};
+            }
+            errorMessage.clear();
+            return execution.owner;
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
+            return {};
+        }
+    }
+
+    void TRTBuilder::ReleaseCachedExecutions(const std::string& cacheRoot) {
+        if (cacheRoot.empty()) return;
+        const std::filesystem::path normalizedRoot =
+            std::filesystem::absolute(cacheRoot).lexically_normal();
+        const auto belongsToCache = [&normalizedRoot](const std::string& candidate) {
+            const std::filesystem::path normalizedCandidate =
+                std::filesystem::absolute(candidate).lexically_normal();
+            auto root = normalizedRoot.begin();
+            auto path = normalizedCandidate.begin();
+            for (; root != normalizedRoot.end(); ++root, ++path) {
+                if (path == normalizedCandidate.end() || *path != *root) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        {
+            std::lock_guard<std::mutex> lock(g_trtExecutionCacheMutex);
+            for (auto execution = g_trtExecutionCache.begin();
+                 execution != g_trtExecutionCache.end();) {
+                if (!belongsToCache(execution->first)) {
+                    ++execution;
+                    continue;
+                }
+                g_trtEngineLoadMutexes.erase(execution->first);
+                execution = g_trtExecutionCache.erase(execution);
+            }
+        }
+        {
+            std::lock_guard<std::mutex> lock(g_trtLayerProfileMutex);
+            for (auto profiled = g_profiledTRTEngines.begin();
+                 profiled != g_profiledTRTEngines.end();) {
+                if (belongsToCache(*profiled)) {
+                    profiled = g_profiledTRTEngines.erase(profiled);
+                } else {
+                    ++profiled;
+                }
+            }
+        }
+    }
+
+    X::Value TRTBuilder::ExportMatmulEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape) {
+        std::cout << "[TRTBuilder] ExportMatmulEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || weightShape.size() != 2) {
+            std::cout << "[TRTBuilder] Matmul export requires 2D input and weight shapes." << std::endl;
+            return X::Value();
+        }
+        if (inputShape[1] != weightShape[0]) {
+            std::cout << "[TRTBuilder] Shape mismatch: input K=" << inputShape[1]
+                << ", weight K=" << weightShape[0] << std::endl;
+            return X::Value();
+        }
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) {
+            std::cout << "[TRTBuilder] createInferBuilder failed." << std::endl;
+            return X::Value();
+        }
+
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) {
+            std::cout << "[TRTBuilder] createNetworkV2 failed." << std::endl;
+            return X::Value();
+        }
+
+        auto config = builder->createBuilderConfig();
+        if (!config) {
+            std::cout << "[TRTBuilder] createBuilderConfig failed." << std::endl;
+            return X::Value();
+        }
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 64ULL << 20);
+
+        Dims inputDims{};
+        inputDims.nbDims = 2;
+        inputDims.d[0] = inputShape[0];
+        inputDims.d[1] = inputShape[1];
+
+        Dims weightDims{};
+        weightDims.nbDims = 2;
+        weightDims.d[0] = weightShape[0];
+        weightDims.d[1] = weightShape[1];
+
+        ITensor* input = network->addInput("a", DataType::kFLOAT, inputDims);
+        ITensor* weight = network->addInput("W", DataType::kFLOAT, weightDims);
+        if (!input || !weight) {
+            std::cout << "[TRTBuilder] addInput failed." << std::endl;
+            return X::Value();
+        }
+
+        auto matmul = network->addMatrixMultiply(*input, MatrixOperation::kNONE, *weight, MatrixOperation::kNONE);
+        if (!matmul || !matmul->getOutput(0)) {
+            std::cout << "[TRTBuilder] addMatrixMultiply failed." << std::endl;
+            return X::Value();
+        }
+        matmul->getOutput(0)->setName("output");
+        network->markOutput(*matmul->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) {
+            std::cout << "[TRTBuilder] buildSerializedNetwork failed." << std::endl;
+            return X::Value();
+        }
+
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream out(outputPath, std::ios::binary);
+        if (!out.is_open()) {
+            std::cout << "[TRTBuilder] Failed to open engine path for write." << std::endl;
+            return X::Value();
+        }
+        out.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        out.close();
+
+        std::cout << "[TRTBuilder] Serialized TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunMatmulEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunMatmulEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(weightValue)) {
+            std::cout << "[TRTBuilder] RunMatmulEngine requires tensor inputs." << std::endl;
+            return X::Value();
+        }
+
+        X::Tensor input(inputValue);
+        X::Tensor weight(weightValue);
+        std::cout << "[TRTBuilder] Input dims=" << input.Info().rank
+            << ", weight dims=" << weight.Info().rank << std::endl;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || weight.Info().dtype != X3_TENSOR_FLOAT32) {
+            std::cout << "[TRTBuilder] RunMatmulEngine currently supports float32 tensors only." << std::endl;
+            return X::Value();
+        }
+        if (input.Info().rank != 2 || weight.Info().rank != 2) {
+            std::cout << "[TRTBuilder] RunMatmulEngine requires 2D tensors." << std::endl;
+            return X::Value();
+        }
+
+        int m = TensorDimension(input, 0);
+        int k = TensorDimension(input, 1);
+        int wK = TensorDimension(weight, 0);
+        int n = TensorDimension(weight, 1);
+        std::cout << "[TRTBuilder] Matmul shapes: [" << m << ", " << k
+            << "] x [" << wK << ", " << n << "]" << std::endl;
+        if (k != wK) {
+            std::cout << "[TRTBuilder] RunMatmulEngine shape mismatch." << std::endl;
+            return X::Value();
+        }
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto* context = cachedUse.Context();
+        if (!context) {
+            std::cout << "[TRTBuilder] Failed to acquire matmul execution context." << std::endl;
+            return X::Value();
+        }
+
+        size_t inputBytes = static_cast<size_t>(m) * static_cast<size_t>(k) * sizeof(float);
+        size_t weightBytes = static_cast<size_t>(k) * static_cast<size_t>(n) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(m) * static_cast<size_t>(n) * sizeof(float);
+
+        void* dInput = nullptr;
+        void* dWeight = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+
+        TensorDeviceBinding inputBinding;
+        TensorDeviceBinding weightBinding;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+            !BindTensorInput(weight, weightBytes, stream, weightBinding, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            std::cout << "[TRTBuilder] CUDA allocation failed." << std::endl;
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        dInput = inputBinding.ptr;
+        dWeight = weightBinding.ptr;
+        std::cout << "[TRTBuilder] CUDA buffers bound." << std::endl;
+
+        bool bound = context->setTensorAddress("a", dInput)
+            && context->setTensorAddress("W", dWeight)
+            && context->setTensorAddress("output", dOutput);
+        std::cout << "[TRTBuilder] setTensorAddress returned " << (bound ? "ok" : "false") << std::endl;
+        if (!bound) {
+            std::cout << "[TRTBuilder] setTensorAddress failed." << std::endl;
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+
+        bool ok = context->enqueueV3(stream);
+        std::cout << "[TRTBuilder] enqueueV3 returned " << (ok ? "ok" : "false") << std::endl;
+        if (!ok) {
+            std::cout << "[TRTBuilder] enqueueV3 failed." << std::endl;
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, m, n, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+
+        FreeOwnedBinding(inputBinding);
+        FreeOwnedBinding(weightBinding);
+        cudaStreamDestroy(stream);
+
+        std::cout << "[TRTBuilder] RunMatmulEngine completed: [" << m << ", " << n << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportTextMLPEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& gateShape, const std::vector<int>& upShape, const std::vector<int>& downShape) {
+        std::cout << "[TRTBuilder] ExportTextMLPEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || gateShape.size() != 2 || upShape.size() != 2 || downShape.size() != 2) {
+            std::cout << "[TRTBuilder] TextMLP export requires 2D input and weight shapes." << std::endl;
+            return X::Value();
+        }
+        int tokens = inputShape[0];
+        int hidden = inputShape[1];
+        int intermediate = gateShape[0];
+        if (gateShape[1] != hidden || upShape[0] != intermediate || upShape[1] != hidden ||
+            downShape[0] != hidden || downShape[1] != intermediate) {
+            std::cout << "[TRTBuilder] TextMLP shape mismatch." << std::endl;
+            return X::Value();
+        }
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 128ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = hidden;
+        Dims projDims{};
+        projDims.nbDims = 2;
+        projDims.d[0] = intermediate;
+        projDims.d[1] = hidden;
+        Dims downDims{};
+        downDims.nbDims = 2;
+        downDims.d[0] = hidden;
+        downDims.d[1] = intermediate;
+
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* wGate = network->addInput("W_gate", DataType::kFLOAT, projDims);
+        ITensor* wUp = network->addInput("W_up", DataType::kFLOAT, projDims);
+        ITensor* wDown = network->addInput("W_down", DataType::kFLOAT, downDims);
+        if (!x || !wGate || !wUp || !wDown) {
+            std::cout << "[TRTBuilder] TextMLP addInput failed." << std::endl;
+            return X::Value();
+        }
+
+        auto gate = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *wGate, MatrixOperation::kTRANSPOSE);
+        auto up = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *wUp, MatrixOperation::kTRANSPOSE);
+        if (!gate || !up || !gate->getOutput(0) || !up->getOutput(0)) {
+            std::cout << "[TRTBuilder] TextMLP projection matmul failed." << std::endl;
+            return X::Value();
+        }
+
+        auto sigmoid = network->addActivation(*gate->getOutput(0), ActivationType::kSIGMOID);
+        if (!sigmoid || !sigmoid->getOutput(0)) {
+            std::cout << "[TRTBuilder] TextMLP sigmoid failed." << std::endl;
+            return X::Value();
+        }
+        auto silu = network->addElementWise(*gate->getOutput(0), *sigmoid->getOutput(0), ElementWiseOperation::kPROD);
+        if (!silu || !silu->getOutput(0)) {
+            std::cout << "[TRTBuilder] TextMLP silu product failed." << std::endl;
+            return X::Value();
+        }
+        auto hiddenAct = network->addElementWise(*silu->getOutput(0), *up->getOutput(0), ElementWiseOperation::kPROD);
+        if (!hiddenAct || !hiddenAct->getOutput(0)) {
+            std::cout << "[TRTBuilder] TextMLP gated product failed." << std::endl;
+            return X::Value();
+        }
+        auto out = network->addMatrixMultiply(*hiddenAct->getOutput(0), MatrixOperation::kNONE, *wDown, MatrixOperation::kTRANSPOSE);
+        if (!out || !out->getOutput(0)) {
+            std::cout << "[TRTBuilder] TextMLP down projection failed." << std::endl;
+            return X::Value();
+        }
+        out->getOutput(0)->setName("output");
+        network->markOutput(*out->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) {
+            std::cout << "[TRTBuilder] TextMLP buildSerializedNetwork failed." << std::endl;
+            return X::Value();
+        }
+
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) {
+            std::cout << "[TRTBuilder] Failed to open TextMLP engine path for write." << std::endl;
+            return X::Value();
+        }
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+
+        std::cout << "[TRTBuilder] Serialized TextMLP TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunTextMLPEngine(const std::string& enginePath, X::Value inputValue, X::Value gateWeight, X::Value upWeight, X::Value downWeight) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunTextMLPEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(gateWeight) || !IsTensor(upWeight) || !IsTensor(downWeight)) {
+            std::cout << "[TRTBuilder] RunTextMLPEngine requires tensor inputs." << std::endl;
+            return X::Value();
+        }
+
+        X::Tensor input(inputValue);
+        X::Tensor gate(gateWeight);
+        X::Tensor up(upWeight);
+        X::Tensor down(downWeight);
+        bool bf16Weights = gate.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            up.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            down.Info().dtype == X3_TENSOR_BFLOAT16;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 ||
+            (!bf16Weights && (gate.Info().dtype != X3_TENSOR_FLOAT32 ||
+                up.Info().dtype != X3_TENSOR_FLOAT32 ||
+                down.Info().dtype != X3_TENSOR_FLOAT32))) {
+            std::cout << "[TRTBuilder] RunTextMLPEngine requires FP32 activations and uniform FP32/BF16 weights." << std::endl;
+            return X::Value();
+        }
+        if (input.Info().rank != 2 || gate.Info().rank != 2 || up.Info().rank != 2 || down.Info().rank != 2) {
+            std::cout << "[TRTBuilder] RunTextMLPEngine requires 2D tensors." << std::endl;
+            return X::Value();
+        }
+
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+        int intermediate = TensorDimension(gate, 0);
+        if (TensorDimension(gate, 1) != hidden || TensorDimension(up, 0) != intermediate ||
+            TensorDimension(up, 1) != hidden || TensorDimension(down, 0) != hidden ||
+            TensorDimension(down, 1) != intermediate) {
+            std::cout << "[TRTBuilder] RunTextMLPEngine shape mismatch." << std::endl;
+            return X::Value();
+        }
+
+        if (enginePath == "cuda_text_mlp" || bf16Weights) {
+            std::cout << "[TRTBuilder] Running CUDA TextMLP: tokens=" << tokens
+                << ", hidden=" << hidden << ", intermediate=" << intermediate << std::endl;
+            size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+            size_t projBytes = static_cast<size_t>(intermediate) * static_cast<size_t>(hidden) * TensorHelper::ItemSize(gate.Info().dtype);
+            size_t downBytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * TensorHelper::ItemSize(down.Info().dtype);
+            size_t intermediateBytes = static_cast<size_t>(tokens) * static_cast<size_t>(intermediate) * sizeof(float);
+            size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+
+            void* dInput = nullptr;
+            void* dGateW = nullptr;
+            void* dUpW = nullptr;
+            void* dDownW = nullptr;
+            void* dGate = nullptr;
+            void* dUp = nullptr;
+            void* dHidden = nullptr;
+            void* dOutput = nullptr;
+            cudaStream_t stream = nullptr;
+            TensorDeviceBinding inputBinding;
+            TensorDeviceBinding gateBinding;
+            TensorDeviceBinding upBinding;
+            TensorDeviceBinding downBinding;
+            if (cudaStreamCreate(&stream) != cudaSuccess ||
+                !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+                !BindTensorInput(gate, projBytes, stream, gateBinding, execution) ||
+                !BindTensorInput(up, projBytes, stream, upBinding, execution) ||
+                !BindTensorInput(down, downBytes, stream, downBinding, execution) ||
+                cudaMalloc(&dGate, intermediateBytes) != cudaSuccess ||
+                cudaMalloc(&dUp, intermediateBytes) != cudaSuccess ||
+                cudaMalloc(&dHidden, intermediateBytes) != cudaSuccess ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA TextMLP allocation failed." << std::endl;
+                FreeOwnedBinding(inputBinding);
+                FreeOwnedBinding(gateBinding);
+                FreeOwnedBinding(upBinding);
+                FreeOwnedBinding(downBinding);
+                if (dGate) cudaFree(dGate);
+                if (dUp) cudaFree(dUp);
+                if (dHidden) cudaFree(dHidden);
+                if (dOutput) cudaFree(dOutput);
+                if (stream) cudaStreamDestroy(stream);
+                return X::Value();
+            }
+        execution.Acquire();
+
+            dInput = inputBinding.ptr;
+            dGateW = gateBinding.ptr;
+            dUpW = upBinding.ptr;
+            dDownW = downBinding.ptr;
+
+            auto linear = [&](const float* source, const void* weights, float* output,
+                int rows, int inFeatures, int outFeatures) {
+                return bf16Weights
+                    ? runLinearTransposeBF16WeightFP32(source, static_cast<const bfloat16*>(weights),
+                        output, rows, inFeatures, outFeatures, stream)
+                    : runLinearTransposeFP32(source, static_cast<const float*>(weights),
+                        output, rows, inFeatures, outFeatures, stream);
+            };
+            cudaError_t status = linear(
+                static_cast<const float*>(dInput), dGateW, static_cast<float*>(dGate),
+                tokens, hidden, intermediate);
+            if (status == cudaSuccess) {
+                status = linear(static_cast<const float*>(dInput), dUpW, static_cast<float*>(dUp),
+                    tokens, hidden, intermediate);
+            }
+            if (status == cudaSuccess) {
+                status = runSiluMulFP32(
+                    static_cast<const float*>(dGate),
+                    static_cast<const float*>(dUp),
+                    static_cast<float*>(dHidden),
+                    tokens * intermediate,
+                    stream);
+            }
+            if (status == cudaSuccess) {
+                status = linear(static_cast<const float*>(dHidden), dDownW, static_cast<float*>(dOutput),
+                    tokens, intermediate, hidden);
+            }
+            if (status != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA TextMLP launch failed: "
+                    << cudaGetErrorString(status) << std::endl;
+                FreeOwnedBinding(inputBinding); FreeOwnedBinding(gateBinding); FreeOwnedBinding(upBinding); FreeOwnedBinding(downBinding);
+                cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
+                cudaStreamDestroy(stream);
+                return X::Value();
+            }
+
+            X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
+            if (!output.IsValid()) {
+                FreeOwnedBinding(inputBinding); FreeOwnedBinding(gateBinding); FreeOwnedBinding(upBinding); FreeOwnedBinding(downBinding);
+                cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden); cudaFree(dOutput);
+                cudaStreamDestroy(stream);
+                return X::Value();
+            }
+
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(gateBinding); FreeOwnedBinding(upBinding); FreeOwnedBinding(downBinding);
+            cudaFree(dGate); cudaFree(dUp); cudaFree(dHidden);
+            cudaStreamDestroy(stream);
+            std::cout << "[TRTBuilder] CUDA TextMLP completed: [" << tokens
+                << ", " << hidden << "]" << std::endl;
+            return output;
+        }
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t projBytes = static_cast<size_t>(intermediate) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t downBytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dGate;
+        TensorDeviceBinding dUp;
+        TensorDeviceBinding dDown;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
+            return X::Value();
+        }
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(gate, projBytes, stream, dGate, execution) ||
+            !BindTensorInput(up, projBytes, stream, dUp, execution) ||
+            !BindTensorInput(down, downBytes, stream, dDown, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            std::cout << "[TRTBuilder] TextMLP CUDA allocation failed." << std::endl;
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dGate);
+            FreeOwnedBinding(dUp);
+            FreeOwnedBinding(dDown);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+
+        bool bound = context->setTensorAddress("x", dInput.ptr)
+            && context->setTensorAddress("W_gate", dGate.ptr)
+            && context->setTensorAddress("W_up", dUp.ptr)
+            && context->setTensorAddress("W_down", dDown.ptr)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            std::cout << "[TRTBuilder] TextMLP enqueue failed." << std::endl;
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dGate);
+            FreeOwnedBinding(dUp);
+            FreeOwnedBinding(dDown);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            std::cout << "[TRTBuilder] Failed to create TextMLP output tensor." << std::endl;
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dGate);
+            FreeOwnedBinding(dUp);
+            FreeOwnedBinding(dDown);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dGate);
+        FreeOwnedBinding(dUp);
+        FreeOwnedBinding(dDown);
+        cudaStreamDestroy(stream);
+
+        std::cout << "[TRTBuilder] RunTextMLPEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportTextQKVEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& qShape, const std::vector<int>& kShape, const std::vector<int>& vShape) {
+        std::cout << "[TRTBuilder] ExportTextQKVEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || qShape.size() != 2 || kShape.size() != 2 || vShape.size() != 2) return X::Value();
+        int tokens = inputShape[0];
+        int hidden = inputShape[1];
+        if (qShape[1] != hidden || kShape[1] != hidden || vShape[1] != hidden) {
+            std::cout << "[TRTBuilder] TextQKV shape mismatch." << std::endl;
+            return X::Value();
+        }
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 128ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = hidden;
+        Dims qDims{};
+        qDims.nbDims = 2;
+        qDims.d[0] = qShape[0];
+        qDims.d[1] = hidden;
+        Dims kDims{};
+        kDims.nbDims = 2;
+        kDims.d[0] = kShape[0];
+        kDims.d[1] = hidden;
+        Dims vDims{};
+        vDims.nbDims = 2;
+        vDims.d[0] = vShape[0];
+        vDims.d[1] = hidden;
+
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* wQ = network->addInput("W_q", DataType::kFLOAT, qDims);
+        ITensor* wK = network->addInput("W_k", DataType::kFLOAT, kDims);
+        ITensor* wV = network->addInput("W_v", DataType::kFLOAT, vDims);
+        if (!x || !wQ || !wK || !wV) return X::Value();
+        auto q = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *wQ, MatrixOperation::kTRANSPOSE);
+        auto k = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *wK, MatrixOperation::kTRANSPOSE);
+        auto v = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *wV, MatrixOperation::kTRANSPOSE);
+        if (!q || !k || !v || !q->getOutput(0) || !k->getOutput(0) || !v->getOutput(0)) return X::Value();
+        ITensor* concatInputs[] = { q->getOutput(0), k->getOutput(0), v->getOutput(0) };
+        auto concat = network->addConcatenation(concatInputs, 3);
+        if (!concat || !concat->getOutput(0)) return X::Value();
+        concat->setAxis(1);
+        concat->getOutput(0)->setName("output");
+        network->markOutput(*concat->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized TextQKV TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunTextQKVEngine(const std::string& enginePath, X::Value inputValue, X::Value qWeight, X::Value kWeight, X::Value vWeight) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunTextQKVEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(qWeight) || !IsTensor(kWeight) || !IsTensor(vWeight)) return X::Value();
+        X::Tensor input(inputValue);
+        X::Tensor q(qWeight);
+        X::Tensor k(kWeight);
+        X::Tensor v(vWeight);
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || q.Info().dtype != X3_TENSOR_FLOAT32 ||
+            k.Info().dtype != X3_TENSOR_FLOAT32 || v.Info().dtype != X3_TENSOR_FLOAT32) return X::Value();
+        if (input.Info().rank != 2 || q.Info().rank != 2 || k.Info().rank != 2 || v.Info().rank != 2) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+        int qOut = TensorDimension(q, 0);
+        int kOut = TensorDimension(k, 0);
+        int vOut = TensorDimension(v, 0);
+        if (TensorDimension(q, 1) != hidden || TensorDimension(k, 1) != hidden || TensorDimension(v, 1) != hidden) return X::Value();
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t qBytes = static_cast<size_t>(qOut) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t kBytes = static_cast<size_t>(kOut) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t vBytes = static_cast<size_t>(vOut) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(qOut + kOut + vOut) * sizeof(float);
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dQ;
+        TensorDeviceBinding dK;
+        TensorDeviceBinding dV;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
+            return X::Value();
+        }
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(q, qBytes, stream, dQ, execution) ||
+            !BindTensorInput(k, kBytes, stream, dK, execution) ||
+            !BindTensorInput(v, vBytes, stream, dV, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        bool bound = context->setTensorAddress("x", dInput.ptr)
+            && context->setTensorAddress("W_q", dQ.ptr)
+            && context->setTensorAddress("W_k", dK.ptr)
+            && context->setTensorAddress("W_v", dV.ptr)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, qOut + kOut + vOut, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dQ);
+        FreeOwnedBinding(dK);
+        FreeOwnedBinding(dV);
+        cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunTextQKVEngine completed: [" << tokens << ", " << (qOut + kOut + vOut) << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportTextQKVHeadNormEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& qShape, const std::vector<int>& kShape, const std::vector<int>& vShape, const std::vector<int>& qNormShape, const std::vector<int>& kNormShape, float eps) {
+        std::cout << "[TRTBuilder] ExportTextQKVHeadNormEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || qShape.size() != 2 || kShape.size() != 2 || vShape.size() != 2 ||
+            qNormShape.size() != 1 || kNormShape.size() != 1) {
+            return X::Value();
+        }
+        int tokens = inputShape[0];
+        int hidden = inputShape[1];
+        int headDim = qNormShape[0];
+        int qOut = qShape[0];
+        int kOut = kShape[0];
+        int vOut = vShape[0];
+        if (headDim <= 0 || kNormShape[0] != headDim || qShape[1] != hidden || kShape[1] != hidden || vShape[1] != hidden ||
+            qOut % headDim != 0 || kOut % headDim != 0 || vOut != kOut) {
+            std::cout << "[TRTBuilder] TextQKVHeadNorm shape mismatch." << std::endl;
+            return X::Value();
+        }
+        int qHeads = qOut / headDim;
+        int kvHeads = kOut / headDim;
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 128ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = hidden;
+        Dims qDims{};
+        qDims.nbDims = 2;
+        qDims.d[0] = qOut;
+        qDims.d[1] = hidden;
+        Dims kDims{};
+        kDims.nbDims = 2;
+        kDims.d[0] = kOut;
+        kDims.d[1] = hidden;
+        Dims vDims{};
+        vDims.nbDims = 2;
+        vDims.d[0] = vOut;
+        vDims.d[1] = hidden;
+        Dims normDims{};
+        normDims.nbDims = 3;
+        normDims.d[0] = 1;
+        normDims.d[1] = 1;
+        normDims.d[2] = headDim;
+        Dims scalarDims{};
+        scalarDims.nbDims = 3;
+        scalarDims.d[0] = 1;
+        scalarDims.d[1] = 1;
+        scalarDims.d[2] = 1;
+
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* wQ = network->addInput("W_q", DataType::kFLOAT, qDims);
+        ITensor* wK = network->addInput("W_k", DataType::kFLOAT, kDims);
+        ITensor* wV = network->addInput("W_v", DataType::kFLOAT, vDims);
+        ITensor* qNormWeight = network->addInput("q_norm", DataType::kFLOAT, normDims);
+        ITensor* kNormWeight = network->addInput("k_norm", DataType::kFLOAT, normDims);
+        if (!x || !wQ || !wK || !wV || !qNormWeight || !kNormWeight) return X::Value();
+
+        auto q = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *wQ, MatrixOperation::kTRANSPOSE);
+        auto k = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *wK, MatrixOperation::kTRANSPOSE);
+        auto v = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *wV, MatrixOperation::kTRANSPOSE);
+        if (!q || !k || !v || !q->getOutput(0) || !k->getOutput(0) || !v->getOutput(0)) return X::Value();
+
+        auto headNorm = [&](ITensor* flat, ITensor* weight, int heads, int flatSize) -> ITensor* {
+            Dims headShape{};
+            headShape.nbDims = 3;
+            headShape.d[0] = tokens;
+            headShape.d[1] = heads;
+            headShape.d[2] = headDim;
+            auto reshape = network->addShuffle(*flat);
+            if (!reshape) return nullptr;
+            reshape->setReshapeDimensions(headShape);
+            ITensor* headed = reshape->getOutput(0);
+            if (!headed) return nullptr;
+            auto square = network->addElementWise(*headed, *headed, ElementWiseOperation::kPROD);
+            if (!square || !square->getOutput(0)) return nullptr;
+            auto mean = network->addReduce(*square->getOutput(0), ReduceOperation::kAVG, 1U << 2, true);
+            if (!mean || !mean->getOutput(0)) return nullptr;
+            float epsValue = eps;
+            Weights epsWeights{ DataType::kFLOAT, &epsValue, 1 };
+            auto epsLayer = network->addConstant(scalarDims, epsWeights);
+            if (!epsLayer || !epsLayer->getOutput(0)) return nullptr;
+            auto variance = network->addElementWise(*mean->getOutput(0), *epsLayer->getOutput(0), ElementWiseOperation::kSUM);
+            if (!variance || !variance->getOutput(0)) return nullptr;
+            auto sqrt = network->addUnary(*variance->getOutput(0), UnaryOperation::kSQRT);
+            if (!sqrt || !sqrt->getOutput(0)) return nullptr;
+            auto inv = network->addUnary(*sqrt->getOutput(0), UnaryOperation::kRECIP);
+            if (!inv || !inv->getOutput(0)) return nullptr;
+            auto normalized = network->addElementWise(*headed, *inv->getOutput(0), ElementWiseOperation::kPROD);
+            if (!normalized || !normalized->getOutput(0)) return nullptr;
+            auto scaled = network->addElementWise(*normalized->getOutput(0), *weight, ElementWiseOperation::kPROD);
+            if (!scaled || !scaled->getOutput(0)) return nullptr;
+            Dims flatShape{};
+            flatShape.nbDims = 2;
+            flatShape.d[0] = tokens;
+            flatShape.d[1] = flatSize;
+            auto flatten = network->addShuffle(*scaled->getOutput(0));
+            if (!flatten) return nullptr;
+            flatten->setReshapeDimensions(flatShape);
+            return flatten->getOutput(0);
+        };
+
+        ITensor* qNormed = headNorm(q->getOutput(0), qNormWeight, qHeads, qOut);
+        ITensor* kNormed = headNorm(k->getOutput(0), kNormWeight, kvHeads, kOut);
+        if (!qNormed || !kNormed) return X::Value();
+        ITensor* concatInputs[] = { qNormed, kNormed, v->getOutput(0) };
+        auto concat = network->addConcatenation(concatInputs, 3);
+        if (!concat || !concat->getOutput(0)) return X::Value();
+        concat->setAxis(1);
+        concat->getOutput(0)->setName("output");
+        network->markOutput(*concat->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized TextQKVHeadNorm TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunTextQKVHeadNormEngine(const std::string& enginePath, X::Value inputValue, X::Value qWeight, X::Value kWeight, X::Value vWeight, X::Value qNormWeight, X::Value kNormWeight) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunTextQKVHeadNormEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(qWeight) || !IsTensor(kWeight) || !IsTensor(vWeight) || !IsTensor(qNormWeight) || !IsTensor(kNormWeight)) return X::Value();
+        X::Tensor input(inputValue);
+        X::Tensor q(qWeight);
+        X::Tensor k(kWeight);
+        X::Tensor v(vWeight);
+        X::Tensor qNorm(qNormWeight);
+        X::Tensor kNorm(kNormWeight);
+        bool bf16Weights = q.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            k.Info().dtype == X3_TENSOR_BFLOAT16 && v.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            qNorm.Info().dtype == X3_TENSOR_BFLOAT16 && kNorm.Info().dtype == X3_TENSOR_BFLOAT16;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 ||
+            (!bf16Weights && (q.Info().dtype != X3_TENSOR_FLOAT32 ||
+                k.Info().dtype != X3_TENSOR_FLOAT32 || v.Info().dtype != X3_TENSOR_FLOAT32 ||
+                qNorm.Info().dtype != X3_TENSOR_FLOAT32 || kNorm.Info().dtype != X3_TENSOR_FLOAT32))) return X::Value();
+        if (input.Info().rank != 2 || q.Info().rank != 2 || k.Info().rank != 2 || v.Info().rank != 2 ||
+            qNorm.Info().rank != 1 || kNorm.Info().rank != 1) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+        int qOut = TensorDimension(q, 0);
+        int kOut = TensorDimension(k, 0);
+        int vOut = TensorDimension(v, 0);
+        int headDim = TensorDimension(qNorm, 0);
+        if (headDim <= 0 || TensorDimension(kNorm, 0) != headDim || TensorDimension(q, 1) != hidden || TensorDimension(k, 1) != hidden ||
+            TensorDimension(v, 1) != hidden || qOut % headDim != 0 || kOut % headDim != 0 || vOut != kOut) return X::Value();
+
+        CachedExecutionUse cachedUse(enginePath, nullptr, !bf16Weights);
+        auto context = cachedUse.Context();
+        if (!bf16Weights && !context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t qBytes = static_cast<size_t>(qOut) * static_cast<size_t>(hidden) * TensorHelper::ItemSize(q.Info().dtype);
+        size_t kBytes = static_cast<size_t>(kOut) * static_cast<size_t>(hidden) * TensorHelper::ItemSize(k.Info().dtype);
+        size_t vBytes = static_cast<size_t>(vOut) * static_cast<size_t>(hidden) * TensorHelper::ItemSize(v.Info().dtype);
+        size_t normBytes = static_cast<size_t>(headDim) * TensorHelper::ItemSize(qNorm.Info().dtype);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(qOut + kOut + vOut) * sizeof(float);
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dQ;
+        TensorDeviceBinding dK;
+        TensorDeviceBinding dV;
+        TensorDeviceBinding dQNorm;
+        TensorDeviceBinding dKNorm;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
+            return X::Value();
+        }
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(q, qBytes, stream, dQ, execution) ||
+            !BindTensorInput(k, kBytes, stream, dK, execution) ||
+            !BindTensorInput(v, vBytes, stream, dV, execution) ||
+            !BindTensorInput(qNorm, normBytes, stream, dQNorm, execution) ||
+            !BindTensorInput(kNorm, normBytes, stream, dKNorm, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            FreeOwnedBinding(dQNorm);
+            FreeOwnedBinding(dKNorm);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        bool executed = bf16Weights
+            ? runQKVHeadNormBF16WeightFP32(
+                static_cast<const float*>(dInput.ptr),
+                static_cast<const bfloat16*>(dQ.ptr), static_cast<const bfloat16*>(dK.ptr),
+                static_cast<const bfloat16*>(dV.ptr), static_cast<const bfloat16*>(dQNorm.ptr),
+                static_cast<const bfloat16*>(dKNorm.ptr), static_cast<float*>(dOutput),
+                tokens, hidden, qOut, kOut, headDim, 1.0e-6f, stream) == cudaSuccess
+            : (context->setTensorAddress("x", dInput.ptr)
+                && context->setTensorAddress("W_q", dQ.ptr)
+                && context->setTensorAddress("W_k", dK.ptr)
+                && context->setTensorAddress("W_v", dV.ptr)
+                && context->setTensorAddress("q_norm", dQNorm.ptr)
+                && context->setTensorAddress("k_norm", dKNorm.ptr)
+                && context->setTensorAddress("output", dOutput)
+                && context->enqueueV3(stream));
+        if (!executed) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            FreeOwnedBinding(dQNorm);
+            FreeOwnedBinding(dKNorm);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, qOut + kOut + vOut, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dQ);
+            FreeOwnedBinding(dK);
+            FreeOwnedBinding(dV);
+            FreeOwnedBinding(dQNorm);
+            FreeOwnedBinding(dKNorm);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dQ);
+        FreeOwnedBinding(dK);
+        FreeOwnedBinding(dV);
+        FreeOwnedBinding(dQNorm);
+        FreeOwnedBinding(dKNorm);
+        cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunTextQKVHeadNormEngine completed: [" << tokens << ", " << (qOut + kOut + vOut) << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportTextRoPEEngine(const std::string& enginePath, const std::vector<int>& qkvShape, const std::vector<int>& cosShape, const std::vector<int>& sinShape, int qHeads, int kvHeads, int headDim) {
+        std::cout << "[TRTBuilder] ExportTextRoPEEngine -> " << enginePath << std::endl;
+        if (qkvShape.size() != 2 || cosShape.size() != 2 || sinShape.size() != 2 || qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || (headDim % 2) != 0) {
+            std::cout << "[TRTBuilder] TextRoPE invalid shapes." << std::endl;
+            return X::Value();
+        }
+        int tokens = qkvShape[0];
+        int qOut = qHeads * headDim;
+        int kOut = kvHeads * headDim;
+        int vOut = kOut;
+        int total = qOut + kOut + vOut;
+        if (qkvShape[1] != total || cosShape[0] != tokens || sinShape[0] != tokens || cosShape[1] != headDim || sinShape[1] != headDim) {
+            std::cout << "[TRTBuilder] TextRoPE shape mismatch." << std::endl;
+            return X::Value();
+        }
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 128ULL << 20);
+
+        Dims qkvDims{};
+        qkvDims.nbDims = 2;
+        qkvDims.d[0] = tokens;
+        qkvDims.d[1] = total;
+        Dims posDims{};
+        posDims.nbDims = 2;
+        posDims.d[0] = tokens;
+        posDims.d[1] = headDim;
+        ITensor* qkv = network->addInput("qkv", DataType::kFLOAT, qkvDims);
+        ITensor* cos = network->addInput("cos", DataType::kFLOAT, posDims);
+        ITensor* sin = network->addInput("sin", DataType::kFLOAT, posDims);
+        if (!qkv || !cos || !sin) return X::Value();
+
+        auto slice2d = [&](ITensor* src, int colStart, int width) -> ITensor* {
+            Dims start{};
+            start.nbDims = 2;
+            start.d[0] = 0;
+            start.d[1] = colStart;
+            Dims size{};
+            size.nbDims = 2;
+            size.d[0] = tokens;
+            size.d[1] = width;
+            Dims stride{};
+            stride.nbDims = 2;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            auto layer = network->addSlice(*src, start, size, stride);
+            if (!layer) return nullptr;
+            return layer->getOutput(0);
+        };
+        auto reshape3d = [&](ITensor* src, int heads) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 3;
+            shape.d[0] = tokens;
+            shape.d[1] = heads;
+            shape.d[2] = headDim;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto reshapePos = [&](ITensor* src) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 3;
+            shape.d[0] = tokens;
+            shape.d[1] = 1;
+            shape.d[2] = headDim;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto flatten2d = [&](ITensor* src, int width) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 2;
+            shape.d[0] = tokens;
+            shape.d[1] = width;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto rotateHalf = [&](ITensor* src, int heads) -> ITensor* {
+            Dims start1{};
+            start1.nbDims = 3;
+            start1.d[0] = 0;
+            start1.d[1] = 0;
+            start1.d[2] = 0;
+            Dims start2{};
+            start2.nbDims = 3;
+            start2.d[0] = 0;
+            start2.d[1] = 0;
+            start2.d[2] = headDim / 2;
+            Dims size{};
+            size.nbDims = 3;
+            size.d[0] = tokens;
+            size.d[1] = heads;
+            size.d[2] = headDim / 2;
+            Dims stride{};
+            stride.nbDims = 3;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            stride.d[2] = 1;
+            auto first = network->addSlice(*src, start1, size, stride);
+            auto second = network->addSlice(*src, start2, size, stride);
+            if (!first || !second || !first->getOutput(0) || !second->getOutput(0)) return nullptr;
+            auto negSecond = network->addUnary(*second->getOutput(0), UnaryOperation::kNEG);
+            if (!negSecond || !negSecond->getOutput(0)) return nullptr;
+            ITensor* parts[] = { negSecond->getOutput(0), first->getOutput(0) };
+            auto concat = network->addConcatenation(parts, 2);
+            if (!concat || !concat->getOutput(0)) return nullptr;
+            concat->setAxis(2);
+            return concat->getOutput(0);
+        };
+        auto applyRope = [&](ITensor* src, ITensor* cos3d, ITensor* sin3d, int heads) -> ITensor* {
+            auto xCos = network->addElementWise(*src, *cos3d, ElementWiseOperation::kPROD);
+            ITensor* rotated = rotateHalf(src, heads);
+            if (!xCos || !xCos->getOutput(0) || !rotated) return nullptr;
+            auto rotSin = network->addElementWise(*rotated, *sin3d, ElementWiseOperation::kPROD);
+            if (!rotSin || !rotSin->getOutput(0)) return nullptr;
+            auto out = network->addElementWise(*xCos->getOutput(0), *rotSin->getOutput(0), ElementWiseOperation::kSUM);
+            if (!out || !out->getOutput(0)) return nullptr;
+            return out->getOutput(0);
+        };
+
+        ITensor* qFlat = slice2d(qkv, 0, qOut);
+        ITensor* kFlat = slice2d(qkv, qOut, kOut);
+        ITensor* vFlat = slice2d(qkv, qOut + kOut, vOut);
+        ITensor* q3d = qFlat ? reshape3d(qFlat, qHeads) : nullptr;
+        ITensor* k3d = kFlat ? reshape3d(kFlat, kvHeads) : nullptr;
+        ITensor* cos3d = reshapePos(cos);
+        ITensor* sin3d = reshapePos(sin);
+        if (!q3d || !k3d || !vFlat || !cos3d || !sin3d) return X::Value();
+        ITensor* qRope = applyRope(q3d, cos3d, sin3d, qHeads);
+        ITensor* kRope = applyRope(k3d, cos3d, sin3d, kvHeads);
+        if (!qRope || !kRope) return X::Value();
+        ITensor* qOutFlat = flatten2d(qRope, qOut);
+        ITensor* kOutFlat = flatten2d(kRope, kOut);
+        if (!qOutFlat || !kOutFlat) return X::Value();
+        ITensor* concatInputs[] = { qOutFlat, kOutFlat, vFlat };
+        auto concat = network->addConcatenation(concatInputs, 3);
+        if (!concat || !concat->getOutput(0)) return X::Value();
+        concat->setAxis(1);
+        concat->getOutput(0)->setName("output");
+        network->markOutput(*concat->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized TextRoPE TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunTextRoPEEngine(const std::string& enginePath, X::Value qkvValue, X::Value cosValue, X::Value sinValue) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunTextRoPEEngine <- " << enginePath << std::endl;
+        if (!IsTensor(qkvValue) || !IsTensor(cosValue) || !IsTensor(sinValue)) return X::Value();
+        X::Tensor qkv(qkvValue);
+        X::Tensor cos(cosValue);
+        X::Tensor sin(sinValue);
+        if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || cos.Info().dtype != X3_TENSOR_FLOAT32 || sin.Info().dtype != X3_TENSOR_FLOAT32) return X::Value();
+        if (qkv.Info().rank != 2 || cos.Info().rank != 2 || sin.Info().rank != 2) return X::Value();
+        int tokens = TensorDimension(qkv, 0);
+        int total = TensorDimension(qkv, 1);
+        int headDim = TensorDimension(cos, 1);
+        if (TensorDimension(cos, 0) != tokens || TensorDimension(sin, 0) != tokens || TensorDimension(sin, 1) != headDim) return X::Value();
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t qkvBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
+        size_t posBytes = static_cast<size_t>(tokens) * static_cast<size_t>(headDim) * sizeof(float);
+        TensorDeviceBinding dQKV;
+        TensorDeviceBinding dCos;
+        TensorDeviceBinding dSin;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
+            return X::Value();
+        }
+        if (!BindTensorInput(qkv, qkvBytes, stream, dQKV, execution) ||
+            !BindTensorInput(cos, posBytes, stream, dCos, execution) ||
+            !BindTensorInput(sin, posBytes, stream, dSin, execution) ||
+            cudaMalloc(&dOutput, qkvBytes) != cudaSuccess) {
+            FreeOwnedBinding(dQKV);
+            FreeOwnedBinding(dCos);
+            FreeOwnedBinding(dSin);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        bool bound = context->setTensorAddress("qkv", dQKV.ptr)
+            && context->setTensorAddress("cos", dCos.ptr)
+            && context->setTensorAddress("sin", dSin.ptr)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            FreeOwnedBinding(dQKV);
+            FreeOwnedBinding(dCos);
+            FreeOwnedBinding(dSin);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, total, dOutput, qkvBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dQKV);
+            FreeOwnedBinding(dCos);
+            FreeOwnedBinding(dSin);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(dQKV);
+        FreeOwnedBinding(dCos);
+        FreeOwnedBinding(dSin);
+        cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunTextRoPEEngine completed: [" << tokens << ", " << total << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportTextAttentionEngine(const std::string& enginePath, const std::vector<int>& qkvShape, int qHeads, int kvHeads, int headDim) {
+        std::cout << "[TRTBuilder] ExportTextAttentionEngine -> " << enginePath << std::endl;
+        if (qkvShape.size() != 2 || qHeads <= 0 || kvHeads <= 0 || headDim <= 0 || qHeads % kvHeads != 0) return X::Value();
+        int tokens = qkvShape[0];
+        int qOut = qHeads * headDim;
+        int kOut = kvHeads * headDim;
+        int vOut = kOut;
+        int total = qOut + kOut + vOut;
+        int repeat = qHeads / kvHeads;
+        if (qkvShape[1] != total) return X::Value();
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 256ULL << 20);
+
+        Dims qkvDims{};
+        qkvDims.nbDims = 2;
+        qkvDims.d[0] = tokens;
+        qkvDims.d[1] = total;
+        ITensor* qkv = network->addInput("qkv", DataType::kFLOAT, qkvDims);
+        if (!qkv) return X::Value();
+
+        auto slice2d = [&](int colStart, int width) -> ITensor* {
+            Dims start{};
+            start.nbDims = 2;
+            start.d[0] = 0;
+            start.d[1] = colStart;
+            Dims size{};
+            size.nbDims = 2;
+            size.d[0] = tokens;
+            size.d[1] = width;
+            Dims stride{};
+            stride.nbDims = 2;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            auto layer = network->addSlice(*qkv, start, size, stride);
+            if (!layer) return nullptr;
+            return layer->getOutput(0);
+        };
+        auto reshapeTHD = [&](ITensor* src, int heads) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 3;
+            shape.d[0] = tokens;
+            shape.d[1] = heads;
+            shape.d[2] = headDim;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto transposeTHDToHTD = [&](ITensor* src) -> ITensor* {
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            Permutation perm{};
+            perm.order[0] = 1;
+            perm.order[1] = 0;
+            perm.order[2] = 2;
+            layer->setFirstTranspose(perm);
+            return layer->getOutput(0);
+        };
+        auto transposeHTDToTHD = [&](ITensor* src) -> ITensor* {
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            Permutation perm{};
+            perm.order[0] = 1;
+            perm.order[1] = 0;
+            perm.order[2] = 2;
+            layer->setFirstTranspose(perm);
+            return layer->getOutput(0);
+        };
+        auto flattenTHD = [&](ITensor* src) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 2;
+            shape.d[0] = tokens;
+            shape.d[1] = qOut;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto repeatKV = [&](ITensor* src) -> ITensor* {
+            std::vector<ITensor*> pieces;
+            pieces.reserve(qHeads);
+            for (int h = 0; h < kvHeads; ++h) {
+                Dims start{};
+                start.nbDims = 3;
+                start.d[0] = h;
+                start.d[1] = 0;
+                start.d[2] = 0;
+                Dims size{};
+                size.nbDims = 3;
+                size.d[0] = 1;
+                size.d[1] = tokens;
+                size.d[2] = headDim;
+                Dims stride{};
+                stride.nbDims = 3;
+                stride.d[0] = 1;
+                stride.d[1] = 1;
+                stride.d[2] = 1;
+                auto slice = network->addSlice(*src, start, size, stride);
+                if (!slice || !slice->getOutput(0)) return nullptr;
+                for (int r = 0; r < repeat; ++r) {
+                    pieces.push_back(slice->getOutput(0));
+                }
+            }
+            auto concat = network->addConcatenation(pieces.data(), static_cast<int32_t>(pieces.size()));
+            if (!concat || !concat->getOutput(0)) return nullptr;
+            concat->setAxis(0);
+            return concat->getOutput(0);
+        };
+
+        ITensor* qFlat = slice2d(0, qOut);
+        ITensor* kFlat = slice2d(qOut, kOut);
+        ITensor* vFlat = slice2d(qOut + kOut, vOut);
+        ITensor* qHTD = qFlat ? transposeTHDToHTD(reshapeTHD(qFlat, qHeads)) : nullptr;
+        ITensor* kHTD = kFlat ? transposeTHDToHTD(reshapeTHD(kFlat, kvHeads)) : nullptr;
+        ITensor* vHTD = vFlat ? transposeTHDToHTD(reshapeTHD(vFlat, kvHeads)) : nullptr;
+        if (!qHTD || !kHTD || !vHTD) return X::Value();
+        ITensor* kRepeated = repeatKV(kHTD);
+        ITensor* vRepeated = repeatKV(vHTD);
+        if (!kRepeated || !vRepeated) return X::Value();
+
+        auto scores = network->addMatrixMultiply(*qHTD, MatrixOperation::kNONE, *kRepeated, MatrixOperation::kTRANSPOSE);
+        if (!scores || !scores->getOutput(0)) return X::Value();
+        float scaleValue = 1.0f / std::sqrt(static_cast<float>(headDim));
+        Dims scalarDims{};
+        scalarDims.nbDims = 3;
+        scalarDims.d[0] = 1;
+        scalarDims.d[1] = 1;
+        scalarDims.d[2] = 1;
+        Weights scaleWeights{ DataType::kFLOAT, &scaleValue, 1 };
+        auto scaleConst = network->addConstant(scalarDims, scaleWeights);
+        if (!scaleConst || !scaleConst->getOutput(0)) return X::Value();
+        auto scaledScores = network->addElementWise(*scores->getOutput(0), *scaleConst->getOutput(0), ElementWiseOperation::kPROD);
+        if (!scaledScores || !scaledScores->getOutput(0)) return X::Value();
+
+        std::vector<float> mask(static_cast<size_t>(tokens) * static_cast<size_t>(tokens), 0.0f);
+        for (int i = 0; i < tokens; ++i) {
+            for (int j = i + 1; j < tokens; ++j) {
+                mask[static_cast<size_t>(i) * static_cast<size_t>(tokens) + static_cast<size_t>(j)] = -10000.0f;
+            }
+        }
+        Dims maskDims{};
+        maskDims.nbDims = 3;
+        maskDims.d[0] = 1;
+        maskDims.d[1] = tokens;
+        maskDims.d[2] = tokens;
+        Weights maskWeights{ DataType::kFLOAT, mask.data(), static_cast<int64_t>(mask.size()) };
+        auto maskConst = network->addConstant(maskDims, maskWeights);
+        if (!maskConst || !maskConst->getOutput(0)) return X::Value();
+        auto maskedScores = network->addElementWise(*scaledScores->getOutput(0), *maskConst->getOutput(0), ElementWiseOperation::kSUM);
+        if (!maskedScores || !maskedScores->getOutput(0)) return X::Value();
+
+        auto softmax = network->addSoftMax(*maskedScores->getOutput(0));
+        if (!softmax || !softmax->getOutput(0)) return X::Value();
+        softmax->setAxes(1U << 2);
+        auto context = network->addMatrixMultiply(*softmax->getOutput(0), MatrixOperation::kNONE, *vRepeated, MatrixOperation::kNONE);
+        if (!context || !context->getOutput(0)) return X::Value();
+        ITensor* thd = transposeHTDToTHD(context->getOutput(0));
+        ITensor* output = thd ? flattenTHD(thd) : nullptr;
+        if (!output) return X::Value();
+        output->setName("output");
+        network->markOutput(*output);
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized TextAttention TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunTextAttentionEngine(const std::string& enginePath, X::Value qkvValue) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunTextAttentionEngine <- " << enginePath << std::endl;
+        if (!IsTensor(qkvValue)) return X::Value();
+        X::Tensor qkv(qkvValue);
+        if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || qkv.Info().rank != 2) return X::Value();
+        int tokens = TensorDimension(qkv, 0);
+        int total = TensorDimension(qkv, 1);
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * 2048ULL * sizeof(float);
+        TensorDeviceBinding dInput;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
+            return X::Value();
+        }
+        if (!BindTensorInput(qkv, inputBytes, stream, dInput, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        bool bound = context->setTensorAddress("qkv", dInput.ptr)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            FreeOwnedBinding(dInput);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, 2048, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(dInput);
+        cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunTextAttentionEngine completed: [" << tokens << ", 2048]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportVisionAttentionEngine(const std::string& enginePath, const std::vector<int>& qkvShape, int heads, int headDim) {
+        std::cout << "[TRTBuilder] ExportVisionAttentionEngine -> " << enginePath << std::endl;
+        if (qkvShape.size() != 2 || heads <= 0 || headDim <= 0) return X::Value();
+        int tokens = qkvShape[0];
+        int hidden = heads * headDim;
+        int total = hidden * 3;
+        if (qkvShape[1] != total) return X::Value();
+        if (tokens > 512) {
+            std::cout << "[TRTBuilder] VisionAttention tokens=" << tokens
+                << " uses CUDA exact attention path; skipping TensorRT score-matrix engine." << std::endl;
+            return X::Value::String(host_, "cuda_exact_vision_attention");
+        }
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 256ULL << 20);
+
+        Dims qkvDims{};
+        qkvDims.nbDims = 2;
+        qkvDims.d[0] = tokens;
+        qkvDims.d[1] = total;
+        ITensor* qkv = network->addInput("qkv", DataType::kFLOAT, qkvDims);
+        if (!qkv) return X::Value();
+
+        auto slice2d = [&](int colStart, int width) -> ITensor* {
+            Dims start{};
+            start.nbDims = 2;
+            start.d[0] = 0;
+            start.d[1] = colStart;
+            Dims size{};
+            size.nbDims = 2;
+            size.d[0] = tokens;
+            size.d[1] = width;
+            Dims stride{};
+            stride.nbDims = 2;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            auto layer = network->addSlice(*qkv, start, size, stride);
+            if (!layer) return nullptr;
+            return layer->getOutput(0);
+        };
+        auto reshapeTHD = [&](ITensor* src) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 3;
+            shape.d[0] = tokens;
+            shape.d[1] = heads;
+            shape.d[2] = headDim;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+        auto transposeTHDToHTD = [&](ITensor* src) -> ITensor* {
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            Permutation perm{};
+            perm.order[0] = 1;
+            perm.order[1] = 0;
+            perm.order[2] = 2;
+            layer->setFirstTranspose(perm);
+            return layer->getOutput(0);
+        };
+        auto transposeHTDToTHD = [&](ITensor* src) -> ITensor* {
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            Permutation perm{};
+            perm.order[0] = 1;
+            perm.order[1] = 0;
+            perm.order[2] = 2;
+            layer->setFirstTranspose(perm);
+            return layer->getOutput(0);
+        };
+        auto flattenTHD = [&](ITensor* src) -> ITensor* {
+            Dims shape{};
+            shape.nbDims = 2;
+            shape.d[0] = tokens;
+            shape.d[1] = hidden;
+            auto layer = network->addShuffle(*src);
+            if (!layer) return nullptr;
+            layer->setReshapeDimensions(shape);
+            return layer->getOutput(0);
+        };
+
+        ITensor* qFlat = slice2d(0, hidden);
+        ITensor* kFlat = slice2d(hidden, hidden);
+        ITensor* vFlat = slice2d(hidden * 2, hidden);
+        ITensor* qHTD = qFlat ? transposeTHDToHTD(reshapeTHD(qFlat)) : nullptr;
+        ITensor* kHTD = kFlat ? transposeTHDToHTD(reshapeTHD(kFlat)) : nullptr;
+        ITensor* vHTD = vFlat ? transposeTHDToHTD(reshapeTHD(vFlat)) : nullptr;
+        if (!qHTD || !kHTD || !vHTD) return X::Value();
+
+        auto scores = network->addMatrixMultiply(*qHTD, MatrixOperation::kNONE, *kHTD, MatrixOperation::kTRANSPOSE);
+        if (!scores || !scores->getOutput(0)) return X::Value();
+        float scaleValue = 1.0f / std::sqrt(static_cast<float>(headDim));
+        Dims scalarDims{};
+        scalarDims.nbDims = 3;
+        scalarDims.d[0] = 1;
+        scalarDims.d[1] = 1;
+        scalarDims.d[2] = 1;
+        Weights scaleWeights{ DataType::kFLOAT, &scaleValue, 1 };
+        auto scaleConst = network->addConstant(scalarDims, scaleWeights);
+        if (!scaleConst || !scaleConst->getOutput(0)) return X::Value();
+        auto scaledScores = network->addElementWise(*scores->getOutput(0), *scaleConst->getOutput(0), ElementWiseOperation::kPROD);
+        if (!scaledScores || !scaledScores->getOutput(0)) return X::Value();
+        auto softmax = network->addSoftMax(*scaledScores->getOutput(0));
+        if (!softmax || !softmax->getOutput(0)) return X::Value();
+        softmax->setAxes(1U << 2);
+        auto context = network->addMatrixMultiply(*softmax->getOutput(0), MatrixOperation::kNONE, *vHTD, MatrixOperation::kNONE);
+        if (!context || !context->getOutput(0)) return X::Value();
+        ITensor* thd = transposeHTDToTHD(context->getOutput(0));
+        ITensor* output = thd ? flattenTHD(thd) : nullptr;
+        if (!output) return X::Value();
+        output->setName("output");
+        network->markOutput(*output);
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized VisionAttention TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunVisionAttentionEngine(const std::string& enginePath, X::Value qkvValue) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunVisionAttentionEngine <- " << enginePath << std::endl;
+        if (!IsTensor(qkvValue)) return X::Value();
+        X::Tensor qkv(qkvValue);
+        if (qkv.Info().dtype != X3_TENSOR_FLOAT32 || qkv.Info().rank != 2 || TensorDimension(qkv, 1) % 3 != 0) return X::Value();
+        int tokens = TensorDimension(qkv, 0);
+        int total = TensorDimension(qkv, 1);
+        int hidden = total / 3;
+        int heads = 16;
+        int headDim = hidden / heads;
+        if (hidden % heads != 0) {
+            std::cout << "[TRTBuilder] VisionAttention hidden size is not divisible by heads." << std::endl;
+            return X::Value();
+        }
+
+        if (enginePath == "cuda_exact_vision_attention" || tokens > 512) {
+            std::cout << "[TRTBuilder] Running CUDA exact vision attention: tokens=" << tokens
+                << ", heads=" << heads << ", headDim=" << headDim << std::endl;
+            size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
+            size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+            void* dInput = nullptr;
+            void* dOutput = nullptr;
+            cudaStream_t stream = nullptr;
+            TensorDeviceBinding inputBinding;
+            if (cudaStreamCreate(&stream) != cudaSuccess ||
+                !BindTensorInput(qkv, inputBytes, stream, inputBinding, execution) ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                FreeOwnedBinding(inputBinding);
+                if (dOutput) cudaFree(dOutput);
+                if (stream) cudaStreamDestroy(stream);
+                std::cout << "[TRTBuilder] CUDA exact vision attention allocation failed." << std::endl;
+                return X::Value();
+            }
+        execution.Acquire();
+            dInput = inputBinding.ptr;
+            cudaError_t launchErr = runVisionAttentionFP32(
+                static_cast<const float*>(dInput),
+                static_cast<float*>(dOutput),
+                tokens,
+                heads,
+                headDim,
+                stream);
+            if (launchErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA exact vision attention launch failed: "
+                    << cudaGetErrorString(launchErr) << std::endl;
+                FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
+            if (!output.IsValid()) {
+                FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            FreeOwnedBinding(inputBinding);
+            cudaStreamDestroy(stream);
+            std::cout << "[TRTBuilder] CUDA exact vision attention completed: [" << tokens
+                << ", " << hidden << "]" << std::endl;
+            return output;
+        }
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(total) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        void* dInput = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        TensorDeviceBinding inputBinding;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            !BindTensorInput(qkv, inputBytes, stream, inputBinding, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(inputBinding);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        dInput = inputBinding.ptr;
+        bool bound = context->setTensorAddress("qkv", dInput)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(inputBinding); cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunVisionAttentionEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportLinearTransposeEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape) {
+        std::cout << "[TRTBuilder] ExportLinearTransposeEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || weightShape.size() != 2 || inputShape[1] != weightShape[1]) {
+            std::cout << "[TRTBuilder] LinearTranspose shape mismatch." << std::endl;
+            return X::Value();
+        }
+        int tokens = inputShape[0];
+        int inFeatures = inputShape[1];
+        int outFeatures = weightShape[0];
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 64ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = inFeatures;
+        Dims wDims{};
+        wDims.nbDims = 2;
+        wDims.d[0] = outFeatures;
+        wDims.d[1] = inFeatures;
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* w = network->addInput("W", DataType::kFLOAT, wDims);
+        if (!x || !w) return X::Value();
+        auto out = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *w, MatrixOperation::kTRANSPOSE);
+        if (!out || !out->getOutput(0)) return X::Value();
+        out->getOutput(0)->setName("output");
+        network->markOutput(*out->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized LinearTranspose TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunLinearTransposeEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunLinearTransposeEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(weightValue)) return X::Value();
+        X::Tensor input(inputValue);
+        X::Tensor weight(weightValue);
+        bool bf16Weight = weight.Info().dtype == X3_TENSOR_BFLOAT16;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 ||
+            (!bf16Weight && weight.Info().dtype != X3_TENSOR_FLOAT32)) return X::Value();
+        if (input.Info().rank != 2 || weight.Info().rank != 2) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int inFeatures = TensorDimension(input, 1);
+        int outFeatures = TensorDimension(weight, 0);
+        if (TensorDimension(weight, 1) != inFeatures) return X::Value();
+
+        if (enginePath == "cuda_linear_transpose" || bf16Weight) {
+            std::cout << "[TRTBuilder] Running CUDA linear transpose: ["
+                << tokens << ", " << inFeatures << "] x [" << outFeatures << ", "
+                << inFeatures << "]" << std::endl;
+            size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
+            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * TensorHelper::ItemSize(weight.Info().dtype);
+            size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
+            TensorDeviceBinding dInput;
+            TensorDeviceBinding dWeight;
+            void* dOutput = nullptr;
+            cudaStream_t stream = nullptr;
+            if (cudaStreamCreate(&stream) != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear transpose stream create failed." << std::endl;
+                return X::Value();
+            }
+            if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+                !BindTensorInput(weight, weightBytes, stream, dWeight, execution) ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                size_t freeBytes = 0;
+                size_t totalBytes = 0;
+                cudaMemGetInfo(&freeBytes, &totalBytes);
+                std::cout << "[TRTBuilder] CUDA linear transpose allocation/bind failed: "
+                    << cudaGetErrorString(cudaGetLastError())
+                    << ", free=" << (freeBytes / (1024 * 1024)) << " MiB"
+                    << ", requested_output=" << (outputBytes / (1024 * 1024)) << " MiB"
+                    << std::endl;
+                FreeOwnedBinding(dInput);
+                FreeOwnedBinding(dWeight);
+                if (dOutput) cudaFree(dOutput);
+                cudaStreamDestroy(stream);
+                return X::Value();
+            }
+        execution.Acquire();
+            cudaError_t status = bf16Weight
+                ? runLinearTransposeBF16WeightFP32(
+                    static_cast<const float*>(dInput.ptr),
+                    static_cast<const bfloat16*>(dWeight.ptr),
+                    static_cast<float*>(dOutput), tokens, inFeatures, outFeatures, stream)
+                : runLinearTransposeFP32(
+                    static_cast<const float*>(dInput.ptr),
+                    static_cast<const float*>(dWeight.ptr),
+                    static_cast<float*>(dOutput), tokens, inFeatures, outFeatures, stream);
+            if (status != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear transpose launch failed: "
+                    << cudaGetErrorString(status) << std::endl;
+                FreeOwnedBinding(dInput);
+                FreeOwnedBinding(dWeight);
+                cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, outFeatures, dOutput, outputBytes, stream);
+            if (!output.IsValid()) {
+                std::cout << "[TRTBuilder] CUDA linear transpose output wrap failed." << std::endl;
+                FreeOwnedBinding(dInput);
+                FreeOwnedBinding(dWeight);
+                cudaFree(dOutput);
+                cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaStreamDestroy(stream);
+            std::cout << "[TRTBuilder] CUDA linear transpose completed: [" << tokens
+                << ", " << outFeatures << "]" << std::endl;
+            return output;
+        }
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
+        size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dWeight;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
+            return X::Value();
+        }
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(weight, weightBytes, stream, dWeight, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        bool bound = context->setTensorAddress("x", dInput.ptr)
+            && context->setTensorAddress("W", dWeight.ptr)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, outFeatures, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dWeight);
+        cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunLinearTransposeEngine completed: [" << tokens << ", " << outFeatures << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportLinearBiasTransposeEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape, const std::vector<int>& biasShape) {
+        std::cout << "[TRTBuilder] ExportLinearBiasTransposeEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || weightShape.size() != 2 || biasShape.size() != 1 || inputShape[1] != weightShape[1] || biasShape[0] != weightShape[0]) {
+            std::cout << "[TRTBuilder] LinearBiasTranspose shape mismatch." << std::endl;
+            return X::Value();
+        }
+        int tokens = inputShape[0];
+        int inFeatures = inputShape[1];
+        int outFeatures = weightShape[0];
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 64ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = inFeatures;
+        Dims wDims{};
+        wDims.nbDims = 2;
+        wDims.d[0] = outFeatures;
+        wDims.d[1] = inFeatures;
+        Dims bDims{};
+        bDims.nbDims = 1;
+        bDims.d[0] = outFeatures;
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* w = network->addInput("W", DataType::kFLOAT, wDims);
+        ITensor* b = network->addInput("B", DataType::kFLOAT, bDims);
+        if (!x || !w || !b) return X::Value();
+        auto linear = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *w, MatrixOperation::kTRANSPOSE);
+        if (!linear || !linear->getOutput(0)) return X::Value();
+        auto biasShuffle = network->addShuffle(*b);
+        if (!biasShuffle || !biasShuffle->getOutput(0)) return X::Value();
+        Dims bias2d{};
+        bias2d.nbDims = 2;
+        bias2d.d[0] = 1;
+        bias2d.d[1] = outFeatures;
+        biasShuffle->setReshapeDimensions(bias2d);
+        auto out = network->addElementWise(*linear->getOutput(0), *biasShuffle->getOutput(0), ElementWiseOperation::kSUM);
+        if (!out || !out->getOutput(0)) return X::Value();
+        out->getOutput(0)->setName("output");
+        network->markOutput(*out->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized LinearBiasTranspose TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunLinearBiasTransposeEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue, X::Value biasValue) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunLinearBiasTransposeEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(weightValue) || !IsTensor(biasValue)) return X::Value();
+        X::Tensor input(inputValue);
+        X::Tensor weight(weightValue);
+        X::Tensor bias(biasValue);
+        bool bf16Weights = weight.Info().dtype == X3_TENSOR_BFLOAT16 &&
+            bias.Info().dtype == X3_TENSOR_BFLOAT16;
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 ||
+            (!bf16Weights && (weight.Info().dtype != X3_TENSOR_FLOAT32 ||
+                bias.Info().dtype != X3_TENSOR_FLOAT32))) return X::Value();
+        if (input.Info().rank != 2 || weight.Info().rank != 2 || bias.Info().rank != 1) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int inFeatures = TensorDimension(input, 1);
+        int outFeatures = TensorDimension(weight, 0);
+        if (TensorDimension(weight, 1) != inFeatures || TensorDimension(bias, 0) != outFeatures) return X::Value();
+
+        if (enginePath == "cuda_linear_bias_transpose" || bf16Weights) {
+            std::cout << "[TRTBuilder] Running CUDA linear+bias transpose: ["
+                << tokens << ", " << inFeatures << "] x [" << outFeatures << ", "
+                << inFeatures << "]" << std::endl;
+            size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
+            size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * TensorHelper::ItemSize(weight.Info().dtype);
+            size_t biasBytes = static_cast<size_t>(outFeatures) * TensorHelper::ItemSize(bias.Info().dtype);
+            size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
+            void* dInput = nullptr;
+            void* dWeight = nullptr;
+            void* dBias = nullptr;
+            void* dOutput = nullptr;
+            cudaStream_t stream = nullptr;
+            TensorDeviceBinding inputBinding;
+            TensorDeviceBinding weightBinding;
+            TensorDeviceBinding biasBinding;
+            if (cudaStreamCreate(&stream) != cudaSuccess ||
+                !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+                !BindTensorInput(weight, weightBytes, stream, weightBinding, execution) ||
+                !BindTensorInput(bias, biasBytes, stream, biasBinding, execution) ||
+                cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+                FreeOwnedBinding(inputBinding);
+                FreeOwnedBinding(weightBinding);
+                FreeOwnedBinding(biasBinding);
+                if (dOutput) cudaFree(dOutput);
+                if (stream) cudaStreamDestroy(stream);
+                std::cout << "[TRTBuilder] CUDA linear+bias allocation failed." << std::endl;
+                return X::Value();
+            }
+        execution.Acquire();
+            dInput = inputBinding.ptr;
+            dWeight = weightBinding.ptr;
+            dBias = biasBinding.ptr;
+            cudaError_t launchErr = bf16Weights
+                ? runLinearBiasTransposeBF16WeightFP32(
+                    static_cast<const float*>(dInput),
+                    static_cast<const bfloat16*>(dWeight),
+                    static_cast<const bfloat16*>(dBias),
+                    static_cast<float*>(dOutput), tokens, inFeatures, outFeatures, stream)
+                : runLinearBiasTransposeFP32(
+                    static_cast<const float*>(dInput),
+                    static_cast<const float*>(dWeight),
+                    static_cast<const float*>(dBias),
+                    static_cast<float*>(dOutput), tokens, inFeatures, outFeatures, stream);
+            if (launchErr != cudaSuccess) {
+                std::cout << "[TRTBuilder] CUDA linear+bias launch failed: "
+                    << cudaGetErrorString(launchErr) << std::endl;
+                FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, outFeatures, dOutput, outputBytes, stream);
+            if (!output.IsValid()) {
+                FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+                return X::Value();
+            }
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            FreeOwnedBinding(biasBinding);
+            cudaStreamDestroy(stream);
+            std::cout << "[TRTBuilder] CUDA linear+bias transpose completed: ["
+                << tokens << ", " << outFeatures << "]" << std::endl;
+            return output;
+        }
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(inFeatures) * sizeof(float);
+        size_t weightBytes = static_cast<size_t>(outFeatures) * static_cast<size_t>(inFeatures) * sizeof(float);
+        size_t biasBytes = static_cast<size_t>(outFeatures) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(outFeatures) * sizeof(float);
+        void* dInput = nullptr;
+        void* dWeight = nullptr;
+        void* dBias = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        TensorDeviceBinding inputBinding;
+        TensorDeviceBinding weightBinding;
+        TensorDeviceBinding biasBinding;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+            !BindTensorInput(weight, weightBytes, stream, weightBinding, execution) ||
+            !BindTensorInput(bias, biasBytes, stream, biasBinding, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            FreeOwnedBinding(biasBinding);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        dInput = inputBinding.ptr;
+        dWeight = weightBinding.ptr;
+        dBias = biasBinding.ptr;
+        bool bound = context->setTensorAddress("x", dInput)
+            && context->setTensorAddress("W", dWeight)
+            && context->setTensorAddress("B", dBias)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, outFeatures, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunLinearBiasTransposeEngine completed: [" << tokens << ", " << outFeatures << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportVisionMLPEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& fc1Shape, const std::vector<int>& fc2Shape) {
+        std::cout << "[TRTBuilder] ExportVisionMLPEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || fc1Shape.size() != 2 || fc2Shape.size() != 2) {
+            std::cout << "[TRTBuilder] VisionMLP export requires 2D input and weight shapes." << std::endl;
+            return X::Value();
+        }
+        int tokens = inputShape[0];
+        int hidden = inputShape[1];
+        int intermediate = fc1Shape[0];
+        if (fc1Shape[1] != hidden || fc2Shape[0] != hidden || fc2Shape[1] != intermediate) {
+            std::cout << "[TRTBuilder] VisionMLP shape mismatch." << std::endl;
+            return X::Value();
+        }
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 128ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = hidden;
+        Dims fc1Dims{};
+        fc1Dims.nbDims = 2;
+        fc1Dims.d[0] = intermediate;
+        fc1Dims.d[1] = hidden;
+        Dims fc1BiasDims{};
+        fc1BiasDims.nbDims = 2;
+        fc1BiasDims.d[0] = 1;
+        fc1BiasDims.d[1] = intermediate;
+        Dims fc2Dims{};
+        fc2Dims.nbDims = 2;
+        fc2Dims.d[0] = hidden;
+        fc2Dims.d[1] = intermediate;
+        Dims fc2BiasDims{};
+        fc2BiasDims.nbDims = 2;
+        fc2BiasDims.d[0] = 1;
+        fc2BiasDims.d[1] = hidden;
+
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* w1 = network->addInput("W_fc1", DataType::kFLOAT, fc1Dims);
+        ITensor* b1 = network->addInput("b_fc1", DataType::kFLOAT, fc1BiasDims);
+        ITensor* w2 = network->addInput("W_fc2", DataType::kFLOAT, fc2Dims);
+        ITensor* b2 = network->addInput("b_fc2", DataType::kFLOAT, fc2BiasDims);
+        if (!x || !w1 || !b1 || !w2 || !b2) {
+            std::cout << "[TRTBuilder] VisionMLP addInput failed." << std::endl;
+            return X::Value();
+        }
+
+        auto fc1 = network->addMatrixMultiply(*x, MatrixOperation::kNONE, *w1, MatrixOperation::kTRANSPOSE);
+        if (!fc1 || !fc1->getOutput(0)) return X::Value();
+        auto fc1Bias = network->addElementWise(*fc1->getOutput(0), *b1, ElementWiseOperation::kSUM);
+        if (!fc1Bias || !fc1Bias->getOutput(0)) return X::Value();
+        auto gelu = network->addActivation(*fc1Bias->getOutput(0), ActivationType::kGELU_TANH);
+        if (!gelu || !gelu->getOutput(0)) return X::Value();
+        auto fc2 = network->addMatrixMultiply(*gelu->getOutput(0), MatrixOperation::kNONE, *w2, MatrixOperation::kTRANSPOSE);
+        if (!fc2 || !fc2->getOutput(0)) return X::Value();
+        auto out = network->addElementWise(*fc2->getOutput(0), *b2, ElementWiseOperation::kSUM);
+        if (!out || !out->getOutput(0)) return X::Value();
+        out->getOutput(0)->setName("output");
+        network->markOutput(*out->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) {
+            std::cout << "[TRTBuilder] VisionMLP buildSerializedNetwork failed." << std::endl;
+            return X::Value();
+        }
+
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+
+        std::cout << "[TRTBuilder] Serialized VisionMLP TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunVisionMLPEngine(const std::string& enginePath, X::Value inputValue, X::Value fc1Weight, X::Value fc1Bias, X::Value fc2Weight, X::Value fc2Bias) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunVisionMLPEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(fc1Weight) || !IsTensor(fc1Bias) || !IsTensor(fc2Weight) || !IsTensor(fc2Bias)) {
+            std::cout << "[TRTBuilder] RunVisionMLPEngine requires tensor inputs." << std::endl;
+            return X::Value();
+        }
+
+        X::Tensor input(inputValue);
+        X::Tensor w1(fc1Weight);
+        X::Tensor b1(fc1Bias);
+        X::Tensor w2(fc2Weight);
+        X::Tensor b2(fc2Bias);
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || w1.Info().dtype != X3_TENSOR_FLOAT32 ||
+            b1.Info().dtype != X3_TENSOR_FLOAT32 || w2.Info().dtype != X3_TENSOR_FLOAT32 ||
+            b2.Info().dtype != X3_TENSOR_FLOAT32) {
+            std::cout << "[TRTBuilder] RunVisionMLPEngine supports float32 only." << std::endl;
+            return X::Value();
+        }
+
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+        int intermediate = TensorDimension(w1, 0);
+        if (input.Info().rank != 2 || w1.Info().rank != 2 || w2.Info().rank != 2 ||
+            TensorDimension(w1, 1) != hidden || TensorDimension(w2, 0) != hidden || TensorDimension(w2, 1) != intermediate) {
+            std::cout << "[TRTBuilder] RunVisionMLPEngine shape mismatch." << std::endl;
+            return X::Value();
+        }
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t fc1Bytes = static_cast<size_t>(intermediate) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t fc1BiasBytes = static_cast<size_t>(intermediate) * sizeof(float);
+        size_t fc2Bytes = static_cast<size_t>(hidden) * static_cast<size_t>(intermediate) * sizeof(float);
+        size_t fc2BiasBytes = static_cast<size_t>(hidden) * sizeof(float);
+        size_t outputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+
+        void* dInput = nullptr;
+        void* dW1 = nullptr;
+        void* dB1 = nullptr;
+        void* dW2 = nullptr;
+        void* dB2 = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        TensorDeviceBinding inputBinding;
+        TensorDeviceBinding w1Binding;
+        TensorDeviceBinding b1Binding;
+        TensorDeviceBinding w2Binding;
+        TensorDeviceBinding b2Binding;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+            !BindTensorInput(w1, fc1Bytes, stream, w1Binding, execution) ||
+            !BindTensorInput(b1, fc1BiasBytes, stream, b1Binding, execution) ||
+            !BindTensorInput(w2, fc2Bytes, stream, w2Binding, execution) ||
+            !BindTensorInput(b2, fc2BiasBytes, stream, b2Binding, execution) ||
+            cudaMalloc(&dOutput, outputBytes) != cudaSuccess) {
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(w1Binding);
+            FreeOwnedBinding(b1Binding);
+            FreeOwnedBinding(w2Binding);
+            FreeOwnedBinding(b2Binding);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+
+        dInput = inputBinding.ptr;
+        dW1 = w1Binding.ptr;
+        dB1 = b1Binding.ptr;
+        dW2 = w2Binding.ptr;
+        dB2 = b2Binding.ptr;
+
+        bool bound = context->setTensorAddress("x", dInput)
+            && context->setTensorAddress("W_fc1", dW1)
+            && context->setTensorAddress("b_fc1", dB1)
+            && context->setTensorAddress("W_fc2", dW2)
+            && context->setTensorAddress("b_fc2", dB2)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(w1Binding); FreeOwnedBinding(b1Binding); FreeOwnedBinding(w2Binding); FreeOwnedBinding(b2Binding); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, outputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(w1Binding); FreeOwnedBinding(b1Binding); FreeOwnedBinding(w2Binding); FreeOwnedBinding(b2Binding); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+
+        FreeOwnedBinding(inputBinding);
+        FreeOwnedBinding(w1Binding);
+        FreeOwnedBinding(b1Binding);
+        FreeOwnedBinding(w2Binding);
+        FreeOwnedBinding(b2Binding);
+        cudaStreamDestroy(stream);
+
+        std::cout << "[TRTBuilder] RunVisionMLPEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportRMSNormEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape, float eps) {
+        std::cout << "[TRTBuilder] ExportRMSNormEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || weightShape.size() != 1 || inputShape[1] != weightShape[0]) {
+            std::cout << "[TRTBuilder] RMSNorm shape mismatch." << std::endl;
+            return X::Value();
+        }
+        int tokens = inputShape[0];
+        int hidden = inputShape[1];
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 128ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = hidden;
+        Dims affineDims{};
+        affineDims.nbDims = 2;
+        affineDims.d[0] = 1;
+        affineDims.d[1] = hidden;
+        Dims scalarDims{};
+        scalarDims.nbDims = 2;
+        scalarDims.d[0] = 1;
+        scalarDims.d[1] = 1;
+
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* weight = network->addInput("weight", DataType::kFLOAT, affineDims);
+        if (!x || !weight) return X::Value();
+
+        auto square = network->addElementWise(*x, *x, ElementWiseOperation::kPROD);
+        if (!square || !square->getOutput(0)) return X::Value();
+        auto mean = network->addReduce(*square->getOutput(0), ReduceOperation::kAVG, 1U << 1, true);
+        if (!mean || !mean->getOutput(0)) return X::Value();
+        float epsValue = eps;
+        Weights epsWeights{ DataType::kFLOAT, &epsValue, 1 };
+        auto epsLayer = network->addConstant(scalarDims, epsWeights);
+        if (!epsLayer || !epsLayer->getOutput(0)) return X::Value();
+        auto variance = network->addElementWise(*mean->getOutput(0), *epsLayer->getOutput(0), ElementWiseOperation::kSUM);
+        if (!variance || !variance->getOutput(0)) return X::Value();
+        auto sqrt = network->addUnary(*variance->getOutput(0), UnaryOperation::kSQRT);
+        if (!sqrt || !sqrt->getOutput(0)) return X::Value();
+        auto inv = network->addUnary(*sqrt->getOutput(0), UnaryOperation::kRECIP);
+        if (!inv || !inv->getOutput(0)) return X::Value();
+        auto normalized = network->addElementWise(*x, *inv->getOutput(0), ElementWiseOperation::kPROD);
+        if (!normalized || !normalized->getOutput(0)) return X::Value();
+        auto out = network->addElementWise(*normalized->getOutput(0), *weight, ElementWiseOperation::kPROD);
+        if (!out || !out->getOutput(0)) return X::Value();
+        out->getOutput(0)->setName("output");
+        network->markOutput(*out->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized RMSNorm TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunRMSNormEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunRMSNormEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(weightValue)) return X::Value();
+        X::Tensor input(inputValue);
+        X::Tensor weight(weightValue);
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || weight.Info().dtype != X3_TENSOR_FLOAT32) return X::Value();
+        if (input.Info().rank != 2 || weight.Info().rank != 1 || TensorDimension(input, 1) != TensorDimension(weight, 0)) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t weightBytes = static_cast<size_t>(hidden) * sizeof(float);
+        TensorDeviceBinding dInput;
+        TensorDeviceBinding dWeight;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        if (cudaStreamCreate(&stream) != cudaSuccess) {
+            return X::Value();
+        }
+        if (!BindTensorInput(input, inputBytes, stream, dInput, execution) ||
+            !BindTensorInput(weight, weightBytes, stream, dWeight, execution) ||
+            cudaMalloc(&dOutput, inputBytes) != cudaSuccess) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            if (dOutput) cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        cudaError_t status = runRMSNormFP32(
+            static_cast<const float*>(dInput.ptr),
+            static_cast<const float*>(dWeight.ptr),
+            static_cast<float*>(dOutput),
+            tokens, hidden, 1.0e-6f, stream);
+        if (status != cudaSuccess) {
+            std::cout << "[TRTBuilder] CUDA RMSNorm failed: "
+                << cudaGetErrorString(status) << std::endl;
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, inputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(dInput);
+            FreeOwnedBinding(dWeight);
+            cudaFree(dOutput);
+            cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(dInput);
+        FreeOwnedBinding(dWeight);
+        cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunRMSNormEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
+        return output;
+    }
+
+    X::Value TRTBuilder::ExportLayerNormEngine(const std::string& enginePath, const std::vector<int>& inputShape, const std::vector<int>& weightShape, float eps) {
+        std::cout << "[TRTBuilder] ExportLayerNormEngine -> " << enginePath << std::endl;
+        if (inputShape.size() != 2 || weightShape.size() != 1 || inputShape[1] != weightShape[0]) {
+            std::cout << "[TRTBuilder] LayerNorm shape mismatch." << std::endl;
+            return X::Value();
+        }
+        int tokens = inputShape[0];
+        int hidden = inputShape[1];
+
+        auto builder = createInferBuilder(gLogger);
+        if (!builder) return X::Value();
+        uint32_t flags = ExplicitBatchNetworkFlag();
+        auto network = builder->createNetworkV2(flags);
+        if (!network) return X::Value();
+        auto config = builder->createBuilderConfig();
+        if (!config) return X::Value();
+        config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 128ULL << 20);
+
+        Dims xDims{};
+        xDims.nbDims = 2;
+        xDims.d[0] = tokens;
+        xDims.d[1] = hidden;
+        Dims affineDims{};
+        affineDims.nbDims = 2;
+        affineDims.d[0] = 1;
+        affineDims.d[1] = hidden;
+        Dims scalarDims{};
+        scalarDims.nbDims = 2;
+        scalarDims.d[0] = 1;
+        scalarDims.d[1] = 1;
+
+        ITensor* x = network->addInput("x", DataType::kFLOAT, xDims);
+        ITensor* weight = network->addInput("weight", DataType::kFLOAT, affineDims);
+        ITensor* bias = network->addInput("bias", DataType::kFLOAT, affineDims);
+        if (!x || !weight || !bias) return X::Value();
+        auto mean = network->addReduce(*x, ReduceOperation::kAVG, 1U << 1, true);
+        if (!mean || !mean->getOutput(0)) return X::Value();
+        auto centered = network->addElementWise(*x, *mean->getOutput(0), ElementWiseOperation::kSUB);
+        if (!centered || !centered->getOutput(0)) return X::Value();
+        auto square = network->addElementWise(*centered->getOutput(0), *centered->getOutput(0), ElementWiseOperation::kPROD);
+        if (!square || !square->getOutput(0)) return X::Value();
+        auto variance = network->addReduce(*square->getOutput(0), ReduceOperation::kAVG, 1U << 1, true);
+        if (!variance || !variance->getOutput(0)) return X::Value();
+        float epsValue = eps;
+        Weights epsWeights{ DataType::kFLOAT, &epsValue, 1 };
+        auto epsLayer = network->addConstant(scalarDims, epsWeights);
+        if (!epsLayer || !epsLayer->getOutput(0)) return X::Value();
+        auto varianceEps = network->addElementWise(*variance->getOutput(0), *epsLayer->getOutput(0), ElementWiseOperation::kSUM);
+        if (!varianceEps || !varianceEps->getOutput(0)) return X::Value();
+        auto sqrt = network->addUnary(*varianceEps->getOutput(0), UnaryOperation::kSQRT);
+        if (!sqrt || !sqrt->getOutput(0)) return X::Value();
+        auto inv = network->addUnary(*sqrt->getOutput(0), UnaryOperation::kRECIP);
+        if (!inv || !inv->getOutput(0)) return X::Value();
+        auto normalized = network->addElementWise(*centered->getOutput(0), *inv->getOutput(0), ElementWiseOperation::kPROD);
+        if (!normalized || !normalized->getOutput(0)) return X::Value();
+        auto scaled = network->addElementWise(*normalized->getOutput(0), *weight, ElementWiseOperation::kPROD);
+        if (!scaled || !scaled->getOutput(0)) return X::Value();
+        auto out = network->addElementWise(*scaled->getOutput(0), *bias, ElementWiseOperation::kSUM);
+        if (!out || !out->getOutput(0)) return X::Value();
+        out->getOutput(0)->setName("output");
+        network->markOutput(*out->getOutput(0));
+
+        auto serialized = builder->buildSerializedNetwork(*network, *config);
+        if (!serialized) return X::Value();
+        std::filesystem::path outputPath(enginePath);
+        std::filesystem::create_directories(outputPath.parent_path());
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile.is_open()) return X::Value();
+        outFile.write(static_cast<const char*>(serialized->data()), static_cast<std::streamsize>(serialized->size()));
+        outFile.close();
+        std::cout << "[TRTBuilder] Serialized LayerNorm TensorRT engine bytes: " << serialized->size() << std::endl;
+        return X::Value::String(host_, enginePath);
+    }
+
+    X::Value TRTBuilder::RunLayerNormEngine(const std::string& enginePath, X::Value inputValue, X::Value weightValue, X::Value biasValue) {
+        ExecutionInputs execution;
+        std::cout << "[TRTBuilder] RunLayerNormEngine <- " << enginePath << std::endl;
+        if (!IsTensor(inputValue) || !IsTensor(weightValue) || !IsTensor(biasValue)) return X::Value();
+        X::Tensor input(inputValue);
+        X::Tensor weight(weightValue);
+        X::Tensor bias(biasValue);
+        if (input.Info().dtype != X3_TENSOR_FLOAT32 || weight.Info().dtype != X3_TENSOR_FLOAT32 || bias.Info().dtype != X3_TENSOR_FLOAT32) return X::Value();
+        if (input.Info().rank != 2 || weight.Info().rank != 1 || bias.Info().rank != 1 || TensorDimension(input, 1) != TensorDimension(weight, 0) || TensorDimension(weight, 0) != TensorDimension(bias, 0)) return X::Value();
+        int tokens = TensorDimension(input, 0);
+        int hidden = TensorDimension(input, 1);
+
+        CachedExecutionUse cachedUse(enginePath);
+        auto context = cachedUse.Context();
+        if (!context) return X::Value();
+
+        size_t inputBytes = static_cast<size_t>(tokens) * static_cast<size_t>(hidden) * sizeof(float);
+        size_t affineBytes = static_cast<size_t>(hidden) * sizeof(float);
+        void* dInput = nullptr;
+        void* dWeight = nullptr;
+        void* dBias = nullptr;
+        void* dOutput = nullptr;
+        cudaStream_t stream = nullptr;
+        TensorDeviceBinding inputBinding;
+        TensorDeviceBinding weightBinding;
+        TensorDeviceBinding biasBinding;
+        if (cudaStreamCreate(&stream) != cudaSuccess ||
+            !BindTensorInput(input, inputBytes, stream, inputBinding, execution) ||
+            !BindTensorInput(weight, affineBytes, stream, weightBinding, execution) ||
+            !BindTensorInput(bias, affineBytes, stream, biasBinding, execution) ||
+            cudaMalloc(&dOutput, inputBytes) != cudaSuccess) {
+            FreeOwnedBinding(inputBinding);
+            FreeOwnedBinding(weightBinding);
+            FreeOwnedBinding(biasBinding);
+            if (dOutput) cudaFree(dOutput);
+            if (stream) cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        execution.Acquire();
+        dInput = inputBinding.ptr;
+        dWeight = weightBinding.ptr;
+        dBias = biasBinding.ptr;
+        bool bound = context->setTensorAddress("x", dInput)
+            && context->setTensorAddress("weight", dWeight)
+            && context->setTensorAddress("bias", dBias)
+            && context->setTensorAddress("output", dOutput);
+        if (!bound || !context->enqueueV3(stream)) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        X::Value output = MakeGPUBackedTensor2D(host_, execution, tokens, hidden, dOutput, inputBytes, stream);
+        if (!output.IsValid()) {
+            FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaFree(dOutput); cudaStreamDestroy(stream);
+            return X::Value();
+        }
+        FreeOwnedBinding(inputBinding); FreeOwnedBinding(weightBinding); FreeOwnedBinding(biasBinding); cudaStreamDestroy(stream);
+        std::cout << "[TRTBuilder] RunLayerNormEngine completed: [" << tokens << ", " << hidden << "]" << std::endl;
+        return output;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTWeight(const std::string& weightName) {
+        auto existing = weightTensorMap.find(weightName);
+        if (existing != weightTensorMap.end()) {
+            return existing->second;
+        }
+        if (!capturedWeightIndex) {
+            loweringError = "native safetensors mapping is unavailable for weight: " + weightName;
+            return nullptr;
+        }
+        const SafeTensorMetadata* metadata = capturedWeightIndex->Find(weightName);
+        if (!metadata) {
+            loweringError = "weight is absent from safetensors index: " + weightName;
+            return nullptr;
+        }
+        DataType dataType;
+        if (metadata->dataType == "BF16") dataType = DataType::kBF16;
+        else if (metadata->dataType == "F16") dataType = DataType::kHALF;
+        else if (metadata->dataType == "F32") dataType = DataType::kFLOAT;
+        else {
+            loweringError = "unsupported TensorRT constant dtype for weight: " + weightName;
+            return nullptr;
+        }
+        if (metadata->shape.empty() || metadata->shape.size() > Dims::MAX_DIMS) {
+            loweringError = "unsupported TensorRT constant rank for weight: " + weightName;
+            return nullptr;
+        }
+        Dims dimensions{};
+        dimensions.nbDims = static_cast<int>(metadata->shape.size());
+        std::int64_t elementCount = 1;
+        for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+            const long long size = metadata->shape[dimension];
+            if (size <= 0 || size > std::numeric_limits<int>::max() ||
+                elementCount > std::numeric_limits<std::int64_t>::max() / size) {
+                loweringError = "invalid TensorRT constant shape for weight: " + weightName;
+                return nullptr;
+            }
+            dimensions.d[dimension] = static_cast<int>(size);
+            elementCount *= size;
+        }
+        const std::string sourcePath = metadata->filePath.string();
+        auto& mappedFile = capturedWeightFiles[sourcePath];
+        if (!mappedFile) {
+            mappedFile = std::make_unique<SafeTensorsMappedFile>();
+            if (!mappedFile->Open(metadata->filePath, loweringError)) return nullptr;
+        }
+        const void* data = mappedFile->DataAt(metadata->dataOffset, metadata->dataSize);
+        if (!data) {
+            loweringError = "safetensors range is unavailable for weight: " + weightName;
+            return nullptr;
+        }
+        if (capturedWeightProfile == "int4_fp16" &&
+            IsQwenLinearWeightForINT4(weightName, *metadata, 64)) {
+            auto quantized = std::make_shared<QuantizedWeight>();
+            if (!QuantizeSymmetricINT4(
+                    weightName, *metadata, data, 64, *quantized,
+                    loweringError)) {
+                return nullptr;
+            }
+            Weights packedWeights{
+                DataType::kINT4,
+                quantized->packedValues.data(),
+                static_cast<std::int64_t>(
+                    quantized->LogicalElementCount())};
+            auto* packedConstant =
+                network->addConstant(dimensions, packedWeights);
+            const auto scaleShape = quantized->ScaleShape();
+            Dims scaleDimensions{};
+            scaleDimensions.nbDims = 2;
+            scaleDimensions.d[0] = static_cast<int>(scaleShape[0]);
+            scaleDimensions.d[1] = static_cast<int>(scaleShape[1]);
+            Weights scaleWeights{
+                DataType::kHALF,
+                quantized->fp16Scales.data(),
+                static_cast<std::int64_t>(
+                    quantized->fp16Scales.size())};
+            auto* scaleConstant =
+                network->addConstant(scaleDimensions, scaleWeights);
+            if (!packedConstant || !scaleConstant) {
+                loweringError =
+                    "TensorRT INT4 constants failed for weight: " +
+                    weightName;
+                return nullptr;
+            }
+            auto* dequantize = network->addDequantize(
+                *packedConstant->getOutput(0),
+                *scaleConstant->getOutput(0),
+                DataType::kHALF);
+            Dims blockShape{};
+            blockShape.nbDims = 2;
+            blockShape.d[0] = 1;
+            blockShape.d[1] = quantized->blockSize;
+            if (!dequantize ||
+                !dequantize->setBlockShape(blockShape)) {
+                loweringError =
+                    "TensorRT INT4 block dequantization failed for weight: " +
+                    weightName;
+                return nullptr;
+            }
+            packedConstant->setName(
+                (weightName + ".int4").c_str());
+            scaleConstant->setName(
+                (weightName + ".scale").c_str());
+            dequantize->setName(
+                (weightName + ".dequantize").c_str());
+            ITensor* output = dequantize->getOutput(0);
+            output->setName(weightName.c_str());
+            capturedQuantizedWeights[weightName] =
+                std::move(quantized);
+            weightTensorMap[weightName] = output;
+            return output;
+        }
+        Weights weights{dataType, data, elementCount};
+        auto* constant = network->addConstant(dimensions, weights);
+        if (!constant || !constant->getOutput(0)) {
+            loweringError = "TensorRT constant lowering failed for weight: " + weightName;
+            return nullptr;
+        }
+        if (!network->setWeightsName(weights, weightName.c_str()) ||
+            !network->markWeightsRefittable(weightName.c_str())) {
+            loweringError = "TensorRT could not mark checkpoint weight refittable: " + weightName;
+            return nullptr;
+        }
+        constant->setName(weightName.c_str());
+        ITensor* output = constant->getOutput(0);
+        output->setName(weightName.c_str());
+        weightTensorMap[weightName] = output;
+        return output;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTWeightFP32(
+        const std::string& weightName) {
+        const std::string cacheKey = weightName + ".fp32";
+        auto existing = weightTensorMap.find(cacheKey);
+        if (existing != weightTensorMap.end()) return existing->second;
+        if (!capturedWeightIndex) {
+            loweringError = "native safetensors mapping is unavailable for weight: " +
+                weightName;
+            return nullptr;
+        }
+        const SafeTensorMetadata* metadata = capturedWeightIndex->Find(weightName);
+        if (!metadata) {
+            loweringError = "weight is absent from safetensors index: " + weightName;
+            return nullptr;
+        }
+        if (metadata->dataType == "F32") return GetOrCreateTRTWeight(weightName);
+        if (metadata->dataType != "BF16" || metadata->shape.empty() ||
+            metadata->shape.size() > Dims::MAX_DIMS) {
+            loweringError = "FP32 projection requires BF16 or F32 weight: " + weightName;
+            return nullptr;
+        }
+        Dims dimensions{};
+        dimensions.nbDims = static_cast<int>(metadata->shape.size());
+        std::int64_t elementCount = 1;
+        for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+            const long long size = metadata->shape[dimension];
+            if (size <= 0 || size > std::numeric_limits<int>::max()) {
+                loweringError = "invalid FP32 projection weight shape: " + weightName;
+                return nullptr;
+            }
+            dimensions.d[dimension] = static_cast<int>(size);
+            elementCount *= size;
+        }
+        const std::string sourcePath = metadata->filePath.string();
+        auto& mappedFile = capturedWeightFiles[sourcePath];
+        if (!mappedFile) {
+            mappedFile = std::make_unique<SafeTensorsMappedFile>();
+            if (!mappedFile->Open(metadata->filePath, loweringError)) return nullptr;
+        }
+        const void* data = mappedFile->DataAt(
+            metadata->dataOffset, metadata->dataSize);
+        if (!data) {
+            loweringError = "safetensors range is unavailable for weight: " + weightName;
+            return nullptr;
+        }
+        vectorWeights.emplace_back(static_cast<size_t>(elementCount));
+        auto& converted = vectorWeights.back();
+        const auto* source = static_cast<const uint16_t*>(data);
+        for (std::int64_t index = 0; index < elementCount; ++index) {
+            const uint32_t expanded = static_cast<uint32_t>(source[index]) << 16U;
+            std::memcpy(&converted[static_cast<size_t>(index)],
+                &expanded, sizeof(float));
+        }
+        Weights weights{DataType::kFLOAT, converted.data(), elementCount};
+        auto* constant = network->addConstant(dimensions, weights);
+        if (!constant || !constant->getOutput(0)) {
+            loweringError = "TensorRT FP32 constant lowering failed for weight: " +
+                weightName;
+            return nullptr;
+        }
+        constant->setName(cacheKey.c_str());
+        ITensor* output = constant->getOutput(0);
+        output->setName(cacheKey.c_str());
+        weightTensorMap[cacheKey] = output;
+        return output;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::GetOrCreateTRTTensor(X::Value value) {
+        if (!IsTensor(value)) {
+            Dims dimensions{};
+            Weights weights{};
+            if (value.raw().tag == X3_TAG_INT64) {
+                integerWeights.push_back(value.ToLongLong());
+                weights = {DataType::kINT64, &integerWeights.back(), 1};
+            } else if (value.raw().tag == X3_TAG_DOUBLE) {
+                scalarWeights.push_back(static_cast<float>(value.ToDouble()));
+                weights = {DataType::kFLOAT, &scalarWeights.back(), 1};
+            } else {
+                loweringError = "TensorRT operands must be tensors or numeric scalars";
+                return nullptr;
+            }
+            auto* constant = network->addConstant(dimensions, weights);
+            return constant ? constant->getOutput(0) : nullptr;
+        }
+        const unsigned long long id = TensorId(value);
+        auto found = tensorMap.find(id);
+        if (found != tensorMap.end()) {
+            return found->second;
+        }
+        if (IsTensor(value)) {
+            const auto named = capturedTensorNames.find(id);
+            if (named != capturedTensorNames.end() && capturedWeightIndex &&
+                capturedWeightIndex->Find(named->second)) {
+                ITensor* weight = GetOrCreateTRTWeight(named->second);
+                if (weight) tensorMap[id] = weight;
+                return weight;
+            }
+            X::Tensor tensor(value);
+            if (!tensor.Info().symbolic) {
+                if (!IsContiguousTensor(tensor)) {
+                    loweringError = "TensorRT constant must be contiguous";
+                    return nullptr;
+                }
+                auto cpu = TensorHelper::CopyToCPU(tensor);
+                const auto info = cpu.Info();
+                Dims dimensions{};
+                if (info.rank > Dims::MAX_DIMS) {
+                    loweringError = "TensorRT constant rank exceeds backend limit";
+                    return nullptr;
+                }
+                dimensions.nbDims = info.rank;
+                int64_t count = 1;
+                for (uint32_t i = 0; i < info.rank; ++i) {
+                    dimensions.d[i] = TensorDimension(cpu, i);
+                    if (dimensions.d[i] && count > INT64_MAX / dimensions.d[i]) {
+                        loweringError = "TensorRT constant shape overflows";
+                        return nullptr;
+                    }
+                    count *= dimensions.d[i];
+                }
+                DataType type;
+                switch (info.dtype) {
+                    case X3_TENSOR_FLOAT32: type = DataType::kFLOAT; break;
+                    case X3_TENSOR_FLOAT16: type = DataType::kHALF; break;
+                    case X3_TENSOR_BFLOAT16: type = DataType::kBF16; break;
+                    case X3_TENSOR_INT32: type = DataType::kINT32; break;
+                    case X3_TENSOR_INT64: type = DataType::kINT64; break;
+                    default: loweringError = "unsupported TensorRT constant dtype"; return nullptr;
+                }
+                constantTensors.push_back(cpu);
+                auto* layer = network->addConstant(dimensions, Weights{type, info.data, count});
+                if (!layer) return nullptr;
+                tensorMap[id] = layer->getOutput(0);
+                return layer->getOutput(0);
+            }
+        }
+        const auto partitionInput = partitionInputNames.find(id);
+        if (partitionBuildActive && partitionInput != partitionInputNames.end()) {
+            DataType dataType;
+            Dims dimensions{};
+            const auto boundaryMetadata = partitionBoundaryMetadata.find(id);
+            if (boundaryMetadata != partitionBoundaryMetadata.end()) {
+                dataType = boundaryMetadata->second.first;
+                dimensions = boundaryMetadata->second.second;
+            }
+            else {
+                X::Tensor tensor(value);
+                if (tensor.Info().dtype == X3_TENSOR_FLOAT32) dataType = DataType::kFLOAT;
+                else if (tensor.Info().dtype == X3_TENSOR_BFLOAT16) dataType = DataType::kBF16;
+                else if (tensor.Info().dtype == X3_TENSOR_INT64) dataType = DataType::kINT64;
+                else if (tensor.Info().dtype == X3_TENSOR_INT32) dataType = DataType::kINT32;
+                else {
+                    loweringError = "unsupported partition boundary dtype";
+                    return nullptr;
+                }
+                dimensions.nbDims = tensor.Info().rank;
+                if (dimensions.nbDims < 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+                    loweringError = "invalid partition boundary rank";
+                    return nullptr;
+                }
+                for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+                    dimensions.d[dimension] = TensorDimension(tensor, dimension);
+                }
+            }
+            ITensor* input = network->addInput(
+                partitionInput->second.c_str(), dataType, dimensions);
+            if (!input) {
+                loweringError = "TensorRT failed to add partition input " +
+                    partitionInput->second;
+                return nullptr;
+            }
+            tensorMap[id] = input;
+            return input;
+        }
+        loweringError = "graph operand was not produced by an input or an earlier lowered operation";
+        return nullptr;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::BroadcastLastDimension(
+        ITensor* tensor,
+        int targetRank,
+        const std::string& layerName) {
+        if (!tensor) return nullptr;
+        const Dims sourceDimensions = tensor->getDimensions();
+        if (sourceDimensions.nbDims == targetRank) return tensor;
+        if (targetRank > 0 && sourceDimensions.nbDims > targetRank) {
+            const int leadingDimensions = sourceDimensions.nbDims - targetRank;
+            bool leadingSingletons = true;
+            for (int dimension = 0; dimension < leadingDimensions; ++dimension) {
+                leadingSingletons = leadingSingletons &&
+                    sourceDimensions.d[dimension] == 1;
+            }
+            if (leadingSingletons) {
+                Dims collapsedDimensions{};
+                collapsedDimensions.nbDims = targetRank;
+                for (int dimension = 0; dimension < targetRank; ++dimension) {
+                    collapsedDimensions.d[dimension] =
+                        sourceDimensions.d[leadingDimensions + dimension];
+                }
+                auto* collapse = network->addShuffle(*tensor);
+                if (!collapse) {
+                    loweringError = "TensorRT singleton collapse failed for " + layerName;
+                    return nullptr;
+                }
+                collapse->setReshapeDimensions(collapsedDimensions);
+                return collapse->getOutput(0);
+            }
+        }
+        if (sourceDimensions.nbDims != 1 || targetRank <= 1 || targetRank > Dims::MAX_DIMS) {
+            std::string sourceShape = "[";
+            for (int dimension = 0; dimension < sourceDimensions.nbDims; ++dimension) {
+                if (dimension) sourceShape += ",";
+                sourceShape += std::to_string(sourceDimensions.d[dimension]);
+            }
+            sourceShape += "]";
+            loweringError = "cannot broadcast " + layerName +
+                " from rank " + std::to_string(sourceDimensions.nbDims) +
+                " shape " + sourceShape + " to target rank " +
+                std::to_string(targetRank);
+            return nullptr;
+        }
+        Dims broadcastDimensions{};
+        broadcastDimensions.nbDims = targetRank;
+        for (int dimension = 0; dimension < targetRank - 1; ++dimension) {
+            broadcastDimensions.d[dimension] = 1;
+        }
+        broadcastDimensions.d[targetRank - 1] = sourceDimensions.d[0];
+        auto* reshape = network->addShuffle(*tensor);
+        if (!reshape) {
+            loweringError = "TensorRT broadcast reshape failed for " + layerName;
+            return nullptr;
+        }
+        reshape->setReshapeDimensions(broadcastDimensions);
+        return reshape->getOutput(0);
+    }
+
+    nvinfer1::ITensor* TRTBuilder::BroadcastMatrixWeight(ITensor* tensor, int targetRank) {
+        if (!tensor) return nullptr;
+        const Dims sourceDimensions = tensor->getDimensions();
+        if (sourceDimensions.nbDims == targetRank) return tensor;
+        if (sourceDimensions.nbDims != 2 || targetRank < 2 || targetRank > Dims::MAX_DIMS) {
+            loweringError = "matrix weight cannot be broadcast to activation rank";
+            return nullptr;
+        }
+        Dims broadcastDimensions{};
+        broadcastDimensions.nbDims = targetRank;
+        for (int dimension = 0; dimension < targetRank - 2; ++dimension) {
+            broadcastDimensions.d[dimension] = 1;
+        }
+        broadcastDimensions.d[targetRank - 2] = sourceDimensions.d[0];
+        broadcastDimensions.d[targetRank - 1] = sourceDimensions.d[1];
+        auto* reshape = network->addShuffle(*tensor);
+        if (reshape) reshape->setReshapeDimensions(broadcastDimensions);
+        return reshape ? reshape->getOutput(0) : nullptr;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerVisionRope(
+        ITensor* qkv,
+        ITensor* positionIds,
+        X::KWARGS& options) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims positionDims = positionIds->getDimensions();
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 2 || positionDims.nbDims != 2 || positionDims.d[1] != 2 ||
+            heads <= 0 || headDim <= 0 || headDim % 4 != 0 ||
+            qkvDims.d[1] != 3 * heads * headDim) {
+            loweringError = "Qwen3-VL vision RoPE received incompatible static dimensions";
+            return nullptr;
+        }
+        const int tokens = qkvDims.d[0];
+        const int hidden = heads * headDim;
+        auto slice = [&](ITensor* source, int axis, int startValue, int sizeValue) -> ITensor* {
+            const Dims sourceDims = source->getDimensions();
+            Dims start{};
+            Dims size = sourceDims;
+            Dims stride{};
+            start.nbDims = sourceDims.nbDims;
+            stride.nbDims = sourceDims.nbDims;
+            for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
+            start.d[axis] = startValue;
+            size.d[axis] = sizeValue;
+            auto* layer = network->addSlice(*source, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto reshape = [&](ITensor* source, const Dims& dimensions) -> ITensor* {
+            auto* layer = source ? network->addShuffle(*source) : nullptr;
+            if (layer) layer->setReshapeDimensions(dimensions);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+
+        Dims thd{};
+        thd.nbDims = 3;
+        thd.d[0] = tokens;
+        thd.d[1] = heads;
+        thd.d[2] = headDim;
+        ITensor* q = reshape(slice(qkv, 1, 0, hidden), thd);
+        ITensor* k = reshape(slice(qkv, 1, hidden, hidden), thd);
+        ITensor* v = reshape(slice(qkv, 1, 2 * hidden, hidden), thd);
+        auto* qFloat = q ? network->addCast(*q, DataType::kFLOAT) : nullptr;
+        auto* kFloat = k ? network->addCast(*k, DataType::kFLOAT) : nullptr;
+        q = qFloat ? qFloat->getOutput(0) : nullptr;
+        k = kFloat ? kFloat->getOutput(0) : nullptr;
+
+        auto* positionCast = network->addCast(*positionIds, DataType::kFLOAT);
+        Dims positionExpanded{};
+        positionExpanded.nbDims = 3;
+        positionExpanded.d[0] = tokens;
+        positionExpanded.d[1] = 2;
+        positionExpanded.d[2] = 1;
+        ITensor* positions = positionCast
+            ? reshape(positionCast->getOutput(0), positionExpanded)
+            : nullptr;
+        const int frequencyCount = headDim / 4;
+        vectorWeights.emplace_back(static_cast<size_t>(frequencyCount));
+        for (int i = 0; i < frequencyCount; ++i) {
+            vectorWeights.back()[i] = 1.0F / std::pow(
+                10000.0F,
+                static_cast<float>(2 * i) / static_cast<float>(headDim / 2));
+        }
+        Dims frequencyDims{};
+        frequencyDims.nbDims = 3;
+        frequencyDims.d[0] = 1;
+        frequencyDims.d[1] = 1;
+        frequencyDims.d[2] = frequencyCount;
+        Weights frequencies{DataType::kFLOAT, vectorWeights.back().data(), frequencyCount};
+        auto* frequency = network->addConstant(frequencyDims, frequencies);
+        auto* phaseGrid = positions && frequency
+            ? network->addElementWise(
+                *positions,
+                *frequency->getOutput(0),
+                ElementWiseOperation::kPROD)
+            : nullptr;
+        Dims halfPhaseDims{};
+        halfPhaseDims.nbDims = 2;
+        halfPhaseDims.d[0] = tokens;
+        halfPhaseDims.d[1] = headDim / 2;
+        ITensor* halfPhase = phaseGrid
+            ? reshape(phaseGrid->getOutput(0), halfPhaseDims)
+            : nullptr;
+        ITensor* phaseParts[] = {halfPhase, halfPhase};
+        auto* phaseConcat = halfPhase ? network->addConcatenation(phaseParts, 2) : nullptr;
+        if (phaseConcat) phaseConcat->setAxis(1);
+        auto* cosine = phaseConcat
+            ? network->addUnary(*phaseConcat->getOutput(0), UnaryOperation::kCOS)
+            : nullptr;
+        auto* sine = phaseConcat
+            ? network->addUnary(*phaseConcat->getOutput(0), UnaryOperation::kSIN)
+            : nullptr;
+        Dims phaseBroadcastDims{};
+        phaseBroadcastDims.nbDims = 3;
+        phaseBroadcastDims.d[0] = tokens;
+        phaseBroadcastDims.d[1] = 1;
+        phaseBroadcastDims.d[2] = headDim;
+        ITensor* cosBroadcast = cosine
+            ? reshape(cosine->getOutput(0), phaseBroadcastDims)
+            : nullptr;
+        ITensor* sinBroadcast = sine
+            ? reshape(sine->getOutput(0), phaseBroadcastDims)
+            : nullptr;
+        auto rotateHalf = [&](ITensor* source) -> ITensor* {
+            ITensor* first = slice(source, 2, 0, headDim / 2);
+            ITensor* second = slice(source, 2, headDim / 2, headDim / 2);
+            auto* negativeSecond = second
+                ? network->addUnary(*second, UnaryOperation::kNEG)
+                : nullptr;
+            ITensor* parts[] = {negativeSecond ? negativeSecond->getOutput(0) : nullptr, first};
+            auto* concat = parts[0] && parts[1]
+                ? network->addConcatenation(parts, 2)
+                : nullptr;
+            if (concat) concat->setAxis(2);
+            return concat ? concat->getOutput(0) : nullptr;
+        };
+        auto applyRope = [&](ITensor* source) -> ITensor* {
+            ITensor* rotated = rotateHalf(source);
+            auto* base = source && cosBroadcast
+                ? network->addElementWise(*source, *cosBroadcast, ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* cross = rotated && sinBroadcast
+                ? network->addElementWise(*rotated, *sinBroadcast, ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* sum = base && cross
+                ? network->addElementWise(
+                    *base->getOutput(0),
+                    *cross->getOutput(0),
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            return sum ? sum->getOutput(0) : nullptr;
+        };
+        Dims flatHidden{};
+        flatHidden.nbDims = 2;
+        flatHidden.d[0] = tokens;
+        flatHidden.d[1] = hidden;
+        ITensor* qRotated = applyRope(q);
+        ITensor* kRotated = applyRope(k);
+        auto* qCast = qRotated ? network->addCast(*qRotated, qkv->getType()) : nullptr;
+        auto* kCast = kRotated ? network->addCast(*kRotated, qkv->getType()) : nullptr;
+        qRotated = reshape(qCast ? qCast->getOutput(0) : nullptr, flatHidden);
+        kRotated = reshape(kCast ? kCast->getOutput(0) : nullptr, flatHidden);
+        v = reshape(v, flatHidden);
+        ITensor* packedParts[] = {qRotated, kRotated, v};
+        auto* packed = qRotated && kRotated && v
+            ? network->addConcatenation(packedParts, 3)
+            : nullptr;
+        if (packed) packed->setAxis(1);
+        return packed ? packed->getOutput(0) : nullptr;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerVisionAttention(
+        ITensor* qkv,
+        ITensor* cuSeqlens,
+        X::KWARGS& options) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims sequenceDims = cuSeqlens->getDimensions();
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 2 || sequenceDims.nbDims != 1 || sequenceDims.d[0] != 2 ||
+            heads <= 0 || headDim <= 0 || qkvDims.d[1] != 3 * heads * headDim) {
+            loweringError = "vision attention currently requires one packed vision sequence";
+            return nullptr;
+        }
+        const int tokens = qkvDims.d[0];
+        const int hidden = heads * headDim;
+        auto sliceColumns = [&](int startColumn) -> ITensor* {
+            Dims start{};
+            start.nbDims = 2;
+            start.d[1] = startColumn;
+            Dims size{};
+            size.nbDims = 2;
+            size.d[0] = tokens;
+            size.d[1] = hidden;
+            Dims stride{};
+            stride.nbDims = 2;
+            stride.d[0] = 1;
+            stride.d[1] = 1;
+            auto* layer = network->addSlice(*qkv, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto toAttentionInput = [&](ITensor* source) -> ITensor* {
+            Dims dimensions{};
+            dimensions.nbDims = 4;
+            dimensions.d[0] = 1;
+            dimensions.d[1] = tokens;
+            dimensions.d[2] = heads;
+            dimensions.d[3] = headDim;
+            auto* shuffle = source ? network->addShuffle(*source) : nullptr;
+            if (!shuffle) return nullptr;
+            shuffle->setReshapeDimensions(dimensions);
+            Permutation permutation{};
+            permutation.order[0] = 0;
+            permutation.order[1] = 2;
+            permutation.order[2] = 1;
+            permutation.order[3] = 3;
+            shuffle->setSecondTranspose(permutation);
+            return shuffle->getOutput(0);
+        };
+        ITensor* q = toAttentionInput(sliceColumns(0));
+        ITensor* k = toAttentionInput(sliceColumns(hidden));
+        ITensor* v = toAttentionInput(sliceColumns(2 * hidden));
+        const float queryScaleValue = 1.0F / std::sqrt(static_cast<float>(headDim));
+        DataType queryScaleType = q ? q->getType() : DataType::kFLOAT;
+        const void* queryScalePointer = nullptr;
+        if (queryScaleType == DataType::kBF16) {
+            uint32_t scaleBits = 0;
+            std::memcpy(&scaleBits, &queryScaleValue, sizeof(scaleBits));
+            scaleBits += 0x7FFFU + ((scaleBits >> 16U) & 1U);
+            bfloat16ScalarWeights.push_back(static_cast<unsigned short>(scaleBits >> 16U));
+            queryScalePointer = &bfloat16ScalarWeights.back();
+        }
+        else if (queryScaleType == DataType::kFLOAT) {
+            scalarWeights.push_back(queryScaleValue);
+            queryScalePointer = &scalarWeights.back();
+        }
+        else {
+            loweringError = "fused vision attention requires BF16 or FP32 QKV";
+            return nullptr;
+        }
+        Weights emptyWeights{queryScaleType, nullptr, 0};
+        Weights queryScaleWeights{queryScaleType, queryScalePointer, 1};
+        auto* queryScale = q
+            ? network->addScale(
+                *q, ScaleMode::kUNIFORM,
+                emptyWeights, queryScaleWeights, emptyWeights)
+            : nullptr;
+        q = queryScale ? queryScale->getOutput(0) : nullptr;
+        auto* attention = q && k && v
+            ? network->addAttention(
+                *q, *k, *v, AttentionNormalizationOp::kSOFTMAX, false)
+            : nullptr;
+        auto* output = attention
+            ? network->addShuffle(*attention->getOutput(0))
+            : nullptr;
+        if (!output) return nullptr;
+        Permutation permutation{};
+        permutation.order[0] = 0;
+        permutation.order[1] = 2;
+        permutation.order[2] = 1;
+        permutation.order[3] = 3;
+        output->setFirstTranspose(permutation);
+        Dims outputDims{};
+        outputDims.nbDims = 2;
+        outputDims.d[0] = tokens;
+        outputDims.d[1] = hidden;
+        output->setReshapeDimensions(outputDims);
+        return output->getOutput(0);
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerTextRope(
+        ITensor* qkv,
+        ITensor* positionIds,
+        X::KWARGS& options,
+        bool multimodal) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims positionDims = positionIds->getDimensions();
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* kvHeadsItem = FindKeyword(options, "num_kv_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
+        const int positionComponents = multimodal ? 3 : 1;
+        if (qkvDims.nbDims != 3 || positionDims.nbDims != 3 ||
+            positionDims.d[0] != positionComponents ||
+            heads <= 0 || kvHeads <= 0 || headDim <= 0 || headDim % 2 != 0 ||
+            qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
+            loweringError = multimodal
+                ? "Qwen3-VL text RoPE received incompatible static dimensions"
+                : "Qwen3 text RoPE received incompatible static dimensions";
+            return nullptr;
+        }
+        const int batch = qkvDims.d[0];
+        const int tokens = qkvDims.d[1];
+        const int qWidth = heads * headDim;
+        const int kvWidth = kvHeads * headDim;
+        auto reshape = [&](ITensor* source, const Dims& dimensions) -> ITensor* {
+            auto* layer = source ? network->addShuffle(*source) : nullptr;
+            if (layer) layer->setReshapeDimensions(dimensions);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto sliceLast = [&](ITensor* source, int startValue, int sizeValue) -> ITensor* {
+            const Dims sourceDims = source->getDimensions();
+            Dims start{};
+            Dims size = sourceDims;
+            Dims stride{};
+            start.nbDims = sourceDims.nbDims;
+            stride.nbDims = sourceDims.nbDims;
+            for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
+            start.d[sourceDims.nbDims - 1] = startValue;
+            size.d[sourceDims.nbDims - 1] = sizeValue;
+            auto* layer = network->addSlice(*source, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+
+        const int frequencyCount = headDim / 2;
+        int sections[3] = {24, 20, 20};
+        auto* sectionsItem = FindKeyword(options, "mrope_section");
+        if (sectionsItem && sectionsItem->second.IsList()) {
+            X::Value sectionValues(sectionsItem->second);
+            if (sectionValues.Size() == 3) {
+                for (int i = 0; i < 3; ++i) {
+                    sections[i] = static_cast<int>(sectionValues[i].ToLongLong());
+                }
+            }
+        }
+        ITensor* selectedPositionTensor = positionIds;
+        if (multimodal) {
+            integerVectorWeights.emplace_back(static_cast<size_t>(frequencyCount), 0);
+            for (int i = 0; i < sections[1]; ++i) {
+                const int index = 1 + 3 * i;
+                if (index < frequencyCount) integerVectorWeights.back()[index] = 1;
+            }
+            for (int i = 0; i < sections[2]; ++i) {
+                const int index = 2 + 3 * i;
+                if (index < frequencyCount) integerVectorWeights.back()[index] = 2;
+            }
+            Dims selectorDims{};
+            selectorDims.nbDims = 1;
+            selectorDims.d[0] = frequencyCount;
+            Weights selectorWeights{
+                DataType::kINT32,
+                integerVectorWeights.back().data(),
+                frequencyCount};
+            auto* selector = network->addConstant(selectorDims, selectorWeights);
+            auto* selectedPositions = selector
+                ? network->addGather(*positionIds, *selector->getOutput(0), 0)
+                : nullptr;
+            selectedPositionTensor =
+                selectedPositions ? selectedPositions->getOutput(0) : nullptr;
+        }
+        auto* positionTranspose = selectedPositionTensor
+            ? network->addShuffle(*selectedPositionTensor)
+            : nullptr;
+        if (positionTranspose) {
+            Permutation permutation{};
+            permutation.order[0] = 1;
+            permutation.order[1] = 2;
+            permutation.order[2] = 0;
+            positionTranspose->setFirstTranspose(permutation);
+        }
+        auto* positionFloat = positionTranspose
+            ? network->addCast(*positionTranspose->getOutput(0), DataType::kFLOAT)
+            : nullptr;
+
+        vectorWeights.emplace_back(static_cast<size_t>(frequencyCount));
+        auto* thetaItem = FindKeyword(options, "rope_theta");
+        const float theta = thetaItem ? static_cast<float>(thetaItem->second.ToDouble()) : 10000.0F;
+        for (int i = 0; i < frequencyCount; ++i) {
+            vectorWeights.back()[i] = 1.0F / std::pow(
+                theta,
+                static_cast<float>(2 * i) / static_cast<float>(headDim));
+        }
+        Dims frequencyDims{};
+        frequencyDims.nbDims = 3;
+        frequencyDims.d[0] = 1;
+        frequencyDims.d[1] = 1;
+        frequencyDims.d[2] = frequencyCount;
+        Weights frequencyWeights{
+            DataType::kFLOAT,
+            vectorWeights.back().data(),
+            frequencyCount};
+        auto* frequencies = network->addConstant(frequencyDims, frequencyWeights);
+        auto* phase = positionFloat && frequencies
+            ? network->addElementWise(
+                *positionFloat->getOutput(0),
+                *frequencies->getOutput(0),
+                ElementWiseOperation::kPROD)
+            : nullptr;
+        ITensor* phaseParts[] = {phase ? phase->getOutput(0) : nullptr, phase ? phase->getOutput(0) : nullptr};
+        auto* fullPhase = phase ? network->addConcatenation(phaseParts, 2) : nullptr;
+        if (fullPhase) fullPhase->setAxis(2);
+        auto* cosine = fullPhase
+            ? network->addUnary(*fullPhase->getOutput(0), UnaryOperation::kCOS)
+            : nullptr;
+        auto* sine = fullPhase
+            ? network->addUnary(*fullPhase->getOutput(0), UnaryOperation::kSIN)
+            : nullptr;
+        Dims ropeBroadcastDims{};
+        ropeBroadcastDims.nbDims = 4;
+        ropeBroadcastDims.d[0] = batch;
+        ropeBroadcastDims.d[1] = tokens;
+        ropeBroadcastDims.d[2] = 1;
+        ropeBroadcastDims.d[3] = headDim;
+        ITensor* cosBroadcast = cosine
+            ? reshape(cosine->getOutput(0), ropeBroadcastDims)
+            : nullptr;
+        ITensor* sinBroadcast = sine
+            ? reshape(sine->getOutput(0), ropeBroadcastDims)
+            : nullptr;
+
+        Dims qHeadDims{};
+        qHeadDims.nbDims = 4;
+        qHeadDims.d[0] = batch;
+        qHeadDims.d[1] = tokens;
+        qHeadDims.d[2] = heads;
+        qHeadDims.d[3] = headDim;
+        Dims kvHeadDims = qHeadDims;
+        kvHeadDims.d[2] = kvHeads;
+        ITensor* q = reshape(sliceLast(qkv, 0, qWidth), qHeadDims);
+        ITensor* k = reshape(sliceLast(qkv, qWidth, kvWidth), kvHeadDims);
+        ITensor* v = sliceLast(qkv, qWidth + kvWidth, kvWidth);
+        auto applyRope = [&](ITensor* source) -> ITensor* {
+            auto* sourceFloatLayer = source ? network->addCast(*source, DataType::kFLOAT) : nullptr;
+            ITensor* sourceFloat = sourceFloatLayer ? sourceFloatLayer->getOutput(0) : nullptr;
+            ITensor* first = sliceLast(sourceFloat, 0, headDim / 2);
+            ITensor* second = sliceLast(sourceFloat, headDim / 2, headDim / 2);
+            auto* negativeSecond = second
+                ? network->addUnary(*second, UnaryOperation::kNEG)
+                : nullptr;
+            ITensor* rotatedParts[] = {negativeSecond ? negativeSecond->getOutput(0) : nullptr, first};
+            auto* rotated = rotatedParts[0] && rotatedParts[1]
+                ? network->addConcatenation(rotatedParts, 2)
+                : nullptr;
+            if (rotated) rotated->setAxis(3);
+            auto* base = sourceFloat && cosBroadcast
+                ? network->addElementWise(*sourceFloat, *cosBroadcast, ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* cross = rotated && sinBroadcast
+                ? network->addElementWise(
+                    *rotated->getOutput(0),
+                    *sinBroadcast,
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* sum = base && cross
+                ? network->addElementWise(
+                    *base->getOutput(0),
+                    *cross->getOutput(0),
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            auto* cast = sum ? network->addCast(*sum->getOutput(0), qkv->getType()) : nullptr;
+            return cast ? cast->getOutput(0) : nullptr;
+        };
+        q = applyRope(q);
+        k = applyRope(k);
+        Dims qFlatDims{};
+        qFlatDims.nbDims = 3;
+        qFlatDims.d[0] = batch;
+        qFlatDims.d[1] = tokens;
+        qFlatDims.d[2] = qWidth;
+        Dims kvFlatDims = qFlatDims;
+        kvFlatDims.d[2] = kvWidth;
+        q = reshape(q, qFlatDims);
+        k = reshape(k, kvFlatDims);
+        ITensor* packedInputs[] = {q, k, v};
+        auto* packed = q && k && v ? network->addConcatenation(packedInputs, 3) : nullptr;
+        if (packed) packed->setAxis(2);
+        return packed ? packed->getOutput(0) : nullptr;
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerTextAttention(
+        ITensor* qkv,
+        ITensor* attentionMask,
+        X::KWARGS& options) {
+        const char* fusedTextAttention = std::getenv("GARNET_FUSED_TEXT_ATTENTION");
+        if (fusedTextAttention && std::string(fusedTextAttention) == "1") {
+            return LowerFusedTextAttention(qkv, attentionMask, options);
+        }
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims maskDims = attentionMask->getDimensions();
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* kvHeadsItem = FindKeyword(options, "num_key_value_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 3 || maskDims.nbDims != 2 || heads <= 0 || kvHeads <= 0 ||
+            heads % kvHeads != 0 || headDim <= 0 ||
+            qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
+            loweringError = "Qwen3 text attention received incompatible static dimensions";
+            return nullptr;
+        }
+        const int batch = qkvDims.d[0];
+        const int tokens = qkvDims.d[1];
+        const int qWidth = heads * headDim;
+        const int kvWidth = kvHeads * headDim;
+        auto sliceLast = [&](int startValue, int sizeValue) -> ITensor* {
+            Dims start{};
+            Dims size = qkvDims;
+            Dims stride{};
+            start.nbDims = qkvDims.nbDims;
+            stride.nbDims = qkvDims.nbDims;
+            for (int i = 0; i < qkvDims.nbDims; ++i) stride.d[i] = 1;
+            start.d[2] = startValue;
+            size.d[2] = sizeValue;
+            auto* layer = network->addSlice(*qkv, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto reshape = [&](ITensor* source, const Dims& dimensions) -> ITensor* {
+            auto* layer = source ? network->addShuffle(*source) : nullptr;
+            if (layer) layer->setReshapeDimensions(dimensions);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        Dims qHeadDims{};
+        qHeadDims.nbDims = 4;
+        qHeadDims.d[0] = batch;
+        qHeadDims.d[1] = tokens;
+        qHeadDims.d[2] = heads;
+        qHeadDims.d[3] = headDim;
+        Dims kvHeadDims = qHeadDims;
+        kvHeadDims.d[2] = kvHeads;
+        ITensor* q = reshape(sliceLast(0, qWidth), qHeadDims);
+        ITensor* k = reshape(sliceLast(qWidth, kvWidth), kvHeadDims);
+        ITensor* v = reshape(sliceLast(qWidth + kvWidth, kvWidth), kvHeadDims);
+
+        integerVectorWeights.emplace_back(static_cast<size_t>(heads));
+        const int repeats = heads / kvHeads;
+        for (int head = 0; head < heads; ++head) {
+            integerVectorWeights.back()[head] = head / repeats;
+        }
+        Dims repeatIndexDims{};
+        repeatIndexDims.nbDims = 1;
+        repeatIndexDims.d[0] = heads;
+        Weights repeatIndexWeights{
+            DataType::kINT32,
+            integerVectorWeights.back().data(),
+            heads};
+        auto* repeatIndices = network->addConstant(repeatIndexDims, repeatIndexWeights);
+        auto* repeatedK = repeatIndices ? network->addGather(*k, *repeatIndices->getOutput(0), 2) : nullptr;
+        auto* repeatedV = repeatIndices ? network->addGather(*v, *repeatIndices->getOutput(0), 2) : nullptr;
+        k = repeatedK ? repeatedK->getOutput(0) : nullptr;
+        v = repeatedV ? repeatedV->getOutput(0) : nullptr;
+        auto headMajorFloat = [&](ITensor* source) -> ITensor* {
+            auto* shuffle = source ? network->addShuffle(*source) : nullptr;
+            if (!shuffle) return nullptr;
+            Permutation permutation{};
+            permutation.order[0] = 0;
+            permutation.order[1] = 2;
+            permutation.order[2] = 1;
+            permutation.order[3] = 3;
+            shuffle->setFirstTranspose(permutation);
+            auto* cast = network->addCast(*shuffle->getOutput(0), DataType::kFLOAT);
+            return cast ? cast->getOutput(0) : nullptr;
+        };
+        q = headMajorFloat(q);
+        k = headMajorFloat(k);
+        v = headMajorFloat(v);
+        auto* scores = q && k
+            ? network->addMatrixMultiply(
+                *q,
+                MatrixOperation::kNONE,
+                *k,
+                MatrixOperation::kTRANSPOSE)
+            : nullptr;
+        scalarWeights.push_back(1.0F / std::sqrt(static_cast<float>(headDim)));
+        Dims scalar4Dims{};
+        scalar4Dims.nbDims = 4;
+        scalar4Dims.d[0] = 1;
+        scalar4Dims.d[1] = 1;
+        scalar4Dims.d[2] = 1;
+        scalar4Dims.d[3] = 1;
+        Weights scaleWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+        auto* scale = network->addConstant(scalar4Dims, scaleWeights);
+        auto* scaledScores = scores && scale
+            ? network->addElementWise(
+                *scores->getOutput(0),
+                *scale->getOutput(0),
+                ElementWiseOperation::kPROD)
+            : nullptr;
+
+        integerWeights.push_back(0);
+        Dims maskScalarDims{};
+        maskScalarDims.nbDims = 2;
+        maskScalarDims.d[0] = 1;
+        maskScalarDims.d[1] = 1;
+        Weights zeroWeights{DataType::kINT64, &integerWeights.back(), 1};
+        auto* zero = network->addConstant(maskScalarDims, zeroWeights);
+        auto* paddingMask = zero
+            ? network->addElementWise(*attentionMask, *zero->getOutput(0), ElementWiseOperation::kEQUAL)
+            : nullptr;
+        auto* paddingFloat = paddingMask
+            ? network->addCast(*paddingMask->getOutput(0), DataType::kFLOAT)
+            : nullptr;
+        Dims paddingDims{};
+        paddingDims.nbDims = 4;
+        paddingDims.d[0] = batch;
+        paddingDims.d[1] = 1;
+        paddingDims.d[2] = 1;
+        paddingDims.d[3] = tokens;
+        ITensor* padding = paddingFloat ? reshape(paddingFloat->getOutput(0), paddingDims) : nullptr;
+        scalarWeights.push_back(-10000.0F);
+        Weights negativeWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+        auto* negative = network->addConstant(scalar4Dims, negativeWeights);
+        auto* paddingBias = padding && negative
+            ? network->addElementWise(*padding, *negative->getOutput(0), ElementWiseOperation::kPROD)
+            : nullptr;
+
+        vectorWeights.emplace_back(static_cast<size_t>(tokens) * static_cast<size_t>(tokens), 0.0F);
+        for (int query = 0; query < tokens; ++query) {
+            for (int key = query + 1; key < tokens; ++key) {
+                vectorWeights.back()[static_cast<size_t>(query) * tokens + key] = -10000.0F;
+            }
+        }
+        Dims causalDims{};
+        causalDims.nbDims = 4;
+        causalDims.d[0] = 1;
+        causalDims.d[1] = 1;
+        causalDims.d[2] = tokens;
+        causalDims.d[3] = tokens;
+        Weights causalWeights{
+            DataType::kFLOAT,
+            vectorWeights.back().data(),
+            static_cast<int64_t>(tokens) * tokens};
+        auto* causal = network->addConstant(causalDims, causalWeights);
+        auto* withCausal = scaledScores && causal
+            ? network->addElementWise(
+                *scaledScores->getOutput(0),
+                *causal->getOutput(0),
+                ElementWiseOperation::kSUM)
+            : nullptr;
+        auto* maskedScores = withCausal && paddingBias
+            ? network->addElementWise(
+                *withCausal->getOutput(0),
+                *paddingBias->getOutput(0),
+                ElementWiseOperation::kSUM)
+            : nullptr;
+        auto* softmax = maskedScores ? network->addSoftMax(*maskedScores->getOutput(0)) : nullptr;
+        if (softmax) softmax->setAxes(1U << 3);
+        auto* context = softmax && v
+            ? network->addMatrixMultiply(
+                *softmax->getOutput(0),
+                MatrixOperation::kNONE,
+                *v,
+                MatrixOperation::kNONE)
+            : nullptr;
+        auto* contextCast = context
+            ? network->addCast(*context->getOutput(0), qkv->getType())
+            : nullptr;
+        auto* output = contextCast ? network->addShuffle(*contextCast->getOutput(0)) : nullptr;
+        if (!output) return nullptr;
+        Permutation permutation{};
+        permutation.order[0] = 0;
+        permutation.order[1] = 2;
+        permutation.order[2] = 1;
+        permutation.order[3] = 3;
+        output->setFirstTranspose(permutation);
+        Dims outputDims{};
+        outputDims.nbDims = 3;
+        outputDims.d[0] = batch;
+        outputDims.d[1] = tokens;
+        outputDims.d[2] = qWidth;
+        output->setReshapeDimensions(outputDims);
+        return output->getOutput(0);
+    }
+
+    nvinfer1::ITensor* TRTBuilder::LowerFusedTextAttention(
+        ITensor* qkv,
+        ITensor* attentionMask,
+        X::KWARGS& options) {
+        const Dims qkvDims = qkv->getDimensions();
+        const Dims maskDims = attentionMask->getDimensions();
+        auto* headsItem = FindKeyword(options, "num_heads");
+        auto* kvHeadsItem = FindKeyword(options, "num_key_value_heads");
+        auto* headDimItem = FindKeyword(options, "head_dim");
+        const int heads = headsItem ? static_cast<int>(headsItem->second.ToLongLong()) : 0;
+        const int kvHeads = kvHeadsItem ? static_cast<int>(kvHeadsItem->second.ToLongLong()) : 0;
+        const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
+        if (qkvDims.nbDims != 3 || maskDims.nbDims != 2 || heads <= 0 || kvHeads <= 0 ||
+            heads % kvHeads != 0 || headDim <= 0 ||
+            qkvDims.d[2] != (heads + 2 * kvHeads) * headDim) {
+            loweringError = "fused Qwen3 text attention received incompatible static dimensions";
+            return nullptr;
+        }
+        const int batch = qkvDims.d[0];
+        const int tokens = qkvDims.d[1];
+        const int qWidth = heads * headDim;
+        const int kvWidth = kvHeads * headDim;
+        auto sliceLast = [&](int startValue, int sizeValue) -> ITensor* {
+            Dims start{};
+            Dims size = qkvDims;
+            Dims stride{};
+            start.nbDims = qkvDims.nbDims;
+            stride.nbDims = qkvDims.nbDims;
+            for (int index = 0; index < qkvDims.nbDims; ++index) stride.d[index] = 1;
+            start.d[2] = startValue;
+            size.d[2] = sizeValue;
+            auto* layer = network->addSlice(*qkv, start, size, stride);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        auto reshape = [&](ITensor* source, const Dims& dimensions) -> ITensor* {
+            auto* layer = source ? network->addShuffle(*source) : nullptr;
+            if (layer) layer->setReshapeDimensions(dimensions);
+            return layer ? layer->getOutput(0) : nullptr;
+        };
+        Dims qHeadDims{};
+        qHeadDims.nbDims = 4;
+        qHeadDims.d[0] = batch;
+        qHeadDims.d[1] = tokens;
+        qHeadDims.d[2] = heads;
+        qHeadDims.d[3] = headDim;
+        Dims kvHeadDims = qHeadDims;
+        kvHeadDims.d[2] = kvHeads;
+        ITensor* q = reshape(sliceLast(0, qWidth), qHeadDims);
+        ITensor* k = reshape(sliceLast(qWidth, kvWidth), kvHeadDims);
+        ITensor* v = reshape(sliceLast(qWidth + kvWidth, kvWidth), kvHeadDims);
+
+        integerVectorWeights.emplace_back(static_cast<size_t>(heads));
+        const int repeats = heads / kvHeads;
+        for (int head = 0; head < heads; ++head) {
+            integerVectorWeights.back()[head] = head / repeats;
+        }
+        Dims repeatIndexDims{};
+        repeatIndexDims.nbDims = 1;
+        repeatIndexDims.d[0] = heads;
+        Weights repeatIndexWeights{
+            DataType::kINT32, integerVectorWeights.back().data(), heads};
+        auto* repeatIndices = network->addConstant(repeatIndexDims, repeatIndexWeights);
+        auto* repeatedK = repeatIndices
+            ? network->addGather(*k, *repeatIndices->getOutput(0), 2)
+            : nullptr;
+        auto* repeatedV = repeatIndices
+            ? network->addGather(*v, *repeatIndices->getOutput(0), 2)
+            : nullptr;
+        k = repeatedK ? repeatedK->getOutput(0) : nullptr;
+        v = repeatedV ? repeatedV->getOutput(0) : nullptr;
+
+        auto headMajor = [&](ITensor* source) -> ITensor* {
+            auto* shuffle = source ? network->addShuffle(*source) : nullptr;
+            if (!shuffle) return nullptr;
+            Permutation permutation{};
+            permutation.order[0] = 0;
+            permutation.order[1] = 2;
+            permutation.order[2] = 1;
+            permutation.order[3] = 3;
+            shuffle->setFirstTranspose(permutation);
+            return shuffle->getOutput(0);
+        };
+        q = headMajor(q);
+        k = headMajor(k);
+        v = headMajor(v);
+
+        const float queryScaleValue = 1.0F / std::sqrt(static_cast<float>(headDim));
+        DataType queryScaleType = q ? q->getType() : DataType::kFLOAT;
+        const void* queryScalePointer = nullptr;
+        if (queryScaleType == DataType::kBF16) {
+            uint32_t scaleBits = 0;
+            std::memcpy(&scaleBits, &queryScaleValue, sizeof(scaleBits));
+            scaleBits += 0x7FFFU + ((scaleBits >> 16U) & 1U);
+            bfloat16ScalarWeights.push_back(static_cast<unsigned short>(scaleBits >> 16U));
+            queryScalePointer = &bfloat16ScalarWeights.back();
+        }
+        else if (queryScaleType == DataType::kFLOAT) {
+            scalarWeights.push_back(queryScaleValue);
+            queryScalePointer = &scalarWeights.back();
+        }
+        else {
+            loweringError = "fused text attention requires BF16 or FP32 QKV";
+            return nullptr;
+        }
+        Weights emptyWeights{queryScaleType, nullptr, 0};
+        Weights queryScaleWeights{queryScaleType, queryScalePointer, 1};
+        auto* queryScale = q
+            ? network->addScale(
+                *q, ScaleMode::kUNIFORM,
+                emptyWeights, queryScaleWeights, emptyWeights)
+            : nullptr;
+        q = queryScale ? queryScale->getOutput(0) : nullptr;
+
+        integerWeights.push_back(0);
+        Dims zeroDims{};
+        zeroDims.nbDims = 2;
+        zeroDims.d[0] = 1;
+        zeroDims.d[1] = 1;
+        Weights zeroWeights{DataType::kINT64, &integerWeights.back(), 1};
+        auto* zero = network->addConstant(zeroDims, zeroWeights);
+        auto* paddingInvalid = zero
+            ? network->addElementWise(
+                *attentionMask, *zero->getOutput(0), ElementWiseOperation::kEQUAL)
+            : nullptr;
+        auto* paddingValid = paddingInvalid
+            ? network->addUnary(*paddingInvalid->getOutput(0), UnaryOperation::kNOT)
+            : nullptr;
+        Dims paddingDims{};
+        paddingDims.nbDims = 4;
+        paddingDims.d[0] = batch;
+        paddingDims.d[1] = 1;
+        paddingDims.d[2] = 1;
+        paddingDims.d[3] = tokens;
+        ITensor* validKeys = paddingValid
+            ? reshape(paddingValid->getOutput(0), paddingDims)
+            : nullptr;
+
+        booleanVectorWeights.emplace_back(
+            static_cast<size_t>(tokens) * static_cast<size_t>(tokens), 0);
+        for (int query = 0; query < tokens; ++query) {
+            for (int key = 0; key <= query; ++key) {
+                booleanVectorWeights.back()[static_cast<size_t>(query) * tokens + key] = 1;
+            }
+        }
+        Dims causalDims{};
+        causalDims.nbDims = 4;
+        causalDims.d[0] = 1;
+        causalDims.d[1] = 1;
+        causalDims.d[2] = tokens;
+        causalDims.d[3] = tokens;
+        Weights causalWeights{
+            DataType::kBOOL,
+            booleanVectorWeights.back().data(),
+            static_cast<int64_t>(tokens) * tokens};
+        auto* causal = network->addConstant(causalDims, causalWeights);
+        auto* allowed = causal && validKeys
+            ? network->addElementWise(
+                *causal->getOutput(0), *validKeys, ElementWiseOperation::kAND)
+            : nullptr;
+        auto* attention = q && k && v
+            ? network->addAttention(
+                *q, *k, *v, AttentionNormalizationOp::kSOFTMAX, false)
+            : nullptr;
+        if (!attention || !allowed || !attention->setMask(*allowed->getOutput(0))) {
+            loweringError = "failed to configure fused text attention mask";
+            return nullptr;
+        }
+        auto* output = network->addShuffle(*attention->getOutput(0));
+        if (!output) return nullptr;
+        Permutation permutation{};
+        permutation.order[0] = 0;
+        permutation.order[1] = 2;
+        permutation.order[2] = 1;
+        permutation.order[3] = 3;
+        output->setFirstTranspose(permutation);
+        Dims outputDims{};
+        outputDims.nbDims = 3;
+        outputDims.d[0] = batch;
+        outputDims.d[1] = tokens;
+        outputDims.d[2] = qWidth;
+        output->setReshapeDimensions(outputDims);
+        return output->getOutput(0);
+    }
+
+    bool TRTBuilder::BuildCapturedGraph(
+        X::Value graph,
+        X::Value forwardFunction,
+        X::ARGS& graphArguments,
+        X::ARGS& symbolicInputs,
+        const SafeTensorsIndex* weightIndex,
+        const std::string& enginePath,
+        std::string& errorMessage) {
+        capturedTensorNames.clear();
+        unsigned long long graphOutputId = 0;
+        try {
+            TensorGraphCapture capture(graph);
+            std::vector<unsigned long long> outputIds;
+            AppendTensorDependencies(capture.Outputs(), outputIds);
+            if (outputIds.size() != 1)
+                throw std::runtime_error("compiled TensorRT graph requires one tensor output");
+            graphOutputId = outputIds.front();
+            for (const auto& operation : capture.Operations()) {
+                if (!operation.provider.empty() || operation.name != "input") continue;
+                for (uint64_t i = 0; i < operation.attributes.Size(); ++i) {
+                    X::Value key, value;
+                    if (!operation.attributes.DictEntry(i, key, value))
+                        throw std::runtime_error("invalid symbolic input attributes");
+                    if (key.ToString() == "name" && value.IsString())
+                        capturedTensorNames[operation.id] = value.ToString();
+                }
+            }
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
+            return false;
+        }
+        tensorMap.clear();
+        constantTensors.clear();
+        weightTensorMap.clear();
+        scalarWeights.clear();
+        bfloat16ScalarWeights.clear();
+        integerWeights.clear();
+        vectorWeights.clear();
+        integerVectorWeights.clear();
+        booleanVectorWeights.clear();
+        lastOutput = nullptr;
+        pendingKVKeyPages = nullptr;
+        pendingKVValuePages = nullptr;
+        pendingKVPageTable = nullptr;
+        pendingKVContextLength = nullptr;
+        pendingKVSlotPosition = nullptr;
+        pendingKVActiveMask = nullptr;
+        for (auto* plugin : ownedPlugins) plugin->destroy();
+        ownedPlugins.clear();
+        loweringError.clear();
+        loweringActive = true;
+        branchParentActivity.clear();
+        flowBranchTaken.clear();
+        capturedWeightIndex = weightIndex;
+        capturedWeightFiles.clear();
+
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return false;
+        }
+        builder = createInferBuilder(gLogger);
+        if (!builder) {
+            errorMessage = "TensorRT createInferBuilder failed";
+            return false;
+        }
+        const uint32_t flags =
+            (ExplicitBatchNetworkFlag()) |
+            (1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kSTRONGLY_TYPED));
+        network = builder->createNetworkV2(flags);
+        config = builder->createBuilderConfig();
+        if (!network || !config) {
+            errorMessage = "TensorRT network/config creation failed";
+            delete config;
+            delete network;
+            delete builder;
+            config = nullptr;
+            network = nullptr;
+            builder = nullptr;
+            return false;
+        }
+        config->setMemoryPoolLimit(
+            MemoryPoolType::kWORKSPACE, capturedWorkspaceBytes);
+        config->setBuilderOptimizationLevel(capturedOptimizationLevel);
+        if (capturedWeightIndex && capturedWeightIndex->TensorCount() > 0) {
+            config->setFlag(BuilderFlag::kREFIT_INDIVIDUAL);
+            config->setFlag(BuilderFlag::kSTRIP_PLAN);
+        }
+
+        for (size_t index = 0; index < symbolicInputs.size(); ++index) {
+            X::Value inputValue = symbolicInputs[index];
+            if (partitionBuildActive &&
+                partitionInputNames.find(TensorId(inputValue)) ==
+                    partitionInputNames.end()) {
+                continue;
+            }
+            if (!IsTensor(inputValue)) {
+                loweringError = "compiled graph inputs must be tensors";
+                break;
+            }
+            X::Tensor input(inputValue);
+            DataType trtDataType;
+            if (input.Info().dtype == X3_TENSOR_FLOAT32) {
+                trtDataType = DataType::kFLOAT;
+            }
+            else if (input.Info().dtype == X3_TENSOR_BFLOAT16) {
+                trtDataType = DataType::kBF16;
+            }
+            else if (input.Info().dtype == X3_TENSOR_INT64) {
+                trtDataType = DataType::kINT64;
+            }
+            else if (input.Info().dtype == X3_TENSOR_INT32) {
+                trtDataType = DataType::kINT32;
+            }
+            else {
+                loweringError = "unsupported symbolic TensorRT input dtype";
+                break;
+            }
+            Dims dimensions{};
+            dimensions.nbDims = input.Info().rank;
+            if (dimensions.nbDims < 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+                loweringError = "invalid symbolic input rank";
+                break;
+            }
+            for (int dimension = 0; dimension < dimensions.nbDims; ++dimension) {
+                dimensions.d[dimension] = TensorDimension(input, dimension);
+            }
+            const std::string name = partitionBuildActive
+                ? partitionInputNames.at(TensorId(inputValue))
+                : "input_" + std::to_string(index);
+            ITensor* trtInput = network->addInput(name.c_str(), trtDataType, dimensions);
+            if (!trtInput) {
+                loweringError = "TensorRT addInput failed for " + name;
+                break;
+            }
+            tensorMap[TensorId(inputValue)] = trtInput;
+        }
+
+        if (loweringError.empty()) {
+            replayOperationIndex = 0;
+            std::string replayError;
+            if (!ReplayTensorGraph(graph, *this, replayError) && loweringError.empty())
+                loweringError = replayError;
+            if (partitionBuildActive && loweringError.empty() &&
+                replayOperationIndex != GetCapturedTensorOperations().size()) {
+                loweringError = "partition replay did not consume the analyzed operation DAG";
+            }
+        }
+
+        if (loweringError.empty() && !partitionBuildActive && !lastOutput) {
+            loweringError = "captured graph produced no lowerable output";
+        }
+        if (loweringError.empty() && !partitionBuildActive) {
+            const auto output = tensorMap.find(graphOutputId);
+            if (output == tensorMap.end()) loweringError = "declared graph output was not lowered";
+            else lastOutput = output->second;
+        }
+        if (loweringError.empty()) {
+            if (partitionBuildActive) {
+                for (const auto& item : partitionOutputNames) {
+                    const auto tensor = tensorMap.find(item.first);
+                    if (tensor == tensorMap.end() || !tensor->second) {
+                        loweringError = "partition output was not produced: " + item.second;
+                        break;
+                    }
+                    tensor->second->setName(item.second.c_str());
+                    network->markOutput(*tensor->second);
+                    partitionBoundaryMetadata[item.first] = {
+                        tensor->second->getType(), tensor->second->getDimensions()};
+                }
+            }
+            else {
+                lastOutput->setName("output_0");
+                network->markOutput(*lastOutput);
+            }
+        }
+        if (loweringError.empty()) {
+            // NonZero and other data-dependent layers can produce dynamic
+            // dimensions even when every public model input has a fixed
+            // shape. TensorRT still requires an optimization profile for
+            // such networks; an empty profile is sufficient when no input
+            // dimension itself is dynamic.
+            auto* optimizationProfile = builder->createOptimizationProfile();
+            if (!optimizationProfile ||
+                config->addOptimizationProfile(optimizationProfile) < 0) {
+                loweringError = "TensorRT optimization profile creation failed";
+            }
+        }
+        if (loweringError.empty()) {
+            auto* serialized = builder->buildSerializedNetwork(*network, *config);
+            if (!serialized) {
+                loweringError = "TensorRT buildSerializedNetwork failed";
+            }
+            else {
+                const std::filesystem::path outputPath(enginePath);
+                std::filesystem::create_directories(outputPath.parent_path());
+                const std::filesystem::path temporaryPath = outputPath.string() + ".tmp";
+                std::ofstream output(temporaryPath, std::ios::binary | std::ios::trunc);
+                output.write(
+                    static_cast<const char*>(serialized->data()),
+                    static_cast<std::streamsize>(serialized->size()));
+                output.close();
+                InvalidateCachedTRTExecution(enginePath);
+                std::error_code fileError;
+                std::filesystem::remove(outputPath, fileError);
+                fileError.clear();
+                std::filesystem::rename(temporaryPath, outputPath, fileError);
+                if (fileError) {
+                    loweringError = "failed to publish TensorRT engine atomically: " + fileError.message();
+                }
+                delete serialized;
+            }
+        }
+
+        delete config;
+        delete network;
+        delete builder;
+        config = nullptr;
+        network = nullptr;
+        builder = nullptr;
+        for (auto* plugin : ownedPlugins) plugin->destroy();
+        ownedPlugins.clear();
+        tensorMap.clear();
+        constantTensors.clear();
+        capturedWeightFiles.clear();
+        capturedWeightIndex = nullptr;
+        lastOutput = nullptr;
+        errorMessage = loweringError;
+        return loweringError.empty();
+    }
+
+    bool TRTBuilder::AnalyzeCapturedGraph(
+        X::Value graph,
+        X::Value forwardFunction,
+        X::ARGS& graphArguments,
+        std::vector<CapturedTensorOperation>& operations,
+        std::string& errorMessage)
+    {
+        analyzedOperations.clear();
+        try {
+            TensorGraphCapture capture(graph);
+            if (!CaptureFusionGraph(capture, FusionPartitionOptions{}, errorMessage))
+                return false;
+            operations = GetCapturedTensorOperations();
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
+            return false;
+        }
+        errorMessage.clear();
+        return true;
+    }
+
+    bool TRTBuilder::BuildCapturedPartitions(
+        X::Value graph,
+        X::Value forwardFunction,
+        X::ARGS& graphArguments,
+        X::ARGS& symbolicInputs,
+        const SafeTensorsIndex* weightIndex,
+        const std::string& baseEnginePath,
+        const std::vector<CapturedTensorOperation>& operations,
+        std::vector<EnginePartitionSpec>& partitions,
+        std::string& errorMessage)
+    {
+        partitions.clear();
+        std::vector<unsigned long long> terminalIds;
+        try {
+            TensorGraphCapture capture(graph);
+            AppendTensorDependencies(capture.Outputs(), terminalIds);
+            if (terminalIds.size() != 1)
+                throw std::runtime_error("partitioned TensorRT graph requires one tensor output");
+        } catch (const std::exception& error) {
+            errorMessage = error.what();
+            return false;
+        }
+        if (operations.empty()) {
+            errorMessage = "captured graph contains no partitionable operations";
+            return false;
+        }
+
+        int partitionCount = 0;
+        std::unordered_map<unsigned long long, int> producerPartition;
+        std::unordered_map<unsigned long long, std::set<int>> consumerPartitions;
+        for (const auto& operation : operations) {
+            partitionCount = std::max(partitionCount, operation.candidatePartition + 1);
+            if (operation.outputTensorId != 0) {
+                producerPartition[operation.outputTensorId] = operation.candidatePartition;
+            }
+            for (const auto inputId : operation.inputTensorIds) {
+                if (inputId != 0) {
+                    consumerPartitions[inputId].insert(operation.candidatePartition);
+                }
+            }
+        }
+        if (partitionCount <= 1) {
+            errorMessage = "captured graph does not require physical partitioning";
+            return false;
+        }
+
+        std::unordered_map<unsigned long long, int> requestInputIndices;
+        for (size_t index = 0; index < symbolicInputs.size(); ++index) {
+            if (symbolicInputs[index].IsObject()) {
+                requestInputIndices[TensorId(symbolicInputs[index])] =
+                    static_cast<int>(index);
+            }
+        }
+
+        const std::filesystem::path basePath(baseEnginePath);
+        partitionBuildActive = true;
+        partitionBoundaryMetadata.clear();
+        for (int partitionId = 0; partitionId < partitionCount; ++partitionId) {
+            EnginePartitionSpec spec;
+            spec.id = partitionId;
+            spec.enginePath = partitionId == 0
+                ? basePath.string()
+                : (basePath.parent_path() /
+                    (basePath.stem().string() + ".partition_" +
+                     std::to_string(partitionId) + basePath.extension().string())).string();
+
+            std::set<unsigned long long> inputIds;
+            std::set<unsigned long long> outputIds;
+            for (const auto& operation : operations) {
+                if (operation.candidatePartition != partitionId) continue;
+                for (const auto inputId : operation.inputTensorIds) {
+                    const auto producer = producerPartition.find(inputId);
+                    if (requestInputIndices.find(inputId) != requestInputIndices.end() ||
+                        (producer != producerPartition.end() &&
+                         producer->second != partitionId)) {
+                        inputIds.insert(inputId);
+                    }
+                }
+                const auto consumers = consumerPartitions.find(operation.outputTensorId);
+                bool crossesPartition = false;
+                if (consumers != consumerPartitions.end()) {
+                    for (const int consumerPartition : consumers->second) {
+                        crossesPartition = crossesPartition || consumerPartition != partitionId;
+                    }
+                }
+                const bool terminal = operation.outputTensorId == terminalIds.front();
+                if (crossesPartition || terminal) outputIds.insert(operation.outputTensorId);
+            }
+
+            partitionInputNames.clear();
+            partitionOutputNames.clear();
+            for (const auto inputId : inputIds) {
+                EnginePartitionBinding binding;
+                binding.tensorId = inputId;
+                const auto requestInput = requestInputIndices.find(inputId);
+                if (requestInput != requestInputIndices.end()) {
+                    binding.requestInputIndex = requestInput->second;
+                    binding.name = "input_" + std::to_string(requestInput->second);
+                }
+                else {
+                    binding.name = "edge_" + std::to_string(inputId);
+                }
+                partitionInputNames[inputId] = binding.name;
+                spec.inputs.push_back(binding);
+            }
+            int terminalIndex = 0;
+            for (const auto outputId : outputIds) {
+                const bool terminal = outputId == terminalIds.front();
+                EnginePartitionBinding binding;
+                binding.tensorId = outputId;
+                binding.terminalOutput = terminal;
+                binding.name = terminal
+                    ? "output_" + std::to_string(terminalIndex++)
+                    : "edge_" + std::to_string(outputId);
+                partitionOutputNames[outputId] = binding.name;
+                spec.outputs.push_back(binding);
+            }
+
+            activePartition = partitionId;
+            if (!BuildCapturedGraph(
+                    graph,
+                    forwardFunction,
+                    graphArguments,
+                    symbolicInputs,
+                    weightIndex,
+                    spec.enginePath,
+                    errorMessage)) {
+                partitionBuildActive = false;
+                partitionInputNames.clear();
+                partitionOutputNames.clear();
+                partitionBoundaryMetadata.clear();
+                partitions.clear();
+                return false;
+            }
+            partitions.push_back(std::move(spec));
+        }
+        partitionBuildActive = false;
+        partitionInputNames.clear();
+        partitionOutputNames.clear();
+        partitionBoundaryMetadata.clear();
+        errorMessage.clear();
+        return true;
+    }
+
+    bool TRTBuilder::PrepareCapturedEngine(
+        const std::string& enginePath,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage)
+    {
+        const auto prepareStart = std::chrono::steady_clock::now();
+        WriteTRTProfileLog("engine prepare begin: " + enginePath);
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return false;
+        }
+        if (!GetCachedTRTEngine(enginePath, weightIndex)) {
+            errorMessage = "failed to prepare captured engine " + enginePath;
+            return false;
+        }
+        const double prepareMs = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - prepareStart).count();
+        WriteTRTProfileLog(
+            "engine prepare complete_ms=" + std::to_string(prepareMs) +
+            ": " + enginePath);
+        errorMessage.clear();
+        return true;
+    }
+
+    bool TRTBuilder::PrepareCapturedPartitions(
+        const std::vector<EnginePartitionSpec>& partitions,
+        const SafeTensorsIndex* weightIndex,
+        std::string& errorMessage)
+    {
+        if (partitions.empty()) {
+            errorMessage = "captured engine partition list is empty";
+            return false;
+        }
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return false;
+        }
+        std::vector<std::future<std::pair<bool, std::string>>> preparations;
+        preparations.reserve(partitions.size());
+        for (const auto& partition : partitions) {
+            preparations.push_back(std::async(
+                std::launch::async,
+                [enginePath = partition.enginePath, weightIndex, host = host_]() {
+                    TRTBuilder builder(host);
+                    std::string localError;
+                    const bool prepared = builder.PrepareCapturedEngine(
+                        enginePath, weightIndex, localError);
+                    return std::make_pair(prepared, std::move(localError));
+                }));
+        }
+        for (auto& preparation : preparations) {
+            auto result = preparation.get();
+            if (!result.first) {
+                errorMessage = std::move(result.second);
+                return false;
+            }
+        }
+        errorMessage.clear();
+        return true;
+    }
+
+    X::Value TRTBuilder::RunCapturedEngine(
+        const std::string& enginePath,
+        X::Value inputsValue,
+        const SafeTensorsIndex* weightIndex,
+        X::Value reusableOutput,
+        bool enableCudaGraph,
+        std::string& errorMessage) {
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return X::Value();
+        }
+        if (!inputsValue.IsList()) {
+            errorMessage = "compiled forward requires an inputs list";
+            return X::Value();
+        }
+
+        CachedExecutionUse cachedUse(enginePath, weightIndex);
+        ICudaEngine* cachedEngine = cachedUse.Engine();
+        IExecutionContext* cachedContext = cachedUse.Context();
+        if (!cachedContext) {
+            errorMessage = "failed to load cached TensorRT engine";
+            return X::Value();
+        }
+
+        X::Value inputs(inputsValue);
+        ExecutionInputs execution;
+        std::vector<void*> bindingSignature;
+        bindingSignature.reserve(static_cast<size_t>(inputs.Size()) + 1);
+        for (long long index = 0; index < inputs.Size(); ++index) {
+            X::Value inputValue = inputs.Get(index);
+            if (!IsTensor(inputValue)) {
+                errorMessage = "compiled forward input_" + std::to_string(index) +
+                    " must be an X::Tensor value";
+                return X::Value();
+            }
+            X::Tensor input(inputValue);
+            if (!IsContiguousTensor(input)) {
+                errorMessage = "TensorRT compiled inputs must be contiguous";
+                return X::Value();
+            }
+            if (input.Info().dtype != X3_TENSOR_FLOAT32 &&
+                input.Info().dtype != X3_TENSOR_BFLOAT16 &&
+                input.Info().dtype != X3_TENSOR_INT32 &&
+                input.Info().dtype != X3_TENSOR_INT64) {
+                errorMessage = "compiled forward accepts FLOAT32, BFLOAT16, INT32, or INT64 inputs";
+                return X::Value();
+            }
+            if (TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
+                errorMessage = "failed to make compiled input GPU-resident";
+                return X::Value();
+            }
+            // TensorRT INPUT mode does not describe plugin side effects. Reloaded
+            // engines expose input_N bindings, not the capture's KV write-set.
+            // Until that write-set is persisted, mutable inputs require WRITE;
+            // readonly weights can still be shared by concurrent readers.
+            if (!execution.Retain(input, input.Info().readonly ? X3_TENSOR_READ : X3_TENSOR_WRITE)) {
+                errorMessage = "TensorRT input device does not match the execution device";
+                return X::Value();
+            }
+            void* devicePointer = TensorHelper::GetGPUMemory(input);
+            const std::string name = "input_" + std::to_string(index);
+            if (!devicePointer || !cachedContext->setTensorAddress(name.c_str(), devicePointer)) {
+                errorMessage = "failed to bind TensorRT input " + name;
+                return X::Value();
+            }
+            bindingSignature.push_back(devicePointer);
+        }
+
+        const Dims outputDimensions = cachedEngine->getTensorShape("output_0");
+        if (outputDimensions.nbDims < 0 || outputDimensions.nbDims > Dims::MAX_DIMS) {
+            errorMessage = "TensorRT engine returned an invalid output shape";
+            return X::Value();
+        }
+        size_t outputCount = 1;
+        std::vector<int64_t> outputShape; outputShape.reserve(outputDimensions.nbDims);
+        for (int dimension = 0; dimension < outputDimensions.nbDims; ++dimension) {
+            if (outputDimensions.d[dimension] <= 0) {
+                errorMessage = "dynamic output shapes are not implemented in compiled fixture execution";
+                return X::Value();
+            }
+            outputShape.push_back(outputDimensions.d[dimension]);
+            outputCount *= static_cast<size_t>(outputDimensions.d[dimension]);
+        }
+
+        void* outputDevicePointer = nullptr;
+        const DataType outputDataType = cachedEngine->getTensorDataType("output_0");
+        X3TensorDType xlangOutputDataType;
+        size_t elementBytes = 0;
+        if (outputDataType == DataType::kFLOAT) {
+            xlangOutputDataType = X3_TENSOR_FLOAT32;
+            elementBytes = sizeof(float);
+        }
+        else if (outputDataType == DataType::kBF16) {
+            xlangOutputDataType = X3_TENSOR_BFLOAT16;
+            elementBytes = sizeof(unsigned short);
+        }
+        else if (outputDataType == DataType::kINT32) {
+            xlangOutputDataType = X3_TENSOR_INT32;
+            elementBytes = sizeof(int);
+        }
+        else if (outputDataType == DataType::kINT64) {
+            xlangOutputDataType = X3_TENSOR_INT64;
+            elementBytes = sizeof(long long);
+        }
+        else {
+            errorMessage = "unsupported TensorRT output dtype: " +
+                std::to_string(static_cast<int>(outputDataType));
+            return X::Value();
+        }
+        const size_t outputBytes = outputCount * elementBytes;
+        X::Value outputValue;
+        if (IsTensor(reusableOutput)) {
+            X::Tensor candidate(reusableOutput);
+            bool shapeMatches = candidate.Info().rank == outputDimensions.nbDims;
+            for (int dimension = 0; shapeMatches && dimension < outputDimensions.nbDims; ++dimension) {
+                shapeMatches = TensorDimension(candidate, dimension) == outputDimensions.d[dimension];
+            }
+            if (shapeMatches && IsContiguousTensor(candidate) && !candidate.Info().readonly &&
+                candidate.Info().dtype == xlangOutputDataType &&
+                TensorHelper::EnsureGPUMemory(candidate) == TensorOpStatus::Success) {
+                outputDevicePointer = TensorHelper::GetGPUMemory(candidate);
+                outputValue = candidate;
+            }
+        }
+        if (!outputDevicePointer) {
+            if (cudaMalloc(&outputDevicePointer, outputBytes) != cudaSuccess) {
+                errorMessage = "failed to allocate TensorRT output on GPU";
+                return X::Value();
+            }
+            try {
+                outputValue = WrapDeviceOutput(inputsValue.host(), xlangOutputDataType,
+                    outputShape, outputDevicePointer, outputBytes);
+            } catch (...) {
+                cudaFree(outputDevicePointer);
+                throw;
+            }
+        }
+        if (!execution.Retain(X::Tensor(outputValue), X3_TENSOR_WRITE)) {
+            errorMessage = "TensorRT output device does not match the execution device";
+            return X::Value();
+        }
+        execution.Acquire();
+        const char* layerProfilePath = std::getenv("GARNET_PROFILE_DECODE_LAYERS");
+        bool profileDecodeLayers = false;
+        if (layerProfilePath && *layerProfilePath && enableCudaGraph) {
+            std::lock_guard<std::mutex> lock(g_trtLayerProfileMutex);
+            profileDecodeLayers = g_profiledTRTEngines.insert(enginePath).second;
+        }
+        OneShotTRTLayerProfiler layerProfiler;
+        if (profileDecodeLayers) {
+            cachedContext->setProfiler(&layerProfiler);
+            cachedContext->setEnqueueEmitsProfile(true);
+        }
+        bindingSignature.push_back(outputDevicePointer);
+        if (!cachedContext->setTensorAddress("output_0", outputDevicePointer) ||
+            !EnqueueTRTWithOptionalCudaGraph(
+                enginePath, cachedContext, *cachedUse.slot.operator->(), bindingSignature, enableCudaGraph,
+                CurrentExecutionStream())) {
+            if (profileDecodeLayers) {
+                cachedContext->setProfiler(nullptr);
+                cachedContext->setEnqueueEmitsProfile(false);
+            }
+            errorMessage = "TensorRT enqueueV3 failed";
+            return X::Value();
+        }
+        if (profileDecodeLayers) {
+            cachedContext->setProfiler(nullptr);
+            cachedContext->setEnqueueEmitsProfile(false);
+            layerProfiler.Write(layerProfilePath, enginePath);
+        }
+
+        errorMessage.clear();
+        return execution.Finish(X::Tensor(outputValue), CurrentExecutionStream(), true);
+    }
+
+    X::Value TRTBuilder::RunCapturedPartitions(
+        const std::vector<EnginePartitionSpec>& partitions,
+        X::Value inputsValue,
+        const SafeTensorsIndex* weightIndex,
+        X::Value reusableOutput,
+        std::string& errorMessage)
+    {
+        if (!EnsurePagedKVDecodePluginRegistered()) {
+            errorMessage = "failed to register Garnet paged-KV TensorRT plugin";
+            return X::Value();
+        }
+        if (!inputsValue.IsList() || partitions.empty()) {
+            errorMessage = "partitioned execution requires partitions and an inputs list";
+            return X::Value();
+        }
+        X::Value requestInputs(inputsValue);
+        std::unordered_map<unsigned long long, X::Value> intermediates;
+        X::Value terminalOutput;
+        unsigned long long terminalTensorId = 0;
+        const char* profileEnvironment = std::getenv("GARNET_PROFILE_PARTITIONS");
+        const bool profilePartitions =
+            profileEnvironment && std::string(profileEnvironment) == "1";
+        const char* profileLogPath = std::getenv("GARNET_PARTITION_PROFILE_LOG");
+        auto writePartitionProfile = [&](const std::string& message) {
+            if (!profilePartitions) return;
+            std::cout << message << std::endl;
+            if (profileLogPath && *profileLogPath) {
+                std::ofstream profileLog(profileLogPath, std::ios::app);
+                profileLog << message << '\n';
+            }
+        };
+
+        for (const auto& partition : partitions) {
+            const auto partitionStart = std::chrono::steady_clock::now();
+            if (profilePartitions) {
+                writePartitionProfile(
+                    "partition " + std::to_string(partition.id) +
+                    " begin: " + partition.enginePath);
+            }
+            CachedExecutionUse cachedUse(partition.enginePath, weightIndex);
+            ICudaEngine* engine = cachedUse.Engine();
+            IExecutionContext* context = cachedUse.Context();
+            if (!context) {
+                errorMessage = "failed to load partition engine " + partition.enginePath;
+                return X::Value();
+            }
+
+            ExecutionInputs execution;
+            for (const auto& binding : partition.inputs) {
+                X::Value inputValue;
+                if (binding.requestInputIndex >= 0) {
+                    if (binding.requestInputIndex >= requestInputs.Size()) {
+                        errorMessage = "partition request input index is out of range";
+                        return X::Value();
+                    }
+                    inputValue = requestInputs.Get(binding.requestInputIndex);
+                }
+                else {
+                    const auto found = intermediates.find(binding.tensorId);
+                    if (found == intermediates.end()) {
+                        errorMessage = "partition input dependency is unavailable: " + binding.name;
+                        return X::Value();
+                    }
+                    inputValue = found->second;
+                }
+                if (!IsTensor(inputValue)) {
+                    errorMessage = "partition binding " + binding.name + " is not an X::Tensor";
+                    return X::Value();
+                }
+                X::Tensor input(inputValue);
+                if (!IsContiguousTensor(input)) {
+                    errorMessage = "TensorRT partition inputs must be contiguous";
+                    return X::Value();
+                }
+                if (TensorHelper::EnsureGPUMemory(input) != TensorOpStatus::Success) {
+                    errorMessage = "partition input is not GPU resident: " + binding.name;
+                    return X::Value();
+                }
+                // Partition bindings likewise lack persisted plugin mutation
+                // metadata; input/output direction alone cannot imply READ.
+                if (!execution.Retain(input, input.Info().readonly ? X3_TENSOR_READ : X3_TENSOR_WRITE)) {
+                    errorMessage = "partition input device does not match the execution device";
+                    return X::Value();
+                }
+                void* devicePointer = TensorHelper::GetGPUMemory(input);
+                if (!devicePointer ||
+                    !context->setTensorAddress(binding.name.c_str(), devicePointer)) {
+                    errorMessage = "failed to bind partition input " + binding.name;
+                    return X::Value();
+                }
+            }
+
+            std::vector<std::pair<EnginePartitionBinding, X::Value>> outputs;
+            for (const auto& binding : partition.outputs) {
+                const Dims dimensions = engine->getTensorShape(binding.name.c_str());
+                if (dimensions.nbDims < 0 || dimensions.nbDims > Dims::MAX_DIMS) {
+                    errorMessage = "invalid partition output shape for " + binding.name;
+                    return X::Value();
+                }
+                size_t elementCount = 1;
+                std::vector<int64_t> outputShape; outputShape.reserve(dimensions.nbDims);
+                for (int index = 0; index < dimensions.nbDims; ++index) {
+                    if (dimensions.d[index] <= 0) {
+                        errorMessage = "dynamic partition outputs are not implemented";
+                        return X::Value();
+                    }
+                    outputShape.push_back(dimensions.d[index]);
+                    elementCount *= static_cast<size_t>(dimensions.d[index]);
+                }
+
+                const DataType dataType = engine->getTensorDataType(binding.name.c_str());
+                X3TensorDType xlangDataType;
+                size_t elementBytes = 0;
+                if (dataType == DataType::kFLOAT) {
+                    xlangDataType = X3_TENSOR_FLOAT32;
+                    elementBytes = sizeof(float);
+                }
+                else if (dataType == DataType::kBF16) {
+                    xlangDataType = X3_TENSOR_BFLOAT16;
+                    elementBytes = sizeof(unsigned short);
+                }
+                else if (dataType == DataType::kINT32) {
+                    xlangDataType = X3_TENSOR_INT32;
+                    elementBytes = sizeof(int);
+                }
+                else if (dataType == DataType::kINT64) {
+                    xlangDataType = X3_TENSOR_INT64;
+                    elementBytes = sizeof(long long);
+                }
+                else {
+                    errorMessage = "unsupported partition output dtype";
+                    return X::Value();
+                }
+
+                void* devicePointer = nullptr;
+                X::Value outputValue;
+                if (binding.terminalOutput && IsTensor(reusableOutput)) {
+                    X::Tensor reusable(reusableOutput);
+                    bool matching =
+                        IsContiguousTensor(reusable) && !reusable.Info().readonly &&
+                        reusable.Info().dtype == xlangDataType &&
+                        reusable.Info().rank == dimensions.nbDims;
+                    for (int index = 0; matching && index < dimensions.nbDims; ++index) {
+                        matching =
+                            TensorDimension(reusable, index) == dimensions.d[index];
+                    }
+                    if (matching) {
+                        devicePointer = TensorHelper::GetGPUMemory(reusable);
+                        if (devicePointer) outputValue = reusableOutput;
+                    }
+                }
+                if (!devicePointer) {
+                    if (cudaMalloc(
+                            &devicePointer,
+                            elementCount * elementBytes) != cudaSuccess) {
+                        errorMessage =
+                            "failed to allocate partition output " + binding.name;
+                        return X::Value();
+                    }
+                    try {
+                        outputValue = WrapDeviceOutput(inputsValue.host(), xlangDataType,
+                            outputShape, devicePointer, elementCount * elementBytes);
+                    } catch (const std::exception& error) {
+                        cudaFree(devicePointer);
+                        errorMessage = error.what();
+                        return X::Value();
+                    }
+                }
+                if (!context->setTensorAddress(binding.name.c_str(), devicePointer)) {
+                    errorMessage = "failed to bind partition output " + binding.name;
+                    return X::Value();
+                }
+                if (!execution.Retain(X::Tensor(outputValue), X3_TENSOR_WRITE)) {
+                    errorMessage = "partition output device does not match the execution device";
+                    return X::Value();
+                }
+                outputs.emplace_back(binding, outputValue);
+            }
+
+            execution.Acquire();
+            if (!context->enqueueV3(CurrentExecutionStream())) {
+                errorMessage = "TensorRT enqueue failed for partition " +
+                    std::to_string(partition.id);
+                return X::Value();
+            }
+            if (profilePartitions) {
+                const cudaError_t syncStatus = cudaStreamSynchronize(CurrentExecutionStream());
+                if (syncStatus != cudaSuccess) {
+                    errorMessage = "partition profiling synchronization failed: " +
+                        std::string(cudaGetErrorString(syncStatus));
+                    return X::Value();
+                }
+                const double elapsedMs = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - partitionStart).count();
+                writePartitionProfile(
+                    "partition " + std::to_string(partition.id) +
+                    " complete_ms=" + std::to_string(elapsedMs));
+            }
+            for (auto& output : outputs) {
+                output.second = execution.Finish(X::Tensor(output.second), CurrentExecutionStream(), true);
+                intermediates[output.first.tensorId] = output.second;
+                if (output.first.terminalOutput) {
+                    terminalOutput = output.second;
+                    terminalTensorId = output.first.tensorId;
+                }
+            }
+        }
+
+        if (!terminalOutput.IsValid()) {
+            errorMessage = "partitioned execution produced no terminal output";
+            return X::Value();
+        }
+        for (auto& intermediate : intermediates) {
+            if (intermediate.first == terminalTensorId ||
+                !IsTensor(intermediate.second)) {
+                continue;
+            }
+            X::Tensor tensor(intermediate.second);
+            TensorHelper::ReleaseGPUMemory(tensor);
+        }
+        errorMessage.clear();
+        return terminalOutput;
+    }
+
+    X::Value TRTBuilder::HandleBinaryOp(
+        const std::string& opName,
+        X::Value graph,
+        X::ARGS& params,
+        X::KWARGS& kwParams,
+        X::Value input1,
+        X::Value input2,
+        X::Value output) {
+        if (analysisActive) {
+            CapturedTensorOperation operation;
+            operation.index = static_cast<int>(analyzedOperations.size());
+            operation.name = opName;
+            if (input1.IsObject()) {
+                operation.inputTensorIds.push_back(TensorId(input1));
+            }
+            if (input2.IsObject()) {
+                operation.inputTensorIds.push_back(TensorId(input2));
+            }
+            AppendTensorKeywordDependencies(kwParams, operation.inputTensorIds);
+            if (output.IsObject()) operation.outputTensorId = TensorId(output);
+            analyzedOperations.push_back(std::move(operation));
+            return X::Value(true);
+        }
+        if (partitionBuildActive) {
+            const auto& operations = GetCapturedTensorOperations();
+            if (replayOperationIndex >= operations.size()) {
+                loweringError = "partition replay produced more binary operations than analysis";
+                return X::Value();
+            }
+            const auto& operation = operations[replayOperationIndex++];
+            if (operation.name != opName) {
+                loweringError = "partition replay operation mismatch: expected " +
+                    operation.name + ", received " + opName;
+                return X::Value();
+            }
+            if (operation.candidatePartition != activePartition) return X::Value(true);
+        }
+        if (!network || loweringError.size() > 0) {
+            return X::Value();
+        }
+        if (!loweringActive) {
+            return X::Value(true);
+        }
+        const bool isLinear =
+            opName == "linear" || opName == "qkv_linear" ||
+            opName == "q_proj" || opName == "k_proj" ||
+            opName == "v_proj" || opName == "o_proj" ||
+            opName == "gate_proj" || opName == "up_proj" ||
+            opName == "down_proj" || opName == "lm_head";
+
+        const bool isElementwise = opName == "add" || opName == "minus" ||
+            opName == "sub" || opName == "mul" || opName == "div";
+        const bool isSequenceConcat =
+            opName == "concat_sequence" || opName == "concat_tokens";
+        const bool isSequenceSelection = opName == "select_last_valid_sequence";
+        const bool isMatrix = opName == "matmul" || isLinear;
+        const bool isVisionPositionInterpolate =
+            opName == "qwen3_vl_pos_embed_interpolate";
+        const bool isVisionRope = opName == "qwen3_vl_apply_vision_rope_packed";
+        const bool isVisionAttention = opName == "vision_varlen_attention_packed";
+        const bool isVisualEmbeddingMerge = opName == "qwen3_vl_merge_visual_embeddings";
+        const bool isAudioEmbeddingMerge =
+            opName == "qwen3_asr_merge_audio_embeddings";
+        const bool isAudioTokenCompact =
+            opName == "qwen3_asr_compact_audio_tokens";
+        const bool isMultimodalTextRope =
+            opName == "qwen3_vl_apply_text_rope_packed";
+        const bool isTextRope =
+            isMultimodalTextRope || opName == "qwen3_apply_text_rope_packed";
+        const bool isTextAttention = opName == "paged_attention_packed";
+        const bool isGptOssRope = opName == "gpt_oss_apply_yarn_rope_packed";
+        const bool isDeepstackAdd = opName == "qwen3_vl_deepstack_add";
+        const bool isPagedKVBinding =
+            opName == "paged_kv_bind_key_pages" ||
+            opName == "paged_kv_bind_value_pages" ||
+            opName == "paged_kv_bind_page_table" ||
+            opName == "paged_kv_bind_context_length" ||
+            opName == "paged_kv_bind_slot_position" ||
+            opName == "paged_kv_bind_active_mask";
+        if (!isElementwise && !isSequenceConcat && !isSequenceSelection && !isMatrix && !isVisionPositionInterpolate &&
+            !isVisionRope && !isVisionAttention && !isVisualEmbeddingMerge &&
+            !isAudioEmbeddingMerge && !isAudioTokenCompact &&
+            !isTextRope && !isTextAttention && !isGptOssRope && !isDeepstackAdd && !isPagedKVBinding) {
+            loweringError = "unsupported binary operation: " + opName;
+            return X::Value();
+        }
+        ITensor* left = GetOrCreateTRTTensor(input1);
+        ITensor* right = GetOrCreateTRTTensor(input2);
+        if (!left || !right) {
+            return X::Value();
+        }
+
+        if (isSequenceSelection) {
+            // The caller supplies one valid count in [1,S] per batch row.
+            // Gather shares the batch axis and keeps a single sequence row.
+            const auto data = left->getDimensions();
+            const auto counts = right->getDimensions();
+            if (data.nbDims != 3 || counts.nbDims != 1 ||
+                data.d[0] <= 0 || data.d[1] <= 0 || data.d[2] <= 0 ||
+                counts.d[0] != data.d[0] || right->getType() != DataType::kINT32) {
+                loweringError = "select_last_valid_sequence requires [B,S,H] and [B] INT32 counts";
+                return X::Value();
+            }
+            integerVectorWeights.emplace_back(1, 1);
+            auto* one = network->addConstant(Dims{1, {1}},
+                Weights{DataType::kINT32, integerVectorWeights.back().data(), 1});
+            auto* index = one ? network->addElementWise(*right, *one->getOutput(0),
+                ElementWiseOperation::kSUB) : nullptr;
+            auto* reshape = index ? network->addShuffle(*index->getOutput(0)) : nullptr;
+            if (reshape) reshape->setReshapeDimensions(Dims{2, {data.d[0], 1}});
+            auto* gather = reshape ? network->addGatherV2(*left, *reshape->getOutput(0),
+                GatherMode::kDEFAULT) : nullptr;
+            if (!gather) {
+                loweringError = "select_last_valid_sequence layer construction failed";
+                return X::Value();
+            }
+            gather->setGatherAxis(1);
+            gather->setNbElementWiseDims(1);
+            lastOutput = gather->getOutput(0);
+        }
+        else if (isGptOssRope) {
+            lastOutput = LowerGptOss(opName, left, right, kwParams);
+        }
+        else if (isPagedKVBinding) {
+            if (opName == "paged_kv_bind_key_pages") pendingKVKeyPages = right;
+            else if (opName == "paged_kv_bind_value_pages") pendingKVValuePages = right;
+            else if (opName == "paged_kv_bind_page_table") pendingKVPageTable = right;
+            else if (opName == "paged_kv_bind_context_length") pendingKVContextLength = right;
+            else if (opName == "paged_kv_bind_slot_position") pendingKVSlotPosition = right;
+            else pendingKVActiveMask = right;
+            lastOutput = left;
+        }
+
+        else if (isDeepstackAdd) {
+            auto* inputIdsItem = FindKeyword(kwParams, "input_ids");
+            auto* imageTokenItem = FindKeyword(kwParams, "image_token_id");
+            auto* videoTokenItem = FindKeyword(kwParams, "video_token_id");
+            if (!inputIdsItem || !imageTokenItem || !videoTokenItem) {
+                loweringError = "DeepStack add requires input_ids and visual token ids";
+                return X::Value();
+            }
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->second);
+            auto makeTokenConstant = [&](long long tokenId) -> ITensor* {
+                integerWeights.push_back(tokenId);
+                Dims dimensions{};
+                dimensions.nbDims = 2;
+                dimensions.d[0] = 1;
+                dimensions.d[1] = 1;
+                Weights weights{DataType::kINT64, &integerWeights.back(), 1};
+                auto* constant = network->addConstant(dimensions, weights);
+                return constant ? constant->getOutput(0) : nullptr;
+            };
+            ITensor* imageToken = makeTokenConstant(imageTokenItem->second.ToLongLong());
+            ITensor* videoToken = makeTokenConstant(videoTokenItem->second.ToLongLong());
+            auto* imageMask = inputIds && imageToken
+                ? network->addElementWise(*inputIds, *imageToken, ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* videoMask = inputIds && videoToken
+                ? network->addElementWise(*inputIds, *videoToken, ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* visualMask = imageMask && videoMask
+                ? network->addElementWise(
+                    *imageMask->getOutput(0),
+                    *videoMask->getOutput(0),
+                    ElementWiseOperation::kOR)
+                : nullptr;
+            auto* nonzero = visualMask
+                ? network->addNonZero(*visualMask->getOutput(0), DataType::kINT32)
+                : nullptr;
+            auto* indices = nonzero ? network->addShuffle(*nonzero->getOutput(0)) : nullptr;
+            if (indices) {
+                Permutation transpose{};
+                transpose.order[0] = 1;
+                transpose.order[1] = 0;
+                indices->setFirstTranspose(transpose);
+            }
+            auto* currentRows = indices
+                ? network->addGatherV2(*left, *indices->getOutput(0), GatherMode::kND)
+                : nullptr;
+            ITensor* compatibleRight = right;
+            auto* rightCast = currentRows &&
+                    right->getType() != currentRows->getOutput(0)->getType()
+                ? network->addCast(*right, currentRows->getOutput(0)->getType())
+                : nullptr;
+            if (rightCast) compatibleRight = rightCast->getOutput(0);
+            auto* updatedRows = currentRows && compatibleRight
+                ? network->addElementWise(
+                    *currentRows->getOutput(0),
+                    *compatibleRight,
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            ITensor* updates = updatedRows ? updatedRows->getOutput(0) : nullptr;
+            auto* updatesCast = updates && updates->getType() != left->getType()
+                ? network->addCast(*updates, left->getType())
+                : nullptr;
+            if (updatesCast) updates = updatesCast->getOutput(0);
+            auto* scatter = indices && updates
+                ? network->addScatter(
+                    *left,
+                    *indices->getOutput(0),
+                    *updates,
+                    ScatterMode::kND)
+                : nullptr;
+            lastOutput = scatter ? scatter->getOutput(0) : nullptr;
+        }
+        else if (isTextAttention) {
+            lastOutput = LowerTextAttention(left, right, kwParams);
+        }
+        else if (isTextRope) {
+            lastOutput = LowerTextRope(
+                left, right, kwParams, isMultimodalTextRope);
+        }
+        else if (isAudioTokenCompact) {
+            const Dims sourceDims = left->getDimensions();
+            const Dims cuDims = right->getDimensions();
+            const int tokensPerChunk = FindKeyword(kwParams, "tokens_per_chunk")
+                ? static_cast<int>(FindKeyword(kwParams, "tokens_per_chunk")->second.ToLongLong())
+                : 13;
+            const int chunks = cuDims.nbDims == 1 ? cuDims.d[0] - 1 : 0;
+            if (sourceDims.nbDims != 2 || cuDims.nbDims != 1 || chunks <= 0 ||
+                sourceDims.d[0] != chunks * tokensPerChunk) {
+                loweringError = "audio token compaction received invalid dimensions";
+                return X::Value();
+            }
+            auto* sourceShape = network->addShuffle(*left);
+            if (sourceShape) sourceShape->setReshapeDimensions(
+                Dims{3, {chunks, tokensPerChunk, sourceDims.d[1]}});
+            auto sliceCu = [&](int startValue) -> ITensor* {
+                Dims start{1, {startValue}};
+                Dims size{1, {chunks}};
+                Dims stride{1, {1}};
+                auto* layer = network->addSlice(*right, start, size, stride);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            ITensor* starts = sliceCu(0);
+            ITensor* ends = sliceCu(1);
+            auto* lengths = starts && ends ? network->addElementWise(
+                *ends, *starts, ElementWiseOperation::kSUB) : nullptr;
+            auto* lengthShape = lengths ? network->addShuffle(*lengths->getOutput(0)) : nullptr;
+            if (lengthShape) lengthShape->setReshapeDimensions(Dims{2, {chunks, 1}});
+            integerVectorWeights.emplace_back(static_cast<size_t>(tokensPerChunk));
+            for (int index = 0; index < tokensPerChunk; ++index) {
+                integerVectorWeights.back()[index] = index;
+            }
+            Dims rangeDims{2, {1, tokensPerChunk}};
+            Weights rangeWeights{DataType::kINT32,
+                integerVectorWeights.back().data(), tokensPerChunk};
+            auto* range = network->addConstant(rangeDims, rangeWeights);
+            auto* mask = lengthShape && range ? network->addElementWise(
+                *range->getOutput(0), *lengthShape->getOutput(0),
+                ElementWiseOperation::kLESS) : nullptr;
+            auto* nonzero = mask
+                ? network->addNonZero(*mask->getOutput(0), DataType::kINT32)
+                : nullptr;
+            auto* indices = nonzero ? network->addShuffle(*nonzero->getOutput(0)) : nullptr;
+            if (indices) {
+                Permutation transpose{};
+                transpose.order[0] = 1; transpose.order[1] = 0;
+                indices->setFirstTranspose(transpose);
+            }
+            auto* gather = sourceShape && indices ? network->addGatherV2(
+                *sourceShape->getOutput(0), *indices->getOutput(0), GatherMode::kND)
+                : nullptr;
+            lastOutput = gather ? gather->getOutput(0) : nullptr;
+        }
+        else if (isAudioEmbeddingMerge) {
+            auto* inputIdsItem = FindKeyword(kwParams, "input_ids");
+            auto* audioTokenItem = FindKeyword(kwParams, "audio_token_id");
+            if (!inputIdsItem || !audioTokenItem) {
+                loweringError =
+                    "audio embedding merge requires input_ids and audio_token_id";
+                return X::Value();
+            }
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->second);
+            if (!inputIds || inputIds->getDimensions().nbDims != 2 ||
+                left->getDimensions().nbDims != 3 ||
+                right->getDimensions().nbDims != 2) {
+                loweringError =
+                    "audio embedding merge requires [B,T,H] text, [A,H] audio, and [B,T] ids";
+                return X::Value();
+            }
+            integerWeights.push_back(audioTokenItem->second.ToLongLong());
+            Dims scalarDims{};
+            scalarDims.nbDims = 2;
+            scalarDims.d[0] = 1;
+            scalarDims.d[1] = 1;
+            Weights tokenWeights{
+                DataType::kINT64, &integerWeights.back(), 1};
+            auto* token = network->addConstant(scalarDims, tokenWeights);
+            auto* mask = token
+                ? network->addElementWise(
+                    *inputIds, *token->getOutput(0), ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* nonzero = mask
+                ? network->addNonZero(*mask->getOutput(0), DataType::kINT32)
+                : nullptr;
+            auto* indices = nonzero
+                ? network->addShuffle(*nonzero->getOutput(0))
+                : nullptr;
+            if (indices) {
+                Permutation transpose{};
+                transpose.order[0] = 1;
+                transpose.order[1] = 0;
+                indices->setFirstTranspose(transpose);
+            }
+            ITensor* updates = right;
+            auto* updatesCast = updates && updates->getType() != left->getType()
+                ? network->addCast(*updates, left->getType())
+                : nullptr;
+            if (updatesCast) updates = updatesCast->getOutput(0);
+            auto* scatter = indices && updates
+                ? network->addScatter(
+                    *left, *indices->getOutput(0), *updates, ScatterMode::kND)
+                : nullptr;
+            lastOutput = scatter ? scatter->getOutput(0) : nullptr;
+        }
+        else if (isVisualEmbeddingMerge) {
+            auto* inputIdsItem = FindKeyword(kwParams, "input_ids");
+            auto* imageTokenItem = FindKeyword(kwParams, "image_token_id");
+            auto* videoTokenItem = FindKeyword(kwParams, "video_token_id");
+            if (!inputIdsItem || !imageTokenItem || !videoTokenItem) {
+                loweringError = "visual embedding merge requires input_ids and visual token ids";
+                return X::Value();
+            }
+            ITensor* inputIds = GetOrCreateTRTTensor(inputIdsItem->second);
+            if (!inputIds || inputIds->getDimensions().nbDims != 2 ||
+                left->getDimensions().nbDims != 3 || right->getDimensions().nbDims != 2) {
+                const int inputIdsRank = inputIds
+                    ? inputIds->getDimensions().nbDims
+                    : -1;
+                loweringError =
+                    "visual embedding merge received incompatible tensor ranks: "
+                    "input_ids=" + std::to_string(inputIdsRank) +
+                    ", text_embeddings=" +
+                    std::to_string(left->getDimensions().nbDims) +
+                    ", visual_embeddings=" +
+                    std::to_string(right->getDimensions().nbDims);
+                return X::Value();
+            }
+            auto makeTokenConstant = [&](long long tokenId) -> ITensor* {
+                integerWeights.push_back(tokenId);
+                Dims dimensions{};
+                dimensions.nbDims = 2;
+                dimensions.d[0] = 1;
+                dimensions.d[1] = 1;
+                Weights weights{DataType::kINT64, &integerWeights.back(), 1};
+                auto* constant = network->addConstant(dimensions, weights);
+                return constant ? constant->getOutput(0) : nullptr;
+            };
+            ITensor* imageToken = makeTokenConstant(imageTokenItem->second.ToLongLong());
+            ITensor* videoToken = makeTokenConstant(videoTokenItem->second.ToLongLong());
+            auto* imageMask = imageToken
+                ? network->addElementWise(*inputIds, *imageToken, ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* videoMask = videoToken
+                ? network->addElementWise(*inputIds, *videoToken, ElementWiseOperation::kEQUAL)
+                : nullptr;
+            auto* visualMask = imageMask && videoMask
+                ? network->addElementWise(
+                    *imageMask->getOutput(0),
+                    *videoMask->getOutput(0),
+                    ElementWiseOperation::kOR)
+                : nullptr;
+            auto* nonzero = visualMask
+                ? network->addNonZero(*visualMask->getOutput(0), DataType::kINT32)
+                : nullptr;
+            auto* indices = nonzero ? network->addShuffle(*nonzero->getOutput(0)) : nullptr;
+            if (indices) {
+                Permutation transpose{};
+                transpose.order[0] = 1;
+                transpose.order[1] = 0;
+                indices->setFirstTranspose(transpose);
+            }
+            ITensor* updates = right;
+            auto* updatesCast = updates && updates->getType() != left->getType()
+                ? network->addCast(*updates, left->getType())
+                : nullptr;
+            if (updatesCast) updates = updatesCast->getOutput(0);
+            auto* scatter = indices && updates
+                ? network->addScatter(
+                    *left,
+                    *indices->getOutput(0),
+                    *updates,
+                    ScatterMode::kND)
+                : nullptr;
+            lastOutput = scatter ? scatter->getOutput(0) : nullptr;
+        }
+        else if (isVisionRope) {
+            lastOutput = LowerVisionRope(left, right, kwParams);
+        }
+        else if (isVisionAttention) {
+            lastOutput = LowerVisionAttention(left, right, kwParams);
+        }
+        else if (isVisionPositionInterpolate) {
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
+            if (!weightNameItem) {
+                loweringError = "vision position interpolation requires weight_name";
+                return X::Value();
+            }
+            ITensor* positionTable = GetOrCreateTRTWeight(weightNameItem->second.ToString());
+            auto* gather = positionTable
+                ? network->addGather(*positionTable, *left, 0)
+                : nullptr;
+            const Dims weightDimensions = right->getDimensions();
+            if (!gather || weightDimensions.nbDims != 2) {
+                loweringError = "vision position interpolation requires rank-2 indices and weights";
+                return X::Value();
+            }
+            Dims expandedWeightDimensions{};
+            expandedWeightDimensions.nbDims = 3;
+            expandedWeightDimensions.d[0] = weightDimensions.d[0];
+            expandedWeightDimensions.d[1] = weightDimensions.d[1];
+            expandedWeightDimensions.d[2] = 1;
+            auto* expand = network->addShuffle(*right);
+            if (expand) {
+                expand->setReshapeDimensions(expandedWeightDimensions);
+            }
+            auto* weighted = expand
+                ? network->addElementWise(
+                    *gather->getOutput(0),
+                    *expand->getOutput(0),
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* sum = weighted
+                ? network->addReduce(
+                    *weighted->getOutput(0),
+                    ReduceOperation::kSUM,
+                    1U << 1,
+                    false)
+                : nullptr;
+            lastOutput = sum ? sum->getOutput(0) : nullptr;
+        }
+        else if (isSequenceConcat) {
+            ITensor* values[] = {left, right};
+            auto* layer = network->addConcatenation(values, 2);
+            if (layer) layer->setAxis(1);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "matmul" || isLinear) {
+            auto* layer = network->addMatrixMultiply(
+                *left,
+                MatrixOperation::kNONE,
+                *right,
+                isLinear ? MatrixOperation::kTRANSPOSE : MatrixOperation::kNONE);
+            if (!layer || !layer->getOutput(0)) {
+                loweringError = "TensorRT matrix multiply lowering failed for " + opName;
+                return X::Value();
+            }
+            lastOutput = layer->getOutput(0);
+        }
+        else if (isElementwise) {
+            const ElementWiseOperation operation =
+                opName == "add" ? ElementWiseOperation::kSUM :
+                (opName == "minus" || opName == "sub") ? ElementWiseOperation::kSUB :
+                opName == "div" ? ElementWiseOperation::kDIV :
+                ElementWiseOperation::kPROD;
+            const int rank = std::max(left->getDimensions().nbDims, right->getDimensions().nbDims);
+            left = BroadcastLastDimension(left, rank, "left_broadcast");
+            right = BroadcastLastDimension(right, rank, "right_broadcast");
+            if (!left || !right) return X::Value();
+            const auto computeType = IsTensor(input1) ? left->getType() : right->getType();
+            auto* leftCast = left->getType() != computeType
+                ? network->addCast(*left, computeType) : nullptr;
+            if (leftCast) left = leftCast->getOutput(0);
+            ITensor* compatibleRight = right;
+            auto* rightCast = right->getType() != computeType
+                ? network->addCast(*right, computeType)
+                : nullptr;
+            if (rightCast) compatibleRight = rightCast->getOutput(0);
+            auto* layer = network->addElementWise(
+                *left, *compatibleRight, operation);
+            if (!layer || !layer->getOutput(0)) {
+                loweringError = "TensorRT elementwise lowering failed for " + opName;
+                return X::Value();
+            }
+            lastOutput = layer->getOutput(0);
+        }
+        if (!lastOutput) {
+            if (loweringError.empty()) {
+                loweringError = "TensorRT binary lowering failed for " + opName;
+            }
+            return X::Value();
+        }
+        if (!output.IsObject()) {
+            loweringError = "binary operation has no graph output identity";
+            return X::Value();
+        }
+        tensorMap[TensorId(output)] = lastOutput;
+        return X::Value(true);
+    }
+
+    X::Value TRTBuilder::HandleUnaryOp(
+        const std::string& opName,
+        X::Value graph,
+        X::ARGS& params,
+        X::KWARGS& kwParams,
+        X::Value input,
+        X::Value output) {
+        if (analysisActive) {
+            CapturedTensorOperation operation;
+            operation.index = static_cast<int>(analyzedOperations.size());
+            operation.name = opName;
+            if (input.IsObject()) {
+                operation.inputTensorIds.push_back(TensorId(input));
+            }
+            AppendTensorKeywordDependencies(kwParams, operation.inputTensorIds);
+            if (output.IsObject()) operation.outputTensorId = TensorId(output);
+            analyzedOperations.push_back(std::move(operation));
+            return X::Value(true);
+        }
+        if (partitionBuildActive) {
+            const auto& operations = GetCapturedTensorOperations();
+            if (replayOperationIndex >= operations.size()) {
+                loweringError = "partition replay produced more unary operations than analysis";
+                return X::Value();
+            }
+            const auto& operation = operations[replayOperationIndex++];
+            if (operation.name != opName) {
+                loweringError = "partition replay operation mismatch: expected " +
+                    operation.name + ", received " + opName;
+                return X::Value();
+            }
+            if (operation.candidatePartition != activePartition) return X::Value(true);
+        }
+        if (!loweringActive) {
+            return X::Value(true);
+        }
+        if (!network || loweringError.size() > 0) {
+            return X::Value();
+        }
+        ITensor* source = GetOrCreateTRTTensor(input);
+        if (!source) {
+            loweringError = "unary operation " + opName + " input: " + loweringError;
+            return X::Value();
+        }
+
+        const bool isLinear =
+            opName == "linear" || opName == "qkv_linear" ||
+            opName == "q_proj" || opName == "k_proj" ||
+            opName == "v_proj" || opName == "o_proj" ||
+            opName == "gate_proj" || opName == "up_proj" ||
+            opName == "down_proj" || opName == "lm_head";
+
+        auto keywordText = [&](const char* name) -> std::string {
+            auto* item = FindKeyword(kwParams, name);
+            return item ? item->second.ToString() : std::string();
+        };
+        auto keywordInt = [&](const char* name, int fallback) -> int {
+            auto* item = FindKeyword(kwParams, name);
+            return item ? static_cast<int>(item->second.ToLongLong()) : fallback;
+        };
+
+        if (opName.rfind("gpt_oss_", 0) == 0) {
+            lastOutput = LowerGptOss(opName, source, nullptr, kwParams);
+        }
+        else if (opName == "neg" || opName == "exp") {
+            auto* layer = network->addUnary(*source,
+                opName == "neg" ? UnaryOperation::kNEG : UnaryOperation::kEXP);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "reshape" || opName == "permute") {
+            auto values = IntegerAttribute(kwParams, opName == "reshape" ? "shape" : "axes");
+            if (values.size() > Dims::MAX_DIMS) {
+                loweringError = "tensor view rank exceeds TensorRT limit";
+                return X::Value();
+            }
+            auto* layer = network->addShuffle(*source);
+            if (!layer) return X::Value();
+            if (opName == "reshape") {
+                Dims shape{};
+                shape.nbDims = static_cast<int>(values.size());
+                for (int i = 0; i < shape.nbDims; ++i) {
+                    if (values[i] < 0 || values[i] > INT_MAX) {
+                        loweringError = "invalid reshape dimension";
+                        return X::Value();
+                    }
+                    shape.d[i] = static_cast<int>(values[i]);
+                }
+                layer->setZeroIsPlaceholder(false);
+                layer->setReshapeDimensions(shape);
+            } else {
+                if (values.size() != static_cast<size_t>(source->getDimensions().nbDims)) {
+                    loweringError = "permute must include every axis";
+                    return X::Value();
+                }
+                Permutation axes{};
+                std::vector<bool> used(values.size());
+                for (size_t i = 0; i < values.size(); ++i) {
+                    if (values[i] < 0 || values[i] >= static_cast<int64_t>(values.size()) || used[values[i]]) {
+                        loweringError = "invalid tensor permutation";
+                        return X::Value();
+                    }
+                    used[values[i]] = true;
+                    axes.order[i] = static_cast<int>(values[i]);
+                }
+                layer->setFirstTranspose(axes);
+            }
+            lastOutput = layer->getOutput(0);
+        }
+        else if (opName == "sum") {
+            const int rank = source->getDimensions().nbDims;
+            uint32_t axes = (1u << rank) - 1;
+            const auto* axis = FindKeyword(kwParams, "axis");
+            if (axis && axis->second.raw().tag != X3_TAG_NONE) {
+                int64_t index = axis->second.ToLongLong();
+                if (index < 0) index += rank;
+                if (axis->second.raw().tag != X3_TAG_INT64 || index < 0 || index >= rank) {
+                    loweringError = "sum axis is out of range";
+                    return X::Value();
+                }
+                axes = 1u << static_cast<uint32_t>(index);
+            }
+            auto* layer = network->addReduce(*source, ReduceOperation::kSUM, axes, false);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "paged_kv_select_layer") {
+            auto* layerItem = FindKeyword(kwParams, "layer_idx");
+            if (!layerItem) {
+                loweringError = "paged_kv_select_layer requires layer_idx";
+                return X::Value();
+            }
+            const int layerIndex = static_cast<int>(layerItem->second.ToLongLong());
+            const Dims sourceDimensions = source->getDimensions();
+            if (sourceDimensions.nbDims < 2 || layerIndex < 0 ||
+                layerIndex >= sourceDimensions.d[0]) {
+                loweringError = "paged_kv_select_layer index is outside the packed cache";
+                return X::Value();
+            }
+            pendingKVLayerIndex = layerIndex;
+            lastOutput = source;
+        }
+
+        else if (opName == "paged_kv_prefill_write_bf16") {
+            auto getIntOption = [&](const char* name, int defaultValue) {
+                auto* item = FindKeyword(kwParams, name);
+                return item ? static_cast<int>(item->second.ToLongLong()) : defaultValue;
+            };
+            const int pageSize = getIntOption("page_size", 16);
+            const int qHeads = getIntOption("q_heads", 0);
+            const int kvHeads = getIntOption("kv_heads", 0);
+            const int headDim = getIntOption("head_dim", 0);
+            if (!pendingKVKeyPages || !pendingKVValuePages || !pendingKVPageTable ||
+                !pendingKVSlotPosition || pageSize <= 0 || qHeads <= 0 ||
+                kvHeads <= 0 || headDim <= 0) {
+                loweringError = "paged_kv_prefill_write_bf16 requires explicit cache bindings and geometry";
+                return X::Value();
+            }
+            auto* plugin = new PagedKVPrefillWritePlugin(
+                pageSize, qHeads, kvHeads, headDim, pendingKVLayerIndex);
+            ownedPlugins.push_back(plugin);
+            auto* sourceCast = source->getType() != DataType::kBF16
+                ? network->addCast(*source, DataType::kBF16)
+                : nullptr;
+            ITensor* pluginSource = sourceCast ? sourceCast->getOutput(0) : source;
+            ITensor* pluginInputs[] = {
+                pluginSource,
+                pendingKVKeyPages,
+                pendingKVValuePages,
+                pendingKVPageTable,
+                pendingKVSlotPosition,
+            };
+            auto* layer = network->addPluginV2(pluginInputs, 5, *plugin);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+            pendingKVKeyPages = nullptr;
+            pendingKVValuePages = nullptr;
+            pendingKVPageTable = nullptr;
+            pendingKVSlotPosition = nullptr;
+            pendingKVActiveMask = nullptr;
+            pendingKVLayerIndex = -1;
+        }
+
+        else if (opName == "paged_kv_decode_bf16" ||
+                 opName == "paged_kv_decode_masked_bf16") {
+            auto getIntOption = [&](const char* name, int defaultValue) {
+                auto* item = FindKeyword(kwParams, name);
+                return item ? static_cast<int>(item->second.ToLongLong()) : defaultValue;
+            };
+            const int pageSize = getIntOption("page_size", 16);
+            const int qHeads = getIntOption("q_heads", 0);
+            const int kvHeads = getIntOption("kv_heads", 0);
+            const int headDim = getIntOption("head_dim", 0);
+            const bool useActiveMask = opName == "paged_kv_decode_masked_bf16";
+            if (!pendingKVKeyPages || !pendingKVValuePages || !pendingKVPageTable ||
+                !pendingKVContextLength || !pendingKVSlotPosition || pageSize <= 0 ||
+                qHeads <= 0 || kvHeads <= 0 || headDim <= 0 ||
+                (useActiveMask && !pendingKVActiveMask)) {
+                loweringError = opName +
+                    " requires explicit cache bindings and geometry";
+                return X::Value();
+            }
+            auto* plugin = new PagedKVDecodePlugin(
+                pageSize, qHeads, kvHeads, headDim, pendingKVLayerIndex,
+                useActiveMask);
+            ownedPlugins.push_back(plugin);
+            auto* sourceCast = source->getType() != DataType::kBF16
+                ? network->addCast(*source, DataType::kBF16)
+                : nullptr;
+            ITensor* pluginSource = sourceCast ? sourceCast->getOutput(0) : source;
+            ITensor* pluginInputs[] = {
+                pluginSource,
+                pendingKVKeyPages,
+                pendingKVValuePages,
+                pendingKVPageTable,
+                pendingKVContextLength,
+                pendingKVSlotPosition,
+            };
+            ITensor* maskedPluginInputs[] = {
+                pluginSource,
+                pendingKVKeyPages,
+                pendingKVValuePages,
+                pendingKVPageTable,
+                pendingKVContextLength,
+                pendingKVSlotPosition,
+                pendingKVActiveMask,
+            };
+            auto* layer = useActiveMask
+                ? network->addPluginV2(maskedPluginInputs, 7, *plugin)
+                : network->addPluginV2(pluginInputs, 6, *plugin);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+            pendingKVKeyPages = nullptr;
+            pendingKVValuePages = nullptr;
+            pendingKVPageTable = nullptr;
+            pendingKVContextLength = nullptr;
+            pendingKVSlotPosition = nullptr;
+            pendingKVActiveMask = nullptr;
+            pendingKVLayerIndex = -1;
+        }
+
+        else if (opName == "qwen3_positions") {
+            const Dims sourceDims = source->getDimensions();
+            if (sourceDims.nbDims != 3) {
+                loweringError = "qwen3_positions requires [batch,tokens,hidden]";
+                return X::Value();
+            }
+            const int components = keywordInt("components", 1);
+            integer64VectorWeights.emplace_back(
+                static_cast<size_t>(components) * sourceDims.d[0] * sourceDims.d[1]);
+            auto& positions = integer64VectorWeights.back();
+            for (int component = 0; component < components; ++component) {
+                for (int batch = 0; batch < sourceDims.d[0]; ++batch) {
+                    for (int token = 0; token < sourceDims.d[1]; ++token) {
+                        positions[(component * sourceDims.d[0] + batch) *
+                            sourceDims.d[1] + token] = token;
+                    }
+                }
+            }
+            Dims dimensions{};
+            dimensions.nbDims = 3;
+            dimensions.d[0] = components;
+            dimensions.d[1] = sourceDims.d[0];
+            dimensions.d[2] = sourceDims.d[1];
+            Weights values{
+                DataType::kINT64, positions.data(),
+                static_cast<int64_t>(components) * sourceDims.d[0] * sourceDims.d[1]};
+            auto* layer = network->addConstant(dimensions, values);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_attention_mask") {
+            const Dims sourceDims = source->getDimensions();
+            if (sourceDims.nbDims != 3) {
+                loweringError = "qwen3_attention_mask requires [batch,tokens,hidden]";
+                return X::Value();
+            }
+            integer64VectorWeights.emplace_back(
+                static_cast<size_t>(sourceDims.d[0]) * sourceDims.d[1], 1);
+            Dims dimensions{};
+            dimensions.nbDims = 2;
+            dimensions.d[0] = sourceDims.d[0];
+            dimensions.d[1] = sourceDims.d[1];
+            Weights values{
+                DataType::kINT64, integer64VectorWeights.back().data(),
+                static_cast<int64_t>(sourceDims.d[0]) * sourceDims.d[1]};
+            auto* layer = network->addConstant(dimensions, values);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "last_token") {
+            const Dims sourceDims = source->getDimensions();
+            if (sourceDims.nbDims < 2 || sourceDims.d[1] <= 0) {
+                loweringError = "last_token requires a non-empty sequence dimension";
+                return X::Value();
+            }
+            Dims start{};
+            Dims size = sourceDims;
+            Dims stride{};
+            start.nbDims = sourceDims.nbDims;
+            stride.nbDims = sourceDims.nbDims;
+            for (int i = 0; i < sourceDims.nbDims; ++i) stride.d[i] = 1;
+            start.d[1] = sourceDims.d[1] - 1;
+            size.d[1] = 1;
+            auto* layer = network->addSlice(*source, start, size, stride);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "argmax_last_dim") {
+            const Dims sourceDims = source->getDimensions();
+            if (sourceDims.nbDims <= 0) {
+                loweringError = "argmax_last_dim requires a ranked tensor";
+                return X::Value();
+            }
+            auto* top = network->addTopK(
+                *source, TopKOperation::kMAX, 1,
+                1U << (sourceDims.nbDims - 1));
+            auto* cast = top
+                ? network->addCast(*top->getOutput(1), DataType::kINT64)
+                : nullptr;
+            auto* squeeze = cast ? network->addShuffle(*cast->getOutput(0)) : nullptr;
+            if (squeeze) {
+                Dims squeezed{};
+                squeezed.nbDims = sourceDims.nbDims - 1;
+                for (int index = 0; index < squeezed.nbDims; ++index) {
+                    squeezed.d[index] = sourceDims.d[index];
+                }
+                squeeze->setReshapeDimensions(squeezed);
+            }
+            lastOutput = squeeze ? squeeze->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_aligned_prompt_embedding") {
+            const Dims idsDims = source->getDimensions();
+            if (idsDims.nbDims != 3 || idsDims.d[2] != 2 ||
+                source->getType() != DataType::kINT64) {
+                loweringError =
+                    "Qwen3-TTS aligned ids must be INT64 [batch,tokens,2]";
+                return X::Value();
+            }
+            auto sliceIds = [&](int column) -> ITensor* {
+                Dims start{};
+                Dims size = idsDims;
+                Dims stride{};
+                start.nbDims = size.nbDims;
+                stride.nbDims = size.nbDims;
+                for (int i = 0; i < size.nbDims; ++i) stride.d[i] = 1;
+                start.d[2] = column;
+                size.d[2] = 1;
+                auto* slice = network->addSlice(*source, start, size, stride);
+                auto* flatten = slice ? network->addShuffle(*slice->getOutput(0)) : nullptr;
+                if (flatten) {
+                    Dims flat{};
+                    flat.nbDims = 2;
+                    flat.d[0] = idsDims.d[0];
+                    flat.d[1] = idsDims.d[1];
+                    flatten->setReshapeDimensions(flat);
+                }
+                return flatten ? flatten->getOutput(0) : nullptr;
+            };
+            auto zeroConstant = [&]() -> ITensor* {
+                integerWeights.push_back(0);
+                Dims dimensions{};
+                dimensions.nbDims = 2;
+                dimensions.d[0] = 1;
+                dimensions.d[1] = 1;
+                Weights values{DataType::kINT64, &integerWeights.back(), 1};
+                auto* layer = network->addConstant(dimensions, values);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            auto maskedEmbedding = [&](ITensor* ids, const char* weightKey)
+                -> ITensor* {
+                ITensor* zero = zeroConstant();
+                auto* valid = zero
+                    ? network->addElementWise(
+                        *ids, *zero, ElementWiseOperation::kGREATER)
+                    : nullptr;
+                auto* clamped = zero
+                    ? network->addElementWise(
+                        *ids, *zero, ElementWiseOperation::kMAX)
+                    : nullptr;
+                ITensor* weight = GetOrCreateTRTWeight(keywordText(weightKey));
+                auto* gathered = clamped && weight
+                    ? network->addGather(
+                        *weight, *clamped->getOutput(0), 0)
+                    : nullptr;
+                auto* validFloat = valid && gathered
+                    ? network->addCast(
+                        *valid->getOutput(0), gathered->getOutput(0)->getType())
+                    : nullptr;
+                auto* expand = validFloat
+                    ? network->addShuffle(*validFloat->getOutput(0))
+                    : nullptr;
+                if (expand) {
+                    Dims maskDims{};
+                    maskDims.nbDims = 3;
+                    maskDims.d[0] = idsDims.d[0];
+                    maskDims.d[1] = idsDims.d[1];
+                    maskDims.d[2] = 1;
+                    expand->setReshapeDimensions(maskDims);
+                }
+                auto* masked = gathered && expand
+                    ? network->addElementWise(
+                        *gathered->getOutput(0), *expand->getOutput(0),
+                        ElementWiseOperation::kPROD)
+                    : nullptr;
+                return masked ? masked->getOutput(0) : nullptr;
+            };
+            ITensor* text = maskedEmbedding(
+                sliceIds(0), "text_embedding_name");
+            ITensor* codec = maskedEmbedding(
+                sliceIds(1), "codec_embedding_name");
+            auto project = [&](ITensor* input, const char* weightKey,
+                               const char* biasKey) -> ITensor* {
+                ITensor* weight = GetOrCreateTRTWeight(keywordText(weightKey));
+                weight = BroadcastMatrixWeight(
+                    weight, input ? input->getDimensions().nbDims : 0);
+                auto* matrix = input && weight
+                    ? network->addMatrixMultiply(
+                        *input, MatrixOperation::kNONE,
+                        *weight, MatrixOperation::kTRANSPOSE)
+                    : nullptr;
+                ITensor* bias = GetOrCreateTRTWeight(keywordText(biasKey));
+                bias = matrix
+                    ? BroadcastLastDimension(
+                        bias, matrix->getOutput(0)->getDimensions().nbDims,
+                        weightKey)
+                    : nullptr;
+                auto* sum = matrix && bias
+                    ? network->addElementWise(
+                        *matrix->getOutput(0), *bias,
+                        ElementWiseOperation::kSUM)
+                    : nullptr;
+                return sum ? sum->getOutput(0) : nullptr;
+            };
+            text = project(text, "text_fc1_weight_name", "text_fc1_bias_name");
+            auto* gelu = text
+                ? network->addActivation(*text, ActivationType::kGELU_ERF)
+                : nullptr;
+            text = project(
+                gelu ? gelu->getOutput(0) : nullptr,
+                "text_fc2_weight_name", "text_fc2_bias_name");
+            auto* combined = text && codec
+                ? network->addElementWise(
+                    *text, *codec, ElementWiseOperation::kSUM)
+                : nullptr;
+            lastOutput = combined ? combined->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_pack_hidden_logits") {
+            ITensor* weight = GetOrCreateTRTWeightFP32(keywordText("weight_name"));
+            auto* sourceCast = source->getType() == DataType::kFLOAT
+                ? nullptr : network->addCast(*source, DataType::kFLOAT);
+            ITensor* sourceFloat = sourceCast ? sourceCast->getOutput(0) : source;
+            weight = BroadcastMatrixWeight(
+                weight, sourceFloat->getDimensions().nbDims);
+            auto* logits = weight
+                ? network->addMatrixMultiply(
+                    *sourceFloat, MatrixOperation::kNONE,
+                    *weight, MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* tensors[] = {
+                sourceFloat, logits ? logits->getOutput(0) : nullptr};
+            auto* packed = tensors[1]
+                ? network->addConcatenation(tensors, 2)
+                : nullptr;
+            if (packed) packed->setAxis(source->getDimensions().nbDims - 1);
+            lastOutput = packed ? packed->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_decode_embedding") {
+            const Dims idsDims = source->getDimensions();
+            const int groups = keywordInt("num_code_groups", 16);
+            if (idsDims.nbDims != 2 || idsDims.d[0] != 1 ||
+                idsDims.d[1] != groups || source->getType() != DataType::kINT64) {
+                loweringError = "Qwen3-TTS decode ids must be INT64 [1,code_groups]";
+                return X::Value();
+            }
+            ITensor* summed = nullptr;
+            for (int group = 0; group < groups; ++group) {
+                Dims start{2, {0, group}};
+                Dims size{2, {1, 1}};
+                Dims stride{2, {1, 1}};
+                auto* slice = network->addSlice(*source, start, size, stride);
+                const std::string weightName = group == 0
+                    ? keywordText("codec_embedding_name")
+                    : keywordText("predictor_embedding_prefix") +
+                        std::to_string(group - 1) + ".weight";
+                ITensor* weight = GetOrCreateTRTWeight(weightName);
+                auto* gather = slice && weight
+                    ? network->addGather(*weight, *slice->getOutput(0), 0)
+                    : nullptr;
+                if (!gather) {
+                    loweringError = "Qwen3-TTS codec embedding is unavailable: " + weightName;
+                    return X::Value();
+                }
+                if (!summed) summed = gather->getOutput(0);
+                else {
+                    auto* add = network->addElementWise(
+                        *summed, *gather->getOutput(0), ElementWiseOperation::kSUM);
+                    summed = add ? add->getOutput(0) : nullptr;
+                }
+            }
+            integerWeights.push_back(keywordInt("tts_pad_token_id", 151671));
+            Dims idDims{2, {1, 1}};
+            Weights idWeights{DataType::kINT64, &integerWeights.back(), 1};
+            auto* padId = network->addConstant(idDims, idWeights);
+            ITensor* textWeight = GetOrCreateTRTWeight(keywordText("text_embedding_name"));
+            auto* textGather = padId && textWeight
+                ? network->addGather(*textWeight, *padId->getOutput(0), 0)
+                : nullptr;
+            ITensor* text = textGather ? textGather->getOutput(0) : nullptr;
+            auto project = [&](ITensor* value, const char* weightKey,
+                               const char* biasKey) -> ITensor* {
+                ITensor* weight = GetOrCreateTRTWeight(keywordText(weightKey));
+                weight = BroadcastMatrixWeight(
+                    weight, value ? value->getDimensions().nbDims : 0);
+                auto* matrix = value && weight
+                    ? network->addMatrixMultiply(
+                        *value, MatrixOperation::kNONE,
+                        *weight, MatrixOperation::kTRANSPOSE)
+                    : nullptr;
+                ITensor* bias = GetOrCreateTRTWeight(keywordText(biasKey));
+                bias = matrix ? BroadcastLastDimension(
+                    bias, matrix->getOutput(0)->getDimensions().nbDims,
+                    weightKey) : nullptr;
+                auto* add = matrix && bias ? network->addElementWise(
+                    *matrix->getOutput(0), *bias, ElementWiseOperation::kSUM) : nullptr;
+                return add ? add->getOutput(0) : nullptr;
+            };
+            text = project(text, "text_fc1_weight_name", "text_fc1_bias_name");
+            auto* gelu = text
+                ? network->addActivation(*text, ActivationType::kGELU_ERF)
+                : nullptr;
+            text = project(gelu ? gelu->getOutput(0) : nullptr,
+                "text_fc2_weight_name", "text_fc2_bias_name");
+            auto* combined = summed && text ? network->addElementWise(
+                *summed, *text, ElementWiseOperation::kSUM) : nullptr;
+            lastOutput = combined ? combined->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_channel_scale") {
+            ITensor* scale = GetOrCreateTRTWeight(keywordText("weight_name"));
+            scale = BroadcastLastDimension(
+                scale, source->getDimensions().nbDims, "qwen3_tts_channel_scale");
+            auto* product = scale ? network->addElementWise(
+                *source, *scale, ElementWiseOperation::kPROD) : nullptr;
+            lastOutput = product ? product->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_dense_attention_packed") {
+            const Dims dims = source->getDimensions();
+            const int qHeads = keywordInt("num_heads", 0);
+            const int kvHeads = keywordInt("num_key_value_heads", 0);
+            const int headDim = keywordInt("head_dim", 0);
+            const int window = keywordInt("sliding_window", 0);
+            const int tokens = dims.nbDims == 3 ? dims.d[1] : 0;
+            const int qWidth = qHeads * headDim;
+            const int kvWidth = kvHeads * headDim;
+            if (dims.nbDims != 3 || tokens <= 0 || qHeads <= 0 || kvHeads <= 0 ||
+                qHeads % kvHeads != 0 || dims.d[2] != qWidth + 2 * kvWidth) {
+                loweringError = "Qwen3-TTS dense attention dimensions are invalid";
+                return X::Value();
+            }
+            auto sliceHeads = [&](int offset, int heads) -> ITensor* {
+                Dims start{3, {0, 0, offset}};
+                Dims size{3, {dims.d[0], tokens, heads * headDim}};
+                Dims stride{3, {1, 1, 1}};
+                auto* slice = network->addSlice(*source, start, size, stride);
+                auto* reshape = slice ? network->addShuffle(*slice->getOutput(0)) : nullptr;
+                if (reshape) {
+                    reshape->setReshapeDimensions(Dims{4, {dims.d[0], tokens, heads, headDim}});
+                    Permutation p{}; p.order[0] = 0; p.order[1] = 2;
+                    p.order[2] = 1; p.order[3] = 3;
+                    reshape->setSecondTranspose(p);
+                }
+                return reshape ? reshape->getOutput(0) : nullptr;
+            };
+            ITensor* q = sliceHeads(0, qHeads);
+            ITensor* k = sliceHeads(qWidth, kvHeads);
+            ITensor* v = sliceHeads(qWidth + kvWidth, kvHeads);
+            if (qHeads != kvHeads) {
+                std::vector<int> indices(static_cast<size_t>(qHeads));
+                const int repeats = qHeads / kvHeads;
+                for (int head = 0; head < qHeads; ++head) indices[head] = head / repeats;
+                integerVectorWeights.push_back(std::move(indices));
+                Dims indexDims{1, {qHeads}};
+                Weights indexWeights{DataType::kINT32,
+                    integerVectorWeights.back().data(), qHeads};
+                auto* index = network->addConstant(indexDims, indexWeights);
+                auto* kg = index ? network->addGather(*k, *index->getOutput(0), 1) : nullptr;
+                auto* vg = index ? network->addGather(*v, *index->getOutput(0), 1) : nullptr;
+                k = kg ? kg->getOutput(0) : nullptr;
+                v = vg ? vg->getOutput(0) : nullptr;
+            }
+            auto* scores = q && k ? network->addMatrixMultiply(
+                *q, MatrixOperation::kNONE, *k, MatrixOperation::kTRANSPOSE) : nullptr;
+            scalarWeights.push_back(1.0F / std::sqrt(static_cast<float>(headDim)));
+            Weights empty{DataType::kFLOAT, nullptr, 0};
+            Weights scale{DataType::kFLOAT, &scalarWeights.back(), 1};
+            auto* scaled = scores ? network->addScale(
+                *scores->getOutput(0), ScaleMode::kUNIFORM, empty, scale, empty) : nullptr;
+            vectorWeights.emplace_back(static_cast<size_t>(tokens) * tokens, 0.0F);
+            for (int row = 0; row < tokens; ++row) {
+                for (int col = 0; col < tokens; ++col) {
+                    if (col > row || (window > 0 && col <= row - window)) {
+                        vectorWeights.back()[static_cast<size_t>(row) * tokens + col] = -10000.0F;
+                    }
+                }
+            }
+            Dims maskDims{4, {1, 1, tokens, tokens}};
+            Weights maskWeights{DataType::kFLOAT, vectorWeights.back().data(),
+                static_cast<int64_t>(vectorWeights.back().size())};
+            auto* mask = network->addConstant(maskDims, maskWeights);
+            ITensor* maskTensor = mask ? mask->getOutput(0) : nullptr;
+            if (maskTensor && scaled && maskTensor->getType() != scaled->getOutput(0)->getType()) {
+                auto* cast = network->addCast(*maskTensor, scaled->getOutput(0)->getType());
+                maskTensor = cast ? cast->getOutput(0) : nullptr;
+            }
+            auto* masked = scaled && maskTensor ? network->addElementWise(
+                *scaled->getOutput(0), *maskTensor, ElementWiseOperation::kSUM) : nullptr;
+            auto* softmax = masked ? network->addSoftMax(*masked->getOutput(0)) : nullptr;
+            if (softmax) softmax->setAxes(1U << 3);
+            auto* attended = softmax && v ? network->addMatrixMultiply(
+                *softmax->getOutput(0), MatrixOperation::kNONE,
+                *v, MatrixOperation::kNONE) : nullptr;
+            auto* flatten = attended ? network->addShuffle(*attended->getOutput(0)) : nullptr;
+            if (flatten) {
+                Permutation p{}; p.order[0] = 0; p.order[1] = 2;
+                p.order[2] = 1; p.order[3] = 3;
+                flatten->setFirstTranspose(p);
+                flatten->setReshapeDimensions(Dims{3, {dims.d[0], tokens, qWidth}});
+            }
+            lastOutput = flatten ? flatten->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_rvq_decode") {
+            const Dims codeDims = source->getDimensions();
+            const int quantizers = keywordInt("num_quantizers", 16);
+            const int semantic = keywordInt("semantic_quantizers", 1);
+            const std::string prefix = keywordText("prefix");
+            if (codeDims.nbDims != 3 || codeDims.d[0] != 1 ||
+                codeDims.d[1] != quantizers || source->getType() != DataType::kINT64) {
+                loweringError = "Qwen3-TTS RVQ codes must be INT64 [1,quantizers,frames]";
+                return X::Value();
+            }
+            ITensor* quantized = nullptr;
+            for (int group = 0; group < quantizers; ++group) {
+                const bool first = group < semantic;
+                const int local = first ? group : group - semantic;
+                const std::string branch = first ? ".rvq_first" : ".rvq_rest";
+                const std::string layer = prefix + branch + ".vq.layers." +
+                    std::to_string(local);
+                Dims start{3, {0, group, 0}};
+                Dims size{3, {1, 1, codeDims.d[2]}};
+                Dims stride{3, {1, 1, 1}};
+                auto* slice = network->addSlice(*source, start, size, stride);
+                auto* flattenIds = slice ? network->addShuffle(*slice->getOutput(0)) : nullptr;
+                if (flattenIds) flattenIds->setReshapeDimensions(
+                    Dims{2, {1, codeDims.d[2]}});
+                ITensor* embeddingSum = GetOrCreateTRTWeight(
+                    layer + "._codebook.embedding_sum");
+                ITensor* usage = GetOrCreateTRTWeight(
+                    layer + "._codebook.cluster_usage");
+                scalarWeights.push_back(1.0e-5F);
+                Dims scalarDims{1, {1}};
+                Weights epsilonWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+                auto* epsilon = network->addConstant(scalarDims, epsilonWeights);
+                ITensor* epsilonTensor = epsilon ? epsilon->getOutput(0) : nullptr;
+                if (usage && epsilonTensor && usage->getType() != epsilonTensor->getType()) {
+                    auto* cast = network->addCast(*epsilonTensor, usage->getType());
+                    epsilonTensor = cast ? cast->getOutput(0) : nullptr;
+                }
+                auto* clamped = usage && epsilonTensor ? network->addElementWise(
+                    *usage, *epsilonTensor, ElementWiseOperation::kMAX) : nullptr;
+                auto* usageShape = clamped ? network->addShuffle(*clamped->getOutput(0)) : nullptr;
+                if (usageShape) {
+                    const Dims sumDims = embeddingSum->getDimensions();
+                    usageShape->setReshapeDimensions(Dims{2, {sumDims.d[0], 1}});
+                }
+                auto* table = embeddingSum && usageShape ? network->addElementWise(
+                    *embeddingSum, *usageShape->getOutput(0), ElementWiseOperation::kDIV) : nullptr;
+                auto* gather = table && flattenIds ? network->addGather(
+                    *table->getOutput(0), *flattenIds->getOutput(0), 0) : nullptr;
+                if (!gather) {
+                    loweringError = "Qwen3-TTS RVQ codebook weights are unavailable: " + layer;
+                    return X::Value();
+                }
+                ITensor* projectWeight = GetOrCreateTRTWeight(
+                    prefix + branch + ".output_proj.weight");
+                auto* projectShape = projectWeight
+                    ? network->addShuffle(*projectWeight) : nullptr;
+                if (projectShape) {
+                    const Dims w = projectWeight->getDimensions();
+                    projectShape->setReshapeDimensions(Dims{2, {w.d[0], w.d[1]}});
+                }
+                ITensor* broadcastProject = projectShape
+                    ? BroadcastMatrixWeight(
+                        projectShape->getOutput(0),
+                        gather->getOutput(0)->getDimensions().nbDims)
+                    : nullptr;
+                auto* projected = broadcastProject ? network->addMatrixMultiply(
+                    *gather->getOutput(0), MatrixOperation::kNONE,
+                    *broadcastProject, MatrixOperation::kTRANSPOSE) : nullptr;
+                ITensor* value = projected ? projected->getOutput(0) : nullptr;
+                if (!value) {
+                    loweringError = "Qwen3-TTS RVQ output projection failed";
+                    return X::Value();
+                }
+                if (!quantized) quantized = value;
+                else {
+                    auto* add = network->addElementWise(
+                        *quantized, *value, ElementWiseOperation::kSUM);
+                    quantized = add ? add->getOutput(0) : nullptr;
+                }
+            }
+            lastOutput = quantized;
+        }
+        else if (opName == "qwen3_tts_causal_conv1d" ||
+                 opName == "qwen3_tts_causal_transconv1d") {
+            const Dims inputDims = source->getDimensions();
+            const bool transposed = opName == "qwen3_tts_causal_transconv1d";
+            const int kernelSize = keywordInt("kernel_size", 0);
+            const int strideValue = keywordInt("stride", 1);
+            const int dilation = keywordInt("dilation", 1);
+            const int groups = keywordInt("groups", 1);
+            ITensor* kernel = GetOrCreateTRTWeight(keywordText("weight_name"));
+            ITensor* bias = GetOrCreateTRTWeight(keywordText("bias_name"));
+            const SafeTensorMetadata* metadata = capturedWeightIndex
+                ? capturedWeightIndex->Find(keywordText("weight_name")) : nullptr;
+            if (inputDims.nbDims != 3 || !kernel || !bias || !metadata ||
+                metadata->shape.size() != 3 || kernelSize <= 0) {
+                loweringError = "Qwen3-TTS convolution metadata is invalid: " +
+                    keywordText("weight_name") + " input_rank=" +
+                    std::to_string(inputDims.nbDims) + " detail=" + loweringError;
+                return X::Value();
+            }
+            auto* toChannels = network->addShuffle(*source);
+            if (toChannels) {
+                Permutation p{}; p.order[0] = 0; p.order[1] = 2; p.order[2] = 1;
+                toChannels->setFirstTranspose(p);
+                toChannels->setReshapeDimensions(Dims{4, {
+                    inputDims.d[0], inputDims.d[2], 1, inputDims.d[1]}});
+            }
+            auto* kernel2d = kernel ? network->addShuffle(*kernel) : nullptr;
+            if (kernel2d) {
+                kernel2d->setReshapeDimensions(Dims{4, {
+                    static_cast<int>(metadata->shape[0]),
+                    static_cast<int>(metadata->shape[1]), 1, kernelSize}});
+            }
+            const int outputChannels = transposed
+                ? static_cast<int>(metadata->shape[1]) * groups
+                : static_cast<int>(metadata->shape[0]);
+            Weights empty{kernel->getType(), nullptr, 0};
+            DimsHW kernelDims{1, kernelSize};
+            DimsHW strideDims{1, strideValue};
+            ILayer* layer = nullptr;
+            if (transposed) {
+                auto* deconv = toChannels && kernel2d ? network->addDeconvolutionNd(
+                    *toChannels->getOutput(0), outputChannels,
+                    kernelDims, empty, empty) : nullptr;
+                if (deconv) {
+                    deconv->setInput(1, *kernel2d->getOutput(0));
+                    deconv->setInput(2, *bias);
+                    deconv->setStrideNd(strideDims);
+                    deconv->setPostPadding(
+                        DimsHW{0, kernelSize - strideValue});
+                }
+                layer = deconv;
+            }
+            else {
+                auto* conv = toChannels && kernel2d ? network->addConvolutionNd(
+                    *toChannels->getOutput(0), outputChannels,
+                    kernelDims, empty, empty) : nullptr;
+                if (conv) {
+                    conv->setInput(1, *kernel2d->getOutput(0));
+                    conv->setInput(2, *bias);
+                    conv->setDilationNd(DimsHW{1, dilation});
+                    conv->setNbGroups(groups);
+                    conv->setPrePadding(
+                        DimsHW{0, (kernelSize - 1) * dilation});
+                }
+                layer = conv;
+            }
+            auto* squeeze = layer ? network->addShuffle(*layer->getOutput(0)) : nullptr;
+            if (squeeze) {
+                const Dims outputDims = layer->getOutput(0)->getDimensions();
+                squeeze->setReshapeDimensions(Dims{3, {
+                    outputDims.d[0], outputDims.d[1], outputDims.d[3]}});
+            }
+            auto* toTokens = squeeze
+                ? network->addShuffle(*squeeze->getOutput(0)) : nullptr;
+            if (toTokens) {
+                Permutation p{}; p.order[0] = 0; p.order[1] = 2; p.order[2] = 1;
+                toTokens->setFirstTranspose(p);
+            }
+            lastOutput = toTokens ? toTokens->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_snake_beta") {
+            ITensor* alpha = GetOrCreateTRTWeight(keywordText("alpha_name"));
+            ITensor* beta = GetOrCreateTRTWeight(keywordText("beta_name"));
+            alpha = BroadcastLastDimension(alpha, source->getDimensions().nbDims,
+                "qwen3_tts_snake_alpha");
+            beta = BroadcastLastDimension(beta, source->getDimensions().nbDims,
+                "qwen3_tts_snake_beta");
+            auto* alphaExp = alpha ? network->addUnary(*alpha, UnaryOperation::kEXP) : nullptr;
+            auto* betaExp = beta ? network->addUnary(*beta, UnaryOperation::kEXP) : nullptr;
+            auto* angle = alphaExp ? network->addElementWise(
+                *source, *alphaExp->getOutput(0), ElementWiseOperation::kPROD) : nullptr;
+            auto* sine = angle ? network->addUnary(*angle->getOutput(0), UnaryOperation::kSIN) : nullptr;
+            auto* square = sine ? network->addElementWise(
+                *sine->getOutput(0), *sine->getOutput(0), ElementWiseOperation::kPROD) : nullptr;
+            auto* periodic = square && betaExp ? network->addElementWise(
+                *square->getOutput(0), *betaExp->getOutput(0), ElementWiseOperation::kDIV) : nullptr;
+            auto* add = periodic ? network->addElementWise(
+                *source, *periodic->getOutput(0), ElementWiseOperation::kSUM) : nullptr;
+            lastOutput = add ? add->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_tts_waveform") {
+            const Dims dims = source->getDimensions();
+            if (dims.nbDims != 3 || dims.d[2] != 1) {
+                loweringError = "Qwen3-TTS waveform input must be [batch,samples,1]";
+                return X::Value();
+            }
+            auto* reshape = network->addShuffle(*source);
+            if (reshape) reshape->setReshapeDimensions(Dims{2, {dims.d[0], dims.d[1]}});
+            lastOutput = reshape ? reshape->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_asr_conv_subsample") {
+            const char* weightKeys[] = {
+                "conv1_weight_name", "conv2_weight_name", "conv3_weight_name"};
+            const char* biasKeys[] = {
+                "conv1_bias_name", "conv2_bias_name", "conv3_bias_name"};
+            ITensor* current = source;
+            for (int stage = 0; stage < 3; ++stage) {
+                ITensor* kernel = GetOrCreateTRTWeight(keywordText(weightKeys[stage]));
+                ITensor* bias = GetOrCreateTRTWeight(keywordText(biasKeys[stage]));
+                const SafeTensorMetadata* metadata = capturedWeightIndex
+                    ? capturedWeightIndex->Find(keywordText(weightKeys[stage]))
+                    : nullptr;
+                if (!kernel || !bias || !metadata || metadata->shape.size() != 4) {
+                    loweringError = "Qwen3-ASR convolution weights are missing or invalid";
+                    return X::Value();
+                }
+                if (current->getType() != kernel->getType()) {
+                    auto* cast = network->addCast(*current, kernel->getType());
+                    current = cast ? cast->getOutput(0) : nullptr;
+                }
+                DimsHW kernelSize{3, 3};
+                Weights empty{kernel->getType(), nullptr, 0};
+                auto* convolution = network->addConvolutionNd(
+                    *current, static_cast<int>(metadata->shape[0]),
+                    kernelSize, empty, empty);
+                if (convolution) {
+                    convolution->setInput(1, *kernel);
+                    convolution->setInput(2, *bias);
+                    convolution->setStrideNd(DimsHW{2, 2});
+                    convolution->setPaddingNd(DimsHW{1, 1});
+                }
+                auto* activation = convolution
+                    ? network->addActivation(
+                        *convolution->getOutput(0), ActivationType::kGELU_ERF)
+                    : nullptr;
+                current = activation ? activation->getOutput(0) : nullptr;
+                if (!current) {
+                    loweringError = "Qwen3-ASR convolution lowering failed";
+                    return X::Value();
+                }
+            }
+            const Dims convDims = current->getDimensions();
+            if (convDims.nbDims != 4) {
+                loweringError = "Qwen3-ASR convolution output must be NCHW";
+                return X::Value();
+            }
+            auto* flatten = network->addShuffle(*current);
+            if (flatten) {
+                Permutation permutation{};
+                permutation.order[0] = 0;
+                permutation.order[1] = 3;
+                permutation.order[2] = 1;
+                permutation.order[3] = 2;
+                flatten->setFirstTranspose(permutation);
+                Dims flatDims{};
+                flatDims.nbDims = 2;
+                flatDims.d[0] = convDims.d[0] * convDims.d[3];
+                flatDims.d[1] = convDims.d[1] * convDims.d[2];
+                flatten->setReshapeDimensions(flatDims);
+            }
+            ITensor* outWeight =
+                GetOrCreateTRTWeight(keywordText("out_weight_name"));
+            outWeight = flatten
+                ? BroadcastMatrixWeight(outWeight, 2)
+                : nullptr;
+            auto* projected = flatten && outWeight
+                ? network->addMatrixMultiply(
+                    *flatten->getOutput(0), MatrixOperation::kNONE,
+                    *outWeight, MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* projectedTensor = projected ? projected->getOutput(0) : nullptr;
+            const int channels = keywordInt("position_channels", 0);
+            const Dims projectedDims = projectedTensor
+                ? projectedTensor->getDimensions()
+                : Dims{};
+            if (!projectedTensor || projectedDims.nbDims != 2 ||
+                channels <= 0 || projectedDims.d[1] != channels) {
+                loweringError = "Qwen3-ASR convolution projection is invalid";
+                return X::Value();
+            }
+            vectorWeights.emplace_back(
+                static_cast<size_t>(projectedDims.d[0]) * channels);
+            const int half = channels / 2;
+            const int tokensPerChunk = convDims.d[3];
+            for (int tokenIndex = 0; tokenIndex < projectedDims.d[0]; ++tokenIndex) {
+                const int position = tokenIndex % tokensPerChunk;
+                for (int index = 0; index < half; ++index) {
+                    const float scale = std::exp(
+                        -std::log(10000.0F) * index / static_cast<float>(half - 1));
+                    vectorWeights.back()[
+                        static_cast<size_t>(tokenIndex) * channels + index] =
+                        std::sin(position * scale);
+                    vectorWeights.back()[
+                        static_cast<size_t>(tokenIndex) * channels + half + index] =
+                        std::cos(position * scale);
+                }
+            }
+            Dims positionDims{};
+            positionDims.nbDims = 2;
+            positionDims.d[0] = projectedDims.d[0];
+            positionDims.d[1] = channels;
+            Weights positionWeights{
+                DataType::kFLOAT, vectorWeights.back().data(),
+                static_cast<int64_t>(vectorWeights.back().size())};
+            auto* positions = network->addConstant(positionDims, positionWeights);
+            ITensor* positionTensor = positions ? positions->getOutput(0) : nullptr;
+            if (positionTensor && positionTensor->getType() != projectedTensor->getType()) {
+                auto* cast = network->addCast(*positionTensor, projectedTensor->getType());
+                positionTensor = cast ? cast->getOutput(0) : nullptr;
+            }
+            auto* added = positionTensor
+                ? network->addElementWise(
+                    *projectedTensor, *positionTensor, ElementWiseOperation::kSUM)
+                : nullptr;
+            lastOutput = added ? added->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_asr_audio_qkv_packed") {
+            ITensor* weights[3] = {
+                GetOrCreateTRTWeight(keywordText("q_weight_name")),
+                GetOrCreateTRTWeight(keywordText("k_weight_name")),
+                GetOrCreateTRTWeight(keywordText("v_weight_name"))};
+            ITensor* biases[3] = {
+                GetOrCreateTRTWeight(keywordText("q_bias_name")),
+                GetOrCreateTRTWeight(keywordText("k_bias_name")),
+                GetOrCreateTRTWeight(keywordText("v_bias_name"))};
+            auto* weightConcat = weights[0] && weights[1] && weights[2]
+                ? network->addConcatenation(weights, 3)
+                : nullptr;
+            if (weightConcat) weightConcat->setAxis(0);
+            auto* biasConcat = biases[0] && biases[1] && biases[2]
+                ? network->addConcatenation(biases, 3)
+                : nullptr;
+            if (biasConcat) biasConcat->setAxis(0);
+            ITensor* packedWeight = weightConcat ? weightConcat->getOutput(0) : nullptr;
+            packedWeight = BroadcastMatrixWeight(packedWeight, source->getDimensions().nbDims);
+            auto* projection = packedWeight
+                ? network->addMatrixMultiply(
+                    *source, MatrixOperation::kNONE,
+                    *packedWeight, MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* packedBias = biasConcat
+                ? BroadcastLastDimension(
+                    biasConcat->getOutput(0),
+                    projection->getOutput(0)->getDimensions().nbDims,
+                    "qwen3_asr_qkv_bias")
+                : nullptr;
+            auto* biased = projection && packedBias
+                ? network->addElementWise(
+                    *projection->getOutput(0), *packedBias,
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            lastOutput = biased ? biased->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_asr_audio_attention_packed") {
+            const Dims qkvDims = source->getDimensions();
+            const int heads = keywordInt("num_heads", 0);
+            const int tokensPerChunk = keywordInt("tokens_per_chunk", 13);
+            const int hidden = qkvDims.nbDims == 2 ? qkvDims.d[1] / 3 : 0;
+            const int headDim = heads > 0 ? hidden / heads : 0;
+            const int chunks = tokensPerChunk > 0 && qkvDims.nbDims == 2
+                ? qkvDims.d[0] / tokensPerChunk
+                : 0;
+            if (qkvDims.nbDims != 2 || chunks <= 0 || heads <= 0 ||
+                headDim <= 0 || qkvDims.d[0] % tokensPerChunk != 0 ||
+                qkvDims.d[1] != 3 * heads * headDim) {
+                loweringError = "Qwen3-ASR chunk attention received invalid dimensions";
+                return X::Value();
+            }
+            auto slice = [&](int offset) -> ITensor* {
+                Dims start{2, {0, offset}};
+                Dims size{2, {qkvDims.d[0], hidden}};
+                Dims stride{2, {1, 1}};
+                auto* layer = network->addSlice(*source, start, size, stride);
+                auto* reshape = layer ? network->addShuffle(*layer->getOutput(0)) : nullptr;
+                if (reshape) {
+                    Dims shape{4, {chunks, tokensPerChunk, heads, headDim}};
+                    reshape->setReshapeDimensions(shape);
+                    Permutation p{};
+                    p.order[0] = 0; p.order[1] = 2;
+                    p.order[2] = 1; p.order[3] = 3;
+                    reshape->setSecondTranspose(p);
+                }
+                return reshape ? reshape->getOutput(0) : nullptr;
+            };
+            ITensor* q = slice(0);
+            ITensor* k = slice(hidden);
+            ITensor* v = slice(2 * hidden);
+            ITensor* cu = nullptr;
+            if (auto* cuItem = FindKeyword(kwParams, "cu_seqlens")) {
+                cu = GetOrCreateTRTTensor(cuItem->second);
+            }
+            ITensor* attentionMask = nullptr;
+            if (cu && cu->getDimensions().nbDims == 1 &&
+                cu->getDimensions().d[0] == chunks + 1) {
+                auto sliceCu = [&](int offset) -> ITensor* {
+                    auto* layer = network->addSlice(
+                        *cu, Dims{1, {offset}}, Dims{1, {chunks}}, Dims{1, {1}});
+                    return layer ? layer->getOutput(0) : nullptr;
+                };
+                ITensor* starts = sliceCu(0);
+                ITensor* ends = sliceCu(1);
+                auto* lengths = starts && ends ? network->addElementWise(
+                    *ends, *starts, ElementWiseOperation::kSUB) : nullptr;
+                auto* lengthShape = lengths
+                    ? network->addShuffle(*lengths->getOutput(0)) : nullptr;
+                if (lengthShape) lengthShape->setReshapeDimensions(
+                    Dims{4, {chunks, 1, 1, 1}});
+                integerVectorWeights.emplace_back(
+                    static_cast<size_t>(tokensPerChunk));
+                for (int index = 0; index < tokensPerChunk; ++index) {
+                    integerVectorWeights.back()[index] = index;
+                }
+                Weights rangeWeights{DataType::kINT32,
+                    integerVectorWeights.back().data(), tokensPerChunk};
+                auto* queryRange = network->addConstant(
+                    Dims{4, {1, 1, tokensPerChunk, 1}}, rangeWeights);
+                auto* keyRange = network->addConstant(
+                    Dims{4, {1, 1, 1, tokensPerChunk}}, rangeWeights);
+                auto* validQueries = lengthShape && queryRange
+                    ? network->addElementWise(
+                        *queryRange->getOutput(0), *lengthShape->getOutput(0),
+                        ElementWiseOperation::kLESS) : nullptr;
+                auto* validKeys = lengthShape && keyRange
+                    ? network->addElementWise(
+                        *keyRange->getOutput(0), *lengthShape->getOutput(0),
+                        ElementWiseOperation::kLESS) : nullptr;
+                auto* valid = validQueries && validKeys
+                    ? network->addElementWise(
+                        *validQueries->getOutput(0), *validKeys->getOutput(0),
+                        ElementWiseOperation::kAND) : nullptr;
+                attentionMask = valid ? valid->getOutput(0) : nullptr;
+            }
+            const float queryScaleValue =
+                1.0F / std::sqrt(static_cast<float>(headDim));
+            const void* queryScalePointer = nullptr;
+            if (q && q->getType() == DataType::kBF16) {
+                uint32_t scaleBits = 0;
+                std::memcpy(&scaleBits, &queryScaleValue, sizeof(scaleBits));
+                scaleBits += 0x7FFFU + ((scaleBits >> 16U) & 1U);
+                bfloat16ScalarWeights.push_back(
+                    static_cast<unsigned short>(scaleBits >> 16U));
+                queryScalePointer = &bfloat16ScalarWeights.back();
+            }
+            else {
+                scalarWeights.push_back(queryScaleValue);
+                queryScalePointer = &scalarWeights.back();
+            }
+            const DataType scaleType = q ? q->getType() : DataType::kFLOAT;
+            Weights emptyScale{scaleType, nullptr, 0};
+            Weights scaleWeights{scaleType, queryScalePointer, 1};
+            auto* scaledQuery = q
+                ? network->addScale(
+                    *q, ScaleMode::kUNIFORM,
+                    emptyScale, scaleWeights, emptyScale)
+                : nullptr;
+            q = scaledQuery ? scaledQuery->getOutput(0) : nullptr;
+            auto* attention = q && k && v
+                ? network->addAttention(
+                    *q, *k, *v, AttentionNormalizationOp::kSOFTMAX, false)
+                : nullptr;
+            if (attention && attentionMask) attention->setMask(*attentionMask);
+            auto* outputLayer = attention
+                ? network->addShuffle(*attention->getOutput(0))
+                : nullptr;
+            if (outputLayer) {
+                Permutation p{};
+                p.order[0] = 0; p.order[1] = 2;
+                p.order[2] = 1; p.order[3] = 3;
+                outputLayer->setFirstTranspose(p);
+                Dims outputDims{2, {qkvDims.d[0], hidden}};
+                outputLayer->setReshapeDimensions(outputDims);
+            }
+            lastOutput = outputLayer ? outputLayer->getOutput(0) : nullptr;
+        }
+        else if (opName == "embedding") {
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
+            if (!weightNameItem) {
+                loweringError = "embedding operation is missing weight_name";
+                return X::Value();
+            }
+            const std::string weightName = weightNameItem->second.ToString();
+            ITensor* weight = GetOrCreateTRTWeightFP32(weightName);
+            if (!weight) {
+                loweringError = "embedding weight " + weightName + ": " + loweringError;
+                return X::Value();
+            }
+            auto* layer = network->addGather(*weight, *source, 0);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (isLinear) {
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
+            if (!weightNameItem) {
+                loweringError = opName + " operation is missing weight_name";
+                return X::Value();
+            }
+            const std::string projectionWeightName =
+                weightNameItem->second.ToString();
+            const bool predictorWeight = projectionWeightName.rfind(
+                "talker.code_predictor.", 0) == 0;
+            const std::string computeDtype = keywordText("compute_dtype");
+            if (!computeDtype.empty() && computeDtype != "float32" && computeDtype != "bfloat16") {
+                loweringError = opName + " compute_dtype must be float32 or bfloat16";
+                return X::Value();
+            }
+            const bool bf16Compute = computeDtype == "bfloat16";
+            ITensor* weight = !bf16Compute && (opName == "lm_head" || predictorWeight)
+                ? GetOrCreateTRTWeightFP32(weightNameItem->second.ToString())
+                : GetOrCreateTRTWeight(weightNameItem->second.ToString());
+            const std::string tpMode = keywordText("tp_mode");
+            const int tpRank = keywordInt("tp_rank", -1);
+            auto sliceWeight = [&](ITensor* tensor, int axis, int start, int length) -> ITensor* {
+                if (!tensor) return nullptr;
+                const Dims dims = tensor->getDimensions();
+                if (axis < 0 || axis >= dims.nbDims || start < 0 || length <= 0 ||
+                    start > dims.d[axis] || length > dims.d[axis] - start) return nullptr;
+                Dims starts{}, sizes = dims, strides{};
+                starts.nbDims = sizes.nbDims;
+                strides.nbDims = sizes.nbDims;
+                for (int i = 0; i < dims.nbDims; ++i) {
+                    starts.d[i] = i == axis ? start : 0;
+                    strides.d[i] = 1;
+                }
+                sizes.d[axis] = length;
+                auto* layer = network->addSlice(*tensor, starts, sizes, strides);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            auto catWeights = [&](const std::vector<ITensor*>& tensors) -> ITensor* {
+                if (tensors.empty() || std::any_of(tensors.begin(), tensors.end(),
+                        [](ITensor* tensor) { return tensor == nullptr; })) return nullptr;
+                auto* layer = network->addConcatenation(tensors.data(), int(tensors.size()));
+                if (layer) layer->setAxis(0);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            auto shardQkv = [&](ITensor* tensor) -> ITensor* {
+                const int qHeads = keywordInt("tp_heads", 0);
+                const int kvHeads = keywordInt("tp_kv_heads", 0);
+                const int headDim = keywordInt("tp_head_dim", 0);
+                if (!tensor || (tpRank != 0 && tpRank != 1) || qHeads <= 0 ||
+                    kvHeads <= 0 || headDim <= 0 || qHeads % 2 || kvHeads % 2) return nullptr;
+                const Dims dims = tensor->getDimensions();
+                if ((dims.nbDims != 1 && dims.nbDims != 2) ||
+                    dims.d[0] != (qHeads + 2 * kvHeads) * headDim) return nullptr;
+                const int qWidth = qHeads * headDim, kvWidth = kvHeads * headDim;
+                const int qPart = qWidth / 2, kvPart = kvWidth / 2;
+                return catWeights({
+                    sliceWeight(tensor, 0, tpRank * qPart, qPart),
+                    sliceWeight(tensor, 0, qWidth + tpRank * kvPart, kvPart),
+                    sliceWeight(tensor, 0, qWidth + kvWidth + tpRank * kvPart, kvPart)});
+            };
+            const char* gemvFlag = std::getenv("GARNET_GPT_OSS_DECODE_GEMV");
+            const Dims sourceDims = source->getDimensions();
+            const bool gptOssGemv =
+                gemvFlag && std::strcmp(gemvFlag, "1") == 0 &&
+                bf16Compute && tpRank >= 0 &&
+                projectionWeightName.rfind("block.", 0) == 0 &&
+                ((tpMode == "qkv" &&
+                  projectionWeightName.find(".attn.qkv.weight") != std::string::npos) ||
+                 (tpMode == "row" &&
+                  projectionWeightName.find(".attn.out.weight") != std::string::npos)) &&
+                sourceDims.nbDims == 3 && sourceDims.d[0] == 1 &&
+                sourceDims.d[1] == 1;
+            if (tpRank >= 0) {
+                if (tpMode == "qkv") {
+                    if (!gptOssGemv) weight = shardQkv(weight);
+                    if (!weight) {
+                        loweringError = opName + " TP2 QKV weight shard failed";
+                        return X::Value();
+                    }
+                } else if (tpMode == "row") {
+                    const Dims dims = weight ? weight->getDimensions() : Dims{};
+                    if (tpRank > 1 || dims.nbDims != 2 || dims.d[1] % 2) {
+                        loweringError = opName + " TP2 row-parallel weight shape is invalid";
+                        return X::Value();
+                    }
+                    const int part = dims.d[1] / 2;
+                    if (!gptOssGemv)
+                        weight = sliceWeight(weight, 1, tpRank * part, part);
+                    if (!weight) {
+                        loweringError = opName + " TP2 row-parallel weight shard failed";
+                        return X::Value();
+                    }
+                } else if (tpMode == "vocab") {
+                    const Dims dims = weight ? weight->getDimensions() : Dims{};
+                    if (tpRank > 1 || dims.nbDims != 2 || dims.d[0] % 2) {
+                        loweringError = opName + " TP2 vocabulary weight shape is invalid";
+                        return X::Value();
+                    }
+                    const int part = dims.d[0] / 2;
+                    weight = sliceWeight(weight, 0, tpRank * part, part);
+                    if (!weight) {
+                        loweringError = opName + " TP2 vocabulary weight shard failed";
+                        return X::Value();
+                    }
+                } else if (!tpMode.empty()) {
+                    loweringError = opName + " has unknown TP2 mode: " + tpMode;
+                    return X::Value();
+                }
+            }
+            ITensor* projectionInput = source;
+            const DataType sourceType = source->getType();
+            const DataType projectionType = bf16Compute ? DataType::kBF16 :
+                opName == "lm_head" || computeDtype == "float32" ||
+                keywordText("accumulation_dtype") == "float32"
+                ? DataType::kFLOAT
+                : (weight ? weight->getType() : sourceType);
+            if (weight && weight->getType() != projectionType) {
+                auto* cast = network->addCast(*weight, projectionType);
+                weight = cast ? cast->getOutput(0) : nullptr;
+            }
+            if (weight && source->getType() != projectionType) {
+                auto* cast = network->addCast(*source, projectionType);
+                projectionInput = cast ? cast->getOutput(0) : nullptr;
+            }
+            if (gptOssGemv) {
+                lastOutput = LowerGptOssDecodeGemv(projectionInput, weight,
+                    tpRank, tpMode == "qkv", keywordInt("tp_heads", 0),
+                    keywordInt("tp_kv_heads", 0), keywordInt("tp_head_dim", 0));
+                if (!lastOutput) return X::Value();
+            } else {
+                weight = projectionInput
+                    ? BroadcastMatrixWeight(
+                        weight, projectionInput->getDimensions().nbDims)
+                    : nullptr;
+                auto* projection = weight
+                    ? network->addMatrixMultiply(
+                        *projectionInput,
+                        MatrixOperation::kNONE,
+                        *weight,
+                        MatrixOperation::kTRANSPOSE)
+                    : nullptr;
+                if (!projection) {
+                    loweringError = opName + " matrix projection failed: " + loweringError;
+                    return X::Value();
+                }
+                lastOutput = projection->getOutput(0);
+            }
+            if ((opName != "lm_head" || bf16Compute) && lastOutput->getType() != sourceType) {
+                auto* cast = network->addCast(*lastOutput, sourceType);
+                lastOutput = cast ? cast->getOutput(0) : nullptr;
+                if (!lastOutput) {
+                    loweringError =
+                        opName + " output precision restoration failed";
+                    return X::Value();
+                }
+            }
+            auto* biasNameItem = FindKeyword(kwParams, "bias_name");
+            if (biasNameItem && !biasNameItem->second.IsNone()) {
+                const std::string biasName = biasNameItem->second.ToString();
+                if (!biasName.empty() && !(tpMode == "row" && tpRank == 1)) {
+                    ITensor* bias = GetOrCreateTRTWeight(biasName);
+                    if (tpMode == "qkv" && tpRank >= 0) {
+                        bias = shardQkv(bias);
+                        if (!bias) {
+                            loweringError = opName + " TP2 QKV bias shard failed";
+                            return X::Value();
+                        }
+                    } else if (tpMode == "vocab" && tpRank >= 0) {
+                        const Dims dims = bias ? bias->getDimensions() : Dims{};
+                        if (dims.nbDims != 1 || dims.d[0] % 2) {
+                            loweringError = opName + " TP2 vocabulary bias shape is invalid";
+                            return X::Value();
+                        }
+                        const int part = dims.d[0] / 2;
+                        bias = sliceWeight(bias, 0, tpRank * part, part);
+                        if (!bias) {
+                            loweringError = opName + " TP2 vocabulary bias shard failed";
+                            return X::Value();
+                        }
+                    }
+                    if (bias && bias->getType() != lastOutput->getType()) {
+                        auto* cast = network->addCast(
+                            *bias, lastOutput->getType());
+                        bias = cast ? cast->getOutput(0) : nullptr;
+                    }
+                    bias = BroadcastLastDimension(
+                        bias,
+                        lastOutput->getDimensions().nbDims,
+                        opName + "_bias_broadcast");
+                    auto* biased = bias
+                        ? network->addElementWise(*lastOutput, *bias, ElementWiseOperation::kSUM)
+                        : nullptr;
+                    if (!biased) {
+                        loweringError = opName + " bias addition failed: " + loweringError;
+                        return X::Value();
+                    }
+                    lastOutput = biased->getOutput(0);
+                }
+            }
+        }
+        else if (opName == "layer_norm") {
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
+            auto* biasNameItem = FindKeyword(kwParams, "bias_name");
+            if (!weightNameItem || !biasNameItem) {
+                loweringError = "layer_norm requires weight_name and bias_name";
+                return X::Value();
+            }
+            const std::string scaleName = weightNameItem->second.ToString();
+            ITensor* scale = scaleName.rfind("talker.code_predictor.", 0) == 0
+                ? GetOrCreateTRTWeightFP32(scaleName)
+                : GetOrCreateTRTWeight(scaleName);
+            ITensor* bias = GetOrCreateTRTWeight(biasNameItem->second.ToString());
+            const Dims sourceDimensions = source->getDimensions();
+            scale = BroadcastLastDimension(scale, sourceDimensions.nbDims, "layer_norm_scale_broadcast");
+            bias = BroadcastLastDimension(bias, sourceDimensions.nbDims, "layer_norm_bias_broadcast");
+            if (!scale || !bias || sourceDimensions.nbDims <= 0) {
+                loweringError = "layer_norm constants or input rank are invalid: " + loweringError;
+                return X::Value();
+            }
+            auto* layer = network->addNormalization(
+                *source,
+                *scale,
+                *bias,
+                1U << (sourceDimensions.nbDims - 1));
+            auto* epsilonItem = FindKeyword(kwParams, "eps");
+            if (layer && epsilonItem) {
+                layer->setEpsilon(static_cast<float>(epsilonItem->second.ToDouble()));
+            }
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "rms_norm") {
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
+            if (!weightNameItem) {
+                loweringError = "rms_norm requires weight_name";
+                return X::Value();
+            }
+            const std::string scaleName = weightNameItem->second.ToString();
+            ITensor* scale = scaleName.rfind("talker.code_predictor.", 0) == 0
+                ? GetOrCreateTRTWeightFP32(scaleName)
+                : GetOrCreateTRTWeight(scaleName);
+            const Dims sourceDimensions = source->getDimensions();
+            scale = BroadcastLastDimension(scale, sourceDimensions.nbDims, "rms_norm_scale_broadcast");
+            if (!scale || sourceDimensions.nbDims <= 0) {
+                loweringError = "rms_norm scale or input rank is invalid: " + loweringError;
+                return X::Value();
+            }
+            auto* sourceFloatLayer = network->addCast(*source, DataType::kFLOAT);
+            ITensor* sourceFloat = sourceFloatLayer ? sourceFloatLayer->getOutput(0) : nullptr;
+            auto* scaleFloatLayer = scale ? network->addCast(*scale, DataType::kFLOAT) : nullptr;
+            ITensor* scaleFloat = scaleFloatLayer ? scaleFloatLayer->getOutput(0) : nullptr;
+            auto* square = sourceFloat
+                ? network->addElementWise(*sourceFloat, *sourceFloat, ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* mean = square
+                ? network->addReduce(
+                    *square->getOutput(0),
+                    ReduceOperation::kAVG,
+                    1U << (sourceDimensions.nbDims - 1),
+                    true)
+                : nullptr;
+            auto* epsilonItem = FindKeyword(kwParams, "eps");
+            scalarWeights.push_back(epsilonItem
+                ? static_cast<float>(epsilonItem->second.ToDouble())
+                : 1.0e-6F);
+            Dims scalarDimensions{};
+            scalarDimensions.nbDims = sourceDimensions.nbDims;
+            for (int dimension = 0; dimension < scalarDimensions.nbDims; ++dimension) {
+                scalarDimensions.d[dimension] = 1;
+            }
+            Weights epsilonWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+            auto* epsilon = network->addConstant(scalarDimensions, epsilonWeights);
+            auto* variance = mean && epsilon
+                ? network->addElementWise(
+                    *mean->getOutput(0),
+                    *epsilon->getOutput(0),
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            auto* root = variance
+                ? network->addUnary(*variance->getOutput(0), UnaryOperation::kSQRT)
+                : nullptr;
+            auto* normalized = root
+                ? network->addElementWise(
+                    *sourceFloat,
+                    *root->getOutput(0),
+                    ElementWiseOperation::kDIV)
+                : nullptr;
+            auto* scaled = normalized
+                ? network->addElementWise(
+                    *normalized->getOutput(0),
+                    *scaleFloat,
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* outputCast = scaled
+                ? network->addCast(*scaled->getOutput(0), source->getType())
+                : nullptr;
+            lastOutput = outputCast ? outputCast->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_text_qkv_packed") {
+            auto weight = [&](const char* name) -> ITensor* {
+                auto* item = FindKeyword(kwParams, name);
+                if (!item || item->second.IsNone()) return nullptr;
+                const std::string weightName = item->second.ToString();
+                if (weightName.empty()) return nullptr;
+                return weightName.rfind("talker.code_predictor.", 0) == 0
+                    ? GetOrCreateTRTWeightFP32(weightName)
+                    : GetOrCreateTRTWeight(weightName);
+            };
+            ITensor* qWeight = weight("q_weight_name");
+            ITensor* kWeight = weight("k_weight_name");
+            ITensor* vWeight = weight("v_weight_name");
+            ITensor* qNormWeight = weight("q_norm_weight_name");
+            ITensor* kNormWeight = weight("k_norm_weight_name");
+            auto* numHeadsItem = FindKeyword(kwParams, "num_heads");
+            auto* numKvHeadsItem = FindKeyword(kwParams, "num_kv_heads");
+            auto* headDimItem = FindKeyword(kwParams, "head_dim");
+            const int numHeads = numHeadsItem ? static_cast<int>(numHeadsItem->second.ToLongLong()) : 0;
+            const int numKvHeads = numKvHeadsItem ? static_cast<int>(numKvHeadsItem->second.ToLongLong()) : 0;
+            const int headDim = headDimItem ? static_cast<int>(headDimItem->second.ToLongLong()) : 0;
+            if (!qWeight || !kWeight || !vWeight ||
+                numHeads <= 0 || numKvHeads <= 0 || headDim <= 0) {
+                loweringError = "Qwen3 text packed QKV metadata or weights are incomplete";
+                return X::Value();
+            }
+            auto sliceLast = [&](ITensor* tensor, int startValue, int sizeValue) -> ITensor* {
+                if (!tensor) return nullptr;
+                const Dims dimensions = tensor->getDimensions();
+                if (dimensions.nbDims <= 0) return nullptr;
+                Dims start{};
+                Dims size = dimensions;
+                Dims stride{};
+                start.nbDims = dimensions.nbDims;
+                stride.nbDims = dimensions.nbDims;
+                for (int index = 0; index < dimensions.nbDims; ++index) {
+                    stride.d[index] = 1;
+                }
+                start.d[dimensions.nbDims - 1] = startValue;
+                size.d[dimensions.nbDims - 1] = sizeValue;
+                auto* layer = network->addSlice(*tensor, start, size, stride);
+                return layer ? layer->getOutput(0) : nullptr;
+            };
+            auto headRmsNorm = [&](ITensor* projected, ITensor* normWeight, int heads) -> ITensor* {
+                if (!projected || !normWeight) return nullptr;
+                const Dims projectedDimensions = projected->getDimensions();
+                if (projectedDimensions.nbDims != 3) return nullptr;
+                Dims headDimensions{};
+                headDimensions.nbDims = 4;
+                headDimensions.d[0] = projectedDimensions.d[0];
+                headDimensions.d[1] = projectedDimensions.d[1];
+                headDimensions.d[2] = heads;
+                headDimensions.d[3] = headDim;
+                auto* reshape = network->addShuffle(*projected);
+                if (!reshape) return nullptr;
+                reshape->setReshapeDimensions(headDimensions);
+                ITensor* headed = reshape->getOutput(0);
+                ITensor* broadcastScale = BroadcastLastDimension(
+                    normWeight,
+                    4,
+                    "qwen3_text_head_norm_scale");
+                auto* headedFloatLayer = network->addCast(*headed, DataType::kFLOAT);
+                auto* scaleFloatLayer = broadcastScale
+                    ? network->addCast(*broadcastScale, DataType::kFLOAT)
+                    : nullptr;
+                ITensor* headedFloat = headedFloatLayer ? headedFloatLayer->getOutput(0) : nullptr;
+                auto* square = headedFloat
+                    ? network->addElementWise(*headedFloat, *headedFloat, ElementWiseOperation::kPROD)
+                    : nullptr;
+                auto* mean = square
+                    ? network->addReduce(
+                        *square->getOutput(0),
+                        ReduceOperation::kAVG,
+                        1U << 3,
+                        true)
+                    : nullptr;
+                auto* epsilonItem = FindKeyword(kwParams, "norm_eps");
+                scalarWeights.push_back(epsilonItem
+                    ? static_cast<float>(epsilonItem->second.ToDouble())
+                    : 1.0e-6F);
+                Dims scalarDimensions{};
+                scalarDimensions.nbDims = 4;
+                scalarDimensions.d[0] = 1;
+                scalarDimensions.d[1] = 1;
+                scalarDimensions.d[2] = 1;
+                scalarDimensions.d[3] = 1;
+                Weights epsilonWeights{DataType::kFLOAT, &scalarWeights.back(), 1};
+                auto* epsilon = network->addConstant(scalarDimensions, epsilonWeights);
+                auto* variance = mean && epsilon
+                    ? network->addElementWise(
+                        *mean->getOutput(0),
+                        *epsilon->getOutput(0),
+                        ElementWiseOperation::kSUM)
+                    : nullptr;
+                auto* root = variance
+                    ? network->addUnary(*variance->getOutput(0), UnaryOperation::kSQRT)
+                    : nullptr;
+                auto* normalized = root
+                    ? network->addElementWise(
+                        *headedFloat,
+                        *root->getOutput(0),
+                        ElementWiseOperation::kDIV)
+                    : nullptr;
+                auto* scaled = normalized && scaleFloatLayer
+                    ? network->addElementWise(
+                        *normalized->getOutput(0),
+                        *scaleFloatLayer->getOutput(0),
+                        ElementWiseOperation::kPROD)
+                    : nullptr;
+                auto* cast = scaled
+                    ? network->addCast(*scaled->getOutput(0), projected->getType())
+                    : nullptr;
+                auto* flatten = cast ? network->addShuffle(*cast->getOutput(0)) : nullptr;
+                if (flatten) flatten->setReshapeDimensions(projectedDimensions);
+                return flatten ? flatten->getOutput(0) : nullptr;
+            };
+            const int qWidth = numHeads * headDim;
+            const int kvWidth = numKvHeads * headDim;
+            ITensor* projectionWeights[] = {qWeight, kWeight, vWeight};
+            auto* weightConcat = network->addConcatenation(projectionWeights, 3);
+            if (weightConcat) weightConcat->setAxis(0);
+            ITensor* packedWeight = weightConcat ? weightConcat->getOutput(0) : nullptr;
+            ITensor* projectionInput = source;
+            const DataType sourceType = source->getType();
+            if (packedWeight && packedWeight->getType() != sourceType) {
+                auto* cast =
+                    network->addCast(*source, packedWeight->getType());
+                projectionInput = cast ? cast->getOutput(0) : nullptr;
+            }
+            packedWeight = BroadcastMatrixWeight(
+                packedWeight,
+                projectionInput
+                    ? projectionInput->getDimensions().nbDims
+                    : source->getDimensions().nbDims);
+            auto* projection = packedWeight
+                ? network->addMatrixMultiply(
+                    *projectionInput,
+                    MatrixOperation::kNONE,
+                    *packedWeight,
+                    MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* packedProjection = projection ? projection->getOutput(0) : nullptr;
+            if (packedProjection &&
+                packedProjection->getType() != sourceType) {
+                auto* cast =
+                    network->addCast(*packedProjection, sourceType);
+                packedProjection = cast ? cast->getOutput(0) : nullptr;
+            }
+            ITensor* qProjection = sliceLast(packedProjection, 0, qWidth);
+            ITensor* kProjection = sliceLast(packedProjection, qWidth, kvWidth);
+            ITensor* v = sliceLast(packedProjection, qWidth + kvWidth, kvWidth);
+            ITensor* q = qNormWeight
+                ? headRmsNorm(qProjection, qNormWeight, numHeads)
+                : qProjection;
+            ITensor* k = kNormWeight
+                ? headRmsNorm(kProjection, kNormWeight, numKvHeads)
+                : kProjection;
+            ITensor* packedInputs[] = {q, k, v};
+            auto* packed = q && k && v ? network->addConcatenation(packedInputs, 3) : nullptr;
+            if (packed) packed->setAxis(2);
+            lastOutput = packed ? packed->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_mlp_gate_up_swiglu_packed") {
+            auto* gateNameItem = FindKeyword(kwParams, "gate_weight_name");
+            auto* upNameItem = FindKeyword(kwParams, "up_weight_name");
+            const std::string gateName = gateNameItem
+                ? gateNameItem->second.ToString() : std::string();
+            const std::string upName = upNameItem
+                ? upNameItem->second.ToString() : std::string();
+            ITensor* gateWeight = gateNameItem &&
+                gateName.rfind("talker.code_predictor.", 0) == 0
+                ? GetOrCreateTRTWeightFP32(gateName)
+                : (gateNameItem ? GetOrCreateTRTWeight(gateName) : nullptr);
+            ITensor* upWeight = upNameItem &&
+                upName.rfind("talker.code_predictor.", 0) == 0
+                ? GetOrCreateTRTWeightFP32(upName)
+                : (upNameItem ? GetOrCreateTRTWeight(upName) : nullptr);
+            const Dims gateDimensions = gateWeight
+                ? gateWeight->getDimensions()
+                : Dims{};
+            const Dims upDimensions = upWeight
+                ? upWeight->getDimensions()
+                : Dims{};
+            if (!gateWeight || !upWeight || gateDimensions.nbDims != 2 ||
+                upDimensions.nbDims != 2 ||
+                gateDimensions.d[0] != upDimensions.d[0] ||
+                gateDimensions.d[1] != upDimensions.d[1]) {
+                loweringError = "Qwen3 packed SwiGLU weights are missing or incompatible";
+                return X::Value();
+            }
+            ITensor* weights[] = {gateWeight, upWeight};
+            auto* weightConcat = network->addConcatenation(weights, 2);
+            if (weightConcat) weightConcat->setAxis(0);
+            ITensor* packedWeight = weightConcat ? weightConcat->getOutput(0) : nullptr;
+            ITensor* projectionInput = source;
+            const DataType sourceType = source->getType();
+            if (packedWeight && packedWeight->getType() != sourceType) {
+                auto* cast =
+                    network->addCast(*source, packedWeight->getType());
+                projectionInput = cast ? cast->getOutput(0) : nullptr;
+            }
+            packedWeight = BroadcastMatrixWeight(
+                packedWeight,
+                projectionInput
+                    ? projectionInput->getDimensions().nbDims
+                    : source->getDimensions().nbDims);
+            auto* projection = packedWeight
+                ? network->addMatrixMultiply(
+                    *projectionInput,
+                    MatrixOperation::kNONE,
+                    *packedWeight,
+                    MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            ITensor* packed = projection ? projection->getOutput(0) : nullptr;
+            if (packed && packed->getType() != sourceType) {
+                auto* cast = network->addCast(*packed, sourceType);
+                packed = cast ? cast->getOutput(0) : nullptr;
+            }
+            if (!packed) {
+                loweringError = "Qwen3 packed SwiGLU projection failed";
+                return X::Value();
+            }
+            const int intermediate = gateDimensions.d[0];
+            const Dims packedDimensions = packed->getDimensions();
+            Dims start{};
+            Dims size = packedDimensions;
+            Dims stride{};
+            start.nbDims = packedDimensions.nbDims;
+            stride.nbDims = packedDimensions.nbDims;
+            for (int index = 0; index < packedDimensions.nbDims; ++index) {
+                stride.d[index] = 1;
+            }
+            size.d[packedDimensions.nbDims - 1] = intermediate;
+            auto* gateSlice = network->addSlice(*packed, start, size, stride);
+            start.d[packedDimensions.nbDims - 1] = intermediate;
+            auto* upSlice = network->addSlice(*packed, start, size, stride);
+            ITensor* gate = gateSlice ? gateSlice->getOutput(0) : nullptr;
+            ITensor* up = upSlice ? upSlice->getOutput(0) : nullptr;
+            auto* sigmoid = gate
+                ? network->addActivation(*gate, ActivationType::kSIGMOID)
+                : nullptr;
+            auto* silu = sigmoid
+                ? network->addElementWise(
+                    *gate,
+                    *sigmoid->getOutput(0),
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            auto* swiglu = silu && up
+                ? network->addElementWise(
+                    *silu->getOutput(0),
+                    *up,
+                    ElementWiseOperation::kPROD)
+                : nullptr;
+            lastOutput = swiglu ? swiglu->getOutput(0) : nullptr;
+        }
+        else if (opName == "paged_kv_update_packed") {
+            auto* enabledItem = FindKeyword(kwParams, "enabled");
+            const bool enabled = enabledItem && enabledItem->second.ToLongLong() != 0;
+            if (enabled) {
+                loweringError = "paged KV update requires the decode engine profile and cache bindings";
+                return X::Value();
+            }
+            lastOutput = source;
+        }
+        else if (opName == "merge_attention_heads") {
+            // LowerTextAttention already returns [batch, tokens, hidden].
+            lastOutput = source;
+        }
+        else if (opName == "qwen3_vl_patch_embed_conv3d") {
+            auto* weightNameItem = FindKeyword(kwParams, "weight_name");
+            auto* biasNameItem = FindKeyword(kwParams, "bias_name");
+            if (!weightNameItem || !biasNameItem) {
+                loweringError = "Qwen3-VL patch embedding requires weight_name and bias_name";
+                return X::Value();
+            }
+            const std::string weightName = weightNameItem->second.ToString();
+            const std::string biasName = biasNameItem->second.ToString();
+            const SafeTensorMetadata* weightMetadata = capturedWeightIndex
+                ? capturedWeightIndex->Find(weightName)
+                : nullptr;
+            if (!weightMetadata || weightMetadata->shape.size() != 5) {
+                loweringError = "Qwen3-VL patch embedding weight must be rank 5: " + weightName;
+                return X::Value();
+            }
+            ITensor* weight = GetOrCreateTRTWeight(weightName);
+            ITensor* bias = GetOrCreateTRTWeight(biasName);
+            if (!weight || !bias) {
+                loweringError = "Qwen3-VL patch embedding constants: " + loweringError;
+                return X::Value();
+            }
+            const long long outputWidth = weightMetadata->shape[0];
+            long long inputWidth = 1;
+            for (size_t dimension = 1; dimension < weightMetadata->shape.size(); ++dimension) {
+                inputWidth *= weightMetadata->shape[dimension];
+            }
+            if (outputWidth > std::numeric_limits<int>::max() ||
+                inputWidth > std::numeric_limits<int>::max()) {
+                loweringError = "Qwen3-VL patch embedding dimensions exceed TensorRT limits";
+                return X::Value();
+            }
+            Dims flattenedWeightShape{};
+            flattenedWeightShape.nbDims = 2;
+            flattenedWeightShape.d[0] = static_cast<int>(outputWidth);
+            flattenedWeightShape.d[1] = static_cast<int>(inputWidth);
+            auto* flatten = network->addShuffle(*weight);
+            if (flatten) {
+                flatten->setReshapeDimensions(flattenedWeightShape);
+                flatten->setName("qwen3_vl_patch_embed_flatten_weight");
+            }
+            auto* projection = flatten
+                ? network->addMatrixMultiply(
+                    *source,
+                    MatrixOperation::kNONE,
+                    *flatten->getOutput(0),
+                    MatrixOperation::kTRANSPOSE)
+                : nullptr;
+            bias = projection
+                ? BroadcastLastDimension(
+                    bias,
+                    projection->getOutput(0)->getDimensions().nbDims,
+                    "qwen3_vl_patch_embed_bias_broadcast")
+                : nullptr;
+            auto* biased = projection
+                ? network->addElementWise(
+                    *projection->getOutput(0),
+                    *bias,
+                    ElementWiseOperation::kSUM)
+                : nullptr;
+            lastOutput = biased ? biased->getOutput(0) : nullptr;
+        }
+        else if (opName == "qwen3_vl_patch_merger_shuffle") {
+            const Dims sourceDimensions = source->getDimensions();
+            auto* mergeSizeItem = FindKeyword(kwParams, "spatial_merge_size");
+            const int mergeSize = mergeSizeItem
+                ? static_cast<int>(mergeSizeItem->second.ToLongLong())
+                : 0;
+            const int mergeUnit = mergeSize * mergeSize;
+            if (sourceDimensions.nbDims != 2 || mergeUnit <= 0 ||
+                sourceDimensions.d[0] % mergeUnit != 0) {
+                loweringError = "Qwen3-VL patch merger received incompatible static dimensions";
+                return X::Value();
+            }
+            Dims mergedDimensions{};
+            mergedDimensions.nbDims = 2;
+            mergedDimensions.d[0] = sourceDimensions.d[0] / mergeUnit;
+            mergedDimensions.d[1] = sourceDimensions.d[1] * mergeUnit;
+            auto* layer = network->addShuffle(*source);
+            if (layer) {
+                layer->setReshapeDimensions(mergedDimensions);
+            }
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        else if (opName == "silu") {
+            auto* sigmoid = network->addActivation(*source, ActivationType::kSIGMOID);
+            auto* product = sigmoid
+                ? network->addElementWise(*source, *sigmoid->getOutput(0), ElementWiseOperation::kPROD)
+                : nullptr;
+            lastOutput = product ? product->getOutput(0) : nullptr;
+        }
+        else {
+            ActivationType activation;
+            if (opName == "relu") activation = ActivationType::kRELU;
+            else if (opName == "sigmoid") activation = ActivationType::kSIGMOID;
+            else if (opName == "tanh") activation = ActivationType::kTANH;
+            else if (opName == "gelu") activation = ActivationType::kGELU_ERF;
+            else if (opName == "gelu_pytorch_tanh" || opName == "gelu_tanh") {
+                activation = ActivationType::kGELU_TANH;
+            }
+            else {
+                loweringError = "unsupported unary operation: " + opName;
+                return X::Value();
+            }
+            auto* layer = network->addActivation(*source, activation);
+            lastOutput = layer ? layer->getOutput(0) : nullptr;
+        }
+        if (!lastOutput || !output.IsObject()) {
+            if (loweringError.empty()) {
+                loweringError = "TensorRT unary lowering failed for " + opName;
+            }
+            return X::Value();
+        }
+        tensorMap[TensorId(output)] = lastOutput;
+        return X::Value(true);
+    }
+
+    X::Value TRTBuilder::HandleBranchBegin(
+        const std::string& condition,
+        int branchType,
+        unsigned long long flowId,
+        int branchId) {
+        const bool parentActive = loweringActive;
+        branchParentActivity.push_back(parentActive);
+
+        bool selectBranch = false;
+        if (branchType == 2 || branchId == -1) {
+            selectBranch = !flowBranchTaken[flowId];
+        }
+        else {
+            bool conditionValue = false;
+            if (condition == "True" || condition == "true" || condition == "1") {
+                conditionValue = true;
+            }
+            else if (condition == "False" || condition == "false" || condition == "0") {
+                conditionValue = false;
+            }
+            else {
+                loweringError = "dynamic branch lowering is not implemented; condition=" + condition;
+                loweringActive = false;
+                return X::Value();
+            }
+            selectBranch = !flowBranchTaken[flowId] && conditionValue;
+            if (conditionValue) {
+                flowBranchTaken[flowId] = true;
+            }
+        }
+        loweringActive = parentActive && selectBranch;
+        return X::Value(true);
+    }
+
+    X::Value TRTBuilder::HandleBranchEnd() {
+        if (branchParentActivity.empty()) {
+            loweringError = "unbalanced branchEnd in captured graph";
+            return X::Value();
+        }
+        loweringActive = branchParentActivity.back();
+        branchParentActivity.pop_back();
+        return X::Value(true);
+    }
+}

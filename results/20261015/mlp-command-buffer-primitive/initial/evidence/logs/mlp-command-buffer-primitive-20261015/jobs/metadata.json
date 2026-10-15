@@ -1,0 +1,67 @@
+{
+  "scope": "Exclusive original BF16 shader weight-address-space gate with verified checkpoints.",
+  "source_sha256": {
+    "test2026/metal/run_mlp_command_buffer_primitive.py": "2febcb95d86a4d5874aa1ccff4afc71207c4d6145e718a62b671004c38a34ea0",
+    "test2026/metal/run_constant_bf16_probe.py": "33977da781d12d68edc10075d0b25c996c56426620768a62461a216fcdaa3c87",
+    "test2026/metal/make_mlp_command_buffer_context.py": "842cb4ffc70a4770633b1fdf8753c997d71b9308f287965d6431319814102624",
+    "test2026/metal/mlp_prefill_graph_test.cpp": "c9c8a9ad67c903c6d9ed94ad02b3ccede1af0c61aaaf07dd008de8b8ca606984",
+    "test2026/metal/compare_vllm_metal.py": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba",
+    "src/backends/metal/coalesced_body_block_shader.h": "d9220433e36f81c46f35a72fa1f88f55ac3bc9f1bc3f07b62e39f12972c319fa",
+    "src/backends/metal/screened_head_native_impl.h": "6ba7906bb0560d6113c3b2deeb9c1d2f92ddedc03527a109cf5800ce8990c1e2",
+    "src/backends/metal/screened_head_shader.h": "5f827261980ca1af04734eb74aa2fdba6d78b9fe05bee925038b7bd66b5df689",
+    "src/backends/metal/serial_vision_prefetch_shader.h": "7acb585b296ebc22bcbe10c8a1df189e3c4f474551fe21f88c034c71e5893526",
+    "src/backends/metal/decoder_session.h": "d6638d9478f70f241507a8c6e03bd92396389c8d60fe58114e4f059754d3b23b",
+    "src/backends/metal/mlp_prefill_graph_impl.h": "4c886a0288aab0e4d58f64738a853640e32e52cd2d99c3ccd5f1d3989ab24519",
+    "src/backends/metal/compiled_graph.h": "26a1a34264d02e8ec0053f601b2d8bae2b4a91da65d3cb4977618d11fada7ce6",
+    "src/backends/metal/body_shape_shader.h": "d5053a0b10a3ce0a08e1dce6591066abf6da291e9152518a4f75555838582b34",
+    "src/backends/metal/parallel_vision_context_shader.h": "4b126294e70f0aabcf3dd574ea555be15fa4b9e18504bdbed62e57aef9ab73cf",
+    "src/backends/metal/exact_half_codec.h": "e8800f4983bb2786a7e376ca7784a7817176a5e6dd2d46c7e353116f99b2a4c9",
+    "src/backends/metal/metal_context.mm": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59",
+    "src/backends/metal/fused_head_argmax_shader.h": "04fd51053519882b5cc6d2d0a8df22c99d9fe3e0dcb9c4cb6130a23223b3b34d",
+    "src/backends/metal/screened_head_index.h": "3eb62e8c510ca49ac718ec510b36c7dec017b91d03ec9c4816de48e167e3726a",
+    "src/backends/metal/interleaved_bf16_body_shader.h": "65ca4710cd576e1fddce73adb3bd0922721a8702bf1949bb9fd68329a71a5ecd",
+    "src/backends/metal/metal_context.h": "6ec2972a9f8cdd3aeda45e12285c5e199187a7373346043dce0ab29942a23df5"
+  },
+  "defines": [
+    "-DGARNET_METAL_ATTENTION_PREFIX=1",
+    "-DGARNET_METAL_COALESCED_BF16_BODY=1",
+    "-DGARNET_METAL_DIRTY_PREFIX_RESET=1",
+    "-DGARNET_METAL_EXACT_HALF_PREFILL=1",
+    "-DGARNET_METAL_FLOAT_DENSE_KEY_PREFILL=1",
+    "-DGARNET_METAL_GLOBAL_HALF_ALPHA=1",
+    "-DGARNET_METAL_INTERLEAVED_BF16_BODY=1",
+    "-DGARNET_METAL_INTERLEAVED_SCREEN_INDEX=1",
+    "-DGARNET_METAL_LINEAR_CHUNK_CONV=1",
+    "-DGARNET_METAL_LINEAR_CHUNK_DELTA=1",
+    "-DGARNET_METAL_LINEAR_CHUNK_DIRECT_WRITE=1",
+    "-DGARNET_METAL_MLP_PREFILL_GRAPH=1",
+    "-DGARNET_METAL_MPS_VISION_SCORES=1",
+    "-DGARNET_METAL_PARALLEL_DELTA_SPLIT=1",
+    "-DGARNET_METAL_PREFILL_STREAM=1",
+    "-DGARNET_METAL_QWEN35_EXTENDED_PREFILL=1",
+    "-DGARNET_METAL_QWEN35_WIDE_BATCH_PREFILL=1",
+    "-DGARNET_METAL_RESIDENT_KV_INPLACE=1",
+    "-DGARNET_METAL_SCREENED_HEAD=1",
+    "-DGARNET_METAL_SERIAL_VISION_PREFETCH=1",
+    "-DGARNET_METAL_SMALL_OUTPUT_DECODE=1",
+    "-DGARNET_METAL_SMALL_SCREEN_SEED=1"
+  ],
+  "generated_sha256": {
+    "metal_context.mm": "8eefbc1e4ce2176284fdfebde71691a454b83ac6558db867e07053a8fce9d2f7",
+    "metal_context.h": "6ec2972a9f8cdd3aeda45e12285c5e199187a7373346043dce0ab29942a23df5",
+    "mlp_prefill_graph_impl.h": "48000f5890f60f4fbddfb9839a7da0f0cc92373d17c0e17afb1619f376551ca8",
+    "mlp_command_buffer_primitive.cpp": "48a1c87ac684d97196abcfb7e77911e79d1ca48ece0a4c90a01215d91339a9ff"
+  },
+  "sdk_headers": {
+    "MPSGraph.h": "45e2e964841078426524210f1458e98a46cafbb1ea10394137bb3a90c1fbe154",
+    "MPSCommandBuffer.h": "4f6a563148509ab3987aab4c09d8998eb814212938d3a436bba2f9be8d83c14a"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M4",
+    "hw.memsize": "17179869184"
+  },
+  "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+  "limitations": "Primitive correctness/ordering only. No trained checkpoint validation, timing, model generation, speed gain or vLLM claim.",
+  "full_goal_met": false,
+  "binary_sha256": "8d74b54bcff02b3a8ddb7d872279b88d45bbf8c9a989dd24de763a817e6466e8"
+}

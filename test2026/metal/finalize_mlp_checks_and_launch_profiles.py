@@ -4,7 +4,7 @@ import hashlib,json,os,subprocess,sys,tarfile,time
 
 root=Path(sys.argv[1]).resolve();out=Path(sys.argv[2]).resolve()
 assert len(sys.argv)==3 or (len(sys.argv)==4 and sys.argv[3]=='--worker')
-dependency=root/'logs/mlp-prefill-native-checks-resume-20261015';pid=73896
+dependency=root/'logs/mlp-prefill-native-checks-completed-20261015';pid=97189
 assert json.loads((dependency/'pid.json').read_text())['pid']==pid
 if len(sys.argv)==3:
     assert not (root/'logs/mlp-prefill-native-20261015').exists()
@@ -29,16 +29,16 @@ else:
         while not (dependency/'exit.json').exists():
             os.kill(pid,0)
             args=subprocess.check_output(['/bin/ps','-p',str(pid),'-o','args='],text=True)
-            assert 'launch_resume_mlp_prefill_native_checks.py' in args and str(dependency) in args and '--worker' in args
+            assert 'launch_complete_mlp_wide_validation.py' in args and str(dependency) in args and '--worker' in args
             if time.monotonic()-started>7200:raise TimeoutError('Exact validation did not finish; no restart')
             time.sleep(5)
         assert json.loads((dependency/'exit.json').read_text())['exit_code']==0,'Validation failed; keep evidence and do not benchmark'
         assert all(hashlib.sha256((root/'source'/name).read_bytes()).hexdigest()==sha for name,sha in manifest.items())
-        state='archiving_validation';archive=root/'mlp-prefill-native-checks-resume-20261015.tar.gz'
+        state='archiving_validation';archive=root/'mlp-prefill-native-checks-completed-20261015.tar.gz'
         assert not archive.exists()
         scripts=root/'source/test2026/metal'
         run('archive-validation',[sys.executable,str(scripts/'archive_mlp_prefill_native_checks.py'),str(root),str(archive)])
-        state='auditing_validation';audit=root/'validation-audits/mlp-prefill-native-checks-resume-20261015'
+        state='auditing_validation';audit=root/'validation-audits/mlp-prefill-native-checks-completed-20261015'
         audit.mkdir(parents=True,exist_ok=False)
         with tarfile.open(archive) as tar:
             for member in tar.getmembers():

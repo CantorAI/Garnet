@@ -4,7 +4,7 @@ import hashlib,io,json,subprocess,sys,tarfile
 
 p=Path(__file__).with_name('archive_mlp_prefill_native_checks.py')
 source=p.read_text();source=source[:source.index('proof=dict(')]
-source=source.replace("trial=sys.argv[3] if len(sys.argv)>3 else 'mlp-prefill-native-checks-resume-20261015'", "trial='mlp-prefill-native-checks-resume-20261015'")
+source=source.replace("trial=sys.argv[3] if len(sys.argv)>3 else 'mlp-prefill-native-checks-completed-20261015'", "trial='mlp-prefill-native-checks-completed-20261015'")
 exec(compile(source,str(p),'exec'))
 native_trial=sys.argv[3] if len(sys.argv)>3 else 'mlp-prefill-native-20261015'
 native=root/'logs'/native_trial
@@ -23,7 +23,7 @@ for name in ('archive_mlp_prefill_native_profiles.py','verify_mlp_prefill_native
 hardware={name:subprocess.check_output(['sysctl','-n',name],text=True).strip() for name in ('machdep.cpu.brand_string','hw.memsize','hw.model')}
 hardware['sw_vers']=subprocess.check_output(['sw_vers'],text=True)
 audit=json.loads((native/'checks-verification.json').read_text())
-assert digest(root/'mlp-prefill-native-checks-resume-20261015.tar.gz')==audit['archive_sha256']
+assert digest(root/'mlp-prefill-native-checks-completed-20261015.tar.gz')==audit['archive_sha256']
 proof=dict(files={},omitted=omitted,hardware=hardware,jobs={trial:status,native_trial:native_status},
            library_sha256={name:omitted[name+'/libgarnet.dylib']['sha256'] for name in ('build-coalesced-bf16-body','build-mlp-prefill-graph-guardfix')},
            checks_archive_sha256=audit['archive_sha256'],

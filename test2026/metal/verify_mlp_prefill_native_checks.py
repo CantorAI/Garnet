@@ -6,7 +6,7 @@ base=Path(sys.argv[1]).resolve();root=base/'evidence';proof=json.loads((root/'ma
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 for name,info in proof['files'].items():
     p=base/name;assert p.resolve().is_relative_to(base) and p.stat().st_size==info['bytes'] and digest(p)==info['sha256']
-trial='mlp-prefill-native-checks-resume-20261015';assert proof['jobs'][trial]['exit_code']==0
+trial='mlp-prefill-native-checks-completed-20261015';assert proof['jobs'][trial]['exit_code']==0
 checks=root/'logs'/trial/'jobs';meta=json.loads((checks/'metadata.json').read_text())
 assert meta['candidate_sha256']==proof['omitted']['build-mlp-prefill-graph-guardfix/libgarnet.dylib']['sha256']
 assert proof['omitted']['build-coalesced-bf16-body/libgarnet.dylib']['sha256']=='c186930919845dc172395f7a26564ce94a2a1fe2ebdb755363774a3fd54e29c1'
@@ -31,10 +31,34 @@ resume=json.loads((checks/'resume-provenance.json').read_text())
 assert resume['prior_archive_sha256']=='6d9fda15edcd9bf2e101918ed7615925b8f3d5f98cfc016ec34cd1da806b2147'
 assert resume['candidate_sha256']==meta['candidate_sha256'] and resume['source_manifest']==manifest
 assert resume['reused_stages']==['configure','build','ctest']
+completion=json.loads((checks/'completion-provenance.json').read_text())
+assert completion['prior_archive_sha256']=='61d83b39924e0093104b01850979d1725b9e00afe2ec5875d1f8d4d91cd82153'
+assert completion['source_manifest']==manifest and completion['candidate_sha256']==meta['candidate_sha256']
+assert completion['fresh_stages']==['wide-batch-trained-reference'] and len(completion['reused_stages'])==27
+assert digest(checks/'original27-manifest.json')=='9b6c7acd589408b39debc83a6d8abdab901dc035f55e6fa365d558a8ad0bf0ab'
+oldproof=json.loads((checks/'original27-manifest.json').read_text())
+oldstatus=json.loads((checks/'original27-statuses.json').read_text())
+assert len(oldstatus)==27 and [s['name'] for s in oldstatus]==completion['reused_stages']
+oldprefix='evidence/logs/mlp-prefill-native-checks-resume-20261015/jobs/'
+assert digest(checks/'original27-statuses.json')==oldproof['files'][oldprefix+'statuses.json']['sha256']
+for name,info in oldproof['files'].items():
+    if not name.startswith(oldprefix):continue
+    relative=name[len(oldprefix):]
+    if relative in ('statuses.json','background_service_checks.json'):continue
+    p=checks/relative;assert p.stat().st_size==info['bytes'] and digest(p)==info['sha256']
+oldprefix='logs/mlp-prefill-native-checks-resume-20261015/jobs/'
+for name,info in oldproof['omitted'].items():
+    if name.startswith(oldprefix):
+        current='logs/mlp-prefill-native-checks-completed-20261015/jobs/'+name[len(oldprefix):]
+        assert proof['omitted'][current]==info
+for name in ('statuses.json','background_service_checks.json'):
+    assert digest(root/'logs/mlp-prefill-native-checks-resume-20261015/jobs'/name)==oldproof['files']['evidence/'+oldprefix+name]['sha256']
+assert proof['omitted']['mlp-prefill-native-checks-resume-20261015.tar.gz']['sha256']==completion['prior_archive_sha256']
 assert 'METAL_INTERLEAVED_SCREEN_INDEX' in meta['options'] and 'METAL_SMALL_SCREEN_SEED' in meta['options'] and 'METAL_SERIAL_VISION_PREFETCH' in meta['options'] and 'METAL_SCREENED_HEAD' in meta['options'] and 'METAL_GLOBAL_HALF_ALPHA' in meta['options']
 assert all(name not in meta['options'] for name in ('METAL_JOINED_GLOBAL_MLP','METAL_VISION_GLOBAL_ALPHA'))
 for name,sha in meta['source_sha256'].items():assert digest(root/'source'/name)==sha
 stages=json.loads((checks/'statuses.json').read_text());assert len(stages)==28
+assert stages[:27]==oldstatus and stages[27]['name']=='wide-batch-trained-reference'
 names={'wide-batch-trained-reference','vision-full-grid','screened-real-heads','configure','build','ctest','qwen35-extended-prefill','serving','mixed-image-pipeline','qwen35-layers','vision-small','vision-pretrained'}
 names|={m+suffix for m in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct') for suffix in ('-exact-tails','-layers')}
 names|={m+suffix for m in ('Qwen3-0.6B','Qwen2.5-Coder-0.5B-Instruct','Qwen3.5-0.8B') for suffix in ('-private-kv','-head')}
@@ -122,7 +146,8 @@ assert 'MLP graph pending producer, ownership, abort/recovery and native bound P
 for name in ('metal_wide_batch_prefill_reference','metal_interleaved_bf16_body_reference','metal_coalesced_bf16_body_reference'):
     assert name in ctext
 result=dict(verified_files=len(proof['files']),validation_stages=28,ctests=8,graph_primitive_cases=64,
-    reused_validation_stages=['configure','build','ctest'],
+    reused_validation_stages=completion['reused_stages'],
+    reused_compile_stages=['configure','build','ctest'],fresh_validation_stages=completion['fresh_stages'],
     trained_head_queries=51,trained_head_rows=78,vision_grid_profiles=4,
     screened_recovery_cases=recovered,prefix_recovery_cases=prefix_recovered,
     wide_reference_profiles=4,wide_carried_steps=12,worst_wide_original_bound_ratio=max(ratios),

@@ -4,9 +4,9 @@ import hashlib,json,os,subprocess,sys,time
 
 root=Path(sys.argv[1]).resolve();out=Path(sys.argv[2]).resolve()
 assert len(sys.argv)==3 or (len(sys.argv)==4 and sys.argv[3]=='--worker')
-checks=root/'logs/mlp-prefill-native-checks-resume-20261015'
+checks=root/'logs/mlp-prefill-native-checks-completed-20261015'
 verification=root/'mlp-prefill-native-checks-verification.json'
-archive=root/'mlp-prefill-native-checks-resume-20261015.tar.gz'
+archive=root/'mlp-prefill-native-checks-completed-20261015.tar.gz'
 assert json.loads((checks/'exit.json').read_text())['exit_code']==0
 audit=json.loads(verification.read_text())
 assert audit['validation_stages']==28 and audit['ctests']==8 and audit['graph_primitive_cases']==64

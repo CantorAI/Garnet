@@ -1,0 +1,19 @@
+{
+  "changes": {
+    "test2026/metal/compare_vllm_metal.py": {
+      "before": "424e3fadf90018212184e8c929196b6c7e477e4ac17cd5e91e25280210052ff0",
+      "after": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+    },
+    "test2026/metal/run_guarded_mlp_prefill_native_checks.py": {
+      "before": "9e70df93de93b66a4607bc6dd23314a1fdab42cc8fb63070e0ee841f60b5e315",
+      "after": "a56d26d1f88bb052c4b18857c77554ba0106153483aabc971ecb0ac0340792fd"
+    },
+    "test2026/metal/launch_mlp_prefill_native_checks.py": {
+      "before": "abd7db1806f5bed297b2ba00380a73d6ab5d7278ee552d9b97f21fc4aeff33b8",
+      "after": "2239897a80e5b81e274509118967261a9fd75305b64f50b4d8adcaa068b05590"
+    }
+  },
+  "scope": "Guard service fingerprint and fresh build path only; native numerical sources and tolerances unchanged",
+  "original_trial_archive_sha256": "eada52786b8f2072c83c810d542823ff58ad9519f07c18b6fa526b5f989465fc",
+  "manifest_files": 18
+}

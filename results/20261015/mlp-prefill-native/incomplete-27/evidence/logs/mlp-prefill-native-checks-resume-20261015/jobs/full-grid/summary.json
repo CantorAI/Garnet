@@ -1,0 +1,48 @@
+{
+  "profiles": [
+    {
+      "batch": 1,
+      "profile": "small",
+      "patch_sha256": "a3d9967d006cdc886374f02d589017afa17056386d7f48a1084b6e557fb2cd49",
+      "values": 1024,
+      "bitwise_equal": true,
+      "embedding_sha256": "e9328f67292ce3ca851505fea84c5122ebd705d1091795eb7c037aa06fd25b98",
+      "expected_candidate_dispatches": 0,
+      "fresh_encodes_per_policy": 2
+    },
+    {
+      "batch": 1,
+      "profile": "full",
+      "patch_sha256": "1f82fddd12eeff26e32727d0d92a742fda8259cfbecbcb171d568df12a752b15",
+      "values": 55296,
+      "bitwise_equal": true,
+      "embedding_sha256": "4d3240960e9ade4c221b22903248700fb344d3f5a2b63edc0aa6225a6d2bebf8",
+      "expected_candidate_dispatches": 12,
+      "fresh_encodes_per_policy": 2
+    },
+    {
+      "batch": 2,
+      "profile": "small",
+      "patch_sha256": "c8882e28ea4dc1217eff031f8f39dbdc1173d9a05a9ee1eef9080241b3b2fdfa",
+      "values": 2048,
+      "bitwise_equal": true,
+      "embedding_sha256": "a5c22bb1ba1d21590fe105e9192d4c22eb8c6905412aabf359aa9110f48b1432",
+      "expected_candidate_dispatches": 0,
+      "fresh_encodes_per_policy": 2
+    },
+    {
+      "batch": 2,
+      "profile": "full",
+      "patch_sha256": "bd417b80148a5c1d871beae7d53a680b57ba8a11c1004f64f199a220b215b1a5",
+      "values": 110592,
+      "bitwise_equal": true,
+      "embedding_sha256": "37c15cdf57892370e356b8374abb859e538736b736547f217ca5859b70f4bc21",
+      "expected_candidate_dispatches": 12,
+      "fresh_encodes_per_policy": 2
+    }
+  ],
+  "source_sha256": {
+    "test_serial_vision_grid.py": "4b567b466f65bd13c3558ce45a5fcc136d731a2f61d89d09e6c7014f0c9d691b",
+    "run_serial_vision_grid.py": "08b88819bb75fe2b080d1d4263cd619b78cd7f6269be062ced05f60974a6a71c"
+  }
+}

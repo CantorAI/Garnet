@@ -449,6 +449,93 @@ The probe remains unexecuted, with only generation/Python syntax checked.
 [queued decode protocol](../../results/20261015/coalesced-eight-body/README.md).
 The full2x decode/half-TTFT goal remains active and unmet.
 
+### 2026-10-15 — completed MLP validation, audit repairs and rejected integration
+
+PID73896 exited0 after1292.240134s, but its generated driver contained27 of
+the original28 required stages. The strict auditor correctly stopped the
+82980/88447 controller sequence. The missing wide-batch stage had been
+appended by the original outer wrapper and was absent from the generated
+resume driver. Preserve both the1,465-file incomplete archive and15-file
+controller failure archive; neither is a complete validation pass.
+
+Completion PID97189 exited0 after101.555720s, copying27 frozen stages and
+running the missing wide reference freshly. The independent audit accounts
+for28 stages,8 CTests,64 primitive cases,51 trained-head queries/78 rows,
+4 vision-grid profiles,6 screened recovery and6 prefix recovery cases,
+4 wide profiles/12 carried steps. Worst original wide-bound ratio0.543284.
+The27 reused stages include configure/build/CTest previously reused from
+PID71863: this assembled coverage is not28 fresh stages or a replication.
+
+Controller99015 admitted full native ABBA PID99045. It exited0 in211.133414s:
+all72 complete outputs match, all6 profiles exercised expected graph routes,
+and all1,131 source-closure identities are frozen. Synchronous per-MLP graphs
+regress warm TTFT by6.2–60.4%, with0.85–1.11 GiB extra peak process RSS.
+First-after-init TTFT rises from104–390ms to1917–2193ms. Initialization
+remains separately recorded; graph compilation is lazy. Decode ratios versus
+the same compact native control are0.957–0.991 despite an unchanged decode
+implementation; this cohort does not isolate the cause. Reject promotion,
+retain OFF default and c186 control. No fresh vLLM ratio or goal pass.
+
+Controller99421 stopped during the independent archive audit:13 `.metal`
+files were omitted by the archive suffix whitelist, in both source and
+snapshot, although their26 hashes were recorded. A corrected archive adds
+only the exact frozen bytes and terminal controller diagnostics; original
+records and the pinned original manifest are independently preserved. A
+second audit reached the final asset assertion but incorrectly looked for
+tokenizer JSON in `omitted` rather than verifying its archived bytes. The
+corrected auditor checks actual tokenizer hashes, checkpoint hashes and every
+unchanged numerical/output assertion. Local and Mac audits then passed.
+All failures and archive hashes are recorded in the
+[native integration report](../../results/20261015/mlp-prefill-native/README.md).
+
+### 2026-10-15 — compact-eight decode rejected; command-buffer scheduling probe
+
+PID3818 compiled and executed the initial compact-eight shader, exiting0 in
+19.352752s. Independent audit:49 files,72 numerical records,189 safety
+profiles. All72 pass the original FP64/native numerical envelopes; only18
+are bitwise equal. Every model/batch/policy has unequal required patterns,
+so all18 profiles are excluded and **zero timing samples** are admitted.
+
+A lexical accumulator follow-up first failed from a generator identifier
+collision (PID4314, exit1 after11.658886s), preserved before correction.
+After whole-token substitution and generated-name checks, PID4586 exited0
+in19.247992s. Independent audit:50 files,72 numerical records,189 safety
+profiles, again54 unequal records and zero admitted timing samples. Replacing
+indexed accumulator arrays did not restore exact bits; no compiler cause is
+established. Reject both variants without changing the exact-bit gate.
+[Sources, bounds, failures and frozen audits](../../results/20261015/coalesced-eight-body/README.md).
+
+Next hypothesis targets scheduling: encode the unchanged FP32 MLP graph into
+the native MPSCommandBuffer, refresh its underlying root after any internal
+commitAndContinue, and defer graph error/completion checks to final native
+submission. Abort drains submitted work before invalidating pending owners.
+This is a private generated context; native serving sources are unchanged.
+The installed SDK headers were inspected and preserved as API evidence.
+
+PID5137 exited0 in10.621082s. Its38-file independent audit regenerates source
+and confirms all64 original synthetic graph safety cases, with an additional
+native consumer and the unchanged native numerical bound. Explicit native
+Flush count is0 per graph; internal MPS commits are not counted by that field.
+No trained-model correctness or speed result follows. Fresh PID5521 exited0
+in11.264293s; the38-file independent audit verifies64 original plus64 true
+dependent two-graph cases, including native consumers and abort/recovery.
+The identical original numerical bound remains mandatory. Both primitive
+archives are preserved before any source transformation.
+
+A separate source/build tree at ROOT/mlp-command-buffer-investigation-20261015
+copies1,240 source files, transforming only the context, graph header and
+primitive test. All copied source hashes and original/transformed hashes are
+recorded; existing sources/models/builds remain untouched. Fresh PID5961 runs
+the complete original28-stage wrapper with its appended wide reference.
+It is live at this snapshot; validation, archive audit, complete generation
+and model timing remain pending. Consumed sources remain frozen until terminal
+and archival. No performance or goal-completion claim follows from dispatch.
+[Private command-buffer protocol and evidence](../../results/20261015/mlp-command-buffer-primitive/README.md).
+
+The latest completed matched vLLM cohorts still meet decode in4/6 profiles,
+TTFT in2/6 and both targets consistently in0/6. None of these component or
+rejected native trials changes that result. Full goal active and unmet.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

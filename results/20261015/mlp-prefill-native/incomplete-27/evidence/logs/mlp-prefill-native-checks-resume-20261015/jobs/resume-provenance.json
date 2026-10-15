@@ -1,0 +1,30 @@
+{
+  "prior": "/Users/zsdx/garnet-metal-investigation/logs/mlp-prefill-native-checks-guardfix-20261015",
+  "candidate_sha256": "23bff0f76a303f2af78c992d4af6e4f90d5041c2e8c57bf454f924b15ac37081",
+  "reused_stages": [
+    "configure",
+    "build",
+    "ctest"
+  ],
+  "prior_archive_sha256": "6d9fda15edcd9bf2e101918ed7615925b8f3d5f98cfc016ec34cd1da806b2147",
+  "source_manifest": {
+    "cmake/GarnetMetal.cmake": "9958cc415e48654316479a071d4cb33f4687d70102d18f640b55a716b06dc7d0",
+    "src/backends/metal/metal_context.h": "6ec2972a9f8cdd3aeda45e12285c5e199187a7373346043dce0ab29942a23df5",
+    "src/backends/metal/metal_context.mm": "813c5679777de90d487ae5e5a481b0b076e09e4325add22b42ea3bd6f6818a59",
+    "src/backends/metal/compiled_graph.cpp": "90b4da60370633158120a66a0752d841a676495fb8e21894bd197e1eaede3fad",
+    "src/backends/metal/compiled_graph.h": "26a1a34264d02e8ec0053f601b2d8bae2b4a91da65d3cb4977618d11fada7ce6",
+    "src/backends/metal/decoder_session.h": "d6638d9478f70f241507a8c6e03bd92396389c8d60fe58114e4f059754d3b23b",
+    "src/backends/metal/decoder_session.cpp": "af4aac6a46d1f47f5a1c7ab6cbcc1786c9a6e0190faf2a3bdbd8adfefe41caa5",
+    "src/entry/metal_main.cpp": "8fe8c437fd6940788c752df5e4d298165de9a3b9a2242d5e8ba30168fc6dc483",
+    "xModel/qwen35/vl_0_8b/metal_decoder.py": "b674a04dddbddbbcd16dfa017f73c3e3c9c37e7c8025ad2be900fe3e4fda8635",
+    "test2026/metal/run_matched_garnet.py": "a10814a171a5d9dcc2745f39c9aba18cc669a37eb87a325ad272f150241d2d50",
+    "test2026/metal/frame_worker_garnet.py": "ec3e83593fad05438e4901cff8c7cfee174f973d6556abbaf3d4cab74a15ce35",
+    "src/backends/metal/mlp_prefill_graph_impl.h": "4c886a0288aab0e4d58f64738a853640e32e52cd2d99c3ccd5f1d3989ab24519",
+    "test2026/metal/mlp_prefill_graph_test.cpp": "c9c8a9ad67c903c6d9ed94ad02b3ccede1af0c61aaaf07dd008de8b8ca606984",
+    "test2026/metal/run_guarded_mlp_prefill_native_checks.py": "a56d26d1f88bb052c4b18857c77554ba0106153483aabc971ecb0ac0340792fd",
+    "test2026/metal/launch_mlp_prefill_native_checks.py": "2239897a80e5b81e274509118967261a9fd75305b64f50b4d8adcaa068b05590",
+    "test2026/metal/prepare_mlp_prefill_native_sources.py": "66291831c60ae7a59624401b9b1c6b0023001271413b50f8d43b586551498ff9",
+    "test2026/metal/install_mlp_prefill_native_sources.py": "0767f3a97ebb8c645d396c3ac95e3cd15ac5de5adfc00877e06d40617bd25ef8",
+    "test2026/metal/compare_vllm_metal.py": "9d329feecbe76d2ebb40b3a961462470aa3521c330d6963403adbd14ad13b8ba"
+  }
+}

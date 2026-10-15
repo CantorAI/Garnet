@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T20:42:57.570161+00:00
+Generated UTC: 2026-10-15T21:11:51.879032+00:00
 
-Base HEAD at generation: `86cfeffb31e9343377dc5c04d57f2589714294d7`. Reports indexed: **146**.
+Base HEAD at generation: `1ccfea27ac26141088186e4c5c056ec85d47e6ac`. Reports indexed: **147**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -90,7 +90,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/coalesced-body-block](../../../results/20261015/coalesced-body-block/README.md) | Exact coalesced BF16 block storage: repeated component signal |
 | [results/20261015/coalesced-body-native](../../../results/20261015/coalesced-body-native/README.md) | Native lossless BF16 blocks: repeated full-model decode gains |
 | [results/20261015/coalesced-body-vllm](../../../results/20261015/coalesced-body-vllm/README.md) | Fresh lossless-body comparison against vLLM-Metal: initial cohort audited |
-| [results/20261015/coalesced-eight-body](../../../results/20261015/coalesced-eight-body/README.md) | Compact eight-output decode: queued, not executed |
+| [results/20261015/coalesced-eight-body](../../../results/20261015/coalesced-eight-body/README.md) | Compact eight-output decode: initial exact-bit rejection; lexical follow-up |
 | [results/20261015/combined-graph-error-diagnostic](../../../results/20261015/combined-graph-error-diagnostic/README.md) | Combined-graph numerical diagnosis: failures isolated to special native keys |
 | [results/20261015/combined-graph-prefill](../../../results/20261015/combined-graph-prefill/README.md) | Combined projection graphs: component gains with rejected batch-2 profiles |
 | [results/20261015/combined-prefill-reset](../../../results/20261015/combined-prefill-reset/README.md) | Combined bounded reset and ordered prefill: initial latency tradeoff |
@@ -113,7 +113,8 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/interleaved-screen-index](../../../results/20261015/interleaved-screen-index/README.md) | Lossless four-column screening index: repeated component gain |
 | [results/20261015/joint-state-zero](../../../results/20261015/joint-state-zero/README.md) | Reset and dependent GPU read in one command buffer: repeated component signal |
 | [results/20261015/mixed-accumulator](../../../results/20261015/mixed-accumulator/README.md) | Apple M4 mixed-input FP32 accumulator capability |
-| [results/20261015/mlp-prefill-native](../../../results/20261015/mlp-prefill-native/README.md) | Native dependent MLP graph prototype: validation in progress |
+| [results/20261015/mlp-command-buffer-primitive](../../../results/20261015/mlp-command-buffer-primitive/README.md) | MLP graph command-buffer encoding: 64-case private safety probe passed |
+| [results/20261015/mlp-prefill-native](../../../results/20261015/mlp-prefill-native/README.md) | Native dependent MLP graph: correct outputs, rejected for latency and memory |
 | [results/20261015/mps-screen-index](../../../results/20261015/mps-screen-index/README.md) | MPS-derived screening dot products: rejected |
 | [results/20261015/mpsgraph-prefill](../../../results/20261015/mpsgraph-prefill/README.md) | MPSGraph FP32 prefill: actual component results, no broad promotion |
 | [results/20261015/packed-body-prefill](../../../results/20261015/packed-body-prefill/README.md) | Packed BF16 prefill tiles: rejected |
