@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "metal_context.h"
 #include "exact_half_codec.h"
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+#include "interleaved_bf16_body_shader.h"
+#endif
 #ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
 #include "serial_vision_prefetch_shader.h"
 #endif
@@ -53,6 +56,9 @@ struct MetalBF16Weight::Impl {
     id<MTLBuffer> screenIndex,screenMetadata;
 #endif
     id<MTLBuffer> buffer;
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+    id<MTLBuffer> interleavedBody;
+#endif
     MPSMatrix* exactHalf;
     id<MTLBuffer> halfScales;
     size_t halfScalesOffset=0;
@@ -64,6 +70,13 @@ struct MetalBF16Weight::Impl {
 };
 bool MetalBF16Weight::ExactHalfReady() const {return impl_&&impl_->exactHalf&&impl_->halfScales;}
 bool MetalBF16Weight::GlobalHalfReady() const {return ExactHalfReady()&&impl_->globalHalf;}
+bool MetalBF16Weight::InterleavedBodyReady() const {
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+    return impl_&&impl_->interleavedBody;
+#else
+    return false;
+#endif
+}
 struct MetalPipelines {
     id<MTLLibrary> library;
 #ifdef GARNET_METAL_SERIAL_VISION_PREFETCH
@@ -83,6 +96,9 @@ struct MetalPipelines {
     id<MTLComputePipelineState> fusedHead,fusedHeadReduce;
 #endif
     id<MTLComputePipelineState> bf16Decode,bf16DecodeSmall,bf16Gemm,bf16Gemm16Wide,bf16Gemm32Wide;
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+    id<MTLComputePipelineState> bf16BodyInterleaved;
+#endif
     id<MTLComputePipelineState> bf16Split,bf16SplitReduce;
 #ifdef GARNET_METAL_NATIVE_BFLOAT_BODY
     id<MTLComputePipelineState> nativeBFSerial,nativeBFDot;
@@ -162,6 +178,7 @@ struct MetalContext::Impl {
     size_t packedPrefillNormDispatches=0;
     size_t globalHalfAlphaDispatches=0;
     size_t wideBatchPrefillDispatches=0;
+    size_t interleavedBodyDispatches=0;
     size_t visionGlobalAlphaDispatches=0;
     size_t visionParallelDispatches=0;
     size_t joinedGlobalMlpBlocks=0;
@@ -1254,6 +1271,9 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
 #ifdef GARNET_METAL_BODY_SHAPE
         source=[source stringByAppendingString:[NSString stringWithUTF8String:kBodyShapeShader]];
 #endif
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+        source=[source stringByAppendingString:[NSString stringWithUTF8String:kInterleavedBF16BodyShader]];
+#endif
         auto library=[impl_->device newLibraryWithSource:source options:compileOptions error:&error];
         if(!library)throw std::runtime_error(std::string(error.localizedDescription.UTF8String));
         impl_->kernels->library=library;
@@ -1288,6 +1308,10 @@ kernel void bf16_native_dot_t128(device const float* a [[buffer(0)]],device cons
         if(!impl_->kernels->kvInplace)throw std::runtime_error("Cannot create private KV update pipeline");
 #endif
         impl_->kernels->bf16Decode=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode"] error:&error];
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+        impl_->kernels->bf16BodyInterleaved=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_body_interleaved"] error:&error];
+        if(!impl_->kernels->bf16BodyInterleaved)throw std::runtime_error("Cannot create interleaved BF16 body pipeline");
+#endif
 #ifdef GARNET_METAL_SINGLE_CODER_HEAD
         impl_->kernels->singleCoderHead=[impl_->device newComputePipelineStateWithFunction:[library newFunctionWithName:@"bf16_decode_single_coder_head"] error:&error];
         if(!impl_->kernels->singleCoderHead)throw std::runtime_error("Cannot create single-row coder vocabulary pipeline");
@@ -1426,6 +1450,25 @@ MetalBF16Weight MetalContext::UploadBF16(const void* data,size_t bytes,size_t ro
         auto value=std::make_shared<MetalBF16Weight::Impl>();value->rows=rows;value->columns=columns;value->floatPrefill=floatPrefill;
         value->buffer=[impl_->device newBufferWithBytes:data length:bytes options:MTLResourceStorageModeShared];
         if(!value->buffer)throw std::runtime_error("BF16 weight allocation failed");
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+        // Retained component policy: large body matrices only. Masters remain
+        // available for prefill, complete logits and every unsupported shape.
+        if(!visionPrefill&&!floatPrefill&&rows>256&&rows<=8192&&columns%4==0&&
+            columns>=(1048576+rows-1)/rows) {
+            const size_t padded=(rows+3)/4*4;
+            if(padded<=impl_->device.maxBufferLength/2/columns) {
+                std::vector<uint16_t> packed(padded*columns,0);auto raw=static_cast<const char*>(data);
+                for(size_t c=0;c<rows;++c)for(size_t k=0;k<columns;++k)
+                    std::memcpy(&packed[(c/4)*columns*4+k*4+c%4],raw+2*(c*columns+k),2);
+                for(size_t c=0;c<padded;++c)for(size_t k=0;k<columns;++k) {
+                    uint16_t expected=0;if(c<rows)std::memcpy(&expected,raw+2*(c*columns+k),2);
+                    if(packed[(c/4)*columns*4+k*4+c%4]!=expected)throw std::runtime_error("BF16 body layout roundtrip failed");
+                }
+                value->interleavedBody=[impl_->device newBufferWithBytes:packed.data() length:packed.size()*2 options:MTLResourceStorageModeShared];
+                if(!value->interleavedBody)throw std::runtime_error("Interleaved BF16 body allocation failed");
+            }
+        }
+#endif
 #ifdef GARNET_METAL_EXACT_HALF_PREFILL
         // Preserve original BF16 decode storage. Pack only modest body matrices;
         // a single nonexact value disables the optional representation entirely.
@@ -1721,6 +1764,7 @@ size_t MetalContext::LastResidualNormDispatches() const {return impl_->residualN
 size_t MetalContext::LastPackedPrefillNormDispatches() const {return impl_->packedPrefillNormDispatches;}
 size_t MetalContext::LastGlobalHalfAlphaDispatches() const {return impl_->globalHalfAlphaDispatches;}
 size_t MetalContext::LastWideBatchPrefillDispatches() const {return impl_->wideBatchPrefillDispatches;}
+size_t MetalContext::LastInterleavedBodyDispatches() const {return impl_->interleavedBodyDispatches;}
 size_t MetalContext::LastVisionGlobalAlphaDispatches() const {return impl_->visionGlobalAlphaDispatches;}
 size_t MetalContext::LastVisionParallelDispatches() const {return impl_->visionParallelDispatches;}
 size_t MetalContext::LastVisionPrefetchDispatches() const {return impl_->visionPrefetchDispatches;}
@@ -1891,6 +1935,10 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         const bool singleCoderHead=a.rows==1&&a.columns==896&&o.columns==151936;
         if(singleCoderHead){pipeline=impl_->kernels->singleCoderHead;threads=128;decodeColumns=16;}
 #endif
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+        const bool interleaved=a.rows<=2&&w->interleavedBody;
+        if(interleaved){pipeline=impl_->kernels->bf16BodyInterleaved;threads=128;decodeColumns=16;}
+#endif
         if(pipeline.threadExecutionWidth!=32||pipeline.maxTotalThreadsPerThreadgroup<threads)
             throw std::runtime_error("BF16 projection requires 32-lane SIMD groups");
         struct Params{uint64_t rows,inner,columns,aStride,oStride;};
@@ -1898,7 +1946,13 @@ void MetalContext::EncodeBF16MatVec(const MetalMatrix& input,const MetalBF16Weig
         auto encoder=[impl_->command computeCommandEncoder];
         if(!encoder)throw std::runtime_error("Cannot create BF16 projection encoder");
         [encoder setComputePipelineState:pipeline];[encoder setBuffer:a.data offset:0 atIndex:0];
-        [encoder setBuffer:w->buffer offset:0 atIndex:1];[encoder setBuffer:o.data offset:0 atIndex:2];
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+        [encoder setBuffer:interleaved?w->interleavedBody:w->buffer offset:0 atIndex:1];
+        if(interleaved)++impl_->interleavedBodyDispatches;
+#else
+        [encoder setBuffer:w->buffer offset:0 atIndex:1];
+#endif
+        [encoder setBuffer:o.data offset:0 atIndex:2];
         [encoder setBytes:&p length:sizeof(p) atIndex:3];
         [encoder dispatchThreadgroups:a.rows<=2?MTLSizeMake((o.columns+decodeColumns-1)/decodeColumns,1,1):MTLSizeMake((o.columns+tileColumns-1)/tileColumns,(o.rows+tileRows-1)/tileRows,1) threadsPerThreadgroup:MTLSizeMake(threads,1,1)];
 #ifdef GARNET_METAL_CONSTANT_BF16_HEAD
@@ -1998,7 +2052,7 @@ void MetalContext::Begin() {
     impl_->joinedPrefillPairs=0;
     impl_->fusedHeadArgmaxDispatches=0;
     impl_->deferredZeroBytes=impl_->deferredZeroStates=0;
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     impl_->command=[impl_->queue commandBuffer];
     if(!impl_->command)throw std::runtime_error("Cannot create Metal command buffer");
 #ifdef GARNET_METAL_DEFERRED_STATE_ZERO
@@ -2670,7 +2724,7 @@ void MetalContext::Abort() {
     for(const auto& entry:impl_->zeroQueued){entry.second->pending=false;entry.second->ready=false;}
     impl_->zeroQueued.clear();
 #endif
-    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
+    impl_->constantHeadDispatches=0;impl_->singleCoderHeadDispatches=0;impl_->residualNormDispatches=0;impl_->packedPrefillNormDispatches=0;impl_->globalHalfAlphaDispatches=0;impl_->wideBatchPrefillDispatches=0;impl_->interleavedBodyDispatches=0;impl_->visionGlobalAlphaDispatches=0;impl_->visionParallelDispatches=0;impl_->joinedGlobalMlpBlocks=0;
     for(auto& output:impl_->outputs){output->pending=false;output->ready=false;}
     impl_->outputs.clear();impl_->pendingOutputs.clear();impl_->command=nil;
 }

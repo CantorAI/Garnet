@@ -1,0 +1,9 @@
+Starting sequential runtime Qwen3-0.6B-b2 garnet-0
+Completed exact runtime Qwen3-0.6B-b2 garnet-0
+Starting sequential runtime Qwen3-0.6B-b2 vllm-metal-0
+Completed exact runtime Qwen3-0.6B-b2 vllm-metal-0
+Starting sequential runtime Qwen3-0.6B-b2 vllm-metal-1
+Completed exact runtime Qwen3-0.6B-b2 vllm-metal-1
+Starting sequential runtime Qwen3-0.6B-b2 garnet-1
+Completed exact runtime Qwen3-0.6B-b2 garnet-1
+{"model": "Qwen3-0.6B", "batch": 2, "means": {"garnet": {"requests": 4, "ttft_ms": 59.509562561288476, "decode_tps": 59.99162116432085, "initialization_s": 2.3867133751045913, "peak_child_rss_bytes": 2548760576}, "vllm-metal": {"requests": 4, "ttft_ms": 89.0884684631601, "decode_tps": 27.340136762615955, "initialization_s": 16.562368874670938, "peak_child_rss_bytes": 3751862272}}, "decode_ratio": 2.194269241781976, "ttft_fraction": 0.6679827769841716, "decode_target_met": true, "ttft_target_met": false, "exact_complete_outputs": true, "counts_as_default_bf16_speedup": false, "scope": "Fresh matched-FP32 native/vLLM comparison with the validated latency bundle."}

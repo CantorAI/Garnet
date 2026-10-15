@@ -24,6 +24,33 @@ first-request observations remain separate in raw records.
 Archive SHA256:
 `3b26eb57ca5d31cae0e8e2e995aaab355687ec967cddcfc29f59f0844b603533`.
 
+## Confirmation
+
+PID40088 exited0 in541.6364s. The separate confirmation archive passed the
+same audit:506 files, three actual GPU dtype audits and72 matching complete
+outputs. The two cohorts therefore contain144 matched outputs and six actual
+dtype audits. `remaining-budgets.json` records all measured target gaps.
+
+| Model | Batch | Repeat Garnet /vLLM tokens/s per row | Repeat Garnet /vLLM TTFT ms |
+| --- | ---: | ---: | ---: |
+| Qwen3-0.6B |1 |62.6849 /36.9923 |38.1346 /76.0602 |
+| Qwen3-0.6B |2 |59.9916 /27.3401 |59.5096 /89.0885 |
+| Qwen2.5-Coder-0.5B-Instruct |1 |79.7018 /47.1194 |26.2606 /57.6205 |
+| Qwen2.5-Coder-0.5B-Instruct |2 |76.6158 /28.4510 |41.9173 /83.2458 |
+| Qwen3.5-0.8B VL |1 |54.0630 /26.4811 |178.8031 /260.1136 |
+| Qwen3.5-0.8B VL |2 |50.5653 /17.2623 |302.3464 /427.4645 |
+
+TextB1 TTFT fraction0.50137 and coderB2 fraction0.50354 no longer meet half
+TTFT. Four decode targets and only coderB1 TTFT pass in both cohorts. No profile
+meets both targets in both cohorts. The borderline first-run wins are not
+retained as repeated target claims. B2 aggregate-throughput scaling is verified
+against the actual identical per-row output streams in both cohorts.
+
+Confirmation archive SHA256:
+`9522dfa9d263fab451b2c65f9eb0aa437d22e7063b0c91a2fe38a1cbb98f76f1`.
+Both comparator jobs and their source are archived before the next native body
+integration. Their pinned old library remains available for comparison.
+
 The separately pinned selection file is
 `work/wide-batch-next-comparator-selection.json`. It selects the validated
 `build-wide-batch-prefill` library for Qwen3-0.6B, Qwen2.5-Coder-0.5B-Instruct

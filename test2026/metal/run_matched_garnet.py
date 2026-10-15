@@ -35,6 +35,7 @@ try:
     screened_head_enabled='screened_head' in garnet.backend_info()
     small_screen_seed_enabled='screen_seed_1024' in garnet.backend_info()
     interleaved_screen_enabled='interleaved_screen_index' in garnet.backend_info()
+    interleaved_body_enabled='interleaved_bf16_body' in garnet.backend_info()
     fused_head_decode_only_enabled='fused_head_decode_only' in garnet.backend_info()
     deferred_state_zero_enabled='deferred_state_zero' in garnet.backend_info()
     reused_zero_source_enabled='reused_zero_source' in garnet.backend_info()
@@ -50,6 +51,7 @@ try:
         screened_head_counts=[decoder.session.screened_head_dispatches if screened_head_enabled else 0]
         screened_head_seed_rows=[decoder.session.screened_head_seed_rows if small_screen_seed_enabled else (8192 if screened_head_enabled else 0)]
         interleaved_screen_counts=[decoder.session.interleaved_screen_dispatches if interleaved_screen_enabled else 0]
+        interleaved_body_counts=[decoder.session.interleaved_body_dispatches if interleaved_body_enabled else 0]
         body_shape_counts=[decoder.session.body_shape_dispatches if body_shape_enabled else 0]
         body_shape_misses=[decoder.session.body_shape_misses if body_shape_enabled else 0]
         output=[[] for row in range(batch)];active=[1]*batch;durations=[];native_ms=[];phases=[]
@@ -65,6 +67,7 @@ try:
             screened_head_counts.append(decoder.session.screened_head_dispatches if screened_head_enabled else 0)
             screened_head_seed_rows.append(decoder.session.screened_head_seed_rows if small_screen_seed_enabled else (8192 if screened_head_enabled else 0))
             interleaved_screen_counts.append(decoder.session.interleaved_screen_dispatches if interleaved_screen_enabled else 0)
+            interleaved_body_counts.append(decoder.session.interleaved_body_dispatches if interleaved_body_enabled else 0)
             body_shape_counts.append(decoder.session.body_shape_dispatches if body_shape_enabled else 0)
             body_shape_misses.append(decoder.session.body_shape_misses if body_shape_enabled else 0)
             phases.append(dict(prepare_ms=decoder.session.prepare_ms,encode_ms=decoder.session.encode_ms,
@@ -101,6 +104,7 @@ try:
             screened_head_enabled=screened_head_enabled,screened_head_counts=screened_head_counts,
             small_screen_seed_enabled=small_screen_seed_enabled,screened_head_seed_rows=screened_head_seed_rows,
             interleaved_screen_enabled=interleaved_screen_enabled,interleaved_screen_counts=interleaved_screen_counts,
+            interleaved_body_enabled=interleaved_body_enabled,interleaved_body_counts=interleaved_body_counts,
             fused_head_decode_only_enabled=fused_head_decode_only_enabled,
             body_shape_enabled=body_shape_enabled,body_shape_counts=body_shape_counts,body_shape_misses=body_shape_misses,
             body_shape_pipeline_count=decoder.session.body_shape_pipeline_count if body_shape_enabled else 0,

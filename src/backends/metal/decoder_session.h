@@ -34,7 +34,7 @@ class MetalDecoderSession {
     size_t singleCoderHeadDispatches_=0;
     size_t residualNormDispatches_=0;
     size_t packedPrefillNormDispatches_=0;
-    size_t globalHalfAlphaDispatches_=0,wideBatchPrefillDispatches_=0;
+    size_t globalHalfAlphaDispatches_=0,wideBatchPrefillDispatches_=0,interleavedBodyDispatches_=0;
     size_t joinedGlobalMlpBlocks_=0;
     size_t prefillPartialSubmissions_=0;
     size_t fusedHeadArgmaxDispatches_=0;
@@ -75,6 +75,7 @@ public:
     size_t LastReusedZeroCopyStates() const {return reusedCopyStates_;}
     size_t LastResidualNormDispatches() const {return residualNormDispatches_;}
     size_t LastPackedPrefillNormDispatches() const {return packedPrefillNormDispatches_;}
+    size_t LastInterleavedBodyDispatches() const {return interleavedBodyDispatches_;}
     size_t LastWideBatchPrefillDispatches() const {return wideBatchPrefillDispatches_;}
     size_t LastGlobalHalfAlphaDispatches() const {return globalHalfAlphaDispatches_;}
     size_t LastJoinedGlobalMlpBlocks() const {return joinedGlobalMlpBlocks_;}
@@ -112,6 +113,7 @@ public:
         APISET().AddProp("reused_zero_copy_states",&MetalDecoderSession::LastReusedZeroCopyStates);
         APISET().AddProp("residual_norm_dispatches",&MetalDecoderSession::LastResidualNormDispatches);
         APISET().AddProp("packed_prefill_norm_dispatches",&MetalDecoderSession::LastPackedPrefillNormDispatches);
+        APISET().AddProp("interleaved_body_dispatches",&MetalDecoderSession::LastInterleavedBodyDispatches);
         APISET().AddProp("wide_batch_prefill_dispatches",&MetalDecoderSession::LastWideBatchPrefillDispatches);
         APISET().AddProp("global_half_alpha_dispatches",&MetalDecoderSession::LastGlobalHalfAlphaDispatches);
         APISET().AddProp("joined_global_mlp_blocks",&MetalDecoderSession::LastJoinedGlobalMlpBlocks);

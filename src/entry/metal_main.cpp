@@ -19,6 +19,9 @@ public:
 #ifdef GARNET_METAL_QWEN35_WIDE_BATCH_PREFILL
         info+="; qwen35_wide_batch_prefill";
 #endif
+#ifdef GARNET_METAL_INTERLEAVED_BF16_BODY
+        info+="; interleaved_bf16_body";
+#endif
 #ifdef GARNET_METAL_RESIDENT_KV_INPLACE
         info+="; resident_kv_inplace";
 #endif

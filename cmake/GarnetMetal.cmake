@@ -214,6 +214,14 @@ if(GARNET_METAL_QWEN35_WIDE_BATCH_PREFILL)
     add_test(NAME metal_wide_batch_prefill_reference COMMAND garnet_wide_batch_prefill_test)
 endif()
 
+option(GARNET_METAL_INTERLEAVED_BF16_BODY "Investigate large-matrix BF16 decode layout" OFF)
+if(GARNET_METAL_INTERLEAVED_BF16_BODY)
+    target_compile_definitions(garnet_metal PUBLIC GARNET_METAL_INTERLEAVED_BF16_BODY=1)
+    add_executable(garnet_interleaved_bf16_body_test test2026/metal/interleaved_bf16_body_test.cpp)
+    target_link_libraries(garnet_interleaved_bf16_body_test PRIVATE garnet_metal)
+    add_test(NAME metal_interleaved_bf16_body_reference COMMAND garnet_interleaved_bf16_body_test)
+endif()
+
 target_include_directories(garnet_metal PUBLIC src/backends/metal)
 target_compile_options(garnet_metal PRIVATE -fobjc-arc)
 target_link_libraries(garnet_metal PUBLIC
