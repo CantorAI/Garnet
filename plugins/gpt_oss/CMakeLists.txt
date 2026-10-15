@@ -7,6 +7,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     enable_testing()
 endif()
 find_package(CUDAToolkit REQUIRED)
+if(MSVC)
+    # CUDA's CCCL headers require the conforming host preprocessor. These
+    # plugin/test targets do not inherit the main garnet target's PRIVATE flags.
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>
+        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor>)
+endif()
 option(GARNET_GPT_OSS_BUILD_XQA_PARITY "Build private XQA native parity test; inference remains unchanged" OFF)
 option(GARNET_GPT_OSS_BUILD_XQA_BENCHMARK "Build private native XQA cost comparison; no inference selection" OFF)
 option(GARNET_GPT_OSS_BUILD_BF16_PAIR_MATH_PARITY "Build private BF16 vector arithmetic test; no peer/inference selection" OFF)
