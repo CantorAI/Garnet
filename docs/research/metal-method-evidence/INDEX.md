@@ -1,8 +1,8 @@
 # Metal experiment evidence index
 
-Generated UTC: 2026-10-15T21:22:18.074743+00:00
+Generated UTC: 2026-10-15T21:28:17.467136+00:00
 
-Base HEAD at generation: `56ebc091c6000836b38d6f0b74d0f513da696dc5`. Reports indexed: **148**.
+Base HEAD at generation: `9278dfdd912fe7d6f1fd1d78edc59524ef16ab3c`. Reports indexed: **149**.
 
 Report hashes describe the working-tree snapshot and may include changes after that base. For a paper, cite the commit containing this index together with the frozen experiment artifact.
 
@@ -103,6 +103,7 @@ Each row links to its original report. Read that report's scope, exclusions and 
 | [results/20261015/deferred-state-zero](../../../results/20261015/deferred-state-zero/README.md) | Deferred request-state zero: repeated full-model latency tradeoff |
 | [results/20261015/dependent-mlp-graph](../../../results/20261015/dependent-mlp-graph/README.md) | Complete dependent MLP graph: audited stress experiment |
 | [results/20261015/direct-mps-body](../../../results/20261015/direct-mps-body/README.md) | Direct original-row mixed-storage MPS component |
+| [results/20261015/eight-fma-body](../../../results/20261015/eight-fma-body/README.md) | Explicit-FMA eight-output decode: prepared locally, not executed |
 | [results/20261015/fastencode-streamed-mps-body](../../../results/20261015/fastencode-streamed-mps-body/README.md) | MPS argument-validation option: wall penalty persists |
 | [results/20261015/fused-head-argmax](../../../results/20261015/fused-head-argmax/README.md) | Fused vocabulary projection and partial argmax: component gain repeats |
 | [results/20261015/fused-projection-groups](../../../results/20261015/fused-projection-groups/README.md) | Single-dispatch independent projections |

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-15T21:22:18.074743+00:00",
-  "source_commit": "56ebc091c6000836b38d6f0b74d0f513da696dc5",
+  "generated_at_utc": "2026-10-15T21:28:17.467136+00:00",
+  "source_commit": "9278dfdd912fe7d6f1fd1d78edc59524ef16ab3c",
   "source_commit_role": "Base HEAD at generation; report hashes describe the working-tree snapshot, which may differ from this commit.",
   "worktree_has_uncommitted_changes": true,
   "scope": "All experiment README reports currently present under repository-root results and test2026/metal/results.",
@@ -12,7 +12,7 @@
     "Command excerpts may contain ROOT/ARCHIVE placeholders; use the archived executed commands for reproduction.",
     "Unreported experiments and unavailable remote-only artifacts are outside this inventory."
   ],
-  "report_count": 148,
+  "report_count": 149,
   "reports": [
     {
       "experiment_id": "results/20261013/attention-prefix",
@@ -2517,6 +2517,23 @@
       "evidence_directories": [
         "evidence"
       ]
+    },
+    {
+      "experiment_id": "results/20261015/eight-fma-body",
+      "title": "Explicit-FMA eight-output decode: prepared locally, not executed",
+      "report_path": "results/20261015/eight-fma-body/README.md",
+      "report_sha256": "d915d0e3b1b776d7a692d784eb58e941193758a6442c947cc9644f22cda18a34",
+      "classification": "historical_report_requires_scope_and_status_review",
+      "report_text": "# Explicit-FMA eight-output decode: prepared locally, not executed\n\nHypothesis: explicit FP32 fused multiply-add may restore the original control\noutput bits in the lexical eight-output kernel. Both prior eight-output\nvariants passed the unchanged numerical envelopes but failed the mandatory\nexact-bit gate; [their failures remain rejected](../coalesced-eight-body/README.md).\nThe native compiler's contraction/reduction behavior is not established.\nThis is a separate candidate, not a reinterpretation of those failed checks.\n\n`make_eight_fma_body.py` replaces exactly four named accumulator expressions\nwith explicit vector FP32 `fma`. Original compact BF16 payload, learned values,\nFP32 inputs/outputs, lane/loop order and control shader remain unchanged.\nThe context, header and harness are private copies. No serving source/default\nchanges. Context/header generation and Python syntax checks passed locally;\nno Mac Objective-C++/Metal compile, GPU execution, correctness pass or timing\nclaim exists for this candidate.\n\nAll original29 trained projection matrices, B1/B2, four patterns,64/128/256\nthread policies, independent original-checkpoint CPU packing proof and189\nsafety profiles remain required. Every numerical record still requires exact\nnative output bits plus the original FP64 gamma envelope and native comparison\nbound. Only policies passing all four patterns may enter the original two\nABBA timing rounds; no failed sample is admitted. The new auditor regenerates\nthe lexical shader from the original four-output shader, then regenerates the\nexplicit-FMA transformation. Success would establish compatibility for those\nfixtures, not explain the old compiler behavior or prove a full-model gain.\n\nThe existing command-buffer validation and native benchmark take precedence.\n`launch_eight_fma_body.py` requires the exact controller13152 dispatch, native\nterminal success, a preserved native archive and the72-complete-output audit,\nthen enforces its own quiet guard. This launcher has not been invoked. Future\nGPU trials must remain sequential, and source bytes stay frozen until the\nowned job is terminal and archived. Fresh component confirmation, unchanged\nmodel gates, complete generation and repeated matched vLLM runs remain\nnecessary for promotion. Full goal unmet.\n\n```text\n# Prepared protocol only; actual invocation requires the upstream evidence.\npython3 launch_eight_fma_body.py ROOT ROOT/logs/eight-fma-body-20261015 component\n# After terminal capture:\npython3 archive_eight_fma_body.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_eight_fma_body.py RESULTS RESULTS/verification.json\n```\n",
+      "commands_as_documented": [
+        "# Prepared protocol only; actual invocation requires the upstream evidence.\npython3 launch_eight_fma_body.py ROOT ROOT/logs/eight-fma-body-20261015 component\n# After terminal capture:\npython3 archive_eight_fma_body.py ROOT ARCHIVE\npython -X utf8 test2026/metal/verify_eight_fma_body.py RESULTS RESULTS/verification.json\n"
+      ],
+      "archive_hashes_as_documented": [],
+      "adjacent_files": [
+        "README.md"
+      ],
+      "verification_records": [],
+      "evidence_directories": []
     },
     {
       "experiment_id": "results/20261015/fastencode-streamed-mps-body",

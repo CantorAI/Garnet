@@ -563,6 +563,24 @@ language prefill. These describe the same warm requests, not a new cohort.
 The matched vLLM target remains unchanged:4/6 decode,2/6 TTFT,0/6 both across
 the two completed cohorts. The new candidate has no admitted timing result.
 
+### 2026-10-15 — explicit FP32 FMA decode candidate prepared, not executed
+
+The two archived eight-output variants pass their original numerical envelopes
+but fail exact bits in54/72 records. An explicit-FMA candidate changes only
+four named accumulator expressions in the lexical shader. This tests a
+contraction hypothesis without treating it as an established cause. Original
+control, learned values, packing, input patterns and precision stay fixed;
+all original exact-bit, FP64/native-bound and safety gates remain mandatory.
+The earlier rejected records remain rejected, with zero admitted timings.
+
+Only local source generation and Python syntax checks have run. The launcher
+requires terminal/archived/audited completion of the active command-buffer
+native cohort before any GPU execution, then a separate quiet guard. It has
+not been dispatched. No source consumed by the current native job is changed.
+[Prepared source transformations, admission protocol and limitations](../../results/20261015/eight-fma-body/README.md).
+The full target remains unmet; this candidate has no compatibility or speed
+result, and the current command-buffer validation remains the active run.
+
 ## Continuing this record
 
 Append a dated entry for each new experiment or repair. Give it an identifier,

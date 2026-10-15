@@ -35,7 +35,7 @@ def main():
     # historical report links which may reference remote-only files.
     paths += [ROOT / 'results/20261015' / name / 'README.md' for name in
               ('dependent-mlp-graph', 'stage-rounded-mlp-graph', 'mlp-prefill-native',
-               'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native')]
+               'coalesced-eight-body','mlp-command-buffer-primitive','mlp-command-buffer-native','eight-fma-body')]
     links = 0
     for p in paths:
         for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', p.read_text(encoding='utf-8')):
